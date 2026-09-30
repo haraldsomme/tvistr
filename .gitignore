@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Committed template for the env vars; real values live in .env.local
 !.env.example
+
+# raw decision PDFs contain personal data; never commit
+/data/

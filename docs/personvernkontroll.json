@@ -1,0 +1,19 @@
+{
+  "tidspunkt": "2026-09-30T17:37:40.986Z",
+  "telling": {
+    "flagget": {
+      "n": 91,
+      "medNavn": 3,
+      "medAnnet": 14,
+      "funnNavn": 8
+    },
+    "tilfeldig": {
+      "n": 300,
+      "medNavn": 0,
+      "medAnnet": 20,
+      "funnNavn": 0
+    }
+  },
+  "feil": 0,
+  "kostnadUsd": 5.32
+}

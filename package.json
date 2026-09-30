@@ -14,7 +14,13 @@
     "hent": "tsx --env-file=.env.local scripts/hent.ts",
     "klassifiser": "tsx --env-file=.env.local scripts/klassifiser.ts",
     "tolk": "tsx --env-file=.env.local scripts/tolk.ts",
-    "rapport": "tsx --env-file=.env.local scripts/rapport.ts"
+    "rapport": "tsx --env-file=.env.local scripts/rapport.ts",
+    "db:backup": "tsx --env-file=.env.local scripts/backup.ts",
+    "db:restore": "tsx --env-file=.env.local scripts/restore.ts",
+    "revurder": "tsx --env-file=.env.local scripts/revurder.ts",
+    "personvern": "tsx --env-file=.env.local scripts/personvernkontroll.ts",
+    "revisjon": "tsx --env-file=.env.local scripts/revisjon.ts",
+    "rett-paragrafer": "tsx --env-file=.env.local scripts/rett-paragrafer.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

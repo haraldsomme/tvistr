@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Tolkning } from "./ai/skjema";
-import { kontroller, maaKontrolleres, sitatFinnes } from "./validering";
+import { beloepUtdrag, kontroller, maaKontrolleres, sitatFinnes } from "./validering";
 
 const tekst =
   "[KLAGER] kjøpte bilen for kr 150 000. Klager krever prisavslag på kr 30 000. Utvalget tilkjenner et prisavslag på kr 20 000. Klager gis delvis medhold. Bilen ble kjøpt av Bilsalg AS, en bilforhandler.";
@@ -131,6 +131,18 @@ describe("kontroller", () => {
     const k = kontroller(tolkning({ forste_reklamasjon_dato: "2021-12-01", konfidens: 0.5 }), tekst, new Date("2026-01-01"));
     expect(k.arsaker).toContain("lav konfidens (0.5)");
     expect(k.arsaker).toContain("første reklamasjon er før overtakelsesdato");
+  });
+});
+
+describe("beloepUtdrag", () => {
+  it("finds amounts written with spaces, periods or decimals and returns a verbatim excerpt", () => {
+    expect(beloepUtdrag("Bilen kostet kr 115 000,- og ble levert.", 115000)).toBe("Bilen kostet kr 115 000,- og ble levert.");
+    expect(beloepUtdrag("prisavslag på kr 18.660,-.", 18660)).toBe("prisavslag på kr 18.660,-.");
+    expect(beloepUtdrag("kostnad 28 429,59 inkl. mva", 28429)).toBe("kostnad 28 429,59 inkl. mva");
+  });
+  it("does not match a longer number or an absent amount", () => {
+    expect(beloepUtdrag("kr 1 115 000,-", 115000)).toBeNull();
+    expect(beloepUtdrag("kr 20 000,-", 30000)).toBeNull();
   });
 });
 

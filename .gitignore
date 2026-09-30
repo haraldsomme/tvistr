@@ -48,3 +48,6 @@ next-env.d.ts
 
 # raw decision PDFs contain personal data; never commit
 /data/
+
+# database exports; redacted but still private
+/backup/

@@ -1,6 +1,6 @@
 # Datagrunnlag for Tvistr
 
-*Generert 2026-09-30 16:58 med `npm run rapport`. Tallene er hentet direkte fra databasen; seksjonen «Kjente hull og svakheter» vedlikeholdes i `scripts/rapport.ts`.*
+*Generert 2026-09-30 17:47 med `npm run rapport`. Tallene er hentet direkte fra databasen; seksjonen «Kjente hull og svakheter» vedlikeholdes i `scripts/rapport.ts`.*
 
 ## 1. Innhenting
 
@@ -145,30 +145,55 @@ Andel av tolkede vedtak der feltet har en verdi. Lav dekning betyr at opplysning
 | lovversjon (ikke ukjent) | 200 | 6 % |
 | paragrafer | 3599 | 100 % |
 | sammendrag | 3608 | 100 % |
-| sitat for utfall | 3597 | 100 % |
+| sitat for utfall | 3596 | 100 % |
 
 ## 5. Kvalitet og treffsikkerhet
 
-- Flagget for manuell kontroll: **891 av 3608** (25 %).
-- Kontrollert i kvalitetssjekken på /data: **30**, hvorav **30 riktige** og **0 feil** – treffsikkerhet 100 %.
+- Flagget for manuell kontroll: **378 av 3608** (10 %).
+- Kontrollert manuelt (`qa_status` i `vedtak`): **30**, hvorav **30 riktige** og **0 feil** – treffsikkerhet 100 %.
 - Gjennomsnittlig konfidens fra modellen: 0.84.
+
+**Flagg og kontroll.** «Flagget» betyr at koden fant noe som bør sees på (lav konfidens, beløp uten støtte i teksten, utfall som ikke stemmer med beløpene, gjenværende personnavn som ble fjernet). Flaggene er revurdert etter tolkingen (`npm run revurder`): sitater sammenlignes på bokstaver og tall, beløp uten modellens sitat får et ordrett utdrag fra teksten hvis beløpet står der, og totaler som er summen av delbeløp eller lik kjøpesummen godtas som avledede.
 
 **Vanligste grunner til flagg**
 
 | Grunn | Vedtak |
 | --- | --- |
-| krevd_totalt_nok mangler sitat | 251 |
-| tilkjent_totalt_nok mangler sitat | 182 |
 | utfall medhold, men tilkjent < krevd | 88 |
-| sitat for forbehold finnes ikke ordrett i vedtaket | 85 |
-| utbedringskostnad_nok mangler sitat | 69 |
 | kontrollkallet fant 1 gjenværende personopplysning | 67 |
 | lav konfidens | 50 |
-| selger_type mangler sitat | 41 |
-| sitat for kjopesum_nok finnes ikke ordrett i vedtaket | 26 |
-| sitat for utbedringskostnad_nok finnes ikke ordrett i vedtaket | 25 |
-| tilkjent_erstatning_nok mangler sitat | 21 |
-| sitat for selger_type finnes ikke ordrett i vedtaket | 21 |
+| selger_type mangler sitat | 27 |
+| tilkjent_totalt_nok | 24 |
+| kontrollkallet fant 2 gjenværende personopplysning | 18 |
+| krevd_totalt_nok | 16 |
+| utfall delvis medhold, men tilkjent ≥ krevd | 15 |
+| tilkjent_erstatning_nok | 14 |
+| utbedringskostnad_nok | 13 |
+| tilkjent totalt | 12 |
+| utfall mangler sitat | 12 |
+
+### Automatisk revisjon (ikke menneskelig kontroll)
+
+En modell leste vedtaksteksten på nytt og vurderte de uttrukne feltene i et tilfeldig utvalg på 100 vedtak (`npm run revisjon`). Dette er en **andre mening fra samme modellfamilie**, ikke menneskelig kontroll; blindsoner kan være felles, og tallene kan ikke erstatte manuell kontroll. `qa_status` er urørt.
+
+| Felt | Riktig | Feil | Usikker | Riktig av vurderte |
+| --- | --- | --- | --- | --- |
+| utfall | 99 | 1 | 0 | 99 % |
+| selger type | 96 | 2 | 2 | 96 % |
+| kjopesum | 98 | 1 | 1 | 98 % |
+| krevd totalt | 94 | 4 | 2 | 94 % |
+| tilkjent totalt | 98 | 2 | 0 | 98 % |
+| kjoretoy merke modell ar | 94 | 2 | 4 | 94 % |
+| feiltyper | 61 | 18 | 21 | 61 % |
+| hovedkrav | 96 | 4 | 0 | 96 % |
+| forbehold | 74 | 7 | 19 | 74 % |
+| lov og paragrafer | 89 | 10 | 1 | 89 % |
+
+Revisjonen avdekket en feil i normaliseringen av paragrafer (paragrafer i andre lover, f.eks. forsinkelsesrenteloven § 2, ble merket som forbrukerkjøpsloven). Den er rettet, og «lov og paragrafer» gikk fra 51 % til 89 %. Feltene «feiltyper» og «forbehold» scorer lavest, se «Kjente hull».
+
+### Personvernkontroll
+
+Et uavhengig kontrollkall leste de lagrede (rensede) tekstfeltene på nytt (`npm run personvern`). Blant **300 tilfeldige** vedtak fant den personnavn i **0**; blant **91 vedtak som allerede var flagget for navn** fant den navn i 3 (fjernet). Med 0 av 300 er den øvre 95 %-grensen for andelen vedtak med gjenværende navn (som modellen kan finne) omtrent 1 %. Et navn som ingen av de to gjennomgangene ser, fanges ikke.
 
 ## 6. Kostnad
 
@@ -190,4 +215,9 @@ Tolking tar i snitt 17 sekunder per vedtak (8 parallelle kall i full kjøring). 
 - **Lovversjon:** Vedtakene sier sjelden eksplisitt hvilken lovversjon som gjelder; feltet er stort sett «ukjent».
 - **Personvern:** Navn fjernes i to trinn (modellens liste + kode, deretter et uavhengig kontrollkall). Firmanavn som inneholder et personnavn (enkeltpersonforetak) beholdes som firmanavn. Rå PDF-er ligger bare lokalt.
 - **Etterkontroll av personvern (2026-09-30):** Et søk etter 60 vanlige fornavn i alle rensede fulltekster ga 249 treff i 107 vedtak. Nesten alle var firmanavn (særlig importøren Harald A. Møller AS), «Per»/«Hans» brukt som vanlige ord, bilmodeller og gatenavn i firmaadresser. Tre vedtak hadde reelle rester (navnefragmenter i en ødelagt tabell, en fullmektigs adresse i løpende tekst og forfatternavn i en litteraturhenvisning); de er fjernet med kode og flagget. Søket fanger bare vanlige fornavn – sjeldne navn kan fortsatt finnes og må fanges i kvalitetssjekken.
-- **Totaler uten sitat:** Omtrent 430 vedtak er flagget fordi krevd eller tilkjent totalbeløp ikke har eget sitat og ikke er lik summen av siterte delbeløp. Ofte oppgir vedtaket bare én samlet sum; en justert prompt kan redusere dette.
+- **Feiltyper er «påberopt», ikke «godtatt»:** Feltet viser feilene klageren gjorde gjeldende. Ved delvis medhold vet vi ikke hvilke av dem utvalget godtok. Vinnersjanse per feiltype er derfor skjev oppover for feiltyper som ofte påberopes sammen med andre (en avvist «motor» i en sak der «girkasse» ble godtatt, teller som medhold). Automatisk revisjon ga bare ~60 % riktig på dette feltet av samme grunn. Løsning: nytt felt `godtatte_feiltyper` i en ny promptversjon (tolk-v4); krever ny tolking (cirka $180).
+- **Forbehold:** Revisjonen er usikker på nesten hver femte; vedtakene angir forbehold i kjøpekontrakt og annonse på ulike måter.
+- **Lovversjon:** Stort sett «ukjent», fordi vedtakene sjelden sier eksplisitt hvilken versjon som gjelder.
+- **Automatiske sitater:** For rundt tusen beløp er sitatet et ordrett utdrag hentet fra teksten med kode (beløpet står der), ikke modellens eget sitat. Merket som «merknad» i `kontroll_arsaker`.
+- **Avledede totaler:** Totalbeløp som ikke står i teksten, men som er summen av to beløp i teksten, godtas (f.eks. kjøpesum + erstatning ved heving).
+- **Menneskelig kvalitetssjekk:** Bare 30 av 3608 vedtak er kontrollert manuelt (alle riktige, pilotutvalget). Manuelle kontroller føres i `vedtak.qa_status` / `qa_kommentar`; tallene over oppdateres med `npm run rapport`. Det finnes ikke lenger noe grensesnitt for dette (siden /data er fjernet).

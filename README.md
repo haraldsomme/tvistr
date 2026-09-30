@@ -1,6 +1,6 @@
 # Tvistr – datagrunnlag
 
-Henter, klassifiserer og tolker vedtak fra Forbrukertvistutvalget og Forbrukerklageutvalget om kjøp av brukte kjøretøy (bil, varebil, bobil, campingvogn, MC), og viser resultatet på `/data`.
+Henter, klassifiserer og tolker vedtak fra Forbrukertvistutvalget og Forbrukerklageutvalget om kjøp av brukte kjøretøy (bil, varebil, bobil, campingvogn, MC), og lagrer resultatet i Postgres (tabellen `vedtak`).
 
 ## Oppsett
 
@@ -15,7 +15,6 @@ npm run db:migrate
 | `DATABASE_URL` | Neon Postgres (pooled). `DATABASE_URL_UNPOOLED` brukes av `drizzle-kit` hvis satt. |
 | `ANTHROPIC_API_KEY` | Klassifisering og tolking med `claude-sonnet-5-5`. |
 | `CONTACT_EMAIL` | Valgfri. Legges i User-Agent (`TvistrBot/0.1 (+https://tvistr.no; e-post)`). |
-| `ADMIN_USER`, `ADMIN_PASSWORD` | Basic Auth for `/data`. Uten dem svarer `/data` 503. |
 
 ## Kjøring, i denne rekkefølgen
 
@@ -24,7 +23,9 @@ npm run hent                     # last ned vedtak (alle arkiv) til data/raw/
 npm run klassifiser              # gjelder saken kjøp av brukt kjøretøy?
 npm run tolk                     # strukturert uttrekk til tabellen vedtak
 npm run rapport                  # skriv docs/datagrunnlag.md
-npm run dev                      # se http://localhost:3000/data
+npm run revurder -- --skriv      # revurder kontrollflagg (sitater, beløp) fra lagrede data, uten API-kall
+npm run personvern               # ny, uavhengig personvernkontroll av lagret tekst (API)
+npm run revisjon                 # automatisk revisjon av uttrukne felt, tilfeldig utvalg (API, ikke menneskelig QA)
 ```
 
 Nyttige valg:
@@ -41,6 +42,18 @@ Alle skript tåler avbrudd (Ctrl-C) og kan kjøres på nytt uten duplikater:
 - **hent** lagrer status per sak i `kildesak` (`ny`, `hentet`, `feilet`, …). En ny kjøring hopper over ferdige saker og prøver feilede opptil 3 ganger. Dokumenter er unike på URL og sha256.
 - **klassifiser** tar bare dokumenter med status `hentet`; **tolk** bare `klassifisert` bruktbilvedtak. Feil lagres i `kildedokument.feilmelding` og prøves igjen ved neste kjøring.
 - **tolk** skriver med upsert på `kildedokument_id`, så en ny tolking erstatter den gamle.
+
+## Sikkerhetskopi
+
+Tolkingen koster penger å gjenta, så ta en kopi før alt som skriver over data (`tolk --på-nytt`, ny promptversjon, migreringer):
+
+```bash
+npm run db:backup                                   # → backup/tvistr-<UTC-tid>.json.gz, kontrollert mot databasen
+npm run db:restore -- backup/<fil>.json.gz          # inn i tomme tabeller med samme migreringer
+npm run db:restore -- backup/<fil>.json.gz --overskriv   # tømmer tabellene først
+```
+
+`backup/` ligger i `.gitignore`. Filene er renset for personnavn, men bør likevel lagres privat (f.eks. kryptert disk eller privat skylagring). Rå PDF-er i `data/raw/` kan lastes ned på nytt med `hent`, men det tar flere timer.
 
 ## Høflighet mot kildene
 
@@ -63,7 +76,6 @@ Maks én forespørsel annethvert sekund (hele prosessen), stadig lengre pauser v
 | `src/lib/personvern/rens.ts` | Rensing av personopplysninger |
 | `src/lib/validering.ts` | Kontroller etter tolking (beløp, datoer, sitater) → `trenger_kontroll` |
 | `src/lib/normalisering.ts` | Merke, firmanavn, org.nr. og paragrafer på fast form |
-| `src/app/data/` | Siden `/data` med nøkkeltall, vinnersjanse, datakvalitet, kvalitetssjekk og søk |
 | `scripts/` | `hent`, `klassifiser`, `tolk`, `rapport`, `migrer` |
 
 Tester: `npm test`. Typesjekk: `npm run typecheck`.

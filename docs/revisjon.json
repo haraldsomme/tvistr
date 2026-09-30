@@ -1,0 +1,365 @@
+{
+  "tidspunkt": "2026-09-30T17:45:10.004Z",
+  "utvalg": 100,
+  "tell": {
+    "utfall": {
+      "riktig": 99,
+      "feil": 1,
+      "usikker": 0
+    },
+    "selger_type": {
+      "riktig": 96,
+      "feil": 2,
+      "usikker": 2
+    },
+    "kjopesum": {
+      "riktig": 98,
+      "feil": 1,
+      "usikker": 1
+    },
+    "krevd_totalt": {
+      "riktig": 94,
+      "feil": 4,
+      "usikker": 2
+    },
+    "tilkjent_totalt": {
+      "riktig": 98,
+      "feil": 2,
+      "usikker": 0
+    },
+    "kjoretoy_merke_modell_ar": {
+      "riktig": 94,
+      "feil": 2,
+      "usikker": 4
+    },
+    "feiltyper": {
+      "riktig": 61,
+      "feil": 18,
+      "usikker": 21
+    },
+    "hovedkrav": {
+      "riktig": 96,
+      "feil": 4,
+      "usikker": 0
+    },
+    "forbehold": {
+      "riktig": 74,
+      "feil": 7,
+      "usikker": 19
+    },
+    "lov_og_paragrafer": {
+      "riktig": 89,
+      "feil": 10,
+      "usikker": 1
+    }
+  },
+  "avvik": [
+    {
+      "id": 1070,
+      "saksnummer": "15/1276",
+      "felt": "feiltyper",
+      "begrunnelse": "Mangelen som ble godkjent var kun luftfjærbelger (understell). Bremser og motor ble ikke ansett som mangler."
+    },
+    {
+      "id": 794,
+      "saksnummer": "16/787",
+      "felt": "feiltyper",
+      "begrunnelse": "Motor, klimaanlegg og elektrisk ble ikke godtatt som mangler. Tilkjente mangler gjaldt lykter (offentligrettslig), nøkkel og tilstandsrapport."
+    },
+    {
+      "id": 794,
+      "saksnummer": "16/787",
+      "felt": "forbehold",
+      "begrunnelse": "Kjente forhold om karosseribytte og km ble ansett kjent for klager (§ 16 tredje ledd). Innklagde hevdet også sen reklamasjon."
+    },
+    {
+      "id": 1073,
+      "saksnummer": "15/1254",
+      "felt": "feiltyper",
+      "begrunnelse": "Bremser og elektrisk ble ikke ansett som mangler; utvalget fant bare girkasse og servicehistorikk."
+    },
+    {
+      "id": 1723,
+      "saksnummer": "23/11374",
+      "felt": "forbehold",
+      "begrunnelse": "Utvalget fant at kontraktens formuleringer ikke var et forbehold etter § 17; uten garanti var bare faktisk beskrivelse."
+    },
+    {
+      "id": 2091,
+      "saksnummer": "22/356",
+      "felt": "feiltyper",
+      "begrunnelse": "«elektrisk» er ikke støttet (bare «flere feilkoder»). Oljelekkasje, kjølevæske mangler; rust, bremser, motor, service ok."
+    },
+    {
+      "id": 3322,
+      "saksnummer": "19/656",
+      "felt": "feiltyper",
+      "begrunnelse": "Feilen gjelder turbo; taklekkasje er bare nevnt av klagerne og ikke vurdert. Motor er tvilsomt, og fukt_lekkasje er ikke støttet."
+    },
+    {
+      "id": 1186,
+      "saksnummer": "15/653",
+      "felt": "forbehold",
+      "begrunnelse": "Bilen ble solgt «som forevist», ikke «som den er»; 3 måneders garanti på motor og girkasse mangler."
+    },
+    {
+      "id": 498,
+      "saksnummer": "16/2376",
+      "felt": "tilkjent_totalt",
+      "begrunnelse": "Vedtaket sier kr 35 466,25, men avrundet 35 466 er ok; prisavslag 25 500 + erstatning 9 966,25 stemmer. Avrunding godtas."
+    },
+    {
+      "id": 3508,
+      "saksnummer": "18/1477",
+      "felt": "hovedkrav",
+      "begrunnelse": "Klageren krevde oppfyllelse/betaling av kjøpesum, ikke erstatning."
+    },
+    {
+      "id": 2695,
+      "saksnummer": "21/5052",
+      "felt": "feiltyper",
+      "begrunnelse": "Oljelekkasje mangler, som er sentral feil. Servicehistorikk er ikke egentlig en feiltype; bremser er kun bigrunn."
+    },
+    {
+      "id": 2695,
+      "saksnummer": "21/5052",
+      "felt": "lov_og_paragrafer",
+      "begrunnelse": "§§ 5, 17 og 24 er fra håndverkertjenesteloven, ikke forbrukerkjøpsloven; hvtjl mangler."
+    },
+    {
+      "id": 1590,
+      "saksnummer": "24/1726",
+      "felt": "kjoretoy_merke_modell_ar",
+      "begrunnelse": "Modell 225 EX og årsmodell 2019 er ikke oppgitt i vedtaket; bilen omtales som BMW 225 og fire år gammel."
+    },
+    {
+      "id": 1590,
+      "saksnummer": "24/1726",
+      "felt": "forbehold",
+      "begrunnelse": "Tilkjenning er betinget av at klageren returnerer ladekabelen for innklagdes regning; dette er et forbehold."
+    },
+    {
+      "id": 851,
+      "saksnummer": "16/453",
+      "felt": "krevd_totalt",
+      "begrunnelse": "Krevd 21 250 + 20 441,18 = 41 691,18; avrundet 41 691 er i praksis riktig."
+    },
+    {
+      "id": 851,
+      "saksnummer": "16/453",
+      "felt": "feiltyper",
+      "begrunnelse": "Kollisjonsskade ikke lagt til grunn; feilene var oljelekkasje, feil felger, omlakkering. Kategorien stemmer dårlig."
+    },
+    {
+      "id": 851,
+      "saksnummer": "16/453",
+      "felt": "lov_og_paragrafer",
+      "begrunnelse": "Kun § 1 nevnt; vedtaket bygger ellers på avtale, ikke andre paragrafer, men listen er tynn."
+    },
+    {
+      "id": 2255,
+      "saksnummer": "21/9298",
+      "felt": "lov_og_paragrafer",
+      "begrunnelse": "fkjl § 2 nevnes ikke i vedtaket; forsinkelsesrenteloven § 2/3 er nevnt, men mangler."
+    },
+    {
+      "id": 1213,
+      "saksnummer": "15/340",
+      "felt": "feiltyper",
+      "begrunnelse": "Rust og klimaanlegg ble ikke godtatt som mangel; girkassefeilen ble utbedret og refundert tidligere. Listen overdriver."
+    },
+    {
+      "id": 3020,
+      "saksnummer": "FKU-2026-23297",
+      "felt": "lov_og_paragrafer",
+      "begrunnelse": "«kjl § 3» er feil; vedtaket viser til forbrukerklageloven § 3 og kjl. § 1. Kjl. § 13 og § 19 er sentrale."
+    },
+    {
+      "id": 2040,
+      "saksnummer": "22/3154",
+      "felt": "selger_type",
+      "begrunnelse": "Selger er en privatperson på papiret, men loven anvendes som forbrukerkjøp fordi selgerens representant opptrer i næringsvirksomhet. «Privat» er dermed misvisende."
+    },
+    {
+      "id": 441,
+      "saksnummer": "17/165",
+      "felt": "feiltyper",
+      "begrunnelse": "Vinterdekk/felger og elektriske feil, rust på bremserør og vannlekkasje er påberopt. «understell_hjuloppheng» er tvilsom; dekk mangler som egen kategori."
+    },
+    {
+      "id": 2044,
+      "saksnummer": "21/13720",
+      "felt": "feiltyper",
+      "begrunnelse": "Motor (turbo) ble ikke godkjent som mangel. Uttrekket inkluderer det uten støtte i vedtaket."
+    },
+    {
+      "id": 3576,
+      "saksnummer": "19/1222",
+      "felt": "feiltyper",
+      "begrunnelse": "Fukt/lekkasje og råte stemmer, men «rust» er ikke støttet; råte i treplater er ikke rust. Muggsopp kunne vært nevnt."
+    },
+    {
+      "id": 2862,
+      "saksnummer": "21/5448",
+      "felt": "lov_og_paragrafer",
+      "begrunnelse": "«fkjl § 56» er feil; det gjelder kommisjonsloven § 56. Også forsinkelsesloven og kommisjonsloven mangler."
+    },
+    {
+      "id": 1246,
+      "saksnummer": "14/1784",
+      "felt": "feiltyper",
+      "begrunnelse": "Bremser ble ikke ansett som mangel; elektrisk (vindusheis) er uklart som mangel. Turbo/motor er hovedfeilen."
+    },
+    {
+      "id": 405,
+      "saksnummer": "17/376",
+      "felt": "kjopesum",
+      "begrunnelse": "Kjøpesummen for bilen var kr 232 900; 105 000 var innbyttebilens verdi."
+    },
+    {
+      "id": 405,
+      "saksnummer": "17/376",
+      "felt": "krevd_totalt",
+      "begrunnelse": "Klageren krevde frifinnelse for kr 36 000; innklagdes krav var ca. 36 000, ikke null. Tvisten gjelder dette beløpet."
+    },
+    {
+      "id": 405,
+      "saksnummer": "17/376",
+      "felt": "kjoretoy_merke_modell_ar",
+      "begrunnelse": "Kjøpt kjøretøy var Land Rover Discovery 3 2005; BMW var innbyttebilen."
+    },
+    {
+      "id": 405,
+      "saksnummer": "17/376",
+      "felt": "hovedkrav",
+      "begrunnelse": "Klagerens krav var frifinnelse for betalingsplikt på 36 000; uttrekket er tomt."
+    },
+    {
+      "id": 664,
+      "saksnummer": "16/1517",
+      "felt": "lov_og_paragrafer",
+      "begrunnelse": "Kommisjonsloven § 56 er feilaktig oppgitt som fkjl § 56; kml. § 56 mangler, og kjøpsloven er også brukt."
+    },
+    {
+      "id": 31,
+      "saksnummer": "15/1288",
+      "felt": "krevd_totalt",
+      "begrunnelse": "Kalkyle på kr 81 683,53 som subsidiært krav (prisavslag/erstatning jf. takst) gir et høyeste krevd beløp; null er trolig feil."
+    },
+    {
+      "id": 31,
+      "saksnummer": "15/1288",
+      "felt": "forbehold",
+      "begrunnelse": "Innklagde gjorde gjeldende at reklamasjonsfristen ikke var overholdt; dette er et forbehold/innsigelse som mangler. «annet» er upresist."
+    },
+    {
+      "id": 1490,
+      "saksnummer": "16/195",
+      "felt": "feiltyper",
+      "begrunnelse": "Fukt ble ikke ansett som mangel, og elektrisk dekker batterilader. Vann/kran-feil (frostskade, sanitærvæske) mangler som kategori; «fukt_lekkasje» er uriktig støttet."
+    },
+    {
+      "id": 1490,
+      "saksnummer": "16/195",
+      "felt": "lov_og_paragrafer",
+      "begrunnelse": "Mangler vesentlig kjl. § 18, også § 13 og § 21, som er nevnt i vurderingen."
+    },
+    {
+      "id": 3067,
+      "saksnummer": "FKU-2026-77134",
+      "felt": "feiltyper",
+      "begrunnelse": "«rust» og «motor» er svakt støttet; tregstarting ikke vurdert av utvalget. Korrosjon nevnt kun i bærearmer. Motor er tvilsomt."
+    },
+    {
+      "id": 3067,
+      "saksnummer": "FKU-2026-77134",
+      "felt": "lov_og_paragrafer",
+      "begrunnelse": "§ 15 er ikke nevnt i vedtaket; de øvrige paragrafene stemmer."
+    },
+    {
+      "id": 3562,
+      "saksnummer": "17/389",
+      "felt": "lov_og_paragrafer",
+      "begrunnelse": "Paragrafene «kjl § 5» og «kjl § 17» er feil; det var hvtjl. § 5 og § 17. Hvtjl. mangler."
+    },
+    {
+      "id": 1243,
+      "saksnummer": "14/1859",
+      "felt": "hovedkrav",
+      "begrunnelse": "Prisavslag ble ikke krevd av klageren, og omlevering er tvilsomt. Subsidiært krevde han utlevering av bilen, ikke omlevering."
+    },
+    {
+      "id": 3680,
+      "saksnummer": "24/4219",
+      "felt": "lov_og_paragrafer",
+      "begrunnelse": "Lov er null, men paragrafer fra forbrukerklageloven, forskriften og forvaltningsloven er oppgitt; lov mangler."
+    },
+    {
+      "id": 3255,
+      "saksnummer": "19/883",
+      "felt": "feiltyper",
+      "begrunnelse": "Manglende garanti var mangel og vesentlig, men mangler i feiltyper; km-avvik ble ikke rettidig reklamert, og «annet» er uklart."
+    },
+    {
+      "id": 1379,
+      "saksnummer": "13/1382",
+      "felt": "tilkjent_totalt",
+      "begrunnelse": "Tilkjent er 95 000 + 20 980 = 115 980? Sjekk: 95 000+20 980 = 115 980, stemmer."
+    },
+    {
+      "id": 1379,
+      "saksnummer": "13/1382",
+      "felt": "hovedkrav",
+      "begrunnelse": "Klageren krevde heving (prinsipalt) og subsidiært utbedring; erstatning for rapport kom i tillegg, retting er ikke rett betegnelse, men nær."
+    },
+    {
+      "id": 3620,
+      "saksnummer": "15/1597",
+      "felt": "krevd_totalt",
+      "begrunnelse": "Subsidiært prisavslag 15 000 + erstatning 1 500 = 16 500 er høyeste alternativ, ikke 13 500."
+    },
+    {
+      "id": 3620,
+      "saksnummer": "15/1597",
+      "felt": "feiltyper",
+      "begrunnelse": "Utvalget la kun girkassefeil til grunn; motor og bremser er ikke fastslått. Elektrisk nevnt i verkstedsnotat, men tvilsomt. Listen overdrevet."
+    },
+    {
+      "id": 375,
+      "saksnummer": "17/586",
+      "felt": "utfall",
+      "begrunnelse": "Klageren fikk heving med full tilbakebetaling av kjøpesummen, det vil si hovedkravet. Kun erstatning for testutlegg ble avslått, så delvis medhold er misvisende."
+    },
+    {
+      "id": 375,
+      "saksnummer": "17/586",
+      "felt": "feiltyper",
+      "begrunnelse": "km_avvik støttes ikke, for det er ikke anført kilometeravvik. Motorlampeproblemet er motor/elektrisk, men avviket gjelder årsmodell, ikke kilometerstand."
+    },
+    {
+      "id": 2789,
+      "saksnummer": "21/3387",
+      "felt": "forbehold",
+      "begrunnelse": "Utvalget fant ingen «som den er»-forbehold; bruktbilgaranti er ikke forbehold. «annet» er ikke støttet."
+    },
+    {
+      "id": 1383,
+      "saksnummer": "13/1324",
+      "felt": "selger_type",
+      "begrunnelse": "Klager kjøpte av privat selger; krav rettet mot tidligere yrkessalgsledd (importør). «formidling» passer ikke; snarere privat med krav mot tidligere ledd."
+    },
+    {
+      "id": 1383,
+      "saksnummer": "13/1324",
+      "felt": "forbehold",
+      "begrunnelse": "«Som den er» gjaldt privat salg; overfor innklagde legges ordinære vilkår til grunn, så forbeholdet er ikke relevant."
+    },
+    {
+      "id": 1834,
+      "saksnummer": "23/2126",
+      "felt": "feiltyper",
+      "begrunnelse": "Kollisjonsskade og motor støttes ikke. Saken gjelder rust, bulker, registerreim og dekk."
+    }
+  ],
+  "kostnadUsd": 1.82
+}

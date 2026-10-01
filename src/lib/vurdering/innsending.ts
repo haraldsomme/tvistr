@@ -1,117 +1,167 @@
-import { KONTAKT_VALG, type FeilKnapp, type KlageInput, type Kontakt } from "./typer";
+import { ABSOLUTT_FRIST_AR, iDag, leggTilManeder } from "./faktorer";
+import { FEILOPPLYSNING_VALG, KONTAKT_VALG, OPPDAGET_VALG, type FeilKnapp, type KlageInput, type Kontakt, type Oppdaget } from "./typer";
 
 // What the form collects (steps 1–3) and the checks shared by the client (enables «Neste») and the
-// API route (never trusts the client). Free text is user input; nothing here is stored.
+// API route (never trusts the client). Nothing here is stored.
 
-export const FEILTYPER_KNAPPER: readonly FeilKnapp[] = ["motor", "girkasse", "elektrisk", "rust", "bremser", "annet"];
+export const FEILTYPER_KNAPPER: readonly FeilKnapp[] = [
+  "motor",
+  "girkasse",
+  "elektrisk",
+  "understell",
+  "bremser",
+  "rust",
+  "fukt",
+  "klimaanlegg",
+  "km_service",
+  "skade",
+  "annet",
+];
 export const OPPLYST_VALG = ["ja", "nei", "usikker"] as const;
-export const BEVIS_FELT = ["kjopekontrakt", "verkstedrapport", "bilder", "korrespondanse", "annonse"] as const;
+export const JA_NEI = ["ja", "nei"] as const;
+export const FRA_AR = 1990;
 
-type BevisFelt = (typeof BEVIS_FELT)[number];
+type JaNei = (typeof JA_NEI)[number] | "";
 
 export type Innsending = {
-  kjopsdato: string;
-  kjopesumNok: string; // digits only
   feiltyper: FeilKnapp[];
-  beskrivelse: string;
-  oppdagetDato: string;
+  kjopManed: string; // "1"–"12"
+  kjopAr: string; // four digits
+  oppdaget: Oppdaget | "";
   opplystForKjop: (typeof OPPLYST_VALG)[number] | "";
+  feilOpplysning: (typeof FEILOPPLYSNING_VALG)[number] | "";
   kontakt: Kontakt | "";
-  bevis: Record<BevisFelt, boolean>;
-  rapportSierForKjop: "ja" | "nei" | "";
-  utbedringskostnadNok: string; // digits only, optional; asked together with the report
+  reklamasjonManed: string; // "1"–"12"; asked when the purchase is over five years old and the dealer is contacted
+  reklamasjonAr: string;
+  verkstedrapport: JaNei;
+  rapportSierForKjop: JaNei; // asked when there is a report
+  bilder: JaNei; // asked when there is no report
 };
 
 export const TOM_INNSENDING: Innsending = {
-  kjopsdato: "",
-  kjopesumNok: "",
   feiltyper: [],
-  beskrivelse: "",
-  oppdagetDato: "",
+  kjopManed: "",
+  kjopAr: "",
+  oppdaget: "",
   opplystForKjop: "",
+  feilOpplysning: "",
   kontakt: "",
-  bevis: { kjopekontrakt: false, verkstedrapport: false, bilder: false, korrespondanse: false, annonse: false },
+  reklamasjonManed: "",
+  reklamasjonAr: "",
+  verkstedrapport: "",
   rapportSierForKjop: "",
-  utbedringskostnadNok: "",
+  bilder: "",
 };
 
-const DAG_MS = 86_400_000;
+const heltall = (s: string, min: number, max: number) => /^\d{1,9}$/.test(s) && Number(s) >= min && Number(s) <= max;
+const jaNei = (v: string): v is "ja" | "nei" => v === "ja" || v === "nei";
 
-function erIsoDato(s: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-  const d = new Date(`${s}T00:00:00Z`);
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+const pad = (n: number) => String(n).padStart(2, "0");
+
+// The first day of the purchase month, for «has at least this long passed» checks.
+const forsteIMaaned = (i: Innsending) => `${i.kjopAr}-${pad(Number(i.kjopManed))}-01`;
+
+// The last day of the purchase month. The form asks for month and year only, and the later date
+// gives the buyer the benefit of the doubt on the five-year deadline.
+export function kjopsdatoFra(i: Pick<Innsending, "kjopManed" | "kjopAr">): string {
+  return sisteIMaaned(i.kjopAr, i.kjopManed);
 }
 
-// One day of slack so a client in a timezone ahead of UTC is not rejected for «today».
-const erIkkeFremtid = (s: string) => Date.parse(`${s}T00:00:00Z`) <= Date.now() + DAG_MS;
+function sisteIMaaned(ar: string, maned: string): string {
+  const siste = new Date(Date.UTC(Number(ar), Number(maned), 0)).getUTCDate();
+  return `${ar}-${pad(Number(maned))}-${pad(siste)}`;
+}
 
-const heltall = (s: string, min: number, max: number) => /^\d{1,9}$/.test(s) && Number(s) >= min && Number(s) <= max;
+// Has the purchase passed the five-year deadline, so that it matters when the buyer first complained?
+// Same date as the engine uses, so the form asks exactly when the answer can change the result.
+export function sporOmReklamasjonsdato(i: Pick<Innsending, "kjopManed" | "kjopAr" | "kontakt">, idag = iDag()): boolean {
+  if (!i.kontakt || i.kontakt === "nei" || !heltall(i.kjopManed, 1, 12) || !heltall(i.kjopAr, FRA_AR, 9999)) return false;
+  return idag > leggTilManeder(kjopsdatoFra(i), ABSOLUTT_FRIST_AR * 12);
+}
 
-function feil(i: Innsending, steg: 1 | 2 | 3): string | null {
+function reklamasjonsdatoFeil(i: Innsending, idag: string): string | null {
+  if (!heltall(i.reklamasjonManed, 1, 12) || !heltall(i.reklamasjonAr, FRA_AR, 9999)) return "Velg når du første gang tok opp feilen med forhandleren.";
+  if (`${i.reklamasjonAr}-${pad(Number(i.reklamasjonManed))}-01` > idag) return "Reklamasjonen kan ikke være i fremtiden.";
+  if (sisteIMaaned(i.reklamasjonAr, i.reklamasjonManed) < forsteIMaaned(i)) return "Du kan ikke ha reklamert før du kjøpte bilen.";
+  return null;
+}
+
+const MIN_MANEDER: Record<Oppdaget, number> = { innen_6_mnd: 0, "6_mnd_til_2_ar": 6, over_2_ar: 24 };
+
+// Can the defect have shown this long after the purchase? Needs year and month to be chosen.
+export function oppdagetMulig(i: Pick<Innsending, "kjopManed" | "kjopAr">, oppdaget: Oppdaget, idag = iDag()): boolean {
+  if (!heltall(i.kjopManed, 1, 12) || !heltall(i.kjopAr, FRA_AR, 9999)) return false;
+  return leggTilManeder(`${i.kjopAr}-${pad(Number(i.kjopManed))}-01`, MIN_MANEDER[oppdaget]) <= idag;
+}
+
+function feil(i: Innsending, steg: 1 | 2 | 3, idag: string): string | null {
   if (steg === 1) {
-    if (!erIsoDato(i.kjopsdato) || !erIkkeFremtid(i.kjopsdato) || i.kjopsdato < "1990-01-01") return "Velg kjøpsdato.";
-    if (!heltall(i.kjopesumNok, 1, 10_000_000)) return "Skriv inn kjøpesummen.";
+    if (i.feiltyper.length === 0) return "Velg hva som er galt.";
+    if (!heltall(i.kjopManed, 1, 12) || !heltall(i.kjopAr, FRA_AR, 9999)) return "Velg når du kjøpte bilen.";
+    if (forsteIMaaned(i) > idag) return "Kjøpet kan ikke være i fremtiden.";
+    if (!i.oppdaget || !OPPDAGET_VALG.includes(i.oppdaget)) return "Velg hvor lenge etter kjøpet feilen viste seg.";
+    if (!oppdagetMulig(i, i.oppdaget, idag)) return "Feilen kan ikke ha vist seg så lenge etter kjøpet når kjøpet er så nylig.";
   }
   if (steg === 2) {
-    if (i.feiltyper.length === 0) return "Velg hva som er galt.";
-    const n = i.beskrivelse.trim().length;
-    if (n < 10 || n > 2000) return "Beskriv feilen med minst 10 tegn (maks 2000).";
-    if (!erIsoDato(i.oppdagetDato) || !erIkkeFremtid(i.oppdagetDato)) return "Velg når du oppdaget feilen.";
-    if (erIsoDato(i.kjopsdato) && i.oppdagetDato < i.kjopsdato) return "Feilen kan ikke være oppdaget før kjøpsdatoen.";
     if (!i.opplystForKjop || !OPPLYST_VALG.includes(i.opplystForKjop)) return "Svar på om du ble fortalt om feilen.";
+    if (!i.feilOpplysning || !FEILOPPLYSNING_VALG.includes(i.feilOpplysning)) return "Svar på om annonsen eller selgeren sa noe som ikke stemte.";
     if (!i.kontakt || !KONTAKT_VALG.includes(i.kontakt)) return "Svar på om du har kontaktet forhandleren.";
+    if (sporOmReklamasjonsdato(i, idag)) return reklamasjonsdatoFeil(i, idag);
   }
-  if (steg === 3 && i.bevis.verkstedrapport) {
-    if (i.rapportSierForKjop !== "ja" && i.rapportSierForKjop !== "nei") return "Svar på hva rapporten sier om feilen.";
-    if (i.utbedringskostnadNok !== "" && !heltall(i.utbedringskostnadNok, 1, 10_000_000)) {
-      return "Skriv inn utbedringskostnaden i hele kroner, eller la feltet stå tomt.";
-    }
+  if (steg === 3) {
+    if (!jaNei(i.verkstedrapport)) return "Svar på om du har en verksted- eller tilstandsrapport.";
+    if (i.verkstedrapport === "ja" && !jaNei(i.rapportSierForKjop)) return "Svar på hva rapporten sier om feilen.";
+    if (i.verkstedrapport === "nei" && !jaNei(i.bilder)) return "Svar på om du har bilder eller video av feilen.";
   }
   return null;
 }
 
-export const stegGyldig = (i: Innsending, steg: 1 | 2 | 3): boolean => feil(i, steg) === null;
+export const stegGyldig = (i: Innsending, steg: 1 | 2 | 3, idag = iDag()): boolean => feil(i, steg, idag) === null;
 
 const tekst = (v: unknown) => (typeof v === "string" ? v : "");
-const bool = (v: unknown) => v === true;
 
 // Parses an untrusted request body into the engine's input. The seller-type and private-use
 // questions are not part of the form yet, so dealer purchase for private use is assumed.
-export function tilKlageInput(raw: unknown): { ok: true; input: KlageInput } | { ok: false; feil: string } {
+export function tilKlageInput(raw: unknown, idag = iDag()): { ok: true; input: KlageInput } | { ok: false; feil: string } {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return { ok: false, feil: "Ugyldig forespørsel." };
   const r = raw as Record<string, unknown>;
-  const bevisRaw = (typeof r.bevis === "object" && r.bevis !== null ? r.bevis : {}) as Record<string, unknown>;
 
   const i: Innsending = {
-    kjopsdato: tekst(r.kjopsdato),
-    kjopesumNok: tekst(r.kjopesumNok),
     feiltyper: Array.isArray(r.feiltyper) ? (r.feiltyper.filter((t): t is FeilKnapp => FEILTYPER_KNAPPER.includes(t)) as FeilKnapp[]) : [],
-    beskrivelse: tekst(r.beskrivelse),
-    oppdagetDato: tekst(r.oppdagetDato),
+    kjopManed: tekst(r.kjopManed),
+    kjopAr: tekst(r.kjopAr),
+    oppdaget: tekst(r.oppdaget) as Innsending["oppdaget"],
     opplystForKjop: tekst(r.opplystForKjop) as Innsending["opplystForKjop"],
+    feilOpplysning: tekst(r.feilOpplysning) as Innsending["feilOpplysning"],
     kontakt: tekst(r.kontakt) as Innsending["kontakt"],
-    bevis: Object.fromEntries(BEVIS_FELT.map((f) => [f, bool(bevisRaw[f])])) as Innsending["bevis"],
-    rapportSierForKjop: r.rapportSierForKjop === "ja" || r.rapportSierForKjop === "nei" ? r.rapportSierForKjop : "",
-    utbedringskostnadNok: tekst(r.utbedringskostnadNok),
+    reklamasjonManed: tekst(r.reklamasjonManed),
+    reklamasjonAr: tekst(r.reklamasjonAr),
+    verkstedrapport: tekst(r.verkstedrapport) as JaNei,
+    rapportSierForKjop: tekst(r.rapportSierForKjop) as JaNei,
+    bilder: tekst(r.bilder) as JaNei,
   };
-  const f = feil(i, 1) ?? feil(i, 2) ?? feil(i, 3);
+  const f = feil(i, 1, idag) ?? feil(i, 2, idag) ?? feil(i, 3, idag);
   if (f) return { ok: false, feil: f };
 
+  const rapport = i.verkstedrapport === "ja";
   return {
     ok: true,
     input: {
       kvalifisering: { selgerType: "forhandler", privatBruk: true },
-      bilOgKjop: { kjopsdato: i.kjopsdato, kjopesumNok: Number(i.kjopesumNok) },
+      bilOgKjop: { kjopsdato: kjopsdatoFra(i) },
       feilen: {
         typer: [...new Set(i.feiltyper)],
-        beskrivelse: i.beskrivelse.trim(),
-        oppdagetDato: i.oppdagetDato,
+        oppdaget: i.oppdaget as Oppdaget,
         opplystForKjop: i.opplystForKjop as Exclude<Innsending["opplystForKjop"], "">,
+        feilOpplysning: i.feilOpplysning as Exclude<Innsending["feilOpplysning"], "">,
         kontakt: i.kontakt as Kontakt,
-        utbedringskostnadNok: i.bevis.verkstedrapport && i.utbedringskostnadNok !== "" ? Number(i.utbedringskostnadNok) : null,
+        ...(sporOmReklamasjonsdato(i, idag) && { forsteReklamasjon: sisteIMaaned(i.reklamasjonAr, i.reklamasjonManed) }),
       },
-      bevis: { ...i.bevis, rapportSierForKjop: i.bevis.verkstedrapport ? i.rapportSierForKjop === "ja" : null },
+      bevis: {
+        verkstedrapport: rapport,
+        rapportSierForKjop: rapport ? i.rapportSierForKjop === "ja" : null,
+        bilder: !rapport && i.bilder === "ja",
+      },
     },
   };
 }

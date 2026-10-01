@@ -37,21 +37,25 @@ function botteSql(f: Faktorer): SQL {
 type Trinn = { beskrivelse: string; betingelse: SQL; spesifikk: boolean };
 
 // Dealer cases only, from most to least specific; we use the first step with enough decisions.
-// With several defect types we first require all of them (@>), then any of them (&&): matching on
-// any alone made every extra tick look like a stronger case. Report and disclaimer are not matched:
-// within the same defect and timing they barely move the share, and they are rules of their own.
+// Each button the buyer picked is a group of defect types, matched with any of them (&&). With
+// several groups we first require every group (AND), then any group (OR): matching on any alone
+// made every extra tick look like a stronger case. Report and disclaimer are not matched: within
+// the same defect and timing they barely move the share, and they are rules of their own.
 export function trinnFor(f: Faktorer): Trinn[] {
   const trinn: Trinn[] = [];
   const botte = botteSql(f);
-  if (f.feiltyper.length) {
-    const liste = tekstListe(f.feiltyper);
-    const navn = f.feiltyper.join("/");
-    if (f.feiltyper.length > 1) {
-      trinn.push({ beskrivelse: `alle av ${navn} og reklamasjonstid`, betingelse: sql`v.feiltyper @> ${liste} and ${botte}`, spesifikk: true });
-      trinn.push({ beskrivelse: `alle av ${navn}`, betingelse: sql`v.feiltyper @> ${liste}`, spesifikk: true });
+  const g = f.feilgrupper;
+  if (g.length) {
+    const treff = g.map((typer) => sql`v.feiltyper && ${tekstListe(typer)}`);
+    const navn = g.map((typer) => typer.join("/")).join(" + ");
+    if (g.length > 1) {
+      const alle = sql.join(treff.map((t) => sql`(${t})`), sql` and `);
+      trinn.push({ beskrivelse: `alle av ${navn} og reklamasjonstid`, betingelse: sql`${alle} and ${botte}`, spesifikk: true });
+      trinn.push({ beskrivelse: `alle av ${navn}`, betingelse: alle, spesifikk: true });
     }
-    trinn.push({ beskrivelse: `${navn} og reklamasjonstid`, betingelse: sql`v.feiltyper && ${liste} and ${botte}`, spesifikk: true });
-    trinn.push({ beskrivelse: navn, betingelse: sql`v.feiltyper && ${liste}`, spesifikk: true });
+    const noen = sql`(${sql.join(treff.map((t) => sql`(${t})`), sql` or `)})`;
+    trinn.push({ beskrivelse: `${navn} og reklamasjonstid`, betingelse: sql`${noen} and ${botte}`, spesifikk: true });
+    trinn.push({ beskrivelse: navn, betingelse: noen, spesifikk: true });
   }
   trinn.push({ beskrivelse: "alle forhandlersaker", betingelse: sql`true`, spesifikk: false });
   return trinn;

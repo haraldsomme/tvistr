@@ -1,25 +1,27 @@
-import { beregnFaktorer, iDag, type Faktorer, type Tolkning } from "./faktorer";
-import { alleKrav, type KravPerOnske } from "./krav";
+import { beregnFaktorer, iDag, type Faktorer } from "./faktorer";
+import { byggGrunnlag, fkjl, NAAR, type Grunnlag } from "./grunnlag";
 import { foreslaTiltak, type Tiltak } from "./tiltak";
 import type { HentStatistikk, Statistikk } from "./statistikk";
 import type { KlageInput, Niva } from "./typer";
 
 export type Vurdering = {
   niva: Niva;
+  // One sentence: what the buyer most likely can claim.
+  tittel: string;
+  // One or two sentences: the facts the level rests on.
   begrunnelse: string;
-  // What the user can do to improve the case; empty when there is nothing to suggest.
+  // The same facts point by point, each with the rule it triggers and a reference to the law.
+  grunnlag: Grunnlag[];
+  // What the user can do to strengthen the case; empty when there is nothing to suggest. Not part
+  // of the free assessment: it is meant for the paid step.
   tiltak: Tiltak[];
-  // Which claim to take to the letter, for each wish. Only for middels/sterk: for a weak case the
-  // advice is to strengthen it first, and amounts would read as a promise.
-  krav: KravPerOnske | null;
-  // Kept for tests and a future UI; not shown to the user.
+  // Kept for tests and the script; not shown to the user.
   faktorer: Faktorer;
   statistikk: Statistikk | null;
   poeng: number;
 };
 
 export type Avhengigheter = {
-  tolk: (input: KlageInput) => Promise<Tolkning | null>;
   hentStatistikk: HentStatistikk;
   idag?: string;
 };
@@ -43,142 +45,89 @@ export const MIDDELS_FRA = 1;
 export const STAT_GOD_LAV = 0.6;
 export const STAT_SVAK_HOY = 0.5;
 
-const pst = (v: number) => `${Math.round(v * 100)} %`;
-const NIVA_TEKST: Record<Niva, string> = { sterk: "sterk", middels: "middels sterk", svak: "svak", ikke_aktuell: "ikke aktuell" };
-
-function varighet(dager: number): string {
-  if (dager < 1) return "samme dag som du kjøpte bilen, altså";
-  if (dager < 60) return `${dager} dager`;
-  const maneder = Math.round(dager / 30.4);
-  return maneder < 24 ? `omtrent ${maneder} måneder` : `omtrent ${Math.round((dager / 365) * 10) / 10} år`.replace(".", ",");
+function ikkeAktuell(f: Faktorer, tittel: string, begrunnelse: string, grunnlag: Grunnlag[] = []): Vurdering {
+  return { niva: "ikke_aktuell", tittel, begrunnelse, grunnlag, tiltak: [], faktorer: f, statistikk: null, poeng: 0 };
 }
 
-function ikkeAktuell(f: Faktorer, begrunnelse: string, s: Statistikk | null): Vurdering {
-  return { niva: "ikke_aktuell", begrunnelse, tiltak: [], krav: null, faktorer: f, statistikk: s, poeng: 0 };
+function poengFor(f: Faktorer, s: Statistikk | null): number {
+  let poeng = 0;
+  if (s?.spesifikk) poeng += s.lav >= STAT_GOD_LAV ? POENG.statistikk : s.hoy < STAT_SVAK_HOY ? -POENG.statistikk : 0;
+  if (f.presumsjon) {
+    poeng += POENG.presumsjon;
+    if (f.rapportSierForKjop === true) poeng += POENG.rapportInnenforPresumsjon;
+  } else {
+    poeng += f.rapportSierForKjop === true ? POENG.rapportUtenforPresumsjon : POENG.ingenStotteUtenforPresumsjon;
+  }
+  if (f.kontakt === "forsokt") poeng += POENG.rettingForsokt;
+  if (f.feilOpplysningerDokumentert) poeng += POENG.feilOpplysninger;
+  return poeng;
 }
 
-type Del = { poeng: number; tekst: string };
+// The dealer may try to repair first (fkjl § 29); once they have tried or refused, the buyer can
+// go on to a price reduction or cancelling the purchase (§§ 31 and 32). Which of the two depends on
+// how serious the defect is, which the form does not ask about.
+function tittelFor(niva: Niva, f: Faktorer): string {
+  if (niva === "svak") return "Det blir vanskelig å nå fram med et krav slik saken står nå.";
+  const krav = f.kontakt === "forsokt" || f.kontakt === "avvist" ? "prisavslag eller heving" : "at forhandleren retter feilen";
+  return niva === "sterk" ? `Du har etter alt å dømme krav på ${krav}.` : `Du kan ha krav på ${krav}.`;
+}
 
-// The text explains the chain: what counted for and against, then any rule that capped the level.
+// The facts that decided the level, as one sentence: timing, what was said, the dealer, evidence.
+function begrunnelseFor(f: Faktorer): string {
+  const ledd = [`Feilen ble oppdaget ${NAAR[f.oppdaget]} etter kjøpet`];
+
+  if (f.opplystForKjop === "ja" && f.feilOpplysninger) {
+    ledd.push(
+      f.feilOpplysningerDokumentert
+        ? "du ble fortalt om feilen, men du kan dokumentere at opplysningene var misvisende"
+        : "du ble fortalt om feilen, men mener opplysningene var misvisende",
+    );
+  } else if (f.feilOpplysningerDokumentert) ledd.push("du kan dokumentere at du fikk uriktige opplysninger om bilen");
+  else if (f.opplystForKjop === "ja") ledd.push("du ble informert om den før kjøpet");
+  else if (f.opplystForKjop === "nei") ledd.push("du ble ikke informert om den");
+
+  if (f.kontakt === "forsokt") ledd.push("forhandleren har forsøkt å rette den uten å lykkes");
+  else if (f.kontakt === "avvist") ledd.push("forhandleren har avvist å rette den");
+
+  if (f.rapportSierForKjop === true) ledd.push("verkstedrapporten peker på en feil som sannsynligvis var til stede ved levering");
+  else if (f.rapportSierForKjop === false) ledd.push("verkstedrapporten sier ikke om feilen var til stede ved levering");
+  else if (f.bilder) ledd.push("du har bilder av feilen, men ingen verkstedrapport");
+  else ledd.push("du har foreløpig ingen dokumentasjon av feilen");
+
+  return `${ledd.slice(0, -1).join(", ")}, og ${ledd[ledd.length - 1]}.`;
+}
+
 export function vurderFraFaktorer(f: Faktorer, s: Statistikk | null): Vurdering {
-  if (f.utenforTjenesten) {
-    const grunn =
-      f.utenforTjenesten === "privat_selger"
-        ? "Kjøp fra en privatperson er omfattet av kjøpsloven og behandles ikke av Forbrukerklageutvalget på samme måte som kjøp fra forhandler."
-        : "Forbrukerklageutvalget behandler bare kjøp til privat bruk.";
-    return ikkeAktuell(f, `${grunn} Vi kan derfor ikke vurdere saken din.`, null);
+  if (f.utenforTjenesten === "privat_selger") {
+    return ikkeAktuell(f, "Vi kan ikke vurdere kjøp fra en privatperson.", "Slike kjøp følger kjøpsloven og behandles ikke på samme måte som kjøp fra forhandler.");
+  }
+  if (f.utenforTjenesten === "ikke_privat_bruk") {
+    return ikkeAktuell(f, "Vi kan bare vurdere kjøp til privat bruk.", "Forbrukerkjøpsloven gjelder ikke når bilen er kjøpt til bruk i næring.");
   }
   if (f.fristUte) {
-    return ikkeAktuell(
-      f,
-      "Det har gått mer enn fem år siden du kjøpte bilen. Etter forbrukerkjøpsloven må du reklamere innen fem år etter at du overtok bilen, så kravet er dessverre tapt.",
-      null,
-    );
+    return ikkeAktuell(f, "Fristen for å klage er dessverre ute.", "Det har gått mer enn fem år siden kjøpet, og etter forbrukerkjøpsloven må du reklamere innen fem år.", [
+      { tekst: "Reklamasjon må senest skje fem år etter at du fikk bilen. Fristen gjelder uansett hva som ellers er riktig i saken.", vekt: "mot", ...fkjl(27) },
+    ]);
   }
 
-  const deler: Del[] = [];
-
-  if (s) {
-    const p = !s.spesifikk ? 0 : s.lav >= STAT_GOD_LAV ? POENG.statistikk : s.hoy < STAT_SVAK_HOY ? -POENG.statistikk : 0;
-    const tillegg = p > 0 ? ", som er et godt utgangspunkt" : p < 0 ? ", som er lavere enn vanlig" : "";
-    deler.push({ poeng: p, tekst: `Av ${s.n} lignende saker fikk klageren helt eller delvis medhold i ${pst(s.andel)} av sakene${tillegg}.` });
-  }
-
-  const periode = f.presumsjonManeder === 24 ? "to år" : "seks måneder";
-  const naar = `Feilen viste seg ${varighet(f.dagerKjopTilOppdaget)} etter kjøpet.`;
-  if (f.presumsjon) {
-    deler.push({
-      poeng: POENG.presumsjon,
-      tekst: `${naar} Når en feil viser seg innen ${periode} etter at du overtok bilen, regner loven med at den var der ved kjøpet, med mindre forhandleren kan bevise noe annet. Det styrker saken din.`,
-    });
-    if (f.rapportSierForKjop === true) {
-      deler.push({ poeng: POENG.rapportInnenforPresumsjon, tekst: "Rapporten din sier i tillegg at feilen sannsynligvis var til stede ved kjøpet." });
-    }
-  } else {
-    const intro = `${naar} Det er etter fristen på ${periode} der loven regner med at feilen var der ved kjøpet, så du må selv kunne vise at den var det.`;
-    if (f.rapportSierForKjop === true) {
-      deler.push({ poeng: POENG.rapportUtenforPresumsjon, tekst: `${intro} Rapporten din sier at feilen sannsynligvis var til stede ved kjøpet, og det er nettopp det som trengs.` });
-    } else if (f.rapportSierForKjop === false) {
-      deler.push({ poeng: POENG.ingenStotteUtenforPresumsjon, tekst: `${intro} Rapporten din sier ikke noe om dette, og det svekker saken.` });
-    } else {
-      deler.push({ poeng: POENG.ingenStotteUtenforPresumsjon, tekst: `${intro} Uten en verksted- eller tilstandsrapport som sier det, står saken svakere.` });
-    }
-  }
-
-  if (f.kontakt === "forsokt") {
-    deler.push({
-      poeng: POENG.rettingForsokt,
-      tekst: "Forhandleren har forsøkt å rette feilen uten å lykkes. I tidligere saker der det var tilfellet, fikk klageren medhold langt oftere enn ellers.",
-    });
-  } else if (f.kontakt === "avvist") {
-    deler.push({ poeng: 0, tekst: "Forhandleren har avvist å rette feilen. Da kan du gå videre med krav om prisavslag eller heving." });
-  }
-
-  if (f.feilOpplysningerDokumentert) {
-    deler.push({
-      poeng: POENG.feilOpplysninger,
-      tekst: "Beskrivelsen din tyder på at forhandleren ga uriktige opplysninger, og du har dokumentasjon på hva som ble sagt. Slike saker får oftere medhold enn andre.",
-    });
-  }
-
-  const poeng = deler.reduce((sum, d) => sum + d.poeng, 0);
+  const poeng = poengFor(f, s);
   let niva: Niva = poeng >= STERK_FRA ? "sterk" : poeng >= MIDDELS_FRA ? "middels" : "svak";
-  const setninger = deler.map((d) => d.tekst);
 
   // Caps: facts that limit the case whatever else speaks for it.
-  if (f.beskrivelseKvalitet === "ubrukelig") {
-    niva = "svak";
-    setninger.push("Beskrivelsen din sier ikke hva som er galt med bilen. Uten det kan vi ikke vurdere saken som mer enn svak.");
-  } else if (f.beskrivelseKvalitet === "tynn" && niva === "sterk") {
-    niva = "middels";
-    setninger.push("Beskrivelsen din sier hva som er galt, men lite om når og hvordan. Vi vurderer derfor saken som middels sterk. Med en mer utfyllende beskrivelse kan den bli sterk.");
-  }
-
-  if (f.opplystTakSvak) {
-    const fra = niva;
-    niva = "svak";
-    setninger.push(
-      fra === "svak"
-        ? "Du ble opplyst om feilen før kjøpet, noe som svekker saken ytterligere."
-        : "Du ble opplyst om feilen før kjøpet. Da er det normalt ikke en mangel, med mindre forhandleren ga villedende opplysninger, så vi vurderer saken som svak.",
-    );
-  }
-
+  if (f.opplystTakSvak) niva = "svak";
+  // Word against word: a claim of misleading information that cannot be shown does not lift the case.
+  if (f.opplystTakMiddels && niva === "sterk") niva = "middels";
   // Inside the presumption period a silent report still gives the dealer something to argue with.
-  if (f.presumsjon && f.rapportSierForKjop === false) {
-    if (niva === "sterk") {
-      niva = "middels";
-      setninger.push(
-        "Rapporten din sier ikke om feilen var til stede ved kjøpet, og forhandleren kan bruke det til å bestride saken. Vi vurderer den derfor som middels sterk. Får du en rapport som sier dette, kan saken bli sterk.",
-      );
-    } else {
-      setninger.push("Rapporten din sier ikke om feilen var til stede ved kjøpet, og forhandleren kan bruke det til å bestride saken.");
-    }
-  }
-
+  if (niva === "sterk" && f.presumsjon && f.rapportSierForKjop === false) niva = "middels";
   // The presumption covers when the defect arose, not that it exists. Without a report or pictures
   // the defect itself is undocumented.
-  if (niva === "sterk" && !f.bevisValgt.verkstedrapport && !f.bevisValgt.bilder) {
-    niva = "middels";
-    setninger.push(
-      "Du har foreløpig ingen dokumentasjon av selve feilen, som en verkstedrapport eller bilder. Vi vurderer derfor saken som middels sterk til feilen er dokumentert.",
-    );
-  }
+  if (niva === "sterk" && !f.verkstedrapport && !f.bilder) niva = "middels";
 
-  return {
-    niva,
-    begrunnelse: `${setninger.join(" ")} Samlet vurdering: ${NIVA_TEKST[niva]} sak.`,
-    tiltak: foreslaTiltak(f),
-    krav: niva === "middels" || niva === "sterk" ? alleKrav(f) : null,
-    faktorer: f,
-    statistikk: s,
-    poeng,
-  };
+  return { niva, tittel: tittelFor(niva, f), begrunnelse: begrunnelseFor(f), grunnlag: byggGrunnlag(f), tiltak: foreslaTiltak(f), faktorer: f, statistikk: s, poeng };
 }
 
 export async function vurder(input: KlageInput, dep: Avhengigheter): Promise<Vurdering> {
-  const tolkning = await dep.tolk(input);
-  const faktorer = beregnFaktorer(input, tolkning, dep.idag ?? iDag());
+  const faktorer = beregnFaktorer(input, dep.idag ?? iDag());
   if (faktorer.utenforTjenesten || faktorer.fristUte) return vurderFraFaktorer(faktorer, null);
   return vurderFraFaktorer(faktorer, await dep.hentStatistikk(faktorer));
 }

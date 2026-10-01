@@ -132,6 +132,7 @@
 @theme inline {
   --font-brev: var(--font-serif), serif;
   --font-ui: var(--font-plex), system-ui, sans-serif;
+  --font-vipps: var(--font-manrope), system-ui, sans-serif;
   --font-kode: var(--font-plex-mono), ui-monospace, monospace;
 }
 

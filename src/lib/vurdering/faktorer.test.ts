@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import klager from "./testdata/klager.json";
-import { beregnFaktorer, dagerMellom, leggTilManeder } from "./faktorer";
+import { beregnFaktorer, leggTilManeder } from "./faktorer";
 import type { KlageInput, TestKlage } from "./typer";
 
 const IDAG = "2026-10-01";
 const testklager = klager as TestKlage[];
 const hent = (id: number): KlageInput => structuredClone(testklager.find((k) => k.id === id)!.input);
-const fakta = (i: KlageInput, tolkning: Parameters<typeof beregnFaktorer>[1] = null) => beregnFaktorer(i, tolkning, IDAG);
+const fakta = (i: KlageInput) => beregnFaktorer(i, IDAG);
 
 describe("testdata", () => {
   it("har 10 klager med unike id-er", () => {
@@ -16,11 +16,6 @@ describe("testdata", () => {
 });
 
 describe("datoer", () => {
-  it("teller kalenderdager", () => {
-    expect(dagerMellom("2026-01-01", "2026-01-31")).toBe(30);
-    expect(dagerMellom("2026-03-01", "2026-03-01")).toBe(0);
-  });
-
   it("legger til måneder", () => {
     expect(leggTilManeder("2024-03-15", 24)).toBe("2026-03-15");
     expect(leggTilManeder("2023-06-15", 6)).toBe("2023-12-15");
@@ -28,27 +23,29 @@ describe("datoer", () => {
 });
 
 describe("presumsjon (fkjl § 18)", () => {
-  it("to år for kjøp fra 2024", () => {
+  it("to år for kjøp fra 2024: «6 måneder til 2 år» er innenfor, «over 2 år» er det ikke", () => {
     const i = hent(4); // kjøpt 2025-07-01
-    i.feilen.oppdagetDato = "2027-06-30";
+    i.feilen.oppdaget = "6_mnd_til_2_ar";
     expect(fakta(i)).toMatchObject({ presumsjonManeder: 24, presumsjon: true });
-    i.feilen.oppdagetDato = "2027-07-02";
+    i.feilen.oppdaget = "over_2_ar";
     expect(fakta(i).presumsjon).toBe(false);
   });
 
-  it("seks måneder for kjøp før 2024", () => {
-    const i = hent(6); // kjøpt 2023-06-15, oppdaget 2025-12-01
+  it("seks måneder for kjøp før 2024: bare «innen 6 måneder» er innenfor", () => {
+    const i = hent(6); // kjøpt 2023-06-15, over to år
     expect(fakta(i)).toMatchObject({ presumsjonManeder: 6, presumsjon: false });
-    i.feilen.oppdagetDato = "2023-12-14";
+    i.feilen.oppdaget = "6_mnd_til_2_ar";
+    expect(fakta(i).presumsjon).toBe(false);
+    i.feilen.oppdaget = "innen_6_mnd";
     expect(fakta(i).presumsjon).toBe(true);
   });
 
   it("grensen går på kjøpsdato", () => {
     const i = hent(1);
+    i.feilen.oppdaget = "6_mnd_til_2_ar";
     i.bilOgKjop.kjopsdato = "2023-12-31";
-    i.feilen.oppdagetDato = "2024-08-01";
     expect(fakta(i)).toMatchObject({ presumsjonManeder: 6, presumsjon: false });
-    i.bilOgKjop.kjopsdato = "2024-01-01";
+    i.bilOgKjop.kjopsdato = "2024-01-31";
     expect(fakta(i)).toMatchObject({ presumsjonManeder: 24, presumsjon: true });
   });
 });
@@ -57,26 +54,33 @@ describe("femårsfristen (fkjl § 27)", () => {
   it("er ute når det har gått mer enn fem år og forhandleren ikke er kontaktet", () => {
     const i = hent(4);
     i.bilOgKjop.kjopsdato = "2021-09-30";
-    i.feilen.oppdagetDato = "2021-12-01";
     expect(fakta(i).fristUte).toBe(true);
     i.bilOgKjop.kjopsdato = "2021-10-01";
     expect(fakta(i).fristUte).toBe(false);
   });
 
-  it("gjelder ikke når forhandleren allerede er kontaktet, siden vi ikke vet når", () => {
+  it("er ute når første reklamasjon kom mer enn fem år etter kjøpet", () => {
     const i = hent(4);
-    i.bilOgKjop.kjopsdato = "2020-01-01";
-    i.feilen.oppdagetDato = "2020-03-01";
-    i.feilen.kontakt = "venter";
+    i.bilOgKjop.kjopsdato = "2017-05-31";
+    i.feilen.kontakt = "forsokt";
+    i.feilen.forsteReklamasjon = "2022-06-30";
+    expect(fakta(i).fristUte).toBe(true);
+  });
+
+  it("er ikke ute når første reklamasjon kom innen fem år, selv om kjøpet er eldre", () => {
+    const i = hent(4);
+    i.bilOgKjop.kjopsdato = "2017-05-31";
+    i.feilen.kontakt = "forsokt";
+    i.feilen.forsteReklamasjon = "2022-05-31";
     expect(fakta(i).fristUte).toBe(false);
   });
 });
 
 describe("beregnFaktorer", () => {
-  it("reklamasjonsbøtten måles fra kjøp til oppdaget", () => {
-    expect(fakta(hent(1)).reklamasjonsbotte).toBe("rask"); // 21 dager
-    expect(fakta(hent(4)).reklamasjonsbotte).toBe("middels"); // 431 dager
-    expect(fakta(hent(6)).reklamasjonsbotte).toBe("sen"); // 900 dager
+  it("reklamasjonsbøtten følger svaret om når feilen viste seg", () => {
+    expect(fakta(hent(1)).reklamasjonsbotte).toBe("rask");
+    expect(fakta(hent(4)).reklamasjonsbotte).toBe("middels");
+    expect(fakta(hent(6)).reklamasjonsbotte).toBe("sen");
   });
 
   it("å ikke ha kontaktet forhandleren endrer ingen fakta utenom femårsfristen", () => {
@@ -87,21 +91,13 @@ describe("beregnFaktorer", () => {
     expect({ ...a, kontakt: null }).toEqual({ ...b, kontakt: null });
   });
 
-  it("oversetter kontakt til rettingsstatus", () => {
+  it("oversetter knappevalg til én gruppe per knapp uten duplikater, og «annet» gir ingen", () => {
     const i = hent(1);
-    const status = (k: KlageInput["feilen"]["kontakt"]) => {
-      i.feilen.kontakt = k;
-      return fakta(i).forhandlerRetting;
-    };
-    expect(status("nei")).toBe("ikke_spurt");
-    expect(status("venter")).toBe("ikke_spurt");
-    expect(status("avvist")).toBe("avvist");
-    expect(status("forsokt")).toBe("forsokt");
-  });
-
-  it("slår sammen knappevalg og fritekst uten duplikater", () => {
-    expect(fakta(hent(7), { feiltyper: ["km_avvik", "servicehistorikk"], mangelsgrunnlag: [] }).feiltyper).toEqual(["km_avvik", "servicehistorikk"]);
-    expect(fakta(hent(1), { feiltyper: ["motor", "elektrisk"], mangelsgrunnlag: [] }).feiltyper).toEqual(["motor", "elektrisk"]);
+    i.feilen.typer = ["motor", "girkasse", "motor", "annet"];
+    expect(fakta(i).feilgrupper).toEqual([["motor"], ["girkasse", "clutch"]]);
+    expect(fakta(hent(7)).feilgrupper).toEqual([["km_avvik", "servicehistorikk", "bruktimport_opplysning"]]);
+    i.feilen.typer = ["annet"];
+    expect(fakta(i).feilgrupper).toEqual([]);
   });
 
   it("markerer saker utenfor tjenesten, men ikke «vet ikke»", () => {
@@ -111,35 +107,23 @@ describe("beregnFaktorer", () => {
     expect(fakta(hent(7)).utenforTjenesten).toBeNull();
   });
 
-  it("opplyst feil gir tak på svak med mindre fritekst viser villedning", () => {
+  it("opplyst feil gir tak på svak med mindre kjøperen sier at opplysningene var uriktige", () => {
     expect(fakta(hent(3)).opplystTakSvak).toBe(true);
-    expect(fakta(hent(3), { feiltyper: [], mangelsgrunnlag: ["feil_opplysninger"] }).opplystTakSvak).toBe(false);
+    const villedet = hent(3);
+    villedet.feilen.feilOpplysning = "ja_udokumentert";
+    expect(fakta(villedet).opplystTakSvak).toBe(false);
+    expect(fakta(villedet).opplystTakMiddels).toBe(true);
+    villedet.feilen.feilOpplysning = "ja_dokumentert";
+    expect(fakta(villedet)).toMatchObject({ opplystTakSvak: false, opplystTakMiddels: false });
     expect(fakta(hent(1)).opplystTakSvak).toBe(false);
   });
 
   it("feil opplysninger teller bare med dokumentasjon", () => {
-    const tolkning = { feiltyper: [], mangelsgrunnlag: ["feil_opplysninger" as const] };
-    expect(fakta(hent(5), tolkning).feilOpplysningerDokumentert).toBe(true);
+    expect(fakta(hent(5)).feilOpplysningerDokumentert).toBe(true);
     const udokumentert = hent(5);
-    udokumentert.bevis = { ...udokumentert.bevis, annonse: false, kjopekontrakt: false, korrespondanse: false };
-    expect(fakta(udokumentert, tolkning).feilOpplysningerDokumentert).toBe(false);
-    expect(fakta(hent(5)).feilOpplysningerDokumentert).toBe(false);
-  });
-
-  it("beskrivelseskvalitet: modellens svar, med faste regler for lengde og selvmotsigelse", () => {
-    const med = (beskrivelse: string, kvalitet: "ubrukelig" | "tynn" | "god" | undefined, feiltyper: ("rust" | "annet")[] = []) => {
-      const i = hent(4);
-      i.feilen.beskrivelse = beskrivelse;
-      return fakta(i, kvalitet ? { feiltyper, mangelsgrunnlag: [], kvalitet } : null).beskrivelseKvalitet;
-    };
-    const lang = "Det er gjennomrustet i bunnen bak hjulbuene, og det var ikke synlig da jeg kjøpte bilen.";
-    expect(med("blabla", "god")).toBe("ubrukelig"); // under 15 tegn
-    expect(med("Bremsene hviner.", "god")).toBe("tynn"); // under 60 tegn
-    expect(med("Bremsene hviner.", "ubrukelig")).toBe("ubrukelig");
-    expect(med(lang, "god")).toBe("god");
-    expect(med(lang, "ubrukelig", ["rust"])).toBe("tynn"); // modellen fant en konkret feil
-    expect(med(lang, "ubrukelig", ["annet"])).toBe("ubrukelig");
-    expect(med(lang, undefined)).toBe("god");
+    udokumentert.feilen.feilOpplysning = "ja_udokumentert";
+    expect(fakta(udokumentert).feilOpplysningerDokumentert).toBe(false);
+    expect(fakta(hent(1)).feilOpplysningerDokumentert).toBe(false);
   });
 
   it("rapportens svar teller bare når det finnes en rapport", () => {

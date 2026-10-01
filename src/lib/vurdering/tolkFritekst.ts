@@ -1,8 +1,11 @@
 import { kallVerktoy } from "@/lib/ai/klient";
 import { VURDERING_SYSTEM, vurderingBruker } from "@/lib/ai/prompter";
 import { FEILTYPER, MANGELSGRUNNLAG } from "@/lib/ai/skjema";
-import type { BeskrivelseKvalitet, Tolkning } from "./faktorer";
-import type { KlageInput } from "./typer";
+import type { Feiltype, KlageInput, Mangelsgrunnlag } from "./typer";
+
+// Not used by the assessment any more: the free text is read when the letter is written.
+export type BeskrivelseKvalitet = "ubrukelig" | "tynn" | "god";
+export type Tolkning = { feiltyper: Feiltype[]; mangelsgrunnlag: Mangelsgrunnlag[]; kvalitet?: BeskrivelseKvalitet };
 
 const VERKTOY = {
   name: "registrer_feilbeskrivelse",
@@ -24,11 +27,11 @@ const VERKTOY = {
 };
 
 // Only the user's own description and button choice are sent: no seller name, plate or other form fields.
-export async function tolkFritekst(input: KlageInput): Promise<Tolkning> {
+export async function tolkFritekst(input: Pick<KlageInput["feilen"], "typer"> & { beskrivelse: string }): Promise<Tolkning> {
   const { input: svar } = await kallVerktoy<{ feiltyper: Tolkning["feiltyper"]; mangelsgrunnlag: Tolkning["mangelsgrunnlag"]; beskrivelse_kvalitet: BeskrivelseKvalitet }>({
     system: VURDERING_SYSTEM,
     verktoy: VERKTOY,
-    bruker: vurderingBruker(input.feilen.beskrivelse, input.feilen.typer),
+    bruker: vurderingBruker(input.beskrivelse, input.typer),
     effort: "low",
     maksTokens: 1024,
   });

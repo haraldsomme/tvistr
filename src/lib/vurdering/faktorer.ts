@@ -1,26 +1,6 @@
-import type { FeilKnapp, Feiltype, KlageInput, Kontakt, Mangelsgrunnlag } from "./typer";
+import type { FeilKnapp, Feiltype, KlageInput, Kontakt, Oppdaget } from "./typer";
 
-// Pure step: turns the form input (plus the model's reading of the free text) into the facts the
-// rules and the statistics use.
-
-export type BeskrivelseKvalitet = "ubrukelig" | "tynn" | "god";
-export type Tolkning = { feiltyper: Feiltype[]; mangelsgrunnlag: Mangelsgrunnlag[]; kvalitet?: BeskrivelseKvalitet };
-
-// Below TULL nothing can be said about the defect; below KORT the text is at best thin.
-export const TULL_BESKRIVELSE_TEGN = 15;
-export const KORT_BESKRIVELSE_TEGN = 60;
-
-function beskrivelseKvalitet(beskrivelse: string, tolkning: Tolkning | null): BeskrivelseKvalitet {
-  const lengde = beskrivelse.trim().length;
-  if (lengde < TULL_BESKRIVELSE_TEGN) return "ubrukelig";
-  // «Ubrukelig» means we cannot tell what is wrong. If the model named a concrete defect in the
-  // same answer, it could, so we take the milder grade (the model was not consistent here in testing).
-  if (tolkning?.kvalitet === "ubrukelig" && tolkning.feiltyper.some((t) => t !== "annet")) return "tynn";
-  // A short text can name the defect but rarely says enough for the letter; the model wavered
-  // between «tynn» and «god» on texts like «Bremsene hviner.», so length settles it.
-  if (lengde < KORT_BESKRIVELSE_TEGN) return tolkning?.kvalitet === "ubrukelig" ? "ubrukelig" : "tynn";
-  return tolkning?.kvalitet ?? "god";
-}
+// Pure step: turns the form input into the facts the rules and the statistics use.
 
 // Forbrukerkjøpsloven § 18 (2): a defect that shows within this period after delivery is presumed
 // to have existed at delivery. Six months until the EU sale-of-goods rules took effect on
@@ -33,47 +13,48 @@ export type Reklamasjonsbotte = "rask" | "middels" | "sen";
 
 export type Faktorer = {
   utenforTjenesten: "ikke_privat_bruk" | "privat_selger" | null;
-  feiltyper: Feiltype[];
-  mangelsgrunnlag: Mangelsgrunnlag[];
-  // Which evidence the user ticked, used to suggest what is missing.
-  bevisValgt: Omit<KlageInput["bevis"], "rapportSierForKjop">;
+  // One group per button the buyer picked; a group stands for any of its defect types. «Annet» gives no group.
+  feilgrupper: Feiltype[][];
+  verkstedrapport: boolean;
+  bilder: boolean;
   // null when there is no report.
   rapportSierForKjop: boolean | null;
   kontakt: Kontakt;
-  // The dealer's repair so far, as the claim ladder needs it.
-  forhandlerRetting: "forsokt" | "avvist" | "ikke_spurt";
-  kjopesumNok: number;
-  utbedringskostnadNok: number | null;
-  beskrivelseKvalitet: BeskrivelseKvalitet;
-  dagerKjopTilOppdaget: number;
+  oppdaget: Oppdaget;
   // Purchase to discovery, matched against dager_til_reklamasjon in the decisions. The same for
   // everyone, so not having complained yet is never held against the buyer.
   reklamasjonsbotte: Reklamasjonsbotte;
   presumsjonManeder: 6 | 24;
   // The defect showed within the presumption period, so the burden of proof is on the dealer.
   presumsjon: boolean;
-  // Not contacted the dealer, and more than five years have passed since purchase: too late.
+  // More than five years from purchase to the first complaint, or to today when there has been none.
   fristUte: boolean;
-  // Defect was disclosed before purchase and nothing suggests the seller misled the buyer.
+  opplystForKjop: KlageInput["feilen"]["opplystForKjop"];
+  // Defect was disclosed before purchase and the buyer does not say the seller misled them.
   opplystTakSvak: boolean;
-  // The text points to wrong information from the dealer, and the buyer has the ad, contract or
-  // messages to show what was said.
+  // Defect was disclosed, and the buyer says the information was misleading but cannot show it.
+  opplystTakMiddels: boolean;
+  // The buyer says what the ad or the dealer said was wrong.
+  feilOpplysninger: boolean;
+  // ... and has the ad, contract or messages to show what was said.
   feilOpplysningerDokumentert: boolean;
 };
 
 const KNAPP_TIL_FEILTYPE: Record<FeilKnapp, Feiltype[]> = {
   motor: ["motor"],
-  girkasse: ["girkasse"],
+  girkasse: ["girkasse", "clutch"],
   elektrisk: ["elektrisk"],
-  rust: ["rust"],
+  understell: ["understell_hjuloppheng"],
   bremser: ["bremser"],
+  rust: ["rust"],
+  fukt: ["fukt_lekkasje"],
+  klimaanlegg: ["klimaanlegg"],
+  km_service: ["km_avvik", "servicehistorikk", "bruktimport_opplysning"],
+  skade: ["kollisjonsskade"],
   annet: [],
 };
 
-const DAG_MS = 86_400_000;
-export function dagerMellom(fra: string, til: string): number {
-  return Math.round((Date.parse(til) - Date.parse(fra)) / DAG_MS);
-}
+const BOTTE: Record<Oppdaget, Reklamasjonsbotte> = { innen_6_mnd: "rask", "6_mnd_til_2_ar": "middels", over_2_ar: "sen" };
 
 export function leggTilManeder(dato: string, maneder: number): string {
   const d = new Date(`${dato}T00:00:00Z`);
@@ -84,47 +65,36 @@ export function leggTilManeder(dato: string, maneder: number): string {
 export const iDag = () => new Date().toISOString().slice(0, 10);
 
 // The purchase date stands in for the delivery date, which the form does not ask for.
-export function beregnFaktorer(input: KlageInput, tolkning: Tolkning | null, idag = iDag()): Faktorer {
+export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
   const { kvalifisering: k, bilOgKjop: b, feilen: f, bevis } = input;
 
-  const feiltyper = [...new Set([...f.typer.flatMap((t) => KNAPP_TIL_FEILTYPE[t]), ...(tolkning?.feiltyper ?? [])])];
-  const mangelsgrunnlag = [...new Set(tolkning?.mangelsgrunnlag ?? [])];
-
-  const dagerKjopTilOppdaget = dagerMellom(b.kjopsdato, f.oppdagetDato);
-  const reklamasjonsbotte: Reklamasjonsbotte = dagerKjopTilOppdaget <= 180 ? "rask" : dagerKjopTilOppdaget <= 730 ? "middels" : "sen";
-
   const presumsjonManeder = b.kjopsdato >= PRESUMSJON_TO_AR_FRA ? 24 : 6;
-  const presumsjon = f.oppdagetDato <= leggTilManeder(b.kjopsdato, presumsjonManeder);
-  // Someone who has already complained did so on a date we do not ask for, so we cannot tell.
-  const fristUte = f.kontakt === "nei" && idag > leggTilManeder(b.kjopsdato, ABSOLUTT_FRIST_AR * 12);
+  // «Innen 6 måneder» is inside the presumption either way; «6 måneder til 2 år» only for purchases
+  // from 2024; «mer enn 2 år» never.
+  const presumsjon = f.oppdaget === "innen_6_mnd" || (f.oppdaget === "6_mnd_til_2_ar" && presumsjonManeder === 24);
+  // The complaint date is only asked for when the purchase is over five years old, so a missing
+  // date means there was no need to ask.
+  const fristSlutt = leggTilManeder(b.kjopsdato, ABSOLUTT_FRIST_AR * 12);
+  const fristUte = f.kontakt === "nei" ? idag > fristSlutt : f.forsteReklamasjon !== undefined && f.forsteReklamasjon > fristSlutt;
 
   const utenforTjenesten = k.selgerType === "privat" ? "privat_selger" : !k.privatBruk ? "ikke_privat_bruk" : null;
-  const villedet = mangelsgrunnlag.includes("feil_opplysninger") || mangelsgrunnlag.includes("tilbakeholdt_opplysning");
 
   return {
     utenforTjenesten,
-    feiltyper,
-    mangelsgrunnlag,
-    bevisValgt: {
-      kjopekontrakt: bevis.kjopekontrakt,
-      verkstedrapport: bevis.verkstedrapport,
-      bilder: bevis.bilder,
-      korrespondanse: bevis.korrespondanse,
-      annonse: bevis.annonse,
-    },
+    feilgrupper: [...new Set(f.typer)].map((t) => KNAPP_TIL_FEILTYPE[t]).filter((g) => g.length > 0),
+    verkstedrapport: bevis.verkstedrapport,
+    bilder: bevis.bilder,
     rapportSierForKjop: bevis.verkstedrapport ? bevis.rapportSierForKjop : null,
     kontakt: f.kontakt,
-    forhandlerRetting: f.kontakt === "forsokt" ? "forsokt" : f.kontakt === "avvist" ? "avvist" : "ikke_spurt",
-    kjopesumNok: b.kjopesumNok,
-    utbedringskostnadNok: f.utbedringskostnadNok,
-    beskrivelseKvalitet: beskrivelseKvalitet(f.beskrivelse, tolkning),
-    dagerKjopTilOppdaget,
-    reklamasjonsbotte,
+    oppdaget: f.oppdaget,
+    reklamasjonsbotte: BOTTE[f.oppdaget],
     presumsjonManeder,
     presumsjon,
     fristUte,
-    opplystTakSvak: f.opplystForKjop === "ja" && !villedet,
-    feilOpplysningerDokumentert:
-      mangelsgrunnlag.includes("feil_opplysninger") && (bevis.annonse || bevis.kjopekontrakt || bevis.korrespondanse),
+    opplystForKjop: f.opplystForKjop,
+    opplystTakSvak: f.opplystForKjop === "ja" && f.feilOpplysning === "nei",
+    opplystTakMiddels: f.opplystForKjop === "ja" && f.feilOpplysning === "ja_udokumentert",
+    feilOpplysninger: f.feilOpplysning !== "nei",
+    feilOpplysningerDokumentert: f.feilOpplysning === "ja_dokumentert",
   };
 }

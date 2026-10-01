@@ -30,19 +30,16 @@
         "typer": [
           "motor"
         ],
-        "beskrivelse": "Bilen begynte å riste og mistet kraft på motorveien, og så kom det hvit røyk fra eksosen. Verkstedet sier at en av sylindrene har for lav kompresjon og at motoren sannsynligvis må skiftes. Bilen hadde gått under 2000 km siden jeg kjøpte den.",
-        "oppdagetDato": "2026-03-07",
+        "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
         "kontakt": "forsokt",
-        "utbedringskostnadNok": 85000
+        "utbedringskostnadNok": 85000,
+        "feilOpplysning": "nei"
       },
       "bevis": {
-        "kjopekontrakt": true,
         "verkstedrapport": true,
         "rapportSierForKjop": true,
-        "bilder": false,
-        "korrespondanse": true,
-        "annonse": false
+        "bilder": false
       }
     }
   },
@@ -76,19 +73,16 @@
         "typer": [
           "girkasse"
         ],
-        "beskrivelse": "Girkassen hakker og det er vanskelig å få den i gir. Selgeren sa at alt fungerte fint da jeg kjøpte den.",
-        "oppdagetDato": "2026-05-30",
+        "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
         "kontakt": "venter",
-        "utbedringskostnadNok": null
+        "utbedringskostnadNok": null,
+        "feilOpplysning": "nei"
       },
       "bevis": {
-        "kjopekontrakt": true,
         "verkstedrapport": false,
         "rapportSierForKjop": null,
-        "bilder": false,
-        "korrespondanse": true,
-        "annonse": true
+        "bilder": false
       }
     }
   },
@@ -122,19 +116,16 @@
         "typer": [
           "girkasse"
         ],
-        "beskrivelse": "Girkassen slurer i tredje gir. Selgeren nevnte at den hadde vært litt sleten i girene, og at bilen derfor var billig, men jeg trodde ikke det var så ille. Nå sier verkstedet at den må skiftes.",
-        "oppdagetDato": "2026-04-18",
+        "oppdaget": "innen_6_mnd",
         "opplystForKjop": "ja",
         "kontakt": "avvist",
-        "utbedringskostnadNok": 25000
+        "utbedringskostnadNok": 25000,
+        "feilOpplysning": "nei"
       },
       "bevis": {
-        "kjopekontrakt": true,
         "verkstedrapport": false,
         "rapportSierForKjop": null,
-        "bilder": false,
-        "korrespondanse": false,
-        "annonse": true
+        "bilder": false
       }
     }
   },
@@ -169,19 +160,16 @@
         "typer": [
           "rust"
         ],
-        "beskrivelse": "Da jeg skulle skifte til sommerdekk så jeg at det er gjennomrustet i bunnen bak hjulbuene. Det var ikke synlig da jeg kjøpte bilen, og den var solgt som rustfri og nylig EU-godkjent.",
-        "oppdagetDato": "2026-09-05",
+        "oppdaget": "6_mnd_til_2_ar",
         "opplystForKjop": "nei",
         "kontakt": "nei",
-        "utbedringskostnadNok": 30000
+        "utbedringskostnadNok": 30000,
+        "feilOpplysning": "ja_dokumentert"
       },
       "bevis": {
-        "kjopekontrakt": true,
         "verkstedrapport": false,
         "rapportSierForKjop": null,
-        "bilder": true,
-        "korrespondanse": false,
-        "annonse": true
+        "bilder": true
       }
     }
   },
@@ -216,19 +204,16 @@
         "typer": [
           "elektrisk"
         ],
-        "beskrivelse": "Rekkevidden er under halvparten av det som ble oppgitt i annonsen, og batteriet viser kraftig degradering. I annonsen sto det at bilen hadde fått nytt batteri, men verkstedet fant originalbatteri fra 2017 med svært lav kapasitet.",
-        "oppdagetDato": "2026-06-15",
+        "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
         "kontakt": "avvist",
-        "utbedringskostnadNok": 60000
+        "utbedringskostnadNok": 60000,
+        "feilOpplysning": "ja_dokumentert"
       },
       "bevis": {
-        "kjopekontrakt": true,
         "verkstedrapport": true,
         "rapportSierForKjop": true,
-        "bilder": true,
-        "korrespondanse": true,
-        "annonse": true
+        "bilder": true
       }
     }
   },
@@ -262,19 +247,16 @@
         "typer": [
           "bremser"
         ],
-        "beskrivelse": "Bremsene har vært dårlige en stund og nå er skivene helt utslitt og en bremsekaliper har sittet fast. Jeg tenkte først det bare var vanlig slitasje, men verkstedet sier at det har vært et problem over lang tid.",
-        "oppdagetDato": "2025-12-01",
+        "oppdaget": "over_2_ar",
         "opplystForKjop": "usikker",
         "kontakt": "venter",
-        "utbedringskostnadNok": 12000
+        "utbedringskostnadNok": 12000,
+        "feilOpplysning": "nei"
       },
       "bevis": {
-        "kjopekontrakt": false,
         "verkstedrapport": false,
         "rapportSierForKjop": null,
-        "bilder": true,
-        "korrespondanse": false,
-        "annonse": false
+        "bilder": true
       }
     }
   },
@@ -309,21 +291,18 @@
       },
       "feilen": {
         "typer": [
-          "annet"
+          "km_service"
         ],
-        "beskrivelse": "Annonsen oppga 98 000 km, men jeg fant senere servicehistorikk og en EU-kontroll som viser over 190 000 km for to år siden. Selgeren avviser at kilometerstanden er endret. Bilen viser også slitasje som ikke stemmer med så lav kilometerstand.",
-        "oppdagetDato": "2026-05-20",
+        "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
         "kontakt": "avvist",
-        "utbedringskostnadNok": null
+        "utbedringskostnadNok": null,
+        "feilOpplysning": "ja_dokumentert"
       },
       "bevis": {
-        "kjopekontrakt": true,
         "verkstedrapport": false,
         "rapportSierForKjop": null,
-        "bilder": true,
-        "korrespondanse": true,
-        "annonse": true
+        "bilder": true
       }
     }
   },
@@ -358,19 +337,16 @@
         "typer": [
           "motor"
         ],
-        "beskrivelse": "Motoren bruker mye olje og har begynt å banke. Verkstedet mener at stempelringene er slitt. Jeg mener bilen burde holdt lenger enn to måneder.",
-        "oppdagetDato": "2026-07-08",
+        "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
         "kontakt": "forsokt",
-        "utbedringskostnadNok": 18000
+        "utbedringskostnadNok": 18000,
+        "feilOpplysning": "nei"
       },
       "bevis": {
-        "kjopekontrakt": true,
         "verkstedrapport": true,
         "rapportSierForKjop": false,
-        "bilder": false,
-        "korrespondanse": false,
-        "annonse": false
+        "bilder": false
       }
     }
   },
@@ -405,19 +381,16 @@
         "typer": [
           "motor"
         ],
-        "beskrivelse": "Varebilen, som vi bruker i firmaet vårt, har fått turboproblemer og mister kraft under belastning.",
-        "oppdagetDato": "2026-03-28",
+        "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
         "kontakt": "forsokt",
-        "utbedringskostnadNok": 40000
+        "utbedringskostnadNok": 40000,
+        "feilOpplysning": "nei"
       },
       "bevis": {
-        "kjopekontrakt": true,
         "verkstedrapport": true,
         "rapportSierForKjop": true,
-        "bilder": false,
-        "korrespondanse": true,
-        "annonse": false
+        "bilder": false
       }
     }
   },
@@ -452,21 +425,18 @@
       },
       "feilen": {
         "typer": [
-          "annet"
+          "klimaanlegg"
         ],
-        "beskrivelse": "Klimaanlegget blåser ikke kaldt luft. Jeg tror det kanskje ble nevnt at det var litt svakt da jeg var og så på bilen, men jeg husker ikke helt.",
-        "oppdagetDato": "2026-08-05",
+        "oppdaget": "innen_6_mnd",
         "opplystForKjop": "usikker",
         "kontakt": "venter",
-        "utbedringskostnadNok": 8000
+        "utbedringskostnadNok": 8000,
+        "feilOpplysning": "nei"
       },
       "bevis": {
-        "kjopekontrakt": false,
         "verkstedrapport": false,
         "rapportSierForKjop": null,
-        "bilder": false,
-        "korrespondanse": false,
-        "annonse": false
+        "bilder": false
       }
     }
   }

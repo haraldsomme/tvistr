@@ -1,0 +1,473 @@
+[
+  {
+    "id": 1,
+    "tittel": "Motorhavari tre uker etter kjøp, dokumentert",
+    "forventetNiva": "sterk",
+    "merknad": "Forhandler, rask reklamasjon, verkstedrapport og kontrakt. Skal være en av de sterkeste.",
+    "input": {
+      "kvalifisering": {
+        "selgerType": "forhandler",
+        "privatBruk": true
+      },
+      "bilOgKjop": {
+        "regnr": "XX12345",
+        "kjoretoy": {
+          "merke": "Volkswagen",
+          "modell": "Passat",
+          "arsmodell": 2016,
+          "drivstoff": "diesel"
+        },
+        "forhandler": {
+          "type": "brreg",
+          "orgnr": "900000001",
+          "navn": "Testbil Oslo AS"
+        },
+        "kjopsdato": "2026-02-14",
+        "kjopesumNok": 219000,
+        "kmVedKjop": 112000
+      },
+      "feilen": {
+        "typer": [
+          "motor"
+        ],
+        "beskrivelse": "Bilen begynte å riste og mistet kraft på motorveien, og så kom det hvit røyk fra eksosen. Verkstedet sier at en av sylindrene har for lav kompresjon og at motoren sannsynligvis må skiftes. Bilen hadde gått under 2000 km siden jeg kjøpte den.",
+        "oppdagetDato": "2026-03-07",
+        "opplystForKjop": "nei",
+        "kontakt": "forsokt",
+        "utbedringskostnadNok": 85000
+      },
+      "bevis": {
+        "kjopekontrakt": true,
+        "verkstedrapport": true,
+        "rapportSierForKjop": true,
+        "bilder": false,
+        "korrespondanse": true,
+        "annonse": false
+      }
+    }
+  },
+  {
+    "id": 2,
+    "tittel": "Kjøpt av privatperson",
+    "forventetNiva": "ikke_aktuell",
+    "merknad": "Privatperson som selger faller utenfor tjenesten (kjøpsloven, ikke forbrukerkjøpsloven).",
+    "input": {
+      "kvalifisering": {
+        "selgerType": "privat",
+        "privatBruk": true
+      },
+      "bilOgKjop": {
+        "regnr": "XX23456",
+        "kjoretoy": {
+          "merke": "Toyota",
+          "modell": "Yaris",
+          "arsmodell": 2012,
+          "drivstoff": "bensin"
+        },
+        "forhandler": {
+          "type": "fritekst",
+          "navn": "Privat selger"
+        },
+        "kjopsdato": "2026-05-10",
+        "kjopesumNok": 58000,
+        "kmVedKjop": 143000
+      },
+      "feilen": {
+        "typer": [
+          "girkasse"
+        ],
+        "beskrivelse": "Girkassen hakker og det er vanskelig å få den i gir. Selgeren sa at alt fungerte fint da jeg kjøpte den.",
+        "oppdagetDato": "2026-05-30",
+        "opplystForKjop": "nei",
+        "kontakt": "venter",
+        "utbedringskostnadNok": null
+      },
+      "bevis": {
+        "kjopekontrakt": true,
+        "verkstedrapport": false,
+        "rapportSierForKjop": null,
+        "bilder": false,
+        "korrespondanse": true,
+        "annonse": true
+      }
+    }
+  },
+  {
+    "id": 3,
+    "tittel": "Girkasse, feilen var opplyst før kjøp",
+    "forventetNiva": "svak",
+    "merknad": "Kjøper ble fortalt om feilen og bilen ble solgt som den er. Skal trekkes sterkt ned.",
+    "input": {
+      "kvalifisering": {
+        "selgerType": "forhandler",
+        "privatBruk": true
+      },
+      "bilOgKjop": {
+        "regnr": "XX34567",
+        "kjoretoy": {
+          "merke": "Ford",
+          "modell": "Focus",
+          "arsmodell": 2011,
+          "drivstoff": "bensin"
+        },
+        "forhandler": {
+          "type": "fritekst",
+          "navn": "Bilhuset Testvik"
+        },
+        "kjopsdato": "2026-04-05",
+        "kjopesumNok": 39000,
+        "kmVedKjop": 187000
+      },
+      "feilen": {
+        "typer": [
+          "girkasse"
+        ],
+        "beskrivelse": "Girkassen slurer i tredje gir. Selgeren nevnte at den hadde vært litt sleten i girene, og at bilen derfor var billig, men jeg trodde ikke det var så ille. Nå sier verkstedet at den må skiftes.",
+        "oppdagetDato": "2026-04-18",
+        "opplystForKjop": "ja",
+        "kontakt": "avvist",
+        "utbedringskostnadNok": 25000
+      },
+      "bevis": {
+        "kjopekontrakt": true,
+        "verkstedrapport": false,
+        "rapportSierForKjop": null,
+        "bilder": false,
+        "korrespondanse": false,
+        "annonse": true
+      }
+    }
+  },
+  {
+    "id": 4,
+    "tittel": "Rust oppdaget etter 14 måneder, ikke reklamert ennå",
+    "forventetNiva": "sterk",
+    "merknad": "Oppdaget innen to år (presumsjon, kjøpt etter 2024), annonsen lovet rustfri bil, og det finnes bilder. At kjøperen ikke har reklamert ennå teller ikke mot: brevet er reklamasjonen.",
+    "input": {
+      "kvalifisering": {
+        "selgerType": "forhandler",
+        "privatBruk": true
+      },
+      "bilOgKjop": {
+        "regnr": "XX45678",
+        "kjoretoy": {
+          "merke": "Skoda",
+          "modell": "Octavia",
+          "arsmodell": 2014,
+          "drivstoff": "diesel"
+        },
+        "forhandler": {
+          "type": "brreg",
+          "orgnr": "900000002",
+          "navn": "Testbil Bergen AS"
+        },
+        "kjopsdato": "2025-07-01",
+        "kjopesumNok": 129000,
+        "kmVedKjop": 158000
+      },
+      "feilen": {
+        "typer": [
+          "rust"
+        ],
+        "beskrivelse": "Da jeg skulle skifte til sommerdekk så jeg at det er gjennomrustet i bunnen bak hjulbuene. Det var ikke synlig da jeg kjøpte bilen, og den var solgt som rustfri og nylig EU-godkjent.",
+        "oppdagetDato": "2026-09-05",
+        "opplystForKjop": "nei",
+        "kontakt": "nei",
+        "utbedringskostnadNok": 30000
+      },
+      "bevis": {
+        "kjopekontrakt": true,
+        "verkstedrapport": false,
+        "rapportSierForKjop": null,
+        "bilder": true,
+        "korrespondanse": false,
+        "annonse": true
+      }
+    }
+  },
+  {
+    "id": 5,
+    "tittel": "Elbil-batteri, annonsen lovde nytt batteri",
+    "forventetNiva": "sterk",
+    "merknad": "Feil opplysning i annonsen (fkjl § 16 b), verkstedrapport, reklamert raskt.",
+    "input": {
+      "kvalifisering": {
+        "selgerType": "forhandler",
+        "privatBruk": true
+      },
+      "bilOgKjop": {
+        "regnr": "XX56789",
+        "kjoretoy": {
+          "merke": "Nissan",
+          "modell": "Leaf",
+          "arsmodell": 2017,
+          "drivstoff": "elbil"
+        },
+        "forhandler": {
+          "type": "brreg",
+          "orgnr": "900000003",
+          "navn": "Elbil Testsenter AS"
+        },
+        "kjopsdato": "2026-02-20",
+        "kjopesumNok": 145000,
+        "kmVedKjop": 78000
+      },
+      "feilen": {
+        "typer": [
+          "elektrisk"
+        ],
+        "beskrivelse": "Rekkevidden er under halvparten av det som ble oppgitt i annonsen, og batteriet viser kraftig degradering. I annonsen sto det at bilen hadde fått nytt batteri, men verkstedet fant originalbatteri fra 2017 med svært lav kapasitet.",
+        "oppdagetDato": "2026-06-15",
+        "opplystForKjop": "nei",
+        "kontakt": "avvist",
+        "utbedringskostnadNok": 60000
+      },
+      "bevis": {
+        "kjopekontrakt": true,
+        "verkstedrapport": true,
+        "rapportSierForKjop": true,
+        "bilder": true,
+        "korrespondanse": true,
+        "annonse": true
+      }
+    }
+  },
+  {
+    "id": 6,
+    "tittel": "Bremser, oppdaget etter 2,7 år og reklamert 9 måneder senere",
+    "forventetNiva": "svak",
+    "merknad": "Kjøpt før 2024, så presumsjonen var seks måneder; feilen viste seg etter 2,5 år, og det finnes ingen rapport som sier at den var der ved kjøpet.",
+    "input": {
+      "kvalifisering": {
+        "selgerType": "forhandler",
+        "privatBruk": true
+      },
+      "bilOgKjop": {
+        "regnr": "XX67890",
+        "kjoretoy": {
+          "merke": "Kia",
+          "modell": "Ceed",
+          "arsmodell": 2015,
+          "drivstoff": "bensin"
+        },
+        "forhandler": {
+          "type": "fritekst",
+          "navn": "Bil og Motor Testdal"
+        },
+        "kjopsdato": "2023-06-15",
+        "kjopesumNok": 99000,
+        "kmVedKjop": 96000
+      },
+      "feilen": {
+        "typer": [
+          "bremser"
+        ],
+        "beskrivelse": "Bremsene har vært dårlige en stund og nå er skivene helt utslitt og en bremsekaliper har sittet fast. Jeg tenkte først det bare var vanlig slitasje, men verkstedet sier at det har vært et problem over lang tid.",
+        "oppdagetDato": "2025-12-01",
+        "opplystForKjop": "usikker",
+        "kontakt": "venter",
+        "utbedringskostnadNok": 12000
+      },
+      "bevis": {
+        "kjopekontrakt": false,
+        "verkstedrapport": false,
+        "rapportSierForKjop": null,
+        "bilder": true,
+        "korrespondanse": false,
+        "annonse": false
+      }
+    }
+  },
+  {
+    "id": 7,
+    "tittel": "Mistanke om skrudd kilometerteller",
+    "forventetNiva": [
+      "middels",
+      "sterk"
+    ],
+    "merknad": "Selgertype usikker, feil kategori 'annet' — testene må fange km-avvik fra fritekst. Annonse og korrespondanse som bevis.",
+    "input": {
+      "kvalifisering": {
+        "selgerType": "vet_ikke",
+        "privatBruk": true
+      },
+      "bilOgKjop": {
+        "regnr": "XX78901",
+        "kjoretoy": {
+          "merke": "Audi",
+          "modell": "A4",
+          "arsmodell": 2013,
+          "drivstoff": "diesel"
+        },
+        "forhandler": {
+          "type": "fritekst",
+          "navn": "Autosalg Testnes"
+        },
+        "kjopsdato": "2026-03-28",
+        "kjopesumNok": 115000,
+        "kmVedKjop": 98000
+      },
+      "feilen": {
+        "typer": [
+          "annet"
+        ],
+        "beskrivelse": "Annonsen oppga 98 000 km, men jeg fant senere servicehistorikk og en EU-kontroll som viser over 190 000 km for to år siden. Selgeren avviser at kilometerstanden er endret. Bilen viser også slitasje som ikke stemmer med så lav kilometerstand.",
+        "oppdagetDato": "2026-05-20",
+        "opplystForKjop": "nei",
+        "kontakt": "avvist",
+        "utbedringskostnadNok": null
+      },
+      "bevis": {
+        "kjopekontrakt": true,
+        "verkstedrapport": false,
+        "rapportSierForKjop": null,
+        "bilder": true,
+        "korrespondanse": true,
+        "annonse": true
+      }
+    }
+  },
+  {
+    "id": 8,
+    "tittel": "Motorproblem på gammel bil med høy km og lav pris",
+    "forventetNiva": "middels",
+    "merknad": "Forventningene til bilen er lavere ved høy alder/km og lav pris; ellers fornuftig dokumentasjon.",
+    "input": {
+      "kvalifisering": {
+        "selgerType": "forhandler",
+        "privatBruk": true
+      },
+      "bilOgKjop": {
+        "regnr": "XX89012",
+        "kjoretoy": {
+          "merke": "Opel",
+          "modell": "Astra",
+          "arsmodell": 2008,
+          "drivstoff": "bensin"
+        },
+        "forhandler": {
+          "type": "brreg",
+          "orgnr": "900000004",
+          "navn": "Billig Bil Test AS"
+        },
+        "kjopsdato": "2026-05-02",
+        "kjopesumNok": 35000,
+        "kmVedKjop": 240000
+      },
+      "feilen": {
+        "typer": [
+          "motor"
+        ],
+        "beskrivelse": "Motoren bruker mye olje og har begynt å banke. Verkstedet mener at stempelringene er slitt. Jeg mener bilen burde holdt lenger enn to måneder.",
+        "oppdagetDato": "2026-07-08",
+        "opplystForKjop": "nei",
+        "kontakt": "forsokt",
+        "utbedringskostnadNok": 18000
+      },
+      "bevis": {
+        "kjopekontrakt": true,
+        "verkstedrapport": true,
+        "rapportSierForKjop": false,
+        "bilder": false,
+        "korrespondanse": false,
+        "annonse": false
+      }
+    }
+  },
+  {
+    "id": 9,
+    "tittel": "Kjøpt til bruk i næring",
+    "forventetNiva": "ikke_aktuell",
+    "merknad": "Ikke privat bruk → ikke forbrukerkjøp, faller utenfor Forbrukerklageutvalget.",
+    "input": {
+      "kvalifisering": {
+        "selgerType": "forhandler",
+        "privatBruk": false
+      },
+      "bilOgKjop": {
+        "regnr": "XX90123",
+        "kjoretoy": {
+          "merke": "Mercedes-Benz",
+          "modell": "Vito",
+          "arsmodell": 2018,
+          "drivstoff": "diesel"
+        },
+        "forhandler": {
+          "type": "brreg",
+          "orgnr": "900000005",
+          "navn": "Varebil Test AS"
+        },
+        "kjopsdato": "2026-03-01",
+        "kjopesumNok": 259000,
+        "kmVedKjop": 121000
+      },
+      "feilen": {
+        "typer": [
+          "motor"
+        ],
+        "beskrivelse": "Varebilen, som vi bruker i firmaet vårt, har fått turboproblemer og mister kraft under belastning.",
+        "oppdagetDato": "2026-03-28",
+        "opplystForKjop": "nei",
+        "kontakt": "forsokt",
+        "utbedringskostnadNok": 40000
+      },
+      "bevis": {
+        "kjopekontrakt": true,
+        "verkstedrapport": true,
+        "rapportSierForKjop": true,
+        "bilder": false,
+        "korrespondanse": true,
+        "annonse": false
+      }
+    }
+  },
+  {
+    "id": 10,
+    "tittel": "Klimaanlegg uten bevis, usikker på om feilen var opplyst",
+    "forventetNiva": [
+      "svak",
+      "middels"
+    ],
+    "merknad": "Innenfor presumsjonen, men selve feilen er ikke dokumentert (ingen rapport eller bilder), så høyst middels.",
+    "input": {
+      "kvalifisering": {
+        "selgerType": "forhandler",
+        "privatBruk": true
+      },
+      "bilOgKjop": {
+        "regnr": "XX01234",
+        "kjoretoy": {
+          "merke": "Hyundai",
+          "modell": "i30",
+          "arsmodell": 2017,
+          "drivstoff": "bensin"
+        },
+        "forhandler": {
+          "type": "fritekst",
+          "navn": "Bilsenter Testheim"
+        },
+        "kjopsdato": "2026-06-25",
+        "kjopesumNok": 149000,
+        "kmVedKjop": 84000
+      },
+      "feilen": {
+        "typer": [
+          "annet"
+        ],
+        "beskrivelse": "Klimaanlegget blåser ikke kaldt luft. Jeg tror det kanskje ble nevnt at det var litt svakt da jeg var og så på bilen, men jeg husker ikke helt.",
+        "oppdagetDato": "2026-08-05",
+        "opplystForKjop": "usikker",
+        "kontakt": "venter",
+        "utbedringskostnadNok": 8000
+      },
+      "bevis": {
+        "kjopekontrakt": false,
+        "verkstedrapport": false,
+        "rapportSierForKjop": null,
+        "bilder": false,
+        "korrespondanse": false,
+        "annonse": false
+      }
+    }
+  }
+]

@@ -128,3 +128,19 @@
     @apply font-sans;
   }
 }
+/* Fonts for the complaint flow (see the UI sketches). */
+@theme inline {
+  --font-brev: var(--font-serif), serif;
+  --font-ui: var(--font-plex), system-ui, sans-serif;
+  --font-kode: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+/* Indeterminate loader: a segment sliding across its track. */
+@keyframes rull {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}

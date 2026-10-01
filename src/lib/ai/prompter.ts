@@ -38,7 +38,30 @@ Personvern – absolutt krav:
 
 konfidens: din samlede sikkerhet på at uttrekket er riktig (0–1). Sett lavere hvis vedtaket er uklart, beløp er uoversiktlige, eller du har måttet tolke.`;
 
-export const KONTROLL_SYSTEM = `Du kontrollerer at en tekst er anonymisert. Teksten er et vedtak der personnavn allerede skal være byttet ut med [KLAGER], [PERSON], [ADRESSE], [REGNR] osv.
+export const VURDERING_VERSJON = "vurder-v3";
+
+export const VURDERING_SYSTEM = `Du leser en forbrukers egen beskrivelse av en feil på en kjøpt bruktbil og plasserer den i faste kategorier. Svar ved å kalle verktøyet registrer_feilbeskrivelse én gang.
+
+- feiltyper: velg alle kategoriene beskrivelsen faktisk gjelder. Ikke velg noe som ikke er nevnt eller tydelig underforstått. Bruk «annet» bare hvis ingen passer.
+- mangelsgrunnlag: hva forbrukeren bygger mangelen på, bare hvis det går frem av teksten:
+  - feil_opplysninger: selger eller annonsen oppga noe som viste seg å være uriktig (f.eks. kilometerstand, utstyr, tidligere reparasjoner, «nytt batteri»).
+  - tilbakeholdt_opplysning: selger unnlot å opplyse om noe han burde ha kjent til.
+  - avvik_fra_avtale: bilen er ikke slik som avtalt.
+  - vesentlig_darligere_stand: bilen var solgt «som den er» eller lignende, men er i vesentlig dårligere stand enn forbrukeren kunne forvente ut fra alder, km og pris.
+  - offentligrettslige_krav: EU-kontroll, registrering, avgift e.l.
+  Er det ikke grunnlag for noe av dette i teksten, returner tom liste. Ikke gjett.
+- beskrivelse_kvalitet: hvor brukbar beskrivelsen er som grunnlag for en reklamasjon. Avgjør i denne rekkefølgen og velg den første som passer:
+  1. god: teksten sier hva som er galt, og i tillegg minst ett av: når det begynte, hvordan det arter seg, hvor på bilen, eller hva et verksted har funnet. Ett av dem er nok. Eksempler: «motorlampen lyser og bilen mister kraft i motbakker» (hvordan), «feil på motoren, verkstedet sier topplokkspakningen har gått» (verkstedfunn).
+  2. tynn: teksten sier hvilken del av bilen eller hva slags feil det gjelder, men ikke noe mer. Eksempler: «girkassen hakker», «det er noe galt med girkassen».
+  3. ubrukelig: bare når teksten ikke sier hvilken del av bilen eller hva slags feil det gjelder. Eksempler: «blabla», «bilen er ødelagt», «mye feil», «forhandleren er useriøs».
+  Vurder innholdet, ikke språket.
+- Beskrivelsen er skrevet av en lekmann og kan være upresis. Tolk det som står, ikke det du tror er juridisk best for forbrukeren.`;
+
+export function vurderingBruker(beskrivelse: string, knappevalg: string[]): string {
+  return `Forbrukeren valgte ${knappevalg.length === 1 ? "kategorien" : "kategoriene"} «${knappevalg.join("», «")}» i skjemaet.\n\n<beskrivelse>\n${beskrivelse}\n</beskrivelse>`;
+}
+
+export const KONTROLL_SYSTEM =`Du kontrollerer at en tekst er anonymisert. Teksten er et vedtak der personnavn allerede skal være byttet ut med [KLAGER], [PERSON], [ADRESSE], [REGNR] osv.
 
 Finn ALLE gjenværende opplysninger som kan identifisere en fysisk person: personnavn (også bare fornavn eller etternavn), gateadresser, registreringsnummer, telefonnummer, e-post, kontonummer. Firmanavn (AS, ASA, ENK osv.), firmaers adresser og telefonnummer, Forbrukertilsynets og utvalgets egne kontaktopplysninger, stedsnavn alene, bilmerker og lovnavn er IKKE personopplysninger.
 

@@ -20,7 +20,9 @@
     "revurder": "tsx --env-file=.env.local scripts/revurder.ts",
     "personvern": "tsx --env-file=.env.local scripts/personvernkontroll.ts",
     "revisjon": "tsx --env-file=.env.local scripts/revisjon.ts",
-    "rett-paragrafer": "tsx --env-file=.env.local scripts/rett-paragrafer.ts"
+    "rett-paragrafer": "tsx --env-file=.env.local scripts/rett-paragrafer.ts",
+    "vurder": "tsx --env-file=.env.local scripts/vurder.ts",
+    "belopstabell": "tsx --env-file=.env.local scripts/belopstabell.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

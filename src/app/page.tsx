@@ -1,18 +1,11 @@
 import Link from "next/link";
+import { Logo } from "@/app/logo";
 
 const STEG = [
   { nr: "01", tittel: "Svar på spørsmål", tekst: "Om bilen, kjøpet, feilen og hva du har av dokumentasjon." },
   { nr: "02", tittel: "Se vurderingen", tekst: "Gratis. Vi forklarer hvor sterk saken er og hvorfor." },
   { nr: "03", tittel: "Send brevet selv", tekst: "249 kr, én gang. Du får brevet som PDF og Word, klart til å sende." },
 ];
-
-function Logo({ liten }: { liten?: boolean }) {
-  return (
-    <div className={`font-brev font-semibold leading-none ${liten ? "text-[21px] md:text-[24px]" : "text-[24px]"}`}>
-      Tvistr<span className="font-normal text-[#8a94a3]">.no</span>
-    </div>
-  );
-}
 
 // Static example of what the letter looks like; the real one is written from the user's answers.
 function Brevutsnitt() {

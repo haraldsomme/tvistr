@@ -43,6 +43,11 @@ next-env.d.ts
 # playwright mcp output
 .playwright-mcp/
 
+# playwright test output
+/test-results/
+/playwright-report/
+/blob-report/
+
 # Committed template for the env vars; real values live in .env.local
 !.env.example
 

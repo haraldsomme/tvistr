@@ -59,6 +59,14 @@ npm run db:restore -- backup/<fil>.json.gz --overskriv   # tømmer tabellene fø
 
 Maks én forespørsel annethvert sekund (hele prosessen), stadig lengre pauser ved feil/429/5xx, og stopp ved innlogging eller captcha. robots.txt følges, med ett dokumentert unntak: `innsyn.onacos.no` forbyr alt, men prosjekteier har valgt å hente derfra (se `src/lib/crawler/http.ts`). Kjør aldri to `hent` samtidig.
 
+## Brukernes saker
+
+Reklamasjonsbrevene brukerne jobber med ligger i tabellen `brevsak` og inneholder personopplysninger. Tabellen er ikke med i sikkerhetskopiene. Saker slettes 30 dager etter siste endring:
+
+```
+npm run rydd                     # slett utløpte saker (bør kjøres daglig)
+```
+
 ## Personvern
 
 - Rå PDF-er ligger bare i `data/raw/` (i `.gitignore`), aldri i git eller databasen.
@@ -78,4 +86,4 @@ Maks én forespørsel annethvert sekund (hele prosessen), stadig lengre pauser v
 | `src/lib/normalisering.ts` | Merke, firmanavn, org.nr. og paragrafer på fast form |
 | `scripts/` | `hent`, `klassifiser`, `tolk`, `rapport`, `migrer` |
 
-Tester: `npm test`. Typesjekk: `npm run typecheck`.
+Tester: `npm test`. Typesjekk: `npm run typecheck`. Ende-til-ende i nettleser: `npm run test:e2e` (`npm run test:e2e:ui` for å se stegene); testplaner ligger i `specs/`, arbeidsgangen står i `CLAUDE.md`.

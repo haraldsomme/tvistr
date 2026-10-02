@@ -21,7 +21,9 @@ export type FeilKnapp =
   | "skade"
   | "annet";
 
-export type Forhandler = { type: "brreg"; orgnr: string; navn: string } | { type: "fritekst"; navn: string };
+// The postal address of a dealer found in Brreg: street lines, then postcode and place.
+export type Adresse = { linjer: string[]; postnummer: string; poststed: string };
+export type Forhandler = { type: "brreg"; orgnr: string; navn: string; adresse?: Adresse } | { type: "fritekst"; navn: string };
 
 // Contact with the dealer so far. nei = not contacted; venter = complained, no answer yet or a repair is under way;
 // avvist = the dealer refused; forsokt = the dealer tried to repair without success.

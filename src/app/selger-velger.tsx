@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { tittel } from "@/lib/brreg";
 
 export type Forslag = { orgnr: string; navn: string; kommune: string | null; bransje: string | null; status: string | null };
 type Valg =
   | { type: "brreg"; orgnr: string; navn: string }
   | { type: "fritekst"; navn: string }
   | { type: "privat" };
-
-export const tittel = (s: string) => s.toLowerCase().replace(/(^|[\s\-.(])(\p{L})/gu, (_, a, b) => a + b.toUpperCase()).replace(/\b(As|Asa)\b/g, (m) => m.toUpperCase());
 
 export function SelgerVelger() {
   const id = useId();

@@ -1,4 +1,4 @@
-import { ABSOLUTT_FRIST_AR, iDag, leggTilManeder } from "./faktorer";
+import { ABSOLUTT_FRIST_AR, erDato, iDag, leggTilManeder } from "./faktorer";
 import { FEILOPPLYSNING_VALG, KONTAKT_VALG, OPPDAGET_VALG, type FeilKnapp, type KlageInput, type Kontakt, type Oppdaget } from "./typer";
 
 // What the form collects (steps 1–4) and the checks shared by the client (enables «Neste») and the
@@ -29,8 +29,7 @@ type JaNei = (typeof JA_NEI)[number] | "";
 export type Steg = 1 | 2 | 3 | 4;
 
 export type Innsending = {
-  kjopManed: string; // "1"–"12"
-  kjopAr: string; // four digits
+  kjopsdato: string; // the day of the purchase, ÅÅÅÅ-MM-DD
   kjopesum: string; // whole kroner, digits only
   kmVedKjop: string; // odometer at purchase, digits only
   feiltyper: FeilKnapp[];
@@ -46,8 +45,7 @@ export type Innsending = {
 };
 
 export const TOM_INNSENDING: Innsending = {
-  kjopManed: "",
-  kjopAr: "",
+  kjopsdato: "",
   kjopesum: "",
   kmVedKjop: "",
   feiltyper: [],
@@ -67,14 +65,8 @@ const jaNei = (v: string): v is "ja" | "nei" => v === "ja" || v === "nei";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-// The first day of the purchase month, for «has at least this long passed» checks.
-const forsteIMaaned = (i: Innsending) => `${i.kjopAr}-${pad(Number(i.kjopManed))}-01`;
-
-// The last day of the purchase month. The form asks for month and year only, and the later date
-// gives the buyer the benefit of the doubt on the five-year deadline.
-export function kjopsdatoFra(i: Pick<Innsending, "kjopManed" | "kjopAr">): string {
-  return sisteIMaaned(i.kjopAr, i.kjopManed);
-}
+// The purchase date is a real day from FRA_AR on, not in the future.
+export const gyldigKjopsdato = (dato: string, idag = iDag()): boolean => erDato(dato) && Number(dato.slice(0, 4)) >= FRA_AR && dato <= idag;
 
 function sisteIMaaned(ar: string, maned: string): string {
   const siste = new Date(Date.UTC(Number(ar), Number(maned), 0)).getUTCDate();
@@ -83,30 +75,30 @@ function sisteIMaaned(ar: string, maned: string): string {
 
 // Has the purchase passed the five-year deadline, so that it matters when the buyer first complained?
 // Same date as the engine uses, so the form asks exactly when the answer can change the result.
-export function sporOmReklamasjonsdato(i: Pick<Innsending, "kjopManed" | "kjopAr" | "kontakt">, idag = iDag()): boolean {
-  if (!i.kontakt || i.kontakt === "nei" || !heltall(i.kjopManed, 1, 12) || !heltall(i.kjopAr, FRA_AR, 9999)) return false;
-  return idag > leggTilManeder(kjopsdatoFra(i), ABSOLUTT_FRIST_AR * 12);
+export function sporOmReklamasjonsdato(i: Pick<Innsending, "kjopsdato" | "kontakt">, idag = iDag()): boolean {
+  if (!i.kontakt || i.kontakt === "nei" || !gyldigKjopsdato(i.kjopsdato, idag)) return false;
+  return idag > leggTilManeder(i.kjopsdato, ABSOLUTT_FRIST_AR * 12);
 }
 
 function reklamasjonsdatoFeil(i: Innsending, idag: string): string | null {
   if (!heltall(i.reklamasjonManed, 1, 12) || !heltall(i.reklamasjonAr, FRA_AR, 9999)) return "Velg når du første gang tok opp feilen med forhandleren.";
   if (`${i.reklamasjonAr}-${pad(Number(i.reklamasjonManed))}-01` > idag) return "Reklamasjonen kan ikke være i fremtiden.";
-  if (sisteIMaaned(i.reklamasjonAr, i.reklamasjonManed) < forsteIMaaned(i)) return "Du kan ikke ha reklamert før du kjøpte bilen.";
+  if (sisteIMaaned(i.reklamasjonAr, i.reklamasjonManed) < i.kjopsdato) return "Du kan ikke ha reklamert før du kjøpte bilen.";
   return null;
 }
 
 const MIN_MANEDER: Record<Oppdaget, number> = { innen_6_mnd: 0, "6_mnd_til_2_ar": 6, over_2_ar: 24 };
 
-// Can the defect have shown this long after the purchase? Needs year and month to be chosen.
-export function oppdagetMulig(i: Pick<Innsending, "kjopManed" | "kjopAr">, oppdaget: Oppdaget, idag = iDag()): boolean {
-  if (!heltall(i.kjopManed, 1, 12) || !heltall(i.kjopAr, FRA_AR, 9999)) return false;
-  return leggTilManeder(`${i.kjopAr}-${pad(Number(i.kjopManed))}-01`, MIN_MANEDER[oppdaget]) <= idag;
+// Can the defect have shown this long after the purchase? Needs the purchase date to be chosen.
+export function oppdagetMulig(i: Pick<Innsending, "kjopsdato">, oppdaget: Oppdaget, idag = iDag()): boolean {
+  if (!gyldigKjopsdato(i.kjopsdato, idag)) return false;
+  return leggTilManeder(i.kjopsdato, MIN_MANEDER[oppdaget]) <= idag;
 }
 
 function feil(i: Innsending, steg: Steg, idag: string): string | null {
   if (steg === 1) {
-    if (!heltall(i.kjopManed, 1, 12) || !heltall(i.kjopAr, FRA_AR, 9999)) return "Velg når du kjøpte bilen.";
-    if (forsteIMaaned(i) > idag) return "Kjøpet kan ikke være i fremtiden.";
+    if (!erDato(i.kjopsdato) || Number(i.kjopsdato.slice(0, 4)) < FRA_AR) return "Velg når du kjøpte bilen.";
+    if (i.kjopsdato > idag) return "Kjøpet kan ikke være i fremtiden.";
     if (!heltall(i.kjopesum, 1, MAKS_KJOPESUM)) return "Oppgi hva bilen kostet.";
     if (!heltall(i.kmVedKjop, 0, MAKS_KM)) return "Oppgi kilometerstanden da du kjøpte bilen.";
   }
@@ -133,12 +125,19 @@ export const stegGyldig = (i: Innsending, steg: Steg, idag = iDag()): boolean =>
 
 const tekst = (v: unknown) => (typeof v === "string" ? v : "");
 
+// The purchase date. Older links and saved cases carry month and year only (`kjopManed`, `kjopAr`);
+// those become the last day of that month, as the form used to assume.
+function kjopsdatoFra(r: Record<string, unknown>): string {
+  if (tekst(r.kjopsdato)) return tekst(r.kjopsdato);
+  const [ar, maned] = [tekst(r.kjopAr), tekst(r.kjopManed)];
+  return heltall(ar, FRA_AR, 9999) && heltall(maned, 1, 12) ? sisteIMaaned(ar, maned) : "";
+}
+
 // Reads untrusted key/value input (request body or URL parameters) into the form state; anything
 // unrecognised is dropped or left empty, so the result still has to pass `feil`.
 export function lesInnsending(r: Record<string, unknown>): Innsending {
   return {
-    kjopManed: tekst(r.kjopManed),
-    kjopAr: tekst(r.kjopAr),
+    kjopsdato: kjopsdatoFra(r),
     kjopesum: tekst(r.kjopesum),
     kmVedKjop: tekst(r.kmVedKjop),
     feiltyper: Array.isArray(r.feiltyper) ? (r.feiltyper.filter((t): t is FeilKnapp => FEILTYPER_KNAPPER.includes(t)) as FeilKnapp[]) : [],
@@ -169,7 +168,9 @@ export function tilParametre(i: Innsending): URLSearchParams {
 // `URLSearchParams`.
 export function fraParametre(p: Record<string, string | string[] | undefined> | URLSearchParams): Innsending {
   const hent = (k: string) => (p instanceof URLSearchParams ? p.get(k) : Array.isArray(p[k]) ? p[k][0] : p[k]) ?? "";
-  return lesInnsending({ ...Object.fromEntries(Object.keys(TOM_INNSENDING).map((k) => [k, hent(k)])), feiltyper: hent("feiltyper").split(",") });
+  // `kjopAr` and `kjopManed` are what older links carry instead of `kjopsdato`.
+  const kjente = [...Object.keys(TOM_INNSENDING), "kjopAr", "kjopManed"];
+  return lesInnsending({ ...Object.fromEntries(kjente.map((k) => [k, hent(k)])), feiltyper: hent("feiltyper").split(",") });
 }
 
 // The first step whose answers are missing or wrong, or null when the whole form is valid.
@@ -190,7 +191,7 @@ export function tilKlageInput(raw: unknown, idag = iDag()): { ok: true; input: K
     ok: true,
     input: {
       kvalifisering: { selgerType: "forhandler", privatBruk: true },
-      bilOgKjop: { kjopsdato: kjopsdatoFra(i), kjopesumNok: Number(i.kjopesum), kmVedKjop: Number(i.kmVedKjop) },
+      bilOgKjop: { kjopsdato: i.kjopsdato, kjopesumNok: Number(i.kjopesum), kmVedKjop: Number(i.kmVedKjop) },
       feilen: {
         typer: [...new Set(i.feiltyper)],
         oppdaget: i.oppdaget as Oppdaget,

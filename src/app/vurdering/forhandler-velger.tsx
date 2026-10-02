@@ -2,23 +2,24 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { Forhandler } from "@/lib/vurdering/typer";
-import { tittel, type Forslag } from "../selger-velger";
+import { tilForhandler, tittel, type Forslag } from "@/lib/brreg";
 
 const gruppertOrgnr = (s: string) => s.replace(/^(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3");
 
-// Not used by the assessment form; kept for the letter step, which needs the dealer.
-// Dealer name with Brreg suggestions (/api/firma). A suggestion gives a «brreg» value with org.nr;
+// Dealer step of the letter page. Name or organisation number with Brreg suggestions (/api/firma). A suggestion gives a «brreg» value with org.nr;
 // anything typed freely stays a «fritekst» value, so a dealer missing from the register still works.
 export function ForhandlerVelger({
   value,
   onChange,
   inputClass,
   labelClass,
+  placeholder,
 }: {
   value: Forhandler;
   onChange: (v: Forhandler) => void;
   inputClass: string;
   labelClass: string;
+  placeholder?: string;
 }) {
   const id = useId();
   const [forslag, setForslag] = useState<Forslag[]>([]);
@@ -55,7 +56,7 @@ export function ForhandlerVelger({
   const velg = (i: number) => {
     const f = liste[i];
     if (!f) return;
-    onChange({ type: "brreg", orgnr: f.orgnr, navn: tittel(f.navn) });
+    onChange(tilForhandler(f));
     setApen(false);
   };
 
@@ -88,6 +89,7 @@ export function ForhandlerVelger({
         aria-activedescendant={visListe && aktiv >= 0 ? `${id}-${aktiv}` : undefined}
         aria-autocomplete="list"
         autoComplete="off"
+        placeholder={placeholder}
         className={inputClass}
         value={tekst}
         onChange={(e) => {
@@ -124,7 +126,7 @@ export function ForhandlerVelger({
                 <span className="ml-2 rounded bg-[oklch(0.95_0.03_25)] px-1.5 py-0.5 text-[12px] text-[oklch(0.42_0.12_25)]">{f.status}</span>
               )}
               <span className="mt-0.5 block text-[13px] leading-[1.4] text-[#5b6472]">
-                {[f.kommune && tittel(f.kommune), f.bransje, `org.nr ${gruppertOrgnr(f.orgnr)}`].filter(Boolean).join(" · ")}
+                {[f.kommune && tittel(f.kommune), `org.nr ${gruppertOrgnr(f.orgnr)}`].filter(Boolean).join(" · ")}
               </span>
             </li>
           ))}

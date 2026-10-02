@@ -23,3 +23,33 @@ Inneholder ett rad per vedtak fra Forbrukertvistutvalget/Forbrukerklageutvalget 
 - Tekstfeltene er renset: klager = `[KLAGER]`, alle andre personer = `[PERSON]`, plassholdere for adresse/regnr/telefon. **Ikke lagre eller vis rå PDF-tekst, navn, adresser eller regnummer**; rå PDF-er ligger bare i `data/raw/` (git-ignorert).
 
 **Vedlikehold:** `README.md` beskriver kjøringsrekkefølge (`hent` → `klassifiser` → `tolk` → `rapport`) og sikkerhetskopi (`npm run db:backup`). Ta kopi før `tolk --på-nytt`. Endres prompt eller skjema i `src/lib/ai/`, øk versjonen i `src/lib/ai/prompter.ts`.
+
+## Tabellen `brevsak`
+
+Én rad per reklamasjonsbrev en bruker jobber med: svarene fra vurderingsskjemaet (`svar`) og det som er fylt inn på brevsiden (`utfylling`). Skjema: `src/db/schema.ts`. All tilgang går gjennom `src/lib/brev/sak.ts`, og alt som lagres valideres i `src/lib/brev/utfylling.ts`.
+
+- **Inneholder personopplysninger** (navn, adresse, registreringsnummer), i motsetning til `vedtak`. Derfor: tabellen er ikke med i `npm run db:backup`, ingenting fra en sak skal logges, og fritekst og navn sendes aldri til en språkmodell sammen.
+- **Tilgang:** `id` er 128 tilfeldige bit og er eneste adgangskontroll (`/brev/[id]`). Ikke lag lister over saker eller ruter som slår opp på noe annet enn id.
+- **Sletting:** en sak utløper 30 dager etter siste endring. Den slettes når den åpnes etter utløp, av `npm run rydd`, eller når brukeren trykker «Slett saken».
+
+## E2E-testing med Playwright
+
+`npm run test:e2e` kjører flytene i `e2e/` i en ekte nettleser, i desktop- og mobilbredde. `npm test` (Vitest) tester reglene i `src/lib/`; Playwright tester at siden virker for en bruker. Testene er vanlig kode og kjører uten AI.
+
+**Hver plan for en feature som endrer noe brukeren ser, skal ha en seksjon «E2E-tester»** med scenariene som skal dekkes: hovedløpet, betingede spørsmål, feiltilstander, og hvilke eksisterende tester endringen påvirker. Scenariene godkjennes sammen med planen.
+
+**Arbeidsgang**
+1. *Plan:* scenariene skrives i planen. For større flyter utforsker `playwright-test-planner` den kjørende appen og lagrer en testplan i `specs/<feature>.md`.
+2. *Underveis:* etter hver del av UI-et som er ferdig, sjekk den i nettleseren (Playwright MCP) og kjør `npm run test:e2e`. Skriv eller generer testen når UI-et finnes (`playwright-test-generator` verifiserer hvert steg mot kjørende app).
+3. *Til slutt:* en feature er ikke ferdig før `npm run test:e2e`, `npm test` og `npm run typecheck` er grønne. Lim inn resultatet i oppsummeringen.
+4. *Rød test:* les feilmeldingen og `test-results/` (skjermbilde, trace) før noe endres. Skyldes feilen en bevisst UI-endring, oppdateres testen (`playwright-test-healer`). Skyldes den en feil i appen, rettes appen. Forventninger skal aldri svekkes og tester aldri settes til `test.fixme`/`skip` for å få grønt; meld fra i stedet.
+
+**Regler for testene**
+- Importer `test` og `expect` fra `e2e/fixtures.ts`, og bruk sideobjektet `skjema`. Utvid det når skjemaet får nye felt.
+- Finn elementer på rolle og synlig tekst (`getByRole`, `getByLabel`). `data-testid` bare når elementet ikke har rolle eller tekst.
+- Bare web-first assertions (`await expect(locator)…`). Aldri `waitForTimeout` eller `networkidle`.
+- Brevtestene åpner ekte saker med fixturen `sak`, som sletter dem etterpå. Oppslag mot Statens vegvesen (`/api/kjoretoy`), Brreg (`/api/firma`) og språkvasken (`/api/sak/*/sprakvask`) mockes med `page.route()`.
+- Mock `/api/vurder` med `page.route()`, unntatt i flyttestene (`registreringsflyt.spec.ts`), som går mot ekte database og derfor sjekker struktur, ikke antall vedtak. Kall mot språkmodeller mockes alltid.
+- `/api/vurder` tillater 10 kall per minutt per adresse. Fixturen sender en egen `x-forwarded-for` per test; behold den.
+- Datoavhengige valg: bruk relative år (for eksempel i fjor) eller `page.clock.setFixedTime`.
+- Testdata er oppdiktede tall. Ingen navn, adresser eller regnummer, heller ikke i `specs/`.

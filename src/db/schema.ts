@@ -12,6 +12,8 @@ import {
   timestamp,
   unique,
 } from "drizzle-orm/pg-core";
+import type { Utfylling } from "../lib/brev/utfylling";
+import type { Innsending } from "../lib/vurdering/innsending";
 
 export const kildeArkivEnum = pgEnum("kilde_arkiv", ["hist", "prod", "wp"]);
 export const dokumentStatusEnum = pgEnum("dokument_status", [
@@ -183,6 +185,23 @@ export const kildesak = pgTable(
     oppdatert: timestamp("oppdatert", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique("kildesak_arkiv_id_uq").on(t.kildeArkiv, t.eksternId), index("kildesak_status_idx").on(t.status)],
+);
+
+// A user's letter case: the answers from the assessment form and what has been filled in on the
+// letter page. Unlike the decision tables this holds personal data (name, address, registration
+// number), so it is left out of the backups (scripts/backup-format.ts) and rows are deleted when
+// they expire. The id is random and is the only access control: whoever has the link sees the case.
+export const brevsak = pgTable(
+  "brevsak",
+  {
+    id: text("id").primaryKey(),
+    svar: jsonb("svar").$type<Innsending>().notNull(),
+    utfylling: jsonb("utfylling").$type<Utfylling>().notNull(),
+    opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
+    endret: timestamp("endret", { withTimezone: true }).notNull().defaultNow(),
+    utloper: timestamp("utloper", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("brevsak_utloper_idx").on(t.utloper)],
 );
 
 export type Kildedokument = typeof kildedokument.$inferSelect;

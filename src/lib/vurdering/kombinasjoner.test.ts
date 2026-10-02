@@ -42,8 +42,8 @@ function lagInnsending(): Innsending {
   const { ar, maned } = kjopMaaned();
   const i: Innsending = {
     feiltyper: [],
-    kjopAr: String(ar),
-    kjopManed: String(maned),
+    // The end of the month, but not after today: the form no longer accepts a purchase in the future.
+    kjopsdato: maanedsslutt(ar, maned) > IDAG ? IDAG : maanedsslutt(ar, maned),
     kjopesum: "",
     kmVedKjop: "",
     oppdaget: "",
@@ -95,9 +95,9 @@ const maanedsslutt = (ar: number, maned: number) => new Date(Date.UTC(ar, maned,
 type Forventet = { niva: "sterk" | "middels" | "svak" | "ikke_aktuell"; fristUte: boolean };
 
 function forventet(i: Innsending, s: Statistikk): Forventet {
-  const kjopAr = Number(i.kjopAr);
-  const kjopManed = Number(i.kjopManed);
-  const kjop = maanedsslutt(kjopAr, kjopManed);
+  const kjop = i.kjopsdato;
+  const kjopAr = Number(kjop.slice(0, 4));
+  const kjopManed = Number(kjop.slice(5, 7));
 
   // Complaining is possible for five years. With no complaint yet it is today that counts; otherwise the first complaint.
   const fristSlutt = maanedsslutt(kjopAr + 5, kjopManed);
@@ -232,7 +232,7 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
           if (e.treff === "generell") avvik.push(`${merke}: har feilgruppe men fikk generelt eksempel`);
           if (!grupper.some((g) => e.setning.includes(FRASE[g]!))) avvik.push(`${merke}: eksempelet handler ikke om en av de valgte feilene (${grupper.join(", ")}): ${e.setning}`);
         }
-        if (e.setning.includes("gjort kjent med feilen") && !(f.niva === "svak" && i.opplystForKjop === "ja" && i.feilOpplysning === "nei" && Number(i.kjopAr) < 2024)) {
+        if (e.setning.includes("gjort kjent med feilen") && !(f.niva === "svak" && i.opplystForKjop === "ja" && i.feilOpplysning === "nei" && Number(i.kjopsdato.slice(0, 4)) < 2024)) {
           avvik.push(`${merke}: «opplyst»-eksempel uten at feilen var opplyst`);
         }
       }
@@ -284,11 +284,11 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
   });
 
   it("ruten avviser skjemaer som ikke kan stemme", async () => {
-    const mal = innsendinger.find((i) => i.kjopAr === "2022" && i.verkstedrapport === "nei")!;
-    const stor = { ...mal, kjopAr: "2027" };
+    const mal = innsendinger.find((i) => i.kjopsdato.startsWith("2022") && i.verkstedrapport === "nei")!;
+    const stor = { ...mal, kjopsdato: "2027-03-31" };
     const ukjentOppdaget = { ...mal, oppdaget: "aldri" };
     const utenFeil = { ...mal, feiltyper: [] };
-    const nyligKjop = { ...mal, kjopAr: "2026", kjopManed: "9", oppdaget: "over_2_ar" };
+    const nyligKjop = { ...mal, kjopsdato: "2026-09-30", oppdaget: "over_2_ar" };
     const uten = { ...mal, kontakt: "" };
     for (const [navn, kropp] of Object.entries({ stor, ukjentOppdaget, utenFeil, nyligKjop, uten, tom: {}, liste: [] })) {
       const res = await POST(new Request("http://localhost/api/vurder", { method: "POST", headers: { "x-forwarded-for": `10.2.0.${navn.length}${navn.charCodeAt(0)}` }, body: JSON.stringify(kropp) }));

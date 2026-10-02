@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Logo } from "@/app/logo";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { FEILTYPER_KNAPPER, forsteUgyldigeSteg, FRA_AR, JA_NEI, oppdagetMulig, OPPLYST_VALG, sporOmReklamasjonsdato, stegGyldig, tilParametre, type Innsending, type Steg } from "@/lib/vurdering/innsending";
-import { presumsjonManederFor } from "@/lib/vurdering/faktorer";
+import { iDag, presumsjonManederFor } from "@/lib/vurdering/faktorer";
 import { KONTAKT_VALG, OPPDAGET_VALG, type Kontakt, type Niva, type Oppdaget } from "@/lib/vurdering/typer";
 
 // How close the example decision is to the buyer's case; see finnEksempel.
@@ -226,14 +228,6 @@ const KORT = "overflow-hidden rounded-lg border border-[#dcd8cf] bg-white";
 const RAD = "flex gap-3.5 border-b border-[#eceae4] px-6 py-[18px] last:border-b-0";
 const SEKSJON_TITTEL = "m-0 font-brev text-[24px] font-semibold leading-[1.3]";
 
-function Logo({ liten }: { liten?: boolean }) {
-  return (
-    <div className={`font-brev font-semibold leading-none ${liten ? "text-[21px] md:text-[24px]" : "text-[24px]"}`}>
-      Tvistr<span className="font-normal text-[#8a94a3]">.no</span>
-    </div>
-  );
-}
-
 // Indeterminate on purpose: we cannot know how long the assessment takes.
 function Venter() {
   return (
@@ -262,10 +256,12 @@ function Venter() {
 
 const PRIS_NOK = 249;
 
-function Vipps({ tekst }: { tekst: string }) {
+function Vipps({ tekst, onClick, disabled }: { tekst: string; onClick: () => void; disabled: boolean }) {
   return (
     <button
       type="button"
+      onClick={onClick}
+      disabled={disabled}
       className="flex items-center justify-center gap-2 rounded-full bg-[#ff5b24] p-4 font-ui text-[16px] font-semibold text-white shadow-[0_1px_0_rgba(0,0,0,.12)] md:text-[17px]"
     >
       <span>{tekst}</span>
@@ -279,7 +275,7 @@ function Vipps({ tekst }: { tekst: string }) {
 // to vedtaksdato, computed 2026-10-01). It was 357 days before 2021. Recompute when `hent` has added more.
 const TID_TIL_VEDTAK = "Saker som ender hos Forbrukerklageutvalget tar nå typisk rundt to år. Et godt brev kan løse saken før det.";
 
-// UI only: the payment buttons do nothing yet.
+// Payment is not built yet: both buttons open the letter. Payment goes in front of it later.
 const LIGNENDE_SAKER = "Henvisninger til lignende saker som fikk medhold";
 const NESTE_PUNKTER = [
   "Formuleringer etter og henvisninger til lovverk",
@@ -290,8 +286,21 @@ const NESTE_PUNKTER = [
 ];
 
 // The line about similar cases is only promised when we have one to refer to.
-function Neste({ niva, medEksempel }: { niva: Niva; medEksempel: boolean }) {
+// `apneBrev` opens the letter and returns an error message if that failed.
+function Neste({ niva, medEksempel, apneBrev }: { niva: Niva; medEksempel: boolean; apneBrev: () => Promise<string | null> }) {
   const punkter = NESTE_PUNKTER.filter((p) => medEksempel || p !== LIGNENDE_SAKER);
+  const [apner, setApner] = useState(false);
+  const [feil, setFeil] = useState<string | null>(null);
+  async function apne() {
+    setApner(true);
+    setFeil(null);
+    const f = await apneBrev();
+    // On success the page is on its way to the letter; keep the buttons disabled meanwhile.
+    if (f) {
+      setFeil(f);
+      setApner(false);
+    }
+  }
   return (
     <aside className="flex flex-col gap-3 bg-[#17263d] px-6 pb-6 pt-5 text-[#f6f4ef] md:sticky md:top-6 md:gap-5 md:self-start md:rounded-lg md:p-9">
       <div className="font-ui text-[12px] font-medium uppercase tracking-[.04em] text-[#8a9bb5] md:text-[13px]">Neste steg</div>
@@ -315,13 +324,20 @@ function Neste({ niva, medEksempel }: { niva: Niva; medEksempel: boolean }) {
         <span className="font-ui text-[16px] font-semibold">Totalt</span>
         <span className="font-brev text-[28px] font-semibold">{PRIS_NOK} kr</span>
       </div>
-      <Vipps tekst="Betal med" />
+      <Vipps tekst="Betal med" onClick={apne} disabled={apner} />
       <button
         type="button"
-        className="rounded-[6px] border border-[rgba(246,244,239,.45)] p-3.5 text-center font-ui text-[15px] font-semibold text-[#f6f4ef] md:p-[15px]"
+        onClick={apne}
+        disabled={apner}
+        className="block rounded-[6px] border border-[rgba(246,244,239,.45)] p-3.5 text-center font-ui text-[15px] font-semibold text-[#f6f4ef] md:p-[15px]"
       >
         Betal med kort
       </button>
+      {feil && (
+        <p role="alert" className="m-0 font-ui text-[13px] leading-[1.5] text-[#ffb4a6]">
+          {feil}
+        </p>
+      )}
       <p className="m-0 text-center font-ui text-[12px] text-[#aab6c7] md:text-left md:text-[13px] md:leading-[1.55]">
         Engangsbeløp, ingen abonnement.<span className="hidden md:inline"> {TID_TIL_VEDTAK}</span>
       </p>
@@ -353,7 +369,7 @@ function Vekt({ vekt }: { vekt: "for" | "mot" | "noytral" }) {
   );
 }
 
-function Vurdering({ resultat, endre }: { resultat: Resultat; endre: () => void }) {
+function Vurdering({ resultat, endre, apneBrev }: { resultat: Resultat; endre: () => void; apneBrev: () => Promise<string | null> }) {
   const v = NIVA_VISNING[resultat.niva];
   return (
     <div className="flex min-h-screen flex-col bg-[#f6f4ef] font-ui text-[#17263d]">
@@ -453,7 +469,7 @@ function Vurdering({ resultat, endre }: { resultat: Resultat; endre: () => void 
         </div>
         {resultat.niva !== "ikke_aktuell" && (
           <div className="mt-auto md:mt-0">
-            <Neste niva={resultat.niva} medEksempel={resultat.eksempel?.utfall === "vunnet" && resultat.eksempel.treff === "lignende"} />
+            <Neste niva={resultat.niva} medEksempel={resultat.eksempel?.utfall === "vunnet" && resultat.eksempel.treff === "lignende"} apneBrev={apneBrev} />
           </div>
         )}
       </div>
@@ -461,10 +477,13 @@ function Vurdering({ resultat, endre }: { resultat: Resultat; endre: () => void 
   );
 }
 
-// The answers and the step live in the URL (`?kjopAr=2024&…&steg=2`), so a link opens the form where
+// The answers and the step live in the URL (`?kjopsdato=2024-03-12&…&steg=2`), so a link opens the form where
 // it was. A complete set of answers without `steg` is a link to the assessment itself.
-export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startSteg: number }) {
+// `sakId` is set when the user came back from a letter: opening the letter again then goes to the
+// same case, with the answers as they are now, so nothing filled in there is lost.
+export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending; startSteg: number; sakId?: string }) {
   const id = useId();
+  const router = useRouter();
   const forsteUgyldig = forsteUgyldigeSteg(startSvar);
   const visVurdering = forsteUgyldig === null && !startSteg;
   const [steg, setSteg] = useState<Steg>(() => {
@@ -481,14 +500,12 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
   const [resultat, setResultat] = useState<Resultat | null>(null);
 
   const sett = <K extends keyof Innsending>(k: K, v: Innsending[K]) => setD((x) => ({ ...x, [k]: v }));
-  const aar = Array.from({ length: new Date().getFullYear() - FRA_AR + 1 }, (_, n) => String(new Date().getFullYear() - n)).slice(0, 11);
+  const idag = iDag();
 
-  // Changing the purchase time can make the chosen «how long after» impossible, or a month in the
-  // current year too late; clear what no longer fits.
-  function settKjop(endring: Partial<Pick<Innsending, "kjopAr" | "kjopManed">>) {
+  // Changing the purchase date can make the chosen «how long after» impossible; clear what no longer fits.
+  function settKjop(kjopsdato: string) {
     setD((x) => {
-      const ny = { ...x, ...endring };
-      if (ny.kjopAr === String(naa.getFullYear()) && Number(ny.kjopManed) > naa.getMonth() + 1) ny.kjopManed = "";
+      const ny = { ...x, kjopsdato };
       if (ny.oppdaget && !oppdagetMulig(ny, ny.oppdaget)) ny.oppdaget = "";
       // When only one answer fits, there is nothing to choose: pick it.
       const mulige = OPPDAGET_VALG.filter((v) => oppdagetMulig(ny, v));
@@ -497,12 +514,11 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
     });
   }
 
-  // In the current year only months up to and including this one can have passed.
   const naa = new Date();
-  const sisteManed = d.kjopAr === String(naa.getFullYear()) ? naa.getMonth() + 1 : 12;
 
-  // Returns an error message, or null when the result was set.
-  async function hent(data: Innsending): Promise<string | null> {
+  // Returns an error message, or null when the result was set. `avbrutt` says the caller no longer
+  // wants the answer (the effect was cleaned up), so a late answer cannot bring the result back.
+  async function hent(data: Innsending, avbrutt: () => boolean = () => false): Promise<string | null> {
     try {
       const res = await fetch("/api/vurder", {
         method: "POST",
@@ -511,6 +527,7 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
       });
       const json = (await res.json()) as Partial<Resultat> & { feil?: string };
       if (!res.ok || !json.niva || !json.tittel || !json.begrunnelse) throw new Error(json.feil ?? "Noe gikk galt.");
+      if (avbrutt()) return null;
       setResultat({
         niva: json.niva,
         tittel: json.tittel,
@@ -527,26 +544,33 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
   }
 
   // Keeps the address in step with the answers without adding history entries.
-  function oppdaterUrl(data: Innsending, s: Steg | null) {
+  function oppdaterUrl(data: Innsending, s: Steg | null, sak: string | undefined) {
     const p = tilParametre(data);
     if (s) p.set("steg", String(s));
+    if (sak) p.set("sak", sak);
     window.history.replaceState(null, "", `?${p}`);
   }
 
   useEffect(() => {
     if (!visVurdering) return;
-    void hent(startSvar).then((f) => {
+    // React runs this effect twice in development; only the answer to the last call counts.
+    let avbrutt = false;
+    void hent(startSvar, () => avbrutt).then((f) => {
+      if (avbrutt) return;
       setFeil(f);
       if (f) setSteg(1);
       setSender(false);
     });
+    return () => {
+      avbrutt = true;
+    };
     // Only the link that opened the page is fetched.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (!resultat && !sender) oppdaterUrl(d, steg);
-  }, [d, steg, resultat, sender]);
+    if (!resultat && !sender) oppdaterUrl(d, steg, sakId);
+  }, [d, steg, resultat, sender, sakId]);
 
   async function neste() {
     if (!stegGyldig(d, steg)) return;
@@ -555,14 +579,30 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
     setSender(true);
     const f = await hent(d);
     setFeil(f);
-    if (!f) oppdaterUrl(d, null);
+    if (!f) oppdaterUrl(d, null, sakId);
     setSender(false);
+  }
+
+  async function apneBrev(): Promise<string | null> {
+    try {
+      const res = await fetch("/api/sak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...d, ...(sakId && { sak: sakId }) }),
+      });
+      const json = (await res.json()) as { id?: string; feil?: string };
+      if (!res.ok || !json.id) return json.feil ?? "Noe gikk galt. Prøv igjen.";
+      router.push(`/brev/${json.id}`);
+      return null;
+    } catch {
+      return "Noe gikk galt. Prøv igjen.";
+    }
   }
 
   if (sender) return <Venter />;
 
   if (resultat) {
-    return <Vurdering resultat={resultat} endre={() => { setSteg(1); setResultat(null); }} />;
+    return <Vurdering resultat={resultat} endre={() => { setSteg(1); setResultat(null); }} apneBrev={apneBrev} />;
   }
 
   const tilbake =
@@ -596,35 +636,17 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
         {steg === 1 && (
           <>
             <div className={INNHOLD}>
-              <div role="group" aria-labelledby={`${id}-kjopt`} className="flex flex-col gap-2.5 md:gap-3">
-                <span id={`${id}-kjopt`} className={LABEL}>
-                  Når kjøpte du bilen?
-                </span>
-                <div className="grid grid-cols-2 gap-2.5 md:max-w-[440px] md:gap-3">
-                  <Rullegardin label="År kjøpt" value={d.kjopAr} onChange={(e) => settKjop({ kjopAr: e.target.value })}>
-                    <option value="">År</option>
-                    {aar.map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
-                  </Rullegardin>
-                  <Rullegardin
-                    label="Måned kjøpt"
-                    className="disabled:opacity-40"
-                    disabled={!d.kjopAr}
-                    value={d.kjopManed}
-                    onChange={(e) => settKjop({ kjopManed: e.target.value })}
-                  >
-                    <option value="">Måned</option>
-                    {MANEDER.slice(0, sisteManed).map((m, n) => (
-                      <option key={m} value={String(n + 1)}>
-                        {m}
-                      </option>
-                    ))}
-                  </Rullegardin>
-                </div>
-              </div>
+              <label className="flex flex-col gap-2.5 md:max-w-[440px] md:gap-3">
+                <span className={LABEL}>Når kjøpte du bilen?</span>
+                <input
+                  type="date"
+                  className={INPUT}
+                  min={`${FRA_AR}-01-01`}
+                  max={idag}
+                  value={d.kjopsdato}
+                  onChange={(e) => settKjop(e.target.value)}
+                />
+              </label>
               <div className="grid grid-cols-1 gap-5 md:max-w-[440px] md:grid-cols-2 md:gap-3">
                 <label className="flex flex-col gap-2.5 md:gap-3">
                   <span className={LABEL}>Hva kostet bilen?</span>
@@ -690,9 +712,9 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
                   deaktivert={(v) => !oppdagetMulig(d, v)}
                 />
                 {/* The period turns on 1 January, so the year alone decides it. */}
-                {d.kjopAr && (
+                {d.kjopsdato && (
                   <p className="m-0 hidden text-[13px] leading-[1.5] text-[#5b6472] md:block">
-                    {presumsjonManederFor(`${d.kjopAr}-12-31`) === 24 ? "Innen 2 år" : "Innen 6 måneder"} antas feilen å ha vært der ved levering. Da står du sterkere.
+                    {presumsjonManederFor(d.kjopsdato) === 24 ? "Innen 2 år" : "Innen 6 måneder"} antas feilen å ha vært der ved levering. Da står du sterkere.
                   </p>
                 )}
               </div>
@@ -770,7 +792,7 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
                   <div className="grid grid-cols-2 gap-2.5 md:max-w-[440px] md:gap-3">
                     <Rullegardin label="År reklamert" value={d.reklamasjonAr} onChange={(e) => sett("reklamasjonAr", e.target.value)}>
                       <option value="">År</option>
-                      {Array.from({ length: naa.getFullYear() - Number(d.kjopAr) + 1 }, (_, n) => String(Number(d.kjopAr) + n)).map((a) => (
+                      {Array.from({ length: naa.getFullYear() - Number(d.kjopsdato.slice(0, 4)) + 1 }, (_, n) => String(Number(d.kjopsdato.slice(0, 4)) + n)).map((a) => (
                         <option key={a} value={a}>
                           {a}
                         </option>

@@ -95,6 +95,17 @@ export function oppdagetMulig(i: Pick<Innsending, "kjopsdato">, oppdaget: Oppdag
   return leggTilManeder(i.kjopsdato, MIN_MANEDER[oppdaget]) <= idag;
 }
 
+// The answers with a new purchase date. The purchase date decides how long after it the defect can
+// have shown, so a chosen «how long after» that no longer fits is cleared, and when only one answer
+// fits there is nothing to choose: it is picked.
+export function medKjopsdato(i: Innsending, kjopsdato: string, idag = iDag()): Innsending {
+  const ny = { ...i, kjopsdato };
+  if (ny.oppdaget && !oppdagetMulig(ny, ny.oppdaget, idag)) ny.oppdaget = "";
+  const mulige = OPPDAGET_VALG.filter((v) => oppdagetMulig(ny, v, idag));
+  if (!ny.oppdaget && mulige.length === 1) ny.oppdaget = mulige[0];
+  return ny;
+}
+
 function feil(i: Innsending, steg: Steg, idag: string): string | null {
   if (steg === 1) {
     if (!erDato(i.kjopsdato) || Number(i.kjopsdato.slice(0, 4)) < FRA_AR) return "Velg når du kjøpte bilen.";

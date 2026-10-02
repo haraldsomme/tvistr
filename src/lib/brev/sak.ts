@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { brevsak } from "@/db/schema";
 import { iDag } from "@/lib/vurdering/faktorer";
 import { lesInnsending, type Innsending } from "@/lib/vurdering/innsending";
+import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 import { erSakId, medEndring, tilpassTilSvar, utloperEtter, type Endring, type Utfylling } from "./utfylling";
 
 // The stored letter cases. A case holds personal data, so: the id is unguessable and is the only
@@ -11,9 +12,10 @@ import { erSakId, medEndring, tilpassTilSvar, utloperEtter, type Endring, type U
 
 export type Sak = { id: string; svar: Innsending; utfylling: Utfylling };
 
-export async function opprettSak(svar: Innsending): Promise<string> {
+// The vehicle is chosen in the assessment and is part of the case from the start; it cannot be changed.
+export async function opprettSak(svar: Innsending, kjoretoy: Kjoretoy): Promise<string> {
   const id = randomBytes(16).toString("base64url");
-  await db.insert(brevsak).values({ id, svar, utfylling: {}, utloper: utloperEtter(new Date()) });
+  await db.insert(brevsak).values({ id, svar, utfylling: { kjoretoy }, utloper: utloperEtter(new Date()) });
   return id;
 }
 
@@ -44,15 +46,13 @@ export async function tellSprakvask(sak: Sak): Promise<void> {
   await db.update(brevsak).set({ utfylling }).where(eq(brevsak.id, sak.id));
 }
 
-// New answers from the assessment form for an existing case. false when there is no such case.
-export async function settSvar(id: string, svar: Innsending): Promise<boolean> {
-  const sak = await hentSak(id);
-  if (!sak) return false;
+// Changed answers from the assessment for a case just read with `hentSak`, and the fill-in that
+// results: what was filled in keeps its value, except dates the new answers make impossible.
+export async function settSvar(sak: Sak, svar: Innsending): Promise<Utfylling> {
   const na = new Date();
-  // What was filled in keeps its value, except dates the new answers make impossible.
   const utfylling = tilpassTilSvar(sak.utfylling, svar, iDag());
-  await db.update(brevsak).set({ svar, utfylling, endret: na, utloper: utloperEtter(na) }).where(eq(brevsak.id, id));
-  return true;
+  await db.update(brevsak).set({ svar, utfylling, endret: na, utloper: utloperEtter(na) }).where(eq(brevsak.id, sak.id));
+  return utfylling;
 }
 
 export async function slettSak(id: string): Promise<void> {

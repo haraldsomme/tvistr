@@ -4,9 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/app/logo";
 import { useEffect, useId, useState, type ReactNode } from "react";
-import { FEILTYPER_KNAPPER, forsteUgyldigeSteg, FRA_AR, JA_NEI, oppdagetMulig, OPPLYST_VALG, sporOmReklamasjonsdato, stegGyldig, tilParametre, type Innsending, type Steg } from "@/lib/vurdering/innsending";
+import { lesKjoretoy } from "@/lib/brev/utfylling";
+import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
+import { FEILTYPER_KNAPPER, forsteUgyldigeSteg, FRA_AR, gyldigKjopsdato, JA_NEI, medKjopsdato, oppdagetMulig, OPPLYST_VALG, sporOmReklamasjonsdato, stegGyldig, tilParametre, type Innsending, type Steg } from "@/lib/vurdering/innsending";
 import { iDag, presumsjonManederFor } from "@/lib/vurdering/faktorer";
-import { KONTAKT_VALG, OPPDAGET_VALG, type Kontakt, type Niva, type Oppdaget } from "@/lib/vurdering/typer";
+import { OPPDAGET_VALG, type Niva } from "@/lib/vurdering/typer";
+import { Bilkort, Regnr } from "./regnr";
+import { FEILTYPE_TEKST, JA_NEI_TEKST, KONTAKTET_TEKST, MANEDER, OPPDAGET_TEKST, OPPLYST_TEKST, SPORSMAL, SVAR_TEKST, SVAR_VALG } from "./tekster";
 
 // How close the example decision is to the buyer's case; see finnEksempel.
 type Treff = "lignende" | "tilnaermet" | "generell";
@@ -22,36 +26,6 @@ type Resultat = {
   eksempel: { setning: string; saksnummer: string; kildeUrl: string; utfall: "vunnet" | "tapt"; treff: Treff } | null;
 };
 
-const FEILTYPE_TEKST: Record<(typeof FEILTYPER_KNAPPER)[number], string> = {
-  motor: "Motor",
-  girkasse: "Girkasse og clutch",
-  elektrisk: "Elektrisk",
-  batteri: "Batteri (elbil)",
-  understell: "Understell og hjul",
-  bremser: "Bremser",
-  rust: "Rust",
-  fukt: "Fukt og lekkasje",
-  klimaanlegg: "Klimaanlegg",
-  km_service: "Kilometer og servicehistorikk",
-  skade: "Kollisjonsskade",
-  annet: "Annet",
-};
-const OPPLYST_TEKST = { ja: "Ja", nei: "Nei", usikker: "Usikker" } as const;
-const KONTAKTET_TEKST = { nei: "Nei, ikke ennå", ja: "Ja" } as const;
-// The follow-up when the dealer has been contacted.
-const SVAR_VALG = KONTAKT_VALG.filter((k): k is Exclude<Kontakt, "nei"> => k !== "nei");
-const SVAR_TEKST: Record<Exclude<Kontakt, "nei">, string> = {
-  venter: "Venter på svar eller reparasjon",
-  avvist: "Forhandleren avviste",
-  forsokt: "Forsøkt rettet, uten hell",
-};
-const OPPDAGET_TEKST: Record<Oppdaget, string> = {
-  innen_6_mnd: "Innen 6 måneder",
-  "6_mnd_til_2_ar": "6 måneder til 2 år",
-  over_2_ar: "Mer enn 2 år",
-};
-const JA_NEI_TEKST = { ja: "Ja", nei: "Nei" } as const;
-const MANEDER = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
 const STEG: readonly Steg[] = [1, 2, 3, 4];
 const SISTE_STEG: Steg = 4;
 const STEG_TEKST: Record<Steg, { navn: string; tittel: string }> = {
@@ -255,6 +229,7 @@ function Venter() {
 }
 
 const PRIS_NOK = 249;
+const KJORETOY_NOKKEL = "tvistr-kjoretoy";
 
 function Vipps({ tekst, onClick, disabled }: { tekst: string; onClick: () => void; disabled: boolean }) {
   return (
@@ -287,7 +262,20 @@ const NESTE_PUNKTER = [
 
 // The line about similar cases is only promised when we have one to refer to.
 // `apneBrev` opens the letter and returns an error message if that failed.
-function Neste({ niva, medEksempel, apneBrev }: { niva: Niva; medEksempel: boolean; apneBrev: () => Promise<string | null> }) {
+function Neste({
+  niva,
+  medEksempel,
+  apneBrev,
+  kjoretoy,
+  velgBil,
+}: {
+  niva: Niva;
+  medEksempel: boolean;
+  apneBrev: () => Promise<string | null>;
+  // undefined until the tab has been read, null when there is no car (a shared link, or storage that is empty).
+  kjoretoy: Kjoretoy | null | undefined;
+  velgBil: () => void;
+}) {
   const punkter = NESTE_PUNKTER.filter((p) => medEksempel || p !== LIGNENDE_SAKER);
   const [apner, setApner] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
@@ -324,11 +312,22 @@ function Neste({ niva, medEksempel, apneBrev }: { niva: Niva; medEksempel: boole
         <span className="font-ui text-[16px] font-semibold">Totalt</span>
         <span className="font-brev text-[28px] font-semibold">{PRIS_NOK} kr</span>
       </div>
-      <Vipps tekst="Betal med" onClick={apne} disabled={apner} />
+      {/* The buyer sees which car the letter is for before paying, and cannot change it here. A shared
+          link or an emptied tab has the answers but not the car: it is chosen in the first step. */}
+      {kjoretoy && <Bilkort kjoretoy={kjoretoy} />}
+      {kjoretoy === null && (
+        <div role="group" aria-label="Bilen mangler" className="flex flex-col items-start gap-2.5 rounded-[6px] border border-[rgba(246,244,239,.35)] p-4 text-[14px] leading-[1.5]">
+          <span>Brevet skrives for én bil. Legg inn registreringsnummeret først.</span>
+          <button type="button" onClick={velgBil} className="rounded-[6px] bg-[#f6f4ef] px-4 py-2.5 font-semibold text-[#17263d]">
+            Legg inn registreringsnummer
+          </button>
+        </div>
+      )}
+      <Vipps tekst="Betal med" onClick={apne} disabled={apner || !kjoretoy} />
       <button
         type="button"
         onClick={apne}
-        disabled={apner}
+        disabled={apner || !kjoretoy}
         className="block rounded-[6px] border border-[rgba(246,244,239,.45)] p-3.5 text-center font-ui text-[15px] font-semibold text-[#f6f4ef] md:p-[15px]"
       >
         Betal med kort
@@ -369,7 +368,17 @@ function Vekt({ vekt }: { vekt: "for" | "mot" | "noytral" }) {
   );
 }
 
-function Vurdering({ resultat, endre, apneBrev }: { resultat: Resultat; endre: () => void; apneBrev: () => Promise<string | null> }) {
+function Vurdering({
+  resultat,
+  endre,
+  apneBrev,
+  kjoretoy,
+}: {
+  resultat: Resultat;
+  endre: () => void;
+  apneBrev: () => Promise<string | null>;
+  kjoretoy: Kjoretoy | null | undefined;
+}) {
   const v = NIVA_VISNING[resultat.niva];
   return (
     <div className="flex min-h-screen flex-col bg-[#f6f4ef] font-ui text-[#17263d]">
@@ -469,7 +478,13 @@ function Vurdering({ resultat, endre, apneBrev }: { resultat: Resultat; endre: (
         </div>
         {resultat.niva !== "ikke_aktuell" && (
           <div className="mt-auto md:mt-0">
-            <Neste niva={resultat.niva} medEksempel={resultat.eksempel?.utfall === "vunnet" && resultat.eksempel.treff === "lignende"} apneBrev={apneBrev} />
+            <Neste
+              niva={resultat.niva}
+              medEksempel={resultat.eksempel?.utfall === "vunnet" && resultat.eksempel.treff === "lignende"}
+              apneBrev={apneBrev}
+              kjoretoy={kjoretoy}
+              velgBil={endre}
+            />
           </div>
         )}
       </div>
@@ -479,9 +494,10 @@ function Vurdering({ resultat, endre, apneBrev }: { resultat: Resultat; endre: (
 
 // The answers and the step live in the URL (`?kjopsdato=2024-03-12&…&steg=2`), so a link opens the form where
 // it was. A complete set of answers without `steg` is a link to the assessment itself.
-// `sakId` is set when the user came back from a letter: opening the letter again then goes to the
-// same case, with the answers as they are now, so nothing filled in there is lost.
-export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending; startSteg: number; sakId?: string }) {
+// The vehicle is not part of the answers and never goes in the address: a registration number is
+// personal. It is kept in this tab (sessionStorage) so a reload does not lose it, and goes to the
+// server when the letter is opened.
+export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startSteg: number }) {
   const id = useId();
   const router = useRouter();
   const forsteUgyldig = forsteUgyldigeSteg(startSvar);
@@ -498,21 +514,19 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
   const [sender, setSender] = useState(visVurdering);
   const [feil, setFeil] = useState<string | null>(null);
   const [resultat, setResultat] = useState<Resultat | null>(null);
+  // undefined until this tab's storage has been read.
+  const [kjoretoy, setKjoretoy] = useState<Kjoretoy | null | undefined>(undefined);
+  // The purchase date was suggested from the registry and has not been touched since.
+  const [datoFraRegister, setDatoFraRegister] = useState(false);
 
   const sett = <K extends keyof Innsending>(k: K, v: Innsending[K]) => setD((x) => ({ ...x, [k]: v }));
   const idag = iDag();
 
-  // Changing the purchase date can make the chosen «how long after» impossible; clear what no longer fits.
-  function settKjop(kjopsdato: string) {
-    setD((x) => {
-      const ny = { ...x, kjopsdato };
-      if (ny.oppdaget && !oppdagetMulig(ny, ny.oppdaget)) ny.oppdaget = "";
-      // When only one answer fits, there is nothing to choose: pick it.
-      const mulige = OPPDAGET_VALG.filter((v) => oppdagetMulig(ny, v));
-      if (!ny.oppdaget && mulige.length === 1) ny.oppdaget = mulige[0];
-      return ny;
-    });
-  }
+  const settKjop = (kjopsdato: string) => setD((x) => medKjopsdato(x, kjopsdato));
+  const rettKjop = (kjopsdato: string) => {
+    setDatoFraRegister(false);
+    settKjop(kjopsdato);
+  };
 
   const naa = new Date();
 
@@ -544,12 +558,45 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
   }
 
   // Keeps the address in step with the answers without adding history entries.
-  function oppdaterUrl(data: Innsending, s: Steg | null, sak: string | undefined) {
+  function oppdaterUrl(data: Innsending, s: Steg | null) {
     const p = tilParametre(data);
     if (s) p.set("steg", String(s));
-    if (sak) p.set("sak", sak);
     window.history.replaceState(null, "", `?${p}`);
   }
+
+  // The day the registry has the vehicle on its current owner is a good guess at the day of the
+  // purchase, so it fills in an empty date. A date the buyer has typed is never replaced, and a
+  // suggestion goes away with the vehicle it came from.
+  function velgKjoretoy(k: Kjoretoy | null, eierFra?: string | null) {
+    if (k && eierFra && !d.kjopsdato && gyldigKjopsdato(eierFra)) {
+      settKjop(eierFra);
+      setDatoFraRegister(true);
+    } else if (!k && datoFraRegister) {
+      rettKjop("");
+    }
+    setKjoretoy(k);
+    // Storage can be blocked or empty; the vehicle is then fetched again.
+    try {
+      if (k) sessionStorage.setItem(KJORETOY_NOKKEL, JSON.stringify(k));
+      else sessionStorage.removeItem(KJORETOY_NOKKEL);
+    } catch {
+      /* the vehicle stays in this page's state */
+    }
+  }
+
+  useEffect(() => {
+    let k: Kjoretoy | null = null;
+    try {
+      const lagret = sessionStorage.getItem(KJORETOY_NOKKEL);
+      k = lagret ? lesKjoretoy(JSON.parse(lagret)) : null;
+    } catch {
+      /* nothing saved, or storage is blocked */
+    }
+    // sessionStorage does not exist on the server, so this cannot be read while rendering without
+    // the first render differing from the server's.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setKjoretoy(k);
+  }, []);
 
   useEffect(() => {
     if (!visVurdering) return;
@@ -569,26 +616,30 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
   }, []);
 
   useEffect(() => {
-    if (!resultat && !sender) oppdaterUrl(d, steg, sakId);
-  }, [d, steg, resultat, sender, sakId]);
+    if (!resultat && !sender) oppdaterUrl(d, steg);
+  }, [d, steg, resultat, sender]);
+
+  // The vehicle is part of the first step: nothing else in the assessment is about another car.
+  const kanGaVidere = stegGyldig(d, steg) && (steg !== 1 || !!kjoretoy);
 
   async function neste() {
-    if (!stegGyldig(d, steg)) return;
+    if (!kanGaVidere) return;
     setFeil(null);
     if (steg < SISTE_STEG) return setSteg((steg + 1) as Steg);
     setSender(true);
     const f = await hent(d);
     setFeil(f);
-    if (!f) oppdaterUrl(d, null, sakId);
+    if (!f) oppdaterUrl(d, null);
     setSender(false);
   }
 
   async function apneBrev(): Promise<string | null> {
+    if (!kjoretoy) return "Hent bilen med registreringsnummeret først.";
     try {
       const res = await fetch("/api/sak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...d, ...(sakId && { sak: sakId }) }),
+        body: JSON.stringify({ ...d, kjoretoy }),
       });
       const json = (await res.json()) as { id?: string; feil?: string };
       if (!res.ok || !json.id) return json.feil ?? "Noe gikk galt. Prøv igjen.";
@@ -602,7 +653,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
   if (sender) return <Venter />;
 
   if (resultat) {
-    return <Vurdering resultat={resultat} endre={() => { setSteg(1); setResultat(null); }} apneBrev={apneBrev} />;
+    return <Vurdering resultat={resultat} endre={() => { setSteg(1); setResultat(null); }} apneBrev={apneBrev} kjoretoy={kjoretoy} />;
   }
 
   const tilbake =
@@ -636,20 +687,24 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
         {steg === 1 && (
           <>
             <div className={INNHOLD}>
-              <label className="flex flex-col gap-2.5 md:max-w-[440px] md:gap-3">
-                <span className={LABEL}>Når kjøpte du bilen?</span>
-                <input
-                  type="date"
-                  className={INPUT}
-                  min={`${FRA_AR}-01-01`}
-                  max={idag}
-                  value={d.kjopsdato}
-                  onChange={(e) => settKjop(e.target.value)}
-                />
-              </label>
+              <Regnr kjoretoy={kjoretoy ?? null} funnet={velgKjoretoy} />
+              <div className="flex flex-col gap-2 md:max-w-[440px]">
+                <label className="flex flex-col gap-2.5 md:gap-3">
+                  <span className={LABEL}>{SPORSMAL.kjopsdato}</span>
+                  <input
+                    type="date"
+                    className={INPUT}
+                    min={`${FRA_AR}-01-01`}
+                    max={idag}
+                    value={d.kjopsdato}
+                    onChange={(e) => rettKjop(e.target.value)}
+                  />
+                </label>
+                {datoFraRegister && <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472]">Hentet fra Statens vegvesen: dagen bilen ble registrert på deg. Rett datoen hvis den ikke stemmer.</p>}
+              </div>
               <div className="grid grid-cols-1 gap-5 md:max-w-[440px] md:grid-cols-2 md:gap-3">
                 <label className="flex flex-col gap-2.5 md:gap-3">
-                  <span className={LABEL}>Hva kostet bilen?</span>
+                  <span className={LABEL}>{SPORSMAL.kjopesum}</span>
                   <input
                     className={INPUT}
                     inputMode="numeric"
@@ -660,7 +715,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
                   />
                 </label>
                 <label className="flex flex-col gap-2.5 md:gap-3">
-                  <span className={LABEL}>Kilometerstand ved kjøpet</span>
+                  <span className={LABEL}>{SPORSMAL.kmVedKjop}</span>
                   <input
                     className={INPUT}
                     inputMode="numeric"
@@ -680,7 +735,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
             <div className={INNHOLD}>
               <div role="group" aria-labelledby={`${id}-feiltype`} className="flex flex-col gap-2.5 md:gap-3">
                 <span id={`${id}-feiltype`} className={LABEL}>
-                  Hva gjelder feilen? <span className="hidden font-normal text-[#5b6472] md:inline">Velg én eller flere</span>
+                  {SPORSMAL.feiltype} <span className="hidden font-normal text-[#5b6472] md:inline">Velg én eller flere</span>
                 </span>
                 <div className="flex flex-wrap gap-2 md:gap-2.5">
                   {FEILTYPER_KNAPPER.map((f) => (
@@ -703,7 +758,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
               <div className="flex flex-col gap-3">
                 <Valg
                   id={`${id}-oppdaget`}
-                  label="Hvor lenge etter kjøpet oppdaget du feilen?"
+                  label={SPORSMAL.oppdaget}
                   verdier={OPPDAGET_VALG}
                   tekst={OPPDAGET_TEKST}
                   valgt={d.oppdaget}
@@ -728,7 +783,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
               <Radliste>
                 <Valg
                   id={`${id}-opplyst`}
-                  label="Ble du fortalt om feilen før kjøpet?"
+                  label={SPORSMAL.opplyst}
                   verdier={OPPLYST_VALG}
                   tekst={OPPLYST_TEKST}
                   valgt={d.opplystForKjop}
@@ -737,7 +792,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
                 />
                 <Valg
                   id={`${id}-feilopplysning`}
-                  label="Ble du feilaktig informert av selger eller annonse?"
+                  label={SPORSMAL.feilopplysning}
                   verdier={JA_NEI}
                   tekst={JA_NEI_TEKST}
                   valgt={d.feilOpplysning === "nei" ? "nei" : feilinformert || d.feilOpplysning ? "ja" : ""}
@@ -751,7 +806,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
                 {d.feilOpplysning !== "nei" && (feilinformert || d.feilOpplysning) && (
                   <Valg
                     id={`${id}-dokumentert`}
-                    label="Har du det skriftlig?"
+                    label={SPORSMAL.dokumentert}
                     verdier={JA_NEI}
                     tekst={JA_NEI_TEKST}
                     valgt={d.feilOpplysning === "ja_dokumentert" ? "ja" : d.feilOpplysning === "ja_udokumentert" ? "nei" : ""}
@@ -761,7 +816,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
                 )}
                 <Valg
                   id={`${id}-kontakt`}
-                  label="Har du tatt opp feilen med forhandleren?"
+                  label={SPORSMAL.kontakt}
                   verdier={JA_NEI}
                   tekst={KONTAKTET_TEKST}
                   valgt={d.kontakt === "nei" ? "nei" : kontaktet || d.kontakt ? "ja" : ""}
@@ -776,7 +831,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
               {d.kontakt !== "nei" && (kontaktet || d.kontakt) && (
                 <Valg
                   id={`${id}-svar`}
-                  label="Hva har skjedd siden?"
+                  label={SPORSMAL.kontaktSvar}
                   verdier={SVAR_VALG}
                   tekst={SVAR_TEKST}
                   valgt={d.kontakt}
@@ -787,7 +842,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
               {sporOmReklamasjonsdato(d) && (
                 <div role="group" aria-labelledby={`${id}-reklamert`} className="flex flex-col gap-2.5 md:gap-3">
                   <span id={`${id}-reklamert`} className={LABEL}>
-                    Når tok du første gang opp feilen med forhandleren?
+                    {SPORSMAL.reklamert}
                   </span>
                   <div className="grid grid-cols-2 gap-2.5 md:max-w-[440px] md:gap-3">
                     <Rullegardin label="År reklamert" value={d.reklamasjonAr} onChange={(e) => sett("reklamasjonAr", e.target.value)}>
@@ -825,7 +880,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
               <Radliste>
                 <Valg
                   id={`${id}-rapport`}
-                  label="Har du en verksted- eller tilstandsrapport?"
+                  label={SPORSMAL.rapport}
                   verdier={JA_NEI}
                   tekst={JA_NEI_TEKST}
                   valgt={d.verkstedrapport}
@@ -835,7 +890,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
                 {d.verkstedrapport === "ja" && (
                   <Valg
                     id={`${id}-rapport-sier`}
-                    label="Sier rapporten at feilen sannsynligvis var til stede før kjøpet?"
+                    label={SPORSMAL.rapportSier}
                     verdier={JA_NEI}
                     tekst={JA_NEI_TEKST}
                     valgt={d.rapportSierForKjop}
@@ -846,7 +901,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
                 {d.verkstedrapport === "nei" && (
                   <Valg
                     id={`${id}-bilder`}
-                    label="Har du bilder eller video av feilen?"
+                    label={SPORSMAL.bilder}
                     verdier={JA_NEI}
                     tekst={JA_NEI_TEKST}
                     valgt={d.bilder}
@@ -870,7 +925,7 @@ export function Skjema({ startSvar, startSteg, sakId }: { startSvar: Innsending;
                 {feil}
               </p>
             )}
-            <button type="submit" className={`${KNAPP} md:w-auto md:min-w-[240px] md:px-8 md:py-[17px]`} disabled={!stegGyldig(d, steg) || sender}>
+            <button type="submit" className={`${KNAPP} md:w-auto md:min-w-[240px] md:px-8 md:py-[17px]`} disabled={!kanGaVidere || sender}>
               {sender ? "Vurderer saken …" : NESTE_TEKST[steg]}
             </button>
           </div>

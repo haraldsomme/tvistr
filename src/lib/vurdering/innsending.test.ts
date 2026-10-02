@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { forsteUgyldigeSteg, fraParametre, gyldigKjopsdato, lesInnsending, tilParametre, sporOmReklamasjonsdato, oppdagetMulig, stegGyldig, TOM_INNSENDING, tilKlageInput, type Innsending, type Steg } from "./innsending";
+import { forsteUgyldigeSteg, fraParametre, gyldigKjopsdato, lesInnsending, medKjopsdato, tilParametre, sporOmReklamasjonsdato, oppdagetMulig, stegGyldig, TOM_INNSENDING, tilKlageInput, type Innsending, type Steg } from "./innsending";
 
 const IDAG = "2026-10-01";
 
@@ -92,6 +92,30 @@ describe("oppdagetMulig", () => {
     // To the day: two years after 2 October 2024 has not passed on 1 October 2026.
     expect(oppdagetMulig({ kjopsdato: "2024-10-02" }, "over_2_ar", IDAG)).toBe(false);
     expect(oppdagetMulig({ kjopsdato: "2024-10-01" }, "over_2_ar", IDAG)).toBe(true);
+  });
+});
+
+describe("medKjopsdato", () => {
+  it("setter datoen og lar svar som fortsatt kan stemme stå", () => {
+    expect(medKjopsdato({ ...gyldig, oppdaget: "innen_6_mnd" }, "2026-02-01", IDAG)).toMatchObject({ kjopsdato: "2026-02-01", oppdaget: "innen_6_mnd" });
+  });
+
+  it("tømmer «hvor lenge etter» når den ikke lenger kan stemme", () => {
+    // Kjøpt for fire måneder siden: feilen kan ikke ha vist seg etter mer enn seks måneder.
+    const r = medKjopsdato({ ...gyldig, oppdaget: "6_mnd_til_2_ar" }, "2026-06-01", IDAG);
+    expect(r.kjopsdato).toBe("2026-06-01");
+    expect(r.oppdaget).toBe("innen_6_mnd");
+  });
+
+  it("velger svaret selv når bare ett passer, og lar det stå tomt når flere passer", () => {
+    expect(medKjopsdato({ ...gyldig, oppdaget: "" }, "2026-08-01", IDAG).oppdaget).toBe("innen_6_mnd");
+    expect(medKjopsdato({ ...gyldig, oppdaget: "" }, "2025-01-01", IDAG).oppdaget).toBe("");
+  });
+
+  it("endrer ikke det som ble gitt inn", () => {
+    const original = structuredClone(gyldig);
+    medKjopsdato(gyldig, "2026-08-01", IDAG);
+    expect(gyldig).toEqual(original);
   });
 });
 

@@ -31,6 +31,8 @@ Inneholder ett rad per vedtak fra Forbrukertvistutvalget/Forbrukerklageutvalget 
 - **Inneholder personopplysninger** (navn, adresse, registreringsnummer), i motsetning til `vedtak`. Derfor: tabellen er ikke med i `npm run db:backup`, ingenting fra en sak skal logges, og fritekst og navn sendes aldri til en språkmodell sammen.
 - **Tilgang:** `id` er 128 tilfeldige bit og er eneste adgangskontroll (`/brev/[id]`). Ikke lag lister over saker eller ruter som slår opp på noe annet enn id.
 - **Sletting:** en sak utløper 30 dager etter siste endring. Den slettes når den åpnes etter utløp, av `npm run rydd`, eller når brukeren trykker «Slett saken».
+- **Brevsiden er etter kjøp.** En sak opprettes først når brevet åpnes (senere: etter betaling), og det er ingen vei tilbake til vurderingen derfra. Registreringsnummeret tas i steg 1 i vurderingen (oppslag mot Statens vegvesen), holdes utenfor adressen (bare i skjemaets state og `sessionStorage` i fanen), følger med `POST /api/sak` og er låst til saken: `utfylling.kjoretoy` kan ikke endres med `PATCH`.
+- **Rette svar:** svarene fra vurderingen rettes på brevsiden (kortet «Svarene fra vurderingen», `PUT /api/sak/[id]/svar`, regler i `src/lib/brev/svar.ts`). En rettelse som gjør at fristen er ute lagres med et varsel over brevet; brevet tas aldri bort fra en som har kjøpt det.
 
 ## E2E-testing med Playwright
 

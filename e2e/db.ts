@@ -18,3 +18,9 @@ export async function finnesSak(id: string): Promise<boolean> {
   const rader = await sql`select 1 from brevsak where id = ${id}`;
   return rader.length > 0;
 }
+
+// The answers of a case set straight in the database, for a state the app itself no longer lets a
+// case into: answers that were complete when they were saved and no longer are.
+export async function settSvarDirekte(id: string, svar: Record<string, unknown>): Promise<void> {
+  await sql`update brevsak set svar = ${JSON.stringify(svar)}::jsonb where id = ${id}`;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { erSakId, lesEndring, medEndring, tilpassTilSvar, utloperEtter } from "./utfylling";
+import { erSakId, lesEndring, lesKjoretoy, medEndring, tilpassTilSvar, utloperEtter } from "./utfylling";
 
 const BIL = { regnr: "ZZ 99999", merke: "Testmerke", modell: "Modell X", ar: 2019 };
 const ADRESSE = { linjer: ["Industriveien 3"], postnummer: "0184", poststed: "Oslo" };
@@ -15,10 +15,14 @@ const lest = (raw: unknown) => {
 };
 
 describe("lesEndring", () => {
-  it("godtar kjøretøy og forhandler slik oppslagene gir dem", () => {
-    expect(lest({ kjoretoy: BIL })).toEqual({ kjoretoy: BIL });
+  it("godtar forhandler slik oppslaget gir den", () => {
     expect(lest({ forhandler: FORHANDLER })).toEqual({ forhandler: FORHANDLER });
-    expect(lest({ kjoretoy: { ...BIL, ar: null } })).toEqual({ kjoretoy: { ...BIL, ar: null } });
+  });
+
+  it("avviser kjøretøy: det velges i vurderingen og er låst når saken finnes", () => {
+    expect(ok({ kjoretoy: BIL })).toBe(false);
+    expect(ok({ kjoretoy: null })).toBe(false);
+    expect(ok({ forhandler: FORHANDLER, kjoretoy: BIL })).toBe(false);
   });
 
   it("godtar forhandler uten adresse og forhandler skrevet for hånd", () => {
@@ -27,11 +31,11 @@ describe("lesEndring", () => {
   });
 
   it("lar null tømme et felt", () => {
-    expect(lest({ kjoretoy: null, forhandler: null })).toEqual({ kjoretoy: null, forhandler: null });
+    expect(lest({ vedlegg: null, forhandler: null })).toEqual({ vedlegg: null, forhandler: null });
   });
 
   it("dropper felt som ikke hører til verdien", () => {
-    expect(lest({ kjoretoy: { ...BIL, ekstra: "x" } })).toEqual({ kjoretoy: BIL });
+    expect(lest({ krav: { utgifter: [], ekstra: "x" } })).toEqual({ krav: { utgifter: [] } });
   });
 
   it("gjør hakeparenteser og linjeskift ufarlige, siden brevet bruker hakeparentes for det som mangler", () => {
@@ -40,12 +44,6 @@ describe("lesEndring", () => {
 
   it("avviser ukjente felt og alt som ikke er et objekt", () => {
     for (const raw of [null, "x", [], { navn: "x" }, { __proto__: null, constructor: 1 }]) expect(ok(raw)).toBe(false);
-  });
-
-  it("avviser ugyldige kjøretøy", () => {
-    for (const k of [{}, "x", { ...BIL, regnr: "<script>" }, { ...BIL, merke: "" }, { ...BIL, modell: "x".repeat(61) }, { ...BIL, ar: 1800 }, { ...BIL, ar: "2019" }, { regnr: BIL.regnr, merke: "A", modell: "B" }]) {
-      expect(ok({ kjoretoy: k })).toBe(false);
-    }
   });
 
   it("avviser ugyldige forhandlere", () => {
@@ -65,7 +63,24 @@ describe("lesEndring", () => {
   });
 
   it("avviser hele lagringen når ett felt er ugyldig", () => {
-    expect(ok({ kjoretoy: BIL, forhandler: {} })).toBe(false);
+    expect(ok({ vedlegg: ["bilder"], forhandler: {} })).toBe(false);
+  });
+});
+
+describe("lesKjoretoy", () => {
+  it("godtar kjøretøy slik oppslaget gir det, også uten årsmodell", () => {
+    expect(lesKjoretoy(BIL)).toEqual(BIL);
+    expect(lesKjoretoy({ ...BIL, ar: null })).toEqual({ ...BIL, ar: null });
+  });
+
+  it("dropper felt som ikke hører til kjøretøyet", () => {
+    expect(lesKjoretoy({ ...BIL, ekstra: "x" })).toEqual(BIL);
+  });
+
+  it("avviser ugyldige kjøretøy", () => {
+    for (const k of [undefined, null, {}, "x", { ...BIL, regnr: "<script>" }, { ...BIL, merke: "" }, { ...BIL, modell: "x".repeat(61) }, { ...BIL, ar: 1800 }, { ...BIL, ar: "2019" }, { regnr: BIL.regnr, merke: "A", modell: "B" }]) {
+      expect(lesKjoretoy(k)).toBeNull();
+    }
   });
 });
 
@@ -160,7 +175,7 @@ describe("medEndring", () => {
   it("erstatter endrede felt, fjerner tømte og lar resten stå", () => {
     const u = { kjoretoy: BIL, forhandler: { type: "fritekst" as const, navn: "Bilsalget" } };
     expect(medEndring(u, { forhandler: null })).toEqual({ kjoretoy: BIL });
-    expect(medEndring(u, { kjoretoy: { ...BIL, ar: 2020 } })).toEqual({ ...u, kjoretoy: { ...BIL, ar: 2020 } });
+    expect(medEndring(u, { vedlegg: ["bilder"] })).toEqual({ ...u, vedlegg: ["bilder"] });
     expect(medEndring({}, {})).toEqual({});
   });
 });

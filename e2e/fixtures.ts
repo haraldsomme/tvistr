@@ -2,6 +2,14 @@ import { randomInt } from "node:crypto";
 import { test as base, expect, type Page } from "@playwright/test";
 import type { Innsending } from "../src/lib/vurdering/innsending";
 
+// A made-up vehicle, as /api/kjoretoy answers with it. The lookup in Statens vegvesen is always mocked.
+export const KJORETOY = { regnr: "ZZ 99999", merke: "Testmerke", modell: "Modell X", ar: 2019 };
+
+// `eierFra` is the day the registry has the vehicle on its current owner, when it has one.
+export async function mockKjoretoy(page: Page, eierFra: string | null = null) {
+  await page.route("**/api/kjoretoy?*", (route) => route.fulfill({ json: { kjoretoy: KJORETOY, eierFra } }));
+}
+
 // The four-step form on /vurdering, addressed the way a user reads it: by question and answer text.
 export class Skjema {
   constructor(private readonly page: Page) {}
@@ -24,6 +32,29 @@ export class Skjema {
 
   get kmVedKjop() {
     return this.page.getByLabel("Kilometerstand ved kjøpet");
+  }
+
+  // The vehicle is the first thing the assessment asks for.
+  get regnr() {
+    return this.page.getByLabel("Registreringsnummer");
+  }
+
+  get hentKnapp() {
+    return this.page.getByRole("button", { name: "Hent bilen" });
+  }
+
+  async hentKjoretoy(regnr: string) {
+    await this.regnr.fill(regnr);
+    await this.hentKnapp.click();
+  }
+
+  // On the assessment, before the letter is bought: the car the letter is written for, which cannot be changed there.
+  get bilKort() {
+    return this.page.getByRole("group", { name: "Brevet skrives for" });
+  }
+
+  get manglerBil() {
+    return this.page.getByRole("group", { name: "Bilen mangler" });
   }
 
   sporsmal(tekst: string) {
@@ -60,8 +91,17 @@ export class Brev {
     return this.page.getByRole("heading", { level: 1 });
   }
 
-  get tilbakeLenke() {
-    return this.page.getByRole("link", { name: "← Tilbake til vurderingen" });
+  // The answers from the assessment, which the buyer can correct once the letter is bought.
+  get svarKort() {
+    return this.page.getByRole("region", { name: "Svarene fra vurderingen" });
+  }
+
+  async endreSvar() {
+    await this.svarKort.getByRole("button", { name: "Endre svar" }).click();
+  }
+
+  async lagreSvar() {
+    await this.svarKort.getByRole("button", { name: "Lagre" }).click();
   }
 
   // A step in the numbered fill-in list, found by its title.
@@ -73,14 +113,6 @@ export class Brev {
     return this.page.getByRole("combobox", { name: "Forhandler" });
   }
 
-  get regnr() {
-    return this.page.getByLabel("Registreringsnummer");
-  }
-
-  get hentKnapp() {
-    return this.page.getByRole("button", { name: "Hent kjøretøy" });
-  }
-
   // The save button of the step that is open.
   lagreKnapp(tittel: string) {
     return this.steg(tittel).getByRole("button", { name: /^(Lagre|Bekreft vedlegg)$/ });
@@ -88,11 +120,6 @@ export class Brev {
 
   async endre(tittel: string) {
     await this.steg(tittel).getByRole("button", { name: "Endre" }).click();
-  }
-
-  async hentKjoretoy(regnr: string) {
-    await this.regnr.fill(regnr);
-    await this.hentKnapp.click();
   }
 
   plassholder(tekst: string) {
@@ -122,7 +149,7 @@ export const test = base.extend<{ skjema: Skjema; brev: Brev; sak: Saker }>({
     const ider: string[] = [];
     await bruk({
       async apne(svar, utfylling) {
-        const res = await request.post("/api/sak", { data: svar });
+        const res = await request.post("/api/sak", { data: { ...svar, kjoretoy: KJORETOY } });
         expect(res.status(), "POST /api/sak").toBe(200);
         const { id } = (await res.json()) as { id: string };
         ider.push(id);

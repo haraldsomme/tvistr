@@ -2,6 +2,8 @@
 // (https://autosys-kjoretoy-api.atlas.vegvesen.no). The key (VEGVESEN_API_KEY) stays on the server.
 // The registration number is the user's own and is only passed on, never stored.
 
+import { erDato } from "@/lib/vurdering/faktorer";
+
 const URL_OPPSLAG = "https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata";
 
 export type Kjoretoy = {
@@ -14,7 +16,9 @@ export type Kjoretoy = {
   ar: number | null;
 };
 
-export type Oppslag = { ok: true; kjoretoy: Kjoretoy } | { ok: false; feil: "ugyldig" | "ikke_funnet" | "utilgjengelig" };
+// `eierFra` is the day the vehicle was registered on its current owner, which is usually the buyer
+// and close to the day of the purchase. It is not stored: it only suggests a purchase date.
+export type Oppslag = { ok: true; kjoretoy: Kjoretoy; eierFra: string | null } | { ok: false; feil: "ugyldig" | "ikke_funnet" | "utilgjengelig" };
 
 // Ordinary plates are two letters and four or five digits; personal plates are two to seven
 // letters and digits. Spaces and hyphens are how people write them, not part of the number.
@@ -32,6 +36,7 @@ function penMerke(merke: string): string {
 type Svar = {
   kjoretoydataListe?: {
     kjoretoyId?: { kjennemerke?: string };
+    registrering?: { registrertForstegangPaEierskap?: unknown };
     forstegangsregistrering?: { registrertForstegangNorgeDato?: string };
     godkjenning?: {
       forstegangsGodkjenning?: { forstegangRegistrertDato?: string };
@@ -51,6 +56,14 @@ export function lesKjoretoy(json: unknown): Kjoretoy | null {
   const dato = k?.godkjenning?.forstegangsGodkjenning?.forstegangRegistrertDato ?? k?.forstegangsregistrering?.registrertForstegangNorgeDato;
   const ar = Number(dato?.slice(0, 4));
   return { regnr, merke: penMerke(merke), modell, ar: ar > 1900 ? ar : null };
+}
+
+// The registry writes the day with a time and an offset («2024-06-04T10:23:02.673+02:00»). The day
+// is kept as written, which is Norwegian time. null when there is none.
+export function lesEierFra(json: unknown): string | null {
+  const tid = (json as Svar | null)?.kjoretoydataListe?.[0]?.registrering?.registrertForstegangPaEierskap;
+  const dag = typeof tid === "string" ? tid.slice(0, 10) : "";
+  return erDato(dag) ? dag : null;
 }
 
 export async function hentKjoretoy(regnr: string): Promise<Oppslag> {
@@ -73,8 +86,9 @@ export async function hentKjoretoy(regnr: string): Promise<Oppslag> {
       console.error("kjøretøyoppslag feilet", res.status);
       return { ok: false, feil: "utilgjengelig" };
     }
-    const kjoretoy = lesKjoretoy(await res.json());
-    return kjoretoy ? { ok: true, kjoretoy } : { ok: false, feil: "ikke_funnet" };
+    const json: unknown = await res.json();
+    const kjoretoy = lesKjoretoy(json);
+    return kjoretoy ? { ok: true, kjoretoy, eierFra: lesEierFra(json) } : { ok: false, feil: "ikke_funnet" };
   } catch (e) {
     console.error("kjøretøyoppslag feilet", e);
     return { ok: false, feil: "utilgjengelig" };

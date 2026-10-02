@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
-import { finnesSak, settUtlopt } from "./db";
-import { expect, idFra, test, type Brev, type Saker } from "./fixtures";
+import { finnesSak, settSvarDirekte, settUtlopt } from "./db";
+import { expect, idFra, KJORETOY, mockKjoretoy, test, type Brev, type Saker } from "./fixtures";
 import { fraParametre, TOM_INNSENDING, tilParametre, type Innsending } from "../src/lib/vurdering/innsending";
 
 // A letter is a case in the database, so each test opens a real case with made-up answers (the `sak`
@@ -27,7 +27,9 @@ const svar = (endring: Partial<Innsending> = {}): Innsending => ({
 test("brevet følger skisse: overskrift, lovhenvisninger, beløp, frist og plassholdere", async ({ page, brev, sak }) => {
   await page.goto(await sak.apne(svar()));
 
-  await expect(brev.overskrift).toHaveText(/^Reklamasjon på mangel – /);
+  // The vehicle was chosen in the assessment and comes with the case.
+  await expect(brev.overskrift).toHaveText("Reklamasjon på mangel – Testmerke Modell X (2019), reg.nr. ZZ 99999");
+  await expect(brev.ark).not.toContainText("[reg.nr.]");
   for (const tekst of ["forbrukerkjøpsloven § 16", "§ 18", "forbrukerkjøpsloven § 27", "jf. § 29 og § 30", "250 000 kr", "Jeg ble heller ikke opplyst om feilen før kjøpet."]) {
     await expect(brev.ark).toContainText(tekst);
   }
@@ -85,6 +87,12 @@ test("ufullstendige svar gir ingen sak", async ({ request }) => {
   expect(((await res.json()) as { id?: string }).id).toBeUndefined();
 });
 
+test("en sak kan ikke åpnes uten en bil fra registeret", async ({ request }) => {
+  expect((await request.post("/api/sak", { data: svar() })).status()).toBe(400);
+  const ugyldig = { regnr: "<script>", merke: "Testmerke", modell: "Modell X", ar: 2019 };
+  expect((await request.post("/api/sak", { data: { ...svar(), kjoretoy: ugyldig } })).status()).toBe(400);
+});
+
 test("en sak som ikke finnes, eller som er utløpt, vises som «finnes ikke» og slettes", async ({ page, sak }) => {
   await page.goto("/brev/AAAAAAAAAAAAAAAAAAAAAA");
   await expect(page.getByRole("heading", { level: 1, name: "Vi finner ikke dette brevet" })).toBeVisible();
@@ -115,102 +123,75 @@ test("«Slett saken» spør først, og sletter så saken for godt", async ({ pag
   await expect(page.getByRole("heading", { level: 1, name: "Vi finner ikke dette brevet" })).toBeVisible();
 });
 
-test("fra vurderingen til brevet og tilbake", async ({ page, brev, sak }) => {
-  await page.route("**/api/vurder", (route) =>
-    route.fulfill({
-      json: { niva: "middels", tittel: "Du kan ha krav på at forhandleren retter feilen.", begrunnelse: "Feilen ble oppdaget innen seks måneder etter kjøpet.", grunnlag: [], tiltak: [], utvalg: null, eksempel: null },
-    }),
-  );
-  await page.route("**/api/kjoretoy?*", (route) =>
-    route.fulfill({ json: { kjoretoy: { regnr: "ZZ 99999", merke: "Testmerke", modell: "Modell X", ar: 2019 } } }),
-  );
-  const vurdering = page.getByRole("heading", { level: 1, name: "Du kan ha krav på at forhandleren retter feilen." });
+const VURDERING = {
+  niva: "middels",
+  tittel: "Du kan ha krav på at forhandleren retter feilen.",
+  begrunnelse: "Feilen ble oppdaget innen seks måneder etter kjøpet.",
+  grunnlag: [],
+  tiltak: [],
+  utvalg: null,
+  eksempel: null,
+};
 
-  await page.goto(`/vurdering?${tilParametre(svar())}`);
-  await expect(vurdering).toBeVisible();
+test("fra vurderingen til brevet: bilen vises før betaling, og følger saken", async ({ page, brev, sak, skjema }) => {
+  await page.route("**/api/vurder", (route) => route.fulfill({ json: VURDERING }));
+  await mockKjoretoy(page);
+
+  // The answers are in the link; the car is chosen in the first step, and the rest is read through.
+  await page.goto(`/vurdering?${tilParametre(svar())}&steg=1`);
+  await skjema.hentKjoretoy("ZZ 99999");
+  for (let n = 0; n < 4; n++) await skjema.neste();
+  await expect(page.getByRole("heading", { level: 1, name: VURDERING.tittel })).toBeVisible();
+
+  // The buyer sees which car the letter is for, and cannot change it here.
+  await expect(skjema.bilKort).toContainText("ZZ 99999");
+  await expect(skjema.bilKort).toContainText("Testmerke Modell X");
+  await expect(skjema.bilKort).toContainText("Første gang registrert 2019");
+  await expect(skjema.bilKort).toContainText("Bilen kan ikke byttes etter kjøpet");
+  await expect(skjema.regnr).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Endre", exact: true })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Betal med vipps" }).click();
   // The letter is a case of its own; the answers are no longer in the address.
   await expect(page).toHaveURL(/\/brev\/[\w-]{22}$/);
-  const brevUrl = page.url();
-  sak.rydd(idFra(brevUrl));
-  await expect(brev.overskrift).toHaveText(/^Reklamasjon på mangel – /);
-  await brev.hentKjoretoy("ZZ 99999");
-  await expect(brev.overskrift).toContainText("Testmerke Modell X");
-
-  await brev.tilbakeLenke.click();
-  await expect(page).toHaveURL(/\/vurdering\?/);
-  expect(fraParametre(new URL(page.url()).searchParams)).toEqual(svar());
-  await expect(vurdering).toBeVisible();
-
-  // Opening the letter again goes back to the same case, with what was filled in.
-  await page.getByRole("button", { name: "Betal med kort" }).click();
-  await expect(page).toHaveURL(brevUrl);
-  await expect(brev.overskrift).toContainText("Testmerke Modell X");
-});
-
-test("registreringsnummeret henter kjøretøyet inn i brevet, og kan endres", async ({ page, brev, sak }) => {
-  await page.route("**/api/kjoretoy?*", (route) =>
-    route.fulfill({ json: { kjoretoy: { regnr: "ZZ 99999", merke: "Testmerke", modell: "Modell X", ar: 2019 } } }),
-  );
-  await page.goto(await sak.apne(svar()));
-
-  await expect(page.getByRole("heading", { level: 2, name: "Fyll inn det som mangler" })).toBeVisible();
-  await expect(page.getByText("Mangler", { exact: true })).toBeVisible();
-  await expect(brev.hentKnapp).toBeDisabled();
-  // Step 1 is the active one until the vehicle is found.
-  await expect(brev.steg("Registreringsnummer")).toHaveAttribute("aria-current", "step");
-  await expect(brev.steg("Registreringsnummer")).toContainText("1");
-  // The dealer step waits its turn: numbered, but closed.
-  await expect(brev.steg("Forhandler")).toContainText("2");
-  await expect(brev.steg("Forhandler")).not.toHaveAttribute("aria-current", "step");
-  await expect(brev.forhandler).toBeHidden();
-
-  await brev.regnr.fill("zz 99999");
-  await expect(brev.regnr).toHaveValue("ZZ 99999");
-  await brev.hentKnapp.click();
-
+  sak.rydd(idFra(page.url()));
   await expect(brev.overskrift).toHaveText("Reklamasjon på mangel – Testmerke Modell X (2019), reg.nr. ZZ 99999");
   await expect(brev.ark).not.toContainText("[reg.nr.]");
-  await expect(page.getByRole("status")).toHaveText("Testmerke Modell X · 2019 · hentet fra Statens vegvesen");
-  await expect(brev.steg("Registreringsnummer")).not.toHaveAttribute("aria-current", "step");
-  await expect(brev.steg("Registreringsnummer").getByRole("img", { name: "Ferdig" })).toBeVisible();
-  // The next step takes over.
-  await expect(brev.steg("Forhandler")).toHaveAttribute("aria-current", "step");
-  await expect(brev.steg("Registreringsnummer")).not.toContainText("Mangler");
-  // Saved with the case, not in the address: a reload keeps it.
-  expect(new URL(page.url()).search).toBe("");
-  await page.reload();
-  await expect(brev.overskrift).toHaveText("Reklamasjon på mangel – Testmerke Modell X (2019), reg.nr. ZZ 99999");
 
-  await page.getByRole("button", { name: "Endre" }).click();
-  await expect(brev.regnr).toHaveValue("ZZ 99999");
-  await expect(brev.plassholder("[reg.nr.]")).toBeVisible();
-  await expect(brev.steg("Registreringsnummer")).toHaveAttribute("aria-current", "step");
-  await page.reload();
-  await expect(brev.plassholder("[reg.nr.]")).toBeVisible();
+  // The buyer has bought the letter: the vehicle is fixed, and the way back is the answers on this page.
+  await expect(page.getByRole("link", { name: /Tilbake til vurderingen/ })).toHaveCount(0);
+  await expect(brev.steg("Registreringsnummer")).toHaveCount(0);
+  await expect(brev.svarKort).toContainText("Testmerke Modell X (2019), ZZ 99999 (kan ikke endres)");
 });
 
-test("registreringsnummer som ikke finnes gir feilmelding og lar brevet stå", async ({ page, brev, sak }) => {
-  await page.route("**/api/kjoretoy?*", (route) =>
-    route.fulfill({ status: 404, json: { feil: "Vi fant ingen kjøretøy med dette registreringsnummeret." } }),
-  );
-  await page.goto(await sak.apne(svar()));
+test("en vurdering uten bil kan ikke kjøpes: registreringsnummeret legges inn først, og svarene beholdes", async ({ page, skjema }) => {
+  await page.route("**/api/vurder", (route) => route.fulfill({ json: VURDERING }));
+  await mockKjoretoy(page);
 
-  await brev.hentKjoretoy("ZZ 99999");
+  // A link with the answers has no car.
+  await page.goto(`/vurdering?${tilParametre(svar())}`);
+  await expect(page.getByRole("heading", { level: 1, name: VURDERING.tittel })).toBeVisible();
+  await expect(skjema.manglerBil).toBeVisible();
+  await expect(skjema.bilKort).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Betal med vipps" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Betal med kort" })).toBeDisabled();
+  // The car cannot be looked up from the purchase panel.
+  await expect(skjema.regnr).toHaveCount(0);
 
-  await expect(page.getByRole("alert").filter({ hasText: "Vi fant ingen kjøretøy" })).toBeVisible();
-  await expect(brev.regnr).toHaveValue("ZZ 99999");
-  await expect(brev.plassholder("[reg.nr.]")).toBeVisible();
+  await page.getByRole("button", { name: "Legg inn registreringsnummer" }).click();
+  await expect(skjema.tittel("Hvilken bil kjøpte du?")).toBeVisible();
+  await expect(skjema.kjopesum).toHaveValue("250 000");
+  await skjema.hentKjoretoy("ZZ 99999");
+  for (let n = 0; n < 4; n++) await skjema.neste();
+
+  await expect(skjema.bilKort).toContainText("Testmerke Modell X");
+  await expect(skjema.manglerBil).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Betal med vipps" })).toBeEnabled();
 });
 
-// The vehicle is step 1; the dealer step opens when it is done.
+// The vehicle comes with the case, so the dealer is the first step and is open at once.
 async function tilForhandlerSteget(page: Page, brev: Brev, sak: Saker) {
-  await page.route("**/api/kjoretoy?*", (route) =>
-    route.fulfill({ json: { kjoretoy: { regnr: "ZZ 99999", merke: "Testmerke", modell: "Modell X", ar: 2019 } } }),
-  );
   await page.goto(await sak.apne(svar()));
-  await brev.hentKjoretoy("ZZ 99999");
   await expect(brev.steg("Forhandler")).toHaveAttribute("aria-current", "step");
 }
 
@@ -288,15 +269,14 @@ test("forhandler som ikke finnes i registeret kan brukes som skrevet, og beholde
   await expect(brev.steg("Forhandler")).toContainText("Ikke koblet til Enhetsregisteret");
 });
 
-// Steps 1 and 2 done, so the tests below start at the step they are about.
+// The vehicle comes with the case and the dealer is done, so the tests below start at the step they are about.
 const FEILEN = { dato: `${AR - 1}-09-02`, egen: "Motorlampen lyser og bilen mister kraft.", tekst: "Motorlampen lyser, og bilen mister trekkraft." };
-const BIL_OG_FORHANDLER = {
-  kjoretoy: { regnr: "ZZ 99999", merke: "Testmerke", modell: "Modell X", ar: 2019 },
+const FORHANDLER_SVAR = {
   forhandler: { type: "brreg", orgnr: "999888777", navn: "Testbil AS", adresse: { linjer: ["Industriveien 3"], postnummer: "0184", poststed: "Oslo" } },
 };
 
 test("feilen, krav, vedlegg og avsender fylles ut i rekkefølge og havner i brevet", async ({ page, brev, sak }) => {
-  await page.goto(await sak.apne(svar(), BIL_OG_FORHANDLER));
+  await page.goto(await sak.apne(svar(), FORHANDLER_SVAR));
 
   // Dealer not contacted: no step about earlier contact.
   await expect(brev.steg("Kontakt med forhandleren")).toHaveCount(0);
@@ -362,7 +342,7 @@ test("feilen, krav, vedlegg og avsender fylles ut i rekkefølge og havner i brev
 });
 
 test("har forhandleren forsøkt å rette, spør vi når og hvordan det ble klaget, og hvor mange forsøk", async ({ page, brev, sak }) => {
-  await page.goto(await sak.apne(svar({ kontakt: "forsokt" }), { ...BIL_OG_FORHANDLER, feilen: FEILEN }));
+  await page.goto(await sak.apne(svar({ kontakt: "forsokt" }), { ...FORHANDLER_SVAR, feilen: FEILEN }));
 
   const kontakt = brev.steg("Kontakt med forhandleren");
   await expect(kontakt).toHaveAttribute("aria-current", "step");
@@ -378,7 +358,7 @@ test("har forhandleren forsøkt å rette, spør vi når og hvordan det ble klage
 });
 
 test("har forhandleren avvist, velger brukeren prisavslag eller heving, med beløp og utgifter", async ({ page, brev, sak }) => {
-  const url = await sak.apne(svar({ kontakt: "avvist" }), { ...BIL_OG_FORHANDLER, feilen: FEILEN, reklamasjon: { dato: `${AR - 1}-09-03`, mate: "epost" } });
+  const url = await sak.apne(svar({ kontakt: "avvist" }), { ...FORHANDLER_SVAR, feilen: FEILEN, reklamasjon: { dato: `${AR - 1}-09-03`, mate: "epost" } });
   await page.goto(url);
 
   const krav = brev.steg("Kravet");
@@ -414,18 +394,17 @@ test("har forhandleren avvist, velger brukeren prisavslag eller heving, med bel�
   await expect(krav).toContainText("Heving av kjøpet");
 });
 
-test("endrer brukeren kjøpsdatoen i vurderingen, forkastes datoer som ikke lenger kan stemme", async ({ page, brev, sak, request }) => {
+test("endrer brukeren kjøpsdatoen, forkastes datoer som ikke lenger kan stemme", async ({ page, brev, sak }) => {
   const reklamasjon = { dato: `${AR - 1}-09-03`, mate: "epost" };
-  const url = await sak.apne(svar({ kontakt: "avvist" }), { ...BIL_OG_FORHANDLER, feilen: FEILEN, reklamasjon });
-  await page.goto(url);
+  await page.goto(await sak.apne(svar({ kontakt: "avvist" }), { ...FORHANDLER_SVAR, feilen: FEILEN, reklamasjon }));
   await expect(brev.ark).toContainText(`Feilen viste seg første gang 2. september ${AR - 1}`);
   await expect(brev.steg("Feilen")).toContainText("Viste seg");
 
   // The purchase moves to 1 October: the defect cannot have shown on 2 September.
-  const res = await request.post("/api/sak", { data: { ...svar({ kontakt: "avvist", kjopsdato: `${AR - 1}-10-01` }), sak: idFra(url) } });
-  expect(res.status()).toBe(200);
-  expect(((await res.json()) as { id: string }).id).toBe(idFra(url));
-  await page.reload();
+  await brev.endreSvar();
+  await brev.svarKort.getByLabel("Når kjøpte du bilen?").fill(`${AR - 1}-10-01`);
+  await brev.lagreSvar();
+  await expect(brev.svarKort).toContainText(`Kjøpt 1. oktober ${AR - 1}`);
   await expect(brev.plassholder("[Beskriv feilen")).toBeVisible();
   await expect(brev.steg("Feilen")).toHaveAttribute("aria-current", "step");
   // The date of the first complaint (3 September) is also before the new purchase date.
@@ -434,6 +413,129 @@ test("endrer brukeren kjøpsdatoen i vurderingen, forkastes datoer som ikke leng
   await expect(brev.steg("Feilen")).toContainText(`Tidligst 1. oktober ${AR - 1}`);
   // Values that still fit are kept.
   await expect(brev.steg("Forhandler")).toContainText("Testbil AS");
+  await page.reload();
+  await expect(brev.plassholder("[Beskriv feilen")).toBeVisible();
+});
+
+// What was filled in on the letter page before the answers are corrected.
+const UTFYLT = { ...FORHANDLER_SVAR, feilen: FEILEN, krav: { utgifter: [] } };
+
+test("svarene fra vurderingen rettes på brevsiden, og brevet og stegene følger", async ({ page, brev, sak }) => {
+  await page.goto(await sak.apne(svar(), UTFYLT));
+  const kort = brev.svarKort;
+  await expect(kort).toContainText(`Kjøpt 12. mars ${AR - 1} for 250 000 kr`);
+  await expect(kort).toContainText("Feil: motor");
+  await expect(kort).toContainText("Kontakt med forhandleren: ingen ennå");
+  await expect(kort.getByLabel("Hva kostet bilen?")).toHaveCount(0);
+
+  await brev.endreSvar();
+  await kort.getByLabel("Hva kostet bilen?").fill("260000");
+  await expect(kort.getByLabel("Hva kostet bilen?")).toHaveValue("260 000");
+  await kort.getByLabel("Har du tatt opp feilen med forhandleren?").selectOption({ label: "Ja, forhandleren avviste" });
+  await brev.lagreSvar();
+
+  await expect(kort).toContainText("for 260 000 kr");
+  await expect(kort).toContainText("Kontakt med forhandleren: forhandleren avviste");
+  await expect(brev.ark).toContainText("for 260 000 kr");
+  await expect(brev.ark).toContainText("jf. § 31 og § 32");
+  await expect(brev.ark).not.toContainText("§ 29");
+  // What the new answers need opens: when the dealer was contacted, and the choice of claim.
+  await expect(brev.steg("Kontakt med forhandleren")).toHaveAttribute("aria-current", "step");
+  await expect(brev.steg("Kravet").getByRole("img", { name: "Ferdig" })).toHaveCount(0);
+
+  // Saved with the case.
+  await page.reload();
+  await expect(brev.ark).toContainText("for 260 000 kr");
+  await expect(brev.svarKort).toContainText("forhandleren avviste");
+});
+
+test("svaret om rapport styrer oppfølgingsspørsmålet og vedlegget i brevet", async ({ page, brev, sak }) => {
+  await page.goto(await sak.apne(svar(), FORHANDLER_SVAR));
+  const kort = brev.svarKort;
+  const rapport = kort.getByLabel("Har du en verksted- eller tilstandsrapport?");
+  const rapportSier = kort.getByLabel("Sier rapporten at feilen sannsynligvis var til stede før kjøpet?");
+  const bilder = kort.getByLabel("Har du bilder eller video av feilen?");
+
+  await brev.endreSvar();
+  // No report: the follow-up is about photos.
+  await expect(bilder).toBeVisible();
+  await expect(rapportSier).toHaveCount(0);
+  await rapport.selectOption("ja");
+  await expect(rapportSier).toBeVisible();
+  await expect(bilder).toHaveCount(0);
+  await expect(kort.getByRole("button", { name: "Lagre" })).toBeDisabled();
+  await rapportSier.selectOption("ja");
+  await brev.lagreSvar();
+
+  await expect(brev.ark).toContainText("Vedlagt følger kjøpekontrakt og verkstedrapport.");
+  await expect(kort).toContainText("Verkstedrapport");
+});
+
+test("«Avbryt» forkaster det som er endret i svarene", async ({ page, brev, sak }) => {
+  await page.goto(await sak.apne(svar(), FORHANDLER_SVAR));
+
+  await brev.endreSvar();
+  await brev.svarKort.getByLabel("Hva kostet bilen?").fill("999999");
+  await brev.svarKort.getByRole("button", { name: "Avbryt" }).click();
+
+  await expect(brev.svarKort.getByLabel("Hva kostet bilen?")).toHaveCount(0);
+  await expect(brev.svarKort).toContainText("for 250 000 kr");
+  await expect(brev.ark).toContainText("for 250 000 kr");
+});
+
+test("en rettelse som gjør at fristen er ute, lagres med et varsel, og brevet blir stående", async ({ page, brev, sak }) => {
+  const url = await sak.apne(svar(), FORHANDLER_SVAR);
+  const varsel = page.getByRole("alert").filter({ hasText: "fristen for å klage ute" });
+  await page.goto(url);
+  await expect(brev.ark).toBeVisible();
+  await expect(varsel).toHaveCount(0);
+
+  // Forhandleren er ikke kontaktet, og kjøpet er over fem år gammelt med disse svarene.
+  await brev.endreSvar();
+  await brev.svarKort.getByLabel("Når kjøpte du bilen?").fill(`${AR - 6}-03-12`);
+  await brev.lagreSvar();
+
+  await expect(varsel).toBeVisible();
+  await expect(brev.ark).toBeVisible();
+  await page.reload();
+  await expect(page).toHaveURL(url);
+  await expect(varsel).toBeVisible();
+  await expect(brev.ark).toContainText(`12. mars ${AR - 6}`);
+});
+
+test("svar som ikke lenger er fullstendige må rettes før brevet vises", async ({ page, brev, sak }) => {
+  const url = await sak.apne(svar({ kontakt: "venter" }), FORHANDLER_SVAR);
+  // Saved before the purchase passed five years, when the first complaint did not have to be dated.
+  await settSvarDirekte(idFra(url), svar({ kontakt: "venter", kjopsdato: `${AR - 6}-03-12` }));
+  await page.goto(url);
+
+  await expect(page.getByRole("heading", { level: 2, name: "Svarene dine må rettes" })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "Velg når du første gang tok opp feilen" })).toBeVisible();
+  await expect(brev.ark).toHaveCount(0);
+  await expect(brev.svarKort.getByRole("button", { name: "Avbryt" })).toHaveCount(0);
+  await expect(brev.svarKort.getByRole("button", { name: "Lagre" })).toBeDisabled();
+
+  await brev.svarKort.getByLabel("År reklamert").selectOption(`${AR - 6}`);
+  await brev.svarKort.getByLabel("Måned reklamert").selectOption("4");
+  await brev.lagreSvar();
+
+  await expect(brev.ark).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Fyll inn det som mangler" })).toBeVisible();
+});
+
+test("svarene erstattes bare med fullstendige og gyldige svar, på en sak som finnes", async ({ request, sak }) => {
+  const id = idFra(await sak.apne(svar()));
+  const put = (data: unknown, sakId = id) => request.put(`/api/sak/${sakId}/svar`, { data });
+
+  expect((await put({ ...svar(), kontakt: "" })).status()).toBe(400);
+  expect((await put({ ...svar(), kjopsdato: "2999-01-01" })).status()).toBe(400);
+  expect((await put(null)).status()).toBe(400);
+  expect((await put(svar(), "AAAAAAAAAAAAAAAAAAAAAA")).status()).toBe(404);
+
+  const res = await put(svar({ kjopesum: "300000" }));
+  expect(res.status()).toBe(200);
+  // The vehicle is part of the case and is not touched by new answers.
+  expect(await res.json()).toMatchObject({ svar: svar({ kjopesum: "300000" }), fristUte: false, utfylling: { kjoretoy: KJORETOY } });
 });
 
 test("serveren avviser utfylling som ikke passer saken", async ({ request, sak }) => {
@@ -444,6 +546,9 @@ test("serveren avviser utfylling som ikke passer saken", async ({ request, sak }
   expect(await lagre({ reklamasjon: { dato: `${AR - 1}-03-11`, mate: "epost" } })).toBe(400);
   expect(await lagre({ feilen: { dato: `${AR - 1}-01-01`, egen: "Motorlampen lyser hele tiden.", tekst: "Motorlampen lyser hele tiden." } })).toBe(400);
   expect(await lagre({ kjopsdato: `${AR - 1}-03-12` })).toBe(400);
+  // The vehicle was chosen in the assessment and is locked to the case.
+  expect(await lagre({ kjoretoy: { ...KJORETOY, regnr: "ZZ 11111" } })).toBe(400);
+  expect(await lagre({ kjoretoy: null })).toBe(400);
   expect(await lagre({ krav: { type: "prisavslag", utbedringNok: -5, utgifter: [] } })).toBe(400);
   expect(await lagre({ avsender: { navn: "Test Testesen", adresse: "Testveien 1", postnummer: "abc", poststed: "Oslo" } })).toBe(400);
   expect(await lagre({ ukjent: 1 })).toBe(400);
@@ -452,7 +557,7 @@ test("serveren avviser utfylling som ikke passer saken", async ({ request, sak }
 
 const EGEN = "motorlampa lyser hele tida og bilen drar ikke i bakker, verkstedet sier turboen er ødelagt";
 const FORSLAG = "Motorlampen lyser hele tiden, og bilen mister trekkraft i bakker. Verkstedet har funnet at turboen er ødelagt.";
-const TIL_FEILEN = BIL_OG_FORHANDLER;
+const TIL_FEILEN = FORHANDLER_SVAR;
 
 test("språkvasken foreslår en tekst som kan brukes, rettes eller forkastes", async ({ page, brev, sak }) => {
   const sendt: string[] = [];

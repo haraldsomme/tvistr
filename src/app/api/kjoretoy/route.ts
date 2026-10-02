@@ -10,12 +10,13 @@ const FEIL = {
   utilgjengelig: { status: 502, feil: "Vi fikk ikke kontakt med Statens vegvesen. Prøv igjen om litt." },
 } as const;
 
-// Make, model and year for one registration number, for the letter. Nothing is stored.
+// Make, model and year for one registration number, and the day it was registered on its current
+// owner (a suggestion for the purchase date). Nothing is stored.
 export async function GET(request: Request) {
   if (forMange(ipFra(request))) {
     return Response.json({ feil: "Du har gjort mange oppslag på kort tid. Vent et minutt og prøv igjen." }, { status: 429 });
   }
   const oppslag = await hentKjoretoy(new URL(request.url).searchParams.get("regnr")?.slice(0, 20) ?? "");
   if (!oppslag.ok) return Response.json({ feil: FEIL[oppslag.feil].feil }, { status: FEIL[oppslag.feil].status });
-  return Response.json({ kjoretoy: oppslag.kjoretoy });
+  return Response.json({ kjoretoy: oppslag.kjoretoy, eierFra: oppslag.eierFra });
 }

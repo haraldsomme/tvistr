@@ -29,15 +29,15 @@ import type { KlageInput } from "@/lib/vurdering/typer";
 
 type Felles = { aktiv: boolean; lagre: (endring: Endring) => Promise<boolean>; avbryt?: () => void };
 
-const LABEL = "text-[13px] font-semibold";
+export const LABEL = "text-[13px] font-semibold";
 const INPUT = "w-full rounded-[6px] border border-[#bfbab0] bg-white px-3.5 py-3 text-[16px] placeholder:text-[#8a94a3]";
-const HJELP = "m-0 text-[13px] leading-[1.5] text-[#5b6472]";
+export const HJELP = "m-0 text-[13px] leading-[1.5] text-[#5b6472]";
 
-const kroner = (n: number) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} kr`;
-const gruppert = (siffer: string) => siffer.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-const bareSiffer = (s: string, maks = 8) => s.replace(/\D/g, "").replace(/^0+/, "").slice(0, maks);
+export const kroner = (n: number) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} kr`;
+export const gruppert = (siffer: string) => siffer.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+export const bareSiffer = (s: string, maks = 8) => s.replace(/\D/g, "").replace(/^0+/, "").slice(0, maks);
 
-function Sammendrag({ linjer }: { linjer: ReactNode[] }) {
+export function Sammendrag({ linjer }: { linjer: ReactNode[] }) {
   return (
     <div className="flex flex-col gap-0.5 text-[14px] leading-[1.45] text-[#3d4757]">
       {linjer.filter(Boolean).map((l, n) => (
@@ -48,7 +48,7 @@ function Sammendrag({ linjer }: { linjer: ReactNode[] }) {
 }
 
 // The form of a step: saves on submit and shows the two buttons.
-function Skjema({ klar, send, avbryt, children, knapp = "Lagre" }: { klar: boolean; send: () => Promise<boolean>; avbryt?: () => void; children: ReactNode; knapp?: string }) {
+export function Skjema({ klar, send, avbryt, children, knapp = "Lagre" }: { klar: boolean; send: () => Promise<boolean>; avbryt?: () => void; children: ReactNode; knapp?: string }) {
   const [lagrer, setLagrer] = useState(false);
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -74,7 +74,7 @@ function Skjema({ klar, send, avbryt, children, knapp = "Lagre" }: { klar: boole
   );
 }
 
-function Tekstfelt({ label, hjelp, ...input }: { label: string; hjelp?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+export function Tekstfelt({ label, hjelp, ...input }: { label: string; hjelp?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   const id = useId();
   return (
     <div className="flex flex-col gap-1.5">
@@ -91,7 +91,7 @@ function Tekstfelt({ label, hjelp, ...input }: { label: string; hjelp?: string }
   );
 }
 
-function Nedtrekk({ label, children, ...select }: { label: string; children: ReactNode } & React.SelectHTMLAttributes<HTMLSelectElement>) {
+export function Nedtrekk({ label, children, ...select }: { label: string; children: ReactNode } & React.SelectHTMLAttributes<HTMLSelectElement>) {
   const id = useId();
   return (
     <div className="flex flex-col gap-1.5">

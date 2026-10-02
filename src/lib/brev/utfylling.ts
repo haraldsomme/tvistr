@@ -20,8 +20,9 @@ export type Utfylling = {
   sprakvask?: number;
 };
 
-// What the page can save: everything but the server's own counter.
-type Felt = Exclude<keyof Utfylling, "sprakvask">;
+// What the page can save: everything but the server's own counter and the vehicle, which is chosen
+// in the assessment and is part of the case from the day it is opened.
+type Felt = Exclude<keyof Utfylling, "sprakvask" | "kjoretoy">;
 
 // The defect: the day it showed, the buyer's own words, and the text that goes in the letter
 // (the buyer's own, a suggestion from the language model, or an edited one).
@@ -71,7 +72,8 @@ function tekst(v: unknown, maks: number, min = 1): string | null {
   return t.length >= min && t.length <= maks ? t : null;
 }
 
-function lesKjoretoy(v: unknown): Kjoretoy | null {
+// The vehicle from the registry lookup, as the assessment sends it when the case is opened.
+export function lesKjoretoy(v: unknown): Kjoretoy | null {
   if (!erObjekt(v)) return null;
   const regnr = tekst(v.regnr, 10);
   const merke = tekst(v.merke, 60);
@@ -170,7 +172,6 @@ function lesAvsender(v: unknown): Avsender | null {
 }
 
 const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } = {
-  kjoretoy: lesKjoretoy,
   forhandler: lesForhandler,
   feilen: lesFeilen,
   opplysning: lesOpplysning,

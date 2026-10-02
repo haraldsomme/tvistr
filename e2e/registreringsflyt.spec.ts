@@ -1,4 +1,4 @@
-import { expect, test } from "./fixtures";
+import { expect, mockKjoretoy, test } from "./fixtures";
 
 // Runs against the real /api/vurder and the database, so it checks the shape of the assessment and
 // not the number of decisions, which changes when `hent` adds more.
@@ -7,6 +7,7 @@ import { expect, test } from "./fixtures";
 const KJOPSDATO = `${new Date().getFullYear() - 1}-03-15`;
 
 test("kjøpsdatoen velges med datovelger og kan ikke ligge i fremtiden", async ({ page, skjema }) => {
+  await mockKjoretoy(page);
   await page.goto("/vurdering");
   await skjema.kjopesum.fill("250000");
   await skjema.kmVedKjop.fill("80000");
@@ -18,6 +19,9 @@ test("kjøpsdatoen velges med datovelger og kan ikke ligge i fremtiden", async (
   await expect(skjema.nesteKnapp).toBeDisabled();
 
   await skjema.velgKjop(KJOPSDATO);
+  // The car is part of the first step too.
+  await expect(skjema.nesteKnapp).toBeDisabled();
+  await skjema.hentKjoretoy("ZZ 99999");
   await expect(skjema.nesteKnapp).toBeEnabled();
 });
 
@@ -27,6 +31,7 @@ test("en gammel lenke med kjøpt måned og år åpner skjemaet med siste dag i m
 });
 
 test("fra forsiden gjennom de fire stegene til vurderingen", async ({ page, skjema }) => {
+  await mockKjoretoy(page);
   await page.goto("/");
   await page.getByRole("link", { name: "Start vurderingen" }).click();
 
@@ -36,6 +41,8 @@ test("fra forsiden gjennom de fire stegene til vurderingen", async ({ page, skje
   await skjema.kjopesum.fill("250000");
   await expect(skjema.kjopesum).toHaveValue("250 000");
   await skjema.kmVedKjop.fill("80000");
+  await expect(skjema.nesteKnapp).toBeDisabled();
+  await skjema.hentKjoretoy("ZZ 99999");
   await skjema.neste();
 
   await expect(skjema.tittel("Hva er galt med bilen?")).toBeVisible();
@@ -77,6 +84,9 @@ test("fra forsiden gjennom de fire stegene til vurderingen", async ({ page, skje
     await expect(grunnlag.getByRole("link", { name: /^Forbrukerklageutvalget, sak / })).toBeVisible();
     await expect(grunnlag.getByRole("link", { name: "forbrukerkjøpsloven § 18" })).toHaveAttribute("href", /lovdata\.no/);
     await expect(page.getByRole("heading", { name: "Få reklamasjonsbrevet" })).toBeVisible();
+    // Before paying, the car the letter is for is shown, and cannot be changed there.
+    await expect(page.getByRole("group", { name: "Brevet skrives for" })).toContainText("Testmerke Modell X");
+    await expect(page.getByRole("group", { name: "Brevet skrives for" })).toContainText("ZZ 99999");
     await expect(page.getByText("Den er veiledende og ikke juridisk rådgivning")).toBeVisible();
   };
   await vurdering();
@@ -85,6 +95,8 @@ test("fra forsiden gjennom de fire stegene til vurderingen", async ({ page, skje
   const url = new URL(page.url());
   expect(url.searchParams.has("steg")).toBe(false);
   expect(url.searchParams.get("kjopsdato")).toBe(KJOPSDATO);
+  // The vehicle is not an answer in the address.
+  expect(decodeURIComponent(url.search).replace(/\s/g, "")).not.toContain("ZZ99999");
   await page.reload();
   await vurdering();
 
@@ -92,4 +104,6 @@ test("fra forsiden gjennom de fire stegene til vurderingen", async ({ page, skje
   await expect(skjema.tittel("Hvilken bil kjøpte du?")).toBeVisible();
   await expect(skjema.kjopsdato).toHaveValue(KJOPSDATO);
   await expect(skjema.kjopesum).toHaveValue("250 000");
+  // The car stays while the answers are changed.
+  await expect(page.getByRole("status")).toContainText("Testmerke Modell X");
 });

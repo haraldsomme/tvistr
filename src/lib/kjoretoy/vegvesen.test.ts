@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lesKjoretoy, normaliserRegnr } from "./vegvesen";
+import { lesEierFra, lesKjoretoy, normaliserRegnr } from "./vegvesen";
 
 // Made-up vehicle in the shape Statens vegvesen answers with; only the fields we read.
 const svar = (endring: Record<string, unknown> = {}) => ({
@@ -69,5 +69,25 @@ describe("lesKjoretoy", () => {
     const s = svar();
     s.kjoretoydataListe[0].godkjenning.tekniskGodkjenning.tekniskeData.generelt.merke = [];
     expect(lesKjoretoy(s)).toBeNull();
+  });
+});
+
+describe("lesEierFra", () => {
+  const med = (registrering: unknown) => svar({ registrering });
+
+  it("leser dagen bilen ble registrert på nåværende eier, uten klokkeslett", () => {
+    expect(lesEierFra(med({ registrertForstegangPaEierskap: "2024-06-04T10:23:02.673+02:00" }))).toBe("2024-06-04");
+  });
+
+  it("beholder dagen slik den står i norsk tid, også sent på kvelden", () => {
+    expect(lesEierFra(med({ registrertForstegangPaEierskap: "2024-06-04T23:50:00.000+02:00" }))).toBe("2024-06-04");
+  });
+
+  it("gir null når datoen mangler eller ikke er en dag", () => {
+    expect(lesEierFra(svar())).toBeNull();
+    expect(lesEierFra(med({}))).toBeNull();
+    for (const d of ["", "i går", "2024-02-30T10:00:00+01:00", 20240604, null]) expect(lesEierFra(med({ registrertForstegangPaEierskap: d }))).toBeNull();
+    expect(lesEierFra(null)).toBeNull();
+    expect(lesEierFra({ kjoretoydataListe: [] })).toBeNull();
   });
 });

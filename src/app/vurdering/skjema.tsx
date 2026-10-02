@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useId, useState, type ReactNode } from "react";
 import { FEILTYPER_KNAPPER, FRA_AR, JA_NEI, oppdagetMulig, OPPLYST_VALG, sporOmReklamasjonsdato, stegGyldig, TOM_INNSENDING, type Innsending } from "@/lib/vurdering/innsending";
+import { presumsjonManederFor } from "@/lib/vurdering/faktorer";
 import { KONTAKT_VALG, OPPDAGET_VALG, type Kontakt, type Niva, type Oppdaget } from "@/lib/vurdering/typer";
 
 type Steg = 1 | 2 | 3;
@@ -15,12 +16,14 @@ type Resultat = {
   tiltak: { tittel: string; tekst?: string }[];
   // null when the case was ruled out before the comparison.
   utvalg: { n: number; spesifikk: boolean } | null;
+  eksempel: { setning: string; saksnummer: string; kildeUrl: string } | null;
 };
 
 const FEILTYPE_TEKST: Record<(typeof FEILTYPER_KNAPPER)[number], string> = {
   motor: "Motor",
   girkasse: "Girkasse og clutch",
   elektrisk: "Elektrisk",
+  batteri: "Batteri (elbil)",
   understell: "Understell og hjul",
   bremser: "Bremser",
   rust: "Rust",
@@ -177,7 +180,11 @@ const NIVA_VISNING: Record<Niva, { tekst: string; prikk: string; farge: string; 
   svak: { tekst: "Dårlig sak", prikk: "oklch(0.52 0.12 25)", farge: "oklch(0.42 0.12 25)", bakgrunn: "oklch(0.95 0.04 25)" },
   ikke_aktuell: { tekst: "Ingen sak", prikk: "#8a94a3", farge: "#5b6472", bakgrunn: "#e6e2d8" },
 };
-const VEKT_PRIKK = { for: "oklch(0.52 0.1 160)", mot: "oklch(0.45 0.1 75)", noytral: "#8a9bb5" } as const;
+// For and against get a sign in the same green and red as the case level; neutral points a grey dot.
+const VEKT_TEGN = {
+  for: { tegn: "+", farge: "oklch(0.42 0.1 160)", bakgrunn: "oklch(0.95 0.04 160)", tekst: "Taler for saken" },
+  mot: { tegn: "−", farge: "oklch(0.42 0.12 25)", bakgrunn: "oklch(0.95 0.04 25)", tekst: "Taler mot saken" },
+} as const;
 const KORT = "overflow-hidden rounded-lg border border-[#dcd8cf] bg-white";
 const RAD = "flex gap-3.5 border-b border-[#eceae4] px-6 py-[18px] last:border-b-0";
 const SEKSJON_TITTEL = "m-0 font-brev text-[24px] font-semibold leading-[1.3]";
@@ -230,16 +237,24 @@ function Vipps({ tekst }: { tekst: string }) {
   );
 }
 
+// From the first complaint to the committee's decision: median 664 days (middle half 514–851) in
+// the 326 dealer decisions from 2023 on that state the complaint date (vedtak.forste_reklamasjon_dato
+// to vedtaksdato, computed 2026-10-01). It was 357 days before 2021. Recompute when `hent` has added more.
+const TID_TIL_VEDTAK = "Saker som ender hos Forbrukerklageutvalget tar nå typisk rundt to år. Et godt brev kan løse saken før det.";
+
 // UI only: the payment buttons do nothing yet.
+const LIGNENDE_SAKER = "Henvisninger til lignende saker som fikk medhold";
 const NESTE_PUNKTER = [
   "Formuleringer etter og henvisninger til lovverk",
-  "Henvisninger til lignende saker som fikk medhold",
+  LIGNENDE_SAKER,
   "Frist for svar fra forhandleren",
   "Hva du gjør hvis forhandleren avviser",
   "PDF og redigerbar Word-fil",
 ];
 
-function Neste({ niva }: { niva: Niva }) {
+// The line about similar cases is only promised when we have one to refer to.
+function Neste({ niva, medEksempel }: { niva: Niva; medEksempel: boolean }) {
+  const punkter = NESTE_PUNKTER.filter((p) => medEksempel || p !== LIGNENDE_SAKER);
   return (
     <aside className="flex flex-col gap-3 bg-[#17263d] px-6 pb-6 pt-5 text-[#f6f4ef] md:sticky md:top-6 md:gap-5 md:self-start md:rounded-lg md:p-9">
       <div className="font-ui text-[12px] font-medium uppercase tracking-[.04em] text-[#8a9bb5] md:text-[13px]">Neste steg</div>
@@ -250,7 +265,7 @@ function Neste({ niva }: { niva: Niva }) {
         <span className="font-brev text-[20px] font-semibold md:hidden">{PRIS_NOK} kr</span>
       </div>
       <ul className="m-0 flex list-none flex-col gap-2 border-b border-[rgba(246,244,239,.18)] p-0 pb-3.5 text-[13px] leading-[1.5] text-[#c9d2df] md:gap-2.5 md:pb-3.5 md:text-[14px]">
-        {NESTE_PUNKTER.map((p) => (
+        {punkter.map((p) => (
           <li key={p} className="flex items-baseline gap-2.5">
             <span aria-hidden className="text-[#8a9bb5]">
               ✓
@@ -271,14 +286,34 @@ function Neste({ niva }: { niva: Niva }) {
         Betal med kort
       </button>
       <p className="m-0 text-center font-ui text-[12px] text-[#aab6c7] md:text-left md:text-[13px] md:leading-[1.55]">
-        Engangsbeløp, ingen abonnement.<span className="hidden md:inline"> Du kan redigere brevet etter kjøp.</span>
+        Engangsbeløp, ingen abonnement.<span className="hidden md:inline"> {TID_TIL_VEDTAK}</span>
       </p>
     </aside>
   );
 }
 
-function Prikk({ farge }: { farge: string }) {
-  return <div aria-hidden className="mt-[7px] h-[9px] w-[9px] flex-none rounded-full" style={{ background: farge }} />;
+// Points for the case first, then those against, then the neutral ones; the order within each group is kept.
+const VEKT_REKKEFOLGE = { for: 0, mot: 1, noytral: 2 } as const;
+const sortertGrunnlag = <T extends { vekt: keyof typeof VEKT_REKKEFOLGE }>(punkter: T[]) =>
+  [...punkter].sort((a, b) => VEKT_REKKEFOLGE[a.vekt] - VEKT_REKKEFOLGE[b.vekt]);
+
+function Prikk() {
+  return <div aria-hidden className="mt-[7px] h-[9px] w-[9px] flex-none rounded-full bg-[#8a9bb5]" />;
+}
+
+function Vekt({ vekt }: { vekt: "for" | "mot" | "noytral" }) {
+  if (vekt === "noytral") return <Prikk />;
+  const v = VEKT_TEGN[vekt];
+  return (
+    <span
+      role="img"
+      aria-label={v.tekst}
+      className="mt-[3px] flex h-[18px] w-[18px] flex-none items-center justify-center rounded-full text-[14px] font-bold leading-none"
+      style={{ background: v.bakgrunn, color: v.farge }}
+    >
+      {v.tegn}
+    </span>
+  );
 }
 
 function Vurdering({ resultat, endre }: { resultat: Resultat; endre: () => void }) {
@@ -318,18 +353,26 @@ function Vurdering({ resultat, endre }: { resultat: Resultat; endre: () => void 
               <ul className={`m-0 list-none p-0 ${KORT}`}>
                 {resultat.utvalg && (
                   <li className={RAD}>
-                    <Prikk farge={VEKT_PRIKK.noytral} />
-                    <p className="m-0 text-[15px] leading-[1.6]">
-                      <strong className="font-semibold">
-                        {resultat.utvalg.spesifikk ? `${resultat.utvalg.n} lignende vedtak` : `${resultat.utvalg.n} vedtak om bruktbil kjøpt fra forhandler`}
-                      </strong>{" "}
-                      fra Forbrukerklageutvalget, og svarene dine vurdert opp mot forbrukerkjøpsloven.
-                    </p>
+                    <Vekt vekt="for" />
+                    <div className="flex flex-col items-start gap-2">
+                      <p className="m-0 text-[15px] leading-[1.6]">
+                        <strong className="font-semibold">
+                          {resultat.utvalg.spesifikk ? `${resultat.utvalg.n} lignende vedtak` : `${resultat.utvalg.n} vedtak om bruktbil kjøpt fra forhandler`}
+                        </strong>{" "}
+                        fra Forbrukerklageutvalget.
+                        {resultat.eksempel && ` Ett eksempel: ${resultat.eksempel.setning}`}
+                      </p>
+                      {resultat.eksempel && (
+                        <a href={resultat.eksempel.kildeUrl} target="_blank" rel="noreferrer" className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
+                          Forbrukerklageutvalget, sak {resultat.eksempel.saksnummer}
+                        </a>
+                      )}
+                    </div>
                   </li>
                 )}
-                {resultat.grunnlag.map((g) => (
+                {sortertGrunnlag(resultat.grunnlag).map((g) => (
                   <li key={g.tekst} className={RAD}>
-                    <Prikk farge={VEKT_PRIKK[g.vekt]} />
+                    <Vekt vekt={g.vekt} />
                     <div className="flex flex-col items-start gap-2">
                       <span className="text-[15px] leading-[1.6]">{g.tekst}</span>
                       {g.paragraf &&
@@ -373,7 +416,7 @@ function Vurdering({ resultat, endre }: { resultat: Resultat; endre: () => void 
         </div>
         {resultat.niva !== "ikke_aktuell" && (
           <div className="mt-auto md:mt-0">
-            <Neste niva={resultat.niva} />
+            <Neste niva={resultat.niva} medEksempel={resultat.eksempel !== null} />
           </div>
         )}
       </div>
@@ -431,6 +474,7 @@ export function Skjema() {
         grunnlag: json.grunnlag ?? [],
         tiltak: json.tiltak ?? [],
         utvalg: json.utvalg ?? null,
+        eksempel: json.eksempel ?? null,
       });
       return null;
     } catch (e) {
@@ -546,9 +590,12 @@ export function Skjema() {
                   kort
                   deaktivert={(v) => !oppdagetMulig(d, v)}
                 />
-                <p className="m-0 hidden text-[13px] leading-[1.5] text-[#5b6472] md:block">
-                  Innen 6 måneder antas feilen å ha vært der ved levering. Da står du sterkere.
-                </p>
+                {/* The period turns on 1 January, so the year alone decides it. */}
+                {d.kjopAr && (
+                  <p className="m-0 hidden text-[13px] leading-[1.5] text-[#5b6472] md:block">
+                    {presumsjonManederFor(`${d.kjopAr}-12-31`) === 24 ? "Innen 2 år" : "Innen 6 måneder"} antas feilen å ha vært der ved levering. Da står du sterkere.
+                  </p>
+                )}
               </div>
             </div>
           </>

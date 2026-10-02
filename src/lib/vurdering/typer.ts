@@ -11,6 +11,7 @@ export type FeilKnapp =
   | "motor"
   | "girkasse"
   | "elektrisk"
+  | "batteri"
   | "understell"
   | "bremser"
   | "rust"

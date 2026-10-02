@@ -24,13 +24,14 @@ describe("grunnlag", () => {
     const i = hent(1);
     for (const [kontakt, paragraf] of [
       ["nei", "forbrukerkjøpsloven § 27"],
-      ["venter", "forbrukerkjøpsloven § 29"],
       ["avvist", "forbrukerkjøpsloven §§ 31 og 32"],
       ["forsokt", "forbrukerkjøpsloven §§ 31 og 32"],
     ] as const) {
       i.feilen.kontakt = kontakt;
       expect(paragrafer(i).at(-1)).toBe(paragraf);
     }
+    i.feilen.kontakt = "venter";
+    expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven § 29");
   });
 
   it("opplyst feil og dokumenterte feilopplysninger får hvert sitt punkt", () => {

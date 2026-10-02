@@ -58,8 +58,6 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
     punkter.push({ tekst: `Forhandleren har ${hendt}. Da kan du gå videre til prisavslag eller heving.`, vekt: "for", ...fkjl(31, "§§ 31 og 32") });
   } else if (f.kontakt === "nei") {
     punkter.push({ tekst: "Du har ikke klaget til forhandleren ennå. Du må gjøre det innen rimelig tid etter at du oppdaget feilen.", vekt: "mot", ...fkjl(27) });
-  } else {
-    punkter.push({ tekst: "Du kan kreve at forhandleren retter feilen uten kostnad for deg.", vekt: "noytral", ...fkjl(29) });
   }
 
   return punkter;

@@ -14,20 +14,22 @@ const hentNeutral = (id: number): KlageInput => {
   return i;
 };
 
-// lav/hoy set ±0.05 around the share: 0.6 is neutral, 0.8 counts +1, 0.3 counts −1.
-const stat = (andel: number, spesifikk = true): Statistikk => ({
+// lav/hoy set ±0.05 around the share, compared with a baseline of 0.6: 0.6 is neutral, 0.8 counts +1,
+// 0.3 counts −1.
+const stat = (andel: number, spesifikk = true, basis = 0.6): Statistikk => ({
   n: 200,
   vunnet: Math.round(andel * 200),
   andel,
   lav: andel - 0.05,
   hoy: andel + 0.05,
+  basis,
   trinn: 1,
   beskrivelse: "test",
   spesifikk,
 });
 
-const dep = (andel = 0.6, spesifikk = true): Avhengigheter => ({
-  hentStatistikk: vi.fn(async () => stat(andel, spesifikk)),
+const dep = (andel = 0.6, spesifikk = true, basis = 0.6): Avhengigheter => ({
+  hentStatistikk: vi.fn(async () => stat(andel, spesifikk, basis)),
   idag: IDAG,
 });
 
@@ -56,7 +58,7 @@ describe("utenfor tjenesten og frister", () => {
 describe("poengkort", () => {
   it("presumsjon, rapport, rettingsforsøk og god statistikk gir sterk", async () => {
     const v = await vurder(hent(1), dep(0.8));
-    expect(v.poeng).toBe(5); // stat 1 + presumsjon 2 + rapport 1 + forsøkt 1
+    expect(v.poeng).toBe(6); // stat 1 + presumsjon 2 + rapport 1 + forsøkt 2
     expect(v.niva).toBe("sterk");
   });
 
@@ -85,6 +87,19 @@ describe("poengkort", () => {
     expect((await vurder(hentNeutral(4), dep(0.6))).poeng).toBe(2);
     expect((await vurder(hentNeutral(4), dep(0.3))).poeng).toBe(1);
     expect((await vurder(hentNeutral(4), dep(0.8, false))).poeng).toBe(2);
+  });
+
+  it("statistikken måles mot andelen for samme tidspunkt, ikke mot et fast nivå", async () => {
+    // 0.8 is clearly above a baseline of 0.6 but not above 0.85; 0.5 is clearly below 0.7 but not below 0.45.
+    expect((await vurder(hentNeutral(4), dep(0.8, true, 0.85))).poeng).toBe(2);
+    expect((await vurder(hentNeutral(4), dep(0.5, true, 0.7))).poeng).toBe(1);
+    expect((await vurder(hentNeutral(4), dep(0.5, true, 0.45))).poeng).toBe(2);
+  });
+
+  it("rettingsforsøk teller dobbelt", async () => {
+    const i = hentNeutral(4);
+    i.feilen.kontakt = "forsokt";
+    expect((await vurder(i, dep())).poeng).toBe(4); // presumsjon 2 + forsøkt 2
   });
 
   it("dokumenterte feilopplysninger gir et poeng", async () => {

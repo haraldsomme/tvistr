@@ -7,19 +7,21 @@ export type Tiltak = { tittel: string; tekst: string };
 export function foreslaTiltak(f: Faktorer): Tiltak[] {
   const tiltak: Tiltak[] = [];
 
-  // The single most common reason for losing: the buyer must show that the defect was there at
-  // delivery, and a report that only names the fault does not do that.
+  // The two most common reasons for losing: the buyer could not show that the defect was there at
+  // delivery (named in about 8 of 10 lost dealer decisions), and the committee saw it as wear the
+  // buyer had to expect from the car's age and mileage (about 6 of 10). A report that only names
+  // the fault answers neither.
   if (!f.verkstedrapport) {
     tiltak.push({
       tittel: "Få en verksted- eller tilstandsrapport",
       tekst:
-        "Be et uavhengig verksted undersøke feilen og skrive hva den er, hva som er årsaken, og om den sannsynligvis var til stede da du kjøpte bilen. Det siste er ofte avgjørende for resultatet. Ta vare på fakturaen.",
+        "Be et uavhengig verksted undersøke feilen og skrive hva den er, hva som er årsaken, om den sannsynligvis var til stede da du kjøpte bilen, og om den er mer enn normal slitasje for bilens alder og kilometerstand. De to siste er ofte avgjørende for resultatet. Ta vare på fakturaen.",
     });
   } else if (f.rapportSierForKjop === false) {
     tiltak.push({
       tittel: "Be et uavhengig verksted vurdere når feilen oppsto",
       tekst:
-        "Rapporten din sier ikke om feilen var til stede før kjøpet, og det er ofte avgjørende for resultatet. Be verkstedet skrive en kort vurdering av årsaken og om feilen sannsynligvis fantes da du overtok bilen, gjerne som et tillegg til rapporten.",
+        "Rapporten din sier ikke om feilen var til stede før kjøpet, og det er ofte avgjørende for resultatet. Be verkstedet skrive en kort vurdering av årsaken, om feilen sannsynligvis fantes da du overtok bilen, og om den er mer enn normal slitasje for bilens alder og kilometerstand, gjerne som et tillegg til rapporten.",
     });
   }
   if (!f.verkstedrapport && !f.bilder) {

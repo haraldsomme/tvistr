@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import klager from "./testdata/klager.json";
-import { beregnFaktorer, leggTilManeder } from "./faktorer";
+import { beregnFaktorer, leggTilManeder, presumsjonManederFor } from "./faktorer";
 import type { KlageInput, TestKlage } from "./typer";
 
 const IDAG = "2026-10-01";
@@ -48,6 +48,11 @@ describe("presumsjon (fkjl § 18)", () => {
     i.bilOgKjop.kjopsdato = "2024-01-31";
     expect(fakta(i)).toMatchObject({ presumsjonManeder: 24, presumsjon: true });
   });
+
+  it("perioden skifter 1. januar 2024", () => {
+    expect(presumsjonManederFor("2023-12-31")).toBe(6);
+    expect(presumsjonManederFor("2024-01-01")).toBe(24);
+  });
 });
 
 describe("femårsfristen (fkjl § 27)", () => {
@@ -81,6 +86,20 @@ describe("beregnFaktorer", () => {
     expect(fakta(hent(1)).reklamasjonsbotte).toBe("rask");
     expect(fakta(hent(4)).reklamasjonsbotte).toBe("middels");
     expect(fakta(hent(6)).reklamasjonsbotte).toBe("sen");
+  });
+
+  it("statistikken sammenlignes med saker i samme rettslige stilling, svaret om tid er uendret", () => {
+    const i = hent(4); // kjøpt 2025-07-01, to års presumsjon
+    expect(i.feilen.oppdaget).toBe("6_mnd_til_2_ar");
+    expect(fakta(i)).toMatchObject({ presumsjon: true, reklamasjonsbotte: "middels", statistikkbotte: "rask" });
+    i.bilOgKjop.kjopsdato = "2023-06-30"; // seks måneders presumsjon: 6 mnd–2 år er utenfor
+    expect(fakta(i)).toMatchObject({ presumsjon: false, reklamasjonsbotte: "middels", statistikkbotte: "middels" });
+  });
+
+  it("elbilbatteri har egen knapp", () => {
+    const i = hent(1);
+    i.feilen.typer = ["batteri"];
+    expect(fakta(i).feilgrupper).toEqual([["batteri_elbil"]]);
   });
 
   it("å ikke ha kontaktet forhandleren endrer ingen fakta utenom femårsfristen", () => {

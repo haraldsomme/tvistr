@@ -20,8 +20,8 @@ function forMange(ip: string): boolean {
   return nylig.length > GRENSE.antall;
 }
 
-// Returns the level, the title, the justification with its legal basis, and how many decisions the
-// case was compared with. The suggested actions go out as titles only (the explanation is part of
+// Returns the level, the title, the justification with its legal basis, how many decisions the case
+// was compared with, and one similar decision when there is one. The suggested actions go out as titles only (the explanation is part of
 // the paid step), except for a weak case, where the advice matters more than the sale. The score,
 // the factors and the share of won cases stay on the server.
 export async function POST(request: Request) {
@@ -52,6 +52,7 @@ export async function POST(request: Request) {
       tittel: v.tittel,
       begrunnelse: v.begrunnelse,
       grunnlag: v.grunnlag,
+      eksempel: v.eksempel && { setning: v.eksempel.setning, saksnummer: v.eksempel.saksnummer, kildeUrl: v.eksempel.kildeUrl },
       tiltak: v.tiltak.map((t) => (v.niva === "svak" ? t : { tittel: t.tittel })),
       utvalg: v.statistikk && { n: v.statistikk.n, spesifikk: v.statistikk.spesifikk },
     });

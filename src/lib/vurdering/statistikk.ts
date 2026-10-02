@@ -9,6 +9,9 @@ export type Statistikk = {
   andel: number;
   lav: number;
   hoy: number;
+  // The share among all dealer decisions with the same timing as the sample (all dealer decisions
+  // when the step does not match on timing). The sample only counts when it clearly differs from this.
+  basis: number;
   // Which step of the relaxation ladder produced the sample (1 = most specific).
   trinn: number;
   beskrivelse: string;
@@ -24,7 +27,7 @@ const VUNNET = sql`v.utfall in ('medhold','delvis_medhold')`;
 const tekstListe = (verdier: string[]) => sql`ARRAY[${sql.join(verdier.map((v) => sql`${v}`), sql`, `)}]::text[]`;
 
 function botteSql(f: Faktorer): SQL {
-  switch (f.reklamasjonsbotte) {
+  switch (f.statistikkbotte) {
     case "rask":
       return sql`v.dager_til_reklamasjon <= 180`;
     case "middels":
@@ -34,7 +37,8 @@ function botteSql(f: Faktorer): SQL {
   }
 }
 
-type Trinn = { beskrivelse: string; betingelse: SQL; spesifikk: boolean };
+// medBotte: the step matches on timing, so it is compared with all dealer decisions with that timing.
+type Trinn = { beskrivelse: string; betingelse: SQL; spesifikk: boolean; medBotte: boolean };
 
 // Dealer cases only, from most to least specific; we use the first step with enough decisions.
 // Each button the buyer picked is a group of defect types, matched with any of them (&&). With
@@ -50,24 +54,27 @@ export function trinnFor(f: Faktorer): Trinn[] {
     const navn = g.map((typer) => typer.join("/")).join(" + ");
     if (g.length > 1) {
       const alle = sql.join(treff.map((t) => sql`(${t})`), sql` and `);
-      trinn.push({ beskrivelse: `alle av ${navn} og reklamasjonstid`, betingelse: sql`${alle} and ${botte}`, spesifikk: true });
-      trinn.push({ beskrivelse: `alle av ${navn}`, betingelse: alle, spesifikk: true });
+      trinn.push({ beskrivelse: `alle av ${navn} og reklamasjonstid`, betingelse: sql`${alle} and ${botte}`, spesifikk: true, medBotte: true });
+      trinn.push({ beskrivelse: `alle av ${navn}`, betingelse: alle, spesifikk: true, medBotte: false });
     }
     const noen = sql`(${sql.join(treff.map((t) => sql`(${t})`), sql` or `)})`;
-    trinn.push({ beskrivelse: `${navn} og reklamasjonstid`, betingelse: sql`${noen} and ${botte}`, spesifikk: true });
-    trinn.push({ beskrivelse: navn, betingelse: noen, spesifikk: true });
+    trinn.push({ beskrivelse: `${navn} og reklamasjonstid`, betingelse: sql`${noen} and ${botte}`, spesifikk: true, medBotte: true });
+    trinn.push({ beskrivelse: navn, betingelse: noen, spesifikk: true, medBotte: false });
   }
-  trinn.push({ beskrivelse: "alle forhandlersaker", betingelse: sql`true`, spesifikk: false });
+  trinn.push({ beskrivelse: "alle forhandlersaker", betingelse: sql`true`, spesifikk: false, medBotte: false });
   return trinn;
 }
 
-// One query that counts every step at once.
+// One query that counts every step at once, plus all dealer decisions with the same timing (nb, vb).
+// The last step is all dealer decisions, so it doubles as the baseline for steps without timing.
 export const hentStatistikk: HentStatistikk = async (f) => {
   const trinn = trinnFor(f);
+  const botte = botteSql(f);
   const kolonner = trinn.map(
     (t, i) =>
       sql`count(*) filter (where ${t.betingelse})::int as ${sql.identifier(`n${i}`)}, count(*) filter (where ${t.betingelse} and ${VUNNET})::int as ${sql.identifier(`v${i}`)}`,
   );
+  kolonner.push(sql`count(*) filter (where ${botte})::int as nb, count(*) filter (where ${botte} and ${VUNNET})::int as vb`);
   const [rad] = (await db.execute(sql`select ${sql.join(kolonner, sql`, `)} from vedtak v where v.selger_type = 'forhandler'`)).rows as Record<
     string,
     number
@@ -84,5 +91,17 @@ export const hentStatistikk: HentStatistikk = async (f) => {
   const vunnet = Number(rad[`v${valgt}`]);
   const [lav, hoy] = wilson(vunnet, n);
   const t = trinn[valgt];
-  return { n, vunnet, andel: n ? vunnet / n : 0, lav, hoy, trinn: valgt + 1, beskrivelse: t.beskrivelse, spesifikk: t.spesifikk };
+  const siste = trinn.length - 1;
+  const [nBasis, vBasis] = t.medBotte ? [Number(rad.nb), Number(rad.vb)] : [Number(rad[`n${siste}`]), Number(rad[`v${siste}`])];
+  return {
+    n,
+    vunnet,
+    andel: n ? vunnet / n : 0,
+    lav,
+    hoy,
+    basis: nBasis ? vBasis / nBasis : 0,
+    trinn: valgt + 1,
+    beskrivelse: t.beskrivelse,
+    spesifikk: t.spesifikk,
+  };
 };

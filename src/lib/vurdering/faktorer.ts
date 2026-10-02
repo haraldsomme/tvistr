@@ -21,9 +21,13 @@ export type Faktorer = {
   rapportSierForKjop: boolean | null;
   kontakt: Kontakt;
   oppdaget: Oppdaget;
-  // Purchase to discovery, matched against dager_til_reklamasjon in the decisions. The same for
-  // everyone, so not having complained yet is never held against the buyer.
+  // Purchase to discovery as the buyer answered; picks the example decision.
   reklamasjonsbotte: Reklamasjonsbotte;
+  // Which decisions the statistics compare the case with, by dager_til_reklamasjon. It follows the
+  // legal position, not the calendar: nearly all decisions are from the six-month rule, so a defect
+  // inside today's two-year presumption is compared with those that were inside the presumption then.
+  // The same for everyone, so not having complained yet is never held against the buyer.
+  statistikkbotte: Reklamasjonsbotte;
   presumsjonManeder: 6 | 24;
   // The defect showed within the presumption period, so the burden of proof is on the dealer.
   presumsjon: boolean;
@@ -44,6 +48,7 @@ const KNAPP_TIL_FEILTYPE: Record<FeilKnapp, Feiltype[]> = {
   motor: ["motor"],
   girkasse: ["girkasse", "clutch"],
   elektrisk: ["elektrisk"],
+  batteri: ["batteri_elbil"],
   understell: ["understell_hjuloppheng"],
   bremser: ["bremser"],
   rust: ["rust"],
@@ -64,11 +69,13 @@ export function leggTilManeder(dato: string, maneder: number): string {
 
 export const iDag = () => new Date().toISOString().slice(0, 10);
 
+export const presumsjonManederFor = (kjopsdato: string): 6 | 24 => (kjopsdato >= PRESUMSJON_TO_AR_FRA ? 24 : 6);
+
 // The purchase date stands in for the delivery date, which the form does not ask for.
 export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
   const { kvalifisering: k, bilOgKjop: b, feilen: f, bevis } = input;
 
-  const presumsjonManeder = b.kjopsdato >= PRESUMSJON_TO_AR_FRA ? 24 : 6;
+  const presumsjonManeder = presumsjonManederFor(b.kjopsdato);
   // «Innen 6 måneder» is inside the presumption either way; «6 måneder til 2 år» only for purchases
   // from 2024; «mer enn 2 år» never.
   const presumsjon = f.oppdaget === "innen_6_mnd" || (f.oppdaget === "6_mnd_til_2_ar" && presumsjonManeder === 24);
@@ -88,6 +95,7 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
     kontakt: f.kontakt,
     oppdaget: f.oppdaget,
     reklamasjonsbotte: BOTTE[f.oppdaget],
+    statistikkbotte: presumsjon ? "rask" : BOTTE[f.oppdaget],
     presumsjonManeder,
     presumsjon,
     fristUte,

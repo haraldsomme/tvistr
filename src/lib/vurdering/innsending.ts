@@ -8,6 +8,7 @@ export const FEILTYPER_KNAPPER: readonly FeilKnapp[] = [
   "motor",
   "girkasse",
   "elektrisk",
+  "batteri",
   "understell",
   "bremser",
   "rust",

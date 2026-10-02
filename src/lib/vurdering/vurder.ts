@@ -1,3 +1,4 @@
+import { finnEksempel, type Eksempel } from "./eksempler";
 import { beregnFaktorer, iDag, type Faktorer } from "./faktorer";
 import { byggGrunnlag, fkjl, NAAR, type Grunnlag } from "./grunnlag";
 import { foreslaTiltak, type Tiltak } from "./tiltak";
@@ -12,6 +13,8 @@ export type Vurdering = {
   begrunnelse: string;
   // The same facts point by point, each with the rule it triggers and a reference to the law.
   grunnlag: Grunnlag[];
+  // A similar decision the buyer won; null when none fits or the case is weak.
+  eksempel: Eksempel | null;
   // What the user can do to strengthen the case; empty when there is nothing to suggest. Not part
   // of the free assessment: it is meant for the paid step.
   tiltak: Tiltak[];
@@ -29,29 +32,28 @@ export type Avhengigheter = {
 // The level is a score card. The decisions show that cases are won or lost on the burden of proof
 // (whether the defect was there at delivery), so that carries the most weight. The share of
 // similar decisions is background: across defect types it only ranges from about 55 to 72 %, and
-// it only counts when the interval is clearly above or below the usual level (about 63 %).
+// it only counts when the interval lies clearly above or below the share for all dealer decisions
+// with the same timing. Measured that way it says something about the defect, not about the timing
+// (which the presumption already counts), the size of the sample or how old the decisions are.
 export const POENG = {
   presumsjon: 2,
   rapportUtenforPresumsjon: 2,
   rapportInnenforPresumsjon: 1,
   ingenStotteUtenforPresumsjon: -1,
-  rettingForsokt: 1, // 85 % medhold when a failed repair was a topic in the decision
+  rettingForsokt: 2, // 89 % medhold when repair attempts were a topic, against 58–66 % otherwise, whatever the timing
   feilOpplysninger: 1, // 70 % medhold with feil_opplysninger as the basis
   statistikk: 1,
 } as const;
 export const STERK_FRA = 3;
 export const MIDDELS_FRA = 1;
-// Wilson bounds for the statistics to count: lower bound at least this for +1, upper bound below this for −1.
-export const STAT_GOD_LAV = 0.6;
-export const STAT_SVAK_HOY = 0.5;
 
 function ikkeAktuell(f: Faktorer, tittel: string, begrunnelse: string, grunnlag: Grunnlag[] = []): Vurdering {
-  return { niva: "ikke_aktuell", tittel, begrunnelse, grunnlag, tiltak: [], faktorer: f, statistikk: null, poeng: 0 };
+  return { niva: "ikke_aktuell", tittel, begrunnelse, grunnlag, eksempel: null, tiltak: [], faktorer: f, statistikk: null, poeng: 0 };
 }
 
 function poengFor(f: Faktorer, s: Statistikk | null): number {
   let poeng = 0;
-  if (s?.spesifikk) poeng += s.lav >= STAT_GOD_LAV ? POENG.statistikk : s.hoy < STAT_SVAK_HOY ? -POENG.statistikk : 0;
+  if (s?.spesifikk) poeng += s.lav > s.basis ? POENG.statistikk : s.hoy < s.basis ? -POENG.statistikk : 0;
   if (f.presumsjon) {
     poeng += POENG.presumsjon;
     if (f.rapportSierForKjop === true) poeng += POENG.rapportInnenforPresumsjon;
@@ -123,7 +125,7 @@ export function vurderFraFaktorer(f: Faktorer, s: Statistikk | null): Vurdering 
   // the defect itself is undocumented.
   if (niva === "sterk" && !f.verkstedrapport && !f.bilder) niva = "middels";
 
-  return { niva, tittel: tittelFor(niva, f), begrunnelse: begrunnelseFor(f), grunnlag: byggGrunnlag(f), tiltak: foreslaTiltak(f), faktorer: f, statistikk: s, poeng };
+  return { niva, tittel: tittelFor(niva, f), begrunnelse: begrunnelseFor(f), grunnlag: byggGrunnlag(f), eksempel: finnEksempel(f, niva), tiltak: foreslaTiltak(f), faktorer: f, statistikk: s, poeng };
 }
 
 export async function vurder(input: KlageInput, dep: Avhengigheter): Promise<Vurdering> {

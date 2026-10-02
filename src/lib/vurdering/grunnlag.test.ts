@@ -55,13 +55,22 @@ describe("grunnlag", () => {
     expect(slitasje(i)).toBeDefined();
   });
 
-  it("uten klage lenge etter at feilen viste seg, sier § 27-punktet at kravet kan være tapt", () => {
+  it("ett mislykket retteforsøk: to forsøk nevnes for kjøp før 2024", () => {
+    const siste = (i: KlageInput) => grunnlag(i).at(-1)!.tekst;
+    expect(siste(hent(1))).toBe("Forhandleren har forsøkt å rette feilen uten å lykkes. Da kan du gå videre til prisavslag eller heving.");
+    const gammel = hent(1);
+    gammel.bilOgKjop.kjopsdato = "2023-12-31";
+    expect(siste(gammel)).toMatch(/har forhandleren normalt rett til to forsøk\. Etter det kan du gå videre/);
+    gammel.feilen.kontakt = "avvist";
+    expect(siste(gammel)).not.toMatch(/to forsøk/);
+  });
+
+  it("ikke klaget ennå er et nøytralt punkt, også lenge etter at feilen viste seg", () => {
     const i = hent(1);
     i.feilen.kontakt = "nei";
+    expect(grunnlag(i).at(-1)).toMatchObject({ vekt: "noytral", paragraf: "forbrukerkjøpsloven § 27" });
     i.bilOgKjop.kjopsdato = "2022-01-31";
-    const siste = grunnlag(i).at(-1)!;
-    expect(siste.paragraf).toBe("forbrukerkjøpsloven § 27");
-    expect(siste.tekst).toMatch(/kan kravet være tapt/);
+    expect(grunnlag(i).at(-1)).toMatchObject({ vekt: "noytral", tekst: expect.stringMatching(/Klag så snart som mulig/) });
   });
 
   it("dokumenterte feilopplysninger får sitt eget punkt", () => {

@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { kjopsdatoFra, sporOmReklamasjonsdato, oppdagetMulig, stegGyldig, TOM_INNSENDING, tilKlageInput, type Innsending } from "./innsending";
+import { forsteUgyldigeSteg, fraParametre, tilParametre, kjopsdatoFra, sporOmReklamasjonsdato, oppdagetMulig, stegGyldig, TOM_INNSENDING, tilKlageInput, type Innsending, type Steg } from "./innsending";
 
 const IDAG = "2026-10-01";
 
 const gyldig: Innsending = {
   ...TOM_INNSENDING,
-  feiltyper: ["motor"],
   kjopManed: "5",
   kjopAr: "2026",
+  kjopesum: "189000",
+  kmVedKjop: "112000",
+  feiltyper: ["motor"],
   oppdaget: "innen_6_mnd",
   opplystForKjop: "nei",
   feilOpplysning: "nei",
@@ -16,16 +18,20 @@ const gyldig: Innsending = {
   rapportSierForKjop: "ja",
 };
 
-const gyldigSteg = (i: Innsending, steg: 1 | 2 | 3) => stegGyldig(i, steg, IDAG);
+const gyldigSteg = (i: Innsending, steg: Steg) => stegGyldig(i, steg, IDAG);
 
 describe("stegGyldig", () => {
-  it("steg 1: feiltype, kjøpt måned/år og hvor lenge etter kjøpet feilen viste seg", () => {
+  it("steg 1: kjøpt måned/år, kjøpesum og kilometerstand", () => {
     expect(gyldigSteg(TOM_INNSENDING, 1)).toBe(false);
     expect(gyldigSteg(gyldig, 1)).toBe(true);
-    expect(gyldigSteg({ ...gyldig, feiltyper: [] }, 1)).toBe(false);
     expect(gyldigSteg({ ...gyldig, kjopManed: "" }, 1)).toBe(false);
     expect(gyldigSteg({ ...gyldig, kjopManed: "13" }, 1)).toBe(false);
-    expect(gyldigSteg({ ...gyldig, oppdaget: "" }, 1)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, kjopesum: "" }, 1)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, kjopesum: "0" }, 1)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, kjopesum: "189 000" }, 1)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, kmVedKjop: "" }, 1)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, kmVedKjop: "0" }, 1)).toBe(true);
+    expect(gyldigSteg({ ...gyldig, kmVedKjop: "3000000" }, 1)).toBe(false);
   });
 
   it("steg 1 avviser kjøp i fremtiden, men godtar inneværende måned", () => {
@@ -33,28 +39,35 @@ describe("stegGyldig", () => {
     expect(gyldigSteg({ ...gyldig, kjopManed: "10" }, 1)).toBe(true);
   });
 
-  it("steg 1 avviser et oppdaget-svar som er umulig for kjøpstidspunktet", () => {
-    expect(gyldigSteg({ ...gyldig, kjopManed: "8", oppdaget: "6_mnd_til_2_ar" }, 1)).toBe(false);
-    expect(gyldigSteg({ ...gyldig, kjopManed: "3", oppdaget: "6_mnd_til_2_ar" }, 1)).toBe(true);
-    expect(gyldigSteg({ ...gyldig, kjopAr: "2025", oppdaget: "over_2_ar" }, 1)).toBe(false);
-    expect(gyldigSteg({ ...gyldig, kjopAr: "2024", kjopManed: "9", oppdaget: "over_2_ar" }, 1)).toBe(true);
-  });
-
-  it("steg 2 krever alle svar", () => {
+  it("steg 2: feiltype og hvor lenge etter kjøpet feilen viste seg", () => {
+    expect(gyldigSteg(TOM_INNSENDING, 2)).toBe(false);
     expect(gyldigSteg(gyldig, 2)).toBe(true);
-    expect(gyldigSteg({ ...gyldig, kontakt: "" }, 2)).toBe(false);
-    expect(gyldigSteg({ ...gyldig, opplystForKjop: "" }, 2)).toBe(false);
-    expect(gyldigSteg({ ...gyldig, feilOpplysning: "" }, 2)).toBe(false);
-    expect(gyldigSteg({ ...gyldig, feilOpplysning: "ja_dokumentert" }, 2)).toBe(true);
-    expect(gyldigSteg({ ...gyldig, feilOpplysning: "ja_udokumentert" }, 2)).toBe(true);
+    expect(gyldigSteg({ ...gyldig, feiltyper: [] }, 2)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, oppdaget: "" }, 2)).toBe(false);
   });
 
-  it("steg 3: rapport krever svar om hva den sier, ingen rapport krever svar om bilder", () => {
-    expect(gyldigSteg(TOM_INNSENDING, 3)).toBe(false);
+  it("steg 2 avviser et oppdaget-svar som er umulig for kjøpstidspunktet", () => {
+    expect(gyldigSteg({ ...gyldig, kjopManed: "8", oppdaget: "6_mnd_til_2_ar" }, 2)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, kjopManed: "3", oppdaget: "6_mnd_til_2_ar" }, 2)).toBe(true);
+    expect(gyldigSteg({ ...gyldig, kjopAr: "2025", oppdaget: "over_2_ar" }, 2)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, kjopAr: "2024", kjopManed: "9", oppdaget: "over_2_ar" }, 2)).toBe(true);
+  });
+
+  it("steg 3 krever alle svar", () => {
     expect(gyldigSteg(gyldig, 3)).toBe(true);
-    expect(gyldigSteg({ ...gyldig, rapportSierForKjop: "" }, 3)).toBe(false);
-    expect(gyldigSteg({ ...gyldig, verkstedrapport: "nei" }, 3)).toBe(false);
-    expect(gyldigSteg({ ...gyldig, verkstedrapport: "nei", bilder: "nei" }, 3)).toBe(true);
+    expect(gyldigSteg({ ...gyldig, kontakt: "" }, 3)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, opplystForKjop: "" }, 3)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, feilOpplysning: "" }, 3)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, feilOpplysning: "ja_dokumentert" }, 3)).toBe(true);
+    expect(gyldigSteg({ ...gyldig, feilOpplysning: "ja_udokumentert" }, 3)).toBe(true);
+  });
+
+  it("steg 4: rapport krever svar om hva den sier, ingen rapport krever svar om bilder", () => {
+    expect(gyldigSteg(TOM_INNSENDING, 4)).toBe(false);
+    expect(gyldigSteg(gyldig, 4)).toBe(true);
+    expect(gyldigSteg({ ...gyldig, rapportSierForKjop: "" }, 4)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, verkstedrapport: "nei" }, 4)).toBe(false);
+    expect(gyldigSteg({ ...gyldig, verkstedrapport: "nei", bilder: "nei" }, 4)).toBe(true);
   });
 });
 
@@ -93,14 +106,14 @@ describe("tilKlageInput", () => {
   it("bygger motorens input med standard kvalifisering", () => {
     const input = ok(gyldig);
     expect(input.kvalifisering).toEqual({ selgerType: "forhandler", privatBruk: true });
-    expect(input.bilOgKjop).toEqual({ kjopsdato: "2026-05-31" });
+    expect(input.bilOgKjop).toEqual({ kjopsdato: "2026-05-31", kjopesumNok: 189000, kmVedKjop: 112000 });
     expect(input.feilen).toEqual({ typer: ["motor"], oppdaget: "innen_6_mnd", opplystForKjop: "nei", feilOpplysning: "nei", kontakt: "venter" });
     expect(input.bevis).toEqual({ verkstedrapport: true, rapportSierForKjop: true, bilder: false });
   });
 
   it("ignorerer felt skjemaet ikke lenger sender", () => {
-    const input = ok({ ...gyldig, regnr: "EK 48213", beskrivelse: "Motoren har havarert", kjopsdato: "2020-01-01", kjopesumNok: "189000" });
-    expect(input.bilOgKjop).toEqual({ kjopsdato: "2026-05-31" });
+    const input = ok({ ...gyldig, regnr: "EK 48213", beskrivelse: "Motoren har havarert", kjopsdato: "2020-01-01", kjopesumNok: "1" });
+    expect(input.bilOgKjop).toEqual({ kjopsdato: "2026-05-31", kjopesumNok: 189000, kmVedKjop: 112000 });
   });
 
   it("svar som ikke ble stilt, påvirker ikke input", () => {
@@ -123,6 +136,8 @@ describe("tilKlageInput", () => {
     expect(tilKlageInput({ ...gyldig, oppdaget: "ofte" }, IDAG).ok).toBe(false);
     expect(tilKlageInput({ ...gyldig, feilOpplysning: "kanskje" }, IDAG).ok).toBe(false);
     expect(tilKlageInput({ ...gyldig, rapportSierForKjop: "kanskje" }, IDAG).ok).toBe(false);
+    expect(tilKlageInput({ ...gyldig, kjopesum: 189000 }, IDAG).ok).toBe(false);
+    expect(tilKlageInput({ ...gyldig, kmVedKjop: "-5" }, IDAG).ok).toBe(false);
   });
 });
 
@@ -136,10 +151,10 @@ describe("dato for første reklamasjon", () => {
   });
 
   it("må oppgis, ikke ligge før kjøpet eller i fremtiden", () => {
-    expect(gyldigSteg(gammel, 2)).toBe(false);
-    expect(gyldigSteg({ ...gammel, reklamasjonAr: "2022", reklamasjonManed: "3" }, 2)).toBe(true);
-    expect(gyldigSteg({ ...gammel, reklamasjonAr: "2017", reklamasjonManed: "4" }, 2)).toBe(false);
-    expect(gyldigSteg({ ...gammel, reklamasjonAr: "2026", reklamasjonManed: "11" }, 2)).toBe(false);
+    expect(gyldigSteg(gammel, 3)).toBe(false);
+    expect(gyldigSteg({ ...gammel, reklamasjonAr: "2022", reklamasjonManed: "3" }, 3)).toBe(true);
+    expect(gyldigSteg({ ...gammel, reklamasjonAr: "2017", reklamasjonManed: "4" }, 3)).toBe(false);
+    expect(gyldigSteg({ ...gammel, reklamasjonAr: "2026", reklamasjonManed: "11" }, 3)).toBe(false);
   });
 
   it("sendes til motoren som siste dag i måneden, og ikke når det ikke er spurt om", () => {
@@ -147,5 +162,26 @@ describe("dato for første reklamasjon", () => {
     expect(r.ok && r.input.feilen.forsteReklamasjon).toBe("2022-06-30");
     const ny = tilKlageInput({ ...gyldig }, IDAG);
     expect(ny.ok && "forsteReklamasjon" in ny.input.feilen).toBe(false);
+  });
+});
+
+describe("URL-parametre", () => {
+  it("rundturer svarene, inkludert flere feiltyper", () => {
+    const i: Innsending = { ...gyldig, feiltyper: ["motor", "rust"] };
+    const p = tilParametre(i);
+    expect(p.get("feiltyper")).toBe("motor,rust");
+    expect(p.has("bilder")).toBe(false);
+    expect(fraParametre(p)).toEqual(i);
+    expect(fraParametre(Object.fromEntries(p))).toEqual(i);
+  });
+
+  it("ignorerer ukjente feiltyper og manglende parametre", () => {
+    expect(fraParametre({ feiltyper: "motor,xx", kjopAr: ["2024", "2025"] })).toEqual({ ...TOM_INNSENDING, feiltyper: ["motor"], kjopAr: "2024" });
+  });
+
+  it("finner første ugyldige steg", () => {
+    expect(forsteUgyldigeSteg(gyldig, IDAG)).toBeNull();
+    expect(forsteUgyldigeSteg({ ...gyldig, verkstedrapport: "" }, IDAG)).toBe(4);
+    expect(forsteUgyldigeSteg(TOM_INNSENDING, IDAG)).toBe(1);
   });
 });

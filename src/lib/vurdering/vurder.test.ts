@@ -51,6 +51,7 @@ describe("utenfor tjenesten og frister", () => {
     expect(v.tittel).toMatch(/Fristen/);
     expect(v.tiltak).toEqual([]);
     expect(v.grunnlag.map((g) => g.paragraf)).toEqual(["forbrukerkjøpsloven § 27"]);
+    expect(v.grunnlag[0].tekst).toMatch(/garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt/);
     expect(d.hentStatistikk).not.toHaveBeenCalled();
   });
 });
@@ -129,15 +130,15 @@ describe("tak", () => {
     expect(v.eksempel?.setning).not.toMatch(/gjort kjent med feilen/);
   });
 
-  it("ikke klaget lenge etter at feilen viste seg gir svak, uansett poeng", async () => {
+  it("ikke klaget ennå senker ikke nivået, heller ikke lenge etter at feilen viste seg", async () => {
     const i = hent(1);
+    const for_ = await vurder(i, dep(0.8));
     i.feilen.kontakt = "nei";
     i.bilOgKjop.kjopsdato = "2022-01-31";
     const v = await vurder(i, dep(0.8));
-    expect(v.poeng).toBeGreaterThanOrEqual(3);
-    expect(v.niva).toBe("svak");
-    expect(v.begrunnelse).toMatch(/du har ikke klaget til forhandleren, selv om det er mer enn seks måneder siden/);
-    expect(v.eksempel?.utfall).toBe("tapt");
+    expect(v.niva).toBe(for_.niva);
+    expect(v.niva).not.toBe("svak");
+    expect(v.begrunnelse).not.toMatch(/ikke klaget/);
   });
 
   it("rapport som ikke sier noe om tidspunkt gir tak på middels innenfor presumsjon", async () => {
@@ -150,6 +151,7 @@ describe("tak", () => {
   it("opplyst feil med dokumentert villedende opplysning gir ikke tak", async () => {
     const i = hent(3);
     i.bilOgKjop.kjopsdato = "2023-12-31";
+    i.bilOgKjop.kjopesumNok = 139000; // case 3 is a cheap car, which has a cap of its own
     i.bevis.bilder = true;
     i.feilen.feilOpplysning = "ja_dokumentert";
     const v = await vurder(i, dep(0.9));
@@ -165,6 +167,43 @@ describe("tak", () => {
     const v = await vurder(i, dep(0.9));
     expect(v.niva).toBe("middels");
     expect(v.begrunnelse).toMatch(/du ble fortalt om feilen, men mener opplysningene var misvisende/);
+  });
+});
+
+describe("pris og kjørelengde (fkjl § 15)", () => {
+  it("billig bil eller høy kjørelengde gir høyst middels, og sier hvorfor", async () => {
+    for (const [pris, km, tekst] of [
+      [49999, 112000, /kostet under 50 000 kr\. Da kan du forvente mindre/],
+      [219000, 200001, /hadde gått over 200 000 km da du kjøpte den\. Da kan du forvente mindre/],
+      [35000, 240000, /kostet under 50 000 kr og hadde gått over 200 000 km/],
+    ] as const) {
+      const i = hent(1);
+      i.bilOgKjop.kjopesumNok = pris;
+      i.bilOgKjop.kmVedKjop = km;
+      const v = await vurder(i, dep(0.8));
+      expect(v.poeng).toBe(6);
+      expect(v.niva).toBe("middels");
+      expect(v.grunnlag.find((g) => tekst.test(g.tekst))).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 15" });
+    }
+  });
+
+  it("grensene er 50 000 kr og 200 000 km, og manglende tall gir ikke tak", async () => {
+    const i = hent(1);
+    i.bilOgKjop.kjopesumNok = 50000;
+    i.bilOgKjop.kmVedKjop = 200000;
+    expect((await vurder(i, dep(0.8))).niva).toBe("sterk");
+    i.bilOgKjop.kjopesumNok = null;
+    i.bilOgKjop.kmVedKjop = undefined;
+    expect((await vurder(i, dep(0.8))).niva).toBe("sterk");
+  });
+
+  it("gjelder ikke når feilen er uriktig kilometerstand eller historikk", async () => {
+    const i = hent(1);
+    i.feilen.typer = ["km_service"];
+    i.bilOgKjop.kjopesumNok = 35000;
+    const v = await vurder(i, dep(0.8));
+    expect(v.niva).toBe("sterk");
+    expect(v.grunnlag.some((g) => /vanlig slitasje/.test(g.tekst))).toBe(false);
   });
 });
 

@@ -12,6 +12,12 @@ export const ABSOLUTT_FRIST_AR = 5;
 // than two months. Six months leaves a wide margin before we call an unmade complaint too late.
 export const RIMELIG_TID_MANEDER = 6;
 
+// What the buyer can expect follows the car's price and mileage (§ 15). Dealer decisions with a
+// complaint within 180 days: 59 % won under 50 000 kr against 77 % at 150 000–300 000 kr, and 60 %
+// over 200 000 km against 72 % under 100 000 km (computed 2026-10-02).
+export const LAV_KJOPESUM_NOK = 50_000;
+export const HOY_KM = 200_000;
+
 export type Reklamasjonsbotte = "rask" | "middels" | "sen";
 
 export type Faktorer = {
@@ -38,6 +44,10 @@ export type Faktorer = {
   fristUte: boolean;
   // The dealer has not been told, and at least RIMELIG_TID_MANEDER have passed since the defect showed.
   reklamertForSent: boolean;
+  // The defect is one that wear can explain: not wrong mileage or history, nor earlier collision damage.
+  slitasjeAktuelt: boolean;
+  // Cheap car or high mileage, so the buyer could expect less of it. null = neither.
+  lavForventning: "pris" | "km" | "begge" | null;
   opplystForKjop: KlageInput["feilen"]["opplystForKjop"];
   // Defect was disclosed before a purchase made before 2024 and the buyer does not say the seller
   // misled them: the buyer cannot complain about what they knew of (§ 16 (3) as it read then).
@@ -73,9 +83,13 @@ const SENEST_OPPDAGET: Record<Oppdaget, number | null> = { innen_6_mnd: 6, "6_mn
 
 const BOTTE: Record<Oppdaget, Reklamasjonsbotte> = { innen_6_mnd: "rask", "6_mnd_til_2_ar": "middels", over_2_ar: "sen" };
 
+// The 31st plus a number of months lands on the last day of a shorter month, not in the next one.
 export function leggTilManeder(dato: string, maneder: number): string {
   const d = new Date(`${dato}T00:00:00Z`);
+  const dag = d.getUTCDate();
+  d.setUTCDate(1);
   d.setUTCMonth(d.getUTCMonth() + maneder);
+  d.setUTCDate(Math.min(dag, new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate()));
   return d.toISOString().slice(0, 10);
 }
 
@@ -98,12 +112,15 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
   const senest = SENEST_OPPDAGET[f.oppdaget];
   const reklamertForSent = f.kontakt === "nei" && senest !== null && idag > leggTilManeder(b.kjopsdato, senest + RIMELIG_TID_MANEDER);
   const opplystUtenInnvending = f.opplystForKjop === "ja" && f.feilOpplysning === "nei";
+  const feilgrupper = [...new Set(f.typer)].map((t) => KNAPP_TIL_FEILTYPE[t]).filter((g) => g.length > 0);
+  const billig = b.kjopesumNok != null && b.kjopesumNok < LAV_KJOPESUM_NOK;
+  const langtKjort = b.kmVedKjop != null && b.kmVedKjop > HOY_KM;
 
   const utenforTjenesten = k.selgerType === "privat" ? "privat_selger" : !k.privatBruk ? "ikke_privat_bruk" : null;
 
   return {
     utenforTjenesten,
-    feilgrupper: [...new Set(f.typer)].map((t) => KNAPP_TIL_FEILTYPE[t]).filter((g) => g.length > 0),
+    feilgrupper,
     verkstedrapport: bevis.verkstedrapport,
     bilder: bevis.bilder,
     rapportSierForKjop: bevis.verkstedrapport ? bevis.rapportSierForKjop : null,
@@ -115,6 +132,8 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
     presumsjon,
     fristUte,
     reklamertForSent,
+    slitasjeAktuelt: feilgrupper.length === 0 || feilgrupper.some((g) => g[0] !== "km_avvik" && g[0] !== "kollisjonsskade"),
+    lavForventning: billig && langtKjort ? "begge" : billig ? "pris" : langtKjort ? "km" : null,
     opplystForKjop: f.opplystForKjop,
     opplystTakSvak: opplystUtenInnvending && presumsjonManeder === 6,
     opplystEtter2024: opplystUtenInnvending && presumsjonManeder === 24,

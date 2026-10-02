@@ -11,6 +11,12 @@ export const NAAR: Record<Oppdaget, string> = {
   over_2_ar: "mer enn to år",
 };
 
+const LAV_FORVENTNING: Record<NonNullable<Faktorer["lavForventning"]>, string> = {
+  pris: "Bilen kostet under 50 000 kr.",
+  km: "Bilen hadde gått over 200 000 km da du kjøpte den.",
+  begge: "Bilen kostet under 50 000 kr og hadde gått over 200 000 km da du kjøpte den.",
+};
+
 // Forbrukerkjøpsloven. A point only gets a reference when the rule sits in one section; check
 // them against the current text on Lovdata when the law changes.
 const LOV_URL = "https://lovdata.no/lov/2002-06-21-34";
@@ -43,8 +49,13 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
 
   // Wear the buyer had to expect is named in about 6 of 10 lost dealer decisions, also inside the
   // presumption period. It does not apply to wrong mileage or history, or to earlier collision damage.
-  const slitasjeAktuelt = f.feilgrupper.length === 0 || f.feilgrupper.some((g) => g[0] !== "km_avvik" && g[0] !== "kollisjonsskade");
-  if (f.presumsjon && slitasjeAktuelt) {
+  if (f.slitasjeAktuelt && f.lavForventning) {
+    punkter.push({
+      tekst: `${LAV_FORVENTNING[f.lavForventning]} Da kan du forvente mindre av den, og forhandleren kan innvende at feilen er vanlig slitasje.`,
+      vekt: "mot",
+      ...fkjl(15),
+    });
+  } else if (f.slitasjeAktuelt && f.presumsjon) {
     punkter.push({
       tekst: "Forhandleren kan likevel innvende at feilen er vanlig slitasje for bilens alder og kjørelengde. Det er en vanlig grunn til at kjøpere taper.",
       vekt: "noytral",
@@ -72,15 +83,20 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
 
   if (f.kontakt === "forsokt" || f.kontakt === "avvist") {
     const hendt = f.kontakt === "forsokt" ? "forsøkt å rette feilen uten å lykkes" : "avvist å rette feilen";
-    punkter.push({ tekst: `Forhandleren har ${hendt}. Da kan du gå videre til prisavslag eller heving.`, vekt: "for", ...fkjl(31, "§§ 31 og 32") });
+    // Purchases before 2024 follow the old rule: the dealer normally had two attempts at the same defect.
+    const videre =
+      f.kontakt === "forsokt" && f.presumsjonManeder === 6
+        ? "For kjøp før 2024 har forhandleren normalt rett til to forsøk. Etter det kan du gå videre til prisavslag eller heving."
+        : "Da kan du gå videre til prisavslag eller heving.";
+    punkter.push({ tekst: `Forhandleren har ${hendt}. ${videre}`, vekt: "for", ...fkjl(31, "§§ 31 og 32") });
   } else if (f.reklamertForSent) {
     punkter.push({
-      tekst: "Du har ikke klaget til forhandleren, og det er mer enn seks måneder siden feilen viste seg. Du må klage innen rimelig tid etter at du oppdaget feilen, ellers kan kravet være tapt.",
-      vekt: "mot",
+      tekst: "Du har ikke klaget til forhandleren ennå, og det er en stund siden feilen viste seg. Klag så snart som mulig: du må klage innen rimelig tid etter at du oppdaget feilen.",
+      vekt: "noytral",
       ...fkjl(27),
     });
   } else if (f.kontakt === "nei") {
-    punkter.push({ tekst: "Du har ikke klaget til forhandleren ennå. Du må gjøre det innen rimelig tid etter at du oppdaget feilen.", vekt: "mot", ...fkjl(27) });
+    punkter.push({ tekst: "Du har ikke klaget til forhandleren ennå. Du må gjøre det innen rimelig tid etter at du oppdaget feilen.", vekt: "noytral", ...fkjl(27) });
   }
 
   return punkter;

@@ -19,6 +19,8 @@ describe("datoer", () => {
   it("legger til måneder", () => {
     expect(leggTilManeder("2024-03-15", 24)).toBe("2026-03-15");
     expect(leggTilManeder("2023-06-15", 6)).toBe("2023-12-15");
+    expect(leggTilManeder("2024-03-31", 30)).toBe("2026-09-30");
+    expect(leggTilManeder("2024-02-29", 60)).toBe("2029-02-28");
   });
 });
 
@@ -163,6 +165,25 @@ describe("beregnFaktorer", () => {
     udokumentert.feilen.feilOpplysning = "ja_udokumentert";
     expect(fakta(udokumentert).feilOpplysningerDokumentert).toBe(false);
     expect(fakta(hent(1)).feilOpplysningerDokumentert).toBe(false);
+  });
+
+  it("billig bil og høy kjørelengde gir lavere forventning", () => {
+    expect(fakta(hent(1)).lavForventning).toBeNull(); // 219 000 kr, 112 000 km
+    expect(fakta(hent(3)).lavForventning).toBe("pris"); // 39 000 kr, 187 000 km
+    expect(fakta(hent(8)).lavForventning).toBe("begge"); // 35 000 kr, 240 000 km
+    const i = hent(1);
+    i.bilOgKjop.kmVedKjop = 200001;
+    expect(fakta(i).lavForventning).toBe("km");
+  });
+
+  it("slitasje er ikke aktuelt når feilen bare gjelder kilometer, historikk eller kollisjonsskade", () => {
+    expect(fakta(hent(1)).slitasjeAktuelt).toBe(true);
+    expect(fakta(hent(7)).slitasjeAktuelt).toBe(false);
+    const i = hent(1);
+    i.feilen.typer = ["skade", "annet"];
+    expect(fakta(i).slitasjeAktuelt).toBe(false);
+    i.feilen.typer = ["annet"];
+    expect(fakta(i).slitasjeAktuelt).toBe(true);
   });
 
   it("rapportens svar teller bare når det finnes en rapport", () => {

@@ -91,7 +91,6 @@ function begrunnelseFor(f: Faktorer): string {
 
   if (f.kontakt === "forsokt") ledd.push("forhandleren har forsøkt å rette den uten å lykkes");
   else if (f.kontakt === "avvist") ledd.push("forhandleren har avvist å rette den");
-  else if (f.reklamertForSent) ledd.push("du har ikke klaget til forhandleren, selv om det er mer enn seks måneder siden");
 
   if (f.rapportSierForKjop === true) ledd.push("verkstedrapporten peker på en feil som sannsynligvis var til stede ved levering");
   else if (f.rapportSierForKjop === false) ledd.push("verkstedrapporten sier ikke om feilen var til stede ved levering");
@@ -110,7 +109,11 @@ export function vurderFraFaktorer(f: Faktorer, s: Statistikk | null): Vurdering 
   }
   if (f.fristUte) {
     return ikkeAktuell(f, "Fristen for å klage er dessverre ute.", "Det har gått mer enn fem år siden kjøpet, og etter forbrukerkjøpsloven må du reklamere innen fem år.", [
-      { tekst: "Reklamasjon må senest skje fem år etter at du fikk bilen. Fristen gjelder uansett hva som ellers er riktig i saken.", vekt: "mot", ...fkjl(27) },
+      {
+        tekst: "Reklamasjon må senest skje fem år etter at du fikk bilen. Unntak gjelder hvis forhandleren har gitt en garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt.",
+        vekt: "mot",
+        ...fkjl(27),
+      },
     ]);
   }
 
@@ -121,8 +124,8 @@ export function vurderFraFaktorer(f: Faktorer, s: Statistikk | null): Vurdering 
   if (f.opplystTakSvak) niva = "svak";
   // Purchases from 2024: the dealer must show that the buyer expressly accepted the deviation.
   if (f.opplystEtter2024 && niva === "sterk") niva = "middels";
-  // A complaint that has not been made long after the defect showed is most likely too late.
-  if (f.reklamertForSent) niva = "svak";
+  // A cheap or far-driven car: the dealer can argue that the defect is wear the buyer had to expect.
+  if (niva === "sterk" && f.lavForventning && f.slitasjeAktuelt) niva = "middels";
   // Word against word: a claim of misleading information that cannot be shown does not lift the case.
   if (f.opplystTakMiddels && niva === "sterk") niva = "middels";
   // Inside the presumption period a silent report still gives the dealer something to argue with.

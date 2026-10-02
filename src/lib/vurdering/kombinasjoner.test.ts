@@ -44,6 +44,8 @@ function lagInnsending(): Innsending {
     feiltyper: [],
     kjopAr: String(ar),
     kjopManed: String(maned),
+    kjopesum: "",
+    kmVedKjop: "",
     oppdaget: "",
     opplystForKjop: velg(["ja", "nei", "usikker"] as const),
     feilOpplysning: velg(FEILOPPLYSNING_VALG),
@@ -71,6 +73,9 @@ function lagInnsending(): Innsending {
     i.reklamasjonAr = String(Math.floor(m / 12));
     i.reklamasjonManed = String((m % 12) + 1);
   }
+  // A third are cheap, a third far-driven, so every combination of the two shows up.
+  i.kjopesum = String(sjanse(0.33) ? 15_000 + Math.floor(tilfeldig() * 35_000) : 50_000 + Math.floor(tilfeldig() * 450_000));
+  i.kmVedKjop = String(sjanse(0.33) ? 200_001 + Math.floor(tilfeldig() * 150_000) : Math.floor(tilfeldig() * 200_001));
   return i;
 }
 
@@ -123,9 +128,9 @@ function forventet(i: Innsending, s: Statistikk): Forventet {
   if (i.opplystForKjop === "ja" && i.feilOpplysning === "ja_udokumentert" && niva === "sterk") niva = "middels";
   if (niva === "sterk" && presumsjon && rapportTiger) niva = "middels";
   if (niva === "sterk" && !harBevis) niva = "middels";
-  // No complaint yet, although the defect must have been known for more than six months.
-  const senest = i.oppdaget === "innen_6_mnd" ? 6 : i.oppdaget === "6_mnd_til_2_ar" ? 24 : null;
-  if (!klaget && senest !== null && IDAG > maanedsslutt(kjopAr + Math.floor((kjopManed - 1 + senest + 6) / 12), ((kjopManed - 1 + senest + 6) % 12) + 1)) niva = "svak";
+  // A cheap or far-driven car is never a strong case when the defect can be put down to wear.
+  const slitasjefeil = i.feiltyper.some((t) => t !== "km_service" && t !== "skade" && t !== "annet") || i.feiltyper.every((t) => t === "annet");
+  if (niva === "sterk" && slitasjefeil && (Number(i.kjopesum) < 50_000 || Number(i.kmVedKjop) > 200_000)) niva = "middels";
   return { niva, fristUte };
 }
 

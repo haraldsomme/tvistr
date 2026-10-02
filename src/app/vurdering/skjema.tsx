@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState, type ReactNode } from "react";
-import { FEILTYPER_KNAPPER, FRA_AR, JA_NEI, oppdagetMulig, OPPLYST_VALG, sporOmReklamasjonsdato, stegGyldig, TOM_INNSENDING, type Innsending } from "@/lib/vurdering/innsending";
+import { useEffect, useId, useState, type ReactNode } from "react";
+import { FEILTYPER_KNAPPER, forsteUgyldigeSteg, FRA_AR, JA_NEI, oppdagetMulig, OPPLYST_VALG, sporOmReklamasjonsdato, stegGyldig, tilParametre, type Innsending, type Steg } from "@/lib/vurdering/innsending";
 import { presumsjonManederFor } from "@/lib/vurdering/faktorer";
 import { KONTAKT_VALG, OPPDAGET_VALG, type Kontakt, type Niva, type Oppdaget } from "@/lib/vurdering/typer";
 
-type Steg = 1 | 2 | 3;
 // How close the example decision is to the buyer's case; see finnEksempel.
 type Treff = "lignende" | "tilnaermet" | "generell";
 type Resultat = {
@@ -51,7 +50,23 @@ const OPPDAGET_TEKST: Record<Oppdaget, string> = {
 };
 const JA_NEI_TEKST = { ja: "Ja", nei: "Nei" } as const;
 const MANEDER = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
-const NESTE_TEKST: Record<Steg, string> = { 1: "Neste: Forhandleren →", 2: "Neste: Dokumentasjon →", 3: "Se vurderingen →" };
+const STEG: readonly Steg[] = [1, 2, 3, 4];
+const SISTE_STEG: Steg = 4;
+const STEG_TEKST: Record<Steg, { navn: string; tittel: string }> = {
+  1: { navn: "Bilen", tittel: "Hvilken bil kjøpte du?" },
+  2: { navn: "Feilen", tittel: "Hva er galt med bilen?" },
+  3: { navn: "Forhandleren", tittel: "Hva har forhandleren sagt?" },
+  4: { navn: "Bevis", tittel: "Hvilke bevis har du?" },
+};
+const NESTE_TEKST: Record<Steg, string> = {
+  1: `Neste: ${STEG_TEKST[2].navn} →`,
+  2: `Neste: ${STEG_TEKST[3].navn} →`,
+  3: `Neste: ${STEG_TEKST[4].navn} →`,
+  4: "Se vurderingen →",
+};
+// Digits only in the state; the field shows them grouped in thousands.
+const bareSifre = (s: string) => s.replace(/\D/g, "").slice(0, 9);
+const medMellomrom = (s: string) => s.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
 const INPUT =
   "w-full rounded-[6px] border border-[#bfbab0] bg-white p-[14px] font-ui text-[16px] text-[#17263d] outline-none placeholder:text-[#8a94a3] focus:border-[#17263d] focus:shadow-[0_0_0_.5px_#17263d]";
@@ -60,28 +75,43 @@ const LABEL = "font-ui text-[14px] font-semibold text-[#17263d] md:text-[15px]";
 const KNAPP =
   "w-full rounded-[6px] bg-[#17263d] p-[18px] text-center font-ui text-[16px] font-semibold text-[#f6f4ef] disabled:cursor-not-allowed disabled:opacity-40";
 
-function StegTopp({ steg, tilbake }: { steg: Steg; tilbake: ReactNode }) {
+// Completed steps are buttons back to that step; the ones ahead cannot be opened, so each step is
+// still validated before the next.
+function StegTopp({ steg, tilbake, gaTil }: { steg: Steg; tilbake: ReactNode; gaTil: (n: Steg) => void }) {
   return (
     <div className="flex flex-col gap-3.5 px-6 pt-[52px] md:gap-3.5 md:px-0 md:pt-0">
-      <div className="flex items-baseline justify-between font-ui text-[14px] text-[#5b6472]">
-        {tilbake}
-        <span>Steg {steg} av 3</span>
-      </div>
-      <div className="flex gap-1.5 md:gap-2">
-        {[1, 2, 3].map((n) => (
-          <div key={n} className={`h-[3px] flex-1 rounded-sm ${n <= steg ? "bg-[#17263d]" : "bg-[#dcd8cf]"}`} />
-        ))}
-      </div>
+      <div className="font-ui text-[14px] text-[#5b6472]">{tilbake}</div>
+      <ol className="m-0 flex list-none gap-1.5 p-0 md:gap-2">
+        {STEG.map((n) => {
+          const navn = `${n} ${STEG_TEKST[n].navn}`;
+          return (
+            <li
+              key={n}
+              aria-current={n === steg ? "step" : undefined}
+              className={`flex flex-1 flex-col gap-2 font-ui text-[13px] ${
+                n === steg ? "font-semibold text-[#17263d]" : n < steg ? "text-[#17263d]" : "text-[#5b6472]"
+              }`}
+            >
+              <div className={`h-[3px] rounded-sm ${n <= steg ? "bg-[#17263d]" : "bg-[#dcd8cf]"}`} />
+              {n < steg ? (
+                <button type="button" onClick={() => gaTil(n)} className="self-start text-left">
+                  {navn}
+                </button>
+              ) : (
+                <span>{navn}</span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }
 
-function Tittel({ etikett, tittel, tekst }: { etikett: string; tittel: string; tekst?: string }) {
+function Tittel({ tittel }: { tittel: string }) {
   return (
-    <div className="flex flex-col gap-2 px-6 pt-[26px] md:gap-2.5 md:px-0 md:pt-0">
-      <div className="font-ui text-[13px] font-medium text-[#1f3a5f]">{etikett}</div>
+    <div className="px-6 pt-[26px] md:px-0 md:pt-0">
       <h2 className="m-0 font-brev text-[27px] font-semibold leading-[1.15] md:text-[40px] md:leading-[1.12] md:tracking-[-.01em]">{tittel}</h2>
-      {tekst && <p className="m-0 font-ui text-[14px] leading-[1.55] text-[#5b6472]">{tekst}</p>}
     </div>
   );
 }
@@ -431,15 +461,22 @@ function Vurdering({ resultat, endre }: { resultat: Resultat; endre: () => void 
   );
 }
 
-export function Skjema() {
+// The answers and the step live in the URL (`?kjopAr=2024&…&steg=2`), so a link opens the form where
+// it was. A complete set of answers without `steg` is a link to the assessment itself.
+export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startSteg: number }) {
   const id = useId();
-  const [steg, setSteg] = useState<Steg>(1);
-  const [d, setD] = useState<Innsending>(TOM_INNSENDING);
+  const forsteUgyldig = forsteUgyldigeSteg(startSvar);
+  const visVurdering = forsteUgyldig === null && !startSteg;
+  const [steg, setSteg] = useState<Steg>(() => {
+    const onsket = ([1, 2, 3, 4] as const).find((s) => s === startSteg) ?? 1;
+    return forsteUgyldig === null ? onsket : (Math.min(onsket, forsteUgyldig) as Steg);
+  });
+  const [d, setD] = useState<Innsending>(startSvar);
   // «Ja» on the contact question, before the follow-up is answered.
   const [kontaktet, setKontaktet] = useState(false);
   // «Ja» on the wrong-information question, before the follow-up is answered.
   const [feilinformert, setFeilinformert] = useState(false);
-  const [sender, setSender] = useState(false);
+  const [sender, setSender] = useState(visVurdering);
   const [feil, setFeil] = useState<string | null>(null);
   const [resultat, setResultat] = useState<Resultat | null>(null);
 
@@ -489,12 +526,36 @@ export function Skjema() {
     }
   }
 
+  // Keeps the address in step with the answers without adding history entries.
+  function oppdaterUrl(data: Innsending, s: Steg | null) {
+    const p = tilParametre(data);
+    if (s) p.set("steg", String(s));
+    window.history.replaceState(null, "", `?${p}`);
+  }
+
+  useEffect(() => {
+    if (!visVurdering) return;
+    void hent(startSvar).then((f) => {
+      setFeil(f);
+      if (f) setSteg(1);
+      setSender(false);
+    });
+    // Only the link that opened the page is fetched.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!resultat && !sender) oppdaterUrl(d, steg);
+  }, [d, steg, resultat, sender]);
+
   async function neste() {
     if (!stegGyldig(d, steg)) return;
     setFeil(null);
-    if (steg < 3) return setSteg((steg + 1) as Steg);
+    if (steg < SISTE_STEG) return setSteg((steg + 1) as Steg);
     setSender(true);
-    setFeil(await hent(d));
+    const f = await hent(d);
+    setFeil(f);
+    if (!f) oppdaterUrl(d, null);
     setSender(false);
   }
 
@@ -529,34 +590,12 @@ export function Skjema() {
         }}
         noValidate
       >
-        <StegTopp steg={steg} tilbake={tilbake} />
+        <StegTopp steg={steg} tilbake={tilbake} gaTil={setSteg} />
+        <Tittel tittel={STEG_TEKST[steg].tittel} />
 
         {steg === 1 && (
           <>
-            <Tittel etikett="Kjøpet og feilen" tittel="Hva er galt, og når kjøpte du bilen?" />
             <div className={INNHOLD}>
-              <div role="group" aria-labelledby={`${id}-feiltype`} className="flex flex-col gap-2.5 md:gap-3">
-                <span id={`${id}-feiltype`} className={LABEL}>
-                  Hva gjelder feilen? <span className="hidden font-normal text-[#5b6472] md:inline">Velg én eller flere</span>
-                </span>
-                <div className="flex flex-wrap gap-2 md:gap-2.5">
-                  {FEILTYPER_KNAPPER.map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      aria-pressed={d.feiltyper.includes(f)}
-                      onClick={() =>
-                        sett("feiltyper", d.feiltyper.includes(f) ? d.feiltyper.filter((x) => x !== f) : [...d.feiltyper, f])
-                      }
-                      className={`rounded-full px-3.5 py-2.5 font-ui text-[14px] font-medium md:px-5 md:py-3 md:text-[15px] ${
-                        d.feiltyper.includes(f) ? "bg-[#17263d] text-[#f6f4ef]" : "border border-[#bfbab0] bg-white text-[#17263d]"
-                      }`}
-                    >
-                      {FEILTYPE_TEKST[f]}
-                    </button>
-                  ))}
-                </div>
-              </div>
               <div role="group" aria-labelledby={`${id}-kjopt`} className="flex flex-col gap-2.5 md:gap-3">
                 <span id={`${id}-kjopt`} className={LABEL}>
                   Når kjøpte du bilen?
@@ -586,6 +625,59 @@ export function Skjema() {
                   </Rullegardin>
                 </div>
               </div>
+              <div className="grid grid-cols-1 gap-5 md:max-w-[440px] md:grid-cols-2 md:gap-3">
+                <label className="flex flex-col gap-2.5 md:gap-3">
+                  <span className={LABEL}>Hva kostet bilen?</span>
+                  <input
+                    className={INPUT}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder="Kroner"
+                    value={medMellomrom(d.kjopesum)}
+                    onChange={(e) => sett("kjopesum", bareSifre(e.target.value))}
+                  />
+                </label>
+                <label className="flex flex-col gap-2.5 md:gap-3">
+                  <span className={LABEL}>Kilometerstand ved kjøpet</span>
+                  <input
+                    className={INPUT}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder="Kilometer"
+                    value={medMellomrom(d.kmVedKjop)}
+                    onChange={(e) => sett("kmVedKjop", bareSifre(e.target.value))}
+                  />
+                </label>
+              </div>
+            </div>
+          </>
+        )}
+
+        {steg === 2 && (
+          <>
+            <div className={INNHOLD}>
+              <div role="group" aria-labelledby={`${id}-feiltype`} className="flex flex-col gap-2.5 md:gap-3">
+                <span id={`${id}-feiltype`} className={LABEL}>
+                  Hva gjelder feilen? <span className="hidden font-normal text-[#5b6472] md:inline">Velg én eller flere</span>
+                </span>
+                <div className="flex flex-wrap gap-2 md:gap-2.5">
+                  {FEILTYPER_KNAPPER.map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      aria-pressed={d.feiltyper.includes(f)}
+                      onClick={() =>
+                        sett("feiltyper", d.feiltyper.includes(f) ? d.feiltyper.filter((x) => x !== f) : [...d.feiltyper, f])
+                      }
+                      className={`rounded-full px-3.5 py-2.5 font-ui text-[14px] font-medium md:px-5 md:py-3 md:text-[15px] ${
+                        d.feiltyper.includes(f) ? "bg-[#17263d] text-[#f6f4ef]" : "border border-[#bfbab0] bg-white text-[#17263d]"
+                      }`}
+                    >
+                      {FEILTYPE_TEKST[f]}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="flex flex-col gap-3">
                 <Valg
                   id={`${id}-oppdaget`}
@@ -608,9 +700,8 @@ export function Skjema() {
           </>
         )}
 
-        {steg === 2 && (
+        {steg === 3 && (
           <>
-            <Tittel etikett="Forhandleren" tittel="Hva ble sagt, og hva har skjedd siden?" />
             <div className={INNHOLD}>
               <Radliste>
                 <Valg
@@ -638,7 +729,7 @@ export function Skjema() {
                 {d.feilOpplysning !== "nei" && (feilinformert || d.feilOpplysning) && (
                   <Valg
                     id={`${id}-dokumentert`}
-                    label="Kan du dokumentere det?"
+                    label="Har du det skriftlig?"
                     verdier={JA_NEI}
                     tekst={JA_NEI_TEKST}
                     valgt={d.feilOpplysning === "ja_dokumentert" ? "ja" : d.feilOpplysning === "ja_udokumentert" ? "nei" : ""}
@@ -706,9 +797,8 @@ export function Skjema() {
           </>
         )}
 
-        {steg === 3 && (
+        {steg === 4 && (
           <>
-            <Tittel etikett="Dokumentasjon" tittel="Kan du dokumentere feilen?" />
             <div className={INNHOLD}>
               <Radliste>
                 <Valg

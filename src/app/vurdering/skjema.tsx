@@ -7,6 +7,8 @@ import { presumsjonManederFor } from "@/lib/vurdering/faktorer";
 import { KONTAKT_VALG, OPPDAGET_VALG, type Kontakt, type Niva, type Oppdaget } from "@/lib/vurdering/typer";
 
 type Steg = 1 | 2 | 3;
+// How close the example decision is to the buyer's case; see finnEksempel.
+type Treff = "lignende" | "tilnaermet" | "generell";
 type Resultat = {
   niva: Niva;
   tittel: string;
@@ -16,7 +18,7 @@ type Resultat = {
   tiltak: { tittel: string; tekst?: string }[];
   // null when the case was ruled out before the comparison.
   utvalg: { n: number; spesifikk: boolean } | null;
-  eksempel: { setning: string; saksnummer: string; kildeUrl: string } | null;
+  eksempel: { setning: string; saksnummer: string; kildeUrl: string; utfall: "vunnet" | "tapt"; treff: Treff } | null;
 };
 
 const FEILTYPE_TEKST: Record<(typeof FEILTYPER_KNAPPER)[number], string> = {
@@ -185,6 +187,11 @@ const VEKT_TEGN = {
   for: { tegn: "+", farge: "oklch(0.42 0.1 160)", bakgrunn: "oklch(0.95 0.04 160)", tekst: "Taler for saken" },
   mot: { tegn: "−", farge: "oklch(0.42 0.12 25)", bakgrunn: "oklch(0.95 0.04 25)", tekst: "Taler mot saken" },
 } as const;
+const TREFF_TEKST: Record<Treff, string> = {
+  lignende: "Ett eksempel:",
+  tilnaermet: "Det nærmeste eksemplet:",
+  generell: "Ett eksempel fra grunnlaget:",
+};
 const KORT = "overflow-hidden rounded-lg border border-[#dcd8cf] bg-white";
 const RAD = "flex gap-3.5 border-b border-[#eceae4] px-6 py-[18px] last:border-b-0";
 const SEKSJON_TITTEL = "m-0 font-brev text-[24px] font-semibold leading-[1.3]";
@@ -353,14 +360,14 @@ function Vurdering({ resultat, endre }: { resultat: Resultat; endre: () => void 
               <ul className={`m-0 list-none p-0 ${KORT}`}>
                 {resultat.utvalg && (
                   <li className={RAD}>
-                    <Vekt vekt="for" />
+                    <Vekt vekt="noytral" />
                     <div className="flex flex-col items-start gap-2">
                       <p className="m-0 text-[15px] leading-[1.6]">
                         <strong className="font-semibold">
                           {resultat.utvalg.spesifikk ? `${resultat.utvalg.n} lignende vedtak` : `${resultat.utvalg.n} vedtak om bruktbil kjøpt fra forhandler`}
                         </strong>{" "}
                         fra Forbrukerklageutvalget.
-                        {resultat.eksempel && ` Ett eksempel: ${resultat.eksempel.setning}`}
+                        {resultat.eksempel && ` ${TREFF_TEKST[resultat.eksempel.treff]} ${resultat.eksempel.setning}`}
                       </p>
                       {resultat.eksempel && (
                         <a href={resultat.eksempel.kildeUrl} target="_blank" rel="noreferrer" className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
@@ -416,7 +423,7 @@ function Vurdering({ resultat, endre }: { resultat: Resultat; endre: () => void 
         </div>
         {resultat.niva !== "ikke_aktuell" && (
           <div className="mt-auto md:mt-0">
-            <Neste niva={resultat.niva} medEksempel={resultat.eksempel !== null} />
+            <Neste niva={resultat.niva} medEksempel={resultat.eksempel?.utfall === "vunnet" && resultat.eksempel.treff === "lignende"} />
           </div>
         )}
       </div>
@@ -494,7 +501,7 @@ export function Skjema() {
   if (sender) return <Venter />;
 
   if (resultat) {
-    return <Vurdering resultat={resultat} endre={() => setResultat(null)} />;
+    return <Vurdering resultat={resultat} endre={() => { setSteg(1); setResultat(null); }} />;
   }
 
   const tilbake =

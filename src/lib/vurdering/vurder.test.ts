@@ -113,8 +113,31 @@ describe("poengkort", () => {
 });
 
 describe("tak", () => {
-  it("opplyst feil gir svak selv med høye poeng", async () => {
-    expect((await vurder(hent(3), dep(0.9))).niva).toBe("svak");
+  it("opplyst feil gir svak selv med høye poeng når bilen er kjøpt før 2024", async () => {
+    const i = hent(3);
+    i.bilOgKjop.kjopsdato = "2023-12-31";
+    i.bevis.bilder = true;
+    expect((await vurder(i, dep(0.9))).niva).toBe("svak");
+  });
+
+  it("opplyst feil gir tak på middels for kjøp fra 2024", async () => {
+    const i = hent(3);
+    i.bevis.bilder = true;
+    const v = await vurder(i, dep(0.9));
+    expect(v.poeng).toBeGreaterThanOrEqual(3);
+    expect(v.niva).toBe("middels");
+    expect(v.eksempel?.setning).not.toMatch(/gjort kjent med feilen/);
+  });
+
+  it("ikke klaget lenge etter at feilen viste seg gir svak, uansett poeng", async () => {
+    const i = hent(1);
+    i.feilen.kontakt = "nei";
+    i.bilOgKjop.kjopsdato = "2022-01-31";
+    const v = await vurder(i, dep(0.8));
+    expect(v.poeng).toBeGreaterThanOrEqual(3);
+    expect(v.niva).toBe("svak");
+    expect(v.begrunnelse).toMatch(/du har ikke klaget til forhandleren, selv om det er mer enn seks måneder siden/);
+    expect(v.eksempel?.utfall).toBe("tapt");
   });
 
   it("rapport som ikke sier noe om tidspunkt gir tak på middels innenfor presumsjon", async () => {
@@ -126,6 +149,7 @@ describe("tak", () => {
 
   it("opplyst feil med dokumentert villedende opplysning gir ikke tak", async () => {
     const i = hent(3);
+    i.bilOgKjop.kjopsdato = "2023-12-31";
     i.bevis.bilder = true;
     i.feilen.feilOpplysning = "ja_dokumentert";
     const v = await vurder(i, dep(0.9));
@@ -135,6 +159,7 @@ describe("tak", () => {
 
   it("opplyst feil med udokumentert påstand om villedende opplysning gir tak på middels", async () => {
     const i = hent(3);
+    i.bilOgKjop.kjopsdato = "2023-12-31";
     i.bevis.bilder = true;
     i.feilen.feilOpplysning = "ja_udokumentert";
     const v = await vurder(i, dep(0.9));

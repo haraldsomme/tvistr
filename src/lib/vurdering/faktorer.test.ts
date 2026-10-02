@@ -126,15 +126,35 @@ describe("beregnFaktorer", () => {
     expect(fakta(hent(7)).utenforTjenesten).toBeNull();
   });
 
-  it("opplyst feil gir tak på svak med mindre kjøperen sier at opplysningene var uriktige", () => {
-    expect(fakta(hent(3)).opplystTakSvak).toBe(true);
-    const villedet = hent(3);
+  it("opplyst feil gir tak på svak for kjøp før 2024, med mindre kjøperen sier at opplysningene var uriktige", () => {
+    const gammel = hent(3);
+    gammel.bilOgKjop.kjopsdato = "2023-12-31";
+    expect(fakta(gammel)).toMatchObject({ opplystTakSvak: true, opplystEtter2024: false });
+    // From 2024 being told is not enough (§ 15 annet ledd).
+    expect(fakta(hent(3))).toMatchObject({ opplystTakSvak: false, opplystEtter2024: true });
+    const villedet = gammel;
     villedet.feilen.feilOpplysning = "ja_udokumentert";
     expect(fakta(villedet).opplystTakSvak).toBe(false);
     expect(fakta(villedet).opplystTakMiddels).toBe(true);
     villedet.feilen.feilOpplysning = "ja_dokumentert";
     expect(fakta(villedet)).toMatchObject({ opplystTakSvak: false, opplystTakMiddels: false });
     expect(fakta(hent(1)).opplystTakSvak).toBe(false);
+  });
+
+  it("uten klage er reklamasjonen for sen når feilen må ha vært kjent i mer enn seks måneder", () => {
+    const i = hent(1); // oppdaget innen 6 måneder
+    i.feilen.kontakt = "nei";
+    i.bilOgKjop.kjopsdato = "2025-09-30"; // senest oppdaget 2026-03-30, pluss seks måneder er 2026-09-30
+    expect(fakta(i).reklamertForSent).toBe(true);
+    i.bilOgKjop.kjopsdato = "2025-10-01";
+    expect(fakta(i).reklamertForSent).toBe(false);
+    i.bilOgKjop.kjopsdato = "2022-01-31";
+    i.feilen.kontakt = "venter";
+    expect(fakta(i).reklamertForSent).toBe(false);
+    // «Mer enn 2 år» has no upper bound, so nothing can be said.
+    i.feilen.kontakt = "nei";
+    i.feilen.oppdaget = "over_2_ar";
+    expect(fakta(i).reklamertForSent).toBe(false);
   });
 
   it("feil opplysninger teller bare med dokumentasjon", () => {

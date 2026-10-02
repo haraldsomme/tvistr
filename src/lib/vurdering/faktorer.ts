@@ -8,6 +8,9 @@ import type { FeilKnapp, Feiltype, KlageInput, Kontakt, Oppdaget } from "./typer
 export const PRESUMSJON_TO_AR_FRA = "2024-01-01";
 // § 27: absolute deadline for complaining, five years for goods meant to last much longer, like a car.
 export const ABSOLUTT_FRIST_AR = 5;
+// § 27 (1): the buyer must complain within reasonable time after discovering the defect, never less
+// than two months. Six months leaves a wide margin before we call an unmade complaint too late.
+export const RIMELIG_TID_MANEDER = 6;
 
 export type Reklamasjonsbotte = "rask" | "middels" | "sen";
 
@@ -33,9 +36,15 @@ export type Faktorer = {
   presumsjon: boolean;
   // More than five years from purchase to the first complaint, or to today when there has been none.
   fristUte: boolean;
+  // The dealer has not been told, and at least RIMELIG_TID_MANEDER have passed since the defect showed.
+  reklamertForSent: boolean;
   opplystForKjop: KlageInput["feilen"]["opplystForKjop"];
-  // Defect was disclosed before purchase and the buyer does not say the seller misled them.
+  // Defect was disclosed before a purchase made before 2024 and the buyer does not say the seller
+  // misled them: the buyer cannot complain about what they knew of (§ 16 (3) as it read then).
   opplystTakSvak: boolean;
+  // The same for a purchase from 2024: being told is not enough, the buyer must have been told
+  // specifically and have accepted the deviation expressly and separately (§ 15 (2)).
+  opplystEtter2024: boolean;
   // Defect was disclosed, and the buyer says the information was misleading but cannot show it.
   opplystTakMiddels: boolean;
   // The buyer says what the ad or the dealer said was wrong.
@@ -58,6 +67,9 @@ const KNAPP_TIL_FEILTYPE: Record<FeilKnapp, Feiltype[]> = {
   skade: ["kollisjonsskade"],
   annet: [],
 };
+
+// The latest the defect can have shown, in months after the purchase. Unknown for «mer enn 2 år».
+const SENEST_OPPDAGET: Record<Oppdaget, number | null> = { innen_6_mnd: 6, "6_mnd_til_2_ar": 24, over_2_ar: null };
 
 const BOTTE: Record<Oppdaget, Reklamasjonsbotte> = { innen_6_mnd: "rask", "6_mnd_til_2_ar": "middels", over_2_ar: "sen" };
 
@@ -83,6 +95,9 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
   // date means there was no need to ask.
   const fristSlutt = leggTilManeder(b.kjopsdato, ABSOLUTT_FRIST_AR * 12);
   const fristUte = f.kontakt === "nei" ? idag > fristSlutt : f.forsteReklamasjon !== undefined && f.forsteReklamasjon > fristSlutt;
+  const senest = SENEST_OPPDAGET[f.oppdaget];
+  const reklamertForSent = f.kontakt === "nei" && senest !== null && idag > leggTilManeder(b.kjopsdato, senest + RIMELIG_TID_MANEDER);
+  const opplystUtenInnvending = f.opplystForKjop === "ja" && f.feilOpplysning === "nei";
 
   const utenforTjenesten = k.selgerType === "privat" ? "privat_selger" : !k.privatBruk ? "ikke_privat_bruk" : null;
 
@@ -99,8 +114,10 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
     presumsjonManeder,
     presumsjon,
     fristUte,
+    reklamertForSent,
     opplystForKjop: f.opplystForKjop,
-    opplystTakSvak: f.opplystForKjop === "ja" && f.feilOpplysning === "nei",
+    opplystTakSvak: opplystUtenInnvending && presumsjonManeder === 6,
+    opplystEtter2024: opplystUtenInnvending && presumsjonManeder === 24,
     opplystTakMiddels: f.opplystForKjop === "ja" && f.feilOpplysning === "ja_udokumentert",
     feilOpplysninger: f.feilOpplysning !== "nei",
     feilOpplysningerDokumentert: f.feilOpplysning === "ja_dokumentert",

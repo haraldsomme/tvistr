@@ -1,4 +1,4 @@
-import { finnEksempel, type Eksempel } from "./eksempler";
+import { finnEksempel, type ValgtEksempel } from "./eksempler";
 import { beregnFaktorer, iDag, type Faktorer } from "./faktorer";
 import { byggGrunnlag, fkjl, NAAR, type Grunnlag } from "./grunnlag";
 import { foreslaTiltak, type Tiltak } from "./tiltak";
@@ -13,8 +13,9 @@ export type Vurdering = {
   begrunnelse: string;
   // The same facts point by point, each with the rule it triggers and a reference to the law.
   grunnlag: Grunnlag[];
-  // A similar decision the buyer won; null when none fits or the case is weak.
-  eksempel: Eksempel | null;
+  // A similar decision: one the buyer won, or one the buyer lost when the case is weak. null only
+  // when the case is not assessed.
+  eksempel: ValgtEksempel | null;
   // What the user can do to strengthen the case; empty when there is nothing to suggest. Not part
   // of the free assessment: it is meant for the paid step.
   tiltak: Tiltak[];
@@ -90,6 +91,7 @@ function begrunnelseFor(f: Faktorer): string {
 
   if (f.kontakt === "forsokt") ledd.push("forhandleren har forsøkt å rette den uten å lykkes");
   else if (f.kontakt === "avvist") ledd.push("forhandleren har avvist å rette den");
+  else if (f.reklamertForSent) ledd.push("du har ikke klaget til forhandleren, selv om det er mer enn seks måneder siden");
 
   if (f.rapportSierForKjop === true) ledd.push("verkstedrapporten peker på en feil som sannsynligvis var til stede ved levering");
   else if (f.rapportSierForKjop === false) ledd.push("verkstedrapporten sier ikke om feilen var til stede ved levering");
@@ -117,6 +119,10 @@ export function vurderFraFaktorer(f: Faktorer, s: Statistikk | null): Vurdering 
 
   // Caps: facts that limit the case whatever else speaks for it.
   if (f.opplystTakSvak) niva = "svak";
+  // Purchases from 2024: the dealer must show that the buyer expressly accepted the deviation.
+  if (f.opplystEtter2024 && niva === "sterk") niva = "middels";
+  // A complaint that has not been made long after the defect showed is most likely too late.
+  if (f.reklamertForSent) niva = "svak";
   // Word against word: a claim of misleading information that cannot be shown does not lift the case.
   if (f.opplystTakMiddels && niva === "sterk") niva = "middels";
   // Inside the presumption period a silent report still gives the dealer something to argue with.

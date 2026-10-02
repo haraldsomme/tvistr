@@ -41,8 +41,25 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
     punkter.push({ tekst: "Du har foreløpig ikke dokumentert selve feilen. Antakelsen gjelder når feilen oppsto, ikke at den finnes.", vekt: "mot" });
   }
 
+  // Wear the buyer had to expect is named in about 6 of 10 lost dealer decisions, also inside the
+  // presumption period. It does not apply to wrong mileage or history, or to earlier collision damage.
+  const slitasjeAktuelt = f.feilgrupper.length === 0 || f.feilgrupper.some((g) => g[0] !== "km_avvik" && g[0] !== "kollisjonsskade");
+  if (f.presumsjon && slitasjeAktuelt) {
+    punkter.push({
+      tekst: "Forhandleren kan likevel innvende at feilen er vanlig slitasje for bilens alder og kjørelengde. Det er en vanlig grunn til at kjøpere taper.",
+      vekt: "noytral",
+      ...fkjl(15),
+    });
+  }
+
   if (f.opplystTakSvak) {
     punkter.push({ tekst: "Du ble fortalt om feilen før kjøpet. Det du kjente til da du kjøpte, kan du normalt ikke klage på.", vekt: "mot" });
+  } else if (f.opplystEtter2024) {
+    punkter.push({
+      tekst: "Du ble fortalt om feilen før kjøpet. Det stenger bare for kravet hvis du ble spesielt opplyst om akkurat denne feilen og uttrykkelig godtok den.",
+      vekt: "mot",
+      ...fkjl(15),
+    });
   } else if (f.feilOpplysningerDokumentert) {
     punkter.push({
       tekst: "Du kan dokumentere at opplysningene du fikk om bilen var uriktige. En bil som ikke svarer til det forhandleren har opplyst, har en mangel.",
@@ -56,6 +73,12 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
   if (f.kontakt === "forsokt" || f.kontakt === "avvist") {
     const hendt = f.kontakt === "forsokt" ? "forsøkt å rette feilen uten å lykkes" : "avvist å rette feilen";
     punkter.push({ tekst: `Forhandleren har ${hendt}. Da kan du gå videre til prisavslag eller heving.`, vekt: "for", ...fkjl(31, "§§ 31 og 32") });
+  } else if (f.reklamertForSent) {
+    punkter.push({
+      tekst: "Du har ikke klaget til forhandleren, og det er mer enn seks måneder siden feilen viste seg. Du må klage innen rimelig tid etter at du oppdaget feilen, ellers kan kravet være tapt.",
+      vekt: "mot",
+      ...fkjl(27),
+    });
   } else if (f.kontakt === "nei") {
     punkter.push({ tekst: "Du har ikke klaget til forhandleren ennå. Du må gjøre det innen rimelig tid etter at du oppdaget feilen.", vekt: "mot", ...fkjl(27) });
   }

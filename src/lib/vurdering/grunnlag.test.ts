@@ -34,8 +34,37 @@ describe("grunnlag", () => {
     expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven § 29");
   });
 
-  it("opplyst feil og dokumenterte feilopplysninger får hvert sitt punkt", () => {
-    expect(grunnlag(hent(3)).some((g) => /fortalt om feilen før kjøpet/.test(g.tekst))).toBe(true);
+  it("opplyst feil viser til § 15 for kjøp fra 2024, og til det kjøperen kjente til før det", () => {
+    const ny = grunnlag(hent(3)).find((g) => /fortalt om feilen før kjøpet/.test(g.tekst))!;
+    expect(ny.paragraf).toBe("forbrukerkjøpsloven § 15");
+    expect(ny.tekst).toMatch(/uttrykkelig godtok/);
+    const i = hent(3);
+    i.bilOgKjop.kjopsdato = "2023-12-31";
+    expect(grunnlag(i).some((g) => /kan du normalt ikke klage på/.test(g.tekst))).toBe(true);
+  });
+
+  it("slitasje nevnes innenfor presumsjonen, men ikke for kilometer, historikk og kollisjonsskade", () => {
+    const slitasje = (i: KlageInput) => grunnlag(i).find((g) => /vanlig slitasje/.test(g.tekst));
+    expect(slitasje(hent(1))).toMatchObject({ vekt: "noytral", paragraf: "forbrukerkjøpsloven § 15" });
+    expect(slitasje(hent(6))).toBeUndefined(); // utenfor presumsjonen
+    expect(slitasje(hent(7))).toBeUndefined(); // km_service
+    const i = hent(1);
+    i.feilen.typer = ["skade", "annet"];
+    expect(slitasje(i)).toBeUndefined();
+    i.feilen.typer = ["annet"];
+    expect(slitasje(i)).toBeDefined();
+  });
+
+  it("uten klage lenge etter at feilen viste seg, sier § 27-punktet at kravet kan være tapt", () => {
+    const i = hent(1);
+    i.feilen.kontakt = "nei";
+    i.bilOgKjop.kjopsdato = "2022-01-31";
+    const siste = grunnlag(i).at(-1)!;
+    expect(siste.paragraf).toBe("forbrukerkjøpsloven § 27");
+    expect(siste.tekst).toMatch(/kan kravet være tapt/);
+  });
+
+  it("dokumenterte feilopplysninger får sitt eget punkt", () => {
     expect(paragrafer(hent(4))).toContain("forbrukerkjøpsloven § 16");
   });
 

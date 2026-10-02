@@ -52,7 +52,13 @@ export async function POST(request: Request) {
       tittel: v.tittel,
       begrunnelse: v.begrunnelse,
       grunnlag: v.grunnlag,
-      eksempel: v.eksempel && { setning: v.eksempel.setning, saksnummer: v.eksempel.saksnummer, kildeUrl: v.eksempel.kildeUrl },
+      eksempel: v.eksempel && {
+        setning: v.eksempel.setning,
+        saksnummer: v.eksempel.saksnummer,
+        kildeUrl: v.eksempel.kildeUrl,
+        utfall: v.eksempel.utfall,
+        treff: v.eksempel.treff,
+      },
       tiltak: v.tiltak.map((t) => (v.niva === "svak" ? t : { tittel: t.tittel })),
       utvalg: v.statistikk && { n: v.statistikk.n, spesifikk: v.statistikk.spesifikk },
     });

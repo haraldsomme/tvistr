@@ -89,8 +89,8 @@
   {
     "id": 3,
     "tittel": "Girkasse, feilen var opplyst før kjøp",
-    "forventetNiva": "svak",
-    "merknad": "Kjøper ble fortalt om feilen og bilen ble solgt som den er. Skal trekkes sterkt ned.",
+    "forventetNiva": "middels",
+    "merknad": "Kjøper ble fortalt om feilen og bilen ble solgt som den er. Kjøpt etter 2024, så opplysningen stenger bare hvis kjøperen uttrykkelig godtok feilen (fkjl § 15 annet ledd): høyst middels.",
     "input": {
       "kvalifisering": {
         "selgerType": "forhandler",

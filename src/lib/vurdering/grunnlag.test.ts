@@ -20,26 +20,19 @@ describe("grunnlag", () => {
     expect(utenfor[1].tekst).toMatch(/ikke en rapport/);
   });
 
-  it("kontakten med forhandleren avgjør hvilken regel som vises til slutt", () => {
-    const i = hent(1);
-    for (const [kontakt, paragraf] of [
-      ["avvist", "forbrukerkjøpsloven §§ 31 og 32"],
-      ["forsokt", "forbrukerkjøpsloven §§ 31 og 32"],
-    ] as const) {
-      i.feilen.kontakt = kontakt;
-      expect(paragrafer(i)).toContain(paragraf);
-      expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven §§ 29 og 30");
-    }
-    for (const kontakt of ["nei", "venter"] as const) {
-      i.feilen.kontakt = kontakt;
-      expect(paragrafer(i)).toContain("forbrukerkjøpsloven §§ 29 og 30");
-      expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven §§ 31 og 32");
-    }
+  it("retting og senere prisavslag eller heving står i ett punkt, med to forsøk for kjøp før 2024", () => {
+    const punkt = (i: KlageInput) => grunnlag(i).find((g) => g.paragraf === "forbrukerkjøpsloven §§ 29–32")!.tekst;
+    expect(punkt(hent(1))).toMatch(/retter den uten kostnad.*prisavslag eller heving\.$/);
+    expect(punkt(hent(1))).not.toMatch(/to forsøk/);
+    const gammel = hent(1);
+    gammel.bilOgKjop.kjopsdato = "2023-12-31";
+    expect(punkt(gammel)).toMatch(/For kjøp før 2024 har forhandleren normalt rett til to forsøk/);
   });
 
   it("opplyst feil viser til § 15 for kjøp fra 2024, og til det kjøperen kjente til før det", () => {
-    const ny = grunnlag(hent(3)).find((g) => /fortalt om feilen før kjøpet/.test(g.tekst))!;
+    const ny = grunnlag(hent(3)).find((g) => /visste om feilen/.test(g.tekst))!;
     expect(ny.paragraf).toBe("forbrukerkjøpsloven § 15");
+    expect(ny.vekt).toBe("mot");
     expect(ny.tekst).toMatch(/uttrykkelig godtok/);
     const i = hent(3);
     i.bilOgKjop.kjopsdato = "2023-12-31";
@@ -56,16 +49,6 @@ describe("grunnlag", () => {
     expect(slitasje(i)).toBeUndefined();
     i.feilen.typer = ["annet"];
     expect(slitasje(i)).toBeDefined();
-  });
-
-  it("ett mislykket retteforsøk: to forsøk nevnes for kjøp før 2024", () => {
-    const siste = (i: KlageInput) => grunnlag(i).find((g) => g.paragraf === "forbrukerkjøpsloven §§ 31 og 32")!.tekst;
-    expect(siste(hent(1))).toBe("Forhandleren har forsøkt å rette feilen uten å lykkes. Da kan du gå videre til prisavslag eller heving.");
-    const gammel = hent(1);
-    gammel.bilOgKjop.kjopsdato = "2023-12-31";
-    expect(siste(gammel)).toMatch(/har forhandleren normalt rett til to forsøk\. Etter det kan du gå videre/);
-    gammel.feilen.kontakt = "avvist";
-    expect(siste(gammel)).not.toMatch(/to forsøk/);
   });
 
   it("ikke klaget ennå gir ikke noe punkt: å klage er det appen hjelper med", () => {

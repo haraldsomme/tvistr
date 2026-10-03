@@ -62,11 +62,16 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
   }
 
   if (f.opplystTakSvak) {
-    punkter.push({ tekst: "Du ble fortalt om feilen før kjøpet. Det du kjente til da du kjøpte, kan du normalt ikke klage på.", vekt: "mot" });
+    punkter.push({
+      tekst:
+        "Du visste om feilen da du kjøpte bilen. Det du kjente til, kan du normalt ikke klage på.",
+      vekt: "mot",
+    });
   } else if (f.opplystEtter2024) {
     punkter.push({
-      tekst: "Du ble fortalt om feilen før kjøpet, men det stenger bare for kravet hvis du ble spesielt opplyst om akkurat denne feilen og uttrykkelig godtok den.",
-      vekt: "for",
+      tekst:
+        "Du visste om feilen da du kjøpte bilen. Det stenger bare for kravet hvis du ble spesielt opplyst om akkurat denne feilen og uttrykkelig godtok den. Forhandleren kan likevel hevde at du kjente til feilen.",
+      vekt: "mot",
       ...fkjl(15),
     });
   } else if (f.feilOpplysningerDokumentert) {
@@ -77,16 +82,23 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
     });
   }
 
-  if (f.kontakt === "forsokt" || f.kontakt === "avvist") {
-    const hendt = f.kontakt === "forsokt" ? "forsøkt å rette feilen uten å lykkes" : "avvist å rette feilen";
-    // Purchases before 2024 follow the old rule: the dealer normally had two attempts at the same defect.
-    const videre =
-      f.kontakt === "forsokt" && f.presumsjonManeder === 6
-        ? "For kjøp før 2024 har forhandleren normalt rett til to forsøk. Etter det kan du gå videre til prisavslag eller heving."
-        : "Da kan du gå videre til prisavslag eller heving.";
-    punkter.push({ tekst: `Forhandleren har ${hendt}. ${videre}`, vekt: "for", ...fkjl(31, "§§ 31 og 32") });
-  } else {
-    punkter.push({ tekst: "Har bilen en mangel, kan du kreve at forhandleren retter den uten kostnad for deg.", vekt: "for", ...fkjl(29, "§§ 29 og 30") });
+  // What the dealer has done is asked on the letter page, so the assessment only says what the buyer can
+  // claim: repair first, then price reduction or cancelling if the dealer does not succeed. Purchases
+  // before 2024 follow the old rule: the dealer normally had two attempts at the same defect.
+  punkter.push({
+    tekst: `Har bilen en mangel, kan du kreve at forhandleren retter den uten kostnad for deg. Retter de ikke, eller lykkes de ikke, kan du kreve prisavslag eller heving.${
+      f.presumsjonManeder === 6 ? " For kjøp før 2024 har forhandleren normalt rett til to forsøk før du kan kreve det." : ""
+    }`,
+    vekt: "for",
+    ...fkjl(29, "§§ 29–32"),
+  });
+  if (f.venterOverEttAr) {
+    punkter.push({
+      tekst:
+        "Du har ikke tatt opp feilen med forhandleren, og ut fra svarene dine har du kjent til den i over ett år. Du må reklamere innen rimelig tid etter at du oppdaget feilen, og forhandleren kan hevde at du har ventet for lenge.",
+      vekt: "mot",
+      ...fkjl(27),
+    });
   }
 
   if (!f.fristUte) {
@@ -96,16 +108,46 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
   return punkter;
 }
 
-// Rules that hold for every purchase from a dealer; they fill the list when the answers give fewer than three points.
-const GENERELLE: Grunnlag[] = [
-  { tekst: "Et generelt forbehold som «solgt som den er» fritar ikke forhandleren for ansvar for mangler.", vekt: "for", ...fkjl(17) },
-  { tekst: "Forhandleren kan ikke avtale seg bort fra rettighetene loven gir deg.", vekt: "for", ...fkjl(3) },
-];
+// Rules that hold for every purchase from a dealer; they fill the list when the answers give fewer than
+// three points. A «solgt som den er» clause works differently before and after 1 January 2024.
+function generelle(f: Faktorer): Grunnlag[] {
+  return [
+    f.presumsjonManeder === 24
+      ? {
+          tekst:
+            "Et generelt forbehold som «solgt som den er» kan ikke gjøres gjeldende mot deg.",
+          vekt: "for",
+          ...fkjl(3, "§§ 3 og 15"),
+        }
+      : {
+          tekst:
+            "Et forbehold som «solgt som den er» hindrer ikke krav når bilen er i dårligere stand enn du hadde grunn til å regne med, eller ikke stemmer med opplysningene du fikk (forbrukerkjøpsloven § 17, slik den lød før 2024).",
+          vekt: "for",
+        },
+    {
+      tekst:
+        "Forhandleren kan ikke avtale seg bort fra rettighetene loven gir deg.",
+      vekt: "for",
+      ...fkjl(3),
+    },
+  ];
+}
 export const ANTALL_STYRKER = 3;
 
-// What the page shows: for a good case exactly three points that strengthen it, in the order of
-// byggGrunnlag; for a weak case the points that speak against it.
-export function synligGrunnlag(niva: Niva, punkter: Grunnlag[]): Grunnlag[] {
-  if (niva === "svak") return punkter.filter((p) => p.vekt === "mot");
-  return [...punkter.filter((p) => p.vekt === "for"), ...GENERELLE].slice(0, ANTALL_STYRKER);
+// What the page shows in two lists. Strengths: for a good case exactly three points that speak for it,
+// in the order of byggGrunnlag (filled up with the rules that hold for every purchase); for a weak case
+// only the ones that really do. Weaknesses: what speaks against it, and what the dealer may object.
+export function synligGrunnlag(
+  niva: Niva,
+  punkter: Grunnlag[],
+  f: Faktorer,
+): { styrker: Grunnlag[]; svakheter: Grunnlag[] } {
+  const for_ = punkter.filter((p) => p.vekt === "for");
+  return {
+    styrker:
+      niva === "god"
+        ? [...for_, ...generelle(f)].slice(0, ANTALL_STYRKER)
+        : for_,
+    svakheter: punkter.filter((p) => p.vekt !== "for"),
+  };
 }

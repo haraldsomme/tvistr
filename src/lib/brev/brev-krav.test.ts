@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { KlageInput } from "@/lib/vurdering/typer";
 import { byggBrev, type LignendeRef } from "./brev";
+import type { Utfylling } from "./utfylling";
 
 const IDAG = "2026-10-02";
 const klage = (feilen: Partial<KlageInput["feilen"]> = {}, bil: Partial<KlageInput["bilOgKjop"]> = {}): KlageInput => ({
   bilOgKjop: { kjopsdato: "2026-03-12", kjopesumNok: 250000, kmVedKjop: 80000, ...bil },
-  feilen: { typer: ["motor"], oppdaget: "innen_6_mnd", opplystForKjop: "nei", feilOpplysning: "nei", kontakt: "avvist", ...feilen },
+  feilen: { typer: ["motor"], oppdaget: "innen_6_mnd", opplystForKjop: "nei", feilOpplysning: "nei", kontakt: "ja", ...feilen },
   bevis: { verkstedrapport: false, rapportSierForKjop: null, bilder: true },
 });
-const tekst = (...args: Parameters<typeof byggBrev>) => byggBrev(...args).avsnitt.join("\n");
+// The dealer has refused to repair unless a test says otherwise (answered on the letter page).
+const tekst = (input: KlageInput, idag: string, u: Utfylling = {}, lignende: LignendeRef[] = []) => byggBrev(input, idag, { retting: "avvist", ...u }, lignende).avsnitt.join("\n");
 
 describe("heving og prisavslag", () => {
   it("heving har subsidiært krav om prisavslag og krav om rente", () => {

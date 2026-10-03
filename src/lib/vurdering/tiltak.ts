@@ -31,6 +31,15 @@ export function foreslaTiltak(f: Faktorer): Tiltak[] {
       tekst: "Ta bilder eller film av feilen slik den er nå, og av det som er skadet. Vent med å utbedre noe til feilen er dokumentert.",
     });
   }
+  // The dealer has the right to try to repair first (§§ 29 and 30); a buyer who repairs it elsewhere first
+  // can lose the right to have the cost covered.
+  if (f.kontakt === "nei") {
+    tiltak.push({
+      tittel: "La forhandleren rette feilen først",
+      tekst:
+        "Ikke få feilen reparert før forhandleren har fått sjansen til å rette den. Har du reparert den selv først, kan du miste retten til å få kostnaden dekket. Ta vare på alle kvitteringer og skriftlige svar fra forhandleren.",
+    });
+  }
   if (f.feilOpplysninger && !f.feilOpplysningerDokumentert) {
     tiltak.push({
       tittel: "Ta vare på annonsen og meldingene",

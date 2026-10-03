@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { useId, useState, type ReactNode } from "react";
 import { Logo } from "@/app/logo";
 import { ForhandlerVelger } from "@/app/vurdering/forhandler-velger";
-import { AvsenderFelt, FeilenFelt, ForbeholdFelt, KravFelt, OpplysningFelt, ReklamasjonFelt, VedleggFelt } from "./felt";
+import { AvsenderFelt, FeilenFelt, ForbeholdFelt, KravFelt, OpplysningFelt, ReklamasjonFelt, RettingFelt, VedleggFelt } from "./felt";
 import { byggBrev, harPlassholder, type LignendeRef } from "@/lib/brev/brev";
 import type { Endring, Utfylling } from "@/lib/brev/utfylling";
 import { beregnFaktorer } from "@/lib/vurdering/faktorer";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
-import type { Forhandler } from "@/lib/vurdering/typer";
+import { gyldigRetting, type Forhandler } from "@/lib/vurdering/typer";
 import { Brevark } from "./brevark";
 import { Saksmappe } from "./mappe/saksmappe";
 import { SvarKort } from "./svar-felt";
@@ -182,7 +182,7 @@ export function BrevSide({
   // The answers were valid when they were saved; a deadline that has begun to matter since can make
   // them incomplete. The buyer then corrects them before the letter can be written.
   const input = parsed.ok ? parsed.input : null;
-  const fristUte = input !== null && beregnFaktorer(input, idag).fristUte;
+  const stopp = input === null ? null : beregnFaktorer(input, idag).stopp;
 
   // Saves one or more fields with the case. The letter shows what the server stored.
   async function lagre(endring: Endring): Promise<boolean> {
@@ -266,7 +266,8 @@ export function BrevSide({
     avbryt: redigerer === stegId ? () => setRedigerer(null) : undefined,
   });
   const kontakt = input.feilen.kontakt;
-  const kanVelgeKrav = kontakt === "avvist" || kontakt === "forsokt";
+  const retting = gyldigRetting(kontakt, utfylling.retting);
+  const kanVelgeKrav = retting === "avvist" || retting === "forsokt" || retting === "reparert_selv";
   const steg: { id: string; tittel: string; ferdig: boolean; kanEndres?: boolean; innhold: () => ReactNode }[] = [
     {
       id: "forhandler",
@@ -292,14 +293,22 @@ export function BrevSide({
           },
         ]
       : []),
+    {
+      id: "retting",
+      tittel: "Reparasjon av feilen",
+      // Nothing has happened is the default for a buyer who has not told the dealer.
+      ferdig: retting !== undefined || kontakt === "nei",
+      kanEndres: true,
+      innhold: () => <RettingFelt input={input} verdi={utfylling.retting} {...felles("retting")} />,
+    },
     ...(kontakt !== "nei"
       ? [
           {
             id: "reklamasjon",
             tittel: "Kontakt med forhandleren",
-            ferdig: utfylling.reklamasjon !== undefined && (kontakt !== "forsokt" || utfylling.reklamasjon.forsok !== undefined),
+            ferdig: utfylling.reklamasjon !== undefined && (retting !== "forsokt" || utfylling.reklamasjon.forsok !== undefined),
             kanEndres: true,
-            innhold: () => <ReklamasjonFelt input={input} idag={idag} verdi={utfylling.reklamasjon} {...felles("reklamasjon")} />,
+            innhold: () => <ReklamasjonFelt input={input} retting={retting} idag={idag} verdi={utfylling.reklamasjon} {...felles("reklamasjon")} />,
           },
         ]
       : []),
@@ -315,7 +324,7 @@ export function BrevSide({
       tittel: "Kravet",
       ferdig: utfylling.krav !== undefined && (!kanVelgeKrav || utfylling.krav.type !== undefined),
       kanEndres: true,
-      innhold: () => <KravFelt input={input} verdi={utfylling.krav} {...felles("krav")} />,
+      innhold: () => <KravFelt kanVelge={kanVelgeKrav} verdi={utfylling.krav} {...felles("krav")} />,
     },
     {
       id: "vedlegg",
@@ -403,9 +412,11 @@ export function BrevSide({
         <SlettSak slett={slett} />
       </section>
       <div className="flex w-full max-w-[820px] flex-col gap-4">
-        {fristUte && (
+        {stopp && (
           <p role="alert" className="m-0 rounded-lg border border-[oklch(0.72_0.11_85)] bg-[oklch(0.96_0.07_85)] px-[18px] py-3.5 text-[14px] leading-[1.55] text-[#6b5618]">
-            Med disse svarene er fristen for å klage ute. Brevet står som det er, men forhandleren kan avvise kravet fordi det kommer for sent. Sjekk at svarene fra vurderingen stemmer.
+            {stopp === "frist"
+              ? "Med disse svarene er fristen for å klage ute. Brevet står som det er, men forhandleren kan avvise kravet fordi det kommer for sent. Sjekk at svarene fra vurderingen stemmer."
+              : "Med disse svarene gjelder ikke forbrukerkjøpsloven for kjøpet (kjøp fra en privatperson eller gjennom et firma). Brevet står som det er, men forhandleren kan avvise kravet. Sjekk at svarene fra vurderingen stemmer."}
           </p>
         )}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">

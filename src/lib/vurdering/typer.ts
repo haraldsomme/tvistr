@@ -25,10 +25,39 @@ export type FeilKnapp =
 export type Adresse = { linjer: string[]; postnummer: string; poststed: string };
 export type Forhandler = { type: "brreg"; orgnr: string; navn: string; adresse?: Adresse } | { type: "fritekst"; navn: string };
 
-// Contact with the dealer so far. nei = not contacted; venter = complained, no answer yet or a repair is under way;
-// avvist = the dealer refused; forsokt = the dealer tried to repair without success.
-export const KONTAKT_VALG = ["nei", "venter", "avvist", "forsokt"] as const;
+// Has the buyer taken the defect up with the dealer? The assessment only needs yes or no (the deadlines
+// in § 27); what has happened since is asked on the letter page (`RETTING_VALG`).
+export const KONTAKT_VALG = ["nei", "ja"] as const;
 export type Kontakt = (typeof KONTAKT_VALG)[number];
+
+// What has happened about repairing the defect (fkjl §§ 29 and 30), asked on the letter page: ingen = nothing
+// yet; venter = the dealer will try or has not answered; avvist = refused; forsokt = tried without
+// success; reparert_selv = the buyer had it repaired elsewhere before the dealer could try.
+export const RETTING_VALG = [
+  "ingen",
+  "venter",
+  "avvist",
+  "forsokt",
+  "reparert_selv",
+] as const;
+export type Retting = (typeof RETTING_VALG)[number];
+
+// The answers that make sense: a buyer who has not told the dealer can only say that nothing has happened
+// or that the car was repaired elsewhere. An answer that no longer fits the contact answer is dropped.
+export const rettingValgFor = (kontakt: Kontakt): readonly Retting[] =>
+  kontakt === "nei"
+    ? ["ingen", "reparert_selv"]
+    : ["venter", "avvist", "forsokt", "reparert_selv"];
+export const gyldigRetting = (
+  kontakt: Kontakt,
+  retting: Retting | undefined,
+): Retting | undefined =>
+  retting && rettingValgFor(kontakt).includes(retting) ? retting : undefined;
+
+// Who the car was bought from. Only a purchase from a dealer by a consumer is covered by the consumer
+// purchase act (§ 1); a purchase from a private person or through a company follows the purchase act.
+export const KJOPSFORM_VALG = ["forhandler", "privatperson", "firma"] as const;
+export type Kjopsform = (typeof KJOPSFORM_VALG)[number];
 
 // How long after the purchase the defect showed. The buckets are the engine's own cut-offs:
 // the presumption periods (6 and 24 months) and the 180/730-day buckets in the decision statistics.
@@ -52,6 +81,8 @@ export type KlageInput = {
     kjopsdato?: string;
     // How long ago it was. Required without `kjopsdato`; with it, the day decides.
     kjopAlder?: Kjopsalder;
+    // Undefined (old data, test data) is read as a dealer.
+    kjopsform?: Kjopsform;
     kjopesumNok?: number | null;
     regnr?: string;
     kjoretoy?: { merke: string; modell: string; arsmodell: number; drivstoff: Drivstoff } | null;
@@ -61,7 +92,7 @@ export type KlageInput = {
   feilen: {
     typer: FeilKnapp[];
     oppdaget: Oppdaget;
-    // Only asked for purchases before 2024 (the only place it decides the level); null = not asked.
+    // Did the buyer know about the defect when buying? null = not answered (old data).
     opplystForKjop: "ja" | "nei" | null;
     feilOpplysning: FeilOpplysning;
     kontakt: Kontakt;
@@ -81,7 +112,9 @@ export type KlageInput = {
   };
 };
 
-export type Niva = "god" | "svak";
+// utenfor = the claim is stopped by the law itself (not a consumer purchase from a dealer, or past the
+// five-year deadline); the letter is not offered.
+export type Niva = "god" | "svak" | "utenfor";
 
 export type TestKlage = {
   id: number;

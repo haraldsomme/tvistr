@@ -34,14 +34,14 @@ const dep = (andel = 0.6, spesifikk = true, basis = 0.6): Avhengigheter => ({
 });
 
 describe("frister", () => {
-  it("over fem år uten kontakt gir dårlig sak, med forklaring og uten å miste unntakene", async () => {
+  it("over fem år uten kontakt stopper saken, med forklaring og uten å miste unntakene", async () => {
     const i = hent(4);
     i.bilOgKjop.kjopsdato = "2021-03-31";
     const d = dep(0.9);
     const v = await vurder(i, d);
-    expect(v.niva).toBe("svak");
+    expect(v.niva).toBe("utenfor");
     expect(v.begrunnelse).toMatch(/mer enn fem år/);
-    expect(v.eksempel?.utfall).toBe("tapt");
+    expect(v.eksempel).toBeNull();
     expect(v.grunnlag[0]).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 27" });
     expect(v.grunnlag[0].tekst).toMatch(/garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt/);
     expect(d.hentStatistikk).not.toHaveBeenCalled();
@@ -67,11 +67,11 @@ describe("nivå", () => {
     expect((await vurder(i, dep())).niva).toBe("god");
   });
 
-  it("utenfor presumsjon løfter et mislykket rettingsforsøk saken, men å ikke ha klaget trekker ikke ned", async () => {
+  it("utenfor presumsjon uten rapport er saken svak, uansett om forhandleren er kontaktet", async () => {
     const i = hent(6);
-    i.feilen.kontakt = "forsokt";
-    expect((await vurder(i, dep(0.3))).niva).toBe("god");
-    i.feilen.kontakt = "avvist";
+    i.feilen.kontakt = "ja";
+    expect((await vurder(i, dep(0.3))).niva).toBe("svak");
+    i.feilen.kontakt = "nei";
     expect((await vurder(i, dep())).niva).toBe("svak");
   });
 
@@ -106,15 +106,45 @@ describe("tak", () => {
     expect(v.eksempel?.setning).not.toMatch(/gjort kjent med feilen/);
   });
 
-  it("ikke klaget ennå senker ikke nivået, heller ikke lenge etter at feilen viste seg", async () => {
+  it("ikke klaget ennå senker ikke nivået når feilen er oppdaget nylig", async () => {
     const i = hent(1);
     const for_ = await vurder(i, dep(0.8));
     i.feilen.kontakt = "nei";
-    i.bilOgKjop.kjopsdato = "2022-01-31";
     const v = await vurder(i, dep(0.8));
     expect(v.niva).toBe(for_.niva);
     expect(v.niva).not.toBe("svak");
     expect(v.begrunnelse).not.toMatch(/ikke klaget/);
+  });
+
+  it("ikke klaget og feilen har helt sikkert vært kjent i over ett år gir svak sak med et punkt mot", async () => {
+    // Defect inside six months of a purchase in January 2022: known since July 2022 at the latest.
+    const i = hent(1);
+    i.bilOgKjop.kjopsdato = "2022-01-31";
+    i.feilen.kontakt = "nei";
+    const v = await vurder(i, dep(0.8));
+    expect(v.niva).toBe("svak");
+    expect(v.grunnlag.find((g) => /kjent til den i over ett år/.test(g.tekst))).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 27" });
+    expect(v.begrunnelse).toMatch(/trolig ventet over ett år/);
+    i.feilen.kontakt = "ja";
+    expect((await vurder(i, dep(0.8))).niva).toBe("god");
+  });
+
+  it("kjøp fra firma eller privatperson stopper saken uten statistikk og eksempel", async () => {
+    for (const [kjopsform, tittel] of [
+      ["firma", /Forbrukerkjøpsloven gjelder ikke for dette kjøpet/],
+      ["privatperson", /gjelder ikke når du kjøper av en privatperson/],
+    ] as const) {
+      const i = hent(1);
+      i.bilOgKjop.kjopsform = kjopsform;
+      const d = dep(0.9);
+      const v = await vurder(i, d);
+      expect(v.niva).toBe("utenfor");
+      expect(v.tittel).toMatch(tittel);
+      expect(v.eksempel).toBeNull();
+      expect(v.tiltak).toEqual([]);
+      expect(v.grunnlag).toHaveLength(1);
+      expect(d.hentStatistikk).not.toHaveBeenCalled();
+    }
   });
 
   it("rapport som ikke sier noe om tidspunkt gir fortsatt god sak innenfor presumsjon", async () => {
@@ -131,7 +161,7 @@ describe("tak", () => {
     i.feilen.feilOpplysning = "ja_dokumentert";
     const v = await vurder(i, dep(0.9));
     expect(v.niva).toBe("god");
-    expect(v.begrunnelse).toMatch(/du ble fortalt om feilen, men du kan dokumentere at opplysningene var misvisende/);
+    expect(v.begrunnelse).toMatch(/du visste om feilen, men du kan dokumentere at opplysningene var misvisende/);
   });
 
   it("opplyst feil med udokumentert påstand om villedende opplysning gir fortsatt god sak", async () => {
@@ -141,7 +171,7 @@ describe("tak", () => {
     i.feilen.feilOpplysning = "ja_udokumentert";
     const v = await vurder(i, dep(0.9));
     expect(v.niva).toBe("god");
-    expect(v.begrunnelse).toMatch(/du ble fortalt om feilen, men mener opplysningene var misvisende/);
+    expect(v.begrunnelse).toMatch(/du visste om feilen, men mener opplysningene var misvisende/);
   });
 });
 
@@ -191,38 +221,48 @@ describe("udokumentert feil", () => {
 });
 
 describe("kontakt med forhandleren", () => {
-  it("å ikke ha kontaktet forhandleren trekker ikke ned og nevnes ikke", async () => {
-    for (const kontakt of ["nei", "venter"] as const) {
-      const i = hent(1);
-      i.feilen.kontakt = kontakt;
-      const v = await vurder(i, dep(0.8));
-      expect(v.niva).toBe("god");
-      expect(v.begrunnelse).not.toMatch(/reklamert|reklamer|bør du/i);
-      expect(v.tittel).toBe("Du har etter alt å dømme krav på at forhandleren retter feilen.");
-      expect(v.tiltak).toEqual([]);
-    }
+  it("å ikke ha kontaktet forhandleren trekker ikke ned og nevnes ikke, men gir et tips om å la forhandleren rette først", async () => {
+    const i = hent(1);
+    i.feilen.kontakt = "nei";
+    const v = await vurder(i, dep(0.8));
+    expect(v.niva).toBe("god");
+    expect(v.begrunnelse).not.toMatch(/reklamert|reklamer|bør du/i);
+    expect(v.tiltak.map((t) => t.tittel)).toEqual(["La forhandleren rette feilen først"]);
   });
 
-  it("forsøkt og avvist forklares i begrunnelsen", async () => {
-    expect((await vurder(hent(1), dep())).begrunnelse).toMatch(/forsøkt å rette den uten å lykkes/);
-    expect((await vurder(hent(5), dep())).begrunnelse).toMatch(/avvist å rette/);
+  it("å ha kontaktet forhandleren gir ikke noe tips", async () => {
+    const i = hent(1);
+    i.feilen.kontakt = "ja";
+    const v = await vurder(i, dep(0.8));
+    expect(v.niva).toBe("god");
+    expect(v.tiltak).toEqual([]);
   });
 });
 
 describe("tittel og begrunnelse", () => {
-  it("tittelen følger nivået og om forhandleren har fått forsøke å rette", async () => {
-    expect((await vurder(hent(1), dep(0.8))).tittel).toBe("Du har etter alt å dømme krav på prisavslag eller heving.");
-    expect((await vurder(hentNeutral(4), dep())).tittel).toBe("Du har etter alt å dømme krav på at forhandleren retter feilen.");
-    expect((await vurder(hent(6), dep())).tittel).toBe("Det blir vanskelig å nå fram med et krav slik saken står nå.");
+  it("tittelen er den samme for gode og svake saker", async () => {
+    const tittel = "Du kan ha en sak mot forhandleren.";
+    expect((await vurder(hent(1), dep(0.8))).tittel).toBe(tittel);
+    expect((await vurder(hentNeutral(4), dep())).tittel).toBe(tittel);
+    const svak = await vurder(hent(6), dep());
+    expect(svak.niva).toBe("svak");
+    expect(svak.tittel).toBe(tittel);
+  });
+
+  it("også en svak sak får et eksempel der kjøperen fikk medhold", async () => {
+    const v = await vurder(hent(6), dep());
+    expect(v.niva).toBe("svak");
+    expect(v.eksempel?.utfall).toBe("vunnet");
+    expect(v.eksempel?.setning).not.toMatch(/ ikke medhold /);
   });
 
   it("begrunnelsen er én setning med tidspunkt, opplysning og dokumentasjon", async () => {
     const i = hent(1);
     i.feilen.kontakt = "nei";
     expect((await vurder(i, dep())).begrunnelse).toBe(
-      "Feilen ble oppdaget innen seks måneder etter kjøpet, du ble ikke informert om den, og verkstedrapporten peker på en feil som sannsynligvis var til stede ved levering.",
+      "Feilen ble oppdaget innen seks måneder etter kjøpet, du visste ikke om den før kjøpet, og verkstedrapporten peker på en feil som sannsynligvis var til stede ved levering.",
     );
-    expect((await vurder(hent(3), dep())).begrunnelse).toMatch(/du ble informert om den før kjøpet/);
+    expect((await vurder(hent(3), dep())).begrunnelse).toMatch(/du visste om feilen før kjøpet/);
     expect((await vurder(hent(6), dep())).begrunnelse).toMatch(/^Feilen ble oppdaget mer enn to år etter kjøpet/);
   });
 

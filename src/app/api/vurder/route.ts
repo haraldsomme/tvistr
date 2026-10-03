@@ -10,8 +10,8 @@ const MAKS_BYTES = 100_000;
 // Every assessment costs a database query.
 const forMange = lagGrense({ antall: 10, vinduMs: 60_000 });
 
-// Returns the level, the title, the justification, the points shown under it (three that strengthen a
-// good case, or those against a weak one), how many decisions the case
+// Returns the level, the title, the justification, the points shown under it (what strengthens the case,
+// and what weakens it; for a claim the law stops, the one reason), how many decisions the case
 // was compared with and how many of those got medhold, and one similar decision when there is one. The
 // suggested actions go out as titles only (the explanation is part of the paid step), except for a weak
 // case, where the advice matters more than the sale. The score and the factors stay on the server.
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       niva: v.niva,
       tittel: v.tittel,
       begrunnelse: v.begrunnelse,
-      grunnlag: synligGrunnlag(v.niva, v.grunnlag),
+      ...(v.niva === "utenfor" ? { styrker: [], svakheter: v.grunnlag } : synligGrunnlag(v.niva, v.grunnlag, v.faktorer)),
       eksempel: v.eksempel && {
         setning: v.eksempel.setning,
         saksnummer: v.eksempel.saksnummer,

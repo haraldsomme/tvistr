@@ -3,21 +3,52 @@
 import { useId, useState } from "react";
 import { norskDato } from "@/lib/brev/brev";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
-import { FEILTYPER_KNAPPER, forsteUgyldigeSteg, FRA_AR, JA_NEI, medKjopsalder, medKjopsdato, oppdagetMulig, OPPLYST_VALG, sporOmFemarsfrist, type Innsending } from "@/lib/vurdering/innsending";
-import { FEILOPPLYSNING_VALG, KJOPSALDER_VALG, KONTAKT_VALG, OPPDAGET_VALG, type Kontakt, type FeilOpplysning } from "@/lib/vurdering/typer";
-import { FEILTYPE_TEKST, JA_NEI_TEKST, KJOPSALDER_TEKST, KONTAKTET_TEKST, OPPDAGET_TEKST, OPPLYST_TEKST, SPORSMAL, SVAR_TEKST } from "@/app/vurdering/tekster";
-import { bareSiffer, gruppert, HJELP, kroner, LABEL, Nedtrekk, Sammendrag, Skjema, Tekstfelt } from "./felt";
+import {
+  FEILTYPER_KNAPPER,
+  forsteUgyldigeSteg,
+  FRA_AR,
+  JA_NEI,
+  medKjopsalder,
+  medKjopsdato,
+  oppdagetMulig,
+  OPPLYST_VALG,
+  sporOmFemarsfrist,
+  type Innsending,
+} from "@/lib/vurdering/innsending";
+import {
+  FEILOPPLYSNING_VALG,
+  KJOPSALDER_VALG,
+  KJOPSFORM_VALG,
+  KONTAKT_VALG,
+  OPPDAGET_VALG,
+  type FeilOpplysning,
+} from "@/lib/vurdering/typer";
+import {
+  FEILTYPE_TEKST,
+  JA_NEI_TEKST,
+  KJOPSALDER_TEKST,
+  KJOPSFORM_TEKST,
+  KONTAKT_TEKST,
+  OPPDAGET_TEKST,
+  OPPLYST_TEKST,
+  SPORSMAL,
+} from "@/app/vurdering/tekster";
+import {
+  bareSiffer,
+  gruppert,
+  HJELP,
+  kroner,
+  LABEL,
+  Nedtrekk,
+  Sammendrag,
+  Skjema,
+  Tekstfelt,
+} from "./felt";
 
 // The answers from the assessment, as they stand in the letter. The buyer can correct them here after
 // the letter is bought: the vehicle cannot be changed, everything else can. A change that makes the
 // deadline pass is saved all the same (see PUT /api/sak/[id]/svar); the page then says so.
 
-const KONTAKT_TEKST: Record<Kontakt, string> = {
-  nei: KONTAKTET_TEKST.nei,
-  venter: `Ja, ${SVAR_TEKST.venter.toLowerCase()}`,
-  avvist: `Ja, ${SVAR_TEKST.avvist.toLowerCase()}`,
-  forsokt: `Ja, ${SVAR_TEKST.forsokt.toLowerCase()}`,
-};
 const FEILOPPLYSNING_TEKST: Record<FeilOpplysning, string> = {
   nei: "Nei",
   ja_dokumentert: "Ja, og jeg har det skriftlig",
@@ -35,8 +66,10 @@ function Oppsummering({ svar, kjoretoy }: { svar: Innsending; kjoretoy: Kjoretoy
         `Kjøpt ${svar.kjopsdato ? norskDato(svar.kjopsdato) : svar.kjopAlder ? KJOPSALDER_TEKST[svar.kjopAlder].toLowerCase() : ""}${svar.kjopesum ? ` for ${kroner(Number(svar.kjopesum))}` : ""}${svar.kmVedKjop ? `, ${gruppert(svar.kmVedKjop)} km` : ""}`,
         (!svar.kjopesum || !svar.kjopsdato) && `${[!svar.kjopsdato && "Kjøpsdatoen", !svar.kjopesum && "kjøpesummen"].filter(Boolean).join(" og ")} mangler. Legg ${!svar.kjopsdato && !svar.kjopesum ? "dem" : "den"} inn under «Endre svar», ellers står det som felt i brevet.`,
         `Feil: ${[...new Set(svar.feiltyper)].map((t) => FEILTYPE_TEKST[t].toLowerCase()).join(", ")}`,
-        svar.oppdaget && `Viste seg: ${OPPDAGET_TEKST[svar.oppdaget].toLowerCase()} etter kjøpet`,
-        svar.kontakt && `Kontakt med forhandleren: ${svar.kontakt === "nei" ? "ingen ennå" : SVAR_TEKST[svar.kontakt].toLowerCase()}`,
+        svar.oppdaget &&
+          `Viste seg: ${OPPDAGET_TEKST[svar.oppdaget].toLowerCase()} etter kjøpet`,
+        svar.kontakt &&
+          `Tatt opp med forhandleren: ${KONTAKT_TEKST[svar.kontakt].toLowerCase()}`,
         bevis && `Bevis: ${bevis}`,
       ]}
     />
@@ -60,9 +93,41 @@ function Svarskjema({ start, idag, lagre, avbryt }: { start: Innsending; idag: s
           </option>
         ))}
       </Nedtrekk>
-      <Tekstfelt label={SPORSMAL.kjopesum} inputMode="numeric" autoComplete="off" placeholder="Kroner" value={gruppert(d.kjopesum)} onChange={(e) => sett("kjopesum", bareSiffer(e.target.value))} />
-      <Tekstfelt label={SPORSMAL.kmVedKjop} inputMode="numeric" autoComplete="off" placeholder="Kilometer" value={gruppert(d.kmVedKjop)} onChange={(e) => sett("kmVedKjop", bareSiffer(e.target.value))} />
-      <div role="group" aria-labelledby={`${id}-feiltype`} className="flex flex-col gap-1.5">
+      <Nedtrekk
+        label={SPORSMAL.kjopsform}
+        value={d.kjopsform}
+        onChange={(e) =>
+          sett("kjopsform", e.target.value as Innsending["kjopsform"])
+        }
+      >
+        <option value="">Velg</option>
+        {KJOPSFORM_VALG.map((v) => (
+          <option key={v} value={v}>
+            {KJOPSFORM_TEKST[v]}
+          </option>
+        ))}
+      </Nedtrekk>
+      <Tekstfelt
+        label={SPORSMAL.kjopesum}
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder="Kroner"
+        value={gruppert(d.kjopesum)}
+        onChange={(e) => sett("kjopesum", bareSiffer(e.target.value))}
+      />
+      <Tekstfelt
+        label={SPORSMAL.kmVedKjop}
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder="Kilometer"
+        value={gruppert(d.kmVedKjop)}
+        onChange={(e) => sett("kmVedKjop", bareSiffer(e.target.value))}
+      />
+      <div
+        role="group"
+        aria-labelledby={`${id}-feiltype`}
+        className="flex flex-col gap-1.5"
+      >
         <span id={`${id}-feiltype`} className={LABEL}>
           {SPORSMAL.feiltype}
         </span>

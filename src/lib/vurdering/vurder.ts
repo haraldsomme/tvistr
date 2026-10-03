@@ -13,8 +13,8 @@ export type Vurdering = {
   begrunnelse: string;
   // The same facts point by point, each with the rule it triggers and a reference to the law.
   grunnlag: Grunnlag[];
-  // A similar decision: one the buyer won, or one the buyer lost when the case is weak. null only
-  // when there is no decision to show.
+  // A similar decision the buyer won, whatever the level. null when the law stops the claim, or when
+  // there is no decision to show.
   eksempel: ValgtEksempel | null;
   // What the user can do to strengthen the case; empty when there is nothing to suggest. Not part
   // of the free assessment: it is meant for the paid step.
@@ -29,14 +29,9 @@ export type Avhengigheter = {
   idag?: string;
 };
 
-// The dealer may try to repair first (fkjl § 29); once they have tried or refused, the buyer can
-// go on to a price reduction or cancelling the purchase (§§ 31 and 32). Which of the two depends on
-// how serious the defect is, which the form does not ask about.
-function tittelFor(niva: Niva, f: Faktorer): string {
-  if (niva === "svak") return "Det blir vanskelig å nå fram med et krav slik saken står nå.";
-  const krav = f.kontakt === "forsokt" || f.kontakt === "avvist" ? "prisavslag eller heving" : "at forhandleren retter feilen";
-  return `Du har etter alt å dømme krav på ${krav}.`;
-}
+// The same title whatever the level: the page lists what speaks for and against the case, and the buyer
+// decides from that whether to buy the letter.
+const TITTEL = "Du kan ha en sak mot forhandleren.";
 
 // The facts that decided the level, as one sentence: timing, what was said, the dealer, evidence.
 function begrunnelseFor(f: Faktorer): string {
@@ -45,15 +40,14 @@ function begrunnelseFor(f: Faktorer): string {
   if (f.opplystForKjop === "ja" && f.feilOpplysninger) {
     ledd.push(
       f.feilOpplysningerDokumentert
-        ? "du ble fortalt om feilen, men du kan dokumentere at opplysningene var misvisende"
-        : "du ble fortalt om feilen, men mener opplysningene var misvisende",
+        ? "du visste om feilen, men du kan dokumentere at opplysningene var misvisende"
+        : "du visste om feilen, men mener opplysningene var misvisende",
     );
   } else if (f.feilOpplysningerDokumentert) ledd.push("du kan dokumentere at du fikk uriktige opplysninger om bilen");
-  else if (f.opplystForKjop === "ja") ledd.push("du ble informert om den før kjøpet");
-  else if (f.opplystForKjop === "nei") ledd.push("du ble ikke informert om den");
+  else if (f.opplystForKjop === "ja") ledd.push("du visste om feilen før kjøpet");
+  else if (f.opplystForKjop === "nei") ledd.push("du visste ikke om den før kjøpet");
 
-  if (f.kontakt === "forsokt") ledd.push("forhandleren har forsøkt å rette den uten å lykkes");
-  else if (f.kontakt === "avvist") ledd.push("forhandleren har avvist å rette den");
+  if (f.venterOverEttAr) ledd.push("du har trolig ventet over ett år med å ta den opp med forhandleren");
 
   if (f.rapportSierForKjop === true) ledd.push("verkstedrapporten peker på en feil som sannsynligvis var til stede ved levering");
   else if (f.rapportSierForKjop === false) ledd.push("verkstedrapporten sier ikke om feilen var til stede ved levering");
@@ -63,37 +57,92 @@ function begrunnelseFor(f: Faktorer): string {
   return `${ledd.slice(0, -1).join(", ")}, og ${ledd[ledd.length - 1]}.`;
 }
 
-const FRISTUTE: Grunnlag = {
-  tekst: "Reklamasjon må senest skje fem år etter at du fikk bilen. Unntak gjelder hvis forhandleren har gitt en garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt.",
-  vekt: "mot",
-  ...fkjl(27),
+// Where the law itself stops the claim: the title, the justification and the one point shown. The letter
+// is not offered. Not reviewed by a lawyer yet.
+const STOPP: Record<
+  NonNullable<Faktorer["stopp"]>,
+  { tittel: string; begrunnelse: string; grunnlag: Grunnlag }
+> = {
+  firma: {
+    tittel: "Forbrukerkjøpsloven gjelder ikke for dette kjøpet.",
+    begrunnelse:
+      "Du kjøpte bilen gjennom et firma. Forbrukerkjøpsloven gjelder bare når en forbruker kjøper av en næringsdrivende. Ved kjøp gjennom firma gjelder kjøpsloven, der et «solgt som den er»-forbehold fortsatt er gyldig og rettighetene dine er langt svakere. Tvistr skriver reklamasjonsbrev etter forbrukerkjøpsloven, så vi kan ikke hjelpe deg i denne saken.",
+    grunnlag: {
+      tekst: "Kjøp gjennom et firma er ikke et forbrukerkjøp.",
+      vekt: "mot",
+      ...fkjl(1),
+    },
+  },
+  privat: {
+    tittel:
+      "Forbrukerkjøpsloven gjelder ikke når du kjøper av en privatperson.",
+    begrunnelse:
+      "Kjøp mellom privatpersoner følger kjøpsloven, der et «solgt som den er»-forbehold fortsatt er gyldig og rettighetene dine er langt svakere. Tvistr skriver reklamasjonsbrev etter forbrukerkjøpsloven og bygger på saker mot forhandlere, så vi kan ikke hjelpe deg i denne saken. Forbrukerrådet gir veiledning om kjøp fra private.",
+    grunnlag: {
+      tekst:
+        "Kjøp fra en privatperson er ikke et forbrukerkjøp fra en næringsdrivende.",
+      vekt: "mot",
+      ...fkjl(1),
+    },
+  },
+  frist: {
+    tittel: "Fristen for å reklamere er trolig ute.",
+    begrunnelse:
+      "Det har gått mer enn fem år siden kjøpet, og du har ikke tatt opp feilen med forhandleren innen fem år. Loven setter en ytterste frist på fem år, og forhandleren kan avvise kravet som for sent. Unntak gjelder hvis forhandleren har gitt en garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt. Har du grunn til å tro det, kan det lønne seg å få juridisk råd.",
+    grunnlag: {
+      tekst:
+        "Reklamasjon må senest skje fem år etter at du fikk bilen. Unntak gjelder hvis forhandleren har gitt en garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt.",
+      vekt: "mot",
+      ...fkjl(27),
+    },
+  },
 };
 
-export function vurderFraFaktorer(f: Faktorer, s: Statistikk | null): Vurdering {
+export function vurderFraFaktorer(
+  f: Faktorer,
+  s: Statistikk | null,
+): Vurdering {
+  if (f.stopp) {
+    const stopp = STOPP[f.stopp];
+    return {
+      niva: "utenfor",
+      tittel: stopp.tittel,
+      begrunnelse: stopp.begrunnelse,
+      grunnlag: [stopp.grunnlag],
+      eksempel: null,
+      tiltak: [],
+      faktorer: f,
+      statistikk: null,
+    };
+  }
+
   // The level is a short list of reasons for a weak case; everything else is a good case. The
   // decisions show that cases are won or lost on the burden of proof (was the defect there at
   // delivery?). Inside the presumption the dealer has that burden. Outside it the buyer has, which
-  // takes a report that points back to before the purchase, or a failed repair attempt (89 % medhold
-  // when repair attempts were a topic, against 58–66 % otherwise). No contact with the dealer yet
-  // does not count against the case: the letter is how the buyer asks for repair. The share of
-  // similar decisions is shown, but does not decide the level.
+  // takes a report that points back to before the purchase. The dealer's attempts at repair are asked
+  // on the letter page and do not count here. The share of similar decisions is shown, but does not
+  // decide the level.
   let niva: Niva = "god";
-  if (!f.presumsjon && f.rapportSierForKjop !== true && f.kontakt !== "forsokt") niva = "svak";
-  // Told about the defect and made no objection, for purchases before 2024.
+  if (!f.presumsjon && f.rapportSierForKjop !== true) niva = "svak";
+  // Knew about the defect when buying, for purchases before 2024.
   if (f.opplystTakSvak) niva = "svak";
-  // Past the five-year limit the dealer can reject the claim as too late, but exceptions exist
-  // (longer guarantee, fraud or gross negligence), so it is a weak case, not a case outside the service.
-  if (f.fristUte) niva = "svak";
+  // Has not told the dealer and found the defect over a year ago: probably not within reasonable time (§ 27).
+  if (f.venterOverEttAr) niva = "svak";
 
-  const grunnlag = byggGrunnlag(f);
-  if (f.fristUte) grunnlag.unshift(FRISTUTE);
-  const begrunnelse = f.fristUte ? `Det har gått mer enn fem år siden kjøpet. ${begrunnelseFor(f)}` : begrunnelseFor(f);
-
-  return { niva, tittel: tittelFor(niva, f), begrunnelse, grunnlag, eksempel: finnEksempel(f, niva), tiltak: foreslaTiltak(f), faktorer: f, statistikk: s };
+  return {
+    niva,
+    tittel: TITTEL,
+    begrunnelse: begrunnelseFor(f),
+    grunnlag: byggGrunnlag(f),
+    eksempel: finnEksempel(f),
+    tiltak: foreslaTiltak(f),
+    faktorer: f,
+    statistikk: s,
+  };
 }
 
 export async function vurder(input: KlageInput, dep: Avhengigheter): Promise<Vurdering> {
   const faktorer = beregnFaktorer(input, dep.idag ?? iDag());
-  if (faktorer.fristUte) return vurderFraFaktorer(faktorer, null);
+  if (faktorer.stopp) return vurderFraFaktorer(faktorer, null);
   return vurderFraFaktorer(faktorer, await dep.hentStatistikk(faktorer));
 }

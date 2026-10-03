@@ -69,7 +69,7 @@ describe("femårsfristen (fkjl § 27)", () => {
   it("er ute når første reklamasjon ikke kom innen fem år etter kjøpet", () => {
     const i = hent(4);
     i.bilOgKjop.kjopsdato = "2017-05-31";
-    i.feilen.kontakt = "forsokt";
+    i.feilen.kontakt = "ja";
     i.feilen.reklamertInnenFemAr = false;
     expect(fakta(i).fristUte).toBe(true);
   });
@@ -77,7 +77,7 @@ describe("femårsfristen (fkjl § 27)", () => {
   it("er ikke ute når første reklamasjon kom innen fem år, selv om kjøpet er eldre", () => {
     const i = hent(4);
     i.bilOgKjop.kjopsdato = "2017-05-31";
-    i.feilen.kontakt = "forsokt";
+    i.feilen.kontakt = "ja";
     i.feilen.reklamertInnenFemAr = true;
     expect(fakta(i).fristUte).toBe(false);
   });
@@ -106,7 +106,7 @@ describe("beregnFaktorer", () => {
 
   it("å ikke ha kontaktet forhandleren endrer ingen fakta utenom femårsfristen", () => {
     const venter = hent(4);
-    venter.feilen.kontakt = "venter";
+    venter.feilen.kontakt = "ja";
     const a = fakta(hent(4));
     const b = fakta(venter);
     expect({ ...a, kontakt: null }).toEqual({ ...b, kontakt: null });
@@ -143,7 +143,7 @@ describe("beregnFaktorer", () => {
     i.bilOgKjop.kjopsdato = "2025-10-01";
     expect(fakta(i).reklamertForSent).toBe(false);
     i.bilOgKjop.kjopsdato = "2022-01-31";
-    i.feilen.kontakt = "venter";
+    i.feilen.kontakt = "ja";
     expect(fakta(i).reklamertForSent).toBe(false);
     // «Mer enn 2 år» has no upper bound, so nothing can be said.
     i.feilen.kontakt = "nei";

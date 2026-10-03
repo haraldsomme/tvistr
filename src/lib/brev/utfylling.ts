@@ -2,7 +2,12 @@ import { normaliserRegnr, type Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 import { orgnrFra } from "@/lib/brreg";
 import { erDato } from "@/lib/vurdering/faktorer";
 import type { Innsending } from "@/lib/vurdering/innsending";
-import type { Adresse, Forhandler } from "@/lib/vurdering/typer";
+import {
+  RETTING_VALG,
+  type Adresse,
+  type Forhandler,
+  type Retting,
+} from "@/lib/vurdering/typer";
 
 // What the buyer has filled in on the letter page, step by step. A missing value leaves its
 // placeholder in the letter. Stored with the case (brevsak.utfylling).
@@ -11,6 +16,8 @@ export type Utfylling = {
   forhandler?: Forhandler;
   feilen?: Feilen;
   opplysning?: Opplysning;
+  // What the dealer has done about the defect; asked when the buyer has taken it up with the dealer.
+  retting?: Retting;
   reklamasjon?: Reklamasjon;
   krav?: Krav;
   vedlegg?: Vedlegg[];
@@ -188,7 +195,11 @@ function lesAvsender(v: unknown): Avsender | null {
   return /^\+?[\d ]{8,16}$/.test(telefon) ? { navn, adresse, postnummer: v.postnummer, poststed, telefon } : null;
 }
 
-const lesForbehold = (v: unknown): Forbehold | null => (blant(FORBEHOLD_VALG, v) ? v : null);
+const lesRetting = (v: unknown): Retting | null =>
+  blant(RETTING_VALG, v) ? v : null;
+
+const lesForbehold = (v: unknown): Forbehold | null =>
+  blant(FORBEHOLD_VALG, v) ? v : null;
 
 function lesLignende(v: unknown): Lignende[] | null {
   if (!Array.isArray(v) || v.length > MAKS_LIGNENDE) return null;
@@ -211,6 +222,7 @@ const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } 
   forhandler: lesForhandler,
   feilen: lesFeilen,
   opplysning: lesOpplysning,
+  retting: lesRetting,
   reklamasjon: lesReklamasjon,
   krav: lesKrav,
   vedlegg: lesVedlegg,

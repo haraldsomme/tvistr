@@ -23,7 +23,12 @@ import {
   type Utgift,
   type Vedlegg,
 } from "@/lib/brev/utfylling";
-import type { KlageInput } from "@/lib/vurdering/typer";
+import {
+  gyldigRetting,
+  rettingValgFor,
+  type KlageInput,
+  type Retting,
+} from "@/lib/vurdering/typer";
 
 // The fields of the fill-in steps on the letter page. Each shows a summary when its step is done
 // and a form when it is active. `lagre` saves with the case and says whether that worked; `avbryt`
@@ -254,11 +259,91 @@ export function OpplysningFelt({ verdi, aktiv, lagre, avbryt }: Felles & { verdi
   );
 }
 
-const MATE_TEKST: Record<Reklamasjon["mate"], string> = { epost: "E-post", sms: "SMS", telefon: "Telefon", oppmote: "Oppmøte hos forhandleren", brev: "Brev" };
+export const RETTING_TEKST: Record<Retting, string> = {
+  ingen: "Nei, feilen er ikke reparert",
+  venter: "Forhandleren vil forsøke, eller har ikke svart ennå",
+  avvist: "Forhandleren nekter å rette feilen",
+  forsokt: "Forhandleren har forsøkt, uten hell",
+  reparert_selv: "Jeg har fått feilen reparert andre steder",
+};
+
+// What has happened about repairing the defect. Decides the claim: repair while the dealer has not had a
+// try, price reduction or cancelling once they have refused or failed. A buyer who had it repaired elsewhere
+// first can lose the right to have the cost covered (§§ 29 and 30), and the letter says what happened.
+export function RettingFelt({
+  input,
+  verdi,
+  aktiv,
+  lagre,
+  avbryt,
+}: Felles & { input: KlageInput; verdi: Retting | undefined }) {
+  const kontakt = input.feilen.kontakt;
+  const [valgt, setValgt] = useState<string>(
+    gyldigRetting(kontakt, verdi) ?? (kontakt === "nei" ? "ingen" : ""),
+  );
+  const spm =
+    kontakt === "nei"
+      ? "Har du fått feilen reparert?"
+      : "Hva har forhandleren gjort?";
+  if (!aktiv) {
+    const vist =
+      gyldigRetting(kontakt, verdi) ??
+      (kontakt === "nei" ? "ingen" : undefined);
+    return vist ? <Sammendrag linjer={[RETTING_TEKST[vist]]} /> : null;
+  }
+  return (
+    <Skjema
+      klar={valgt !== ""}
+      send={() => lagre({ retting: valgt as Retting })}
+      avbryt={avbryt}
+    >
+      {kontakt === "nei" && (
+        <p className={HJELP}>
+          Forhandleren har rett til å forsøke å rette feilen først. Reparerer du
+          den andre steder før de har fått sjansen, kan du miste retten til å få
+          kostnaden dekket.
+        </p>
+      )}
+      <Nedtrekk
+        label={spm}
+        value={valgt}
+        onChange={(e) => setValgt(e.target.value)}
+      >
+        <option value="">Velg</option>
+        {rettingValgFor(kontakt).map((v) => (
+          <option key={v} value={v}>
+            {RETTING_TEKST[v]}
+          </option>
+        ))}
+      </Nedtrekk>
+    </Skjema>
+  );
+}
+
+const MATE_TEKST: Record<Reklamasjon["mate"], string> = {
+  epost: "E-post",
+  sms: "SMS",
+  telefon: "Telefon",
+  oppmote: "Oppmøte hos forhandleren",
+  brev: "Brev",
+};
 
 // When and how the buyer first took the defect up with the dealer. Only for buyers who have.
-export function ReklamasjonFelt({ input, idag, verdi, aktiv, lagre, avbryt }: Felles & { input: KlageInput; idag: string; verdi: Reklamasjon | undefined }) {
-  const forsokt = input.feilen.kontakt === "forsokt";
+export function ReklamasjonFelt({
+  input,
+  retting,
+  idag,
+  verdi,
+  aktiv,
+  lagre,
+  avbryt,
+}: Felles & {
+  input: KlageInput;
+  retting: Retting | undefined;
+  idag: string;
+  verdi: Reklamasjon | undefined;
+}) {
+  const forsokt = retting === "forsokt";
   const [dato, setDato] = useState(verdi?.dato ?? "");
   const [mate, setMate] = useState<string>(verdi?.mate ?? "");
   const [forsok, setForsok] = useState(verdi?.forsok ? String(verdi.forsok) : "");
@@ -311,9 +396,14 @@ type UtgiftUtkast = { type: Utgift["type"]; belop: string };
 
 // What the buyer claims. The choice between a price reduction and cancelling is only there once the
 // dealer has refused or failed to repair; before that the claim is repair. Costs can always be claimed.
-export function KravFelt({ input, verdi, aktiv, lagre, avbryt }: Felles & { input: KlageInput; verdi: Krav | undefined }) {
+export function KravFelt({
+  kanVelge,
+  verdi,
+  aktiv,
+  lagre,
+  avbryt,
+}: Felles & { kanVelge: boolean; verdi: Krav | undefined }) {
   const id = useId();
-  const kanVelge = input.feilen.kontakt === "avvist" || input.feilen.kontakt === "forsokt";
   const [type, setType] = useState<Krav["type"]>(verdi?.type);
   const [utbedring, setUtbedring] = useState(verdi?.utbedringNok ? String(verdi.utbedringNok) : "");
   const [utgifter, setUtgifter] = useState<UtgiftUtkast[]>(() => (verdi?.utgifter ?? []).map((u) => ({ type: u.type, belop: String(u.belopNok) })));

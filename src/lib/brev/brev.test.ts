@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { KlageInput } from "@/lib/vurdering/typer";
 import { byggBrev, type Brev } from "./brev";
+import type { Utfylling } from "./utfylling";
 
 const IDAG = "2026-10-02";
 
@@ -12,6 +13,17 @@ const grunn = (): KlageInput => ({
 });
 
 const tekst = (b: Brev) => b.avsnitt.join("\n");
+
+// The contact answer of the assessment is yes or no; what the dealer did is filled in on the letter page.
+type Forhold = "nei" | "venter" | "avvist" | "forsokt";
+const forhold = (i: KlageInput, f: Forhold): Utfylling => {
+  i.feilen.kontakt = f === "nei" ? "nei" : "ja";
+  return f === "nei" ? {} : { retting: f };
+};
+const brevFor = (f: Forhold, u: Utfylling = {}, idag = IDAG) => {
+  const i = grunn();
+  return byggBrev(i, idag, { ...forhold(i, f), ...u });
+};
 
 describe("byggBrev", () => {
   it("setter dato og svarfrist 14 dager frem, også over månedsskifte", () => {
@@ -79,9 +91,7 @@ describe("byggBrev", () => {
 
   describe("krav følger kontakten med forhandleren", () => {
     it.each(["nei", "venter"] as const)("%s: krever retting (§ 29, § 30) med forbehold om §§ 31–33", (kontakt) => {
-      const i = grunn();
-      i.feilen.kontakt = kontakt;
-      const t = tekst(byggBrev(i, IDAG));
+      const t = tekst(brevFor(kontakt));
       expect(t).toContain("§ 27");
       expect(t).toContain("jf. § 29 og § 30");
       expect(t).toContain("§ 31 og § 32");
@@ -90,9 +100,7 @@ describe("byggBrev", () => {
     });
 
     it.each(["avvist", "forsokt"] as const)("%s: krever prisavslag eller heving (§ 31, § 32), ikke retting", (kontakt) => {
-      const i = grunn();
-      i.feilen.kontakt = kontakt;
-      const t = tekst(byggBrev(i, IDAG));
+      const t = tekst(brevFor(kontakt));
       expect(t).toContain("§ 27");
       expect(t).toContain("[prisavslag / heving av kjøpet]");
       expect(t).toContain("jf. § 31 og § 32");
@@ -101,12 +109,8 @@ describe("byggBrev", () => {
     });
 
     it("beskriver hva forhandleren har gjort", () => {
-      const a = grunn();
-      a.feilen.kontakt = "avvist";
-      expect(tekst(byggBrev(a, IDAG))).toContain("avvist å rette");
-      const f = grunn();
-      f.feilen.kontakt = "forsokt";
-      expect(tekst(byggBrev(f, IDAG))).toContain("forsøkt å rette feilen uten å lykkes");
+      expect(tekst(brevFor("avvist"))).toContain("avvist å rette");
+      expect(tekst(brevFor("forsokt"))).toContain("forsøkt å rette feilen uten å lykkes");
     });
   });
 
@@ -234,28 +238,22 @@ describe("byggBrev", () => {
   });
 
   describe("tidligere reklamasjon", () => {
-    const med = (kontakt: KlageInput["feilen"]["kontakt"]) => {
-      const i = grunn();
-      i.feilen.kontakt = kontakt;
-      return i;
-    };
-
     it("venter: nevner når og hvordan feilen ble tatt opp, og krever fortsatt retting", () => {
-      const t = tekst(byggBrev(med("venter"), IDAG, { reklamasjon: { dato: "2026-09-03", mate: "epost" } }));
+      const t = tekst(brevFor("venter", { reklamasjon: { dato: "2026-09-03", mate: "epost" } }));
       expect(t).toContain("Jeg tok opp feilen med dere første gang 3. september 2026 på e-post.");
       expect(t).toContain("jf. § 29 og § 30");
     });
 
     it("avvist: sier at forhandleren avviste", () => {
-      const t = tekst(byggBrev(med("avvist"), IDAG, { reklamasjon: { dato: "2026-09-03", mate: "oppmote" } }));
+      const t = tekst(brevFor("avvist", { reklamasjon: { dato: "2026-09-03", mate: "oppmote" } }));
       expect(t).toContain("Jeg tok opp feilen med dere første gang 3. september 2026 ved oppmøte hos dere, men dere har avvist å rette den.");
     });
 
     it("forsøkt rettet: sier hvor mange ganger", () => {
       const r = { dato: "2026-09-03", mate: "telefon" as const };
-      expect(tekst(byggBrev(med("forsokt"), IDAG, { reklamasjon: { ...r, forsok: 1 } }))).toContain("Dere har forsøkt å rette feilen én gang uten å lykkes.");
-      expect(tekst(byggBrev(med("forsokt"), IDAG, { reklamasjon: { ...r, forsok: 3 } }))).toContain("Dere har forsøkt å rette feilen tre ganger uten å lykkes.");
-      expect(tekst(byggBrev(med("forsokt"), IDAG, { reklamasjon: r }))).toContain("Dere har forsøkt å rette feilen uten å lykkes.");
+      expect(tekst(brevFor("forsokt", { reklamasjon: { ...r, forsok: 1 } }))).toContain("Dere har forsøkt å rette feilen én gang uten å lykkes.");
+      expect(tekst(brevFor("forsokt", { reklamasjon: { ...r, forsok: 3 } }))).toContain("Dere har forsøkt å rette feilen tre ganger uten å lykkes.");
+      expect(tekst(brevFor("forsokt", { reklamasjon: r }))).toContain("Dere har forsøkt å rette feilen uten å lykkes.");
     });
 
     it("tas ikke med når forhandleren ikke er kontaktet", () => {
@@ -264,25 +262,19 @@ describe("byggBrev", () => {
   });
 
   describe("kravet", () => {
-    const avvist = () => {
-      const i = grunn();
-      i.feilen.kontakt = "avvist";
-      return i;
-    };
-
     it("prisavslag med kjent utbedringskostnad krever beløpet", () => {
-      const t = tekst(byggBrev(avvist(), IDAG, { krav: { type: "prisavslag", utbedringNok: 38000, utgifter: [] } }));
+      const t = tekst(brevFor("avvist", { krav: { type: "prisavslag", utbedringNok: 38000, utgifter: [] } }));
       expect(t).toContain("krever prisavslag på 38 000 kr, som tilsvarer kostnaden ved å få mangelen rettet, jf. § 31.");
       expect(t).not.toContain("[prisavslag / heving av kjøpet]");
       expect(t).not.toContain("§ 29");
     });
 
     it("prisavslag uten kjent kostnad krever et forholdsmessig prisavslag", () => {
-      expect(tekst(byggBrev(avvist(), IDAG, { krav: { type: "prisavslag", utgifter: [] } }))).toContain("krever et forholdsmessig prisavslag, jf. § 31.");
+      expect(tekst(brevFor("avvist", { krav: { type: "prisavslag", utgifter: [] } }))).toContain("krever et forholdsmessig prisavslag, jf. § 31.");
     });
 
     it("heving krever kjøpesummen tilbake mot at bilen leveres tilbake", () => {
-      const t = tekst(byggBrev(avvist(), IDAG, { krav: { type: "heving", utgifter: [] } }));
+      const t = tekst(brevFor("avvist", { krav: { type: "heving", utgifter: [] } }));
       expect(t).toContain("hever kjøpet, jf. § 32, og krever kjøpesummen på 250 000 kr tilbakebetalt mot at bilen leveres tilbake.");
     });
 
@@ -300,7 +292,7 @@ describe("byggBrev", () => {
     });
 
     it("én utgift står uten sum, og etter avvisning forbeholdes ytterligere tap", () => {
-      const t = tekst(byggBrev(avvist(), IDAG, { krav: { type: "prisavslag", utgifter: [{ type: "leiebil", belopNok: 3000 }] } }));
+      const t = tekst(brevFor("avvist", { krav: { type: "prisavslag", utgifter: [{ type: "leiebil", belopNok: 3000 }] } }));
       expect(t).toContain("jf. § 33: leiebil 3 000 kr.");
       expect(t).not.toContain("til sammen");
       expect(t).toContain("Jeg forbeholder meg retten til å kreve erstatning for ytterligere tap.");
@@ -338,9 +330,9 @@ describe("byggBrev", () => {
 
   it("har ingen hakeparenteser når alt er fylt inn", () => {
     const i = grunn();
-    i.feilen.kontakt = "forsokt";
     i.feilen.feilOpplysning = "ja_dokumentert";
     const b = byggBrev(i, IDAG, {
+      ...forhold(i, "forsokt"),
       kjoretoy: { regnr: "ZZ 99999", merke: "Testmerke", modell: "Modell X", ar: 2019 },
       forhandler: { type: "brreg", orgnr: "999888777", navn: "Testbil AS", adresse: { linjer: ["Industriveien 3"], postnummer: "0184", poststed: "Oslo" } },
       feilen: { dato: "2026-09-02", egen: "Motorlampen lyser og bilen mister kraft.", tekst: "Motorlampen lyser, og bilen mister trekkraft." },
@@ -359,9 +351,8 @@ describe("byggBrev", () => {
     for (const kontakt of ["nei", "venter", "avvist", "forsokt"] as const) {
       for (const oppdaget of ["innen_6_mnd", "6_mnd_til_2_ar", "over_2_ar"] as const) {
         const i = grunn();
-        i.feilen.kontakt = kontakt;
         i.feilen.oppdaget = oppdaget;
-        const b = byggBrev(i, IDAG);
+        const b = byggBrev(i, IDAG, forhold(i, kontakt));
         const alt = [...b.avsender, ...b.mottaker, b.stedDato, b.emne, ...b.avsnitt, b.hilsen, b.underskrift];
         for (const del of alt) {
           expect(del.trim()).not.toBe("");

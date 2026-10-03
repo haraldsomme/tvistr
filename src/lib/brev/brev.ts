@@ -1,7 +1,19 @@
 import { beregnFaktorer, iDag, type Faktorer } from "@/lib/vurdering/faktorer";
 import { NAAR } from "@/lib/vurdering/grunnlag";
-import type { FeilKnapp, KlageInput } from "@/lib/vurdering/typer";
-import type { Forbehold, Opplysning, Reklamasjon, Utfylling, Utgift, Vedlegg } from "./utfylling";
+import {
+  gyldigRetting,
+  type FeilKnapp,
+  type KlageInput,
+  type Retting,
+} from "@/lib/vurdering/typer";
+import type {
+  Forbehold,
+  Opplysning,
+  Reklamasjon,
+  Utfylling,
+  Utgift,
+  Vedlegg,
+} from "./utfylling";
 
 // The complaint letter as data, so the page can show it now and PDF/Word and new paragraphs can be
 // built on the same shape later. Phase 1 is a fixed template: no model call. What the form does not
@@ -147,8 +159,8 @@ function mangelOgBevisbyrde(input: KlageInput, idag: string, u: Utfylling): stri
 // The dealer may try to repair first (§ 29). Once the dealer has refused or tried without success,
 // the buyer can go on to a price reduction or cancelling (§§ 31 and 32). The form does not ask how
 // serious the defect is, so the choice between the two is the buyer's, made on the letter page.
-type Kontakt = KlageInput["feilen"]["kontakt"];
-const harFatt = (kontakt: Kontakt) => kontakt === "avvist" || kontakt === "forsokt";
+const harFatt = (retting: Retting | undefined) =>
+  retting === "avvist" || retting === "forsokt" || retting === "reparert_selv";
 
 const MATE: Record<Reklamasjon["mate"], string> = {
   epost: "på e-post",
@@ -160,11 +172,22 @@ const MATE: Record<Reklamasjon["mate"], string> = {
 const GANGER = ["én gang", "to ganger", "tre ganger", "fire ganger", "fem ganger", "seks ganger", "sju ganger", "åtte ganger", "ni ganger"];
 
 // What has happened between the buyer and the dealer so far. Empty when the dealer is not contacted.
-function historikk(kontakt: Kontakt, r: Reklamasjon | undefined): string {
+function historikk(
+  kontakt: KlageInput["feilen"]["kontakt"],
+  retting: Retting | undefined,
+  r: Reklamasjon | undefined,
+): string {
+  if (retting === "reparert_selv")
+    return "Jeg har fått feilen utbedret hos et annet verksted. ";
   if (kontakt === "nei") return "";
-  const forste = r && `Jeg tok opp feilen med dere første gang ${norskDato(r.dato)} ${MATE[r.mate]}`;
-  if (kontakt === "avvist") return forste ? `${forste}, men dere har avvist å rette den. ` : "Jeg har tatt opp feilen med dere, men dere har avvist å rette den. ";
-  if (kontakt === "forsokt") {
+  const forste =
+    r &&
+    `Jeg tok opp feilen med dere første gang ${norskDato(r.dato)} ${MATE[r.mate]}`;
+  if (retting === "avvist")
+    return forste
+      ? `${forste}, men dere har avvist å rette den. `
+      : "Jeg har tatt opp feilen med dere, men dere har avvist å rette den. ";
+  if (retting === "forsokt") {
     const forsok = `Dere har forsøkt å rette feilen ${r?.forsok ? `${GANGER[r.forsok - 1]} ` : ""}uten å lykkes. `;
     return forste ? `${forste}. ${forsok}` : forsok;
   }
@@ -172,9 +195,8 @@ function historikk(kontakt: Kontakt, r: Reklamasjon | undefined): string {
 }
 
 function krav(input: KlageInput, u: Utfylling): string {
-  const kontakt = input.feilen.kontakt;
-  const start = `${historikk(kontakt, u.reklamasjon)}Jeg reklamerer herved i medhold av forbrukerkjøpsloven § 27 og`;
-  if (!harFatt(kontakt)) {
+  const start = `${historikk(input.feilen.kontakt, u.retting, u.reklamasjon)}Jeg reklamerer herved i medhold av forbrukerkjøpsloven § 27 og`;
+  if (!harFatt(u.retting)) {
     return `${start} krever at dere retter mangelen for egen regning innen rimelig tid, jf. § 29 og § 30. Retting skal skje uten kostnad og uten vesentlig ulempe for meg.`;
   }
   if (u.krav?.type === "heving") {
@@ -193,13 +215,13 @@ function krav(input: KlageInput, u: Utfylling): string {
 const UTGIFT: Record<Utgift["type"], string> = { verksted: "verksted og feilsøking", tauing: "tauing", leiebil: "leiebil", annet: "andre utgifter" };
 
 // Costs claimed as damages (§ 33), and what the buyer reserves the right to claim later.
-function erstatningOgForbehold(kontakt: Kontakt, u: Utfylling): string {
+function erstatningOgForbehold(u: Utfylling): string {
   const utgifter = u.krav?.utgifter ?? [];
   const sum = utgifter.reduce((s, x) => s + x.belopNok, 0);
   const erstatning = utgifter.length
     ? `I tillegg krever jeg erstatning for utgiftene mangelen har påført meg, jf. § 33: ${liste(utgifter.map((x) => `${UTGIFT[x.type]} ${kroner(x.belopNok)}`))}${utgifter.length > 1 ? `, til sammen ${kroner(sum)}` : ""}. `
     : "";
-  if (harFatt(kontakt)) {
+  if (harFatt(u.retting)) {
     return `${erstatning}${utgifter.length ? "Jeg forbeholder meg retten til å kreve erstatning for ytterligere tap." : "Jeg forbeholder meg også retten til erstatning for mitt økonomiske tap etter § 33."}`;
   }
   return `${erstatning}Dersom retting ikke skjer innen rimelig tid, forbeholder jeg meg retten til å kreve prisavslag eller heving av kjøpet etter § 31 og § 32, samt ${utgifter.length ? "ytterligere erstatning" : "erstatning for mitt økonomiske tap"} etter § 33.`;
@@ -223,12 +245,26 @@ export function vedleggFor(input: KlageInput, u: Utfylling): Vedlegg[] {
 
 // The letter from the answers of the assessment and what the buyer has filled in on the letter
 // page. Whatever is not filled in yet is a placeholder in square brackets.
-export function byggBrev(input: KlageInput, idag = iDag(), u: Utfylling = {}, lignende: LignendeRef[] = []): Brev {
+export function byggBrev(
+  input: KlageInput,
+  idag = iDag(),
+  utfylt: Utfylling = {},
+  lignende: LignendeRef[] = [],
+): Brev {
   const f = beregnFaktorer(input, idag);
+  // An answer about the repair that no longer fits the contact answer is not used.
+  const u: Utfylling = {
+    ...utfylt,
+    retting: gyldigRetting(input.feilen.kontakt, utfylt.retting),
+  };
   const { kjoretoy, forhandler, avsender } = u;
-  const kontakt = input.feilen.kontakt;
-  const bil = kjoretoy && `${kjoretoy.merke} ${kjoretoy.modell}${kjoretoy.ar ? ` (${kjoretoy.ar})` : ""}`;
-  const orgnrLinje = forhandler?.type === "brreg" ? `Org.nr. ${gruppert(forhandler.orgnr)}` : null;
+  const bil =
+    kjoretoy &&
+    `${kjoretoy.merke} ${kjoretoy.modell}${kjoretoy.ar ? ` (${kjoretoy.ar})` : ""}`;
+  const orgnrLinje =
+    forhandler?.type === "brreg"
+      ? `Org.nr. ${gruppert(forhandler.orgnr)}`
+      : null;
   const adresse = forhandler?.type === "brreg" ? forhandler.adresse : undefined;
   const adresseLinjer = adresse ? [...adresse.linjer, `${adresse.postnummer} ${adresse.poststed}`] : [];
   const avsenderLinjer = avsender ? [avsender.navn, avsender.adresse, `${avsender.postnummer} ${avsender.poststed}`, ...(avsender.telefon ? [`Tlf. ${avsender.telefon}`] : [])] : [];
@@ -244,7 +280,7 @@ export function byggBrev(input: KlageInput, idag = iDag(), u: Utfylling = {}, li
       ...innvendinger(input, f, u),
       ...lignendeAvsnitt(lignende),
       krav(input, u),
-      erstatningOgForbehold(kontakt, u),
+      erstatningOgForbehold(u),
       `Jeg ber om skriftlig svar innen ${SVARFRIST_DAGER} dager fra dette brevets dato, det vil si innen ${norskDato(pluss14(idag))}. Hører jeg ikke fra dere innen fristen, vil jeg bringe saken inn for Forbrukerklageutvalget.`,
       ...(vedlagt.length ? [`Vedlagt følger ${liste(vedlagt.map((v) => VEDLEGG_NAVN[v]))}.`] : []),
     ],

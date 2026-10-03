@@ -3,11 +3,11 @@ import klager from "./testdata/klager.json";
 import { alleEksempler, finnEksempel } from "./eksempler";
 import { beregnFaktorer } from "./faktorer";
 import { FEILTYPER_KNAPPER } from "./innsending";
-import { OPPDAGET_VALG, type KlageInput, type Niva, type TestKlage } from "./typer";
+import { OPPDAGET_VALG, type KlageInput, type TestKlage } from "./typer";
 
 const IDAG = "2026-10-01";
 const hent = (id: number): KlageInput => structuredClone((klager as TestKlage[]).find((k) => k.id === id)!.input);
-const eksempel = (i: KlageInput, niva: Niva = "god") => finnEksempel(beregnFaktorer(i, IDAG), niva);
+const eksempel = (i: KlageInput) => finnEksempel(beregnFaktorer(i, IDAG));
 
 describe("eksempelsaker", () => {
   it("velger saken for feilgruppen og tiden til feilen viste seg", () => {
@@ -40,20 +40,6 @@ describe("eksempelsaker", () => {
     expect(eksempel(i)?.setning).toMatch(/bremsefeil/);
   });
 
-  it("svake saker får en tapt sak, og en sak tapt av samme grunn når feilen var opplyst", () => {
-    const i = hent(1);
-    i.feilen.typer = ["motor"];
-    i.feilen.oppdaget = "over_2_ar";
-    expect(eksempel(i, "svak")).toMatchObject({ utfall: "tapt", treff: "lignende" });
-    expect(eksempel(i, "svak")?.setning).toMatch(/ikke medhold .+ ikke var vist at bilen hadde en mangel/);
-    i.feilen.opplystForKjop = "ja";
-    i.feilen.feilOpplysning = "nei";
-    // Purchases from 2024 follow another rule, so they get an ordinary lost decision.
-    expect(eksempel(i, "svak")?.setning).not.toMatch(/gjort kjent med feilen før kjøpet/);
-    i.bilOgKjop.kjopsdato = "2021-02-14";
-    expect(eksempel(i, "svak")?.setning).toMatch(/gjort kjent med feilen før kjøpet/);
-  });
-
   it("elbilbatteri har egne eksempler: vunnet bare for korteste tidsrom, ellers nærmeste", () => {
     const i = hent(1);
     i.feilen.typer = ["batteri"];
@@ -62,43 +48,36 @@ describe("eksempelsaker", () => {
     expect(eksempel(i)?.setning).toMatch(/Tesla Model S .+ elbilbatteriet/);
     i.feilen.oppdaget = "over_2_ar";
     expect(eksempel(i)).toMatchObject({ utfall: "vunnet", treff: "tilnaermet" });
-    expect(eksempel(i, "svak")).toMatchObject({ utfall: "tapt", treff: "lignende" });
-    expect(eksempel(i, "svak")?.setning).toMatch(/klaget for sent/);
-    i.feilen.oppdaget = "6_mnd_til_2_ar";
-    expect(eksempel(i, "svak")?.setning).toMatch(/Kia Soul/);
   });
 
   it("«Annet» gir et generelt eksempel", () => {
     const i = hent(1);
     i.feilen.typer = ["annet"];
     expect(eksempel(i)).toMatchObject({ utfall: "vunnet", treff: "generell" });
-    expect(eksempel(i, "svak")).toMatchObject({ utfall: "tapt", treff: "generell" });
   });
 
-  it("alle vurderte saker får et eksempel med riktig utfall", () => {
+  it("alle vurderte saker får et eksempel der kjøperen fikk medhold", () => {
     for (const type of FEILTYPER_KNAPPER) {
       for (const oppdaget of OPPDAGET_VALG) {
-        for (const niva of ["god", "svak"] as const) {
-          const i = hent(1);
-          i.feilen.typer = [type];
-          i.feilen.oppdaget = oppdaget;
-          const e = eksempel(i, niva);
-          expect(e, `${type} ${oppdaget} ${niva}`).not.toBeNull();
-          expect(e!.utfall).toBe(niva === "svak" ? "tapt" : "vunnet");
-          expect(e!.setning).toMatch(/ medhold /);
-          expect(/ ikke medhold /.test(e!.setning)).toBe(niva === "svak");
-        }
+        const i = hent(1);
+        i.feilen.typer = [type];
+        i.feilen.oppdaget = oppdaget;
+        const e = eksempel(i);
+        expect(e, `${type} ${oppdaget}`).not.toBeNull();
+        expect(e!.utfall).toBe("vunnet");
+        expect(e!.setning).toMatch(/ medhold /);
+        expect(e!.setning).not.toMatch(/ ikke medhold /);
       }
     }
   });
 
   it("alle setninger følger malen og har kilde", () => {
     const alle = alleEksempler();
-    expect(alle).toHaveLength(62);
-    expect(new Set(alle.map((e) => e.vedtakId)).size).toBe(62);
+    expect(alle).toHaveLength(29);
+    expect(new Set(alle.map((e) => e.vedtakId)).size).toBe(29);
     for (const e of alle) {
       expect(e.setning).toMatch(
-        /^I 20\d\d fikk kjøperen av en .+ (ikke |delvis )?medhold etter å ha klaget på .+ (etter|som) kjøpet\. Utvalget (tilkjente [\d ]+ kr|kom til at .+)\.$/,
+        /^I 20\d\d fikk kjøperen av en .+ (delvis )?medhold etter å ha klaget på .+ (etter|som) kjøpet\. Utvalget (tilkjente [\d ]+ kr|kom til at .+)\.$/,
       );
       expect(e.kildeUrl).toMatch(/^https:\/\//);
       expect(e.saksnummer).toBeTruthy();

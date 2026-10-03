@@ -28,7 +28,7 @@
         ],
         "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
-        "kontakt": "forsokt",
+        "kontakt": "ja",
         "utbedringskostnadNok": 85000,
         "feilOpplysning": "nei"
       },
@@ -67,7 +67,7 @@
         ],
         "oppdaget": "innen_6_mnd",
         "opplystForKjop": "ja",
-        "kontakt": "avvist",
+        "kontakt": "ja",
         "utbedringskostnadNok": 25000,
         "feilOpplysning": "nei"
       },
@@ -147,7 +147,7 @@
         ],
         "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
-        "kontakt": "avvist",
+        "kontakt": "ja",
         "utbedringskostnadNok": 60000,
         "feilOpplysning": "ja_dokumentert"
       },
@@ -186,7 +186,7 @@
         ],
         "oppdaget": "over_2_ar",
         "opplystForKjop": "nei",
-        "kontakt": "venter",
+        "kontakt": "ja",
         "utbedringskostnadNok": 12000,
         "feilOpplysning": "nei"
       },
@@ -225,7 +225,7 @@
         ],
         "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
-        "kontakt": "avvist",
+        "kontakt": "ja",
         "utbedringskostnadNok": null,
         "feilOpplysning": "ja_dokumentert"
       },
@@ -265,7 +265,7 @@
         ],
         "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
-        "kontakt": "forsokt",
+        "kontakt": "ja",
         "utbedringskostnadNok": 18000,
         "feilOpplysning": "nei"
       },
@@ -307,7 +307,7 @@
         ],
         "oppdaget": "innen_6_mnd",
         "opplystForKjop": "nei",
-        "kontakt": "venter",
+        "kontakt": "ja",
         "utbedringskostnadNok": 8000,
         "feilOpplysning": "nei"
       },

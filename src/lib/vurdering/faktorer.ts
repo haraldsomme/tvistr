@@ -11,6 +11,8 @@ export const ABSOLUTT_FRIST_AR = 5;
 // § 27 (1): the buyer must complain within reasonable time after discovering the defect, never less
 // than two months. Six months leaves a wide margin before we call an unmade complaint too late.
 export const RIMELIG_TID_MANEDER = 6;
+// Without having told the dealer, this long after the defect showed is too long to be within reasonable time.
+export const VENTET_FOR_LENGE_MANEDER = 12;
 
 // What the buyer can expect follows the car's price and mileage (§ 15). Dealer decisions with a
 // complaint within 180 days: 59 % won under 50 000 kr against 77 % at 150 000–300 000 kr, and 60 %
@@ -42,18 +44,24 @@ export type Faktorer = {
   presumsjon: boolean;
   // More than five years from purchase to the first complaint, or to today when there has been none.
   fristUte: boolean;
-  // The dealer has not been told, and at least RIMELIG_TID_MANEDER have passed since the defect showed.
+  // The law itself stops the claim: not a purchase from a dealer by a consumer (§ 1), or past the
+  // five-year deadline (§ 27). Then there is no letter to offer.
+  stopp: "firma" | "privat" | "frist" | null;
+  // The dealer has not been told, and too long has passed since the defect showed (§ 27, reasonable time).
   reklamertForSent: boolean;
+  // The dealer has not been told, and the defect has certainly been known for over a year. Weakens the case.
+  venterOverEttAr: boolean;
   // The defect is one that wear can explain: not wrong mileage or history, nor earlier collision damage.
   slitasjeAktuelt: boolean;
   // Cheap car or high mileage, so the buyer could expect less of it. null = neither.
   lavForventning: "pris" | "km" | "begge" | null;
   opplystForKjop: KlageInput["feilen"]["opplystForKjop"];
-  // Defect was disclosed before a purchase made before 2024 and the buyer does not say the seller
-  // misled them: the buyer cannot complain about what they knew of (§ 16 (3) as it read then).
+  // The buyer knew about the defect when buying, for a purchase before 2024: the buyer cannot complain
+  // about what they knew of (§ 16 (3) as it read then).
   opplystTakSvak: boolean;
-  // The same for a purchase from 2024: being told is not enough, the buyer must have been told
-  // specifically and have accepted the deviation expressly and separately (§ 15 (2)).
+  // The same for a purchase from 2024: knowing is not enough to lose the claim, the buyer must have been
+  // told specifically and have accepted the deviation expressly and separately (§ 15 (2)); it is still a
+  // point against the case.
   opplystEtter2024: boolean;
   // The buyer says what the ad or the dealer said was wrong.
   feilOpplysninger: boolean;
@@ -131,9 +139,15 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
   const femAarGatt = idag > leggTilManeder(kjopsdato, ABSOLUTT_FRIST_AR * 12);
   const fristUte = femAarGatt && (f.kontakt === "nei" || f.reklamertInnenFemAr === false);
   const senest = SENEST_OPPDAGET[f.oppdaget];
-  const reklamertForSent = f.kontakt === "nei" && senest !== null && idag > leggTilManeder(kjopsdato, senest + RIMELIG_TID_MANEDER);
-  const opplystUtenInnvending = f.opplystForKjop === "ja" && f.feilOpplysning === "nei";
-  const feilgrupper = [...new Set(f.typer)].map((t) => KNAPP_TIL_FEILTYPE[t]).filter((g) => g.length > 0);
+  const reklamertForSent = f.kontakt === "nei" && senest != null && idag > leggTilManeder(kjopsdato, senest + RIMELIG_TID_MANEDER);
+  // The same from the two answers we have, the purchase date and how long after it the defect showed: the
+  // latest it can have shown plus a year is already past. Not guessed for «mer enn 2 år», which has no latest.
+  const venterOverEttAr = f.kontakt === "nei" && senest != null && idag > leggTilManeder(kjopsdato, senest + VENTET_FOR_LENGE_MANEDER);
+  const opplystUtenInnvending =
+    f.opplystForKjop === "ja" && f.feilOpplysning === "nei";
+  const feilgrupper = [...new Set(f.typer)]
+    .map((t) => KNAPP_TIL_FEILTYPE[t])
+    .filter((g) => g.length > 0);
   const billig = b.kjopesumNok != null && b.kjopesumNok < LAV_KJOPESUM_NOK;
   const langtKjort = b.kmVedKjop != null && b.kmVedKjop > HOY_KM;
 
@@ -150,7 +164,16 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
     presumsjonManeder,
     presumsjon,
     fristUte,
+    stopp:
+      b.kjopsform === "firma"
+        ? "firma"
+        : b.kjopsform === "privatperson"
+          ? "privat"
+          : fristUte
+            ? "frist"
+            : null,
     reklamertForSent,
+    venterOverEttAr,
     slitasjeAktuelt: feilgrupper.length === 0 || feilgrupper.some((g) => g[0] !== "km_avvik" && g[0] !== "kollisjonsskade"),
     lavForventning: billig && langtKjort ? "begge" : billig ? "pris" : langtKjort ? "km" : null,
     opplystForKjop: f.opplystForKjop,

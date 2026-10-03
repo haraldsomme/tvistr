@@ -1,4 +1,4 @@
-import { KONTAKT_VALG, type Kjopsalder, type Kontakt, type Oppdaget } from "@/lib/vurdering/typer";
+import { type Kjopsalder, type Kjopsform, type Kontakt, type Oppdaget } from "@/lib/vurdering/typer";
 import { FEILTYPER_KNAPPER } from "@/lib/vurdering/innsending";
 
 // The wording of the questions and the answers in the assessment. The letter page lets the buyer
@@ -6,16 +6,16 @@ import { FEILTYPER_KNAPPER } from "@/lib/vurdering/innsending";
 
 export const SPORSMAL = {
   kjopAlder: "Når kjøpte du bilen?",
+  kjopsform: "Hvem kjøpte du bilen av?",
   kjopsdato: "Kjøpsdato",
   kjopesum: "Hva kostet bilen?",
   kmVedKjop: "Kilometerstand ved kjøpet",
   feiltype: "Hva gjelder feilen?",
   oppdaget: "Hvor lenge etter kjøpet oppdaget du feilen?",
-  opplyst: "Ble du fortalt om feilen før kjøpet?",
+  opplyst: "Visste du om feilen før du kjøpte?",
   feilopplysning: "Ble du feilaktig informert av selger eller annonse?",
   dokumentert: "Har du det skriftlig?",
   kontakt: "Har du tatt opp feilen med forhandleren?",
-  kontaktSvar: "Hva har skjedd siden?",
   reklamert: "Tok du opp feilen med forhandleren innen fem år etter kjøpet?",
   rapport: "Har du en verksted- eller tilstandsrapport?",
   rapportSier: "Sier rapporten at feilen sannsynligvis var til stede før kjøpet?",
@@ -43,14 +43,8 @@ export const FEILTYPE_TEKST: Record<(typeof FEILTYPER_KNAPPER)[number], string> 
   annet: "Annet",
 };
 export const OPPLYST_TEKST = { ja: "Ja", nei: "Nei" } as const;
-export const KONTAKTET_TEKST = { nei: "Nei", ja: "Ja" } as const;
-// The follow-up when the dealer has been contacted.
-export const SVAR_VALG = KONTAKT_VALG.filter((k): k is Exclude<Kontakt, "nei"> => k !== "nei");
-export const SVAR_TEKST: Record<Exclude<Kontakt, "nei">, string> = {
-  venter: "Venter på svar eller reparasjon",
-  avvist: "Forhandleren avviste",
-  forsokt: "Forsøkt rettet, uten hell",
-};
+export const KONTAKT_TEKST: Record<Kontakt, string> = { nei: "Nei", ja: "Ja" };
+export const KJOPSFORM_TEKST: Record<Kjopsform, string> = { forhandler: "Bilforhandler", privatperson: "Privatperson", firma: "Kjøpt gjennom firma" };
 export const OPPDAGET_TEKST: Record<Oppdaget, string> = {
   innen_6_mnd: "Innen 6 måneder",
   "6_mnd_til_2_ar": "6 måneder til 2 år",

@@ -1,10 +1,30 @@
-import { erDato, iDag, kjopsalderFor, kjopsdatoFor, leggTilManeder, presumsjonManederFor } from "./faktorer";
-import { FEILOPPLYSNING_VALG, KJOPSALDER_VALG, KONTAKT_VALG, OPPDAGET_VALG, type FeilKnapp, type KlageInput, type Kjopsalder, type Kontakt, type Oppdaget } from "./typer";
+import {
+  erDato,
+  iDag,
+  kjopsalderFor,
+  kjopsdatoFor,
+  leggTilManeder,
+  presumsjonManederFor,
+} from "./faktorer";
+import {
+  FEILOPPLYSNING_VALG,
+  KJOPSALDER_VALG,
+  KJOPSFORM_VALG,
+  KONTAKT_VALG,
+  OPPDAGET_VALG,
+  type FeilKnapp,
+  type KlageInput,
+  type Kjopsalder,
+  type Kjopsform,
+  type Kontakt,
+  type Oppdaget,
+} from "./typer";
 
 // What the form collects (steps 1–4) and the checks shared by the client (enables «Neste») and the
 // API route (never trusts the client). The assessment only asks for what decides the level: purchase
-// date, defect, when it showed, contact with the dealer, and (when it matters) what the buyer was
-// told and what the report says. The purchase price, mileage, whether the information was in writing
+// date, who the car was bought from, defect, when it showed, whether the buyer knew about it, contact
+// with the dealer, and (when it matters) what the report says. A purchase that is not covered by the
+// consumer purchase act stops the form at step 1 (see `stoppGrunn`). The purchase price, mileage, whether the information was in writing
 // and pictures are left empty here and answered on the letter page (the card «Svarene fra
 // vurderingen»), which uses the same type.
 
@@ -34,13 +54,14 @@ export type Steg = 1 | 2 | 3 | 4;
 
 export type Innsending = {
   kjopAlder: Kjopsalder | ""; // how long ago the car was bought; the assessment asks for this
+  kjopsform: Kjopsform | ""; // who the car was bought from
   kjopsdato: string; // the exact day, ÅÅÅÅ-MM-DD; empty until the registry or the letter page gives it
   kjopesum: string; // whole kroner, digits only; not asked in the assessment
   kmVedKjop: string; // odometer at purchase, digits only; not asked in the assessment
   feiltyper: FeilKnapp[];
   oppdaget: Oppdaget | "";
-  opplystForKjop: (typeof OPPLYST_VALG)[number] | ""; // asked for purchases before 2024
-  feilOpplysning: (typeof FEILOPPLYSNING_VALG)[number] | ""; // asked when the buyer was told about the defect; «ja» then means ja_udokumentert
+  opplystForKjop: (typeof OPPLYST_VALG)[number] | ""; // did the buyer know about the defect when buying
+  feilOpplysning: (typeof FEILOPPLYSNING_VALG)[number] | ""; // not asked in the assessment; answered on the letter page
   kontakt: Kontakt | "";
   reklamertInnenFemAr: JaNei; // asked when the purchase is over five years old and the dealer is contacted
   verkstedrapport: JaNei; // asked when the defect showed outside the presumption period
@@ -49,6 +70,7 @@ export type Innsending = {
 };
 
 export const TOM_INNSENDING: Innsending = {
+  kjopsform: "",
   kjopAlder: "",
   kjopsdato: "",
   kjopesum: "",
@@ -93,11 +115,32 @@ export function sporOmFemarsfrist(i: Pick<Innsending, "kjopsdato" | "kjopAlder" 
   return kjopsalderAv(i, idag) === "over_5";
 }
 
-// Does the answer to «Ble du fortalt om feilen før kjøpet?» decide anything? Only for purchases
-// before 2024, where being told without objecting closes the claim.
-export function sporOmOpplysning(i: Pick<Innsending, "kjopsdato" | "kjopAlder">, idag = iDag()): boolean {
-  const dato = kjopsdatoAv(i, idag);
-  return dato !== "" && presumsjonManederFor(dato) === 6;
+// Does the answer to «Visste du om feilen før du kjøpte?» decide anything? It does for every purchase:
+// before 2024 knowing about it closes the claim, from 2024 it weakens it (§ 16 third paragraph, § 15).
+export function sporOmOpplysning(
+  i: Pick<Innsending, "kjopsdato" | "kjopAlder">,
+  idag = iDag(),
+): boolean {
+  return kjopsdatoAv(i, idag) !== "";
+}
+
+// The law itself stops the claim: a purchase from a private person or through a company (the
+// consumer purchase act does not apply, § 1), or past the five-year deadline (§ 27). null when it does not.
+// Same rule as the engine's `stopp`, so the form stops asking exactly when the answer is settled.
+export type Stopp = "firma" | "privat" | "frist";
+export function stoppGrunn(
+  i: Pick<
+    Innsending,
+    "kjopsform" | "kjopsdato" | "kjopAlder" | "kontakt" | "reklamertInnenFemAr"
+  >,
+  idag = iDag(),
+): Stopp | null {
+  if (i.kjopsform === "firma") return "firma";
+  if (i.kjopsform === "privatperson") return "privat";
+  if (!i.kontakt || kjopsalderAv(i, idag) !== "over_5") return null;
+  return i.kontakt === "nei" || i.reklamertInnenFemAr === "nei"
+    ? "frist"
+    : null;
 }
 
 // Does the evidence decide anything? Only when the defect showed outside the presumption period,
@@ -109,8 +152,23 @@ export function sporOmBevis(i: Pick<Innsending, "kjopsdato" | "kjopAlder" | "opp
   return !presumsjon;
 }
 
-// The steps the form shows for these answers: the evidence step only when it can change the result.
-export const stegFor = (i: Pick<Innsending, "kjopsdato" | "kjopAlder" | "oppdaget">, idag = iDag()): readonly Steg[] => (sporOmBevis(i, idag) ? [1, 2, 3, 4] : [1, 2, 3]);
+// The steps the form shows for these answers. A purchase that is not covered by the act stops at step 1,
+// and a missed deadline after step 3; the evidence step only when it can change the result.
+type StegSvar = Pick<
+  Innsending,
+  | "kjopsform"
+  | "kjopsdato"
+  | "kjopAlder"
+  | "oppdaget"
+  | "kontakt"
+  | "reklamertInnenFemAr"
+>;
+export function stegFor(i: StegSvar, idag = iDag()): readonly Steg[] {
+  const stopp = stoppGrunn(i, idag);
+  if (stopp === "firma" || stopp === "privat") return [1];
+  if (stopp === "frist") return [1, 2, 3];
+  return sporOmBevis(i, idag) ? [1, 2, 3, 4] : [1, 2, 3];
+}
 
 const MIN_MANEDER: Record<Oppdaget, number> = { innen_6_mnd: 0, "6_mnd_til_2_ar": 6, over_2_ar: 24 };
 
@@ -152,8 +210,12 @@ function feil(i: Innsending, steg: Steg, idag: string): string | null {
   if (steg === 1) {
     if (i.kjopsdato && !gyldigKjopsdato(i.kjopsdato, idag)) return erDato(i.kjopsdato) && i.kjopsdato > idag ? "Kjøpet kan ikke være i fremtiden." : "Skriv kjøpsdatoen som en gyldig dato.";
     if (!kjopsalderAv(i, idag)) return "Velg når du kjøpte bilen.";
-    if (i.kjopesum && !heltall(i.kjopesum, 1, MAKS_KJOPESUM)) return "Oppgi hva bilen kostet i hele kroner.";
-    if (i.kmVedKjop && !heltall(i.kmVedKjop, 0, MAKS_KM)) return "Oppgi kilometerstanden som et tall.";
+    if (!KJOPSFORM_VALG.includes(i.kjopsform as Kjopsform))
+      return "Svar på hvem du kjøpte bilen av.";
+    if (i.kjopesum && !heltall(i.kjopesum, 1, MAKS_KJOPESUM))
+      return "Oppgi hva bilen kostet i hele kroner.";
+    if (i.kmVedKjop && !heltall(i.kmVedKjop, 0, MAKS_KM))
+      return "Oppgi kilometerstanden som et tall.";
   }
   if (steg === 2) {
     if (i.feiltyper.length === 0) return "Velg hva som er galt.";
@@ -161,14 +223,16 @@ function feil(i: Innsending, steg: Steg, idag: string): string | null {
     if (!oppdagetMulig(i, i.oppdaget, idag)) return "Feilen kan ikke ha vist seg så lenge etter kjøpet når kjøpet er så nylig.";
   }
   if (steg === 3) {
-    if (i.opplystForKjop && !OPPLYST_VALG.includes(i.opplystForKjop)) return "Svar på om du ble fortalt om feilen.";
-    if (i.feilOpplysning && !FEILOPPLYSNING_VALG.includes(i.feilOpplysning)) return "Svar på om annonsen eller selgeren sa noe som ikke stemte.";
-    if (sporOmOpplysning(i, idag)) {
-      if (!i.opplystForKjop) return "Svar på om du ble fortalt om feilen.";
-      if (i.opplystForKjop === "ja" && !i.feilOpplysning) return "Svar på om annonsen eller selgeren sa noe som ikke stemte.";
-    }
-    if (!i.kontakt || !KONTAKT_VALG.includes(i.kontakt)) return "Svar på om du har kontaktet forhandleren.";
-    if (sporOmFemarsfrist(i, idag) && !jaNei(i.reklamertInnenFemAr)) return "Svar på om du tok det opp med forhandleren innen fem år etter kjøpet.";
+    if (i.opplystForKjop && !OPPLYST_VALG.includes(i.opplystForKjop))
+      return "Svar på om du visste om feilen før kjøpet.";
+    if (i.feilOpplysning && !FEILOPPLYSNING_VALG.includes(i.feilOpplysning))
+      return "Svar på om annonsen eller selgeren sa noe som ikke stemte.";
+    if (sporOmOpplysning(i, idag) && !i.opplystForKjop)
+      return "Svar på om du visste om feilen før kjøpet.";
+    if (!i.kontakt || !KONTAKT_VALG.includes(i.kontakt))
+      return "Svar på om du har tatt opp feilen med forhandleren.";
+    if (sporOmFemarsfrist(i, idag) && !jaNei(i.reklamertInnenFemAr))
+      return "Svar på om du tok det opp med forhandleren innen fem år etter kjøpet.";
   }
   if (steg === 4 && sporOmBevis(i, idag)) {
     if (!jaNei(i.verkstedrapport)) return "Svar på om du har en verksted- eller tilstandsrapport.";
@@ -200,7 +264,11 @@ export function lesInnsending(r: Record<string, unknown>, idag = iDag()): Innsen
   const kjopsdato = kjopsdatoFra(r);
   return {
     // A valid exact day decides the answer to «hvor lenge siden».
-    kjopAlder: kjopsalderAv({ kjopsdato, kjopAlder: tekst(r.kjopAlder) as Innsending["kjopAlder"] }, idag),
+    kjopsform: tekst(r.kjopsform) as Innsending["kjopsform"],
+    kjopAlder: kjopsalderAv(
+      { kjopsdato, kjopAlder: tekst(r.kjopAlder) as Innsending["kjopAlder"] },
+      idag,
+    ),
     kjopsdato,
     kjopesum: tekst(r.kjopesum),
     kmVedKjop: tekst(r.kmVedKjop),
@@ -208,7 +276,10 @@ export function lesInnsending(r: Record<string, unknown>, idag = iDag()): Innsen
     oppdaget: tekst(r.oppdaget) as Innsending["oppdaget"],
     opplystForKjop: tekst(r.opplystForKjop) as Innsending["opplystForKjop"],
     feilOpplysning: tekst(r.feilOpplysning) as Innsending["feilOpplysning"],
-    kontakt: tekst(r.kontakt) as Innsending["kontakt"],
+    // Older saved cases hold what the dealer did (venter, avvist, ...): any of those means «ja».
+    kontakt: (tekst(r.kontakt) === "" || tekst(r.kontakt) === "nei"
+      ? tekst(r.kontakt)
+      : "ja") as Innsending["kontakt"],
     reklamertInnenFemAr: tekst(r.reklamertInnenFemAr) as JaNei,
     verkstedrapport: tekst(r.verkstedrapport) as JaNei,
     rapportSierForKjop: tekst(r.rapportSierForKjop) as JaNei,
@@ -245,7 +316,11 @@ export function forsteUgyldigeSteg(i: Innsending, idag = iDag()): Steg | null {
 export function tilKlageInput(raw: unknown, idag = iDag()): { ok: true; input: KlageInput } | { ok: false; feil: string } {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return { ok: false, feil: "Ugyldig forespørsel." };
   const i = lesInnsending(raw as Record<string, unknown>, idag);
-  const f = feil(i, 1, idag) ?? feil(i, 2, idag) ?? feil(i, 3, idag) ?? feil(i, 4, idag);
+  // Only the steps the form shows for these answers: a stopped claim has no later answers.
+  const f = stegFor(i, idag).reduce<string | null>(
+    (funnet, s) => funnet ?? feil(i, s, idag),
+    null,
+  );
   if (f) return { ok: false, feil: f };
 
   const rapport = i.verkstedrapport === "ja";
@@ -253,7 +328,13 @@ export function tilKlageInput(raw: unknown, idag = iDag()): { ok: true; input: K
   return {
     ok: true,
     input: {
-      bilOgKjop: { ...(i.kjopsdato && { kjopsdato: i.kjopsdato }), kjopAlder: i.kjopAlder as Kjopsalder, kjopesumNok: i.kjopesum ? Number(i.kjopesum) : null, ...(i.kmVedKjop && { kmVedKjop: Number(i.kmVedKjop) }) },
+      bilOgKjop: {
+        kjopsform: i.kjopsform as Kjopsform,
+        ...(i.kjopsdato && { kjopsdato: i.kjopsdato }),
+        kjopAlder: i.kjopAlder as Kjopsalder,
+        kjopesumNok: i.kjopesum ? Number(i.kjopesum) : null,
+        ...(i.kmVedKjop && { kmVedKjop: Number(i.kmVedKjop) }),
+      },
       feilen: {
         typer: [...new Set(i.feiltyper)],
         oppdaget: i.oppdaget as Oppdaget,

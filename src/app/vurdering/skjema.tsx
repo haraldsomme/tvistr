@@ -7,24 +7,64 @@ import { Logo } from "@/app/logo";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { lesKjoretoy } from "@/lib/brev/utfylling";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
-import { FEILTYPER_KNAPPER, forsteUgyldigeSteg, gyldigKjopsdato, JA_NEI, kjopsdatoAv, medKjopsalder, medKjopsdato, oppdagetMulig, OPPLYST_VALG, sporOmFemarsfrist, sporOmOpplysning, stegFor, stegGyldig, tilParametre, type Innsending, type Steg } from "@/lib/vurdering/innsending";
+import {
+  FEILTYPER_KNAPPER,
+  forsteUgyldigeSteg,
+  gyldigKjopsdato,
+  JA_NEI,
+  kjopsdatoAv,
+  medKjopsalder,
+  medKjopsdato,
+  oppdagetMulig,
+  OPPLYST_VALG,
+  sporOmFemarsfrist,
+  sporOmOpplysning,
+  stegFor,
+  stegGyldig,
+  tilParametre,
+  type Innsending,
+  type Steg,
+} from "@/lib/vurdering/innsending";
 import { presumsjonManederFor } from "@/lib/vurdering/faktorer";
-import { KJOPSALDER_VALG, OPPDAGET_VALG, type Niva } from "@/lib/vurdering/typer";
+import {
+  KJOPSALDER_VALG,
+  KJOPSFORM_VALG,
+  KONTAKT_VALG,
+  OPPDAGET_VALG,
+  type Niva,
+} from "@/lib/vurdering/typer";
 import { Bilkort, Regnr } from "./regnr";
-import { FEILTYPE_TEKST, JA_NEI_TEKST, KJOPSALDER_TEKST, KONTAKTET_TEKST, OPPDAGET_TEKST, OPPLYST_TEKST, SPORSMAL, SVAR_TEKST, SVAR_VALG } from "./tekster";
+import {
+  FEILTYPE_TEKST,
+  JA_NEI_TEKST,
+  KJOPSALDER_TEKST,
+  KJOPSFORM_TEKST,
+  KONTAKT_TEKST,
+  OPPDAGET_TEKST,
+  OPPLYST_TEKST,
+  SPORSMAL,
+} from "./tekster";
 
 // How close the example decision is to the buyer's case; see finnEksempel.
 type Treff = "lignende" | "tilnaermet" | "generell";
+type Punkt = {
+  tekst: string;
+  vekt: "for" | "mot" | "noytral";
+  paragraf?: string;
+  lenke?: string;
+};
 type Resultat = {
   niva: Niva;
   tittel: string;
   begrunnelse: string;
-  grunnlag: { tekst: string; vekt: "for" | "mot"; paragraf?: string; lenke?: string }[];
+  // What strengthens the case, and what weakens it (or the one reason the law stops it).
+  styrker: Punkt[];
+  svakheter: Punkt[];
   // The explanation is only sent for a weak case; otherwise it is part of the paid step.
   tiltak: { tittel: string; tekst?: string }[];
   // null when the five-year deadline has passed, so no comparison was made.
   utvalg: { n: number; vunnet: number; spesifikk: boolean } | null;
-  eksempel: { setning: string; saksnummer: string; kildeUrl: string; utfall: "vunnet" | "tapt"; treff: Treff } | null;
+  eksempel: { setning: string; saksnummer: string; kildeUrl: string; utfall: "vunnet"; treff: Treff } | null;
 };
 
 const STEG_TEKST: Record<Steg, { navn: string; tittel: string }> = {
@@ -174,15 +214,12 @@ const TREFF_TEKST: Record<Treff, string> = {
   generell: "Her er ett eksempel fra grunnlaget:",
 };
 
-// The comparison point shown right under the title: how many similar decisions the case was checked
-// against, and how many of those got (or did not get) medhold — then the one example decision, if any.
+// The comparison point shown right under the title: how many similar decisions that got medhold the case
+// was checked against, then the one example decision (always one the buyer won), if any.
 function sammenligningTekst(utvalg: Resultat["utvalg"], eksempel: Resultat["eksempel"]): string | null {
   if (!utvalg) return null;
-  const godSak = eksempel?.utfall !== "tapt";
-  const antall = godSak ? utvalg.vunnet : utvalg.n - utvalg.vunnet;
   const gruppe = utvalg.spesifikk ? "lignende vedtak" : "vedtak om bruktbil kjøpt fra forhandler";
-  const utfallstekst = godSak ? "som fikk medhold" : "der kjøperen ikke fikk medhold";
-  const grunnsetning = `Vi har sjekket saken din opp mot ${antall} ${gruppe} fra Forbrukerklageutvalget ${utfallstekst}.`;
+  const grunnsetning = `Vi har sjekket saken din opp mot ${utvalg.vunnet} ${gruppe} fra Forbrukerklageutvalget som fikk medhold.`;
   return eksempel ? `${grunnsetning} ${TREFF_TEKST[eksempel.treff]} ${eksempel.setning}` : grunnsetning;
 }
 const KORT = "overflow-hidden rounded-lg border border-[#dcd8cf] bg-white";
@@ -247,13 +284,11 @@ const NESTE_PUNKTER = [
 // The line about similar cases is only promised when we have one to refer to.
 // `apneBrev` opens the letter and returns an error message if that failed.
 function Neste({
-  niva,
   medEksempel,
   apneBrev,
   kjoretoy,
   velgBil,
 }: {
-  niva: Niva;
   medEksempel: boolean;
   apneBrev: () => Promise<string | null>;
   // undefined until the tab has been read, null when there is no car (a shared link, or storage that is empty).
@@ -278,7 +313,7 @@ function Neste({
       <div className="font-ui text-[12px] font-medium uppercase tracking-[.04em] text-[#8a9bb5] md:text-[13px]">Neste steg</div>
       <div className="flex items-baseline justify-between gap-4">
         <h2 className="m-0 font-brev text-[17px] font-semibold leading-[1.3] md:text-[28px] md:leading-[1.2]">
-          {niva === "svak" ? "Vil du reklamere likevel?" : "Få reklamasjonsbrevet"}
+          Få reklamasjonsbrevet
         </h2>
         <span className="font-brev text-[20px] font-semibold md:hidden">{PRIS_NOK} kr</span>
       </div>
@@ -342,6 +377,82 @@ function Vekt({ vekt }: { vekt: "for" | "mot" }) {
   );
 }
 
+// A list of points under a heading: a green plus for what strengthens the case, a red minus for what
+// weakens it, with the rule it rests on.
+function PunktListe({
+  id,
+  tittel,
+  punkter,
+}: {
+  id: string;
+  tittel: string;
+  punkter: Punkt[];
+}) {
+  return (
+    <section aria-labelledby={id} className="flex flex-col gap-3.5">
+      <h2 id={id} className={SEKSJON_TITTEL}>
+        {tittel}
+      </h2>
+      <ul className={`m-0 list-none p-0 ${KORT}`}>
+        {punkter.map((g) => (
+          <li key={g.tekst} className={RAD}>
+            <Vekt vekt={g.vekt === "for" ? "for" : "mot"} />
+            <div className="flex flex-col items-start gap-2">
+              <span className="text-[15px] leading-[1.6]">{g.tekst}</span>
+              {g.paragraf &&
+                (g.lenke ? (
+                  <a
+                    href={g.lenke}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]"
+                  >
+                    {g.paragraf}
+                  </a>
+                ) : (
+                  <span className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
+                    {g.paragraf}
+                  </span>
+                ))}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+// Where the law stops the claim there is no letter to sell. The buyer can change the answers, and is
+// pointed to the Consumer Council for advice.
+function Utenfor({ endre }: { endre: () => void }) {
+  return (
+    <aside className="flex flex-col gap-3 rounded-lg border border-[#dcd8cf] bg-white px-6 py-5 md:sticky md:top-6 md:gap-4 md:self-start md:p-9">
+      <h2 className="m-0 font-brev text-[20px] font-semibold leading-[1.3] md:text-[24px]">
+        Brevet passer ikke for denne saken
+      </h2>
+      <p className="m-0 text-[14px] leading-[1.6] text-[#3d4757] md:text-[15px]">
+        Har du svart feil, kan du endre svarene. Ellers kan Forbrukerrådet gi
+        gratis veiledning om hva du kan gjøre.
+      </p>
+      <button
+        type="button"
+        onClick={endre}
+        className="rounded-[6px] bg-[#17263d] p-3.5 text-center font-ui text-[15px] font-semibold text-[#f6f4ef]"
+      >
+        Endre svar
+      </button>
+      <a
+        href="https://www.forbrukerradet.no"
+        target="_blank"
+        rel="noreferrer"
+        className="text-center text-[14px] font-medium text-[#1f3a5f] underline"
+      >
+        Forbrukerrådet
+      </a>
+    </aside>
+  );
+}
+
 function Vurdering({
   resultat,
   endre,
@@ -387,43 +498,42 @@ function Vurdering({
               {resultat.begrunnelse}
             </p>
           </div>
-          {resultat.grunnlag.length > 0 && (
-            <section aria-labelledby="grunnlag" className="flex flex-col gap-3.5">
-              <h2 id="grunnlag" className={SEKSJON_TITTEL}>
-                {resultat.niva === "svak" ? "Dette taler mot saken din" : "Dette styrker saken din"}
-              </h2>
-              <ul className={`m-0 list-none p-0 ${KORT}`}>
-                {resultat.grunnlag.map((g) => (
-                  <li key={g.tekst} className={RAD}>
-                    <Vekt vekt={g.vekt} />
-                    <div className="flex flex-col items-start gap-2">
-                      <span className="text-[15px] leading-[1.6]">{g.tekst}</span>
-                      {g.paragraf &&
-                        (g.lenke ? (
-                          <a href={g.lenke} target="_blank" rel="noreferrer" className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
-                            {g.paragraf}
-                          </a>
-                        ) : (
-                          <span className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">{g.paragraf}</span>
-                        ))}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
+          {resultat.styrker.length > 0 && (
+            <PunktListe
+              id="styrker"
+              tittel="Dette styrker saken din"
+              punkter={resultat.styrker}
+            />
+          )}
+          {resultat.svakheter.length > 0 && (
+            <PunktListe
+              id="svakheter"
+              tittel={
+                resultat.niva === "utenfor"
+                  ? "Dette stopper saken din"
+                  : "Dette svekker saken din"
+              }
+              punkter={resultat.svakheter}
+            />
           )}
           <p className="m-0 max-w-[600px] border-t border-[#dcd8cf] pt-4 text-[13px] leading-[1.55] text-[#5b6472]">
             Vurderingen bygger på svarene dine og på tidligere vedtak. Den er veiledende og ikke juridisk rådgivning, og utfallet i din sak kan bli et annet.
           </p>
         </div>
         <div className="mt-auto md:mt-0">
-          <Neste
-            niva={resultat.niva}
-            medEksempel={resultat.eksempel?.utfall === "vunnet" && resultat.eksempel.treff === "lignende"}
-            apneBrev={apneBrev}
-            kjoretoy={kjoretoy}
-            velgBil={endre}
-          />
+          {resultat.niva === "utenfor" ? (
+            <Utenfor endre={endre} />
+          ) : (
+            <Neste
+              medEksempel={
+                resultat.eksempel?.utfall === "vunnet" &&
+                resultat.eksempel.treff === "lignende"
+              }
+              apneBrev={apneBrev}
+              kjoretoy={kjoretoy}
+              velgBil={endre}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -445,8 +555,6 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
     return forsteUgyldig === null ? onsket : (Math.min(onsket, forsteUgyldig) as Steg);
   });
   const [d, setD] = useState<Innsending>(startSvar);
-  // «Ja» on the contact question, before the follow-up is answered.
-  const [kontaktet, setKontaktet] = useState(false);
   const [sender, setSender] = useState(visVurdering);
   const [feil, setFeil] = useState<string | null>(null);
   const [resultat, setResultat] = useState<Resultat | null>(null);
@@ -482,7 +590,8 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
         niva: json.niva,
         tittel: json.tittel,
         begrunnelse: json.begrunnelse,
-        grunnlag: json.grunnlag ?? [],
+        styrker: json.styrker ?? [],
+        svakheter: json.svakheter ?? [],
         tiltak: json.tiltak ?? [],
         utvalg: json.utvalg ?? null,
         eksempel: json.eksempel ?? null,
@@ -637,6 +746,15 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
                 />
                 {datoFraRegister && <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472]">Valgt ut fra Statens vegvesen: dagen bilen ble registrert på deg. Velg et annet alternativ hvis det ikke stemmer.</p>}
               </div>
+              <Valg
+                id={`${id}-kjopsform`}
+                label={SPORSMAL.kjopsform}
+                verdier={KJOPSFORM_VALG}
+                tekst={KJOPSFORM_TEKST}
+                valgt={d.kjopsform}
+                velg={(v) => sett("kjopsform", v)}
+                kort
+              />
             </div>
           </>
         )}
@@ -691,54 +809,26 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
         {steg === 3 && (
           <>
             <div className={INNHOLD}>
-              <Radliste>
-                {sporOmOpplysning(d) && (
-                  <Valg
-                    id={`${id}-opplyst`}
-                    label={SPORSMAL.opplyst}
-                    verdier={OPPLYST_VALG}
-                    tekst={OPPLYST_TEKST}
-                    valgt={d.opplystForKjop}
-                    velg={(v) => sett("opplystForKjop", v)}
-                    rad
-                  />
-                )}
-                {sporOmOpplysning(d) && d.opplystForKjop === "ja" && (
-                  <Valg
-                    id={`${id}-feilopplysning`}
-                    label={SPORSMAL.feilopplysning}
-                    verdier={JA_NEI}
-                    tekst={JA_NEI_TEKST}
-                    valgt={d.feilOpplysning === "nei" ? "nei" : d.feilOpplysning ? "ja" : ""}
-                    velg={(v) => sett("feilOpplysning", v === "ja" ? "ja_udokumentert" : "nei")}
-                    rad
-                  />
-                )}
+              {sporOmOpplysning(d) && (
                 <Valg
-                  id={`${id}-kontakt`}
-                  label={SPORSMAL.kontakt}
-                  verdier={JA_NEI}
-                  tekst={KONTAKTET_TEKST}
-                  valgt={d.kontakt === "nei" ? "nei" : kontaktet || d.kontakt ? "ja" : ""}
-                  velg={(v) => {
-                    setKontaktet(v === "ja");
-                    if (v === "nei") sett("kontakt", "nei");
-                    else if (d.kontakt === "nei") sett("kontakt", "");
-                  }}
-                  rad
-                />
-              </Radliste>
-              {d.kontakt !== "nei" && (kontaktet || d.kontakt) && (
-                <Valg
-                  id={`${id}-svar`}
-                  label={SPORSMAL.kontaktSvar}
-                  verdier={SVAR_VALG}
-                  tekst={SVAR_TEKST}
-                  valgt={d.kontakt}
-                  velg={(v) => sett("kontakt", v)}
+                  id={`${id}-opplyst`}
+                  label={SPORSMAL.opplyst}
+                  verdier={OPPLYST_VALG}
+                  tekst={OPPLYST_TEKST}
+                  valgt={d.opplystForKjop}
+                  velg={(v) => sett("opplystForKjop", v)}
                   kort
                 />
               )}
+              <Valg
+                id={`${id}-kontakt`}
+                label={SPORSMAL.kontakt}
+                verdier={KONTAKT_VALG}
+                tekst={KONTAKT_TEKST}
+                valgt={d.kontakt}
+                velg={(v) => sett("kontakt", v)}
+                kort
+              />
               {sporOmFemarsfrist(d) && (
                 <Valg
                   id={`${id}-reklamert`}

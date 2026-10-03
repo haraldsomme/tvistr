@@ -1,6 +1,7 @@
 import { opprettSak } from "@/lib/brev/sak";
 import { lesKjoretoy } from "@/lib/brev/utfylling";
 import { ipFra, lagGrense, lesJson } from "@/lib/rategrense";
+import { beregnFaktorer } from "@/lib/vurdering/faktorer";
 import { lesInnsending, tilKlageInput } from "@/lib/vurdering/innsending";
 
 // Every call writes a row.
@@ -15,6 +16,8 @@ export async function POST(request: Request) {
   const body = await lesJson(request);
   const parsed = tilKlageInput(body);
   if (!parsed.ok) return Response.json({ feil: parsed.feil }, { status: 400 });
+  // A claim the law stops has no letter to open: the assessment says why.
+  if (beregnFaktorer(parsed.input).stopp) return Response.json({ feil: "Brevet kan ikke åpnes for dette kjøpet." }, { status: 400 });
   const kjoretoy = lesKjoretoy((body as { kjoretoy?: unknown }).kjoretoy);
   if (!kjoretoy) return Response.json({ feil: "Hent bilen med registreringsnummeret først." }, { status: 400 });
 

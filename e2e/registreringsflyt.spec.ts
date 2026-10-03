@@ -14,6 +14,8 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await skjema.velgKjop("Mindre enn 2 år siden");
   await expect(skjema.nesteKnapp).toBeDisabled();
   await skjema.hentKjoretoy("ZZ 99999");
+  await expect(skjema.nesteKnapp).toBeDisabled();
+  await skjema.svar("Hvem kjøpte du bilen av?", "Bilforhandler");
   await skjema.neste();
 
   await expect(skjema.tittel("Hva er galt med bilen?")).toBeVisible();
@@ -23,12 +25,9 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await skjema.neste();
 
   await expect(skjema.tittel("Hva har forhandleren sagt?")).toBeVisible();
-  // The purchase is less than two years ago, so what the buyer was told does not decide anything and is not asked.
-  await expect(skjema.sporsmal("Ble du fortalt om feilen før kjøpet?")).toBeHidden();
-  await expect(skjema.sporsmal("Hva har skjedd siden?")).toBeHidden();
-  await skjema.svar("Har du tatt opp feilen med forhandleren?", "Ja");
   await expect(skjema.nesteKnapp).toBeDisabled();
-  await skjema.svar("Hva har skjedd siden?", "Forhandleren avviste");
+  await skjema.svar("Visste du om feilen før du kjøpte?", "Nei");
+  await skjema.svar("Har du tatt opp feilen med forhandleren?", "Ja");
   // Inside the presumption period the evidence does not decide the level, so the last step is this one.
   await expect(skjema.nesteKnapp).toHaveText("Se vurderingen →");
 
@@ -50,6 +49,8 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
     const grunnlag = page.getByRole("region", { name: "Dette styrker saken din" });
     await expect(grunnlag.getByRole("listitem")).toHaveCount(3);
     await expect(grunnlag.getByRole("link", { name: "forbrukerkjøpsloven § 18" })).toHaveAttribute("href", /lovdata\.no/);
+    // What the dealer may object (wear on an engine) stands in its own list, not in the title.
+    await expect(page.getByRole("region", { name: "Dette svekker saken din" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Få reklamasjonsbrevet" })).toBeVisible();
     // Before paying, the car the letter is for is shown, and cannot be changed there.
     await expect(page.getByRole("group", { name: "Brevet skrives for" })).toContainText("Testmerke Modell X");

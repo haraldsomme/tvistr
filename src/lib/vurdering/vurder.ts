@@ -14,7 +14,7 @@ export type Vurdering = {
   // The same facts point by point, each with the rule it triggers and a reference to the law.
   grunnlag: Grunnlag[];
   // A similar decision: one the buyer won, or one the buyer lost when the case is weak. null only
-  // when the case is not assessed.
+  // when there is no decision to show.
   eksempel: ValgtEksempel | null;
   // What the user can do to strengthen the case; empty when there is nothing to suggest. Not part
   // of the free assessment: it is meant for the paid step.
@@ -28,10 +28,6 @@ export type Avhengigheter = {
   hentStatistikk: HentStatistikk;
   idag?: string;
 };
-
-function ikkeAktuell(f: Faktorer, tittel: string, begrunnelse: string, grunnlag: Grunnlag[] = []): Vurdering {
-  return { niva: "ikke_aktuell", tittel, begrunnelse, grunnlag, eksempel: null, tiltak: [], faktorer: f, statistikk: null };
-}
 
 // The dealer may try to repair first (fkjl § 29); once they have tried or refused, the buyer can
 // go on to a price reduction or cancelling the purchase (§§ 31 and 32). Which of the two depends on
@@ -61,9 +57,9 @@ function begrunnelseFor(f: Faktorer): string {
 
   if (f.rapportSierForKjop === true) ledd.push("verkstedrapporten peker på en feil som sannsynligvis var til stede ved levering");
   else if (f.rapportSierForKjop === false) ledd.push("verkstedrapporten sier ikke om feilen var til stede ved levering");
-  else if (f.bilder) ledd.push("du har bilder av feilen, men ingen verkstedrapport");
-  else ledd.push("du har foreløpig ingen dokumentasjon av feilen");
+  else if (f.verkstedrapport === false) ledd.push("du har ingen verkstedrapport");
 
+  if (ledd.length === 1) return `${ledd[0]}.`;
   return `${ledd.slice(0, -1).join(", ")}, og ${ledd[ledd.length - 1]}.`;
 }
 
@@ -74,12 +70,6 @@ const FRISTUTE: Grunnlag = {
 };
 
 export function vurderFraFaktorer(f: Faktorer, s: Statistikk | null): Vurdering {
-  if (f.utenforTjenesten === "privat_selger") {
-    return ikkeAktuell(f, "Vi kan ikke vurdere kjøp fra en privatperson.", "Slike kjøp følger kjøpsloven og behandles ikke på samme måte som kjøp fra forhandler.");
-  }
-  if (f.utenforTjenesten === "ikke_privat_bruk") {
-    return ikkeAktuell(f, "Vi kan bare vurdere kjøp til privat bruk.", "Forbrukerkjøpsloven gjelder ikke når bilen er kjøpt til bruk i næring.");
-  }
   // The level is a short list of reasons for a weak case; everything else is a good case. The
   // decisions show that cases are won or lost on the burden of proof (was the defect there at
   // delivery?). Inside the presumption the dealer has that burden. Outside it the buyer has, which
@@ -104,6 +94,6 @@ export function vurderFraFaktorer(f: Faktorer, s: Statistikk | null): Vurdering 
 
 export async function vurder(input: KlageInput, dep: Avhengigheter): Promise<Vurdering> {
   const faktorer = beregnFaktorer(input, dep.idag ?? iDag());
-  if (faktorer.utenforTjenesten || faktorer.fristUte) return vurderFraFaktorer(faktorer, null);
+  if (faktorer.fristUte) return vurderFraFaktorer(faktorer, null);
   return vurderFraFaktorer(faktorer, await dep.hentStatistikk(faktorer));
 }

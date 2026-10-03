@@ -9,7 +9,6 @@ import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 // form, so it has no form of its own: Enter looks the vehicle up instead of going to the next step.
 
 const LABEL = "font-ui text-[14px] font-semibold text-[#17263d] md:text-[15px]";
-const HJELP = "m-0 text-[13px] leading-[1.5] text-[#5b6472]";
 
 // `funnet` gets the vehicle, and the day it was registered on its current owner when the registry has it.
 export function Regnr({ kjoretoy, funnet }: { kjoretoy: Kjoretoy | null; funnet: (k: Kjoretoy | null, eierFra?: string | null) => void }) {
@@ -62,7 +61,6 @@ export function Regnr({ kjoretoy, funnet }: { kjoretoy: Kjoretoy | null; funnet:
       <div className="flex gap-2">
         <input
           id={id}
-          aria-describedby={`${id}-hjelp`}
           aria-invalid={feil ? true : undefined}
           value={regnr}
           onChange={(e) => setRegnr(e.target.value.toUpperCase())}
@@ -74,7 +72,7 @@ export function Regnr({ kjoretoy, funnet }: { kjoretoy: Kjoretoy | null; funnet:
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
-          maxLength={10}
+          maxLength={8}
           placeholder="AB 12345"
           className="min-w-0 flex-1 rounded-[6px] border border-[#bfbab0] bg-white p-[14px] font-kode text-[16px] tracking-[.06em] text-[#17263d] outline-none placeholder:text-[#8a94a3] focus:border-[#17263d] focus:shadow-[0_0_0_.5px_#17263d]"
         />
@@ -87,9 +85,6 @@ export function Regnr({ kjoretoy, funnet }: { kjoretoy: Kjoretoy | null; funnet:
           {henter ? "Henter …" : "Hent bilen"}
         </button>
       </div>
-      <p id={`${id}-hjelp`} className={HJELP}>
-        Vi henter merke, modell og årsmodell fra Statens vegvesen. Registreringsnummeret kommer ikke i adressen.
-      </p>
       {feil && (
         <p role="alert" className="m-0 text-[13px] leading-[1.5] text-[#a23b2a]">
           {feil}

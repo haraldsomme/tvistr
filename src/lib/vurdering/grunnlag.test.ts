@@ -27,12 +27,13 @@ describe("grunnlag", () => {
       ["forsokt", "forbrukerkjøpsloven §§ 31 og 32"],
     ] as const) {
       i.feilen.kontakt = kontakt;
-      expect(paragrafer(i).at(-1)).toBe(paragraf);
+      expect(paragrafer(i)).toContain(paragraf);
+      expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven §§ 29 og 30");
     }
     for (const kontakt of ["nei", "venter"] as const) {
       i.feilen.kontakt = kontakt;
-      expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven § 27");
-      expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven § 29");
+      expect(paragrafer(i)).toContain("forbrukerkjøpsloven §§ 29 og 30");
+      expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven §§ 31 og 32");
     }
   });
 
@@ -58,7 +59,7 @@ describe("grunnlag", () => {
   });
 
   it("ett mislykket retteforsøk: to forsøk nevnes for kjøp før 2024", () => {
-    const siste = (i: KlageInput) => grunnlag(i).at(-1)!.tekst;
+    const siste = (i: KlageInput) => grunnlag(i).find((g) => g.paragraf === "forbrukerkjøpsloven §§ 31 og 32")!.tekst;
     expect(siste(hent(1))).toBe("Forhandleren har forsøkt å rette feilen uten å lykkes. Da kan du gå videre til prisavslag eller heving.");
     const gammel = hent(1);
     gammel.bilOgKjop.kjopsdato = "2023-12-31";

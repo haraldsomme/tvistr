@@ -6,7 +6,6 @@ const IDAG = "2026-10-02";
 
 // Purchased March 2026, defect inside six months, dealer not contacted, no evidence.
 const grunn = (): KlageInput => ({
-  kvalifisering: { selgerType: "forhandler", privatBruk: true },
   bilOgKjop: { kjopsdato: "2026-03-12", kjopesumNok: 250000, kmVedKjop: 80000 },
   feilen: { typer: ["motor"], oppdaget: "innen_6_mnd", opplystForKjop: "nei", feilOpplysning: "nei", kontakt: "nei" },
   bevis: { verkstedrapport: false, rapportSierForKjop: null, bilder: false },
@@ -74,7 +73,7 @@ describe("byggBrev", () => {
   it("sier at feilen ikke ble opplyst bare når svaret er nei", () => {
     expect(tekst(byggBrev(grunn(), IDAG))).toContain("Jeg ble heller ikke opplyst om feilen før kjøpet.");
     const i = grunn();
-    i.feilen.opplystForKjop = "usikker";
+    i.feilen.opplystForKjop = "ja";
     expect(tekst(byggBrev(i, IDAG))).not.toContain("ikke opplyst");
   });
 

@@ -9,9 +9,9 @@ const hent = (id: number): KlageInput => structuredClone(testklager.find((k) => 
 const fakta = (i: KlageInput) => beregnFaktorer(i, IDAG);
 
 describe("testdata", () => {
-  it("har 10 klager med unike id-er", () => {
-    expect(testklager).toHaveLength(10);
-    expect(new Set(testklager.map((k) => k.id)).size).toBe(10);
+  it("har 8 klager med unike id-er", () => {
+    expect(testklager).toHaveLength(8);
+    expect(new Set(testklager.map((k) => k.id)).size).toBe(8);
   });
 });
 
@@ -66,11 +66,11 @@ describe("femårsfristen (fkjl § 27)", () => {
     expect(fakta(i).fristUte).toBe(false);
   });
 
-  it("er ute når første reklamasjon kom mer enn fem år etter kjøpet", () => {
+  it("er ute når første reklamasjon ikke kom innen fem år etter kjøpet", () => {
     const i = hent(4);
     i.bilOgKjop.kjopsdato = "2017-05-31";
     i.feilen.kontakt = "forsokt";
-    i.feilen.forsteReklamasjon = "2022-06-30";
+    i.feilen.reklamertInnenFemAr = false;
     expect(fakta(i).fristUte).toBe(true);
   });
 
@@ -78,7 +78,7 @@ describe("femårsfristen (fkjl § 27)", () => {
     const i = hent(4);
     i.bilOgKjop.kjopsdato = "2017-05-31";
     i.feilen.kontakt = "forsokt";
-    i.feilen.forsteReklamasjon = "2022-05-31";
+    i.feilen.reklamertInnenFemAr = true;
     expect(fakta(i).fristUte).toBe(false);
   });
 });
@@ -121,13 +121,6 @@ describe("beregnFaktorer", () => {
     expect(fakta(i).feilgrupper).toEqual([]);
   });
 
-  it("markerer saker utenfor tjenesten, men ikke «vet ikke»", () => {
-    expect(fakta(hent(2)).utenforTjenesten).toBe("privat_selger");
-    expect(fakta(hent(9)).utenforTjenesten).toBe("ikke_privat_bruk");
-    expect(fakta(hent(1)).utenforTjenesten).toBeNull();
-    expect(fakta(hent(7)).utenforTjenesten).toBeNull();
-  });
-
   it("opplyst feil gir tak på svak for kjøp før 2024, med mindre kjøperen sier at opplysningene var uriktige", () => {
     const gammel = hent(3);
     gammel.bilOgKjop.kjopsdato = "2023-12-31";
@@ -137,9 +130,8 @@ describe("beregnFaktorer", () => {
     const villedet = gammel;
     villedet.feilen.feilOpplysning = "ja_udokumentert";
     expect(fakta(villedet).opplystTakSvak).toBe(false);
-    expect(fakta(villedet).opplystTakMiddels).toBe(true);
     villedet.feilen.feilOpplysning = "ja_dokumentert";
-    expect(fakta(villedet)).toMatchObject({ opplystTakSvak: false, opplystTakMiddels: false });
+    expect(fakta(villedet)).toMatchObject({ opplystTakSvak: false });
     expect(fakta(hent(1)).opplystTakSvak).toBe(false);
   });
 

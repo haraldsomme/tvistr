@@ -1,5 +1,5 @@
 import type { Faktorer } from "./faktorer";
-import type { Oppdaget } from "./typer";
+import type { Niva, Oppdaget } from "./typer";
 
 // vekt: whether the point speaks for or against the case, or only informs; the page colours it.
 export type Vekt = "for" | "mot" | "noytral";
@@ -40,11 +40,9 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
   }
 
   if (f.rapportSierForKjop === true) {
-    punkter.push({ tekst: "Verkstedrapporten din sier at feilen sannsynligvis var der før kjøpet. Det er ofte avgjørende i lignende saker.", vekt: "for" });
+    punkter.push({ tekst: "Verkstedrapporten din sier at feilen sannsynligvis var der før kjøpet. Det er ofte avgjørende i lignende saker.", vekt: "for", ...fkjl(18) });
   } else if (!f.presumsjon) {
     punkter.push({ tekst: "Du har ikke en rapport som sier at feilen var der før kjøpet. Uten det er det vanskelig å nå fram.", vekt: "mot" });
-  } else if (!f.verkstedrapport && !f.bilder) {
-    punkter.push({ tekst: "Du har foreløpig ikke dokumentert selve feilen. Antakelsen gjelder når feilen oppsto, ikke at den finnes.", vekt: "mot" });
   }
 
   // Wear the buyer had to expect is named in about 6 of 10 lost dealer decisions, also inside the
@@ -67,8 +65,8 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
     punkter.push({ tekst: "Du ble fortalt om feilen før kjøpet. Det du kjente til da du kjøpte, kan du normalt ikke klage på.", vekt: "mot" });
   } else if (f.opplystEtter2024) {
     punkter.push({
-      tekst: "Du ble fortalt om feilen før kjøpet. Det stenger bare for kravet hvis du ble spesielt opplyst om akkurat denne feilen og uttrykkelig godtok den.",
-      vekt: "mot",
+      tekst: "Du ble fortalt om feilen før kjøpet, men det stenger bare for kravet hvis du ble spesielt opplyst om akkurat denne feilen og uttrykkelig godtok den.",
+      vekt: "for",
       ...fkjl(15),
     });
   } else if (f.feilOpplysningerDokumentert) {
@@ -77,8 +75,6 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
       vekt: "for",
       ...fkjl(16),
     });
-  } else if (f.opplystTakMiddels) {
-    punkter.push({ tekst: "Du mener opplysningene du fikk var misvisende, men kan ikke dokumentere det. Da står påstand mot påstand.", vekt: "mot" });
   }
 
   if (f.kontakt === "forsokt" || f.kontakt === "avvist") {
@@ -89,7 +85,27 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
         ? "For kjøp før 2024 har forhandleren normalt rett til to forsøk. Etter det kan du gå videre til prisavslag eller heving."
         : "Da kan du gå videre til prisavslag eller heving.";
     punkter.push({ tekst: `Forhandleren har ${hendt}. ${videre}`, vekt: "for", ...fkjl(31, "§§ 31 og 32") });
+  } else {
+    punkter.push({ tekst: "Har bilen en mangel, kan du kreve at forhandleren retter den uten kostnad for deg.", vekt: "for", ...fkjl(29, "§§ 29 og 30") });
+  }
+
+  if (!f.fristUte) {
+    punkter.push({ tekst: "Det er under fem år siden du fikk bilen, så den ytterste fristen for å reklamere er ikke ute.", vekt: "for", ...fkjl(27) });
   }
 
   return punkter;
+}
+
+// Rules that hold for every purchase from a dealer; they fill the list when the answers give fewer than three points.
+const GENERELLE: Grunnlag[] = [
+  { tekst: "Et generelt forbehold som «solgt som den er» fritar ikke forhandleren for ansvar for mangler.", vekt: "for", ...fkjl(17) },
+  { tekst: "Forhandleren kan ikke avtale seg bort fra rettighetene loven gir deg.", vekt: "for", ...fkjl(3) },
+];
+export const ANTALL_STYRKER = 3;
+
+// What the page shows: for a good case exactly three points that strengthen it, in the order of
+// byggGrunnlag; for a weak case the points that speak against it.
+export function synligGrunnlag(niva: Niva, punkter: Grunnlag[]): Grunnlag[] {
+  if (niva === "svak") return punkter.filter((p) => p.vekt === "mot");
+  return [...punkter.filter((p) => p.vekt === "for"), ...GENERELLE].slice(0, ANTALL_STYRKER);
 }

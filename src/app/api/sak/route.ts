@@ -1,7 +1,6 @@
 import { opprettSak } from "@/lib/brev/sak";
 import { lesKjoretoy } from "@/lib/brev/utfylling";
 import { ipFra, lagGrense, lesJson } from "@/lib/rategrense";
-import { beregnFaktorer } from "@/lib/vurdering/faktorer";
 import { lesInnsending, tilKlageInput } from "@/lib/vurdering/innsending";
 
 // Every call writes a row.

@@ -1,4 +1,4 @@
-import type { FeilKnapp, Feiltype, KlageInput, Kontakt, Oppdaget } from "./typer";
+import type { FeilKnapp, Feiltype, KlageInput, Kjopsalder, Kontakt, Oppdaget } from "./typer";
 
 // Pure step: turns the form input into the facts the rules and the statistics use.
 
@@ -21,12 +21,12 @@ export const HOY_KM = 200_000;
 export type Reklamasjonsbotte = "rask" | "middels" | "sen";
 
 export type Faktorer = {
-  utenforTjenesten: "ikke_privat_bruk" | "privat_selger" | null;
   // One group per button the buyer picked; a group stands for any of its defect types. «Annet» gives no group.
   feilgrupper: Feiltype[][];
-  verkstedrapport: boolean;
-  bilder: boolean;
-  // null when there is no report.
+  // null = not asked.
+  verkstedrapport: boolean | null;
+  bilder: boolean | null;
+  // null when there is no report, or it is not known whether there is one.
   rapportSierForKjop: boolean | null;
   kontakt: Kontakt;
   oppdaget: Oppdaget;
@@ -55,8 +55,6 @@ export type Faktorer = {
   // The same for a purchase from 2024: being told is not enough, the buyer must have been told
   // specifically and have accepted the deviation expressly and separately (§ 15 (2)).
   opplystEtter2024: boolean;
-  // Defect was disclosed, and the buyer says the information was misleading but cannot show it.
-  opplystTakMiddels: boolean;
   // The buyer says what the ad or the dealer said was wrong.
   feilOpplysninger: boolean;
   // ... and has the ad, contract or messages to show what was said.
@@ -93,6 +91,21 @@ export function leggTilManeder(dato: string, maneder: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+// The purchase date the rules work with: the exact day when it is known, otherwise a day in the
+// middle of the answer given. The middle of «2–5 år» is before 2024 for now, so the six-month
+// presumption applies to it, which is the careful assumption; it follows the calendar from 2029.
+const MIDT_I_KJOPSALDER: Record<Kjopsalder, number> = { under_2: -12, "2_5": -42, over_5: -72 };
+export function kjopsdatoFor(b: { kjopsdato?: string; kjopAlder?: Kjopsalder }, idag: string): string {
+  if (b.kjopsdato) return b.kjopsdato;
+  return leggTilManeder(idag, MIDT_I_KJOPSALDER[b.kjopAlder ?? "under_2"]);
+}
+
+// Which of the three answers an exact purchase day falls under.
+export function kjopsalderFor(kjopsdato: string, idag: string): Kjopsalder {
+  if (idag > leggTilManeder(kjopsdato, ABSOLUTT_FRIST_AR * 12)) return "over_5";
+  return idag > leggTilManeder(kjopsdato, 24) ? "2_5" : "under_2";
+}
+
 export const iDag = () => new Date().toISOString().slice(0, 10);
 
 // A real calendar day written ÅÅÅÅ-MM-DD (so not 31 February).
@@ -106,27 +119,26 @@ export const presumsjonManederFor = (kjopsdato: string): 6 | 24 => (kjopsdato >=
 
 // The purchase date stands in for the delivery date, which the form does not ask for.
 export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
-  const { kvalifisering: k, bilOgKjop: b, feilen: f, bevis } = input;
+  const { bilOgKjop: b, feilen: f, bevis } = input;
 
-  const presumsjonManeder = presumsjonManederFor(b.kjopsdato);
+  const kjopsdato = kjopsdatoFor(b, idag);
+  const presumsjonManeder = presumsjonManederFor(kjopsdato);
   // «Innen 6 måneder» is inside the presumption either way; «6 måneder til 2 år» only for purchases
   // from 2024; «mer enn 2 år» never.
   const presumsjon = f.oppdaget === "innen_6_mnd" || (f.oppdaget === "6_mnd_til_2_ar" && presumsjonManeder === 24);
-  // The complaint date is only asked for when the purchase is over five years old, so a missing
-  // date means there was no need to ask.
-  const fristSlutt = leggTilManeder(b.kjopsdato, ABSOLUTT_FRIST_AR * 12);
-  const fristUte = f.kontakt === "nei" ? idag > fristSlutt : f.forsteReklamasjon !== undefined && f.forsteReklamasjon > fristSlutt;
+  // Whether the first complaint came within five years is only asked when the purchase is over
+  // five years old and the dealer has been contacted; a missing answer means there was no need to ask.
+  const femAarGatt = idag > leggTilManeder(kjopsdato, ABSOLUTT_FRIST_AR * 12);
+  const fristUte = femAarGatt && (f.kontakt === "nei" || f.reklamertInnenFemAr === false);
   const senest = SENEST_OPPDAGET[f.oppdaget];
-  const reklamertForSent = f.kontakt === "nei" && senest !== null && idag > leggTilManeder(b.kjopsdato, senest + RIMELIG_TID_MANEDER);
+  const reklamertForSent = f.kontakt === "nei" && senest !== null && idag > leggTilManeder(kjopsdato, senest + RIMELIG_TID_MANEDER);
   const opplystUtenInnvending = f.opplystForKjop === "ja" && f.feilOpplysning === "nei";
   const feilgrupper = [...new Set(f.typer)].map((t) => KNAPP_TIL_FEILTYPE[t]).filter((g) => g.length > 0);
   const billig = b.kjopesumNok != null && b.kjopesumNok < LAV_KJOPESUM_NOK;
   const langtKjort = b.kmVedKjop != null && b.kmVedKjop > HOY_KM;
 
-  const utenforTjenesten = k.selgerType === "privat" ? "privat_selger" : !k.privatBruk ? "ikke_privat_bruk" : null;
 
   return {
-    utenforTjenesten,
     feilgrupper,
     verkstedrapport: bevis.verkstedrapport,
     bilder: bevis.bilder,
@@ -144,7 +156,6 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
     opplystForKjop: f.opplystForKjop,
     opplystTakSvak: opplystUtenInnvending && presumsjonManeder === 6,
     opplystEtter2024: opplystUtenInnvending && presumsjonManeder === 24,
-    opplystTakMiddels: f.opplystForKjop === "ja" && f.feilOpplysning === "ja_udokumentert",
     feilOpplysninger: f.feilOpplysning !== "nei",
     feilOpplysningerDokumentert: f.feilOpplysning === "ja_dokumentert",
   };

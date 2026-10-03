@@ -5,10 +5,6 @@
     "forventetNiva": "god",
     "merknad": "Forhandler, rask reklamasjon, verkstedrapport og kontrakt. Skal være en av de sterkeste.",
     "input": {
-      "kvalifisering": {
-        "selgerType": "forhandler",
-        "privatBruk": true
-      },
       "bilOgKjop": {
         "regnr": "XX12345",
         "kjoretoy": {
@@ -44,58 +40,11 @@
     }
   },
   {
-    "id": 2,
-    "tittel": "Kjøpt av privatperson",
-    "forventetNiva": "ikke_aktuell",
-    "merknad": "Privatperson som selger faller utenfor tjenesten (kjøpsloven, ikke forbrukerkjøpsloven).",
-    "input": {
-      "kvalifisering": {
-        "selgerType": "privat",
-        "privatBruk": true
-      },
-      "bilOgKjop": {
-        "regnr": "XX23456",
-        "kjoretoy": {
-          "merke": "Toyota",
-          "modell": "Yaris",
-          "arsmodell": 2012,
-          "drivstoff": "bensin"
-        },
-        "forhandler": {
-          "type": "fritekst",
-          "navn": "Privat selger"
-        },
-        "kjopsdato": "2026-05-10",
-        "kjopesumNok": 58000,
-        "kmVedKjop": 143000
-      },
-      "feilen": {
-        "typer": [
-          "girkasse"
-        ],
-        "oppdaget": "innen_6_mnd",
-        "opplystForKjop": "nei",
-        "kontakt": "venter",
-        "utbedringskostnadNok": null,
-        "feilOpplysning": "nei"
-      },
-      "bevis": {
-        "verkstedrapport": false,
-        "rapportSierForKjop": null,
-        "bilder": false
-      }
-    }
-  },
-  {
     "id": 3,
     "tittel": "Girkasse, feilen var opplyst før kjøp",
     "forventetNiva": "god",
     "merknad": "Kjøper ble fortalt om feilen og bilen ble solgt som den er. Kjøpt etter 2024, så opplysningen stenger bare hvis kjøperen uttrykkelig godtok feilen (fkjl § 15 annet ledd).",
     "input": {
-      "kvalifisering": {
-        "selgerType": "forhandler",
-        "privatBruk": true
-      },
       "bilOgKjop": {
         "regnr": "XX34567",
         "kjoretoy": {
@@ -135,10 +84,6 @@
     "forventetNiva": "god",
     "merknad": "Oppdaget innen to år (presumsjon, kjøpt etter 2024), annonsen lovet rustfri bil, og det finnes bilder. At kjøperen ikke har reklamert ennå teller ikke mot: brevet er reklamasjonen.",
     "input": {
-      "kvalifisering": {
-        "selgerType": "forhandler",
-        "privatBruk": true
-      },
       "bilOgKjop": {
         "regnr": "XX45678",
         "kjoretoy": {
@@ -179,10 +124,6 @@
     "forventetNiva": "god",
     "merknad": "Feil opplysning i annonsen (fkjl § 16 b), verkstedrapport, reklamert raskt.",
     "input": {
-      "kvalifisering": {
-        "selgerType": "forhandler",
-        "privatBruk": true
-      },
       "bilOgKjop": {
         "regnr": "XX56789",
         "kjoretoy": {
@@ -223,10 +164,6 @@
     "forventetNiva": "svak",
     "merknad": "Kjøpt før 2024, så presumsjonen var seks måneder; feilen viste seg etter 2,5 år, og det finnes ingen rapport som sier at den var der ved kjøpet.",
     "input": {
-      "kvalifisering": {
-        "selgerType": "forhandler",
-        "privatBruk": true
-      },
       "bilOgKjop": {
         "regnr": "XX67890",
         "kjoretoy": {
@@ -248,7 +185,7 @@
           "bremser"
         ],
         "oppdaget": "over_2_ar",
-        "opplystForKjop": "usikker",
+        "opplystForKjop": "nei",
         "kontakt": "venter",
         "utbedringskostnadNok": 12000,
         "feilOpplysning": "nei"
@@ -266,10 +203,6 @@
     "forventetNiva": "god",
     "merknad": "Selgertype usikker, feil kategori 'annet' — testene må fange km-avvik fra fritekst. Annonse og korrespondanse som bevis.",
     "input": {
-      "kvalifisering": {
-        "selgerType": "vet_ikke",
-        "privatBruk": true
-      },
       "bilOgKjop": {
         "regnr": "XX78901",
         "kjoretoy": {
@@ -309,10 +242,6 @@
     "forventetNiva": "god",
     "merknad": "Forventningene til bilen er lavere ved høy alder/km og lav pris; ellers fornuftig dokumentasjon.",
     "input": {
-      "kvalifisering": {
-        "selgerType": "forhandler",
-        "privatBruk": true
-      },
       "bilOgKjop": {
         "regnr": "XX89012",
         "kjoretoy": {
@@ -348,59 +277,14 @@
     }
   },
   {
-    "id": 9,
-    "tittel": "Kjøpt til bruk i næring",
-    "forventetNiva": "ikke_aktuell",
-    "merknad": "Ikke privat bruk → ikke forbrukerkjøp, faller utenfor Forbrukerklageutvalget.",
-    "input": {
-      "kvalifisering": {
-        "selgerType": "forhandler",
-        "privatBruk": false
-      },
-      "bilOgKjop": {
-        "regnr": "XX90123",
-        "kjoretoy": {
-          "merke": "Mercedes-Benz",
-          "modell": "Vito",
-          "arsmodell": 2018,
-          "drivstoff": "diesel"
-        },
-        "forhandler": {
-          "type": "brreg",
-          "orgnr": "900000005",
-          "navn": "Varebil Test AS"
-        },
-        "kjopsdato": "2026-03-01",
-        "kjopesumNok": 259000,
-        "kmVedKjop": 121000
-      },
-      "feilen": {
-        "typer": [
-          "motor"
-        ],
-        "oppdaget": "innen_6_mnd",
-        "opplystForKjop": "nei",
-        "kontakt": "forsokt",
-        "utbedringskostnadNok": 40000,
-        "feilOpplysning": "nei"
-      },
-      "bevis": {
-        "verkstedrapport": true,
-        "rapportSierForKjop": true,
-        "bilder": false
-      }
-    }
-  },
-  {
     "id": 10,
-    "tittel": "Klimaanlegg uten bevis, usikker på om feilen var opplyst",
-    "forventetNiva": ["svak", "god"],
+    "tittel": "Klimaanlegg uten bevis, feilen ikke opplyst",
+    "forventetNiva": [
+      "svak",
+      "god"
+    ],
     "merknad": "Innenfor presumsjonen, men selve feilen er ikke dokumentert (ingen rapport eller bilder).",
     "input": {
-      "kvalifisering": {
-        "selgerType": "forhandler",
-        "privatBruk": true
-      },
       "bilOgKjop": {
         "regnr": "XX01234",
         "kjoretoy": {
@@ -422,7 +306,7 @@
           "klimaanlegg"
         ],
         "oppdaget": "innen_6_mnd",
-        "opplystForKjop": "usikker",
+        "opplystForKjop": "nei",
         "kontakt": "venter",
         "utbedringskostnadNok": 8000,
         "feilOpplysning": "nei"

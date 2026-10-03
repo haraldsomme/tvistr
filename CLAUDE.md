@@ -2,7 +2,7 @@
 
 ## Hva Tvistr er
 
-Tvistr skal la en bruker fylle ut et fire-stegs skjema om et bruktbilkjøp som gikk galt, og få en vurdering av hvor god klagesak de har før de bestemmer seg for å kjøpe et profesjonelt klagebrev. Vurderingen skal bygge på de cirka 3 600 vedtakene i tabellen `vedtak` (Forbrukerklageutvalget, bruktkjøretøy). Vurderingen trenger bare et utvalg av feltene, men alle feltene i `vedtak` skal beholdes: de er grunnlag for det endelige klagebrevet.
+Tvistr skal la en bruker fylle ut et kort skjema (tre eller fire steg) om et bruktbilkjøp som gikk galt, og få en vurdering av hvor god klagesak de har før de bestemmer seg for å kjøpe et profesjonelt klagebrev. Vurderingen skal bygge på de cirka 3 600 vedtakene i tabellen `vedtak` (Forbrukerklageutvalget, bruktkjøretøy). Vurderingen trenger bare et utvalg av feltene, men alle feltene i `vedtak` skal beholdes: de er grunnlag for det endelige klagebrevet.
 
 ## Tabellen `vedtak`
 
@@ -32,7 +32,7 @@ Inneholder ett rad per vedtak fra Forbrukertvistutvalget/Forbrukerklageutvalget 
 - **Tilgang:** `id` er 128 tilfeldige bit og er eneste adgangskontroll (`/brev/[id]`). Ikke lag lister over saker eller ruter som slår opp på noe annet enn id.
 - **Sletting:** en sak utløper 30 dager etter siste endring. Den slettes når den åpnes etter utløp, av `npm run rydd`, eller når brukeren trykker «Slett saken».
 - **Brevsiden er etter kjøp.** En sak opprettes først når brevet åpnes (senere: etter betaling), og det er ingen vei tilbake til vurderingen derfra. Registreringsnummeret tas i steg 1 i vurderingen (oppslag mot Statens vegvesen), holdes utenfor adressen (bare i skjemaets state og `sessionStorage` i fanen), følger med `POST /api/sak` og er låst til saken: `utfylling.kjoretoy` kan ikke endres med `PATCH`.
-- **Rette svar:** svarene fra vurderingen rettes på brevsiden (kortet «Svarene fra vurderingen», `PUT /api/sak/[id]/svar`, regler i `src/lib/brev/svar.ts`). En rettelse som gjør at fristen er ute lagres med et varsel over brevet; brevet tas aldri bort fra en som har kjøpt det.
+- **Rette svar:** vurderingen spør bare om det som avgjør nivået (hvor lenge siden kjøpet: under 2 år, 2–5 år eller over 5 år; feil; når den viste seg; kontakt med forhandleren, og bare når det betyr noe: opplysninger før kjøp for kjøp før 2024, verkstedrapport utenfor presumsjonen; se `sporOmOpplysning` og `sporOmBevis` i `src/lib/vurdering/innsending.ts`). Eksakt kjøpsdato (hentes fra Statens vegvesen når registeret har den), kjøpesum, kilometerstand, bilder og «skriftlig» fylles ut på brevsiden. Svarene fra vurderingen rettes der (kortet «Svarene fra vurderingen», `PUT /api/sak/[id]/svar`, regler i `src/lib/brev/svar.ts`). En rettelse som gjør at fristen er ute lagres med et varsel over brevet; brevet tas aldri bort fra en som har kjøpt det.
 - **Fil og purring:** `GET /api/sak/[id]/dokument/{brev,purring}.{pdf,docx}` lager filene på serveren fra samme `Brev` som siden viser (`src/lib/brev/eksport.ts`). Plassholdere i hakeparenteser står igjen i filen; siden advarer.
 
 ## Saksmappe (fanen ved siden av brevet)
@@ -50,7 +50,7 @@ Kode i `src/lib/mappe/`, vist i `src/app/brev/mappe/`. Beregnes per forespørsel
 Få tester med vilje: små features skal gå raskt å bygge.
 
 - **Vitest (`npm test`)** dekker bare vurderingsmotoren (`src/lib/vurdering/`: samme input gir forventet vurdering) og brevet (`src/lib/brev/brev.test.ts`, `brev-krav.test.ts`: brevet bygges riktig ut fra input). Ikke skriv enhetstester for andre deler.
-- **Playwright (`npm run test:e2e`)** har én test: `e2e/registreringsflyt.spec.ts`, fra forsiden gjennom de fire stegene og vurderingen til ferdig brev. Oppslag mot Statens vegvesen mockes; `/api/vurder` går mot ekte database.
+- **Playwright (`npm run test:e2e`)** har én test: `e2e/registreringsflyt.spec.ts`, fra forsiden gjennom stegene og vurderingen til ferdig brev. Oppslag mot Statens vegvesen mockes; `/api/vurder` går mot ekte database.
 - **Ikke lag nye tester (Vitest eller Playwright) uten at brukeren ber om det.** Ingen «E2E-tester»-seksjon i planer.
 - Underveis i avanserte features kan Playwright (MCP) brukes til å sjekke UI-et i nettleseren. Det er verktøy for utvikling, ikke tester som sjekkes inn.
 - Rød test: les feilen før noe endres. Skyldes den en bevisst endring, oppdater testen; skyldes den en feil i appen, rett appen. Aldri svekk forventninger eller bruk `skip`/`fixme` for å få grønt.

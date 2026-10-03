@@ -1,23 +1,17 @@
 import { expect, idFra, mockKjoretoy, test } from "./fixtures";
 
-// The one flow test: from the landing page, through the four steps and the assessment, to the finished letter.
+// The one flow test: from the landing page, through the three steps (the evidence step only comes when the defect showed outside the presumption period) and the assessment, to the finished letter.
 // Runs against the real /api/vurder and the database, so it checks the shape of the assessment and
 // not the number of decisions, which changes when `hent` adds more.
 
-// A day last year is always a valid purchase date, inside the presumption period and the five-year deadline.
-const KJOPSDATO = `${new Date().getFullYear() - 1}-03-15`;
-
-test("fra forsiden gjennom de fire stegene og vurderingen til ferdig brev", async ({ page, skjema, brev, sak }) => {
+test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ page, skjema, brev, sak }) => {
   await mockKjoretoy(page);
   await page.goto("/");
   await page.getByRole("link", { name: "Start vurderingen" }).click();
 
   await expect(skjema.tittel("Hvilken bil kjøpte du?")).toBeVisible();
   await expect(skjema.nesteKnapp).toBeDisabled();
-  await skjema.velgKjop(KJOPSDATO);
-  await skjema.kjopesum.fill("250000");
-  await expect(skjema.kjopesum).toHaveValue("250 000");
-  await skjema.kmVedKjop.fill("80000");
+  await skjema.velgKjop("Mindre enn 2 år siden");
   await expect(skjema.nesteKnapp).toBeDisabled();
   await skjema.hentKjoretoy("ZZ 99999");
   await skjema.neste();
@@ -29,18 +23,14 @@ test("fra forsiden gjennom de fire stegene og vurderingen til ferdig brev", asyn
   await skjema.neste();
 
   await expect(skjema.tittel("Hva har forhandleren sagt?")).toBeVisible();
-  await skjema.svar("Ble du fortalt om feilen før kjøpet?", "Nei");
-  await skjema.svar("Ble du feilaktig informert av selger eller annonse?", "Nei");
+  // The purchase is less than two years ago, so what the buyer was told does not decide anything and is not asked.
+  await expect(skjema.sporsmal("Ble du fortalt om feilen før kjøpet?")).toBeHidden();
   await expect(skjema.sporsmal("Hva har skjedd siden?")).toBeHidden();
   await skjema.svar("Har du tatt opp feilen med forhandleren?", "Ja");
   await expect(skjema.nesteKnapp).toBeDisabled();
   await skjema.svar("Hva har skjedd siden?", "Forhandleren avviste");
-  await skjema.neste();
-
-  await expect(skjema.tittel("Hvilke bevis har du?")).toBeVisible();
-  await skjema.svar("Har du en verksted- eller tilstandsrapport?", "Ja");
-  await expect(skjema.nesteKnapp).toBeDisabled();
-  await skjema.svar("Sier rapporten at feilen sannsynligvis var til stede før kjøpet?", "Ja");
+  // Inside the presumption period the evidence does not decide the level, so the last step is this one.
+  await expect(skjema.nesteKnapp).toHaveText("Se vurderingen →");
 
   // Hold the answer back so the waiting page is certain to be on screen when we look for it.
   let slipp = () => {};
@@ -54,11 +44,11 @@ test("fra forsiden gjennom de fire stegene og vurderingen til ferdig brev", asyn
   slipp();
 
   const vurdering = async () => {
-    await expect(page.getByText("Sterk sak", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).not.toBeEmpty();
-    const grunnlag = page.getByRole("region", { name: "Dette bygger vurderingen på" });
-    await expect(grunnlag).toContainText(/\d+ (lignende )?vedtak/);
-    await expect(grunnlag.getByRole("link", { name: /^Forbrukerklageutvalget, sak / })).toBeVisible();
+    await expect(page.getByText(/Vi har sjekket saken din opp mot \d+ (lignende )?vedtak/)).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Forbrukerklageutvalget, sak / })).toBeVisible();
+    const grunnlag = page.getByRole("region", { name: "Dette styrker saken din" });
+    await expect(grunnlag.getByRole("listitem")).toHaveCount(3);
     await expect(grunnlag.getByRole("link", { name: "forbrukerkjøpsloven § 18" })).toHaveAttribute("href", /lovdata\.no/);
     await expect(page.getByRole("heading", { name: "Få reklamasjonsbrevet" })).toBeVisible();
     // Before paying, the car the letter is for is shown, and cannot be changed there.

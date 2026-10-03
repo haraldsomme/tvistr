@@ -107,7 +107,7 @@ function innvendinger(input: KlageInput, f: Faktorer, u: Utfylling): string[] {
 function kjopetOgFeilen(input: KlageInput, u: Utfylling): string {
   const { kjopsdato, kjopesumNok } = input.bilOgKjop;
   const sum = kjopesumNok != null ? kroner(kjopesumNok) : "[kjøpesum]";
-  const kjopet = `Jeg viser til kjøp av ovennevnte bil fra dere ${norskDato(kjopsdato)} for ${sum}.`;
+  const kjopet = `Jeg viser til kjøp av ovennevnte bil fra dere ${kjopsdato ? norskDato(kjopsdato) : "[kjøpsdato]"} for ${sum}.`;
   if (u.feilen) return `${kjopet} Feilen viste seg første gang ${norskDato(u.feilen.dato)}. ${medPunktum(u.feilen.tekst)}`;
   const feil = [...new Set(input.feilen.typer)].map((t) => FEIL_I_SETNING[t]).filter((t): t is string => t !== null);
   const feilen = feil.length > 0 ? `Bilen har feil ved ${liste(feil)}.` : "Bilen har en feil.";
@@ -218,7 +218,7 @@ const VEDLEGG_NAVN: Record<Vedlegg, string> = {
 export function vedleggFor(input: KlageInput, u: Utfylling): Vedlegg[] {
   if (u.vedlegg) return u.vedlegg;
   const { verkstedrapport, bilder } = input.bevis;
-  return ["kjopekontrakt", ...(verkstedrapport ? (["verkstedrapport"] as const) : bilder ? (["bilder"] as const) : [])];
+  return ["kjopekontrakt", ...(verkstedrapport ? (["verkstedrapport"] as const) : []), ...(bilder ? (["bilder"] as const) : [])];
 }
 
 // The letter from the answers of the assessment and what the buyer has filled in on the letter

@@ -68,12 +68,11 @@ describe("eksempelsaker", () => {
     expect(eksempel(i, "svak")?.setning).toMatch(/Kia Soul/);
   });
 
-  it("«Annet» gir et generelt eksempel, og saker som ikke er vurdert gir ingen", () => {
+  it("«Annet» gir et generelt eksempel", () => {
     const i = hent(1);
     i.feilen.typer = ["annet"];
     expect(eksempel(i)).toMatchObject({ utfall: "vunnet", treff: "generell" });
     expect(eksempel(i, "svak")).toMatchObject({ utfall: "tapt", treff: "generell" });
-    expect(eksempel(i, "ikke_aktuell")).toBeNull();
   });
 
   it("alle vurderte saker får et eksempel med riktig utfall", () => {

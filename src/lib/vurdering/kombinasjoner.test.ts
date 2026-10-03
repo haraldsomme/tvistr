@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { FEILTYPER_KNAPPER, oppdagetMulig, sporOmReklamasjonsdato, tilKlageInput, type Innsending } from "./innsending";
+import { FEILTYPER_KNAPPER, kjopsalderAv, oppdagetMulig, sporOmFemarsfrist, tilKlageInput, type Innsending } from "./innsending";
 import type { Statistikk } from "./statistikk";
 import { FEILOPPLYSNING_VALG, KONTAKT_VALG, OPPDAGET_VALG, type FeilKnapp } from "./typer";
 import { vurder } from "./vurder";
@@ -43,15 +43,15 @@ function lagInnsending(): Innsending {
   const i: Innsending = {
     feiltyper: [],
     // The end of the month, but not after today: the form no longer accepts a purchase in the future.
+    kjopAlder: "",
     kjopsdato: maanedsslutt(ar, maned) > IDAG ? IDAG : maanedsslutt(ar, maned),
     kjopesum: "",
     kmVedKjop: "",
     oppdaget: "",
-    opplystForKjop: velg(["ja", "nei", "usikker"] as const),
+    opplystForKjop: velg(["ja", "nei"] as const),
     feilOpplysning: velg(FEILOPPLYSNING_VALG),
     kontakt: velg(KONTAKT_VALG),
-    reklamasjonManed: "",
-    reklamasjonAr: "",
+    reklamertInnenFemAr: "",
     verkstedrapport: velg(["ja", "nei"] as const),
     rapportSierForKjop: "",
     bilder: "",
@@ -65,14 +65,8 @@ function lagInnsending(): Innsending {
   i.oppdaget = velg(mulige);
   if (i.verkstedrapport === "ja") i.rapportSierForKjop = velg(["ja", "nei"] as const);
   else i.bilder = velg(["ja", "nei"] as const);
-  if (sporOmReklamasjonsdato(i, IDAG)) {
-    // Any month from the purchase month to now, so some are past the five-year deadline and some are not.
-    const fra = ar * 12 + (maned - 1);
-    const til = 2026 * 12 + 9;
-    const m = fra + Math.floor(tilfeldig() * (til - fra + 1));
-    i.reklamasjonAr = String(Math.floor(m / 12));
-    i.reklamasjonManed = String((m % 12) + 1);
-  }
+  i.kjopAlder = kjopsalderAv(i, IDAG);
+  if (sporOmFemarsfrist(i, IDAG)) i.reklamertInnenFemAr = velg(["ja", "nei"] as const);
   // A third are cheap, a third far-driven, so every combination of the two shows up.
   i.kjopesum = String(sjanse(0.33) ? 15_000 + Math.floor(tilfeldig() * 35_000) : 50_000 + Math.floor(tilfeldig() * 450_000));
   i.kmVedKjop = String(sjanse(0.33) ? 200_001 + Math.floor(tilfeldig() * 150_000) : Math.floor(tilfeldig() * 200_001));
@@ -94,15 +88,14 @@ const maanedsslutt = (ar: number, maned: number) => new Date(Date.UTC(ar, maned,
 
 type Forventet = { niva: "god" | "svak"; fristUte: boolean };
 
-function forventet(i: Innsending, s: Statistikk): Forventet {
+function forventet(i: Innsending): Forventet {
   const kjop = i.kjopsdato;
   const kjopAr = Number(kjop.slice(0, 4));
   const kjopManed = Number(kjop.slice(5, 7));
 
-  // Complaining is possible for five years. With no complaint yet it is today that counts; otherwise the first complaint.
+  // Complaining is possible for five years. With no complaint yet it is today that counts; otherwise whether the first complaint came within them.
   const fristSlutt = maanedsslutt(kjopAr + 5, kjopManed);
-  const klaget = i.kontakt !== "nei";
-  const fristUte = !klaget ? IDAG > fristSlutt : i.reklamasjonAr !== "" && maanedsslutt(Number(i.reklamasjonAr), Number(i.reklamasjonManed)) > fristSlutt;
+  const fristUte = IDAG > fristSlutt && (i.kontakt === "nei" || i.reklamertInnenFemAr === "nei");
 
   // Presumption that the defect was there at delivery: six months, two years for purchases from 2024.
   const toAar = kjop >= "2024-01-01";
@@ -154,7 +147,7 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
     for (const f of FEILTYPER_KNAPPER) expect(innsendinger.filter((i) => i.feiltyper.includes(f)).length, f).toBeGreaterThan(150);
     for (const o of OPPDAGET_VALG) expect(innsendinger.filter((i) => i.oppdaget === o).length, o).toBeGreaterThan(100);
     for (const k of KONTAKT_VALG) expect(innsendinger.filter((i) => i.kontakt === k).length, k).toBeGreaterThan(150);
-    expect(innsendinger.filter((i) => i.reklamasjonAr !== "").length).toBeGreaterThan(50);
+    expect(innsendinger.filter((i) => i.reklamertInnenFemAr !== "").length).toBeGreaterThan(50);
     expect(new Set(innsendinger.map((i) => JSON.stringify(i))).size).toBeGreaterThan(950);
   });
 
@@ -165,7 +158,7 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
 
   it("gir forventet vurdering og et eksempelvedtak i alle fire statistikkscenarier", async () => {
     const avvik: string[] = [];
-    const teller = { god: 0, svak: 0, ikke_aktuell: 0, lignende: 0, tilnaermet: 0, generell: 0, tapt: 0, vunnet: 0 };
+    const teller = { god: 0, svak: 0, lignende: 0, tilnaermet: 0, generell: 0, tapt: 0, vunnet: 0 };
     const batteriBare: number[] = [];
 
     for (const [n, i] of innsendinger.entries()) {
@@ -175,7 +168,7 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
 
       for (const s of SCENARIER) {
         const v = await vurder(parsed.input, { hentStatistikk: async () => s.stat, idag: IDAG });
-        const f = forventet(i, s.stat);
+        const f = forventet(i);
         const merke = `#${n} ${s.navn} ${JSON.stringify(i)}`;
 
         if (v.niva !== f.niva) avvik.push(`${merke}: forventet ${f.niva}, fikk ${v.niva}`);
@@ -242,7 +235,7 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
         }),
       );
       const json = await res.json();
-      const f = forventet(i, SCENARIER[0].stat);
+      const f = forventet(i);
       const merke = `#${n} ${JSON.stringify(i)}`;
       if (res.status !== 200) {
         avvik.push(`${merke}: status ${res.status} ${JSON.stringify(json)}`);

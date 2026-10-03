@@ -431,7 +431,6 @@ const GENERELLE: Record<ValgtEksempel["utfall"], Partial<Record<Reklamasjonsbott
 // lost one for weak cases. Same group and timing first, then the same group with the nearest timing,
 // then a general one.
 export function finnEksempel(f: Faktorer, niva: Niva): ValgtEksempel | null {
-  if (niva === "ikke_aktuell") return null;
   const utfall = niva === "svak" ? "tapt" : "vunnet";
   const celler = utfall === "tapt" ? TAPT : VUNNET;
   const har = new Set(f.feilgrupper.map((g) => GRUPPE_FOR[g[0]]));

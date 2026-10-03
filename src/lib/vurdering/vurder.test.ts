@@ -33,14 +33,7 @@ const dep = (andel = 0.6, spesifikk = true, basis = 0.6): Avhengigheter => ({
   idag: IDAG,
 });
 
-describe("utenfor tjenesten og frister", () => {
-  it("privat selger og næringsbruk er ikke aktuelt, uten å spørre databasen", async () => {
-    const d = dep(0.9);
-    expect((await vurder(hent(2), d)).niva).toBe("ikke_aktuell");
-    expect((await vurder(hent(9), d)).niva).toBe("ikke_aktuell");
-    expect(d.hentStatistikk).not.toHaveBeenCalled();
-  });
-
+describe("frister", () => {
   it("over fem år uten kontakt gir dårlig sak, med forklaring og uten å miste unntakene", async () => {
     const i = hent(4);
     i.bilOgKjop.kjopsdato = "2021-03-31";
@@ -189,13 +182,11 @@ describe("pris og kjørelengde (fkjl § 15)", () => {
 });
 
 describe("udokumentert feil", () => {
-  it("uten rapport og bilder er saken fortsatt god innenfor presumsjonen", async () => {
+  it("uten rapport og bilder er saken fortsatt god innenfor presumsjonen, uten å påstå noe om dokumentasjon", async () => {
     const v = await vurder(hent(10), dep(0.8));
     expect(v.niva).toBe("god");
-    expect(v.begrunnelse).toMatch(/ingen dokumentasjon av feilen/);
-    const medBilder = hent(10);
-    medBilder.bevis.bilder = true;
-    expect((await vurder(medBilder, dep(0.8))).niva).toBe("god");
+    expect(v.begrunnelse).not.toMatch(/dokumentasjon/);
+    expect(v.grunnlag.some((g) => /dokumentert selve feilen/.test(g.tekst))).toBe(false);
   });
 });
 
@@ -236,7 +227,7 @@ describe("tittel og begrunnelse", () => {
   });
 
   it("inneholder ingen tekniske rester", async () => {
-    for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+    for (const id of [1, 3, 4, 5, 6, 7, 8, 10]) {
       const v = await vurder(hent(id), dep());
       expect(`${v.tittel} ${v.begrunnelse}`).not.toMatch(/undefined|NaN|null|XX\d|Testbil/);
     }
@@ -247,19 +238,9 @@ describe("tiltak", () => {
   const titler = async (i: KlageInput) => (await vurder(i, dep())).tiltak.map((t) => t.tittel);
 
   it("foreslår det som mangler, og ingenting når saken er dokumentert", async () => {
-    expect(await titler(hent(10))).toEqual([
-      "Få en verksted- eller tilstandsrapport",
-      "Dokumenter feilen med bilder eller film",
-      "Sjekk annonsen og kontrakten", // case 10 is unsure whether the defect was disclosed
-    ]);
+    expect(await titler(hent(10))).toEqual(["Få en verksted- eller tilstandsrapport", "Dokumenter feilen med bilder eller film"]);
     expect(await titler(hent(8))).toEqual(["Be et uavhengig verksted vurdere når feilen oppsto"]);
     expect(await titler(hent(1))).toEqual([]);
-  });
-
-  it("foreslår å sjekke annonsen og kontrakten når kjøperen er usikker på om feilen ble opplyst", async () => {
-    const i = hent(1);
-    i.feilen.opplystForKjop = "usikker";
-    expect(await titler(i)).toEqual(["Sjekk annonsen og kontrakten"]);
   });
 
   it("foreslår å ta vare på annonsen når opplysningene var uriktige og ikke dokumentert", async () => {

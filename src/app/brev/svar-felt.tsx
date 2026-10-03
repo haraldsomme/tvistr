@@ -3,9 +3,9 @@
 import { useId, useState } from "react";
 import { norskDato } from "@/lib/brev/brev";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
-import { FEILTYPER_KNAPPER, forsteUgyldigeSteg, FRA_AR, JA_NEI, medKjopsdato, oppdagetMulig, OPPLYST_VALG, sporOmReklamasjonsdato, type Innsending } from "@/lib/vurdering/innsending";
-import { FEILOPPLYSNING_VALG, KONTAKT_VALG, OPPDAGET_VALG, type Kontakt, type FeilOpplysning } from "@/lib/vurdering/typer";
-import { FEILTYPE_TEKST, JA_NEI_TEKST, KONTAKTET_TEKST, MANEDER, OPPDAGET_TEKST, OPPLYST_TEKST, SPORSMAL, SVAR_TEKST } from "@/app/vurdering/tekster";
+import { FEILTYPER_KNAPPER, forsteUgyldigeSteg, FRA_AR, JA_NEI, medKjopsalder, medKjopsdato, oppdagetMulig, OPPLYST_VALG, sporOmFemarsfrist, type Innsending } from "@/lib/vurdering/innsending";
+import { FEILOPPLYSNING_VALG, KJOPSALDER_VALG, KONTAKT_VALG, OPPDAGET_VALG, type Kontakt, type FeilOpplysning } from "@/lib/vurdering/typer";
+import { FEILTYPE_TEKST, JA_NEI_TEKST, KJOPSALDER_TEKST, KONTAKTET_TEKST, OPPDAGET_TEKST, OPPLYST_TEKST, SPORSMAL, SVAR_TEKST } from "@/app/vurdering/tekster";
 import { bareSiffer, gruppert, HJELP, kroner, LABEL, Nedtrekk, Sammendrag, Skjema, Tekstfelt } from "./felt";
 
 // The answers from the assessment, as they stand in the letter. The buyer can correct them here after
@@ -27,16 +27,17 @@ const FEILOPPLYSNING_TEKST: Record<FeilOpplysning, string> = {
 // What the form below shows when it is closed: the answers that decide the letter, in a few lines.
 function Oppsummering({ svar, kjoretoy }: { svar: Innsending; kjoretoy: Kjoretoy | undefined }) {
   const bil = kjoretoy && `${kjoretoy.merke} ${kjoretoy.modell}${kjoretoy.ar ? ` (${kjoretoy.ar})` : ""}, ${kjoretoy.regnr}`;
-  const bevis = svar.verkstedrapport === "ja" ? "Verkstedrapport" : svar.bilder === "ja" ? "Bilder eller video av feilen" : "Ingen rapport, bilder eller video";
+  const bevis = [svar.verkstedrapport === "ja" && "verkstedrapport", svar.bilder === "ja" && "bilder eller video av feilen"].filter(Boolean).join(" og ");
   return (
     <Sammendrag
       linjer={[
         bil && `${bil} (kan ikke endres)`,
-        `Kjøpt ${norskDato(svar.kjopsdato)} for ${kroner(Number(svar.kjopesum))}`,
+        `Kjøpt ${svar.kjopsdato ? norskDato(svar.kjopsdato) : svar.kjopAlder ? KJOPSALDER_TEKST[svar.kjopAlder].toLowerCase() : ""}${svar.kjopesum ? ` for ${kroner(Number(svar.kjopesum))}` : ""}${svar.kmVedKjop ? `, ${gruppert(svar.kmVedKjop)} km` : ""}`,
+        (!svar.kjopesum || !svar.kjopsdato) && `${[!svar.kjopsdato && "Kjøpsdatoen", !svar.kjopesum && "kjøpesummen"].filter(Boolean).join(" og ")} mangler. Legg ${!svar.kjopsdato && !svar.kjopesum ? "dem" : "den"} inn under «Endre svar», ellers står det som felt i brevet.`,
         `Feil: ${[...new Set(svar.feiltyper)].map((t) => FEILTYPE_TEKST[t].toLowerCase()).join(", ")}`,
         svar.oppdaget && `Viste seg: ${OPPDAGET_TEKST[svar.oppdaget].toLowerCase()} etter kjøpet`,
         svar.kontakt && `Kontakt med forhandleren: ${svar.kontakt === "nei" ? "ingen ennå" : SVAR_TEKST[svar.kontakt].toLowerCase()}`,
-        bevis,
+        bevis && `Bevis: ${bevis}`,
       ]}
     />
   );
@@ -46,14 +47,21 @@ function Svarskjema({ start, idag, lagre, avbryt }: { start: Innsending; idag: s
   const id = useId();
   const [d, setD] = useState(start);
   const sett = <K extends keyof Innsending>(k: K, v: Innsending[K]) => setD((x) => ({ ...x, [k]: v }));
-  const [iAr, iManed] = idag.split("-").map(Number);
-  const kjopsAr = Number(d.kjopsdato.slice(0, 4));
 
   return (
     <Skjema klar={forsteUgyldigeSteg(d, idag) === null} send={() => lagre(d)} avbryt={avbryt}>
       <p className={HJELP}>Brevet bygges av disse svarene og oppdateres når du lagrer. Bilen kan ikke byttes etter kjøpet.</p>
       <Tekstfelt label={SPORSMAL.kjopsdato} type="date" min={`${FRA_AR}-01-01`} max={idag} value={d.kjopsdato} onChange={(e) => setD((x) => medKjopsdato(x, e.target.value, idag))} />
+      <Nedtrekk label={SPORSMAL.kjopAlder} value={d.kjopAlder} onChange={(e) => setD((x) => medKjopsalder(x, e.target.value as Innsending["kjopAlder"], idag))}>
+        <option value="">Velg</option>
+        {KJOPSALDER_VALG.map((v) => (
+          <option key={v} value={v}>
+            {KJOPSALDER_TEKST[v]}
+          </option>
+        ))}
+      </Nedtrekk>
       <Tekstfelt label={SPORSMAL.kjopesum} inputMode="numeric" autoComplete="off" placeholder="Kroner" value={gruppert(d.kjopesum)} onChange={(e) => sett("kjopesum", bareSiffer(e.target.value))} />
+      <Tekstfelt label={SPORSMAL.kmVedKjop} inputMode="numeric" autoComplete="off" placeholder="Kilometer" value={gruppert(d.kmVedKjop)} onChange={(e) => sett("kmVedKjop", bareSiffer(e.target.value))} />
       <div role="group" aria-labelledby={`${id}-feiltype`} className="flex flex-col gap-1.5">
         <span id={`${id}-feiltype`} className={LABEL}>
           {SPORSMAL.feiltype}
@@ -104,30 +112,15 @@ function Svarskjema({ start, idag, lagre, avbryt }: { start: Innsending; idag: s
           </option>
         ))}
       </Nedtrekk>
-      {sporOmReklamasjonsdato(d, idag) && (
-        <div role="group" aria-labelledby={`${id}-reklamert`} className="flex flex-col gap-1.5">
-          <span id={`${id}-reklamert`} className={LABEL}>
-            {SPORSMAL.reklamert}
-          </span>
-          <div className="grid grid-cols-2 gap-2">
-            <Nedtrekk label="År reklamert" value={d.reklamasjonAr} onChange={(e) => sett("reklamasjonAr", e.target.value)}>
-              <option value="">År</option>
-              {Array.from({ length: iAr - kjopsAr + 1 }, (_, n) => String(kjopsAr + n)).map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </Nedtrekk>
-            <Nedtrekk label="Måned reklamert" disabled={!d.reklamasjonAr} value={d.reklamasjonManed} onChange={(e) => sett("reklamasjonManed", e.target.value)}>
-              <option value="">Måned</option>
-              {MANEDER.slice(0, d.reklamasjonAr === String(iAr) ? iManed : 12).map((m, n) => (
-                <option key={m} value={String(n + 1)}>
-                  {m}
-                </option>
-              ))}
-            </Nedtrekk>
-          </div>
-        </div>
+      {sporOmFemarsfrist(d, idag) && (
+        <Nedtrekk label={SPORSMAL.reklamert} value={d.reklamertInnenFemAr} onChange={(e) => sett("reklamertInnenFemAr", e.target.value as Innsending["reklamertInnenFemAr"])}>
+          <option value="">Velg</option>
+          {JA_NEI.map((v) => (
+            <option key={v} value={v}>
+              {JA_NEI_TEKST[v]}
+            </option>
+          ))}
+        </Nedtrekk>
       )}
       <Nedtrekk label={SPORSMAL.rapport} value={d.verkstedrapport} onChange={(e) => sett("verkstedrapport", e.target.value as Innsending["verkstedrapport"])}>
         <option value="">Velg</option>
@@ -147,16 +140,14 @@ function Svarskjema({ start, idag, lagre, avbryt }: { start: Innsending; idag: s
           ))}
         </Nedtrekk>
       )}
-      {d.verkstedrapport === "nei" && (
-        <Nedtrekk label={SPORSMAL.bilder} value={d.bilder} onChange={(e) => sett("bilder", e.target.value as Innsending["bilder"])}>
-          <option value="">Velg</option>
-          {JA_NEI.map((v) => (
-            <option key={v} value={v}>
-              {JA_NEI_TEKST[v]}
-            </option>
-          ))}
-        </Nedtrekk>
-      )}
+      <Nedtrekk label={SPORSMAL.bilder} value={d.bilder} onChange={(e) => sett("bilder", e.target.value as Innsending["bilder"])}>
+        <option value="">Velg</option>
+        {JA_NEI.map((v) => (
+          <option key={v} value={v}>
+            {JA_NEI_TEKST[v]}
+          </option>
+        ))}
+      </Nedtrekk>
     </Skjema>
   );
 }
@@ -164,7 +155,8 @@ function Svarskjema({ start, idag, lagre, avbryt }: { start: Innsending; idag: s
 // `tvinget` is the message when the answers no longer give a letter (a deadline that has begun to
 // matter since they were saved): the form is then open and cannot be cancelled.
 export function SvarKort({ svar, kjoretoy, idag, tvinget, lagre }: { svar: Innsending; kjoretoy: Kjoretoy | undefined; idag: string; tvinget: string | null; lagre: (svar: Innsending) => Promise<boolean> }) {
-  const [apen, setApen] = useState(false);
+  // Without the price the letter has a gap in its first sentence, so the form is open from the start.
+  const [apen, setApen] = useState(!svar.kjopesum || !svar.kjopsdato);
   const tittelId = useId();
   const redigerer = apen || tvinget !== null;
   return (

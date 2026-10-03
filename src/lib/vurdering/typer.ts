@@ -40,14 +40,18 @@ export type Oppdaget = (typeof OPPDAGET_VALG)[number];
 export const FEILOPPLYSNING_VALG = ["nei", "ja_dokumentert", "ja_udokumentert"] as const;
 export type FeilOpplysning = (typeof FEILOPPLYSNING_VALG)[number];
 
+// How long ago the car was bought. The assessment asks for this instead of the exact day: it is
+// what the rules turn on (the five-year deadline, and the presumption period, which is two years for
+// purchases from 2024). The exact day is asked for on the letter page.
+export const KJOPSALDER_VALG = ["under_2", "2_5", "over_5"] as const;
+export type Kjopsalder = (typeof KJOPSALDER_VALG)[number];
+
 export type KlageInput = {
-  kvalifisering: {
-    selgerType: "forhandler" | "privat" | "vet_ikke";
-    privatBruk: boolean;
-  };
   bilOgKjop: {
-    // The form asks for month and year only, and sends the last day of that month.
-    kjopsdato: string;
+    // The exact day, when it is known (from the registry or the letter page). ÅÅÅÅ-MM-DD.
+    kjopsdato?: string;
+    // How long ago it was. Required without `kjopsdato`; with it, the day decides.
+    kjopAlder?: Kjopsalder;
     kjopesumNok?: number | null;
     regnr?: string;
     kjoretoy?: { merke: string; modell: string; arsmodell: number; drivstoff: Drivstoff } | null;
@@ -57,24 +61,27 @@ export type KlageInput = {
   feilen: {
     typer: FeilKnapp[];
     oppdaget: Oppdaget;
-    opplystForKjop: "ja" | "nei" | "usikker";
+    // Only asked for purchases before 2024 (the only place it decides the level); null = not asked.
+    opplystForKjop: "ja" | "nei" | null;
     feilOpplysning: FeilOpplysning;
     kontakt: Kontakt;
-    // When the buyer first complained to the dealer (last day of the month). Only asked when the
-    // purchase is more than five years old and the dealer has been contacted; decides the § 27 deadline.
-    forsteReklamasjon?: string;
+    // Did the buyer first complain to the dealer within five years of the purchase? Only asked when
+    // the purchase is more than five years old and the dealer has been contacted; decides the § 27 deadline.
+    reklamertInnenFemAr?: boolean;
     utbedringskostnadNok?: number | null;
   };
+  // Only asked when the defect showed outside the presumption period, where the report decides the
+  // level. null = not asked; the buyer can answer on the letter page.
   bevis: {
-    verkstedrapport: boolean;
+    verkstedrapport: boolean | null;
     // Only asked when a report exists: does it say the defect was probably there before purchase?
     rapportSierForKjop: boolean | null;
-    // Only asked when there is no report.
-    bilder: boolean;
+    // Not asked in the assessment; answered on the letter page.
+    bilder: boolean | null;
   };
 };
 
-export type Niva = "god" | "svak" | "ikke_aktuell";
+export type Niva = "god" | "svak";
 
 export type TestKlage = {
   id: number;

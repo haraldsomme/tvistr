@@ -1,11 +1,12 @@
-import { KONTAKT_VALG, type Kontakt, type Oppdaget } from "@/lib/vurdering/typer";
+import { KONTAKT_VALG, type Kjopsalder, type Kontakt, type Oppdaget } from "@/lib/vurdering/typer";
 import { FEILTYPER_KNAPPER } from "@/lib/vurdering/innsending";
 
 // The wording of the questions and the answers in the assessment. The letter page lets the buyer
 // correct the answers, and asks with the same words.
 
 export const SPORSMAL = {
-  kjopsdato: "Når kjøpte du bilen?",
+  kjopAlder: "Når kjøpte du bilen?",
+  kjopsdato: "Kjøpsdato",
   kjopesum: "Hva kostet bilen?",
   kmVedKjop: "Kilometerstand ved kjøpet",
   feiltype: "Hva gjelder feilen?",
@@ -15,11 +16,17 @@ export const SPORSMAL = {
   dokumentert: "Har du det skriftlig?",
   kontakt: "Har du tatt opp feilen med forhandleren?",
   kontaktSvar: "Hva har skjedd siden?",
-  reklamert: "Når tok du første gang opp feilen med forhandleren?",
+  reklamert: "Tok du opp feilen med forhandleren innen fem år etter kjøpet?",
   rapport: "Har du en verksted- eller tilstandsrapport?",
   rapportSier: "Sier rapporten at feilen sannsynligvis var til stede før kjøpet?",
   bilder: "Har du bilder eller video av feilen?",
 } as const;
+
+export const KJOPSALDER_TEKST: Record<Kjopsalder, string> = {
+  under_2: "Mindre enn 2 år siden",
+  "2_5": "2–5 år siden",
+  over_5: "Mer enn 5 år siden",
+};
 
 export const FEILTYPE_TEKST: Record<(typeof FEILTYPER_KNAPPER)[number], string> = {
   motor: "Motor",
@@ -35,8 +42,8 @@ export const FEILTYPE_TEKST: Record<(typeof FEILTYPER_KNAPPER)[number], string> 
   skade: "Kollisjonsskade",
   annet: "Annet",
 };
-export const OPPLYST_TEKST = { ja: "Ja", nei: "Nei", usikker: "Usikker" } as const;
-export const KONTAKTET_TEKST = { nei: "Nei, ikke ennå", ja: "Ja" } as const;
+export const OPPLYST_TEKST = { ja: "Ja", nei: "Nei" } as const;
+export const KONTAKTET_TEKST = { nei: "Nei", ja: "Ja" } as const;
 // The follow-up when the dealer has been contacted.
 export const SVAR_VALG = KONTAKT_VALG.filter((k): k is Exclude<Kontakt, "nei"> => k !== "nei");
 export const SVAR_TEKST: Record<Exclude<Kontakt, "nei">, string> = {

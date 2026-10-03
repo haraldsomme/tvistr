@@ -4,7 +4,6 @@ import { byggBrev, type LignendeRef } from "./brev";
 
 const IDAG = "2026-10-02";
 const klage = (feilen: Partial<KlageInput["feilen"]> = {}, bil: Partial<KlageInput["bilOgKjop"]> = {}): KlageInput => ({
-  kvalifisering: { selgerType: "forhandler", privatBruk: true },
   bilOgKjop: { kjopsdato: "2026-03-12", kjopesumNok: 250000, kmVedKjop: 80000, ...bil },
   feilen: { typer: ["motor"], oppdaget: "innen_6_mnd", opplystForKjop: "nei", feilOpplysning: "nei", kontakt: "avvist", ...feilen },
   bevis: { verkstedrapport: false, rapportSierForKjop: null, bilder: true },

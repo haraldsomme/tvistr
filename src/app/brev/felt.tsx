@@ -128,7 +128,7 @@ export function FeilenFelt({ sakId, input, idag, verdi, aktiv, lagre, avbryt }: 
     return <Sammendrag linjer={[`Viste seg ${norskDato(verdi.dato)}`, verdi.tekst.length > 90 ? `${verdi.tekst.slice(0, 90)}…` : verdi.tekst]} />;
   }
 
-  const min = input.bilOgKjop.kjopsdato;
+  const min = input.bilOgKjop.kjopsdato ?? "";
   const datoOk = dato >= min && dato <= idag;
   const egenOk = egen.trim().length >= BESKRIVELSE_MIN;
   const forslagOk = forslag !== null && forslag.trim().length >= BESKRIVELSE_MIN;
@@ -158,9 +158,9 @@ export function FeilenFelt({ sakId, input, idag, verdi, aktiv, lagre, avbryt }: 
     <div className="flex flex-col gap-3">
       <Tekstfelt
         label="Når viste feilen seg første gang?"
-        hjelp={`Tidligst ${norskDato(min)}, den dagen du kjøpte bilen, og senest i dag.`}
+        hjelp={min ? `Tidligst ${norskDato(min)}, den dagen du kjøpte bilen, og senest i dag.` : "Senest i dag."}
         type="date"
-        min={min}
+        min={min || undefined}
         max={idag}
         value={dato}
         onChange={(e) => setDato(e.target.value)}
@@ -266,15 +266,15 @@ export function ReklamasjonFelt({ input, idag, verdi, aktiv, lagre, avbryt }: Fe
     if (!verdi) return null;
     return <Sammendrag linjer={[`${norskDato(verdi.dato)} · ${MATE_TEKST[verdi.mate].toLowerCase()}`, verdi.forsok ? `${verdi.forsok} rettingsforsøk` : null]} />;
   }
-  const min = input.bilOgKjop.kjopsdato;
+  const min = input.bilOgKjop.kjopsdato ?? "";
   const klar = dato >= min && dato <= idag && mate !== "" && (!forsokt || forsok !== "");
   return (
     <Skjema klar={klar} send={() => lagre({ reklamasjon: { dato, mate: mate as Reklamasjon["mate"], ...(forsokt && { forsok: Number(forsok) }) } })} avbryt={avbryt}>
       <Tekstfelt
         label="Når tok du opp feilen første gang?"
-        hjelp={`Tidligst ${norskDato(min)}, den dagen du kjøpte bilen, og senest i dag.`}
+        hjelp={min ? `Tidligst ${norskDato(min)}, den dagen du kjøpte bilen, og senest i dag.` : "Senest i dag."}
         type="date"
-        min={min}
+        min={min || undefined}
         max={idag}
         value={dato}
         onChange={(e) => setDato(e.target.value)}

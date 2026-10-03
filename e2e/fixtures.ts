@@ -9,7 +9,7 @@ export async function mockKjoretoy(page: Page, eierFra: string | null = null) {
   await page.route("**/api/kjoretoy?*", (route) => route.fulfill({ json: { kjoretoy: KJORETOY, eierFra } }));
 }
 
-// The four-step form on /vurdering, addressed the way a user reads it: by question and answer text.
+// The form on /vurdering, addressed the way a user reads it: by question and answer text.
 export class Skjema {
   constructor(private readonly page: Page) {}
 
@@ -19,18 +19,6 @@ export class Skjema {
 
   get nesteKnapp() {
     return this.page.getByRole("button", { name: /^(Neste:|Se vurderingen)/ });
-  }
-
-  get kjopsdato() {
-    return this.page.getByLabel("Når kjøpte du bilen?");
-  }
-
-  get kjopesum() {
-    return this.page.getByLabel("Hva kostet bilen?");
-  }
-
-  get kmVedKjop() {
-    return this.page.getByLabel("Kilometerstand ved kjøpet");
   }
 
   // The vehicle is the first thing the assessment asks for.
@@ -60,9 +48,9 @@ export class Skjema {
     return this.page.getByRole("radiogroup", { name: tekst });
   }
 
-  // The date picker takes the date as ÅÅÅÅ-MM-DD.
-  async velgKjop(dato: string) {
-    await this.kjopsdato.fill(dato);
+  // How long ago the car was bought: «Mindre enn 2 år siden», «2–5 år siden» or «Mer enn 5 år siden».
+  async velgKjop(alder: string) {
+    await this.svar("Når kjøpte du bilen?", alder);
   }
 
   async velgFeiltype(navn: string) {

@@ -22,7 +22,6 @@ export type Vurdering = {
   // Kept for tests and the script; not shown to the user.
   faktorer: Faktorer;
   statistikk: Statistikk | null;
-  poeng: number;
 };
 
 export type Avhengigheter = {
@@ -30,40 +29,8 @@ export type Avhengigheter = {
   idag?: string;
 };
 
-// The level is a score card. The decisions show that cases are won or lost on the burden of proof
-// (whether the defect was there at delivery), so that carries the most weight. The share of
-// similar decisions is background: across defect types it only ranges from about 55 to 72 %, and
-// it only counts when the interval lies clearly above or below the share for all dealer decisions
-// with the same timing. Measured that way it says something about the defect, not about the timing
-// (which the presumption already counts), the size of the sample or how old the decisions are.
-export const POENG = {
-  presumsjon: 2,
-  rapportUtenforPresumsjon: 2,
-  rapportInnenforPresumsjon: 1,
-  ingenStotteUtenforPresumsjon: -1,
-  rettingForsokt: 2, // 89 % medhold when repair attempts were a topic, against 58–66 % otherwise, whatever the timing
-  feilOpplysninger: 1, // 70 % medhold with feil_opplysninger as the basis
-  statistikk: 1,
-} as const;
-export const STERK_FRA = 3;
-export const MIDDELS_FRA = 1;
-
 function ikkeAktuell(f: Faktorer, tittel: string, begrunnelse: string, grunnlag: Grunnlag[] = []): Vurdering {
-  return { niva: "ikke_aktuell", tittel, begrunnelse, grunnlag, eksempel: null, tiltak: [], faktorer: f, statistikk: null, poeng: 0 };
-}
-
-function poengFor(f: Faktorer, s: Statistikk | null): number {
-  let poeng = 0;
-  if (s?.spesifikk) poeng += s.lav > s.basis ? POENG.statistikk : s.hoy < s.basis ? -POENG.statistikk : 0;
-  if (f.presumsjon) {
-    poeng += POENG.presumsjon;
-    if (f.rapportSierForKjop === true) poeng += POENG.rapportInnenforPresumsjon;
-  } else {
-    poeng += f.rapportSierForKjop === true ? POENG.rapportUtenforPresumsjon : POENG.ingenStotteUtenforPresumsjon;
-  }
-  if (f.kontakt === "forsokt") poeng += POENG.rettingForsokt;
-  if (f.feilOpplysningerDokumentert) poeng += POENG.feilOpplysninger;
-  return poeng;
+  return { niva: "ikke_aktuell", tittel, begrunnelse, grunnlag, eksempel: null, tiltak: [], faktorer: f, statistikk: null };
 }
 
 // The dealer may try to repair first (fkjl § 29); once they have tried or refused, the buyer can
@@ -72,7 +39,7 @@ function poengFor(f: Faktorer, s: Statistikk | null): number {
 function tittelFor(niva: Niva, f: Faktorer): string {
   if (niva === "svak") return "Det blir vanskelig å nå fram med et krav slik saken står nå.";
   const krav = f.kontakt === "forsokt" || f.kontakt === "avvist" ? "prisavslag eller heving" : "at forhandleren retter feilen";
-  return niva === "sterk" ? `Du har etter alt å dømme krav på ${krav}.` : `Du kan ha krav på ${krav}.`;
+  return `Du har etter alt å dømme krav på ${krav}.`;
 }
 
 // The facts that decided the level, as one sentence: timing, what was said, the dealer, evidence.
@@ -100,6 +67,12 @@ function begrunnelseFor(f: Faktorer): string {
   return `${ledd.slice(0, -1).join(", ")}, og ${ledd[ledd.length - 1]}.`;
 }
 
+const FRISTUTE: Grunnlag = {
+  tekst: "Reklamasjon må senest skje fem år etter at du fikk bilen. Unntak gjelder hvis forhandleren har gitt en garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt.",
+  vekt: "mot",
+  ...fkjl(27),
+};
+
 export function vurderFraFaktorer(f: Faktorer, s: Statistikk | null): Vurdering {
   if (f.utenforTjenesten === "privat_selger") {
     return ikkeAktuell(f, "Vi kan ikke vurdere kjøp fra en privatperson.", "Slike kjøp følger kjøpsloven og behandles ikke på samme måte som kjøp fra forhandler.");
@@ -107,34 +80,26 @@ export function vurderFraFaktorer(f: Faktorer, s: Statistikk | null): Vurdering 
   if (f.utenforTjenesten === "ikke_privat_bruk") {
     return ikkeAktuell(f, "Vi kan bare vurdere kjøp til privat bruk.", "Forbrukerkjøpsloven gjelder ikke når bilen er kjøpt til bruk i næring.");
   }
-  if (f.fristUte) {
-    return ikkeAktuell(f, "Fristen for å klage er dessverre ute.", "Det har gått mer enn fem år siden kjøpet, og etter forbrukerkjøpsloven må du reklamere innen fem år.", [
-      {
-        tekst: "Reklamasjon må senest skje fem år etter at du fikk bilen. Unntak gjelder hvis forhandleren har gitt en garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt.",
-        vekt: "mot",
-        ...fkjl(27),
-      },
-    ]);
-  }
-
-  const poeng = poengFor(f, s);
-  let niva: Niva = poeng >= STERK_FRA ? "sterk" : poeng >= MIDDELS_FRA ? "middels" : "svak";
-
-  // Caps: facts that limit the case whatever else speaks for it.
+  // The level is a short list of reasons for a weak case; everything else is a good case. The
+  // decisions show that cases are won or lost on the burden of proof (was the defect there at
+  // delivery?). Inside the presumption the dealer has that burden. Outside it the buyer has, which
+  // takes a report that points back to before the purchase, or a failed repair attempt (89 % medhold
+  // when repair attempts were a topic, against 58–66 % otherwise). No contact with the dealer yet
+  // does not count against the case: the letter is how the buyer asks for repair. The share of
+  // similar decisions is shown, but does not decide the level.
+  let niva: Niva = "god";
+  if (!f.presumsjon && f.rapportSierForKjop !== true && f.kontakt !== "forsokt") niva = "svak";
+  // Told about the defect and made no objection, for purchases before 2024.
   if (f.opplystTakSvak) niva = "svak";
-  // Purchases from 2024: the dealer must show that the buyer expressly accepted the deviation.
-  if (f.opplystEtter2024 && niva === "sterk") niva = "middels";
-  // A cheap or far-driven car: the dealer can argue that the defect is wear the buyer had to expect.
-  if (niva === "sterk" && f.lavForventning && f.slitasjeAktuelt) niva = "middels";
-  // Word against word: a claim of misleading information that cannot be shown does not lift the case.
-  if (f.opplystTakMiddels && niva === "sterk") niva = "middels";
-  // Inside the presumption period a silent report still gives the dealer something to argue with.
-  if (niva === "sterk" && f.presumsjon && f.rapportSierForKjop === false) niva = "middels";
-  // The presumption covers when the defect arose, not that it exists. Without a report or pictures
-  // the defect itself is undocumented.
-  if (niva === "sterk" && !f.verkstedrapport && !f.bilder) niva = "middels";
+  // Past the five-year limit the dealer can reject the claim as too late, but exceptions exist
+  // (longer guarantee, fraud or gross negligence), so it is a weak case, not a case outside the service.
+  if (f.fristUte) niva = "svak";
 
-  return { niva, tittel: tittelFor(niva, f), begrunnelse: begrunnelseFor(f), grunnlag: byggGrunnlag(f), eksempel: finnEksempel(f, niva), tiltak: foreslaTiltak(f), faktorer: f, statistikk: s, poeng };
+  const grunnlag = byggGrunnlag(f);
+  if (f.fristUte) grunnlag.unshift(FRISTUTE);
+  const begrunnelse = f.fristUte ? `Det har gått mer enn fem år siden kjøpet. ${begrunnelseFor(f)}` : begrunnelseFor(f);
+
+  return { niva, tittel: tittelFor(niva, f), begrunnelse, grunnlag, eksempel: finnEksempel(f, niva), tiltak: foreslaTiltak(f), faktorer: f, statistikk: s };
 }
 
 export async function vurder(input: KlageInput, dep: Avhengigheter): Promise<Vurdering> {

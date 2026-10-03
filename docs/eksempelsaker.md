@@ -2,7 +2,7 @@
 
 Vurderingssiden viser alltid én sak fra Forbrukerklageutvalget når saken er vurdert. Koden ligger i `src/lib/vurdering/eksempler.ts`.
 
-# Vunnede saker (vises ved sterk og middels sak)
+# Vunnede saker (vises ved god sak)
 
 Én forhåndsvalgt sak per kombinasjon av feilgruppe og tid fra kjøp til klage. 25 av 30 kombinasjoner har en sak; fem står tomme fordi ingen kandidat holdt.
 

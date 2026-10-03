@@ -59,10 +59,10 @@ application behavior.
    </example-generation>
 
 # Project rules (Tvistr)
-- Follow «E2E-testing med Playwright» in `CLAUDE.md`.
+- Follow «Tester» in `CLAUDE.md`.
 - Locate by role and visible text; `data-testid` only as a last resort. Web-first assertions only, never `waitForTimeout` or `networkidle`.
 - Test data is made-up numbers: no names, addresses or registration numbers.
-- Write tests to `e2e/<feature>.spec.ts`. Related scenarios may share a file.
+- Only when the user asks for a test. Write it to `e2e/<feature>.spec.ts`.
 - Import `test` and `expect` from `./fixtures` and use the `skjema` page object; extend it in `e2e/fixtures.ts` instead of repeating locators.
 - Test titles and step comments in Norwegian, matching the plan in `specs/`.
 - Mock `/api/vurder` with `page.route()` unless the plan says the scenario runs against the real backend.

@@ -92,7 +92,7 @@ const SCENARIER: Scenario[] = [
 
 const maanedsslutt = (ar: number, maned: number) => new Date(Date.UTC(ar, maned, 0)).toISOString().slice(0, 10);
 
-type Forventet = { niva: "sterk" | "middels" | "svak" | "ikke_aktuell"; fristUte: boolean };
+type Forventet = { niva: "god" | "svak"; fristUte: boolean };
 
 function forventet(i: Innsending, s: Statistikk): Forventet {
   const kjop = i.kjopsdato;
@@ -103,7 +103,6 @@ function forventet(i: Innsending, s: Statistikk): Forventet {
   const fristSlutt = maanedsslutt(kjopAr + 5, kjopManed);
   const klaget = i.kontakt !== "nei";
   const fristUte = !klaget ? IDAG > fristSlutt : i.reklamasjonAr !== "" && maanedsslutt(Number(i.reklamasjonAr), Number(i.reklamasjonManed)) > fristSlutt;
-  if (fristUte) return { niva: "ikke_aktuell", fristUte };
 
   // Presumption that the defect was there at delivery: six months, two years for purchases from 2024.
   const toAar = kjop >= "2024-01-01";
@@ -111,32 +110,17 @@ function forventet(i: Innsending, s: Statistikk): Forventet {
 
   const rapport = i.verkstedrapport === "ja";
   const rapportSierFor = rapport && i.rapportSierForKjop === "ja";
-  const rapportTiger = rapport && i.rapportSierForKjop === "nei";
-  const harBevis = rapport || i.bilder === "ja";
 
-  let poeng = 0;
-  if (s.spesifikk && s.lav > s.basis) poeng += 1;
-  if (s.spesifikk && s.hoy < s.basis) poeng -= 1;
-  if (presumsjon) poeng += rapportSierFor ? 3 : 2;
-  else poeng += rapportSierFor ? 2 : -1;
-  if (i.kontakt === "forsokt") poeng += 2;
-  if (i.feilOpplysning === "ja_dokumentert") poeng += 1;
-
-  let niva: "sterk" | "middels" | "svak" = poeng >= 3 ? "sterk" : poeng >= 1 ? "middels" : "svak";
+  let niva: "god" | "svak" = !presumsjon && !rapportSierFor && i.kontakt !== "forsokt" ? "svak" : "god";
   // Told about the defect: decisive for purchases before 2024; from 2024 the buyer must also have accepted it expressly.
-  if (i.opplystForKjop === "ja" && i.feilOpplysning === "nei") niva = toAar ? (niva === "sterk" ? "middels" : niva) : "svak";
-  if (i.opplystForKjop === "ja" && i.feilOpplysning === "ja_udokumentert" && niva === "sterk") niva = "middels";
-  if (niva === "sterk" && presumsjon && rapportTiger) niva = "middels";
-  if (niva === "sterk" && !harBevis) niva = "middels";
-  // A cheap or far-driven car is never a strong case when the defect can be put down to wear.
-  const slitasjefeil = i.feiltyper.some((t) => t !== "km_service" && t !== "skade" && t !== "annet") || i.feiltyper.every((t) => t === "annet");
-  if (niva === "sterk" && slitasjefeil && (Number(i.kjopesum) < 50_000 || Number(i.kmVedKjop) > 200_000)) niva = "middels";
+  if (i.opplystForKjop === "ja" && i.feilOpplysning === "nei" && !toAar) niva = "svak";
+  // Past the five-year limit the case is weak, whatever else speaks for it.
+  if (fristUte) niva = "svak";
   return { niva, fristUte };
 }
 
-const TITTEL: Record<"sterk" | "middels" | "svak", RegExp> = {
-  sterk: /^Du har etter alt å dømme krav på (prisavslag eller heving|at forhandleren retter feilen)\.$/,
-  middels: /^Du kan ha krav på (prisavslag eller heving|at forhandleren retter feilen)\.$/,
+const TITTEL: Record<"god" | "svak", RegExp> = {
+  god: /^Du har etter alt å dømme krav på (prisavslag eller heving|at forhandleren retter feilen)\.$/,
   svak: /^Det blir vanskelig å nå fram med et krav slik saken står nå\.$/,
 };
 
@@ -181,7 +165,7 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
 
   it("gir forventet vurdering og et eksempelvedtak i alle fire statistikkscenarier", async () => {
     const avvik: string[] = [];
-    const teller = { sterk: 0, middels: 0, svak: 0, ikke_aktuell: 0, lignende: 0, tilnaermet: 0, generell: 0, tapt: 0, vunnet: 0 };
+    const teller = { god: 0, svak: 0, ikke_aktuell: 0, lignende: 0, tilnaermet: 0, generell: 0, tapt: 0, vunnet: 0 };
     const batteriBare: number[] = [];
 
     for (const [n, i] of innsendinger.entries()) {
@@ -194,14 +178,12 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
         const f = forventet(i, s.stat);
         const merke = `#${n} ${s.navn} ${JSON.stringify(i)}`;
 
-        if (v.niva !== f.niva) avvik.push(`${merke}: forventet ${f.niva}, fikk ${v.niva} (poeng ${v.poeng})`);
+        if (v.niva !== f.niva) avvik.push(`${merke}: forventet ${f.niva}, fikk ${v.niva}`);
         if (s === SCENARIER[0]) teller[v.niva]++;
 
-        if (f.niva === "ikke_aktuell") {
-          if (v.eksempel !== null) avvik.push(`${merke}: frist ute skal ikke ha eksempel`);
-          if (!/Fristen for å klage er dessverre ute/.test(v.tittel)) avvik.push(`${merke}: feil tittel ved frist ute: ${v.tittel}`);
-          if (v.grunnlag.length !== 1 || v.grunnlag[0].paragraf !== "forbrukerkjøpsloven § 27") avvik.push(`${merke}: frist ute mangler henvisning til § 27`);
-          continue;
+        if (f.fristUte) {
+          if (!v.grunnlag.some((g) => g.paragraf === "forbrukerkjøpsloven § 27")) avvik.push(`${merke}: frist ute mangler henvisning til § 27`);
+          if (!/mer enn fem år/.test(v.begrunnelse)) avvik.push(`${merke}: frist ute mangler forklaring`);
         }
 
         if (!TITTEL[f.niva].test(v.tittel)) avvik.push(`${merke}: tittel «${v.tittel}» passer ikke til ${f.niva}`);
@@ -242,16 +224,14 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
     console.info(`Registreringer med bare «Batteri» (og evt. «Annet») som feil, som får generelt eksempel: ${batteriBare.length}`);
     expect(avvik.slice(0, 15)).toEqual([]);
     expect(avvik).toHaveLength(0);
-    expect(teller.sterk).toBeGreaterThan(50);
-    expect(teller.middels).toBeGreaterThan(50);
+    expect(teller.god).toBeGreaterThan(50);
     expect(teller.svak).toBeGreaterThan(50);
-    expect(teller.ikke_aktuell).toBeGreaterThan(10);
     expect(teller.lignende).toBeGreaterThan(300);
     expect(teller.tilnaermet).toBeGreaterThan(0);
     expect(teller.generell).toBeGreaterThan(0);
   });
 
-  it("API-ruten gir samme resultat og lekker ikke poeng eller statistikk", async () => {
+  it("API-ruten gir samme resultat og lekker ikke statistikk", async () => {
     const avvik: string[] = [];
     for (const [n, i] of innsendinger.entries()) {
       const res = await POST(
@@ -269,16 +249,14 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
         continue;
       }
       if (json.niva !== f.niva) avvik.push(`${merke}: forventet ${f.niva}, fikk ${json.niva}`);
-      if (f.niva === "ikke_aktuell") {
-        if (json.eksempel !== null) avvik.push(`${merke}: frist ute skal ikke ha eksempel`);
-      } else if (!json.eksempel?.setning || !json.eksempel?.kildeUrl || !json.eksempel?.saksnummer) {
+      if (!json.eksempel?.setning || !json.eksempel?.kildeUrl || !json.eksempel?.saksnummer) {
         avvik.push(`${merke}: ruten ga ingen eksempelsak`);
       } else if (json.eksempel.utfall !== (f.niva === "svak" ? "tapt" : "vunnet")) {
         avvik.push(`${merke}: feil utfall på eksempelet: ${json.eksempel.utfall}`);
       }
       const nokler = Object.keys(json).sort().join(",");
       if (nokler !== "begrunnelse,eksempel,grunnlag,niva,tiltak,tittel,utvalg") avvik.push(`${merke}: uventede felt i svaret: ${nokler}`);
-      if (f.niva !== "svak" && f.niva !== "ikke_aktuell" && json.tiltak.some((t: { tekst?: string }) => t.tekst !== undefined)) avvik.push(`${merke}: tiltakstekst skal ikke sendes ut gratis`);
+      if (f.niva !== "svak" && json.tiltak.some((t: { tekst?: string }) => t.tekst !== undefined)) avvik.push(`${merke}: tiltakstekst skal ikke sendes ut gratis`);
     }
     expect(avvik.slice(0, 15)).toEqual([]);
   });

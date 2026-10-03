@@ -2,7 +2,7 @@
   {
     "id": 1,
     "tittel": "Motorhavari tre uker etter kjøp, dokumentert",
-    "forventetNiva": "sterk",
+    "forventetNiva": "god",
     "merknad": "Forhandler, rask reklamasjon, verkstedrapport og kontrakt. Skal være en av de sterkeste.",
     "input": {
       "kvalifisering": {
@@ -89,8 +89,8 @@
   {
     "id": 3,
     "tittel": "Girkasse, feilen var opplyst før kjøp",
-    "forventetNiva": "middels",
-    "merknad": "Kjøper ble fortalt om feilen og bilen ble solgt som den er. Kjøpt etter 2024, så opplysningen stenger bare hvis kjøperen uttrykkelig godtok feilen (fkjl § 15 annet ledd): høyst middels.",
+    "forventetNiva": "god",
+    "merknad": "Kjøper ble fortalt om feilen og bilen ble solgt som den er. Kjøpt etter 2024, så opplysningen stenger bare hvis kjøperen uttrykkelig godtok feilen (fkjl § 15 annet ledd).",
     "input": {
       "kvalifisering": {
         "selgerType": "forhandler",
@@ -132,7 +132,7 @@
   {
     "id": 4,
     "tittel": "Rust oppdaget etter 14 måneder, ikke reklamert ennå",
-    "forventetNiva": "sterk",
+    "forventetNiva": "god",
     "merknad": "Oppdaget innen to år (presumsjon, kjøpt etter 2024), annonsen lovet rustfri bil, og det finnes bilder. At kjøperen ikke har reklamert ennå teller ikke mot: brevet er reklamasjonen.",
     "input": {
       "kvalifisering": {
@@ -176,7 +176,7 @@
   {
     "id": 5,
     "tittel": "Elbil-batteri, annonsen lovde nytt batteri",
-    "forventetNiva": "sterk",
+    "forventetNiva": "god",
     "merknad": "Feil opplysning i annonsen (fkjl § 16 b), verkstedrapport, reklamert raskt.",
     "input": {
       "kvalifisering": {
@@ -263,10 +263,7 @@
   {
     "id": 7,
     "tittel": "Mistanke om skrudd kilometerteller",
-    "forventetNiva": [
-      "middels",
-      "sterk"
-    ],
+    "forventetNiva": "god",
     "merknad": "Selgertype usikker, feil kategori 'annet' — testene må fange km-avvik fra fritekst. Annonse og korrespondanse som bevis.",
     "input": {
       "kvalifisering": {
@@ -309,7 +306,7 @@
   {
     "id": 8,
     "tittel": "Motorproblem på gammel bil med høy km og lav pris",
-    "forventetNiva": "middels",
+    "forventetNiva": "god",
     "merknad": "Forventningene til bilen er lavere ved høy alder/km og lav pris; ellers fornuftig dokumentasjon.",
     "input": {
       "kvalifisering": {
@@ -397,11 +394,8 @@
   {
     "id": 10,
     "tittel": "Klimaanlegg uten bevis, usikker på om feilen var opplyst",
-    "forventetNiva": [
-      "svak",
-      "middels"
-    ],
-    "merknad": "Innenfor presumsjonen, men selve feilen er ikke dokumentert (ingen rapport eller bilder), så høyst middels.",
+    "forventetNiva": ["svak", "god"],
+    "merknad": "Innenfor presumsjonen, men selve feilen er ikke dokumentert (ingen rapport eller bilder).",
     "input": {
       "kvalifisering": {
         "selgerType": "forhandler",

@@ -52,9 +52,9 @@ You will:
 professional formatting suitable for sharing with development and QA teams.
 
 # Project rules (Tvistr)
-- Follow «E2E-testing med Playwright» in `CLAUDE.md`.
+- Follow «Tester» in `CLAUDE.md`.
 - Locate by role and visible text; `data-testid` only as a last resort. Web-first assertions only, never `waitForTimeout` or `networkidle`.
 - Test data is made-up numbers: no names, addresses or registration numbers.
-- Save plans as `specs/<feature>.md`, written in Norwegian, with `e2e/seed.spec.ts` as the seed.
+- Only when the user asks. Save plans as `specs/<feature>.md`, written in Norwegian.
 - Explore both desktop and mobile width when the layout differs.
 - Mark which scenarios need the real `/api/vurder` (few) and which should mock it (most).

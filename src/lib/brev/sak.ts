@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { eq, lt } from "drizzle-orm";
+import { eq, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { brevsak } from "@/db/schema";
 import { iDag } from "@/lib/vurdering/faktorer";
@@ -32,18 +32,29 @@ export async function hentSak(id: string): Promise<Sak | null> {
   return { id: rad.id, svar: lesInnsending(rad.svar as unknown as Record<string, unknown>), utfylling: rad.utfylling };
 }
 
-// Applies one save to a case just read with `hentSak`, and pushes the expiry forward.
+// Applies one save to a case just read with `hentSak`, and pushes the expiry forward. The merge is
+// done by the database in one statement, so two saves of different fields at the same time (a tick in
+// the checklist and a chosen decision, say) cannot overwrite each other.
 export async function endreSak(id: string, endring: Endring, sak: Sak): Promise<Utfylling> {
-  const utfylling = medEndring(sak.utfylling, endring);
+  const satt: Record<string, unknown> = {};
+  const fjernet: string[] = [];
+  for (const [felt, verdi] of Object.entries(endring)) {
+    if (verdi === null) fjernet.push(felt);
+    else satt[felt] = verdi;
+  }
   const na = new Date();
-  await db.update(brevsak).set({ utfylling, endret: na, utloper: utloperEtter(na) }).where(eq(brevsak.id, id));
-  return utfylling;
+  const sammenslatt = fjernet.reduce((uttrykk, felt) => sql`(${uttrykk}) - ${felt}::text`, sql`${brevsak.utfylling} || ${JSON.stringify(satt)}::jsonb`);
+  const [rad] = await db.update(brevsak).set({ utfylling: sammenslatt, endret: na, utloper: utloperEtter(na) }).where(eq(brevsak.id, id)).returning({ utfylling: brevsak.utfylling });
+  // The case can have been deleted between the read and the save; the answer then is what the read saw.
+  return rad?.utfylling ?? medEndring(sak.utfylling, endring);
 }
 
 // Counts one more suggestion from the language model for a case just read with `hentSak`.
 export async function tellSprakvask(sak: Sak): Promise<void> {
-  const utfylling = { ...sak.utfylling, sprakvask: (sak.utfylling.sprakvask ?? 0) + 1 };
-  await db.update(brevsak).set({ utfylling }).where(eq(brevsak.id, sak.id));
+  await db
+    .update(brevsak)
+    .set({ utfylling: sql`jsonb_set(${brevsak.utfylling}, '{sprakvask}', to_jsonb(coalesce((${brevsak.utfylling}->>'sprakvask')::int, 0) + 1))` })
+    .where(eq(brevsak.id, sak.id));
 }
 
 // Changed answers from the assessment for a case just read with `hentSak`, and the fill-in that

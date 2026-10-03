@@ -21,7 +21,7 @@ export type Statistikk = {
 
 export type HentStatistikk = (f: Faktorer) => Promise<Statistikk>;
 
-const MIN_UTVALG = 30;
+export const MIN_UTVALG = 30;
 const VUNNET = sql`v.utfall in ('medhold','delvis_medhold')`;
 
 const tekstListe = (verdier: string[]) => sql`ARRAY[${sql.join(verdier.map((v) => sql`${v}`), sql`, `)}]::text[]`;
@@ -38,7 +38,7 @@ function botteSql(f: Faktorer): SQL {
 }
 
 // medBotte: the step matches on timing, so it is compared with all dealer decisions with that timing.
-type Trinn = { beskrivelse: string; betingelse: SQL; spesifikk: boolean; medBotte: boolean };
+export type Trinn = { beskrivelse: string; betingelse: SQL; spesifikk: boolean; medBotte: boolean };
 
 // Dealer cases only, from most to least specific; we use the first step with enough decisions.
 // Each button the buyer picked is a group of defect types, matched with any of them (&&). With

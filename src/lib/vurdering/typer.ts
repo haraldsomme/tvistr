@@ -74,7 +74,7 @@ export type KlageInput = {
   };
 };
 
-export type Niva = "sterk" | "middels" | "svak" | "ikke_aktuell";
+export type Niva = "god" | "svak" | "ikke_aktuell";
 
 export type TestKlage = {
   id: number;

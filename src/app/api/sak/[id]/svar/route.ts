@@ -1,3 +1,4 @@
+import { lignendeFor } from "@/lib/brev/dokument";
 import { hentSak, settSvar } from "@/lib/brev/sak";
 import { lesSvar } from "@/lib/brev/svar";
 import { erSakId } from "@/lib/brev/utfylling";
@@ -22,7 +23,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!sak) return Response.json(FINNES_IKKE, { status: 404 });
     const lest = lesSvar(body);
     if (!lest.ok) return Response.json({ feil: lest.feil }, { status: 400 });
-    return Response.json({ svar: lest.svar, utfylling: await settSvar(sak, lest.svar), fristUte: lest.fristUte });
+    const utfylling = await settSvar(sak, lest.svar);
+    return Response.json({ svar: lest.svar, utfylling, lignende: await lignendeFor({ utfylling }), fristUte: lest.fristUte });
   } catch {
     console.error("lagring av svar feilet");
     return Response.json({ feil: "Vi fikk ikke lagret. Prøv igjen om litt." }, { status: 500 });

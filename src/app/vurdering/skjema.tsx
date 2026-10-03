@@ -1,5 +1,6 @@
 "use client";
 
+import { TID_TIL_VEDTAK } from "@/lib/vurdering/tid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/app/logo";
@@ -183,8 +184,7 @@ function Rullegardin({ label, ...rest }: { label: string } & React.SelectHTMLAtt
 }
 
 const NIVA_VISNING: Record<Niva, { tekst: string; prikk: string; farge: string; bakgrunn: string }> = {
-  sterk: { tekst: "Sterk sak", prikk: "oklch(0.52 0.1 160)", farge: "oklch(0.42 0.1 160)", bakgrunn: "oklch(0.95 0.04 160)" },
-  middels: { tekst: "Middels sterk sak", prikk: "oklch(0.45 0.1 75)", farge: "oklch(0.45 0.1 75)", bakgrunn: "oklch(0.95 0.04 75)" },
+  god: { tekst: "God sak", prikk: "oklch(0.52 0.1 160)", farge: "oklch(0.42 0.1 160)", bakgrunn: "oklch(0.95 0.04 160)" },
   svak: { tekst: "Dårlig sak", prikk: "oklch(0.52 0.12 25)", farge: "oklch(0.42 0.12 25)", bakgrunn: "oklch(0.95 0.04 25)" },
   ikke_aktuell: { tekst: "Ingen sak", prikk: "#8a94a3", farge: "#5b6472", bakgrunn: "#e6e2d8" },
 };
@@ -245,10 +245,6 @@ function Vipps({ tekst, onClick, disabled }: { tekst: string; onClick: () => voi
   );
 }
 
-// From the first complaint to the committee's decision: median 664 days (middle half 514–851) in
-// the 326 dealer decisions from 2023 on that state the complaint date (vedtak.forste_reklamasjon_dato
-// to vedtaksdato, computed 2026-10-01). It was 357 days before 2021. Recompute when `hent` has added more.
-const TID_TIL_VEDTAK = "Saker som ender hos Forbrukerklageutvalget tar nå typisk rundt to år. Et godt brev kan løse saken før det.";
 
 // Payment is not built yet: both buttons open the letter. Payment goes in front of it later.
 const LIGNENDE_SAKER = "Henvisninger til lignende saker som fikk medhold";
@@ -256,7 +252,8 @@ const NESTE_PUNKTER = [
   "Formuleringer etter og henvisninger til lovverk",
   LIGNENDE_SAKER,
   "Frist for svar fra forhandleren",
-  "Hva du gjør hvis forhandleren avviser",
+  "Hva du gjør hvis forhandleren avviser, med svar til vanlige innvendinger og purrebrev",
+  "Saksmappe med tall fra tidligere vedtak: sjanser, beløp og forhandlerens historikk",
   "PDF og redigerbar Word-fil",
 ];
 

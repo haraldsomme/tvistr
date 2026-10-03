@@ -1,36 +1,13 @@
-import { expect, mockKjoretoy, test } from "./fixtures";
+import { expect, idFra, mockKjoretoy, test } from "./fixtures";
 
+// The one flow test: from the landing page, through the four steps and the assessment, to the finished letter.
 // Runs against the real /api/vurder and the database, so it checks the shape of the assessment and
 // not the number of decisions, which changes when `hent` adds more.
 
 // A day last year is always a valid purchase date, inside the presumption period and the five-year deadline.
 const KJOPSDATO = `${new Date().getFullYear() - 1}-03-15`;
 
-test("kjøpsdatoen velges med datovelger og kan ikke ligge i fremtiden", async ({ page, skjema }) => {
-  await mockKjoretoy(page);
-  await page.goto("/vurdering");
-  await skjema.kjopesum.fill("250000");
-  await skjema.kmVedKjop.fill("80000");
-  await expect(skjema.nesteKnapp).toBeDisabled();
-
-  const imorgen = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  await expect(skjema.kjopsdato).toHaveAttribute("type", "date");
-  await skjema.velgKjop(imorgen);
-  await expect(skjema.nesteKnapp).toBeDisabled();
-
-  await skjema.velgKjop(KJOPSDATO);
-  // The car is part of the first step too.
-  await expect(skjema.nesteKnapp).toBeDisabled();
-  await skjema.hentKjoretoy("ZZ 99999");
-  await expect(skjema.nesteKnapp).toBeEnabled();
-});
-
-test("en gammel lenke med kjøpt måned og år åpner skjemaet med siste dag i måneden", async ({ page, skjema }) => {
-  await page.goto(`/vurdering?kjopAr=${new Date().getFullYear() - 1}&kjopManed=2&kjopesum=250000&kmVedKjop=80000&steg=1`);
-  await expect(skjema.kjopsdato).toHaveValue(`${new Date().getFullYear() - 1}-02-28`);
-});
-
-test("fra forsiden gjennom de fire stegene til vurderingen", async ({ page, skjema }) => {
+test("fra forsiden gjennom de fire stegene og vurderingen til ferdig brev", async ({ page, skjema, brev, sak }) => {
   await mockKjoretoy(page);
   await page.goto("/");
   await page.getByRole("link", { name: "Start vurderingen" }).click();
@@ -91,19 +68,9 @@ test("fra forsiden gjennom de fire stegene til vurderingen", async ({ page, skje
   };
   await vurdering();
 
-  // The address is now a link to the assessment itself.
-  const url = new URL(page.url());
-  expect(url.searchParams.has("steg")).toBe(false);
-  expect(url.searchParams.get("kjopsdato")).toBe(KJOPSDATO);
-  // The vehicle is not an answer in the address.
-  expect(decodeURIComponent(url.search).replace(/\s/g, "")).not.toContain("ZZ99999");
-  await page.reload();
-  await vurdering();
-
-  await page.getByRole("button", { name: "← Endre svar" }).click();
-  await expect(skjema.tittel("Hvilken bil kjøpte du?")).toBeVisible();
-  await expect(skjema.kjopsdato).toHaveValue(KJOPSDATO);
-  await expect(skjema.kjopesum).toHaveValue("250 000");
-  // The car stays while the answers are changed.
-  await expect(page.getByRole("status")).toContainText("Testmerke Modell X");
+  await page.getByRole("button", { name: "Betal med vipps" }).click();
+  await expect(page).toHaveURL(/\/brev\/[\w-]{22}$/);
+  sak.rydd(idFra(page.url()));
+  await expect(brev.overskrift).toHaveText("Reklamasjon på mangel – Testmerke Modell X (2019), reg.nr. ZZ 99999");
+  await expect(brev.ark).not.toContainText("[reg.nr.]");
 });

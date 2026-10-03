@@ -45,7 +45,7 @@ Key principles:
 - Never wait for networkidle or use other discouraged or deprecated apis
 
 # Project rules (Tvistr)
-- Follow «E2E-testing med Playwright» in `CLAUDE.md`.
+- Follow «Tester» in `CLAUDE.md`.
 - Locate by role and visible text; `data-testid` only as a last resort. Web-first assertions only, never `waitForTimeout` or `networkidle`.
 - Test data is made-up numbers: no names, addresses or registration numbers.
 - These rules override the workflow above where they differ.

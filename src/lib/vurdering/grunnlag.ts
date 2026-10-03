@@ -89,14 +89,6 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
         ? "For kjøp før 2024 har forhandleren normalt rett til to forsøk. Etter det kan du gå videre til prisavslag eller heving."
         : "Da kan du gå videre til prisavslag eller heving.";
     punkter.push({ tekst: `Forhandleren har ${hendt}. ${videre}`, vekt: "for", ...fkjl(31, "§§ 31 og 32") });
-  } else if (f.reklamertForSent) {
-    punkter.push({
-      tekst: "Du har ikke klaget til forhandleren ennå, og det er en stund siden feilen viste seg. Klag så snart som mulig: du må klage innen rimelig tid etter at du oppdaget feilen.",
-      vekt: "noytral",
-      ...fkjl(27),
-    });
-  } else if (f.kontakt === "nei") {
-    punkter.push({ tekst: "Du har ikke klaget til forhandleren ennå. Du må gjøre det innen rimelig tid etter at du oppdaget feilen.", vekt: "noytral", ...fkjl(27) });
   }
 
   return punkter;

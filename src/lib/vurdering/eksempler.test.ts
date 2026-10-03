@@ -7,7 +7,7 @@ import { OPPDAGET_VALG, type KlageInput, type Niva, type TestKlage } from "./typ
 
 const IDAG = "2026-10-01";
 const hent = (id: number): KlageInput => structuredClone((klager as TestKlage[]).find((k) => k.id === id)!.input);
-const eksempel = (i: KlageInput, niva: Niva = "sterk") => finnEksempel(beregnFaktorer(i, IDAG), niva);
+const eksempel = (i: KlageInput, niva: Niva = "god") => finnEksempel(beregnFaktorer(i, IDAG), niva);
 
 describe("eksempelsaker", () => {
   it("velger saken for feilgruppen og tiden til feilen viste seg", () => {
@@ -36,8 +36,8 @@ describe("eksempelsaker", () => {
     const i = hent(1);
     i.feilen.typer = ["bremser"];
     i.feilen.oppdaget = "6_mnd_til_2_ar";
-    expect(eksempel(i, "middels")).toMatchObject({ utfall: "vunnet", treff: "tilnaermet" });
-    expect(eksempel(i, "middels")?.setning).toMatch(/bremsefeil/);
+    expect(eksempel(i)).toMatchObject({ utfall: "vunnet", treff: "tilnaermet" });
+    expect(eksempel(i)?.setning).toMatch(/bremsefeil/);
   });
 
   it("svake saker får en tapt sak, og en sak tapt av samme grunn når feilen var opplyst", () => {
@@ -79,7 +79,7 @@ describe("eksempelsaker", () => {
   it("alle vurderte saker får et eksempel med riktig utfall", () => {
     for (const type of FEILTYPER_KNAPPER) {
       for (const oppdaget of OPPDAGET_VALG) {
-        for (const niva of ["sterk", "middels", "svak"] as const) {
+        for (const niva of ["god", "svak"] as const) {
           const i = hent(1);
           i.feilen.typer = [type];
           i.feilen.oppdaget = oppdaget;

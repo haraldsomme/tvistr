@@ -41,32 +41,25 @@ describe("utenfor tjenesten og frister", () => {
     expect(d.hentStatistikk).not.toHaveBeenCalled();
   });
 
-  it("over fem år uten kontakt er ikke aktuelt, med forklaring", async () => {
+  it("over fem år uten kontakt gir dårlig sak, med forklaring og uten å miste unntakene", async () => {
     const i = hent(4);
     i.bilOgKjop.kjopsdato = "2021-03-31";
     const d = dep(0.9);
     const v = await vurder(i, d);
-    expect(v.niva).toBe("ikke_aktuell");
-    expect(v.begrunnelse).toMatch(/innen fem år/);
-    expect(v.tittel).toMatch(/Fristen/);
-    expect(v.tiltak).toEqual([]);
-    expect(v.grunnlag.map((g) => g.paragraf)).toEqual(["forbrukerkjøpsloven § 27"]);
+    expect(v.niva).toBe("svak");
+    expect(v.begrunnelse).toMatch(/mer enn fem år/);
+    expect(v.eksempel?.utfall).toBe("tapt");
+    expect(v.grunnlag[0]).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 27" });
     expect(v.grunnlag[0].tekst).toMatch(/garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt/);
     expect(d.hentStatistikk).not.toHaveBeenCalled();
   });
 });
 
-describe("poengkort", () => {
-  it("presumsjon, rapport, rettingsforsøk og god statistikk gir sterk", async () => {
-    const v = await vurder(hent(1), dep(0.8));
-    expect(v.poeng).toBe(6); // stat 1 + presumsjon 2 + rapport 1 + forsøkt 2
-    expect(v.niva).toBe("sterk");
-  });
-
-  it("presumsjon alene gir middels", async () => {
-    const v = await vurder(hentNeutral(4), dep());
-    expect(v.poeng).toBe(2);
-    expect(v.niva).toBe("middels");
+describe("nivå", () => {
+  it("presumsjon gir god sak, med eller uten rapport, rettingsforsøk og statistikk", async () => {
+    expect((await vurder(hent(1), dep(0.8))).niva).toBe("god");
+    expect((await vurder(hentNeutral(4), dep())).niva).toBe("god");
+    expect((await vurder(hentNeutral(4), dep(0.3))).niva).toBe("god");
   });
 
   it("utenfor presumsjon uten rapport gir svak, selv med god statistikk", async () => {
@@ -78,34 +71,25 @@ describe("poengkort", () => {
     const i = hent(6);
     i.bevis.verkstedrapport = true;
     i.bevis.rapportSierForKjop = true;
-    expect((await vurder(i, dep())).niva).toBe("middels");
+    expect((await vurder(i, dep())).niva).toBe("god");
+  });
+
+  it("utenfor presumsjon løfter et mislykket rettingsforsøk saken, men å ikke ha klaget trekker ikke ned", async () => {
+    const i = hent(6);
     i.feilen.kontakt = "forsokt";
-    expect((await vurder(i, dep())).niva).toBe("sterk");
+    expect((await vurder(i, dep(0.3))).niva).toBe("god");
+    i.feilen.kontakt = "avvist";
+    expect((await vurder(i, dep())).niva).toBe("svak");
   });
 
-  it("statistikk teller bare når intervallet er tydelig, og bare når den er spesifikk", async () => {
-    expect((await vurder(hentNeutral(4), dep(0.8))).poeng).toBe(3);
-    expect((await vurder(hentNeutral(4), dep(0.6))).poeng).toBe(2);
-    expect((await vurder(hentNeutral(4), dep(0.3))).poeng).toBe(1);
-    expect((await vurder(hentNeutral(4), dep(0.8, false))).poeng).toBe(2);
+  it("statistikken avgjør ikke nivået, men følger med vurderingen", async () => {
+    const v = await vurder(hentNeutral(4), dep(0.8));
+    expect(v.niva).toBe("god");
+    expect(v.statistikk?.andel).toBe(0.8);
   });
 
-  it("statistikken måles mot andelen for samme tidspunkt, ikke mot et fast nivå", async () => {
-    // 0.8 is clearly above a baseline of 0.6 but not above 0.85; 0.5 is clearly below 0.7 but not below 0.45.
-    expect((await vurder(hentNeutral(4), dep(0.8, true, 0.85))).poeng).toBe(2);
-    expect((await vurder(hentNeutral(4), dep(0.5, true, 0.7))).poeng).toBe(1);
-    expect((await vurder(hentNeutral(4), dep(0.5, true, 0.45))).poeng).toBe(2);
-  });
-
-  it("rettingsforsøk teller dobbelt", async () => {
-    const i = hentNeutral(4);
-    i.feilen.kontakt = "forsokt";
-    expect((await vurder(i, dep())).poeng).toBe(4); // presumsjon 2 + forsøkt 2
-  });
-
-  it("dokumenterte feilopplysninger gir et poeng", async () => {
+  it("dokumenterte feilopplysninger nevnes i begrunnelsen", async () => {
     const v = await vurder(hent(4), dep(0.6));
-    expect(v.poeng).toBe(3);
     expect(v.begrunnelse).toMatch(/uriktige opplysninger/);
     const udokumentert = hent(4);
     udokumentert.feilen.feilOpplysning = "ja_udokumentert";
@@ -114,19 +98,18 @@ describe("poengkort", () => {
 });
 
 describe("tak", () => {
-  it("opplyst feil gir svak selv med høye poeng når bilen er kjøpt før 2024", async () => {
+  it("opplyst feil gir svak når bilen er kjøpt før 2024", async () => {
     const i = hent(3);
     i.bilOgKjop.kjopsdato = "2023-12-31";
     i.bevis.bilder = true;
     expect((await vurder(i, dep(0.9))).niva).toBe("svak");
   });
 
-  it("opplyst feil gir tak på middels for kjøp fra 2024", async () => {
+  it("opplyst feil gir fortsatt god sak for kjøp fra 2024", async () => {
     const i = hent(3);
     i.bevis.bilder = true;
     const v = await vurder(i, dep(0.9));
-    expect(v.poeng).toBeGreaterThanOrEqual(3);
-    expect(v.niva).toBe("middels");
+    expect(v.niva).toBe("god");
     expect(v.eksempel?.setning).not.toMatch(/gjort kjent med feilen/);
   });
 
@@ -141,10 +124,9 @@ describe("tak", () => {
     expect(v.begrunnelse).not.toMatch(/ikke klaget/);
   });
 
-  it("rapport som ikke sier noe om tidspunkt gir tak på middels innenfor presumsjon", async () => {
+  it("rapport som ikke sier noe om tidspunkt gir fortsatt god sak innenfor presumsjon", async () => {
     const v = await vurder(hent(8), dep(0.8));
-    expect(v.poeng).toBeGreaterThanOrEqual(3);
-    expect(v.niva).toBe("middels");
+    expect(v.niva).toBe("god");
     expect(v.begrunnelse).toMatch(/verkstedrapporten sier ikke om feilen var til stede ved levering/);
   });
 
@@ -155,23 +137,23 @@ describe("tak", () => {
     i.bevis.bilder = true;
     i.feilen.feilOpplysning = "ja_dokumentert";
     const v = await vurder(i, dep(0.9));
-    expect(v.niva).toBe("sterk");
+    expect(v.niva).toBe("god");
     expect(v.begrunnelse).toMatch(/du ble fortalt om feilen, men du kan dokumentere at opplysningene var misvisende/);
   });
 
-  it("opplyst feil med udokumentert påstand om villedende opplysning gir tak på middels", async () => {
+  it("opplyst feil med udokumentert påstand om villedende opplysning gir fortsatt god sak", async () => {
     const i = hent(3);
     i.bilOgKjop.kjopsdato = "2023-12-31";
     i.bevis.bilder = true;
     i.feilen.feilOpplysning = "ja_udokumentert";
     const v = await vurder(i, dep(0.9));
-    expect(v.niva).toBe("middels");
+    expect(v.niva).toBe("god");
     expect(v.begrunnelse).toMatch(/du ble fortalt om feilen, men mener opplysningene var misvisende/);
   });
 });
 
 describe("pris og kjørelengde (fkjl § 15)", () => {
-  it("billig bil eller høy kjørelengde gir høyst middels, og sier hvorfor", async () => {
+  it("billig bil eller høy kjørelengde endrer ikke nivået, men sier hvorfor", async () => {
     for (const [pris, km, tekst] of [
       [49999, 112000, /kostet under 50 000 kr\. Da kan du forvente mindre/],
       [219000, 200001, /hadde gått over 200 000 km da du kjøpte den\. Da kan du forvente mindre/],
@@ -181,8 +163,7 @@ describe("pris og kjørelengde (fkjl § 15)", () => {
       i.bilOgKjop.kjopesumNok = pris;
       i.bilOgKjop.kmVedKjop = km;
       const v = await vurder(i, dep(0.8));
-      expect(v.poeng).toBe(6);
-      expect(v.niva).toBe("middels");
+      expect(v.niva).toBe("god");
       expect(v.grunnlag.find((g) => tekst.test(g.tekst))).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 15" });
     }
   });
@@ -191,10 +172,10 @@ describe("pris og kjørelengde (fkjl § 15)", () => {
     const i = hent(1);
     i.bilOgKjop.kjopesumNok = 50000;
     i.bilOgKjop.kmVedKjop = 200000;
-    expect((await vurder(i, dep(0.8))).niva).toBe("sterk");
+    expect((await vurder(i, dep(0.8))).niva).toBe("god");
     i.bilOgKjop.kjopesumNok = null;
     i.bilOgKjop.kmVedKjop = undefined;
-    expect((await vurder(i, dep(0.8))).niva).toBe("sterk");
+    expect((await vurder(i, dep(0.8))).niva).toBe("god");
   });
 
   it("gjelder ikke når feilen er uriktig kilometerstand eller historikk", async () => {
@@ -202,20 +183,19 @@ describe("pris og kjørelengde (fkjl § 15)", () => {
     i.feilen.typer = ["km_service"];
     i.bilOgKjop.kjopesumNok = 35000;
     const v = await vurder(i, dep(0.8));
-    expect(v.niva).toBe("sterk");
+    expect(v.niva).toBe("god");
     expect(v.grunnlag.some((g) => /vanlig slitasje/.test(g.tekst))).toBe(false);
   });
 });
 
 describe("udokumentert feil", () => {
-  it("uten rapport og bilder blir saken høyst middels, selv innenfor presumsjonen", async () => {
+  it("uten rapport og bilder er saken fortsatt god innenfor presumsjonen", async () => {
     const v = await vurder(hent(10), dep(0.8));
-    expect(v.poeng).toBeGreaterThanOrEqual(3);
-    expect(v.niva).toBe("middels");
+    expect(v.niva).toBe("god");
     expect(v.begrunnelse).toMatch(/ingen dokumentasjon av feilen/);
     const medBilder = hent(10);
     medBilder.bevis.bilder = true;
-    expect((await vurder(medBilder, dep(0.8))).niva).toBe("sterk");
+    expect((await vurder(medBilder, dep(0.8))).niva).toBe("god");
   });
 });
 
@@ -225,7 +205,7 @@ describe("kontakt med forhandleren", () => {
       const i = hent(1);
       i.feilen.kontakt = kontakt;
       const v = await vurder(i, dep(0.8));
-      expect(v.niva).toBe("sterk");
+      expect(v.niva).toBe("god");
       expect(v.begrunnelse).not.toMatch(/reklamert|reklamer|bør du/i);
       expect(v.tittel).toBe("Du har etter alt å dømme krav på at forhandleren retter feilen.");
       expect(v.tiltak).toEqual([]);
@@ -241,7 +221,7 @@ describe("kontakt med forhandleren", () => {
 describe("tittel og begrunnelse", () => {
   it("tittelen følger nivået og om forhandleren har fått forsøke å rette", async () => {
     expect((await vurder(hent(1), dep(0.8))).tittel).toBe("Du har etter alt å dømme krav på prisavslag eller heving.");
-    expect((await vurder(hentNeutral(4), dep())).tittel).toBe("Du kan ha krav på at forhandleren retter feilen.");
+    expect((await vurder(hentNeutral(4), dep())).tittel).toBe("Du har etter alt å dømme krav på at forhandleren retter feilen.");
     expect((await vurder(hent(6), dep())).tittel).toBe("Det blir vanskelig å nå fram med et krav slik saken står nå.");
   });
 

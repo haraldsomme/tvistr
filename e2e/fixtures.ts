@@ -1,6 +1,5 @@
 import { randomInt } from "node:crypto";
 import { test as base, expect, type Page } from "@playwright/test";
-import type { Innsending } from "../src/lib/vurdering/innsending";
 
 // A made-up vehicle, as /api/kjoretoy answers with it. The lookup in Statens vegvesen is always mocked.
 export const KJORETOY = { regnr: "ZZ 99999", merke: "Testmerke", modell: "Modell X", ar: 2019 };
@@ -127,10 +126,8 @@ export class Brev {
   }
 }
 
-// Letter cases live in the database, so tests make real ones (with made-up answers) and this deletes
-// them afterwards. `apne` returns the address of the new case, with steps already filled in when
-// `utfylling` is given; `rydd` registers a case the app made.
-export type Saker = { apne: (svar: Innsending, utfylling?: Record<string, unknown>) => Promise<string>; rydd: (id: string) => void };
+// Letter cases live in the database; the flow test registers the case the app made, and this deletes it afterwards.
+export type Saker = { rydd: (id: string) => void };
 
 export const idFra = (url: string) => new URL(url, "http://x").pathname.split("/").pop()!;
 
@@ -147,20 +144,7 @@ export const test = base.extend<{ skjema: Skjema; brev: Brev; sak: Saker }>({
   },
   sak: async ({ request }, bruk) => {
     const ider: string[] = [];
-    await bruk({
-      async apne(svar, utfylling) {
-        const res = await request.post("/api/sak", { data: { ...svar, kjoretoy: KJORETOY } });
-        expect(res.status(), "POST /api/sak").toBe(200);
-        const { id } = (await res.json()) as { id: string };
-        ider.push(id);
-        if (utfylling) {
-          const lagret = await request.patch(`/api/sak/${id}`, { data: utfylling });
-          expect(lagret.status(), "PATCH /api/sak/[id]").toBe(200);
-        }
-        return `/brev/${id}`;
-      },
-      rydd: (id) => void ider.push(id),
-    });
+    await bruk({ rydd: (id) => void ider.push(id) });
     for (const id of ider) await request.delete(`/api/sak/${id}`);
   },
 });

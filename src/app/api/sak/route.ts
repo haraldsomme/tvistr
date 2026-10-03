@@ -16,7 +16,6 @@ export async function POST(request: Request) {
   const body = await lesJson(request);
   const parsed = tilKlageInput(body);
   if (!parsed.ok) return Response.json({ feil: parsed.feil }, { status: 400 });
-  if (beregnFaktorer(parsed.input).fristUte) return Response.json({ feil: "Fristen for å klage er ute, så vi kan ikke lage et brev for denne saken." }, { status: 400 });
   const kjoretoy = lesKjoretoy((body as { kjoretoy?: unknown }).kjoretoy);
   if (!kjoretoy) return Response.json({ feil: "Hent bilen med registreringsnummeret først." }, { status: 400 });
 

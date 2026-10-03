@@ -33,25 +33,25 @@ Inneholder ett rad per vedtak fra Forbrukertvistutvalget/Forbrukerklageutvalget 
 - **Sletting:** en sak utløper 30 dager etter siste endring. Den slettes når den åpnes etter utløp, av `npm run rydd`, eller når brukeren trykker «Slett saken».
 - **Brevsiden er etter kjøp.** En sak opprettes først når brevet åpnes (senere: etter betaling), og det er ingen vei tilbake til vurderingen derfra. Registreringsnummeret tas i steg 1 i vurderingen (oppslag mot Statens vegvesen), holdes utenfor adressen (bare i skjemaets state og `sessionStorage` i fanen), følger med `POST /api/sak` og er låst til saken: `utfylling.kjoretoy` kan ikke endres med `PATCH`.
 - **Rette svar:** svarene fra vurderingen rettes på brevsiden (kortet «Svarene fra vurderingen», `PUT /api/sak/[id]/svar`, regler i `src/lib/brev/svar.ts`). En rettelse som gjør at fristen er ute lagres med et varsel over brevet; brevet tas aldri bort fra en som har kjøpt det.
+- **Fil og purring:** `GET /api/sak/[id]/dokument/{brev,purring}.{pdf,docx}` lager filene på serveren fra samme `Brev` som siden viser (`src/lib/brev/eksport.ts`). Plassholdere i hakeparenteser står igjen i filen; siden advarer.
 
-## E2E-testing med Playwright
+## Saksmappe (fanen ved siden av brevet)
 
-`npm run test:e2e` kjører flytene i `e2e/` i en ekte nettleser, i desktop- og mobilbredde. `npm test` (Vitest) tester reglene i `src/lib/`; Playwright tester at siden virker for en bruker. Testene er vanlig kode og kjører uten AI.
+Kode i `src/lib/mappe/`, vist i `src/app/brev/mappe/`. Beregnes per forespørsel fra `vedtak` (`GET /api/sak/[id]/mappe`), lagres ikke og bruker ingen språkmodell. Rene byggere per kort i `kort/` får tallene fra `MappeData` (SQL i `hent.ts`).
 
-**Hver plan for en feature som endrer noe brukeren ser, skal ha en seksjon «E2E-tester»** med scenariene som skal dekkes: hovedløpet, betingede spørsmål, feiltilstander, og hvilke eksisterende tester endringen påvirker. Scenariene godkjennes sammen med planen.
+- **Utvalget** er første trinn i vurderingens stige (`trinnFor`) med minst `MIN_UTVALG` (30) forhandlervedtak, så mappen og vurderingen er enige. Under `MIN_N` (10) i delinndelinger, `MIN_N_FORHANDLER` (3) og `MIN_N_MODELL` (5) står «for få saker», aldri et tall. Et tall vises alltid med antall saker.
+- **Eksempelvedtak** må oppfylle `KVALIFISERT` i `hent.ts` (ikke `trenger_kontroll`, konfidens ≥ 0,85, `qa_status` ≠ feil, sitat for utfall, saksnummer, minst ett nøkkelpunkt). Nøkkelpunktene er modellens sammendrag, ikke ordrett tekst; de vises med kilde-lenke og «les vedtaket». `rens()` gjør `[KLAGER]` o.l. om til ord, fordi brevet bruker hakeparenteser for felt som mangler.
+- **Sitert i brevet:** kjøperen velger vedtak og nøkkelpunkt (`utfylling.lignende`, maks 3). Klienten sender bare id og punktnummer; teksten leses fra databasen (`hentLignende`), og tapte eller ikke-kvalifiserte vedtak droppes.
+- Andre felt i `utfylling`: `forbehold` (trinnet «Forbehold i kjøpet»), `sjekket` (sjekklisten), `sendt` (datoen brevet ble sendt, for frister og purring).
+- Juridisk ordlyd som ikke bare gjentar en regel (subsidiært prisavslag, rente, forbehold, slitasje, svarmalene) står i `JURIDISK` i `src/lib/brev/brev.ts` og i `kort/videre.ts`. **Ikke lest av jurist.**
 
-**Arbeidsgang**
-1. *Plan:* scenariene skrives i planen. For større flyter utforsker `playwright-test-planner` den kjørende appen og lagrer en testplan i `specs/<feature>.md`.
-2. *Underveis:* etter hver del av UI-et som er ferdig, sjekk den i nettleseren (Playwright MCP) og kjør `npm run test:e2e`. Skriv eller generer testen når UI-et finnes (`playwright-test-generator` verifiserer hvert steg mot kjørende app).
-3. *Til slutt:* en feature er ikke ferdig før `npm run test:e2e`, `npm test` og `npm run typecheck` er grønne. Lim inn resultatet i oppsummeringen.
-4. *Rød test:* les feilmeldingen og `test-results/` (skjermbilde, trace) før noe endres. Skyldes feilen en bevisst UI-endring, oppdateres testen (`playwright-test-healer`). Skyldes den en feil i appen, rettes appen. Forventninger skal aldri svekkes og tester aldri settes til `test.fixme`/`skip` for å få grønt; meld fra i stedet.
+## Tester
 
-**Regler for testene**
-- Importer `test` og `expect` fra `e2e/fixtures.ts`, og bruk sideobjektet `skjema`. Utvid det når skjemaet får nye felt.
-- Finn elementer på rolle og synlig tekst (`getByRole`, `getByLabel`). `data-testid` bare når elementet ikke har rolle eller tekst.
-- Bare web-first assertions (`await expect(locator)…`). Aldri `waitForTimeout` eller `networkidle`.
-- Brevtestene åpner ekte saker med fixturen `sak`, som sletter dem etterpå. Oppslag mot Statens vegvesen (`/api/kjoretoy`), Brreg (`/api/firma`) og språkvasken (`/api/sak/*/sprakvask`) mockes med `page.route()`.
-- Mock `/api/vurder` med `page.route()`, unntatt i flyttestene (`registreringsflyt.spec.ts`), som går mot ekte database og derfor sjekker struktur, ikke antall vedtak. Kall mot språkmodeller mockes alltid.
-- `/api/vurder` tillater 10 kall per minutt per adresse. Fixturen sender en egen `x-forwarded-for` per test; behold den.
-- Datoavhengige valg: bruk relative år (for eksempel i fjor) eller `page.clock.setFixedTime`.
-- Testdata er oppdiktede tall. Ingen navn, adresser eller regnummer, heller ikke i `specs/`.
+Få tester med vilje: små features skal gå raskt å bygge.
+
+- **Vitest (`npm test`)** dekker bare vurderingsmotoren (`src/lib/vurdering/`: samme input gir forventet vurdering) og brevet (`src/lib/brev/brev.test.ts`, `brev-krav.test.ts`: brevet bygges riktig ut fra input). Ikke skriv enhetstester for andre deler.
+- **Playwright (`npm run test:e2e`)** har én test: `e2e/registreringsflyt.spec.ts`, fra forsiden gjennom de fire stegene og vurderingen til ferdig brev. Oppslag mot Statens vegvesen mockes; `/api/vurder` går mot ekte database.
+- **Ikke lag nye tester (Vitest eller Playwright) uten at brukeren ber om det.** Ingen «E2E-tester»-seksjon i planer.
+- Underveis i avanserte features kan Playwright (MCP) brukes til å sjekke UI-et i nettleseren. Det er verktøy for utvikling, ikke tester som sjekkes inn.
+- Rød test: les feilen før noe endres. Skyldes den en bevisst endring, oppdater testen; skyldes den en feil i appen, rett appen. Aldri svekk forventninger eller bruk `skip`/`fixme` for å få grønt.
+- Testdata er oppdiktede tall. Ingen navn, adresser eller regnummer.

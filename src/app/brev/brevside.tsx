@@ -4,13 +4,14 @@ import { useRouter } from "next/navigation";
 import { useId, useState, type ReactNode } from "react";
 import { Logo } from "@/app/logo";
 import { ForhandlerVelger } from "@/app/vurdering/forhandler-velger";
-import { AvsenderFelt, FeilenFelt, KravFelt, OpplysningFelt, ReklamasjonFelt, VedleggFelt } from "./felt";
-import { byggBrev } from "@/lib/brev/brev";
+import { AvsenderFelt, FeilenFelt, ForbeholdFelt, KravFelt, OpplysningFelt, ReklamasjonFelt, VedleggFelt } from "./felt";
+import { byggBrev, harPlassholder, type LignendeRef } from "@/lib/brev/brev";
 import type { Endring, Utfylling } from "@/lib/brev/utfylling";
 import { beregnFaktorer } from "@/lib/vurdering/faktorer";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import type { Forhandler } from "@/lib/vurdering/typer";
 import { Brevark } from "./brevark";
+import { Saksmappe } from "./mappe/saksmappe";
 import { SvarKort } from "./svar-felt";
 
 const MERKE_MANGLER = "whitespace-nowrap rounded bg-[oklch(0.96_0.07_85)] px-2 py-[3px] text-[12px] font-semibold text-[#6b5618]";
@@ -157,15 +158,20 @@ export function BrevSide({
   startSvar,
   idag,
   startUtfylling,
+  startLignende,
 }: {
   id: string;
   startSvar: Innsending;
   // From the server, so the date in the letter is the same on both sides of hydration.
   idag: string;
   startUtfylling: Utfylling;
+  // The decisions the buyer cites, as the server resolved them.
+  startLignende: LignendeRef[];
 }) {
   const [svar, setSvar] = useState(startSvar);
   const [utfylling, setUtfylling] = useState(startUtfylling);
+  const [lignende, setLignende] = useState(startLignende);
+  const [fane, setFane] = useState<"brev" | "mappe">("brev");
   const [feil, setFeil] = useState<string | null>(null);
   const router = useRouter();
   const idBase = useId();
@@ -183,9 +189,10 @@ export function BrevSide({
     setFeil(null);
     try {
       const res = await fetch(`/api/sak/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(endring) });
-      const json = (await res.json()) as { utfylling?: Utfylling; feil?: string };
+      const json = (await res.json()) as { utfylling?: Utfylling; lignende?: LignendeRef[]; feil?: string };
       if (!res.ok || !json.utfylling) throw new Error(json.feil ?? "");
       setUtfylling(json.utfylling);
+      setLignende(json.lignende ?? []);
       return true;
     } catch (e) {
       setFeil((e instanceof Error && !(e instanceof TypeError) && e.message) || "Vi fikk ikke lagret. Prøv igjen om litt.");
@@ -199,10 +206,11 @@ export function BrevSide({
     setFeil(null);
     try {
       const res = await fetch(`/api/sak/${id}/svar`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(nye) });
-      const json = (await res.json()) as { svar?: Innsending; utfylling?: Utfylling; feil?: string };
+      const json = (await res.json()) as { svar?: Innsending; utfylling?: Utfylling; lignende?: LignendeRef[]; feil?: string };
       if (!res.ok || !json.svar || !json.utfylling) throw new Error(json.feil ?? "");
       setSvar(json.svar);
       setUtfylling(json.utfylling);
+      setLignende(json.lignende ?? []);
       setRedigerer(null);
       return true;
     } catch (e) {
@@ -296,6 +304,13 @@ export function BrevSide({
         ]
       : []),
     {
+      id: "forbehold",
+      tittel: "Forbehold i kjøpet",
+      ferdig: utfylling.forbehold !== undefined,
+      kanEndres: true,
+      innhold: () => <ForbeholdFelt verdi={utfylling.forbehold} {...felles("forbehold")} />,
+    },
+    {
       id: "krav",
       tittel: "Kravet",
       ferdig: utfylling.krav !== undefined && (!kanVelgeKrav || utfylling.krav.type !== undefined),
@@ -323,8 +338,45 @@ export function BrevSide({
     return aktivId === stegId;
   }
 
+  const brev = byggBrev(input, idag, utfylling, lignende);
+  const faner = (
+    <div role="tablist" aria-label="Sakens deler" className="flex w-full gap-1 border-b border-[#d3cec3] lg:col-span-2">
+      {(["brev", "mappe"] as const).map((f) => (
+        <button
+          key={f}
+          type="button"
+          role="tab"
+          id={`fane-${f}`}
+          aria-selected={fane === f}
+          aria-controls={`panel-${f}`}
+          tabIndex={fane === f ? 0 : -1}
+          onClick={() => setFane(f)}
+          onKeyDown={(e) => {
+            if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+            const annen = f === "brev" ? "mappe" : "brev";
+            setFane(annen);
+            document.getElementById(`fane-${annen}`)?.focus();
+          }}
+          className={`-mb-px border-b-2 px-4 py-3 text-[15px] font-semibold ${fane === f ? "border-[#17263d] text-[#17263d]" : "border-transparent text-[#5b6472]"}`}
+        >
+          {f === "brev" ? "Brev" : "Saksmappe"}
+        </button>
+      ))}
+    </div>
+  );
+  // The numbers in the saksmappe follow the answers, the claim and the dealer; ticks and citations
+  // do not change them, so they are left out and do not make it fetch again.
+  const avhengighet = JSON.stringify([svar, utfylling.krav, utfylling.forhandler, utfylling.forbehold, utfylling.sendt]);
+
   return (
     <Ramme>
+      {faner}
+      {fane === "mappe" ? (
+        <div role="tabpanel" id="panel-mappe" aria-labelledby="fane-mappe" className="flex w-full justify-center lg:col-span-2">
+          <Saksmappe sakId={id} avhengighet={avhengighet} utfylling={utfylling} lagre={lagre} />
+        </div>
+      ) : (
+        <div role="tabpanel" id="panel-brev" aria-labelledby="fane-brev" className="contents">
       <section aria-labelledby="mangler-tittel" className="flex w-full max-w-[820px] flex-col gap-4 lg:sticky lg:top-6">
         <h2 id="mangler-tittel" className="m-0 font-brev text-[22px] font-semibold leading-[1.3]">
           Fyll inn det som mangler
@@ -356,8 +408,23 @@ export function BrevSide({
             Med disse svarene er fristen for å klage ute. Brevet står som det er, men forhandleren kan avvise kravet fordi det kommer for sent. Sjekk at svarene fra vurderingen stemmer.
           </p>
         )}
-        <Brevark brev={byggBrev(input, idag, utfylling)} />
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <a href={`/api/sak/${id}/dokument/brev.pdf`} download className="rounded-[6px] bg-[#17263d] px-[18px] py-[11px] text-[14px] font-semibold text-[#f6f4ef]">
+            Last ned PDF
+          </a>
+          <a href={`/api/sak/${id}/dokument/brev.docx`} download className="rounded-[6px] border border-[#bfbab0] bg-white px-[18px] py-[11px] text-[14px] font-semibold text-[#17263d]">
+            Last ned Word
+          </a>
+          {harPlassholder(brev) && (
+            <p role="status" className="m-0 text-[13px] leading-[1.5] text-[#6b5618]">
+              Brevet har felt som mangler (markert gult). Du kan laste det ned nå og fylle ut for hånd.
+            </p>
+          )}
+        </div>
+        <Brevark brev={brev} />
       </div>
+        </div>
+      )}
     </Ramme>
   );
 }

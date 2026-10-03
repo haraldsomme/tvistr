@@ -86,4 +86,4 @@ npm run rydd                     # slett utløpte saker (bør kjøres daglig)
 | `src/lib/normalisering.ts` | Merke, firmanavn, org.nr. og paragrafer på fast form |
 | `scripts/` | `hent`, `klassifiser`, `tolk`, `rapport`, `migrer` |
 
-Tester: `npm test`. Typesjekk: `npm run typecheck`. Ende-til-ende i nettleser: `npm run test:e2e` (`npm run test:e2e:ui` for å se stegene); testplaner ligger i `specs/`, arbeidsgangen står i `CLAUDE.md`.
+Tester: `npm test` (vurderingsmotor og brev). Typesjekk: `npm run typecheck`. Ende-til-ende: `npm run test:e2e` (én flyt, forsiden til ferdig brev). Se «Tester» i `CLAUDE.md`.

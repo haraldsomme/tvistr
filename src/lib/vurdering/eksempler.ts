@@ -33,8 +33,7 @@ const NAERMEST: Record<Reklamasjonsbotte, Reklamasjonsbotte[]> = { rask: ["midde
 // All decisions below are picked by hand and checked against the decision text; docs/eksempelsaker.md
 // says how and lists the weaknesses. The sentences follow one template and name no dealer.
 
-// Decisions the buyer won, per defect group and time from purchase to complaint. Shown for strong
-// and medium cases. Some combinations have no decision that holds up. «Batteri» has one only for
+// Decisions the buyer won, per defect group and time from purchase to complaint. Shown for good cases. Some combinations have no decision that holds up. «Batteri» has one only for
 // the shortest time; the others use it.
 const VUNNET: Celler = {
   "motor/rask": {
@@ -428,7 +427,7 @@ const GENERELLE: Record<ValgtEksempel["utfall"], Partial<Record<Reklamasjonsbott
   },
 };
 
-// Always gives a decision when the case has been assessed: a won one for strong and medium cases, a
+// Always gives a decision when the case has been assessed: a won one for good cases, a
 // lost one for weak cases. Same group and timing first, then the same group with the nearest timing,
 // then a general one.
 export function finnEksempel(f: Faktorer, niva: Niva): ValgtEksempel | null {

@@ -5,6 +5,7 @@ import { norskDato, vedleggFor } from "@/lib/brev/brev";
 import {
   BESKRIVELSE_MAKS,
   BESKRIVELSE_MIN,
+  FORBEHOLD_VALG,
   KRAV_TYPER,
   OPPLYSNING_KILDER,
   MAKS_UTGIFTER,
@@ -14,6 +15,7 @@ import {
   type Avsender,
   type Endring,
   type Feilen,
+  type Forbehold,
   type Krav,
   type Opplysning,
   type Reklamasjon,
@@ -442,6 +444,33 @@ export function AvsenderFelt({ verdi, aktiv, lagre, avbryt }: Felles & { verdi: 
         <Tekstfelt label="Sted" autoComplete="address-level2" maxLength={50} value={a.poststed} onChange={sett("poststed")} />
       </div>
       <Tekstfelt label="Telefon (valgfritt)" autoComplete="tel" inputMode="tel" maxLength={16} value={a.telefon} onChange={sett("telefon")} />
+    </Skjema>
+  );
+}
+
+const FORBEHOLD_TEKST: Record<Forbehold, string> = {
+  som_den_er: "Ja, bilen ble solgt «som den er»",
+  garanti: "Nei, men bilen hadde garanti fra forhandleren",
+  ingen: "Nei, ingen forbehold eller garanti",
+  vet_ikke: "Jeg vet ikke",
+};
+
+// Did the contract or the ad say «som den er», or promise a warranty? Decides whether the letter
+// meets a disclaimer. «Vet ikke» leaves it out.
+export function ForbeholdFelt({ verdi, aktiv, lagre, avbryt }: Felles & { verdi: Forbehold | undefined }) {
+  const [valg, setValg] = useState<Forbehold | null>(verdi ?? null);
+  if (!aktiv) return verdi ? <Sammendrag linjer={[FORBEHOLD_TEKST[verdi]]} /> : null;
+  return (
+    <Skjema klar={valg !== null} send={() => lagre({ forbehold: valg! })} avbryt={avbryt}>
+      <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+        <legend className={`${LABEL} mb-1`}>Sto det «solgt som den er» eller noe om garanti i kontrakten eller annonsen?</legend>
+        {FORBEHOLD_VALG.map((v) => (
+          <label key={v} className="flex items-start gap-2.5 text-[14px] leading-[1.45]">
+            <input type="radio" name="forbehold" value={v} checked={valg === v} onChange={() => setValg(v)} className="mt-1" />
+            {FORBEHOLD_TEKST[v]}
+          </label>
+        ))}
+      </fieldset>
     </Skjema>
   );
 }

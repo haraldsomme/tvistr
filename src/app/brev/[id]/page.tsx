@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { lignendeFor } from "@/lib/brev/dokument";
 import { hentSak } from "@/lib/brev/sak";
 import { iDag } from "@/lib/vurdering/faktorer";
 import { BrevSide } from "../brevside";
@@ -15,5 +16,5 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const sak = await hentSak(id);
   if (!sak) notFound();
 
-  return <BrevSide id={sak.id} startSvar={sak.svar} idag={iDag()} startUtfylling={sak.utfylling} />;
+  return <BrevSide id={sak.id} startSvar={sak.svar} idag={iDag()} startUtfylling={sak.utfylling} startLignende={await lignendeFor(sak)} />;
 }

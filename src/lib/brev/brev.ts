@@ -1,7 +1,7 @@
-import { beregnFaktorer, iDag } from "@/lib/vurdering/faktorer";
+import { beregnFaktorer, iDag, type Faktorer } from "@/lib/vurdering/faktorer";
 import { NAAR } from "@/lib/vurdering/grunnlag";
 import type { FeilKnapp, KlageInput } from "@/lib/vurdering/typer";
-import type { Opplysning, Reklamasjon, Utfylling, Utgift, Vedlegg } from "./utfylling";
+import type { Forbehold, Opplysning, Reklamasjon, Utfylling, Utgift, Vedlegg } from "./utfylling";
 
 // The complaint letter as data, so the page can show it now and PDF/Word and new paragraphs can be
 // built on the same shape later. Phase 1 is a fixed template: no model call. What the form does not
@@ -38,7 +38,7 @@ const FEIL_I_SETNING: Record<FeilKnapp, string | null> = {
 
 const MANEDER = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
 // How long the dealer gets to answer.
-const SVARFRIST_DAGER = 14;
+export const SVARFRIST_DAGER = 14;
 
 const FEIL_PLASSHOLDER = "[Beskriv feilen: når den viste seg, hva som skjer, og hva verkstedet har funnet.]";
 const KRAV_ALTERNATIV = "[prisavslag / heving av kjøpet]";
@@ -62,6 +62,47 @@ function liste(ledd: string[]): string {
 }
 
 const medPunktum = (t: string) => (/[.!?]$/.test(t) ? t : `${t}.`);
+
+// Legal wording that goes beyond restating a rule in the form: in one place so a lawyer can read it.
+// Not reviewed by a lawyer yet.
+const FORBEHOLD_AVSNITT: Record<Forbehold, string | null> = {
+  som_den_er:
+    "Selv om bilen ble solgt «som den er», fritar ikke det dere for ansvar overfor meg som forbruker. Et slikt forbehold kan ikke innskrenke rettighetene mine etter forbrukerkjøpsloven, jf. § 3.",
+  garanti: "Garantien dere ga kommer i tillegg til rettighetene mine etter forbrukerkjøpsloven, og innskrenker dem ikke, jf. § 3.",
+  ingen: null,
+  vet_ikke: null,
+};
+
+export const JURIDISK = {
+  hevingSubsidiart: (utbedringNok?: number) =>
+    utbedringNok ? `Dersom dere ikke godtar heving, krever jeg subsidiært prisavslag på ${kroner(utbedringNok)}, jf. § 31.` : "Dersom dere ikke godtar heving, krever jeg subsidiært et forholdsmessig prisavslag, jf. § 31.",
+  rente: "Jeg krever også forsinkelsesrente etter forsinkelsesrenteloven §§ 2 og 3 av det beløpet dere skylder meg, fra forfall til betaling skjer.",
+  forbehold: FORBEHOLD_AVSNITT,
+  slitasje: (km?: number) =>
+    `Jeg bestrider at feilen er normal slitasje. ${km !== undefined ? `Bilen hadde gått ${kroner(km).replace(/ kr$/, "")} km da jeg kjøpte den, og ` : ""}feilen er mer omfattende enn jeg med rimelighet kunne vente ut fra bilens alder, kilometerstand og pris, jf. § 15.`,
+  lignende: "Jeg viser til Forbrukerklageutvalgets behandling av lignende saker.",
+} as const;
+
+// Does the letter still have something to fill in? Placeholders are written in square brackets.
+export const harPlassholder = (b: Brev) => [...b.avsender, ...b.mottaker, b.stedDato, b.emne, ...b.avsnitt, b.underskrift].some((t) => /\[[^\]]+\]/.test(t));
+
+// A decision the buyer cites, resolved from the database (see mappe/hent.ts).
+export type LignendeRef = { saksnummer: string; ar: number; utfall: "medhold" | "delvis_medhold"; moment: string; kildeUrl: string };
+
+const UTFALL_TEKST = { medhold: "medhold", delvis_medhold: "delvis medhold" } as const;
+
+function lignendeAvsnitt(refs: LignendeRef[]): string[] {
+  if (refs.length === 0) return [];
+  return [`${JURIDISK.lignende} ${refs.map((r) => `Sak ${r.saksnummer} (${r.ar}, ${UTFALL_TEKST[r.utfall]}): ${medPunktum(r.moment)}`).join(" ")}`];
+}
+
+function innvendinger(input: KlageInput, f: Faktorer, u: Utfylling): string[] {
+  const ledd: string[] = [];
+  const forbehold = u.forbehold && JURIDISK.forbehold[u.forbehold];
+  if (forbehold) ledd.push(forbehold);
+  if (f.slitasjeAktuelt) ledd.push(JURIDISK.slitasje(input.bilOgKjop.kmVedKjop));
+  return ledd.length ? [ledd.join(" ")] : [];
+}
 
 function kjopetOgFeilen(input: KlageInput, u: Utfylling): string {
   const { kjopsdato, kjopesumNok } = input.bilOgKjop;
@@ -138,12 +179,13 @@ function krav(input: KlageInput, u: Utfylling): string {
   }
   if (u.krav?.type === "heving") {
     const sum = input.bilOgKjop.kjopesumNok != null ? kroner(input.bilOgKjop.kjopesumNok) : "[kjøpesum]";
-    return `${start} hever kjøpet, jf. § 32, og krever kjøpesummen på ${sum} tilbakebetalt mot at bilen leveres tilbake.`;
+    return `${start} hever kjøpet, jf. § 32, og krever kjøpesummen på ${sum} tilbakebetalt mot at bilen leveres tilbake. ${JURIDISK.hevingSubsidiart(u.krav.utbedringNok)} ${JURIDISK.rente}`;
   }
   if (u.krav?.type === "prisavslag") {
-    return u.krav.utbedringNok
+    const avslag = u.krav.utbedringNok
       ? `${start} krever prisavslag på ${kroner(u.krav.utbedringNok)}, som tilsvarer kostnaden ved å få mangelen rettet, jf. § 31.`
       : `${start} krever et forholdsmessig prisavslag, jf. § 31.`;
+    return `${avslag} ${JURIDISK.rente}`;
   }
   return `${start} krever ${KRAV_ALTERNATIV}, jf. § 31 og § 32.`;
 }
@@ -181,7 +223,8 @@ export function vedleggFor(input: KlageInput, u: Utfylling): Vedlegg[] {
 
 // The letter from the answers of the assessment and what the buyer has filled in on the letter
 // page. Whatever is not filled in yet is a placeholder in square brackets.
-export function byggBrev(input: KlageInput, idag = iDag(), u: Utfylling = {}): Brev {
+export function byggBrev(input: KlageInput, idag = iDag(), u: Utfylling = {}, lignende: LignendeRef[] = []): Brev {
+  const f = beregnFaktorer(input, idag);
   const { kjoretoy, forhandler, avsender } = u;
   const kontakt = input.feilen.kontakt;
   const bil = kjoretoy && `${kjoretoy.merke} ${kjoretoy.modell}${kjoretoy.ar ? ` (${kjoretoy.ar})` : ""}`;
@@ -198,6 +241,8 @@ export function byggBrev(input: KlageInput, idag = iDag(), u: Utfylling = {}): B
     avsnitt: [
       kjopetOgFeilen(input, u),
       mangelOgBevisbyrde(input, idag, u),
+      ...innvendinger(input, f, u),
+      ...lignendeAvsnitt(lignende),
       krav(input, u),
       erstatningOgForbehold(kontakt, u),
       `Jeg ber om skriftlig svar innen ${SVARFRIST_DAGER} dager fra dette brevets dato, det vil si innen ${norskDato(pluss14(idag))}. Hører jeg ikke fra dere innen fristen, vil jeg bringe saken inn for Forbrukerklageutvalget.`,

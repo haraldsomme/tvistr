@@ -317,7 +317,8 @@ describe("byggBrev", () => {
     it("utelater avsnittet når ingenting legges ved", () => {
       const b = byggBrev(grunn(), IDAG, { vedlegg: [] });
       expect(tekst(b)).not.toContain("Vedlagt");
-      expect(b.avsnitt).toHaveLength(5);
+      // Five paragraphs plus the paragraph on wear.
+      expect(b.avsnitt).toHaveLength(6);
     });
   });
 

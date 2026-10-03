@@ -23,15 +23,17 @@ describe("grunnlag", () => {
   it("kontakten med forhandleren avgjør hvilken regel som vises til slutt", () => {
     const i = hent(1);
     for (const [kontakt, paragraf] of [
-      ["nei", "forbrukerkjøpsloven § 27"],
       ["avvist", "forbrukerkjøpsloven §§ 31 og 32"],
       ["forsokt", "forbrukerkjøpsloven §§ 31 og 32"],
     ] as const) {
       i.feilen.kontakt = kontakt;
       expect(paragrafer(i).at(-1)).toBe(paragraf);
     }
-    i.feilen.kontakt = "venter";
-    expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven § 29");
+    for (const kontakt of ["nei", "venter"] as const) {
+      i.feilen.kontakt = kontakt;
+      expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven § 27");
+      expect(paragrafer(i)).not.toContain("forbrukerkjøpsloven § 29");
+    }
   });
 
   it("opplyst feil viser til § 15 for kjøp fra 2024, og til det kjøperen kjente til før det", () => {
@@ -65,12 +67,12 @@ describe("grunnlag", () => {
     expect(siste(gammel)).not.toMatch(/to forsøk/);
   });
 
-  it("ikke klaget ennå er et nøytralt punkt, også lenge etter at feilen viste seg", () => {
+  it("ikke klaget ennå gir ikke noe punkt: å klage er det appen hjelper med", () => {
     const i = hent(1);
     i.feilen.kontakt = "nei";
-    expect(grunnlag(i).at(-1)).toMatchObject({ vekt: "noytral", paragraf: "forbrukerkjøpsloven § 27" });
+    expect(grunnlag(i).some((g) => /ikke klaget/.test(g.tekst))).toBe(false);
     i.bilOgKjop.kjopsdato = "2022-01-31";
-    expect(grunnlag(i).at(-1)).toMatchObject({ vekt: "noytral", tekst: expect.stringMatching(/Klag så snart som mulig/) });
+    expect(grunnlag(i).some((g) => /ikke klaget/.test(g.tekst))).toBe(false);
   });
 
   it("dokumenterte feilopplysninger får sitt eget punkt", () => {

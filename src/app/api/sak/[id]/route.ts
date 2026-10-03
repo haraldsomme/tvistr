@@ -1,3 +1,4 @@
+import { lignendeFor } from "@/lib/brev/dokument";
 import { endreSak, hentSak, slettSak } from "@/lib/brev/sak";
 import { erSakId, lesEndring } from "@/lib/brev/utfylling";
 import { ipFra, lagGrense, lesJson } from "@/lib/rategrense";
@@ -21,7 +22,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     // A save is checked against the answers of the case: dates must fit the purchase.
     const lest = lesEndring(body, { svar: sak.svar, idag: iDag() });
     if (!lest.ok) return Response.json({ feil: lest.feil }, { status: 400 });
-    return Response.json({ utfylling: await endreSak(id, lest.endring, sak) });
+    const utfylling = await endreSak(id, lest.endring, sak);
+    return Response.json({ utfylling, lignende: await lignendeFor({ utfylling }) });
   } catch {
     console.error("lagring av sak feilet");
     return Response.json({ feil: "Vi fikk ikke lagret. Prøv igjen om litt." }, { status: 500 });

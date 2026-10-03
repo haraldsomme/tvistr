@@ -216,11 +216,16 @@ const TREFF_TEKST: Record<Treff, string> = {
 
 // The comparison point shown right under the title: how many similar decisions that got medhold the case
 // was checked against, then the one example decision (always one the buyer won), if any.
-function sammenligningTekst(utvalg: Resultat["utvalg"], eksempel: Resultat["eksempel"]): string | null {
+function sammenligningTekst(
+  utvalg: Resultat["utvalg"],
+  eksempel: Resultat["eksempel"],
+): { ramme: string; setning: string | null } | null {
   if (!utvalg) return null;
   const gruppe = utvalg.spesifikk ? "lignende vedtak" : "vedtak om bruktbil kjøpt fra forhandler";
   const grunnsetning = `Vi har sjekket saken din opp mot ${utvalg.vunnet} ${gruppe} fra Forbrukerklageutvalget som fikk medhold.`;
-  return eksempel ? `${grunnsetning} ${TREFF_TEKST[eksempel.treff]} ${eksempel.setning}` : grunnsetning;
+  return eksempel
+    ? { ramme: `${grunnsetning} ${TREFF_TEKST[eksempel.treff]}`, setning: eksempel.setning }
+    : { ramme: grunnsetning, setning: null };
 }
 const KORT = "overflow-hidden rounded-lg border border-[#dcd8cf] bg-white";
 const RAD = "flex gap-3.5 border-b border-[#eceae4] px-6 py-[18px] last:border-b-0";
@@ -271,17 +276,15 @@ function Vipps({ tekst, onClick, disabled }: { tekst: string; onClick: () => voi
 
 
 // Payment is not built yet: both buttons open the letter. Payment goes in front of it later.
-const LIGNENDE_SAKER = "Henvisninger til lignende saker som fikk medhold";
+const BREV_MED_LIGNENDE = "Ferdig brev med lovhenvisninger og argumentasjon vi vet har vunnet lignende saker";
+const BREV_UTEN_LIGNENDE = "Ferdig brev med henvisninger til lovverket";
 const NESTE_PUNKTER = [
-  "Formuleringer etter og henvisninger til lovverk",
-  LIGNENDE_SAKER,
-  "Frist for svar fra forhandleren",
-  "Hva du gjør hvis forhandleren avviser, med svar til vanlige innvendinger og purrebrev",
-  "Saksmappe med tall fra tidligere vedtak: sjanser, beløp og forhandlerens historikk",
-  "PDF og redigerbar Word-fil",
+  "Frist for svar, og hva du gjør om forhandleren avviser",
+  "Saksmappe med verktøy for håndtering av saken videre",
+  "Brev i PDF og Word-fil til nedlasting",
 ];
 
-// The line about similar cases is only promised when we have one to refer to.
+// Similar cases are only promised when we have one to refer to.
 // `apneBrev` opens the letter and returns an error message if that failed.
 function Neste({
   medEksempel,
@@ -295,7 +298,7 @@ function Neste({
   kjoretoy: Kjoretoy | null | undefined;
   velgBil: () => void;
 }) {
-  const punkter = NESTE_PUNKTER.filter((p) => medEksempel || p !== LIGNENDE_SAKER);
+  const punkter = [medEksempel ? BREV_MED_LIGNENDE : BREV_UTEN_LIGNENDE, ...NESTE_PUNKTER];
   const [apner, setApner] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
   async function apne() {
@@ -483,10 +486,15 @@ function Vurdering({
               {resultat.tittel}
             </h1>
             {sammenligning && (
-              <div className="flex flex-col items-start gap-2">
-                <p className="m-0 max-w-[600px] text-[15px] leading-[1.6] text-[#3d4757] [text-wrap:pretty] md:text-[17px] md:leading-[1.65]">
-                  {sammenligning}
+              <div className={`flex flex-col items-start gap-2 px-6 py-[18px] ${KORT}`}>
+                <p className="m-0 max-w-[600px] text-[15px] leading-[1.6] text-[#5b6472] [text-wrap:pretty]">
+                  {sammenligning.ramme}
                 </p>
+                {sammenligning.setning && (
+                  <p className="m-0 max-w-[600px] text-[15px] font-semibold leading-[1.6] text-[#17263d] [text-wrap:pretty]">
+                    {sammenligning.setning}
+                  </p>
+                )}
                 {resultat.eksempel && (
                   <a href={resultat.eksempel.kildeUrl} target="_blank" rel="noreferrer" className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
                     Forbrukerklageutvalget, sak {resultat.eksempel.saksnummer}
@@ -494,9 +502,6 @@ function Vurdering({
                 )}
               </div>
             )}
-            <p className="m-0 max-w-[600px] text-[15px] leading-[1.6] text-[#3d4757] [text-wrap:pretty] md:text-[17px] md:leading-[1.65]">
-              {resultat.begrunnelse}
-            </p>
           </div>
           {resultat.styrker.length > 0 && (
             <PunktListe

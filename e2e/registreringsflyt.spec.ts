@@ -1,6 +1,6 @@
 import { expect, idFra, mockKjoretoy, test } from "./fixtures";
 
-// The one flow test: from the landing page, through the three steps (the evidence step only comes when the defect showed outside the presumption period) and the assessment, to the finished letter.
+// The one flow test: from the landing page, through the four steps and the assessment, to the finished letter.
 // Runs against the real /api/vurder and the database, so it checks the shape of the assessment and
 // not the number of decisions, which changes when `hent` adds more.
 
@@ -28,7 +28,12 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await expect(skjema.nesteKnapp).toBeDisabled();
   await skjema.svar("Visste du om feilen før du kjøpte?", "Nei");
   await skjema.svar("Har du tatt opp feilen med forhandleren?", "Ja");
-  // Inside the presumption period the evidence does not decide the level, so the last step is this one.
+  await skjema.neste();
+
+  await expect(skjema.tittel("Hvilke bevis har du?")).toBeVisible();
+  await expect(skjema.nesteKnapp).toBeDisabled();
+  await skjema.svar("Har du en verksted- eller tilstandsrapport?", "Ja");
+  await skjema.svar("Sier rapporten at feilen sannsynligvis var til stede før kjøpet?", "Ja");
   await expect(skjema.nesteKnapp).toHaveText("Se vurderingen →");
 
   // Hold the answer back so the waiting page is certain to be on screen when we look for it.
@@ -48,7 +53,10 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
     await expect(page.getByRole("link", { name: /^Forbrukerklageutvalget, sak / })).toBeVisible();
     const grunnlag = page.getByRole("region", { name: "Dette styrker saken din" });
     await expect(grunnlag.getByRole("listitem")).toHaveCount(3);
-    await expect(grunnlag.getByRole("link", { name: "forbrukerkjøpsloven § 18" })).toHaveAttribute("href", /lovdata\.no/);
+    // The presumption and the report both rest on § 18.
+    const paragraf18 = grunnlag.getByRole("link", { name: "forbrukerkjøpsloven § 18" });
+    await expect(paragraf18).toHaveCount(2);
+    await expect(paragraf18.first()).toHaveAttribute("href", /lovdata\.no/);
     // What the dealer may object (wear on an engine) stands in its own list, not in the title.
     await expect(page.getByRole("region", { name: "Dette svekker saken din" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Få reklamasjonsbrevet" })).toBeVisible();

@@ -42,6 +42,9 @@ export type Faktorer = {
   presumsjonManeder: 6 | 24;
   // The defect showed within the presumption period, so the burden of proof is on the dealer.
   presumsjon: boolean;
+  // More than five years have passed since the purchase. With a first complaint inside the five years
+  // the claim stands anyway.
+  femAarGatt: boolean;
   // More than five years from purchase to the first complaint, or to today when there has been none.
   fristUte: boolean;
   // The law itself stops the claim: not a purchase from a dealer by a consumer (§ 1), or past the
@@ -163,6 +166,7 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
     statistikkbotte: presumsjon ? "rask" : BOTTE[f.oppdaget],
     presumsjonManeder,
     presumsjon,
+    femAarGatt,
     fristUte,
     stopp:
       b.kjopsform === "firma"

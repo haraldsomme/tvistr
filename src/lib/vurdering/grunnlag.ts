@@ -41,7 +41,9 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
 
   if (f.rapportSierForKjop === true) {
     punkter.push({ tekst: "Verkstedrapporten din sier at feilen sannsynligvis var der før kjøpet. Det er ofte avgjørende i lignende saker.", vekt: "for", ...fkjl(18) });
-  } else if (!f.presumsjon) {
+  } else if (f.presumsjon) {
+    punkter.push({ tekst: "Du har ikke en rapport som sier at feilen var der før kjøpet. Forhandleren kan prøve å vise at den kom etter kjøpet, og uten rapport har du lite å svare med.", vekt: "mot" });
+  } else {
     punkter.push({ tekst: "Du har ikke en rapport som sier at feilen var der før kjøpet. Uten det er det vanskelig å nå fram.", vekt: "mot" });
   }
 
@@ -64,7 +66,7 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
   if (f.opplystTakSvak) {
     punkter.push({
       tekst:
-        "Du visste om feilen da du kjøpte bilen. Det du kjente til, kan du normalt ikke klage på.",
+        "Du visste om feilen da du kjøpte bilen. Det du kjente til, kan du normalt ikke klage på (forbrukerkjøpsloven § 16 tredje ledd, slik den lød før 2024).",
       vekt: "mot",
     });
   } else if (f.opplystEtter2024) {
@@ -101,7 +103,9 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
     });
   }
 
-  if (!f.fristUte) {
+  if (f.femAarGatt && !f.fristUte) {
+    punkter.push({ tekst: "Det er mer enn fem år siden du fikk bilen, men du tok det opp med forhandleren innen fem år, så den ytterste fristen for å reklamere er overholdt.", vekt: "for", ...fkjl(27) });
+  } else if (!f.fristUte) {
     punkter.push({ tekst: "Det er under fem år siden du fikk bilen, så den ytterste fristen for å reklamere er ikke ute.", vekt: "for", ...fkjl(27) });
   }
 

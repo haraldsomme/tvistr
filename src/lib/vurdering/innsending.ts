@@ -4,7 +4,6 @@ import {
   kjopsalderFor,
   kjopsdatoFor,
   leggTilManeder,
-  presumsjonManederFor,
 } from "./faktorer";
 import {
   FEILOPPLYSNING_VALG,
@@ -64,7 +63,7 @@ export type Innsending = {
   feilOpplysning: (typeof FEILOPPLYSNING_VALG)[number] | ""; // not asked in the assessment; answered on the letter page
   kontakt: Kontakt | "";
   reklamertInnenFemAr: JaNei; // asked when the purchase is over five years old and the dealer is contacted
-  verkstedrapport: JaNei; // asked when the defect showed outside the presumption period
+  verkstedrapport: JaNei; // asked unless the law stops the claim
   rapportSierForKjop: JaNei; // asked when there is a report
   bilder: JaNei; // not asked in the assessment
 };
@@ -143,17 +142,8 @@ export function stoppGrunn(
     : null;
 }
 
-// Does the evidence decide anything? Only when the defect showed outside the presumption period,
-// where the buyer must show that it was there at delivery and a report is the way to do it.
-export function sporOmBevis(i: Pick<Innsending, "kjopsdato" | "kjopAlder" | "oppdaget">, idag = iDag()): boolean {
-  const dato = kjopsdatoAv(i, idag);
-  if (!dato || !i.oppdaget) return false;
-  const presumsjon = i.oppdaget === "innen_6_mnd" || (i.oppdaget === "6_mnd_til_2_ar" && presumsjonManederFor(dato) === 24);
-  return !presumsjon;
-}
-
 // The steps the form shows for these answers. A purchase that is not covered by the act stops at step 1,
-// and a missed deadline after step 3; the evidence step only when it can change the result.
+// and a missed deadline after step 3; every other case gets the evidence step.
 type StegSvar = Pick<
   Innsending,
   | "kjopsform"
@@ -167,7 +157,7 @@ export function stegFor(i: StegSvar, idag = iDag()): readonly Steg[] {
   const stopp = stoppGrunn(i, idag);
   if (stopp === "firma" || stopp === "privat") return [1];
   if (stopp === "frist") return [1, 2, 3];
-  return sporOmBevis(i, idag) ? [1, 2, 3, 4] : [1, 2, 3];
+  return [1, 2, 3, 4];
 }
 
 const MIN_MANEDER: Record<Oppdaget, number> = { innen_6_mnd: 0, "6_mnd_til_2_ar": 6, over_2_ar: 24 };
@@ -234,7 +224,7 @@ function feil(i: Innsending, steg: Steg, idag: string): string | null {
     if (sporOmFemarsfrist(i, idag) && !jaNei(i.reklamertInnenFemAr))
       return "Svar på om du tok det opp med forhandleren innen fem år etter kjøpet.";
   }
-  if (steg === 4 && sporOmBevis(i, idag)) {
+  if (steg === 4) {
     if (!jaNei(i.verkstedrapport)) return "Svar på om du har en verksted- eller tilstandsrapport.";
     if (i.verkstedrapport === "ja" && !jaNei(i.rapportSierForKjop)) return "Svar på hva rapporten sier om feilen.";
   }

@@ -101,13 +101,13 @@ export type KlageInput = {
     reklamertInnenFemAr?: boolean;
     utbedringskostnadNok?: number | null;
   };
-  // Only asked when the defect showed outside the presumption period, where the report decides the
-  // level. null = not asked; the buyer can answer on the letter page.
+  // Asked in the assessment unless the law stops the claim first. null = not asked; the buyer can
+  // answer on the letter page.
   bevis: {
     verkstedrapport: boolean | null;
     // Only asked when a report exists: does it say the defect was probably there before purchase?
     rapportSierForKjop: boolean | null;
-    // Not asked in the assessment; answered on the letter page.
+    // Not asked in the assessment; derived on the letter page from the attachments chosen there.
     bilder: boolean | null;
   };
 };

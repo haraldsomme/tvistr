@@ -70,6 +70,48 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await page.getByRole("button", { name: "Betal med vipps" }).click();
   await expect(page).toHaveURL(/\/brev\/[\w-]{22}$/);
   sak.rydd(idFra(page.url()));
+
+  // A fresh case opens on the fill-in list (on a narrow screen the letter is a tap away on «Brev»; on
+  // a wide screen both show side by side regardless). Every step, in order, to a finished letter.
+  await brev.steg("Kjøpet").getByLabel("Når kjøpte du bilen?").fill("2024-03-12");
+  await brev.steg("Kjøpet").getByLabel("Hva kostet bilen?").fill("250000");
+  await brev.steg("Kjøpet").getByRole("radio", { name: "Ja, bilen ble solgt «som den er»" }).check();
+  await brev.lagreKnapp("Kjøpet").click();
+
+  await brev.forhandler.fill("Testbil AS");
+  await brev.steg("Forhandler").getByRole("button", { name: /Bruk «.*» som skrevet/ }).click();
+
+  await brev.steg("Feilen").getByLabel("Når viste feilen seg første gang?").fill("2024-06-01");
+  await brev.steg("Feilen").getByLabel("Beskriv feilen").fill("Motorlampen lyser, og bilen mister kraft i motbakker.");
+  await brev.steg("Feilen").getByRole("button", { name: "Sett inn min egen tekst" }).click();
+
+  await brev.steg("Før kjøpet").getByLabel("Visste du om feilen før du kjøpte?").selectOption({ label: "Nei" });
+  await brev.steg("Før kjøpet").getByLabel("Sa annonsen eller selgeren noe om bilen som ikke stemte?").selectOption({ label: "Nei" });
+  await brev.lagreKnapp("Før kjøpet").click();
+
+  await brev.steg("Kontakt med forhandleren").getByLabel("Når tok du opp feilen første gang?").fill("2024-06-10");
+  await brev.steg("Kontakt med forhandleren").getByLabel("Hvordan tok du kontakt?").selectOption({ label: "E-post" });
+  await brev.steg("Kontakt med forhandleren").getByLabel("Hva har forhandleren gjort?").selectOption({ label: "Forhandleren vil forsøke, eller har ikke svart ennå" });
+  await brev.lagreKnapp("Kontakt med forhandleren").click();
+
+  await brev.steg("Bevis og vedlegg").getByLabel("Har du en verksted- eller tilstandsrapport?").selectOption({ label: "Nei" });
+  await brev.steg("Bevis og vedlegg").getByRole("button", { name: "Bekreft vedlegg" }).click();
+
+  // The dealer has not had the chance to repair yet, so the claim is repair: nothing to choose.
+  await brev.lagreKnapp("Kravet").click();
+
+  await brev.steg("Deg").getByLabel("Navn").fill("Test Testesen");
+  await brev.steg("Deg").getByLabel("Adresse").fill("Testveien 1");
+  await brev.steg("Deg").getByLabel("Postnummer").fill("0184");
+  await brev.steg("Deg").getByLabel("Sted").fill("Oslo");
+  await brev.lagreKnapp("Deg").click();
+
+  await page.getByRole("tab", { name: "Brev" }).click();
   await expect(brev.overskrift).toHaveText("Reklamasjon på mangel – Testmerke Modell X (2019), reg.nr. ZZ 99999");
   await expect(brev.ark).not.toContainText("[reg.nr.]");
+  await expect(brev.ark).toContainText("Test Testesen");
+  await expect(brev.ark).toContainText("Testbil AS");
+  await expect(brev.ark).toContainText("solgt «som den er»");
+  await expect(brev.ark).not.toContainText("[Beskriv feilen");
+  await expect(brev.ark).not.toContainText("[Ditt navn]");
 });

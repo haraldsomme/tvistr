@@ -15,6 +15,9 @@ export type Utfylling = {
   kjoretoy?: Kjoretoy;
   forhandler?: Forhandler;
   feilen?: Feilen;
+  // Did the ad or the dealer say something about the car that was not true? `opplysning` holds what
+  // and where only when this is "ja"; answering "nei" clears it.
+  feilopplyst?: "ja" | "nei";
   opplysning?: Opplysning;
   // What the dealer has done about the defect; asked when the buyer has taken it up with the dealer.
   retting?: Retting;
@@ -78,6 +81,10 @@ export type Kontekst = { svar: Pick<Innsending, "kjopsdato">; idag: string };
 
 // One save from the page: the fields that changed. null clears a field.
 export type Endring = { [K in Felt]?: Utfylling[K] | null };
+
+// One save from a step that also corrects an answer from the assessment (the exact purchase date, say),
+// alongside the fill-in fields that change with it.
+export type Lagring = Endring & { svar?: Innsending };
 
 // How long a case is kept after it was last changed.
 export const LEVETID_DAGER = 30;
@@ -198,6 +205,10 @@ function lesAvsender(v: unknown): Avsender | null {
 const lesRetting = (v: unknown): Retting | null =>
   blant(RETTING_VALG, v) ? v : null;
 
+const FEILOPPLYST_VALG = ["ja", "nei"] as const;
+const lesFeilopplyst = (v: unknown): "ja" | "nei" | null =>
+  blant(FEILOPPLYST_VALG, v) ? v : null;
+
 const lesForbehold = (v: unknown): Forbehold | null =>
   blant(FORBEHOLD_VALG, v) ? v : null;
 
@@ -221,6 +232,7 @@ const lesSendt = (v: unknown, k: Kontekst): string | null => (etterKjop(v, k) ? 
 const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } = {
   forhandler: lesForhandler,
   feilen: lesFeilen,
+  feilopplyst: lesFeilopplyst,
   opplysning: lesOpplysning,
   retting: lesRetting,
   reklamasjon: lesReklamasjon,

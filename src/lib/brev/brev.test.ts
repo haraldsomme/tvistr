@@ -80,6 +80,47 @@ describe("byggBrev", () => {
       expect(t).not.toContain("§ 18");
       expect(t).toContain("mer enn to år etter levering");
     });
+
+    it("en rapport som sier feilen var der før kjøpet støtter presumsjonen innenfor perioden", () => {
+      const i = grunn();
+      i.bevis = { verkstedrapport: true, rapportSierForKjop: true, bilder: false };
+      const t = tekst(byggBrev(i, IDAG));
+      expect(t).toContain("støtter også at feilen var der allerede da jeg overtok bilen");
+      expect(t).not.toContain("§ 18 første ledd");
+    });
+
+    it("en rapport er beviset etter § 18 første ledd utenfor presumsjonsperioden", () => {
+      const i = grunn();
+      i.feilen.oppdaget = "over_2_ar";
+      i.bevis = { verkstedrapport: true, rapportSierForKjop: true, bilder: false };
+      expect(tekst(byggBrev(i, IDAG))).toContain("sannsynligvis var til stede før jeg overtok bilen, jf. § 18 første ledd");
+    });
+
+    it("ingen rapportsetning uten rapport, eller når den ikke sier noe om tidspunktet", () => {
+      expect(tekst(byggBrev(grunn(), IDAG))).not.toContain("verksted- eller tilstandsrapport");
+      const i = grunn();
+      i.bevis = { verkstedrapport: true, rapportSierForKjop: false, bilder: false };
+      expect(tekst(byggBrev(i, IDAG))).not.toContain("verksted- eller tilstandsrapport sier");
+    });
+  });
+
+  describe("femårsfristen", () => {
+    it("sier at fristen er overholdt når det er reklamert innen fem år, men mer enn fem år er gått", () => {
+      const i = grunn();
+      i.bilOgKjop.kjopsdato = "2020-01-01";
+      i.feilen.kontakt = "ja";
+      i.feilen.reklamertInnenFemAr = true;
+      const t = tekst(byggBrev(i, IDAG, { retting: "avvist" }));
+      expect(t).toContain("Det er mer enn fem år siden jeg overtok bilen, men jeg tok dette opp med dere innen fem år, slik at fristen i § 27 andre ledd er overholdt.");
+    });
+
+    it("ingen slik setning innenfor fem år, eller når fristen er ute", () => {
+      expect(tekst(byggBrev(grunn(), IDAG))).not.toContain("er overholdt");
+      const i = grunn();
+      i.bilOgKjop.kjopsdato = "2020-01-01";
+      i.feilen.kontakt = "nei";
+      expect(tekst(byggBrev(i, IDAG))).not.toContain("er overholdt");
+    });
   });
 
   it("sier at feilen ikke ble opplyst bare når svaret er nei", () => {

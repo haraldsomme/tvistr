@@ -4,15 +4,19 @@ import { useRouter } from "next/navigation";
 import { useId, useState, type ReactNode } from "react";
 import { Logo } from "@/app/logo";
 import { ForhandlerVelger } from "@/app/vurdering/forhandler-velger";
-import { AvsenderFelt, FeilenFelt, ForbeholdFelt, KravFelt, OpplysningFelt, ReklamasjonFelt, RettingFelt, VedleggFelt } from "./felt";
+import { AvsenderFelt, KravFelt } from "./felt";
+import { BevisFelt } from "./steg/bevis";
+import { FeilenFelt } from "./steg/feilen";
+import { ForKjopetFelt } from "./steg/for-kjopet";
+import { KjopetFelt } from "./steg/kjopet";
+import { KontaktFelt } from "./steg/kontakt";
 import { byggBrev, harPlassholder, type LignendeRef } from "@/lib/brev/brev";
-import type { Endring, Utfylling } from "@/lib/brev/utfylling";
+import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { beregnFaktorer } from "@/lib/vurdering/faktorer";
-import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
+import { gyldigKjopsdato, tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import { gyldigRetting, type Forhandler } from "@/lib/vurdering/typer";
 import { Brevark } from "./brevark";
 import { Saksmappe } from "./mappe/saksmappe";
-import { SvarKort } from "./svar-felt";
 
 const MERKE_MANGLER = "whitespace-nowrap rounded bg-[oklch(0.96_0.07_85)] px-2 py-[3px] text-[12px] font-semibold text-[#6b5618]";
 
@@ -76,9 +80,9 @@ type StegStatus = "aktiv" | "ferdig" | "venter";
 // One numbered step of the fill-in list: the number turns into a check when the step is done, and
 // only the active step is open. The active step is the first one not done, or a finished one the
 // user has chosen to change (`endre`).
-function Steg({ nr, tittel, tittelId, status, endre, children }: { nr: number; tittel: string; tittelId: string; status: StegStatus; endre?: () => void; children: ReactNode }) {
+function Steg({ id, nr, tittel, tittelId, status, endre, children }: { id: string; nr: number; tittel: string; tittelId: string; status: StegStatus; endre?: () => void; children: ReactNode }) {
   return (
-    <li aria-current={status === "aktiv" ? "step" : undefined} className={`flex gap-3.5 px-[18px] py-4 first:rounded-t-lg last:rounded-b-lg ${status === "aktiv" ? "bg-[#fbf9f4]" : ""} ${status === "venter" ? "opacity-60" : ""}`}>
+    <li id={`steg-${id}`} aria-current={status === "aktiv" ? "step" : undefined} className={`flex gap-3.5 px-[18px] py-4 first:rounded-t-lg last:rounded-b-lg ${status === "aktiv" ? "bg-[#fbf9f4]" : ""} ${status === "venter" ? "opacity-60" : ""}`}>
       {status === "ferdig" ? (
         <span role="img" aria-label="Ferdig" className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-[oklch(0.52_0.1_160)] text-[13px] font-semibold text-white">
           ✓
@@ -151,8 +155,11 @@ function Ramme({ children }: { children: ReactNode }) {
   );
 }
 
+type Fane = "fyll" | "brev" | "mappe";
+const FANE_TEKST: Record<Fane, string> = { fyll: "Fyll inn", brev: "Brev", mappe: "Saksmappe" };
+
 // The letter page is where the buyer lands after buying, so there is no way back to the assessment:
-// the answers it gave are corrected here (`SvarKort`), and the vehicle is fixed from the start.
+// the answers it gave are corrected in the step they belong to, and the vehicle is fixed from the start.
 export function BrevSide({
   id,
   startSvar,
@@ -171,7 +178,11 @@ export function BrevSide({
   const [svar, setSvar] = useState(startSvar);
   const [utfylling, setUtfylling] = useState(startUtfylling);
   const [lignende, setLignende] = useState(startLignende);
-  const [fane, setFane] = useState<"brev" | "mappe">("brev");
+  // On a narrow screen only one of the fill-in list and the letter shows at a time (on a wide screen
+  // both always do); a letter with something still missing opens on the list, a finished one on itself.
+  const parsed0 = tilKlageInput(startSvar, idag);
+  const alleredeFerdig = parsed0.ok && !harPlassholder(byggBrev(parsed0.input, idag, startUtfylling, startLignende));
+  const [fane, setFane] = useState<Fane>(alleredeFerdig ? "brev" : "fyll");
   const [feil, setFeil] = useState<string | null>(null);
   const router = useRouter();
   const idBase = useId();
@@ -184,31 +195,16 @@ export function BrevSide({
   const input = parsed.ok ? parsed.input : null;
   const stopp = input === null ? null : beregnFaktorer(input, idag).stopp;
 
-  // Saves one or more fields with the case. The letter shows what the server stored.
-  async function lagre(endring: Endring): Promise<boolean> {
+  // Saves one step: the fill-in fields that changed, and the answers from the assessment it corrects,
+  // if any. The letter shows what the server stored, including the answers it derives from the save
+  // (how long after the purchase the defect showed, and so on; see `avledSvar`).
+  async function lagre(lagring: Lagring): Promise<boolean> {
     setFeil(null);
     try {
-      const res = await fetch(`/api/sak/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(endring) });
-      const json = (await res.json()) as { utfylling?: Utfylling; lignende?: LignendeRef[]; feil?: string };
-      if (!res.ok || !json.utfylling) throw new Error(json.feil ?? "");
-      setUtfylling(json.utfylling);
-      setLignende(json.lignende ?? []);
-      return true;
-    } catch (e) {
-      setFeil((e instanceof Error && !(e instanceof TypeError) && e.message) || "Vi fikk ikke lagret. Prøv igjen om litt.");
-      return false;
-    }
-  }
-
-  // Replaces the answers from the assessment. The server returns the fill-in too, since dates the
-  // new answers make impossible are dropped from it.
-  async function lagreSvar(nye: Innsending): Promise<boolean> {
-    setFeil(null);
-    try {
-      const res = await fetch(`/api/sak/${id}/svar`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(nye) });
+      const res = await fetch(`/api/sak/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(lagring) });
       const json = (await res.json()) as { svar?: Innsending; utfylling?: Utfylling; lignende?: LignendeRef[]; feil?: string };
-      if (!res.ok || !json.svar || !json.utfylling) throw new Error(json.feil ?? "");
-      setSvar(json.svar);
+      if (!res.ok || !json.utfylling) throw new Error(json.feil ?? "");
+      if (json.svar) setSvar(json.svar);
       setUtfylling(json.utfylling);
       setLignende(json.lignende ?? []);
       setRedigerer(null);
@@ -230,14 +226,23 @@ export function BrevSide({
     }
   }
 
-  const svarKort = <SvarKort svar={svar} kjoretoy={utfylling.kjoretoy} idag={idag} tvinget={parsed.ok ? null : parsed.feil} lagre={lagreSvar} />;
+  // Opens the step a clicked placeholder in the letter belongs to.
+  function apneSteg(stegId: string) {
+    setFane("fyll");
+    setRedigerer(stegId);
+    requestAnimationFrame(() => document.getElementById(`steg-${stegId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+  }
+
   const feilmelding = feil && (
     <p role="alert" className="m-0 text-[13px] leading-[1.5] text-[#a23b2a]">
       {feil}
     </p>
   );
 
-  // The answers no longer give a letter: only the answers are shown, open, until they are corrected.
+  const retting = gyldigRetting(svar.kontakt || "nei", utfylling.retting);
+
+  // The answers no longer give a letter (typically: the five-year deadline has begun to matter since
+  // they were saved): only the one step that decides it is shown, open, until it is corrected.
   if (!input) {
     return (
       <Ramme>
@@ -245,7 +250,14 @@ export function BrevSide({
           <h2 id="mangler-tittel" className="m-0 font-brev text-[22px] font-semibold leading-[1.3]">
             Svarene dine må rettes
           </h2>
-          {svarKort}
+          <p role="alert" className="m-0 text-[13px] leading-[1.5] text-[#a23b2a]">
+            {!parsed.ok && parsed.feil}
+          </p>
+          <ol className="m-0 list-none divide-y divide-[#eceae4] rounded-lg border border-[#dcd8cf] bg-white p-0">
+            <Steg id="kontakt" nr={1} tittel="Kontakt med forhandleren" tittelId={`${idBase}-kontakt`} status="aktiv">
+              <KontaktFelt svar={svar} idag={idag} retting={retting} reklamasjon={utfylling.reklamasjon} aktiv lagre={lagre} />
+            </Steg>
+          </ol>
           {feilmelding}
           <SlettSak slett={slett} />
         </section>
@@ -253,22 +265,25 @@ export function BrevSide({
     );
   }
 
-  // The steps in order. A step is left out when the answers from the assessment make it irrelevant.
-  // The first two are lookups and handle their own «Endre» (it clears the value); the rest keep
-  // their value while it is being changed.
+  // The steps in order. «Forhandleren» looks up the dealer itself and handles its own «Endre» (it
+  // clears the value); the rest keep their value while it is being changed.
   const felles = (stegId: string) => ({
     aktiv: erAktiv(stegId),
-    lagre: async (e: Endring) => {
-      const ok = await lagre(e);
-      if (ok) setRedigerer(null);
-      return ok;
-    },
+    lagre,
     avbryt: redigerer === stegId ? () => setRedigerer(null) : undefined,
   });
-  const kontakt = input.feilen.kontakt;
-  const retting = gyldigRetting(kontakt, utfylling.retting);
+  const kjopetFerdig = gyldigKjopsdato(svar.kjopsdato, idag) && /^\d+$/.test(svar.kjopesum) && utfylling.forbehold !== undefined;
+  const kontakt = svar.kontakt || "nei";
+  const kontaktFerdig = kontakt === "nei" || (retting !== undefined && utfylling.reklamasjon !== undefined && (retting !== "forsokt" || utfylling.reklamasjon.forsok !== undefined));
   const kanVelgeKrav = retting === "avvist" || retting === "forsokt" || retting === "reparert_selv";
   const steg: { id: string; tittel: string; ferdig: boolean; kanEndres?: boolean; innhold: () => ReactNode }[] = [
+    {
+      id: "kjopet",
+      tittel: "Kjøpet",
+      ferdig: kjopetFerdig,
+      kanEndres: true,
+      innhold: () => <KjopetFelt kjoretoy={utfylling.kjoretoy!} svar={svar} idag={idag} verdi={utfylling.forbehold} {...felles("kjopet")} />,
+    },
     {
       id: "forhandler",
       tittel: "Forhandler",
@@ -282,42 +297,26 @@ export function BrevSide({
       kanEndres: true,
       innhold: () => <FeilenFelt sakId={id} input={input} idag={idag} verdi={utfylling.feilen} {...felles("feilen")} />,
     },
-    ...(input.feilen.feilOpplysning !== "nei"
-      ? [
-          {
-            id: "opplysning",
-            tittel: "Opplysninger før kjøpet",
-            ferdig: utfylling.opplysning !== undefined,
-            kanEndres: true,
-            innhold: () => <OpplysningFelt verdi={utfylling.opplysning} {...felles("opplysning")} />,
-          },
-        ]
-      : []),
     {
-      id: "retting",
-      tittel: "Reparasjon av feilen",
-      // Nothing has happened is the default for a buyer who has not told the dealer.
-      ferdig: retting !== undefined || kontakt === "nei",
+      id: "for-kjopet",
+      tittel: "Før kjøpet",
+      ferdig: utfylling.feilopplyst !== undefined,
       kanEndres: true,
-      innhold: () => <RettingFelt input={input} verdi={utfylling.retting} {...felles("retting")} />,
+      innhold: () => <ForKjopetFelt svar={svar} verdi={utfylling.opplysning} feilopplyst={utfylling.feilopplyst} {...felles("for-kjopet")} />,
     },
-    ...(kontakt !== "nei"
-      ? [
-          {
-            id: "reklamasjon",
-            tittel: "Kontakt med forhandleren",
-            ferdig: utfylling.reklamasjon !== undefined && (retting !== "forsokt" || utfylling.reklamasjon.forsok !== undefined),
-            kanEndres: true,
-            innhold: () => <ReklamasjonFelt input={input} retting={retting} idag={idag} verdi={utfylling.reklamasjon} {...felles("reklamasjon")} />,
-          },
-        ]
-      : []),
     {
-      id: "forbehold",
-      tittel: "Forbehold i kjøpet",
-      ferdig: utfylling.forbehold !== undefined,
+      id: "kontakt",
+      tittel: "Kontakt med forhandleren",
+      ferdig: kontaktFerdig,
       kanEndres: true,
-      innhold: () => <ForbeholdFelt verdi={utfylling.forbehold} {...felles("forbehold")} />,
+      innhold: () => <KontaktFelt svar={svar} idag={idag} retting={retting} reklamasjon={utfylling.reklamasjon} {...felles("kontakt")} />,
+    },
+    {
+      id: "bevis",
+      tittel: "Bevis og vedlegg",
+      ferdig: utfylling.vedlegg !== undefined,
+      kanEndres: true,
+      innhold: () => <BevisFelt input={input} svar={svar} utfylling={utfylling} {...felles("bevis")} />,
     },
     {
       id: "krav",
@@ -325,13 +324,6 @@ export function BrevSide({
       ferdig: utfylling.krav !== undefined && (!kanVelgeKrav || utfylling.krav.type !== undefined),
       kanEndres: true,
       innhold: () => <KravFelt kanVelge={kanVelgeKrav} verdi={utfylling.krav} {...felles("krav")} />,
-    },
-    {
-      id: "vedlegg",
-      tittel: "Vedlegg",
-      ferdig: utfylling.vedlegg !== undefined,
-      kanEndres: true,
-      innhold: () => <VedleggFelt input={input} utfylling={utfylling} {...felles("vedlegg")} />,
     },
     {
       id: "avsender",
@@ -346,11 +338,12 @@ export function BrevSide({
   function erAktiv(stegId: string) {
     return aktivId === stegId;
   }
+  const ferdigAntall = steg.filter((s) => s.ferdig).length;
 
   const brev = byggBrev(input, idag, utfylling, lignende);
   const faner = (
     <div role="tablist" aria-label="Sakens deler" className="flex w-full gap-1 border-b border-[#d3cec3] lg:col-span-2">
-      {(["brev", "mappe"] as const).map((f) => (
+      {(["fyll", "brev", "mappe"] as const).map((f) => (
         <button
           key={f}
           type="button"
@@ -362,13 +355,14 @@ export function BrevSide({
           onClick={() => setFane(f)}
           onKeyDown={(e) => {
             if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-            const annen = f === "brev" ? "mappe" : "brev";
+            const rekkefolge: Fane[] = ["fyll", "brev", "mappe"];
+            const annen = rekkefolge[(rekkefolge.indexOf(f) + (e.key === "ArrowRight" ? 1 : rekkefolge.length - 1)) % rekkefolge.length];
             setFane(annen);
             document.getElementById(`fane-${annen}`)?.focus();
           }}
-          className={`-mb-px border-b-2 px-4 py-3 text-[15px] font-semibold ${fane === f ? "border-[#17263d] text-[#17263d]" : "border-transparent text-[#5b6472]"}`}
+          className={`-mb-px border-b-2 px-4 py-3 text-[15px] font-semibold lg:last:ml-auto ${f === "fyll" ? "lg:hidden" : ""} ${fane === f ? "border-[#17263d] text-[#17263d]" : "border-transparent text-[#5b6472]"}`}
         >
-          {f === "brev" ? "Brev" : "Saksmappe"}
+          {FANE_TEKST[f]}
         </button>
       ))}
     </div>
@@ -376,6 +370,65 @@ export function BrevSide({
   // The numbers in the saksmappe follow the answers, the claim and the dealer; ticks and citations
   // do not change them, so they are left out and do not make it fetch again.
   const avhengighet = JSON.stringify([svar, utfylling.krav, utfylling.forhandler, utfylling.forbehold, utfylling.sendt]);
+
+  const fyllKolonne = (
+    <section aria-labelledby="mangler-tittel" className={`flex w-full max-w-[820px] flex-col gap-4 ${fane === "fyll" ? "" : "hidden lg:flex"}`}>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id="mangler-tittel" className="m-0 font-brev text-[22px] font-semibold leading-[1.3]">
+          Fyll inn det som mangler
+        </h2>
+        <span className="whitespace-nowrap text-[13px] text-[#5b6472]">
+          {ferdigAntall} av {steg.length}
+        </span>
+      </div>
+      <ol className="m-0 list-none divide-y divide-[#eceae4] rounded-lg border border-[#dcd8cf] bg-white p-0">
+        {steg.map((s, n) => (
+          <Steg
+            key={s.id}
+            id={s.id}
+            nr={n + 1}
+            tittel={s.tittel}
+            tittelId={`${idBase}-${s.id}`}
+            status={s.id === aktivId ? "aktiv" : s.ferdig ? "ferdig" : "venter"}
+            endre={s.kanEndres && s.ferdig ? () => setRedigerer(s.id) : undefined}
+          >
+            {s.innhold()}
+          </Steg>
+        ))}
+      </ol>
+      {feilmelding}
+      <p className="m-0 text-[13px] leading-[1.55] text-[#5b6472]">
+        Gule felt i brevet viser hva som mangler. Det du fyller inn lagres automatisk, og saken slettes 30 dager etter siste endring.
+      </p>
+      <SlettSak slett={slett} />
+    </section>
+  );
+
+  const brevKolonne = (
+    <div className={`flex w-full max-w-[820px] flex-col gap-4 lg:sticky lg:top-6 ${fane === "brev" ? "" : "hidden lg:flex"}`}>
+      {stopp && (
+        <p role="alert" className="m-0 rounded-lg border border-[oklch(0.72_0.11_85)] bg-[oklch(0.96_0.07_85)] px-[18px] py-3.5 text-[14px] leading-[1.55] text-[#6b5618]">
+          {stopp === "frist"
+            ? "Med disse svarene er fristen for å klage ute. Brevet står som det er, men forhandleren kan avvise kravet fordi det kommer for sent. Sjekk at svarene fra vurderingen stemmer."
+            : "Med disse svarene gjelder ikke forbrukerkjøpsloven for kjøpet (kjøp fra en privatperson eller gjennom et firma). Brevet står som det er, men forhandleren kan avvise kravet. Sjekk at svarene fra vurderingen stemmer."}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <a href={`/api/sak/${id}/dokument/brev.pdf`} download className="rounded-[6px] bg-[#17263d] px-[18px] py-[11px] text-[14px] font-semibold text-[#f6f4ef]">
+          Last ned PDF
+        </a>
+        <a href={`/api/sak/${id}/dokument/brev.docx`} download className="rounded-[6px] border border-[#bfbab0] bg-white px-[18px] py-[11px] text-[14px] font-semibold text-[#17263d]">
+          Last ned Word
+        </a>
+        {harPlassholder(brev) && (
+          <p role="status" className="m-0 text-[13px] leading-[1.5] text-[#6b5618]">
+            Brevet har felt som mangler (markert gult). Du kan laste det ned nå og fylle ut for hånd.
+          </p>
+        )}
+      </div>
+      <Brevark brev={brev} apne={apneSteg} />
+    </div>
+  );
 
   return (
     <Ramme>
@@ -385,56 +438,12 @@ export function BrevSide({
           <Saksmappe sakId={id} avhengighet={avhengighet} utfylling={utfylling} lagre={lagre} />
         </div>
       ) : (
-        <div role="tabpanel" id="panel-brev" aria-labelledby="fane-brev" className="contents">
-      <section aria-labelledby="mangler-tittel" className="flex w-full max-w-[820px] flex-col gap-4 lg:sticky lg:top-6">
-        <h2 id="mangler-tittel" className="m-0 font-brev text-[22px] font-semibold leading-[1.3]">
-          Fyll inn det som mangler
-        </h2>
-        <ol className="m-0 list-none divide-y divide-[#eceae4] rounded-lg border border-[#dcd8cf] bg-white p-0">
-          {steg.map((s, n) => (
-            <Steg
-              key={s.id}
-              nr={n + 1}
-              tittel={s.tittel}
-              tittelId={`${idBase}-${s.id}`}
-              status={s.id === aktivId ? "aktiv" : s.ferdig ? "ferdig" : "venter"}
-              endre={s.kanEndres && s.ferdig ? () => setRedigerer(s.id) : undefined}
-            >
-              {s.innhold()}
-            </Steg>
-          ))}
-        </ol>
-        {svarKort}
-        {feilmelding}
-        <p className="m-0 text-[13px] leading-[1.55] text-[#5b6472]">
-          Gule felt i brevet viser hva som mangler. Det du fyller inn lagres automatisk, og saken slettes 30 dager etter siste endring.
-        </p>
-        <SlettSak slett={slett} />
-      </section>
-      <div className="flex w-full max-w-[820px] flex-col gap-4">
-        {stopp && (
-          <p role="alert" className="m-0 rounded-lg border border-[oklch(0.72_0.11_85)] bg-[oklch(0.96_0.07_85)] px-[18px] py-3.5 text-[14px] leading-[1.55] text-[#6b5618]">
-            {stopp === "frist"
-              ? "Med disse svarene er fristen for å klage ute. Brevet står som det er, men forhandleren kan avvise kravet fordi det kommer for sent. Sjekk at svarene fra vurderingen stemmer."
-              : "Med disse svarene gjelder ikke forbrukerkjøpsloven for kjøpet (kjøp fra en privatperson eller gjennom et firma). Brevet står som det er, men forhandleren kan avvise kravet. Sjekk at svarene fra vurderingen stemmer."}
-          </p>
-        )}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <a href={`/api/sak/${id}/dokument/brev.pdf`} download className="rounded-[6px] bg-[#17263d] px-[18px] py-[11px] text-[14px] font-semibold text-[#f6f4ef]">
-            Last ned PDF
-          </a>
-          <a href={`/api/sak/${id}/dokument/brev.docx`} download className="rounded-[6px] border border-[#bfbab0] bg-white px-[18px] py-[11px] text-[14px] font-semibold text-[#17263d]">
-            Last ned Word
-          </a>
-          {harPlassholder(brev) && (
-            <p role="status" className="m-0 text-[13px] leading-[1.5] text-[#6b5618]">
-              Brevet har felt som mangler (markert gult). Du kan laste det ned nå og fylle ut for hånd.
-            </p>
-          )}
-        </div>
-        <Brevark brev={brev} />
-      </div>
-        </div>
+        <>
+          <div role="tabpanel" id={fane === "fyll" ? "panel-fyll" : "panel-brev"} aria-labelledby={fane === "fyll" ? "fane-fyll" : "fane-brev"} className="contents">
+            {fyllKolonne}
+            {brevKolonne}
+          </div>
+        </>
       )}
     </Ramme>
   );

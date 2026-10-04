@@ -78,19 +78,6 @@ export class Brev {
     return this.page.getByRole("heading", { level: 1 });
   }
 
-  // The answers from the assessment, which the buyer can correct once the letter is bought.
-  get svarKort() {
-    return this.page.getByRole("region", { name: "Svarene fra vurderingen" });
-  }
-
-  async endreSvar() {
-    await this.svarKort.getByRole("button", { name: "Endre svar" }).click();
-  }
-
-  async lagreSvar() {
-    await this.svarKort.getByRole("button", { name: "Lagre" }).click();
-  }
-
   // A step in the numbered fill-in list, found by its title.
   steg(tittel: string) {
     return this.page.getByRole("listitem").filter({ has: this.page.getByRole("heading", { name: tittel, exact: true }) });

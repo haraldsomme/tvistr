@@ -575,7 +575,7 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
     setD((x) => medKjopsalder(x, alder));
   };
 
-  // The evidence step only exists when the defect showed outside the presumption period.
+  // Every step up to the evidence one, unless the law stops the claim first.
   const steger = stegFor(d);
   const sisteSteg = steger[steger.length - 1];
 

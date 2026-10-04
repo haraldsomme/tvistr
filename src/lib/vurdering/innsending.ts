@@ -22,10 +22,11 @@ import {
 // What the form collects (steps 1–4) and the checks shared by the client (enables «Neste») and the
 // API route (never trusts the client). The assessment only asks for what decides the level: purchase
 // date, who the car was bought from, defect, when it showed, whether the buyer knew about it, contact
-// with the dealer, and (when it matters) what the report says. A purchase that is not covered by the
-// consumer purchase act stops the form at step 1 (see `stoppGrunn`). The purchase price, mileage, whether the information was in writing
-// and pictures are left empty here and answered on the letter page (the card «Svarene fra
-// vurderingen»), which uses the same type.
+// with the dealer, and what a report says, when there is one. A purchase that is not covered by the
+// consumer purchase act stops the form at step 1 (see `stoppGrunn`). The purchase price, mileage,
+// whether a false statement was in writing and pictures are left empty here: the letter page asks for
+// them in the step they belong to, and some are derived there instead of asked again
+// (`avledSvar` in `src/lib/brev/svar.ts`).
 
 export const FEILTYPER_KNAPPER: readonly FeilKnapp[] = [
   "motor",

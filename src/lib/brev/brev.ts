@@ -52,9 +52,10 @@ const MANEDER = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "a
 // How long the dealer gets to answer.
 export const SVARFRIST_DAGER = 14;
 
-const FEIL_PLASSHOLDER = "[Beskriv feilen: når den viste seg, hva som skjer, og hva verkstedet har funnet.]";
-const KRAV_ALTERNATIV = "[prisavslag / heving av kjøpet]";
-const OPPLYSNING_PLASSHOLDER = "[Skriv hva annonsen eller selgeren opplyste som ikke stemte.]";
+// Exported so the letter on screen can turn a placeholder into a button that opens the step that fills it.
+export const FEIL_PLASSHOLDER = "[Beskriv feilen: når den viste seg, hva som skjer, og hva verkstedet har funnet.]";
+export const KRAV_ALTERNATIV = "[prisavslag / heving av kjøpet]";
+export const OPPLYSNING_PLASSHOLDER = "[Skriv hva annonsen eller selgeren opplyste som ikke stemte.]";
 
 export function norskDato(iso: string): string {
   const [ar, maned, dag] = iso.split("-").map(Number);
@@ -144,6 +145,15 @@ function mangelOgBevisbyrde(input: KlageInput, idag: string, u: Utfylling): stri
   } else {
     setninger.push(`Feilen viste seg ${NAAR[f.oppdaget]} etter levering.`);
   }
+  // A report that points backward in time is evidence either way: inside the presumption it backs it
+  // up, outside it is what the buyer has instead of it (§ 18 first paragraph).
+  if (f.rapportSierForKjop === true) {
+    setninger.push(
+      f.presumsjon
+        ? "En verksted- eller tilstandsrapport støtter også at feilen var der allerede da jeg overtok bilen."
+        : "En verksted- eller tilstandsrapport sier at feilen sannsynligvis var til stede før jeg overtok bilen, jf. § 18 første ledd.",
+    );
+  }
   // The buyer answered that the ad or the dealer said something that was not true.
   if (input.feilen.feilOpplysning !== "nei") {
     setninger.push(
@@ -194,8 +204,11 @@ function historikk(
   return forste ? `${forste}. ` : "";
 }
 
-function krav(input: KlageInput, u: Utfylling): string {
-  const start = `${historikk(input.feilen.kontakt, u.retting, u.reklamasjon)}Jeg reklamerer herved i medhold av forbrukerkjøpsloven § 27 og`;
+function krav(input: KlageInput, f: Faktorer, u: Utfylling): string {
+  // Past the five-year deadline, but the first complaint came in time: says so, since the dealer may
+  // otherwise read the date alone as too late.
+  const frist = f.femAarGatt && !f.fristUte ? "Det er mer enn fem år siden jeg overtok bilen, men jeg tok dette opp med dere innen fem år, slik at fristen i § 27 andre ledd er overholdt. " : "";
+  const start = `${frist}${historikk(input.feilen.kontakt, u.retting, u.reklamasjon)}Jeg reklamerer herved i medhold av forbrukerkjøpsloven § 27 og`;
   if (!harFatt(u.retting)) {
     return `${start} krever at dere retter mangelen for egen regning innen rimelig tid, jf. § 29 og § 30. Retting skal skje uten kostnad og uten vesentlig ulempe for meg.`;
   }
@@ -279,7 +292,7 @@ export function byggBrev(
       mangelOgBevisbyrde(input, idag, u),
       ...innvendinger(input, f, u),
       ...lignendeAvsnitt(lignende),
-      krav(input, u),
+      krav(input, f, u),
       erstatningOgForbehold(u),
       `Jeg ber om skriftlig svar innen ${SVARFRIST_DAGER} dager fra dette brevets dato, det vil si innen ${norskDato(pluss14(idag))}. Hører jeg ikke fra dere innen fristen, vil jeg bringe saken inn for Forbrukerklageutvalget.`,
       ...(vedlagt.length ? [`Vedlagt følger ${liste(vedlagt.map((v) => VEDLEGG_NAVN[v]))}.`] : []),

@@ -316,6 +316,9 @@ export function tilKlageInput(raw: unknown, idag = iDag()): { ok: true; input: K
 
   const rapport = i.verkstedrapport === "ja";
   const ja = (v: JaNei) => (v === "ja" ? true : v === "nei" ? false : null);
+  // The vehicle's first registration year, sent alongside the answers from the registry lookup.
+  const bilAr = (raw as Record<string, unknown>).bilAr;
+  const gyldigBilAr = Number.isInteger(bilAr) && (bilAr as number) >= 1900 && (bilAr as number) <= Number(idag.slice(0, 4));
   return {
     ok: true,
     input: {
@@ -325,6 +328,7 @@ export function tilKlageInput(raw: unknown, idag = iDag()): { ok: true; input: K
         kjopAlder: i.kjopAlder as Kjopsalder,
         kjopesumNok: i.kjopesum ? Number(i.kjopesum) : null,
         ...(i.kmVedKjop && { kmVedKjop: Number(i.kmVedKjop) }),
+        ...(gyldigBilAr && { bilAr: bilAr as number }),
       },
       feilen: {
         typer: [...new Set(i.feiltyper)],

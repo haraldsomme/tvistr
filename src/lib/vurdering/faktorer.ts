@@ -25,6 +25,8 @@ export type Reklamasjonsbotte = "rask" | "middels" | "sen";
 export type Faktorer = {
   // One group per button the buyer picked; a group stands for any of its defect types. «Annet» gives no group.
   feilgrupper: Feiltype[][];
+  // The car's age in whole years at purchase, from its first registration. null when not known.
+  bilAlder: number | null;
   // null = not asked.
   verkstedrapport: boolean | null;
   bilder: boolean | null;
@@ -72,7 +74,7 @@ export type Faktorer = {
   feilOpplysningerDokumentert: boolean;
 };
 
-const KNAPP_TIL_FEILTYPE: Record<FeilKnapp, Feiltype[]> = {
+export const KNAPP_TIL_FEILTYPE: Record<FeilKnapp, Feiltype[]> = {
   motor: ["motor"],
   girkasse: ["girkasse", "clutch"],
   elektrisk: ["elektrisk"],
@@ -157,6 +159,7 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
 
   return {
     feilgrupper,
+    bilAlder: b.bilAr ? Math.max(0, Number(kjopsdato.slice(0, 4)) - b.bilAr) : null,
     verkstedrapport: bevis.verkstedrapport,
     bilder: bevis.bilder,
     rapportSierForKjop: bevis.verkstedrapport ? bevis.rapportSierForKjop : null,

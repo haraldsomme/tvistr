@@ -1,5 +1,6 @@
 import { beregnFaktorer, iDag, type Faktorer } from "@/lib/vurdering/faktorer";
 import { NAAR } from "@/lib/vurdering/grunnlag";
+import { velgHenvisning, type ValgtHenvisning } from "@/lib/vurdering/henvisninger";
 import {
   gyldigRetting,
   type FeilKnapp,
@@ -75,6 +76,7 @@ function liste(ledd: string[]): string {
 }
 
 const medPunktum = (t: string) => (/[.!?]$/.test(t) ? t : `${t}.`);
+const utenPunktum = (t: string) => t.replace(/[.!?]+$/, "");
 
 // Legal wording that goes beyond restating a rule in the form: in one place so a lawyer can read it.
 // Not reviewed by a lawyer yet.
@@ -93,21 +95,21 @@ export const JURIDISK = {
   forbehold: FORBEHOLD_AVSNITT,
   slitasje: (km?: number) =>
     `Jeg bestrider at feilen er normal slitasje. ${km !== undefined ? `Bilen hadde gått ${kroner(km).replace(/ kr$/, "")} km da jeg kjøpte den, og ` : ""}feilen er mer omfattende enn jeg med rimelighet kunne vente ut fra bilens alder, kilometerstand og pris, jf. § 15.`,
-  lignende: "Jeg viser til Forbrukerklageutvalgets behandling av lignende saker.",
+  // Law first, then the decision: case reference, date, one sentence on the likeness and one on the
+  // outcome, and a link. No amounts, no names.
+  henvisning: ({ henvisning: h }: ValgtHenvisning) => {
+    const kilde = `(${h.ref}, ${norskDato(h.dato)}, ${h.kildeUrl}).`;
+    // The paragraph before states the presumption, the report or the information, so «the same» points
+    // back to it; it does not state what the buyer could expect, so that rule is named here.
+    const innledning = h.type === "regel" && h.grunnlag === "forventning" ? "har vurdert hva en kjøper kan forvente av en eldre bil" : "har lagt det samme til grunn i tidligere saker";
+    return h.type === "regel"
+      ? `${h.organ} ${innledning}. ${utenPunktum(h.regel)} ${kilde} Jeg ber dere ta hensyn til at utvalget har vurdert tilsvarende saker slik.`
+      : `${h.organ} har behandlet en lignende sak. ${medPunktum(h.likhet)} ${utenPunktum(h.konklusjon)} ${kilde} Jeg ber dere ta hensyn til at utvalget har vurdert en tilsvarende sak slik.`;
+  },
 } as const;
 
 // Does the letter still have something to fill in? Placeholders are written in square brackets.
 export const harPlassholder = (b: Brev) => [...b.avsender, ...b.mottaker, b.stedDato, b.emne, ...b.avsnitt, b.underskrift].some((t) => /\[[^\]]+\]/.test(t));
-
-// A decision the buyer cites, resolved from the database (see mappe/hent.ts).
-export type LignendeRef = { saksnummer: string; ar: number; utfall: "medhold" | "delvis_medhold"; moment: string; kildeUrl: string };
-
-const UTFALL_TEKST = { medhold: "medhold", delvis_medhold: "delvis medhold" } as const;
-
-function lignendeAvsnitt(refs: LignendeRef[]): string[] {
-  if (refs.length === 0) return [];
-  return [`${JURIDISK.lignende} ${refs.map((r) => `Sak ${r.saksnummer} (${r.ar}, ${UTFALL_TEKST[r.utfall]}): ${medPunktum(r.moment)}`).join(" ")}`];
-}
 
 function innvendinger(input: KlageInput, f: Faktorer, u: Utfylling): string[] {
   const ledd: string[] = [];
@@ -256,15 +258,24 @@ export function vedleggFor(input: KlageInput, u: Utfylling): Vedlegg[] {
   return ["kjopekontrakt", ...(verkstedrapport ? (["verkstedrapport"] as const) : []), ...(bilder ? (["bilder"] as const) : [])];
 }
 
+// The answers do not hold the vehicle; its first registration comes from the registry lookup.
+const medBilAr = (input: KlageInput, u: Utfylling): KlageInput =>
+  u.kjoretoy?.ar ? { ...input, bilOgKjop: { ...input.bilOgKjop, bilAr: u.kjoretoy.ar } } : input;
+
+// The decision the letter cites: the same choice as the assessment's, from the same facts.
+export function henvisningFor(input: KlageInput, idag: string, u: Utfylling): ValgtHenvisning | null {
+  return velgHenvisning(beregnFaktorer(medBilAr(input, u), idag));
+}
+
 // The letter from the answers of the assessment and what the buyer has filled in on the letter
 // page. Whatever is not filled in yet is a placeholder in square brackets.
 export function byggBrev(
   input: KlageInput,
   idag = iDag(),
   utfylt: Utfylling = {},
-  lignende: LignendeRef[] = [],
 ): Brev {
   const f = beregnFaktorer(input, idag);
+  const henvisning = henvisningFor(input, idag, utfylt);
   // An answer about the repair that no longer fits the contact answer is not used.
   const u: Utfylling = {
     ...utfylt,
@@ -290,8 +301,8 @@ export function byggBrev(
     avsnitt: [
       kjopetOgFeilen(input, u),
       mangelOgBevisbyrde(input, idag, u),
+      ...(henvisning ? [JURIDISK.henvisning(henvisning)] : []),
       ...innvendinger(input, f, u),
-      ...lignendeAvsnitt(lignende),
       krav(input, f, u),
       erstatningOgForbehold(u),
       `Jeg ber om skriftlig svar innen ${SVARFRIST_DAGER} dager fra dette brevets dato, det vil si innen ${norskDato(pluss14(idag))}. Hører jeg ikke fra dere innen fristen, vil jeg bringe saken inn for Forbrukerklageutvalget.`,

@@ -50,7 +50,7 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   const vurdering = async () => {
     await expect(page.getByRole("heading", { level: 1 })).not.toBeEmpty();
     await expect(page.getByText(/Vi har sjekket saken din opp mot \d+ (lignende )?vedtak/)).toBeVisible();
-    await expect(page.getByRole("link", { name: /^Forbrukerklageutvalget, sak / })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Forbruker(klage|tvist)utvalget, (FKU|FTU)-\d{4}-\d+/ })).toBeVisible();
     const grunnlag = page.getByRole("region", { name: "Dette styrker saken din" });
     await expect(grunnlag.getByRole("listitem")).toHaveCount(3);
     // The presumption and the report both rest on § 18.

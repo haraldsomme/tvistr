@@ -10,13 +10,15 @@ import { FeilenFelt } from "./steg/feilen";
 import { ForKjopetFelt } from "./steg/for-kjopet";
 import { KjopetFelt } from "./steg/kjopet";
 import { KontaktFelt } from "./steg/kontakt";
-import { byggBrev, harPlassholder, type LignendeRef } from "@/lib/brev/brev";
+import { byggBrev, harPlassholder, henvisningFor } from "@/lib/brev/brev";
+import { motsvar } from "@/lib/brev/motsvar";
 import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { beregnFaktorer } from "@/lib/vurdering/faktorer";
 import { gyldigKjopsdato, tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import { gyldigRetting, type Forhandler } from "@/lib/vurdering/typer";
 import { Brevark } from "./brevark";
 import { Saksmappe } from "./mappe/saksmappe";
+import { Motsvar } from "./motsvar";
 
 const MERKE_MANGLER = "whitespace-nowrap rounded bg-[oklch(0.96_0.07_85)] px-2 py-[3px] text-[12px] font-semibold text-[#6b5618]";
 
@@ -155,8 +157,9 @@ function Ramme({ children }: { children: ReactNode }) {
   );
 }
 
-type Fane = "fyll" | "brev" | "mappe";
-const FANE_TEKST: Record<Fane, string> = { fyll: "Fyll inn", brev: "Brev", mappe: "Saksmappe" };
+type Fane = "fyll" | "brev" | "motsvar" | "mappe";
+const FANER: Fane[] = ["fyll", "brev", "motsvar", "mappe"];
+const FANE_TEKST: Record<Fane, string> = { fyll: "Fyll inn", brev: "Brev", motsvar: "Motsvar", mappe: "Saksmappe" };
 
 // The letter page is where the buyer lands after buying, so there is no way back to the assessment:
 // the answers it gave are corrected in the step they belong to, and the vehicle is fixed from the start.
@@ -165,23 +168,19 @@ export function BrevSide({
   startSvar,
   idag,
   startUtfylling,
-  startLignende,
 }: {
   id: string;
   startSvar: Innsending;
   // From the server, so the date in the letter is the same on both sides of hydration.
   idag: string;
   startUtfylling: Utfylling;
-  // The decisions the buyer cites, as the server resolved them.
-  startLignende: LignendeRef[];
 }) {
   const [svar, setSvar] = useState(startSvar);
   const [utfylling, setUtfylling] = useState(startUtfylling);
-  const [lignende, setLignende] = useState(startLignende);
   // On a narrow screen only one of the fill-in list and the letter shows at a time (on a wide screen
   // both always do); a letter with something still missing opens on the list, a finished one on itself.
   const parsed0 = tilKlageInput(startSvar, idag);
-  const alleredeFerdig = parsed0.ok && !harPlassholder(byggBrev(parsed0.input, idag, startUtfylling, startLignende));
+  const alleredeFerdig = parsed0.ok && !harPlassholder(byggBrev(parsed0.input, idag, startUtfylling));
   const [fane, setFane] = useState<Fane>(alleredeFerdig ? "brev" : "fyll");
   const [feil, setFeil] = useState<string | null>(null);
   const router = useRouter();
@@ -193,6 +192,8 @@ export function BrevSide({
   // The answers were valid when they were saved; a deadline that has begun to matter since can make
   // them incomplete. The buyer then corrects them before the letter can be written.
   const input = parsed.ok ? parsed.input : null;
+  // A correction the law would stop is not saved (`kontrollerRettelse`), so the claim is only stopped
+  // here when time has passed since: the purchase has passed five years before the dealer was told.
   const stopp = input === null ? null : beregnFaktorer(input, idag).stopp;
 
   // Saves one step: the fill-in fields that changed, and the answers from the assessment it corrects,
@@ -202,11 +203,10 @@ export function BrevSide({
     setFeil(null);
     try {
       const res = await fetch(`/api/sak/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(lagring) });
-      const json = (await res.json()) as { svar?: Innsending; utfylling?: Utfylling; lignende?: LignendeRef[]; feil?: string };
+      const json = (await res.json()) as { svar?: Innsending; utfylling?: Utfylling; feil?: string };
       if (!res.ok || !json.utfylling) throw new Error(json.feil ?? "");
       if (json.svar) setSvar(json.svar);
       setUtfylling(json.utfylling);
-      setLignende(json.lignende ?? []);
       setRedigerer(null);
       return true;
     } catch (e) {
@@ -340,10 +340,11 @@ export function BrevSide({
   }
   const ferdigAntall = steg.filter((s) => s.ferdig).length;
 
-  const brev = byggBrev(input, idag, utfylling, lignende);
+  const brev = byggBrev(input, idag, utfylling);
+  const henvisning = henvisningFor(input, idag, utfylling);
   const faner = (
     <div role="tablist" aria-label="Sakens deler" className="flex w-full gap-1 border-b border-[#d3cec3] lg:col-span-2">
-      {(["fyll", "brev", "mappe"] as const).map((f) => (
+      {FANER.map((f) => (
         <button
           key={f}
           type="button"
@@ -355,8 +356,7 @@ export function BrevSide({
           onClick={() => setFane(f)}
           onKeyDown={(e) => {
             if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-            const rekkefolge: Fane[] = ["fyll", "brev", "mappe"];
-            const annen = rekkefolge[(rekkefolge.indexOf(f) + (e.key === "ArrowRight" ? 1 : rekkefolge.length - 1)) % rekkefolge.length];
+            const annen = FANER[(FANER.indexOf(f) + (e.key === "ArrowRight" ? 1 : FANER.length - 1)) % FANER.length];
             setFane(annen);
             document.getElementById(`fane-${annen}`)?.focus();
           }}
@@ -367,9 +367,9 @@ export function BrevSide({
       ))}
     </div>
   );
-  // The numbers in the saksmappe follow the answers, the claim and the dealer; ticks and citations
-  // do not change them, so they are left out and do not make it fetch again.
-  const avhengighet = JSON.stringify([svar, utfylling.krav, utfylling.forhandler, utfylling.forbehold, utfylling.sendt]);
+  // The numbers in the saksmappe follow the answers, the claim and the dealer; ticks do not change
+  // them, so they are left out and do not make it fetch again.
+  const avhengighet = JSON.stringify([svar, utfylling.krav, utfylling.forhandler, utfylling.sendt]);
 
   const fyllKolonne = (
     <section aria-labelledby="mangler-tittel" className={`flex w-full max-w-[820px] flex-col gap-4 ${fane === "fyll" ? "" : "hidden lg:flex"}`}>
@@ -409,7 +409,7 @@ export function BrevSide({
       {stopp && (
         <p role="alert" className="m-0 rounded-lg border border-[oklch(0.72_0.11_85)] bg-[oklch(0.96_0.07_85)] px-[18px] py-3.5 text-[14px] leading-[1.55] text-[#6b5618]">
           {stopp === "frist"
-            ? "Med disse svarene er fristen for å klage ute. Brevet står som det er, men forhandleren kan avvise kravet fordi det kommer for sent. Sjekk at svarene fra vurderingen stemmer."
+            ? "Det har gått mer enn fem år siden kjøpet, og med disse svarene er fristen for å klage ute. Brevet står som det er, men forhandleren kan avvise kravet fordi det kommer for sent. Sjekk at svarene fra vurderingen stemmer."
             : "Med disse svarene gjelder ikke forbrukerkjøpsloven for kjøpet (kjøp fra en privatperson eller gjennom et firma). Brevet står som det er, men forhandleren kan avvise kravet. Sjekk at svarene fra vurderingen stemmer."}
         </p>
       )}
@@ -435,7 +435,11 @@ export function BrevSide({
       {faner}
       {fane === "mappe" ? (
         <div role="tabpanel" id="panel-mappe" aria-labelledby="fane-mappe" className="flex w-full justify-center lg:col-span-2">
-          <Saksmappe sakId={id} avhengighet={avhengighet} utfylling={utfylling} lagre={lagre} />
+          <Saksmappe sakId={id} avhengighet={avhengighet} utfylling={utfylling} henvisning={henvisning} lagre={lagre} />
+        </div>
+      ) : fane === "motsvar" ? (
+        <div role="tabpanel" id="panel-motsvar" aria-labelledby="fane-motsvar" className="flex w-full justify-center lg:col-span-2">
+          <Motsvar motargumenter={motsvar(beregnFaktorer(input, idag), utfylling)} />
         </div>
       ) : (
         <>

@@ -1,4 +1,4 @@
-import { finnEksempel, type ValgtEksempel } from "./eksempler";
+import { velgHenvisning, type ValgtHenvisning } from "./henvisninger";
 import { beregnFaktorer, iDag, type Faktorer } from "./faktorer";
 import { byggGrunnlag, fkjl, NAAR, type Grunnlag } from "./grunnlag";
 import { foreslaTiltak, type Tiltak } from "./tiltak";
@@ -13,9 +13,8 @@ export type Vurdering = {
   begrunnelse: string;
   // The same facts point by point, each with the rule it triggers and a reference to the law.
   grunnlag: Grunnlag[];
-  // A similar decision the buyer won, whatever the level. null when the law stops the claim, or when
-  // there is no decision to show.
-  eksempel: ValgtEksempel | null;
+  // The decision the letter cites, shown to the buyer before purchase. null only when the law stops the claim.
+  eksempel: ValgtHenvisning | null;
   // What the user can do to strengthen the case; empty when there is nothing to suggest. Not part
   // of the free assessment: it is meant for the paid step.
   tiltak: Tiltak[];
@@ -134,7 +133,7 @@ export function vurderFraFaktorer(
     tittel: TITTEL,
     begrunnelse: begrunnelseFor(f),
     grunnlag: byggGrunnlag(f),
-    eksempel: finnEksempel(f),
+    eksempel: velgHenvisning(f),
     tiltak: foreslaTiltak(f),
     faktorer: f,
     statistikk: s,

@@ -24,7 +24,9 @@
     "revisjon": "tsx --env-file=.env.local scripts/revisjon.ts",
     "rett-paragrafer": "tsx --env-file=.env.local scripts/rett-paragrafer.ts",
     "vurder": "tsx --env-file=.env.local scripts/vurder.ts",
-    "rydd": "tsx --env-file=.env.local scripts/rydd.ts"
+    "rydd": "tsx --env-file=.env.local scripts/rydd.ts",
+    "henvisning-kandidater": "tsx --env-file=.env.local scripts/henvisning-kandidater.ts",
+    "sjekk-henvisninger": "tsx --env-file=.env.local scripts/sjekk-henvisninger.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

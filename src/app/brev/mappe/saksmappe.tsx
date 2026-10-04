@@ -3,13 +3,27 @@
 import { useEffect, useState } from "react";
 import type { Endring, Utfylling } from "@/lib/brev/utfylling";
 import type { Mappe } from "@/lib/mappe/typer";
+import type { ValgtHenvisning } from "@/lib/vurdering/henvisninger";
 import { AktorInnhold, AvgjordeInnhold, BelopInnhold, Kort, StyrkeInnhold, StyrkInnhold, VidereInnhold } from "./kort";
 
 type Tilstand = { type: "laster" } | { type: "feil"; melding: string } | { type: "ok"; mappe: Mappe };
 
 // The saksmappe: fetched when the tab opens and again when what the numbers depend on changes (the
 // answers, the claim, the dealer). `lagre` saves one field of the case and says whether it worked.
-export function Saksmappe({ sakId, avhengighet, utfylling, lagre }: { sakId: string; avhengighet: string; utfylling: Utfylling; lagre: (e: Endring) => Promise<boolean> }) {
+export function Saksmappe({
+  sakId,
+  avhengighet,
+  utfylling,
+  henvisning,
+  lagre,
+}: {
+  sakId: string;
+  avhengighet: string;
+  utfylling: Utfylling;
+  // The decision the letter cites, chosen the same way as in the letter.
+  henvisning: ValgtHenvisning | null;
+  lagre: (e: Endring) => Promise<boolean>;
+}) {
   const [t, setT] = useState<Tilstand>({ type: "laster" });
   useEffect(() => {
     const avbryt = new AbortController();
@@ -52,7 +66,7 @@ export function Saksmappe({ sakId, avhengighet, utfylling, lagre }: { sakId: str
         <BelopInnhold k={m.belop} />
       </Kort>
       <Kort tittel="Hva avgjorde lignende saker?">
-        <AvgjordeInnhold k={m.avgjorde} valgt={utfylling.lignende ?? []} lagre={lagre} />
+        <AvgjordeInnhold k={m.avgjorde} henvisning={henvisning} />
       </Kort>
       <Kort tittel="Forhandleren og bilen">
         <AktorInnhold k={m.aktorer} />

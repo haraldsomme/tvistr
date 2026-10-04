@@ -2,7 +2,7 @@
 
 import { useId, useState, type ReactNode } from "react";
 import { norskDato } from "@/lib/brev/brev";
-import type { Endring, Lignende, SjekkNokkel } from "@/lib/brev/utfylling";
+import type { Endring, SjekkNokkel } from "@/lib/brev/utfylling";
 import type { AktorKort } from "@/lib/mappe/kort/aktorer";
 import type { AvgjordeKort } from "@/lib/mappe/kort/avgjorde";
 import type { BelopKort } from "@/lib/mappe/kort/belop";
@@ -10,6 +10,7 @@ import type { StyrkeKort } from "@/lib/mappe/kort/styrke";
 import type { Sjekkpunkt } from "@/lib/mappe/kort/styrk";
 import type { VidereKort } from "@/lib/mappe/kort/videre";
 import { erForFa, type Andel, type ForFa } from "@/lib/mappe/typer";
+import type { Treff, ValgtHenvisning } from "@/lib/vurdering/henvisninger";
 
 // The cards of the saksmappe. Every share is shown with the number of decisions behind it; a sample
 // below its threshold is shown as «for få saker», never as a number.
@@ -141,14 +142,37 @@ export function BelopInnhold({ k }: { k: BelopKort }) {
 
 const UTFALL: Record<string, string> = { medhold: "Medhold", delvis_medhold: "Delvis medhold", ikke_medhold: "Tapt sak" };
 
-export function AvgjordeInnhold({ k, valgt, lagre }: { k: AvgjordeKort; valgt: Lignende[]; lagre: (e: Endring) => Promise<boolean> }) {
-  const [feil, setFeil] = useState<string | null>(null);
-  async function sett(neste: Lignende[]) {
-    setFeil(null);
-    if (!(await lagre({ lignende: neste }))) setFeil("Vi fikk ikke lagret valget. Prøv igjen.");
-  }
+// Only what always holds: the car's age is stated, not compared, since the buyer's may be unknown.
+const HVORFOR: Record<Treff, string> = {
+  lignende: "Valgt fordi saken gjaldt samme type feil, feilen viste seg omtrent like lenge etter kjøpet, og kjøperen vant mot forhandleren.",
+  tilnaermet: "Valgt fordi saken gjaldt samme type feil, og kjøperen vant mot forhandleren. Feilen viste seg på et annet tidspunkt enn i din sak.",
+  regel: "Valgt fordi utvalget brukte den samme regelen som brevet ditt bygger på, og kjøperen vant mot forhandleren.",
+};
+
+// The decision the letter cites, as it stands in the letter. Chosen for the buyer, not by them.
+function Henvisningsblokk({ v }: { v: ValgtHenvisning }) {
+  const h = v.henvisning;
+  return (
+    <div className="flex flex-col gap-2 rounded-md border border-[#c9d3e3] bg-[#f4f7fb] p-3.5">
+      <strong className="text-[13px] uppercase tracking-[.04em] text-[#5b6472]">Brevet ditt viser til</strong>
+      <strong>
+        {h.organ}, {h.ref} · {norskDato(h.dato)}
+      </strong>
+      <p className="m-0">{h.type === "regel" ? h.regel : `${h.likhet} ${h.konklusjon}`}</p>
+      <p className={SMA}>
+        {HVORFOR[v.treff]} Bilen i saken var {h.alder} år gammel da den ble kjøpt.
+      </p>
+      <a href={h.kildeUrl} target="_blank" rel="noreferrer" className="self-start text-[14px] font-semibold text-[#1f3a5f] underline underline-offset-2">
+        Les vedtaket
+      </a>
+    </div>
+  );
+}
+
+export function AvgjordeInnhold({ k, henvisning }: { k: AvgjordeKort; henvisning: ValgtHenvisning | null }) {
   return (
     <>
+      {henvisning && <Henvisningsblokk v={henvisning} />}
       {k.temaer.length > 0 && (
         <div className="flex flex-col gap-1.5">
           <strong className="text-[13px] uppercase tracking-[.04em] text-[#5b6472]">Hva som kom opp i vunne og tapte saker</strong>
@@ -161,60 +185,30 @@ export function AvgjordeInnhold({ k, valgt, lagre }: { k: AvgjordeKort; valgt: L
           </ul>
         </div>
       )}
-      {k.eksempler.length === 0 ? (
-        <p className="m-0">Vi har ingen kontrollerte eksempelvedtak som passer saken din.</p>
-      ) : (
-        <p className={SMA}>Et vedtak kan også ha punkter som gikk mot klageren. Siter bare punkter som støtter kravet ditt.</p>
-      )}
+      {k.eksempler.length === 0 && <p className="m-0">Vi har ingen kontrollerte eksempelvedtak som passer saken din.</p>}
       {k.eksempler.length > 0 && (
         <ul aria-label="Eksempelvedtak" className="m-0 flex list-none flex-col gap-3 p-0">
-          {k.eksempler.map((e) => {
-            const tapt = e.utfall === "ikke_medhold";
-            const valgtMoment = valgt.find((v) => v.id === e.id)?.moment;
-            return (
-              <li key={e.id} className="flex flex-col gap-2 rounded-md border border-[#e4e0d6] p-3.5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <strong>
-                    {e.ar} · {UTFALL[e.utfall]}
-                    {e.tilkjentNok ? ` · ${kr(e.tilkjentNok)}` : ""}
-                  </strong>
-                  <a href={e.kildeUrl} target="_blank" rel="noreferrer" className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
-                    Forbrukerklageutvalget, sak {e.saksnummer}
-                  </a>
-                </div>
-                {e.sammendrag && <p className="m-0">{e.sammendrag}</p>}
-                <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
-                  {e.momenter.map((m, n) => (
-                    <li key={n} className="flex items-start justify-between gap-3">
-                      <span>– {m}</span>
-                      {!tapt &&
-                        (valgtMoment === n ? (
-                          <button type="button" onClick={() => sett(valgt.filter((v) => v.id !== e.id))} className={`${KNAPP_LITEN} whitespace-nowrap`}>
-                            Fjern fra brevet
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={valgtMoment === undefined && valgt.length >= 3}
-                            onClick={() => sett([...valgt.filter((v) => v.id !== e.id), { id: e.id, moment: n }])}
-                            className={`${KNAPP_LITEN} whitespace-nowrap`}
-                          >
-                            Siter i brevet
-                          </button>
-                        ))}
-                    </li>
-                  ))}
-                </ul>
-                <p className={SMA}>Nøkkelpunktene er et sammendrag laget av en modell. Les vedtaket før du bruker det.</p>
-              </li>
-            );
-          })}
+          {k.eksempler.map((e) => (
+            <li key={e.id} className="flex flex-col gap-2 rounded-md border border-[#e4e0d6] p-3.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <strong>
+                  {e.ar} · {UTFALL[e.utfall]}
+                  {e.tilkjentNok ? ` · ${kr(e.tilkjentNok)}` : ""}
+                </strong>
+                <a href={e.kildeUrl} target="_blank" rel="noreferrer" className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
+                  Forbrukerklageutvalget, sak {e.saksnummer}
+                </a>
+              </div>
+              {e.sammendrag && <p className="m-0">{e.sammendrag}</p>}
+              <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+                {e.momenter.map((m, n) => (
+                  <li key={n}>– {m}</li>
+                ))}
+              </ul>
+              <p className={SMA}>Nøkkelpunktene er et sammendrag laget av en modell. Les vedtaket før du bruker det.</p>
+            </li>
+          ))}
         </ul>
-      )}
-      {feil && (
-        <p role="alert" className="m-0 text-[13px] text-[#a23b2a]">
-          {feil}
-        </p>
       )}
     </>
   );
@@ -281,15 +275,6 @@ export function StyrkInnhold({ punkter, sjekket, lagre }: { punkter: Sjekkpunkt[
 export function VidereInnhold({ k, sakId, sendt, idag, lagre }: { k: VidereKort; sakId: string; sendt: string | undefined; idag: string; lagre: (e: Endring) => Promise<boolean> }) {
   const id = useId();
   const [dato, setDato] = useState(sendt ?? "");
-  const [kopiert, setKopiert] = useState<string | null>(null);
-  async function kopier(nokkel: string, tekst: string) {
-    try {
-      await navigator.clipboard.writeText(tekst);
-      setKopiert(nokkel);
-    } catch {
-      setKopiert(null);
-    }
-  }
   return (
     <>
       <ol className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -342,21 +327,6 @@ export function VidereInnhold({ k, sakId, sendt, idag, lagre }: { k: VidereKort;
         </div>
       )}
       <p className={SMA}>{k.ventetid}</p>
-      <div className="flex flex-col gap-2">
-        <strong className="text-[13px] uppercase tracking-[.04em] text-[#5b6472]">Hvis forhandleren svarer</strong>
-        {k.motargumenter.map((m) => (
-          <details key={m.nokkel} open={m.relevant} className="rounded-md border border-[#e4e0d6] p-3">
-            <summary className="cursor-pointer font-semibold">
-              {m.tittel}
-              {m.relevant && <span className="ml-2 text-[12px] font-normal text-[#6b5618]">passer saken din</span>}
-            </summary>
-            <p className="mb-2 mt-2">{m.svar}</p>
-            <button type="button" onClick={() => kopier(m.nokkel, m.svar)} className={KNAPP_LITEN}>
-              {kopiert === m.nokkel ? "Kopiert" : "Kopier svar"}
-            </button>
-          </details>
-        ))}
-      </div>
     </>
   );
 }

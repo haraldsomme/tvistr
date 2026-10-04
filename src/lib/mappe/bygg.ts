@@ -49,6 +49,6 @@ export async function byggMappe(sak: Pick<Sak, "svar" | "utfylling">, dep: Mappe
     avgjorde: avgjordeKort(temaer, eksempler),
     aktorer: aktorKort(forhandlerTall, modell),
     styrk: styrkPunkter(f, bevis, u.sjekket ?? []),
-    videre: videreKort(f, u, idag),
+    videre: videreKort(u, idag),
   };
 }

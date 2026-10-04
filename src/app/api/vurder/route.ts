@@ -12,7 +12,7 @@ const forMange = lagGrense({ antall: 10, vinduMs: 60_000 });
 
 // Returns the level, the title, the justification, the points shown under it (what strengthens the case,
 // and what weakens it; for a claim the law stops, the one reason), how many decisions the case
-// was compared with and how many of those got medhold, and one similar decision when there is one. The
+// was compared with and how many of those got medhold, and the decision the letter will cite. The
 // suggested actions go out as titles only (the explanation is part of the paid step), except for a weak
 // case, where the advice matters more than the sale. The score and the factors stay on the server.
 export async function POST(request: Request) {
@@ -43,10 +43,10 @@ export async function POST(request: Request) {
       begrunnelse: v.begrunnelse,
       ...(v.niva === "utenfor" ? { styrker: [], svakheter: v.grunnlag } : synligGrunnlag(v.niva, v.grunnlag, v.faktorer)),
       eksempel: v.eksempel && {
-        setning: v.eksempel.setning,
-        saksnummer: v.eksempel.saksnummer,
-        kildeUrl: v.eksempel.kildeUrl,
-        utfall: v.eksempel.utfall,
+        setning: v.eksempel.henvisning.setning,
+        ref: v.eksempel.henvisning.ref,
+        organ: v.eksempel.henvisning.organ,
+        kildeUrl: v.eksempel.henvisning.kildeUrl,
         treff: v.eksempel.treff,
       },
       tiltak: v.tiltak.map((t) => (v.niva === "svak" ? t : { tittel: t.tittel })),

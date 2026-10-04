@@ -8,8 +8,8 @@ import { lesInnsending, tilKlageInput } from "@/lib/vurdering/innsending";
 const forMange = lagGrense({ antall: 10, vinduMs: 60_000 });
 
 // Opens the letter for a set of answers from the assessment form and returns the id of the case.
-// The vehicle chosen in the assessment goes with it and is locked to the case from then on; the
-// answers can be changed later with PUT /api/sak/[id]/svar.
+// The vehicle chosen in the assessment goes with it and is locked to the case from then on; some of
+// the answers can be corrected later with PATCH /api/sak/[id] (`rettSvar`).
 export async function POST(request: Request) {
   if (forMange(ipFra(request))) return Response.json({ feil: "Du har gjort dette mange ganger på kort tid. Vent et minutt og prøv igjen." }, { status: 429 });
 

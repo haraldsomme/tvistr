@@ -26,7 +26,6 @@ export type Utfylling = {
   vedlegg?: Vedlegg[];
   avsender?: Avsender;
   forbehold?: Forbehold;
-  lignende?: Lignende[];
   sjekket?: SjekkNokkel[];
   // The day the letter was sent, for the reminder and the deadlines.
   sendt?: string;
@@ -65,10 +64,6 @@ export type Vedlegg = (typeof VEDLEGG)[number];
 // What the contract or the ad said about the car being sold as it is, or about a warranty.
 export const FORBEHOLD_VALG = ["som_den_er", "garanti", "ingen", "vet_ikke"] as const;
 export type Forbehold = (typeof FORBEHOLD_VALG)[number];
-
-// Earlier decisions the buyer cites in the letter: the decision and which of its key points.
-export const MAKS_LIGNENDE = 3;
-export type Lignende = { id: number; moment: number };
 
 // The points of the checklist in the saksmappe the buyer has ticked off.
 export const SJEKK_NOKLER = ["rapport_tidspunkt", "bilder", "annonse", "meldinger", "kontrakt", "kvitteringer"] as const;
@@ -212,16 +207,6 @@ const lesFeilopplyst = (v: unknown): "ja" | "nei" | null =>
 const lesForbehold = (v: unknown): Forbehold | null =>
   blant(FORBEHOLD_VALG, v) ? v : null;
 
-function lesLignende(v: unknown): Lignende[] | null {
-  if (!Array.isArray(v) || v.length > MAKS_LIGNENDE) return null;
-  const ut: Lignende[] = [];
-  for (const x of v) {
-    if (!erObjekt(x) || !heltall(x.id, 1, 100_000_000) || !heltall(x.moment, 0, 9) || ut.some((y) => y.id === x.id)) return null;
-    ut.push({ id: x.id, moment: x.moment });
-  }
-  return ut;
-}
-
 function lesSjekket(v: unknown): SjekkNokkel[] | null {
   if (!Array.isArray(v) || v.some((x) => !blant(SJEKK_NOKLER, x))) return null;
   return SJEKK_NOKLER.filter((x) => v.includes(x));
@@ -240,7 +225,6 @@ const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } 
   vedlegg: lesVedlegg,
   avsender: lesAvsender,
   forbehold: lesForbehold,
-  lignende: lesLignende,
   sjekket: lesSjekket,
   sendt: lesSendt,
 };

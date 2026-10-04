@@ -1,7 +1,5 @@
 import { sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import type { LignendeRef } from "@/lib/brev/brev";
-import type { Lignende } from "@/lib/brev/utfylling";
 import { normaliserFirmanavn, normaliserMerke } from "@/lib/normalisering";
 import type { Faktorer } from "@/lib/vurdering/faktorer";
 import { MIN_UTVALG, trinnFor } from "@/lib/vurdering/statistikk";
@@ -148,21 +146,4 @@ function tilEksempel(r: Record<string, unknown>): EksempelVedtak {
     modell: (r.modell as string | null) ?? null,
     dagerTilReklamasjon: tall(r.dager_til_reklamasjon),
   };
-}
-
-// The decisions the buyer has chosen to cite, read from the database so the letter never quotes text
-// the client sent. A decision that no longer qualifies, does not exist or was a loss is dropped.
-export async function hentLignende(valg: Lignende[]): Promise<LignendeRef[]> {
-  if (valg.length === 0) return [];
-  const ider = sql.join(valg.map((v) => sql`${v.id}`), sql`, `);
-  const funnet = await rader<Record<string, unknown>>(sql`select v.id, v.saksnummer, extract(year from v.vedtaksdato)::int ar, v.utfall, v.utvalgets_nokkelmomenter momenter, v.kilde_url
-    from vedtak v where v.id in (${ider}) and ${FORHANDLER} and ${VUNNET} and ${KVALIFISERT}`);
-  const ut: LignendeRef[] = [];
-  for (const v of valg) {
-    const r = funnet.find((x) => Number(x.id) === v.id);
-    const moment = r ? rens(((r.momenter as string[] | null) ?? [])[v.moment] ?? "") : "";
-    if (!r || !moment) continue;
-    ut.push({ saksnummer: String(r.saksnummer), ar: Number(r.ar), utfall: r.utfall as LignendeRef["utfall"], moment, kildeUrl: String(r.kilde_url) });
-  }
-  return ut;
 }

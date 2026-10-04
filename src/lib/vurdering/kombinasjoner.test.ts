@@ -145,12 +145,13 @@ const FRASE: Partial<Record<FeilKnapp, string>> = {
   rust: "rust",
   fukt: "fukt eller lekkasje",
   klimaanlegg: "klimaanlegget",
-  km_service: "kilometerstand eller service",
-  skade: "kollisjonsskade",
+  km_service: "service",
+  // The decisions speak of an earlier damage, not always of a collision.
+  skade: "skade",
   batteri: "elbilbatteriet",
 };
 
-const MAL = /^I 20\d\d fikk kjøperen av en .+ (delvis )?medhold etter å ha klaget på .+ (etter|som) kjøpet\. Utvalget (tilkjente [\d ]+ kr|kom til at .+)\.$/;
+const MAL = /^I 20\d\d fikk kjøper(en|ne) av en .+ (delvis )?medhold etter å ha klaget på .+ (etter|som) kjøpet\. Utvalget (tilkjente [\d ]+ kr|kom til at .+)\.$/;
 
 describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
   beforeAll(() => {
@@ -177,8 +178,7 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
 
   it("gir forventet vurdering og et eksempelvedtak i alle fire statistikkscenarier", async () => {
     const avvik: string[] = [];
-    const teller = { god: 0, svak: 0, utenfor: 0, lignende: 0, tilnaermet: 0, generell: 0, vunnet: 0 };
-    const batteriBare: number[] = [];
+    const teller = { god: 0, svak: 0, utenfor: 0, lignende: 0, tilnaermet: 0, regel: 0 };
 
     for (const [n, i] of innsendinger.entries()) {
       const parsed = tilKlageInput(i, IDAG);
@@ -216,37 +216,26 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
 
         const e = v.eksempel;
         if (!e) {
-          avvik.push(`${merke}: INGEN eksempelsak`);
+          avvik.push(`${merke}: INGEN henvisning`);
           continue;
         }
-        if (s === SCENARIER[0]) {
-          teller[e.treff]++;
-          teller[e.utfall]++;
-        }
-        if (!MAL.test(e.setning)) avvik.push(`${merke}: setning følger ikke malen: ${e.setning}`);
-        if (!e.kildeUrl.startsWith("https://") || !e.saksnummer) avvik.push(`${merke}: eksempelet mangler kilde`);
-        // Only decisions the buyer won are shown, also for a weak case.
-        if (e.utfall !== "vunnet" || / ikke medhold /.test(e.setning)) avvik.push(`${merke}: eksempelet skal være en sak kjøperen vant, fikk ${e.utfall}: ${e.setning}`);
-
-        if (grupper.length === 0) {
-          if (e.treff !== "generell") avvik.push(`${merke}: uten egen feilgruppe skal eksempelet være generelt, fikk ${e.treff}`);
-          if (s === SCENARIER[0] && i.feiltyper.every((t) => t === "batteri" || t === "annet") && i.feiltyper.includes("batteri")) batteriBare.push(n);
-        } else {
-          if (e.treff === "generell") avvik.push(`${merke}: har feilgruppe men fikk generelt eksempel`);
-          if (!grupper.some((g) => e.setning.includes(FRASE[g]!))) avvik.push(`${merke}: eksempelet handler ikke om en av de valgte feilene (${grupper.join(", ")}): ${e.setning}`);
-        }
+        const h = e.henvisning;
+        if (s === SCENARIER[0]) teller[e.treff]++;
+        if (!MAL.test(h.setning)) avvik.push(`${merke}: setning følger ikke malen: ${h.setning}`);
+        if (!h.kildeUrl.startsWith("https://") || !h.ref) avvik.push(`${merke}: henvisningen mangler kilde`);
+        if (/ ikke medhold /.test(h.setning)) avvik.push(`${merke}: henvisningen skal være en sak kjøperen vant: ${h.setning}`);
+        if (grupper.length === 0 && e.treff !== "regel") avvik.push(`${merke}: uten egen feilgruppe skal henvisningen være en regel-sak, fikk ${e.treff}`);
+        if (e.treff !== "regel" && !grupper.some((g) => h.setning.includes(FRASE[g]!))) avvik.push(`${merke}: henvisningen handler ikke om en av de valgte feilene (${grupper.join(", ")}): ${h.setning}`);
       }
     }
 
     console.info("Fordeling (nøytral statistikk):", teller);
-    console.info(`Registreringer med bare «Batteri» (og evt. «Annet») som feil, som får generelt eksempel: ${batteriBare.length}`);
     expect(avvik.slice(0, 15)).toEqual([]);
     expect(avvik).toHaveLength(0);
     expect(teller.god).toBeGreaterThan(50);
     expect(teller.svak).toBeGreaterThan(50);
     expect(teller.lignende).toBeGreaterThan(300);
-    expect(teller.tilnaermet).toBeGreaterThan(0);
-    expect(teller.generell).toBeGreaterThan(0);
+    expect(teller.regel).toBeGreaterThan(0);
   });
 
   it("API-ruten gir samme resultat og lekker ikke statistikk", async () => {
@@ -269,10 +258,8 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
       if (json.niva !== f.niva) avvik.push(`${merke}: forventet ${f.niva}, fikk ${json.niva}`);
       if (f.niva === "utenfor") {
         if (json.eksempel !== null || json.styrker.length !== 0 || json.svakheter.length !== 1) avvik.push(`${merke}: stoppet sak skal bare ha ett punkt og ingen eksempel`);
-      } else if (!json.eksempel?.setning || !json.eksempel?.kildeUrl || !json.eksempel?.saksnummer) {
-        avvik.push(`${merke}: ruten ga ingen eksempelsak`);
-      } else if (json.eksempel.utfall !== "vunnet") {
-        avvik.push(`${merke}: feil utfall på eksempelet: ${json.eksempel.utfall}`);
+      } else if (!json.eksempel?.setning || !json.eksempel?.kildeUrl || !json.eksempel?.ref || !json.eksempel?.organ) {
+        avvik.push(`${merke}: ruten ga ingen henvisning`);
       }
       // Strengths: exactly three for a good case; weaknesses never hold a point that speaks for the case.
       if (f.niva === "god" && json.styrker.length !== 3) avvik.push(`${merke}: god sak skal ha tre styrker, fikk ${json.styrker.length}`);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { KlageInput } from "@/lib/vurdering/typer";
-import { byggBrev, type LignendeRef } from "./brev";
+import { byggBrev, henvisningFor } from "./brev";
 import type { Utfylling } from "./utfylling";
 
 const IDAG = "2026-10-02";
@@ -10,7 +10,7 @@ const klage = (feilen: Partial<KlageInput["feilen"]> = {}, bil: Partial<KlageInp
   bevis: { verkstedrapport: false, rapportSierForKjop: null, bilder: true },
 });
 // The dealer has refused to repair unless a test says otherwise (answered on the letter page).
-const tekst = (input: KlageInput, idag: string, u: Utfylling = {}, lignende: LignendeRef[] = []) => byggBrev(input, idag, { retting: "avvist", ...u }, lignende).avsnitt.join("\n");
+const tekst = (input: KlageInput, idag: string, u: Utfylling = {}) => byggBrev(input, idag, { retting: "avvist", ...u }).avsnitt.join("\n");
 
 describe("heving og prisavslag", () => {
   it("heving har subsidiært krav om prisavslag og krav om rente", () => {
@@ -57,32 +57,43 @@ describe("forbehold og slitasje", () => {
   });
 });
 
-describe("lignende vedtak", () => {
-  const ref = (o: Partial<LignendeRef> = {}): LignendeRef => ({
-    saksnummer: "23/13923",
-    ar: 2024,
-    utfall: "delvis_medhold",
-    moment: "Formodningsregelen gjaldt, og feilene ble anses å foreligge ved levering",
-    kildeUrl: "https://example.test/v.pdf",
-    ...o,
-  });
+describe("henvisning til vedtak", () => {
+  const KILDE = /\((FKU|FTU)-\d{4}-\d+(-\d+)?, \d{1,2}\. [a-zø]+ \d{4}, https:\/\/\S+\)\./;
 
-  it("uten vedtak er det ikke noe avsnitt", () => {
-    expect(tekst(klage(), IDAG, {}, [])).not.toContain("Forbrukerklageutvalgets behandling");
-  });
-
-  it("hvert vedtak står med saksnummer, år, utfall og nøkkelmoment som en egen setning", () => {
-    const t = tekst(klage(), IDAG, {}, [ref(), ref({ saksnummer: "FKU-2025-140302", ar: 2025, utfall: "medhold", moment: "Feilen var dokumentert av verksted." })]);
-    expect(t).toContain("Sak 23/13923 (2024, delvis medhold): Formodningsregelen gjaldt, og feilene ble anses å foreligge ved levering.");
-    expect(t).toContain("Sak FKU-2025-140302 (2025, medhold): Feilen var dokumentert av verksted.");
-  });
-
-  it("vedtakene kommer før kravet, og vedlegg-linjen nevner ikke vedtakene", () => {
-    const b = byggBrev(klage(), IDAG, {}, [ref()]);
-    const iLignende = b.avsnitt.findIndex((a) => a.includes("Forbrukerklageutvalgets behandling"));
+  it("står rett etter avsnittet om mangel og bevisbyrde, før kravet, med ref, dato og lenke", () => {
+    const i = klage();
+    const v = henvisningFor(i, IDAG, {});
+    expect(v).not.toBeNull();
+    const b = byggBrev(i, IDAG, { retting: "avvist" });
+    const iMangel = b.avsnitt.findIndex((a) => a.includes("mangel etter forbrukerkjøpsloven § 16"));
+    const iHenvisning = b.avsnitt.findIndex((a) => a.includes(v!.henvisning.ref));
     const iKrav = b.avsnitt.findIndex((a) => a.includes("Jeg reklamerer herved"));
-    expect(iLignende).toBeGreaterThan(-1);
-    expect(iLignende).toBeLessThan(iKrav);
-    expect(b.avsnitt.at(-1)).not.toContain("23/13923");
+    expect(iHenvisning).toBe(iMangel + 1);
+    expect(iHenvisning).toBeLessThan(iKrav);
+    expect(b.avsnitt[iHenvisning]).toMatch(KILDE);
+    expect(b.avsnitt[iHenvisning]).toMatch(/^Forbruker(klage|tvist)utvalget har (behandlet en lignende sak|lagt det samme til grunn i tidligere saker|vurdert hva en kjøper kan forvente av en eldre bil)\./);
+    expect(b.avsnitt[iHenvisning]).toMatch(/Jeg ber dere ta hensyn til at utvalget har vurdert (en tilsvarende sak|tilsvarende saker) slik\.$/);
+    expect(b.avsnitt.filter((a) => KILDE.test(a))).toHaveLength(1);
+  });
+
+  it("«Annet» gir en regel-sak", () => {
+    expect(tekst(klage({ typer: ["annet"] }), IDAG)).toContain("har lagt det samme til grunn i tidligere saker");
+  });
+
+  it("en kjøpsdato før 2024 gir aldri en sak vunnet på formodningsregelen for feil etter 6–24 måneder", () => {
+    const i = klage({ oppdaget: "6_mnd_til_2_ar" }, { kjopsdato: "2023-03-12" });
+    const v = henvisningFor(i, IDAG, {});
+    expect(v?.henvisning.presumsjon).toBe(false);
+    expect(tekst(i, IDAG)).toContain(v!.henvisning.ref);
+  });
+
+  it("bilens årstall fra registeret brukes: en 25 år gammel bil får aldri en mye nyere lignende bil", () => {
+    const v = henvisningFor(klage(), IDAG, { kjoretoy: { regnr: "ZZ 99999", merke: "Testmerke", modell: "Modell X", ar: 2001 } });
+    expect(v).not.toBeNull();
+    if (v!.henvisning.type === "lignende") expect(v!.henvisning.alder).toBeGreaterThanOrEqual(21);
+  });
+
+  it("når loven stopper kravet, viser brevet ikke til noe vedtak", () => {
+    expect(tekst(klage({}, { kjopsform: "privatperson" }), IDAG)).not.toMatch(KILDE);
   });
 });

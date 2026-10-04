@@ -45,8 +45,8 @@ import {
   SPORSMAL,
 } from "./tekster";
 
-// How close the example decision is to the buyer's case; see finnEksempel.
-type Treff = "lignende" | "tilnaermet" | "generell";
+// How close the cited decision is to the buyer's case; see velgHenvisning.
+type Treff = "lignende" | "tilnaermet" | "regel";
 type Punkt = {
   tekst: string;
   vekt: "for" | "mot" | "noytral";
@@ -64,7 +64,7 @@ type Resultat = {
   tiltak: { tittel: string; tekst?: string }[];
   // null when the five-year deadline has passed, so no comparison was made.
   utvalg: { n: number; vunnet: number; spesifikk: boolean } | null;
-  eksempel: { setning: string; saksnummer: string; kildeUrl: string; utfall: "vunnet"; treff: Treff } | null;
+  eksempel: { setning: string; ref: string; organ: string; kildeUrl: string; treff: Treff } | null;
 };
 
 const STEG_TEKST: Record<Steg, { navn: string; tittel: string }> = {
@@ -209,9 +209,9 @@ const VEKT_TEGN = {
   mot: { tegn: "−", farge: "oklch(0.42 0.12 25)", bakgrunn: "oklch(0.95 0.04 25)", tekst: "Taler mot saken" },
 } as const;
 const TREFF_TEKST: Record<Treff, string> = {
-  lignende: "Her er ett eksempel:",
-  tilnaermet: "Her er det nærmeste eksemplet:",
-  generell: "Her er ett eksempel fra grunnlaget:",
+  lignende: "Her er en lignende sak:",
+  tilnaermet: "Her er den nærmeste lignende saken:",
+  regel: "Her er en sak der utvalget la samme regel til grunn:",
 };
 
 // The comparison point shown right under the title: how many similar decisions that got medhold the case
@@ -260,6 +260,16 @@ function Venter() {
 const PRIS_NOK = 249;
 const KJORETOY_NOKKEL = "tvistr-kjoretoy";
 
+// The vehicle chosen in step 1, kept in this tab. null when there is none or storage is blocked.
+function lagretKjoretoy(): Kjoretoy | null {
+  try {
+    const lagret = sessionStorage.getItem(KJORETOY_NOKKEL);
+    return lagret ? lesKjoretoy(JSON.parse(lagret)) : null;
+  } catch {
+    return null;
+  }
+}
+
 function Vipps({ tekst, onClick, disabled }: { tekst: string; onClick: () => void; disabled: boolean }) {
   return (
     <button
@@ -277,28 +287,25 @@ function Vipps({ tekst, onClick, disabled }: { tekst: string; onClick: () => voi
 
 // Payment is not built yet: both buttons open the letter. Payment goes in front of it later.
 const BREV_MED_LIGNENDE = "Ferdig brev med lovhenvisninger og argumentasjon vi vet har vunnet lignende saker";
-const BREV_UTEN_LIGNENDE = "Ferdig brev med henvisninger til lovverket";
 const NESTE_PUNKTER = [
   "Frist for svar, og hva du gjør om forhandleren avviser",
   "Saksmappe med verktøy for håndtering av saken videre",
   "Brev i PDF og Word-fil til nedlasting",
 ];
 
-// Similar cases are only promised when we have one to refer to.
+// Every letter that can be bought cites a decision (velgHenvisning).
 // `apneBrev` opens the letter and returns an error message if that failed.
 function Neste({
-  medEksempel,
   apneBrev,
   kjoretoy,
   velgBil,
 }: {
-  medEksempel: boolean;
   apneBrev: () => Promise<string | null>;
   // undefined until the tab has been read, null when there is no car (a shared link, or storage that is empty).
   kjoretoy: Kjoretoy | null | undefined;
   velgBil: () => void;
 }) {
-  const punkter = [medEksempel ? BREV_MED_LIGNENDE : BREV_UTEN_LIGNENDE, ...NESTE_PUNKTER];
+  const punkter = [BREV_MED_LIGNENDE, ...NESTE_PUNKTER];
   const [apner, setApner] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
   async function apne() {
@@ -496,9 +503,12 @@ function Vurdering({
                   </p>
                 )}
                 {resultat.eksempel && (
-                  <a href={resultat.eksempel.kildeUrl} target="_blank" rel="noreferrer" className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
-                    Forbrukerklageutvalget, sak {resultat.eksempel.saksnummer}
-                  </a>
+                  <>
+                    <a href={resultat.eksempel.kildeUrl} target="_blank" rel="noreferrer" className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
+                      {resultat.eksempel.organ}, {resultat.eksempel.ref}
+                    </a>
+                    <p className="m-0 text-[14px] font-medium text-[#1f3a5f]">Brevet ditt viser til denne saken.</p>
+                  </>
                 )}
               </div>
             )}
@@ -530,10 +540,6 @@ function Vurdering({
             <Utenfor endre={endre} />
           ) : (
             <Neste
-              medEksempel={
-                resultat.eksempel?.utfall === "vunnet" &&
-                resultat.eksempel.treff === "lignende"
-              }
               apneBrev={apneBrev}
               kjoretoy={kjoretoy}
               velgBil={endre}
@@ -581,12 +587,14 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
 
   // Returns an error message, or null when the result was set. `avbrutt` says the caller no longer
   // wants the answer (the effect was cleaned up), so a late answer cannot bring the result back.
-  async function hent(data: Innsending, avbrutt: () => boolean = () => false): Promise<string | null> {
+  // `bilAr` is passed explicitly where the vehicle state is not set yet (the fetch when the page opens).
+  async function hent(data: Innsending, avbrutt: () => boolean = () => false, bilAr = kjoretoy?.ar): Promise<string | null> {
     try {
       const res = await fetch("/api/vurder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        // Only the year, not the registration number: it picks a decision with a car of similar age.
+        body: JSON.stringify(bilAr ? { ...data, bilAr } : data),
       });
       const json = (await res.json()) as Partial<Resultat> & { feil?: string };
       if (!res.ok || !json.niva || !json.tittel || !json.begrunnelse) throw new Error(json.feil ?? "Noe gikk galt.");
@@ -636,13 +644,7 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
   }
 
   useEffect(() => {
-    let k: Kjoretoy | null = null;
-    try {
-      const lagret = sessionStorage.getItem(KJORETOY_NOKKEL);
-      k = lagret ? lesKjoretoy(JSON.parse(lagret)) : null;
-    } catch {
-      /* nothing saved, or storage is blocked */
-    }
+    const k = lagretKjoretoy();
     // sessionStorage does not exist on the server, so this cannot be read while rendering without
     // the first render differing from the server's.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -653,7 +655,9 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
     if (!visVurdering) return;
     // React runs this effect twice in development; only the answer to the last call counts.
     let avbrutt = false;
-    void hent(startSvar, () => avbrutt).then((f) => {
+    // The vehicle state is not set yet in this first effect; read it from the tab, so the assessment
+    // picks the decision with the car's age, as the letter will.
+    void hent(startSvar, () => avbrutt, lagretKjoretoy()?.ar ?? undefined).then((f) => {
       if (avbrutt) return;
       setFeil(f);
       if (f) setSteg(1);

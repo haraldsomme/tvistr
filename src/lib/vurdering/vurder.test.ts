@@ -103,7 +103,7 @@ describe("tak", () => {
     i.bevis.bilder = true;
     const v = await vurder(i, dep(0.9));
     expect(v.niva).toBe("god");
-    expect(v.eksempel?.setning).not.toMatch(/gjort kjent med feilen/);
+    expect(v.eksempel?.henvisning.setning).not.toMatch(/gjort kjent med feilen/);
   });
 
   it("ikke klaget ennå senker ikke nivået når feilen er oppdaget nylig", async () => {
@@ -249,11 +249,11 @@ describe("tittel og begrunnelse", () => {
     expect(svak.tittel).toBe(tittel);
   });
 
-  it("også en svak sak får et eksempel der kjøperen fikk medhold", async () => {
+  it("også en svak sak får en henvisning til en sak kjøperen vant", async () => {
     const v = await vurder(hent(6), dep());
     expect(v.niva).toBe("svak");
-    expect(v.eksempel?.utfall).toBe("vunnet");
-    expect(v.eksempel?.setning).not.toMatch(/ ikke medhold /);
+    expect(v.eksempel?.henvisning.setning).toMatch(/ medhold /);
+    expect(v.eksempel?.henvisning.setning).not.toMatch(/ ikke medhold /);
   });
 
   it("begrunnelsen er én setning med tidspunkt, opplysning og dokumentasjon", async () => {

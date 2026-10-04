@@ -34,9 +34,9 @@ export async function hentSak(id: string): Promise<Sak | null> {
 // Applies one save to a case just read with `hentSak`: the fill-in fields that changed, and the
 // answers from the assessment the save leaves them in step with (unchanged unless the step corrected
 // one of them; see `avledSvar` in `svar.ts`). The fill-in merge is done by the database in one
-// statement, so two saves of different fields at the same time (a tick in the checklist and a chosen
-// decision, say) cannot overwrite each other; the answers are not fielded that way, since only one
-// step at a time corrects them.
+// statement, so two saves of different fields at the same time (two ticks in the checklist, say)
+// cannot overwrite each other; the answers are not fielded that way, since only one step at a time
+// corrects them.
 export async function endreSak(id: string, svar: Innsending, endring: Endring, sak: Sak): Promise<Utfylling> {
   const satt: Record<string, unknown> = {};
   const fjernet: string[] = [];

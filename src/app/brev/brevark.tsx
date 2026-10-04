@@ -20,12 +20,26 @@ function stegForPlassholder(tekst: string): string | null {
   return null;
 }
 
+// A link in the letter (the decision it cites) is clickable on the page too.
+const LENKE = /(https:\/\/[^\s)]+)/;
+function MedLenker({ tekst }: { tekst: string }): ReactNode {
+  return tekst.split(LENKE).map((del, n) =>
+    n % 2 === 0 ? (
+      del
+    ) : (
+      <a key={n} href={del} target="_blank" rel="noreferrer" className="break-all text-[#1f3a5f] underline underline-offset-2">
+        {del}
+      </a>
+    ),
+  );
+}
+
 // `steg` fixes the step for every placeholder in the text (the address blocks, where the same
 // placeholder text, «[Postnummer og sted]», belongs to different steps depending on whose address it
 // is); left out, each placeholder is resolved on its own text.
 function Tekst({ children, steg, apne }: { children: string; steg?: string; apne?: (steg: string) => void }): ReactNode {
   return children.split(PLASSHOLDER).map((del, n) => {
-    if (n % 2 === 0) return del;
+    if (n % 2 === 0) return <MedLenker key={n} tekst={del} />;
     const malSteg = steg ?? stegForPlassholder(del);
     if (apne && malSteg)
       return (

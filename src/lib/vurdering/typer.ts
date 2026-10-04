@@ -88,6 +88,8 @@ export type KlageInput = {
     kjoretoy?: { merke: string; modell: string; arsmodell: number; drivstoff: Drivstoff } | null;
     forhandler?: Forhandler;
     kmVedKjop?: number;
+    // The year the vehicle was first registered (from the registry lookup); gives its age at purchase.
+    bilAr?: number;
   };
   feilen: {
     typer: FeilKnapp[];

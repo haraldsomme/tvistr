@@ -1,5 +1,5 @@
-import { Document, Packer, Paragraph, TextRun } from "docx";
-import { PDFDocument, rgb, StandardFonts, type PDFFont } from "pdf-lib";
+import { Document, ExternalHyperlink, Packer, Paragraph, TextRun } from "docx";
+import { PDFArray, PDFDocument, PDFName, PDFString, rgb, StandardFonts, type PDFFont, type PDFPage } from "pdf-lib";
 import { type Brev } from "./brev";
 
 export { harPlassholder } from "./brev";
@@ -20,12 +20,24 @@ function blokker(b: Brev): Blokk[] {
   ];
 }
 
+const LENKE = /(https:\/\/[^\s)]+)/;
+
+// One line of a block as runs: plain text, and the link to the cited decision as a real hyperlink.
+function kjoringer(linje: string, fet: boolean | undefined, nyLinje: boolean) {
+  return linje.split(LENKE).map((del, n) => {
+    const brudd = nyLinje && n === 0 ? 1 : 0;
+    return n % 2 === 0
+      ? new TextRun({ text: del, bold: fet, break: brudd })
+      : new ExternalHyperlink({ link: del, children: [new TextRun({ text: del, color: "1F3A5F", underline: {}, break: brudd })] });
+  });
+}
+
 export async function tilDocx(b: Brev): Promise<Uint8Array> {
   const children = blokker(b).map(
     (bl) =>
       new Paragraph({
         spacing: { after: 240 },
-        children: bl.linjer.map((l, n) => new TextRun({ text: l, bold: bl.fet, break: n > 0 ? 1 : 0 })),
+        children: bl.linjer.flatMap((l, n) => kjoringer(l, bl.fet, n > 0)),
       }),
   );
   const doc = new Document({
@@ -57,6 +69,9 @@ function brytLinjer(tekst: string, font: PDFFont, storrelse: number, bredde: num
     while (font.widthOfTextAtSize(rest, storrelse) > bredde) {
       let n = rest.length - 1;
       while (n > 1 && font.widthOfTextAtSize(rest.slice(0, n), storrelse) > bredde) n--;
+      // A link breaks after a / ? & or =, so each piece still reads as part of the address.
+      const naturlig = Math.max(...["/", "?", "&", "="].map((t) => rest.lastIndexOf(t, n - 1)));
+      if (naturlig > 0) n = naturlig + 1;
       legg(rest.slice(0, n));
       ut.push(linje);
       linje = "";
@@ -68,6 +83,16 @@ function brytLinjer(tekst: string, font: PDFFont, storrelse: number, bredde: num
   return ut;
 }
 
+// A clickable area over a piece of a link in the PDF.
+function lenke(pdf: PDFDocument, side: PDFPage, x: number, y: number, bredde: number, hoyde: number, url: string) {
+  const ref = pdf.context.register(
+    pdf.context.obj({ Type: "Annot", Subtype: "Link", Rect: [x, y - 2, x + bredde, y + hoyde], Border: [0, 0, 0], A: { Type: "Action", S: "URI", URI: PDFString.of(url) } }),
+  );
+  const annots = side.node.lookup(PDFName.of("Annots"));
+  if (annots instanceof PDFArray) annots.push(ref);
+  else side.node.set(PDFName.of("Annots"), pdf.context.obj([ref]));
+}
+
 export async function tilPdf(b: Brev): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const normal = await pdf.embedFont(StandardFonts.Helvetica);
@@ -76,17 +101,28 @@ export async function tilPdf(b: Brev): Promise<Uint8Array> {
   const bredde = BREDDE_SIDE - 2 * MARG;
   let side = pdf.addPage([BREDDE_SIDE, HOYDE_SIDE]);
   let y = HOYDE_SIDE - MARG;
-  const skriv = (linje: string, font: PDFFont) => {
+  const skriv = (linje: string, font: PDFFont, urler: string[]) => {
     if (y < MARG) {
       side = pdf.addPage([BREDDE_SIDE, HOYDE_SIDE]);
       y = HOYDE_SIDE - MARG;
     }
     side.drawText(linje, { x: MARG, y, size: STR, font, color: rgb(0.09, 0.15, 0.24) });
+    // Every word on the line that is a piece of a link in the paragraph gets a link to the whole address.
+    let x = MARG;
+    for (const ord of linje.split(" ")) {
+      const bit = ord.replace(/^\(/, "").replace(/\)?[.,]?$/, "");
+      const url = bit.length > 8 ? urler.find((u) => u.includes(bit)) : undefined;
+      if (url) lenke(pdf, side, x + font.widthOfTextAtSize(ord.startsWith("(") ? "(" : "", STR), y, font.widthOfTextAtSize(bit, STR), STR, url);
+      x += font.widthOfTextAtSize(`${ord} `, STR);
+    }
     y -= HOYDE;
   };
   for (const bl of blokker(b)) {
     const font = bl.fet ? fet : normal;
-    for (const l of bl.linjer) for (const del of brytLinjer(l, font, STR, bredde)) skriv(del, font);
+    for (const l of bl.linjer) {
+      const urler = l.match(/https:\/\/[^\s)]+/g) ?? [];
+      for (const del of brytLinjer(l, font, STR, bredde)) skriv(del, font, urler);
+    }
     y -= HOYDE * 0.6;
   }
   return pdf.save();

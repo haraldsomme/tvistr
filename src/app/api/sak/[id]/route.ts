@@ -1,6 +1,5 @@
-import { lignendeFor } from "@/lib/brev/dokument";
 import { endreSak, hentSak, slettSak } from "@/lib/brev/sak";
-import { avledSvar, lesSvar } from "@/lib/brev/svar";
+import { avledSvar, kontrollerRettelse, rettSvar } from "@/lib/brev/svar";
 import { erSakId, lesEndring, medEndring, tilpassTilSvar } from "@/lib/brev/utfylling";
 import { ipFra, lagGrense, lesJson } from "@/lib/rategrense";
 import { iDag } from "@/lib/vurdering/faktorer";
@@ -12,10 +11,12 @@ const FINNES_IKKE = { feil: "Vi finner ikke denne saken. Den kan være slettet."
 const UGYLDIG = { feil: "Ugyldig forespørsel." };
 
 // Saves what the user filled in for one step and returns the whole fill-in. A step that corrects an
-// answer from the assessment sends the whole set of answers as `svar`, checked like the assessment
-// checks it (`lesSvar`); a date the new answer makes impossible is then dropped from the fill-in
-// (`tilpassTilSvar`), and the derived answers (how long after the purchase the defect showed, and so
-// on) are brought back in step with it (`avledSvar`) before anything is written.
+// answer from the assessment sends the whole set of answers as `svar`, of which only the answers a step
+// corrects are taken (`rettSvar`); a date the new answer makes impossible is then dropped from the
+// fill-in (`tilpassTilSvar`), and the derived answers (how long after the purchase the defect showed,
+// and so on) are brought back in step with it (`avledSvar`). The result is checked like the assessment
+// checks it (`kontrollerRettelse`): a save that leaves answers the assessment would not have given a
+// letter for is not written.
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!erSakId(id)) return Response.json(FINNES_IKKE, { status: 404 });
@@ -33,9 +34,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     let svar = sak.svar;
     let utfylling = sak.utfylling;
     if (svarRaw !== undefined) {
-      const lest = lesSvar(svarRaw, idag);
-      if (!lest.ok) return Response.json({ feil: lest.feil }, { status: 400 });
-      svar = lest.svar;
+      const rettet = rettSvar(sak.svar, svarRaw, idag);
+      if (!rettet) return Response.json(UGYLDIG, { status: 400 });
+      svar = rettet;
       utfylling = tilpassTilSvar(utfylling, svar, idag);
     }
 
@@ -51,9 +52,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const samletEndring = { ...fjernet, ...lestEndring.endring };
     const forhandsvisning = medEndring(utfylling, lestEndring.endring);
     const avledet = avledSvar(svar, forhandsvisning, idag);
+    const avvist = kontrollerRettelse(sak.svar, avledet, idag);
+    if (avvist) return Response.json({ feil: avvist }, { status: 400 });
 
     const endeligUtfylling = await endreSak(id, avledet, samletEndring, sak);
-    return Response.json({ svar: avledet, utfylling: endeligUtfylling, lignende: await lignendeFor({ utfylling: endeligUtfylling }) });
+    return Response.json({ svar: avledet, utfylling: endeligUtfylling });
   } catch {
     console.error("lagring av sak feilet");
     return Response.json({ feil: "Vi fikk ikke lagret. Prøv igjen om litt." }, { status: 500 });

@@ -101,12 +101,25 @@ export class Brev {
   }
 }
 
+// The wizard after buying, one step per screen, addressed by its heading and buttons.
+export class Veiviser {
+  constructor(private readonly page: Page) {}
+
+  tittel(tekst: string) {
+    return this.page.getByRole("heading", { level: 1, name: tekst });
+  }
+
+  async neste() {
+    await this.page.getByRole("button", { name: "Neste", exact: true }).click();
+  }
+}
+
 // Letter cases live in the database; the flow test registers the case the app made, and this deletes it afterwards.
 export type Saker = { rydd: (id: string) => void };
 
-export const idFra = (url: string) => new URL(url, "http://x").pathname.split("/").pop()!;
+export const idFra = (url: string) => new URL(url, "http://x").pathname.split("/").find((del) => /^[\w-]{22}$/.test(del))!;
 
-export const test = base.extend<{ skjema: Skjema; brev: Brev; sak: Saker }>({
+export const test = base.extend<{ skjema: Skjema; brev: Brev; veiviser: Veiviser; sak: Saker }>({
   // /api/vurder allows ten calls a minute per address; each test gets its own.
   extraHTTPHeaders: async ({}, bruk) => {
     await bruk({ "x-forwarded-for": `10.${randomInt(256)}.${randomInt(256)}.${randomInt(1, 255)}` });
@@ -116,6 +129,9 @@ export const test = base.extend<{ skjema: Skjema; brev: Brev; sak: Saker }>({
   },
   brev: async ({ page }, bruk) => {
     await bruk(new Brev(page));
+  },
+  veiviser: async ({ page }, bruk) => {
+    await bruk(new Veiviser(page));
   },
   sak: async ({ request }, bruk) => {
     const ider: string[] = [];

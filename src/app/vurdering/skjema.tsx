@@ -698,7 +698,7 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
       });
       const json = (await res.json()) as { id?: string; feil?: string };
       if (!res.ok || !json.id) return json.feil ?? "Noe gikk galt. Prøv igjen.";
-      router.push(`/brev/${json.id}`);
+      router.push(`/brev/${json.id}/veiviser`);
       return null;
     } catch {
       return "Noe gikk galt. Prøv igjen.";

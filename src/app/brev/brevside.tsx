@@ -3,79 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useId, useState, type ReactNode } from "react";
 import { Logo } from "@/app/logo";
-import { ForhandlerVelger } from "@/app/vurdering/forhandler-velger";
-import { AvsenderFelt, KravFelt } from "./felt";
-import { BevisFelt } from "./steg/bevis";
-import { FeilenFelt } from "./steg/feilen";
-import { ForKjopetFelt } from "./steg/for-kjopet";
-import { KjopetFelt } from "./steg/kjopet";
 import { KontaktFelt } from "./steg/kontakt";
+import { lagSteg } from "./steg/liste";
 import { byggBrev, harPlassholder, henvisningFor } from "@/lib/brev/brev";
 import { motsvar } from "@/lib/brev/motsvar";
 import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { beregnFaktorer } from "@/lib/vurdering/faktorer";
-import { gyldigKjopsdato, tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
-import { gyldigRetting, type Forhandler } from "@/lib/vurdering/typer";
+import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
+import { gyldigRetting } from "@/lib/vurdering/typer";
 import { Brevark } from "./brevark";
 import { Saksmappe } from "./mappe/saksmappe";
 import { Motsvar } from "./motsvar";
 
 const MERKE_MANGLER = "whitespace-nowrap rounded bg-[oklch(0.96_0.07_85)] px-2 py-[3px] text-[12px] font-semibold text-[#6b5618]";
-
-const gruppertOrgnr = (s: string) => s.replace(/^(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3");
-
-// The dealer is found in Brreg by name or organisation number; choosing a suggestion is enough. A
-// dealer missing from the register (or a sole proprietorship, which we leave out) can be used as typed.
-function ForhandlerFelt({ forhandler, funnet, tittelId }: { forhandler: Forhandler | null; funnet: (f: Forhandler | null) => Promise<boolean>; tittelId: string }) {
-  const [utkast, setUtkast] = useState<Forhandler>({ type: "fritekst", navn: "" });
-
-  if (forhandler) {
-    return (
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-[14px] font-medium">{forhandler.navn}</span>
-          <span className="text-[13px] leading-[1.4] text-[#1f5a45]">
-            {forhandler.type === "brreg" ? `Koblet til Enhetsregisteret · org.nr ${gruppertOrgnr(forhandler.orgnr)}` : "Ikke koblet til Enhetsregisteret"}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setUtkast({ type: "fritekst", navn: forhandler.navn });
-            funnet(null);
-          }}
-          className="whitespace-nowrap text-[14px] font-medium text-[#5b6472]"
-        >
-          Endre
-        </button>
-      </div>
-    );
-  }
-
-  const navn = utkast.navn.trim();
-  return (
-    <div className="flex flex-col gap-2.5">
-      <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472]">Skriv navnet på forhandleren eller organisasjonsnummeret. Vi finner firmaet i Enhetsregisteret.</p>
-      <div role="group" aria-labelledby={tittelId}>
-        <ForhandlerVelger
-          value={utkast}
-          onChange={(v) => (v.type === "brreg" ? funnet(v) : setUtkast(v))}
-          inputClass="w-full rounded-[6px] border-[1.5px] border-[#17263d] bg-white px-3.5 py-3 text-[16px] placeholder:text-[#8a94a3]"
-          labelClass="sr-only"
-          placeholder="Navn eller org.nr."
-        />
-      </div>
-      <button
-        type="button"
-        disabled={navn.length < 2}
-        onClick={() => funnet({ type: "fritekst", navn })}
-        className="self-start rounded-[6px] border border-[#bfbab0] bg-white px-[18px] py-[11px] text-[14px] font-semibold text-[#17263d] disabled:text-[#8a94a3]"
-      >
-        {navn.length >= 2 ? `Bruk «${navn.length > 24 ? `${navn.slice(0, 24)}…` : navn}» som skrevet` : "Bruk som skrevet"}
-      </button>
-    </div>
-  );
-}
 
 type StegStatus = "aktiv" | "ferdig" | "venter";
 
@@ -185,9 +125,10 @@ export function BrevSide({
   const [feil, setFeil] = useState<string | null>(null);
   const router = useRouter();
   const idBase = useId();
+  // The defect is described in the wizard, which comes back to the letter when it is saved.
+  const feilenAdresse = `/brev/${id}/veiviser?steg=feilen&tilbake=brev`;
   // A finished step the user is changing. It is the open step until it is saved or cancelled.
   const [redigerer, setRedigerer] = useState<string | null>(null);
-  const forhandler = utfylling.forhandler ?? null;
   const parsed = tilKlageInput(svar, idag);
   // The answers were valid when they were saved; a deadline that has begun to matter since can make
   // them incomplete. The buyer then corrects them before the letter can be written.
@@ -228,6 +169,10 @@ export function BrevSide({
 
   // Opens the step a clicked placeholder in the letter belongs to.
   function apneSteg(stegId: string) {
+    if (stegId === "feilen") {
+      router.push(feilenAdresse);
+      return;
+    }
     setFane("fyll");
     setRedigerer(stegId);
     requestAnimationFrame(() => document.getElementById(`steg-${stegId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
@@ -265,75 +210,10 @@ export function BrevSide({
     );
   }
 
-  // The steps in order. «Forhandleren» looks up the dealer itself and handles its own «Endre» (it
-  // clears the value); the rest keep their value while it is being changed.
-  const felles = (stegId: string) => ({
-    aktiv: erAktiv(stegId),
-    lagre,
-    avbryt: redigerer === stegId ? () => setRedigerer(null) : undefined,
-  });
-  const kjopetFerdig = gyldigKjopsdato(svar.kjopsdato, idag) && /^\d+$/.test(svar.kjopesum) && utfylling.forbehold !== undefined;
-  const kontakt = svar.kontakt || "nei";
-  const kontaktFerdig = kontakt === "nei" || (retting !== undefined && utfylling.reklamasjon !== undefined && (retting !== "forsokt" || utfylling.reklamasjon.forsok !== undefined));
-  const kanVelgeKrav = retting === "avvist" || retting === "forsokt" || retting === "reparert_selv";
-  const steg: { id: string; tittel: string; ferdig: boolean; kanEndres?: boolean; innhold: () => ReactNode }[] = [
-    {
-      id: "kjopet",
-      tittel: "Kjøpet",
-      ferdig: kjopetFerdig,
-      kanEndres: true,
-      innhold: () => <KjopetFelt kjoretoy={utfylling.kjoretoy!} svar={svar} idag={idag} verdi={utfylling.forbehold} {...felles("kjopet")} />,
-    },
-    {
-      id: "forhandler",
-      tittel: "Forhandler",
-      ferdig: forhandler !== null,
-      innhold: () => <ForhandlerFelt forhandler={forhandler} funnet={(f) => lagre({ forhandler: f })} tittelId={`${idBase}-forhandler`} />,
-    },
-    {
-      id: "feilen",
-      tittel: "Feilen",
-      ferdig: utfylling.feilen !== undefined,
-      kanEndres: true,
-      innhold: () => <FeilenFelt sakId={id} input={input} idag={idag} verdi={utfylling.feilen} {...felles("feilen")} />,
-    },
-    {
-      id: "for-kjopet",
-      tittel: "Før kjøpet",
-      ferdig: utfylling.feilopplyst !== undefined,
-      kanEndres: true,
-      innhold: () => <ForKjopetFelt svar={svar} verdi={utfylling.opplysning} feilopplyst={utfylling.feilopplyst} {...felles("for-kjopet")} />,
-    },
-    {
-      id: "kontakt",
-      tittel: "Kontakt med forhandleren",
-      ferdig: kontaktFerdig,
-      kanEndres: true,
-      innhold: () => <KontaktFelt svar={svar} idag={idag} retting={retting} reklamasjon={utfylling.reklamasjon} {...felles("kontakt")} />,
-    },
-    {
-      id: "bevis",
-      tittel: "Bevis og vedlegg",
-      ferdig: utfylling.vedlegg !== undefined,
-      kanEndres: true,
-      innhold: () => <BevisFelt input={input} svar={svar} utfylling={utfylling} {...felles("bevis")} />,
-    },
-    {
-      id: "krav",
-      tittel: "Kravet",
-      ferdig: utfylling.krav !== undefined && (!kanVelgeKrav || utfylling.krav.type !== undefined),
-      kanEndres: true,
-      innhold: () => <KravFelt kanVelge={kanVelgeKrav} verdi={utfylling.krav} {...felles("krav")} />,
-    },
-    {
-      id: "avsender",
-      tittel: "Deg",
-      ferdig: utfylling.avsender !== undefined,
-      kanEndres: true,
-      innhold: () => <AvsenderFelt verdi={utfylling.avsender} {...felles("avsender")} />,
-    },
-  ];
-
+  // The steps in order (`steg/liste.tsx`). «Forhandleren» looks up the dealer itself and handles its
+  // own «Endre» (it clears the value); «Feilen» is changed in the wizard; the rest keep their value
+  // while it is being changed.
+  const steg = lagSteg({ sakId: id, input, svar, utfylling, idag, idBase, lagre });
   const aktivId = redigerer ?? steg.find((s) => !s.ferdig)?.id ?? null;
   function erAktiv(stegId: string) {
     return aktivId === stegId;
@@ -390,9 +270,9 @@ export function BrevSide({
             tittel={s.tittel}
             tittelId={`${idBase}-${s.id}`}
             status={s.id === aktivId ? "aktiv" : s.ferdig ? "ferdig" : "venter"}
-            endre={s.kanEndres && s.ferdig ? () => setRedigerer(s.id) : undefined}
+            endre={s.id !== "forhandler" && s.ferdig ? () => (s.id === "feilen" ? router.push(feilenAdresse) : setRedigerer(s.id)) : undefined}
           >
-            {s.innhold()}
+            {s.innhold({ aktiv: erAktiv(s.id), avbryt: redigerer === s.id ? () => setRedigerer(null) : undefined })}
           </Steg>
         ))}
       </ol>

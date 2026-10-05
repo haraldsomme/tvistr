@@ -25,8 +25,10 @@ export function KjopetFelt({
   aktiv,
   lagre,
   avbryt,
-}: Felles & { kjoretoy: Kjoretoy; svar: Innsending; idag: string; verdi: Forbehold | undefined }) {
-  const [dato, setDato] = useState(svar.kjopsdato);
+  forslagKjopsdato,
+}: Felles & { kjoretoy: Kjoretoy; svar: Innsending; idag: string; verdi: Forbehold | undefined; forslagKjopsdato?: string | null }) {
+  // Without a purchase date in the case, the registry's day for the current owner is the suggestion.
+  const [dato, setDato] = useState(svar.kjopsdato || forslagKjopsdato || "");
   const [sum, setSum] = useState(svar.kjopesum);
   const [km, setKm] = useState(svar.kmVedKjop);
   const [forbehold, setForbehold] = useState<Forbehold | null>(verdi ?? null);
@@ -52,7 +54,7 @@ export function KjopetFelt({
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt}>
       <p className={HJELP}>{bil} (bilen kan ikke endres)</p>
-      <Tekstfelt label="Når kjøpte du bilen?" type="date" min={`${FRA_AR}-01-01`} max={idag} value={dato} onChange={(e) => setDato(e.target.value)} />
+      <Tekstfelt label="Når kjøpte du bilen?" hjelp={forslagKjopsdato && !svar.kjopsdato && dato === forslagKjopsdato ? "Foreslått fra Statens vegvesen: datoen bilen ble registrert på deg. Rett den hvis den ikke stemmer med kjøpekontrakten." : undefined} type="date" min={`${FRA_AR}-01-01`} max={idag} value={dato} onChange={(e) => setDato(e.target.value)} />
       <Tekstfelt label="Hva kostet bilen?" inputMode="numeric" autoComplete="off" placeholder="Kroner" value={gruppert(sum)} onChange={(e) => setSum(bareSiffer(e.target.value))} />
       <Tekstfelt label="Kilometerstand ved kjøpet (valgfritt)" inputMode="numeric" autoComplete="off" placeholder="Kilometer" value={gruppert(km)} onChange={(e) => setKm(bareSiffer(e.target.value))} />
       <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">

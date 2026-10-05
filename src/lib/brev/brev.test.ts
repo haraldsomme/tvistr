@@ -232,7 +232,7 @@ describe("byggBrev", () => {
   });
 
   describe("beskrivelsen av feilen", () => {
-    const feilen = { dato: "2026-09-02", egen: "motorlampa lyser og bilen mister kraft", tekst: "Motorlampen lyser, og bilen mister trekkraft i motbakker" };
+    const feilen = { dato: "2026-09-02", egen: "motorlampa lyser og bilen mister kraft", feil: [], avsnitt: ["Motorlampen lyser, og bilen mister trekkraft i motbakker"] };
 
     it("erstatter plassholderen med datoen og den godkjente teksten", () => {
       const b = byggBrev(grunn(), IDAG, { feilen });
@@ -244,7 +244,13 @@ describe("byggBrev", () => {
     });
 
     it("setter ikke to punktum når teksten alt slutter med ett", () => {
-      expect(byggBrev(grunn(), IDAG, { feilen: { ...feilen, tekst: "Motoren stopper." } }).avsnitt[0]).toMatch(/Motoren stopper\.$/);
+      expect(byggBrev(grunn(), IDAG, { feilen: { ...feilen, avsnitt: ["Motoren stopper."] } }).avsnitt[0]).toMatch(/Motoren stopper\.$/);
+    });
+
+    it("deler beskrivelsen i avsnitt og skriver «Den første feilen» ved flere feil", () => {
+      const b = byggBrev(grunn(), IDAG, { feilen: { ...feilen, feil: ["Motoren", "Rust"], avsnitt: ["Motorlampen lyser", "Det er rust på bakskjermen."] } });
+      expect(b.avsnitt[0]).toMatch(/Den første feilen viste seg 2\. september 2026\. Motorlampen lyser\.$/);
+      expect(b.avsnitt[1]).toBe("Det er rust på bakskjermen.");
     });
   });
 
@@ -376,7 +382,7 @@ describe("byggBrev", () => {
       ...forhold(i, "forsokt"),
       kjoretoy: { regnr: "ZZ 99999", merke: "Testmerke", modell: "Modell X", ar: 2019 },
       forhandler: { type: "brreg", orgnr: "999888777", navn: "Testbil AS", adresse: { linjer: ["Industriveien 3"], postnummer: "0184", poststed: "Oslo" } },
-      feilen: { dato: "2026-09-02", egen: "Motorlampen lyser og bilen mister kraft.", tekst: "Motorlampen lyser, og bilen mister trekkraft." },
+      feilen: { dato: "2026-09-02", egen: "Motorlampen lyser og bilen mister kraft.", feil: [], avsnitt: ["Motorlampen lyser, og bilen mister trekkraft."] },
       opplysning: { kilde: "annonse", tekst: "Ny clutch" },
       reklamasjon: { dato: "2026-09-03", mate: "epost", forsok: 2 },
       krav: { type: "heving", utgifter: [{ type: "verksted", belopNok: 4500 }] },

@@ -22,7 +22,7 @@ Suksess: en kjøper som åpner saken vet hva hun kan kreve, hva hun sannsynligvi
 - `feiltyper` er feil klageren påberopte, ikke godtatte. Treff på feiltype merkes slik i grensesnittet til `godtatte_feiltyper` finnes.
 - Eksempelvedtak må ha `trenger_kontroll = false`, `konfidens ≥ 0.85`, `qa_status <> 'feil'` og et sitat for utfallet. Nøkkelmomentene er modellens oppsummering av vedtaket og ikke ordrett tekst; hvert eksempel lenker til kilden (`kilde_url`) og sier «les vedtaket før du bruker det».
 - Ingen rå PDF-tekst, ingen navn. `fulltekst_renset` brukes ikke i mappen.
-- Mappen er avledet fra `vedtak` og saken. Ingenting fra `brevsak` (navn, adresse, regnr, fritekst) sendes til en språkmodell, og mappen bruker ingen modellkall.
+- Mappen er avledet fra `vedtak` og saken. Navn, adresse og regnr fra `brevsak` sendes aldri til en språkmodell. Bare feilbeskrivelsen og svarene om feilen sendes, uten navn (se `2026-10-04-feilbeskrivelse-intervju-design.md`), og mappen bruker ingen modellkall.
 - Juridiske formuleringer er regler i kode og skal leses av en jurist før lansering. Spec-en og sluttrapporten sier dette.
 
 ## 1. Sterkere brev

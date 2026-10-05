@@ -119,14 +119,20 @@ function innvendinger(input: KlageInput, f: Faktorer, u: Utfylling): string[] {
   return ledd.length ? [ledd.join(" ")] : [];
 }
 
-function kjopetOgFeilen(input: KlageInput, u: Utfylling): string {
+// The purchase and the defect: the buyer's first paragraph follows the purchase and the date; the
+// rest stand as paragraphs of their own.
+function kjopetOgFeilen(input: KlageInput, u: Utfylling): string[] {
   const { kjopsdato, kjopesumNok } = input.bilOgKjop;
   const sum = kjopesumNok != null ? kroner(kjopesumNok) : "[kjøpesum]";
   const kjopet = `Jeg viser til kjøp av ovennevnte bil fra dere ${kjopsdato ? norskDato(kjopsdato) : "[kjøpsdato]"} for ${sum}.`;
-  if (u.feilen) return `${kjopet} Feilen viste seg første gang ${norskDato(u.feilen.dato)}. ${medPunktum(u.feilen.tekst)}`;
+  if (u.feilen) {
+    const [forste, ...resten] = u.feilen.avsnitt;
+    const viste = u.feilen.feil.length > 1 ? "Den første feilen viste seg" : "Feilen viste seg første gang";
+    return [`${kjopet} ${viste} ${norskDato(u.feilen.dato)}. ${medPunktum(forste)}`, ...resten.map(medPunktum)];
+  }
   const feil = [...new Set(input.feilen.typer)].map((t) => FEIL_I_SETNING[t]).filter((t): t is string => t !== null);
   const feilen = feil.length > 0 ? `Bilen har feil ved ${liste(feil)}.` : "Bilen har en feil.";
-  return `${kjopet} ${feilen} ${FEIL_PLASSHOLDER}`;
+  return [`${kjopet} ${feilen} ${FEIL_PLASSHOLDER}`];
 }
 
 const OPPLYSNING_KILDE: Record<Opplysning["kilde"], string> = {
@@ -234,7 +240,7 @@ function erstatningOgForbehold(u: Utfylling): string {
   const utgifter = u.krav?.utgifter ?? [];
   const sum = utgifter.reduce((s, x) => s + x.belopNok, 0);
   const erstatning = utgifter.length
-    ? `I tillegg krever jeg erstatning for utgiftene mangelen har påført meg, jf. § 33: ${liste(utgifter.map((x) => `${UTGIFT[x.type]} ${kroner(x.belopNok)}`))}${utgifter.length > 1 ? `, til sammen ${kroner(sum)}` : ""}. `
+    ? `I tillegg krever jeg erstatning for utgiftene mangelen har påført meg, jf. § 33: ${liste(utgifter.map((x) => `${x.type === "annet" && x.beskrivelse ? x.beskrivelse : UTGIFT[x.type]} ${kroner(x.belopNok)}`))}${utgifter.length > 1 ? `, til sammen ${kroner(sum)}` : ""}. `
     : "";
   if (harFatt(u.retting)) {
     return `${erstatning}${utgifter.length ? "Jeg forbeholder meg retten til å kreve erstatning for ytterligere tap." : "Jeg forbeholder meg også retten til erstatning for mitt økonomiske tap etter § 33."}`;
@@ -299,7 +305,7 @@ export function byggBrev(
     stedDato: `${avsender?.poststed ?? "[Sted]"}, ${norskDato(idag)}`,
     emne: kjoretoy ? `Reklamasjon på mangel – ${bil}, reg.nr. ${kjoretoy.regnr}` : "Reklamasjon på mangel – [merke og modell], reg.nr. [reg.nr.]",
     avsnitt: [
-      kjopetOgFeilen(input, u),
+      ...kjopetOgFeilen(input, u),
       mangelOgBevisbyrde(input, idag, u),
       ...(henvisning ? [JURIDISK.henvisning(henvisning)] : []),
       ...innvendinger(input, f, u),

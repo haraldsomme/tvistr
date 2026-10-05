@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { brevsak } from "@/db/schema";
 import { lesInnsending, type Innsending } from "@/lib/vurdering/innsending";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
-import { erSakId, medEndring, utloperEtter, type Endring, type Utfylling } from "./utfylling";
+import { erSakId, lesLagret, medEndring, utloperEtter, type Endring, type Utfylling } from "./utfylling";
 
 // The stored letter cases. A case holds personal data, so: the id is unguessable and is the only
 // way in, nothing from a case is logged, and a case is deleted when it expires or the user asks.
@@ -28,7 +28,7 @@ export async function hentSak(id: string): Promise<Sak | null> {
     return null;
   }
   // Read through `lesInnsending`, so a case saved with the purchase month only still opens.
-  return { id: rad.id, svar: lesInnsending(rad.svar as unknown as Record<string, unknown>), utfylling: rad.utfylling };
+  return { id: rad.id, svar: lesInnsending(rad.svar as unknown as Record<string, unknown>), utfylling: lesLagret(rad.utfylling) };
 }
 
 // Applies one save to a case just read with `hentSak`: the fill-in fields that changed, and the
@@ -48,7 +48,7 @@ export async function endreSak(id: string, svar: Innsending, endring: Endring, s
   const sammenslatt = fjernet.reduce((uttrykk, felt) => sql`(${uttrykk}) - ${felt}::text`, sql`${brevsak.utfylling} || ${JSON.stringify(satt)}::jsonb`);
   const [rad] = await db.update(brevsak).set({ svar, utfylling: sammenslatt, endret: na, utloper: utloperEtter(na) }).where(eq(brevsak.id, id)).returning({ utfylling: brevsak.utfylling });
   // The case can have been deleted between the read and the save; the answer then is what the read saw.
-  return rad?.utfylling ?? medEndring(sak.utfylling, endring);
+  return lesLagret(rad?.utfylling ?? medEndring(sak.utfylling, endring));
 }
 
 // Counts one more suggestion from the language model for a case just read with `hentSak`.

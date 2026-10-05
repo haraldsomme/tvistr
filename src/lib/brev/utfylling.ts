@@ -29,6 +29,8 @@ export type Utfylling = {
   sjekket?: SjekkNokkel[];
   // The day the letter was sent, for the reminder and the deadlines.
   sendt?: string;
+  // The buyer has been through the wizard once; the link then opens the letter.
+  gjennomgatt?: true;
   // How many suggestions the language model has made for this case. Counted on the server; the
   // page cannot set it.
   sprakvask?: number;
@@ -38,9 +40,11 @@ export type Utfylling = {
 // in the assessment and is part of the case from the day it is opened.
 type Felt = Exclude<keyof Utfylling, "sprakvask" | "kjoretoy">;
 
-// The defect: the day it showed, the buyer's own words, and the text that goes in the letter
-// (the buyer's own, a suggestion from the language model, or an edited one).
-export type Feilen = { dato: string; egen: string; tekst: string };
+// The defect: the day the first defect showed, the buyer's own words, the defects the model found
+// (titles; more than one changes the sentence before the text), the answers to its questions, and the
+// paragraphs that go in the letter (the buyer's own text, or a draft the buyer approved).
+export type Fakta = { feil: string; sporsmal: string; svar: string };
+export type Feilen = { dato: string; egen: string; feil: string[]; fakta?: Fakta[]; avsnitt: string[] };
 
 // What the ad or the dealer said that turned out to be wrong, and where it was said.
 export const OPPLYSNING_KILDER = ["annonse", "kontrakt", "melding", "muntlig"] as const;
@@ -55,7 +59,9 @@ export type Reklamasjon = { dato: string; mate: (typeof REKLAMASJON_MATER)[numbe
 // claimed as damages.
 export const KRAV_TYPER = ["prisavslag", "heving"] as const;
 export const UTGIFT_TYPER = ["verksted", "tauing", "leiebil", "annet"] as const;
-export type Utgift = { type: (typeof UTGIFT_TYPER)[number]; belopNok: number };
+// `beskrivelse` says what an «annet» expense was; it is required for that type and stands in the letter.
+export type Utgift = { type: (typeof UTGIFT_TYPER)[number]; belopNok: number; beskrivelse?: string };
+export const UTGIFT_BESKRIVELSE_MAKS = 80;
 export type Krav = { type?: (typeof KRAV_TYPER)[number]; utbedringNok?: number; utgifter: Utgift[] };
 
 export const VEDLEGG = ["kjopekontrakt", "verkstedrapport", "bilder", "annonse", "meldinger", "kvitteringer"] as const;
@@ -139,18 +145,61 @@ const blant = <T extends string>(valg: readonly T[], v: unknown): v is T => type
 const etterKjop = (v: unknown, k: Kontekst): v is string => erDato(v) && v >= k.svar.kjopsdato && v <= k.idag;
 
 export const BESKRIVELSE_MIN = 20;
-export const BESKRIVELSE_MAKS = 1500;
-// How many suggestions the language model makes for one case.
-export const MAKS_SPRAKVASK = 10;
+export const BESKRIVELSE_MAKS = 3000;
+// The limits of the description in the letter and of what the interview stores.
+export const FEILBESKRIVELSE = { maksAvsnitt: 6, avsnittMin: 5, totalMaks: 3000, maksFeil: 6, feilTittelMaks: 80, maksFakta: 8, sporsmalMaks: 200, svarMaks: 300 } as const;
+// How many calls to the language model one case gets; one round of the interview is two.
+export const MAKS_SPRAKVASK = 20;
 
 // The buyer's description of the defect, as it must be to be saved or sent to the language model.
 export const lesBeskrivelse = (v: unknown): string | null => tekst(v, BESKRIVELSE_MAKS, BESKRIVELSE_MIN);
 
+// The paragraphs of the description: each one line without brackets, together within the limit.
+export function lesAvsnitt(v: unknown): string[] | null {
+  if (!Array.isArray(v) || v.length === 0 || v.length > FEILBESKRIVELSE.maksAvsnitt) return null;
+  const avsnitt = v.map((a) => tekst(a, FEILBESKRIVELSE.totalMaks, FEILBESKRIVELSE.avsnittMin));
+  if (avsnitt.some((a) => a === null)) return null;
+  const lest = avsnitt as string[];
+  return lest.reduce((n, a) => n + a.length, 0) <= FEILBESKRIVELSE.totalMaks ? lest : null;
+}
+
+// The buyer's answers to the follow-up questions. Unanswered questions are not stored.
+export function lesFakta(v: unknown): Fakta[] | null {
+  if (!Array.isArray(v) || v.length > FEILBESKRIVELSE.maksFakta) return null;
+  const fakta: Fakta[] = [];
+  for (const f of v) {
+    if (!erObjekt(f)) return null;
+    const feil = tekst(f.feil, FEILBESKRIVELSE.feilTittelMaks);
+    const sporsmal = tekst(f.sporsmal, FEILBESKRIVELSE.sporsmalMaks);
+    const svar = tekst(f.svar, FEILBESKRIVELSE.svarMaks);
+    if (!feil || !sporsmal || !svar) return null;
+    fakta.push({ feil, sporsmal, svar });
+  }
+  return fakta;
+}
+
+function lesFeiltitler(v: unknown): string[] | null {
+  if (!Array.isArray(v) || v.length > FEILBESKRIVELSE.maksFeil) return null;
+  const titler = v.map((f) => tekst(f, FEILBESKRIVELSE.feilTittelMaks));
+  return titler.some((t) => t === null) ? null : (titler as string[]);
+}
+
 function lesFeilen(v: unknown, k: Kontekst): Feilen | null {
   if (!erObjekt(v) || !etterKjop(v.dato, k)) return null;
-  const egen = tekst(v.egen, BESKRIVELSE_MAKS, BESKRIVELSE_MIN);
-  const iBrevet = tekst(v.tekst, BESKRIVELSE_MAKS, BESKRIVELSE_MIN);
-  return egen && iBrevet ? { dato: v.dato, egen, tekst: iBrevet } : null;
+  const egen = lesBeskrivelse(v.egen);
+  const feil = lesFeiltitler(v.feil);
+  const avsnitt = lesAvsnitt(v.avsnitt);
+  const fakta = v.fakta === undefined ? [] : lesFakta(v.fakta);
+  if (!egen || !feil || !avsnitt || !fakta) return null;
+  return { dato: v.dato, egen, feil, ...(fakta.length > 0 && { fakta }), avsnitt };
+}
+
+// The fill-in as stored. A case saved before the description had paragraphs holds one text in
+// `feilen.tekst`; it reads as one paragraph.
+export function lesLagret(u: Utfylling): Utfylling {
+  const f = u.feilen as (Partial<Feilen> & { dato: string; egen: string; tekst?: string }) | undefined;
+  if (!f || Array.isArray(f.avsnitt)) return u;
+  return { ...u, feilen: { dato: f.dato, egen: f.egen, feil: [], avsnitt: [f.tekst ?? f.egen] } };
 }
 
 function lesOpplysning(v: unknown): Opplysning | null {
@@ -173,7 +222,13 @@ function lesKrav(v: unknown): Krav | null {
   const utgifter: Utgift[] = [];
   for (const u of v.utgifter) {
     if (!erObjekt(u) || !blant(UTGIFT_TYPER, u.type) || !heltall(u.belopNok, 1, MAKS_BELOP)) return null;
-    utgifter.push({ type: u.type, belopNok: u.belopNok });
+    if (u.type !== "annet") {
+      utgifter.push({ type: u.type, belopNok: u.belopNok });
+      continue;
+    }
+    const beskrivelse = tekst(u.beskrivelse, UTGIFT_BESKRIVELSE_MAKS, 2);
+    if (!beskrivelse) return null;
+    utgifter.push({ type: u.type, belopNok: u.belopNok, beskrivelse });
   }
   if (v.type !== undefined && !blant(KRAV_TYPER, v.type)) return null;
   if (v.utbedringNok !== undefined && !heltall(v.utbedringNok, 1, MAKS_BELOP)) return null;
@@ -214,6 +269,8 @@ function lesSjekket(v: unknown): SjekkNokkel[] | null {
 
 const lesSendt = (v: unknown, k: Kontekst): string | null => (etterKjop(v, k) ? v : null);
 
+const lesGjennomgatt = (v: unknown): true | null => (v === true ? true : null);
+
 const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } = {
   forhandler: lesForhandler,
   feilen: lesFeilen,
@@ -227,6 +284,7 @@ const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } 
   forbehold: lesForbehold,
   sjekket: lesSjekket,
   sendt: lesSendt,
+  gjennomgatt: lesGjennomgatt,
 };
 
 // Parses an untrusted save from the page. Every field is checked; one bad field rejects the save.

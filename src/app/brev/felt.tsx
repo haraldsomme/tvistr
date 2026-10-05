@@ -1,11 +1,12 @@
 "use client";
 
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { createContext, useContext, useId, useState, type FormEvent, type ReactNode } from "react";
 import {
   BESKRIVELSE_MAKS,
   BESKRIVELSE_MIN,
   KRAV_TYPER,
   MAKS_UTGIFTER,
+  UTGIFT_BESKRIVELSE_MAKS,
   UTGIFT_TYPER,
   type Avsender,
   type Krav,
@@ -37,24 +38,46 @@ export function Sammendrag({ linjer }: { linjer: ReactNode[] }) {
   );
 }
 
-// The form of a step: saves on submit and shows the two buttons.
+// Set by the wizard after buying: the form's main button moves on after a save, and «Tilbake» and
+// «Hopp over» show beside it.
+export type Veiviser = { neste: () => void; tilbake: () => void; hoppOver?: () => void; nesteTekst: string };
+export const VeiviserKontekst = createContext<Veiviser | null>(null);
+
+export const VEIVISER_LENKE = "px-2.5 py-[11px] text-[14px] font-medium text-[#5b6472]";
+
+// The form of a step: saves on submit and shows the two buttons (in the wizard: «Neste», «Tilbake»
+// and «Hopp over»).
 export function Skjema({ klar, send, avbryt, children, knapp = "Lagre" }: { klar: boolean; send: () => Promise<boolean>; avbryt?: () => void; children: ReactNode; knapp?: string }) {
   const [lagrer, setLagrer] = useState(false);
+  const veiviser = useContext(VeiviserKontekst);
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!klar || lagrer) return;
     setLagrer(true);
-    await send();
+    const ok = await send();
     setLagrer(false);
+    if (ok) veiviser?.neste();
   }
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       {children}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={!klar || lagrer} className="rounded-[6px] bg-[#17263d] px-[18px] py-[11px] text-[14px] font-semibold text-[#f6f4ef] disabled:bg-[#dcd8cf] disabled:text-[#8a94a3]">
-          {lagrer ? "Lagrer …" : knapp}
+          {lagrer ? "Lagrer …" : veiviser && knapp === "Lagre" ? veiviser.nesteTekst : knapp}
         </button>
-        {avbryt && (
+        {veiviser && (
+          <>
+            <button type="button" disabled={lagrer} onClick={veiviser.tilbake} className={VEIVISER_LENKE}>
+              Tilbake
+            </button>
+            {veiviser.hoppOver && (
+              <button type="button" disabled={lagrer} onClick={veiviser.hoppOver} className={`${VEIVISER_LENKE} underline underline-offset-2`}>
+                Hopp over
+              </button>
+            )}
+          </>
+        )}
+        {!veiviser && avbryt && (
           <button type="button" onClick={avbryt} className="px-2.5 py-[11px] text-[14px] font-medium text-[#5b6472]">
             Avbryt
           </button>
@@ -105,7 +128,7 @@ const KRAV_TEKST: Record<NonNullable<Krav["type"]>, { tittel: string; tekst: str
 };
 const UTGIFT_TEKST: Record<Utgift["type"], string> = { verksted: "Verksted og feilsøking", tauing: "Tauing", leiebil: "Leiebil", annet: "Annet" };
 
-type UtgiftUtkast = { type: Utgift["type"]; belop: string };
+type UtgiftUtkast = { type: Utgift["type"]; belop: string; beskrivelse: string };
 
 // What the buyer claims. The choice between a price reduction and cancelling is only there once the
 // dealer has refused or failed to repair; before that the claim is repair. Costs can always be claimed.
@@ -119,7 +142,7 @@ export function KravFelt({
   const id = useId();
   const [type, setType] = useState<Krav["type"]>(verdi?.type);
   const [utbedring, setUtbedring] = useState(verdi?.utbedringNok ? String(verdi.utbedringNok) : "");
-  const [utgifter, setUtgifter] = useState<UtgiftUtkast[]>(() => (verdi?.utgifter ?? []).map((u) => ({ type: u.type, belop: String(u.belopNok) })));
+  const [utgifter, setUtgifter] = useState<UtgiftUtkast[]>(() => (verdi?.utgifter ?? []).map((u) => ({ type: u.type, belop: String(u.belopNok), beskrivelse: u.beskrivelse ?? "" })));
 
   if (!aktiv) {
     if (!verdi) return null;
@@ -129,13 +152,13 @@ export function KravFelt({
   }
 
   const endreUtgift = (n: number, e: Partial<UtgiftUtkast>) => setUtgifter((u) => u.map((x, i) => (i === n ? { ...x, ...e } : x)));
-  const klar = (!kanVelge || type !== undefined) && utgifter.every((u) => u.belop !== "");
+  const klar = (!kanVelge || type !== undefined) && utgifter.every((u) => u.belop !== "" && (u.type !== "annet" || u.beskrivelse.trim().length >= 2));
   const send = () =>
     lagre({
       krav: {
         ...(kanVelge && type && { type }),
         ...(kanVelge && type === "prisavslag" && utbedring !== "" && { utbedringNok: Number(utbedring) }),
-        utgifter: utgifter.map((u) => ({ type: u.type, belopNok: Number(u.belop) })),
+        utgifter: utgifter.map((u) => ({ type: u.type, belopNok: Number(u.belop), ...(u.type === "annet" && { beskrivelse: u.beskrivelse.trim() }) })),
       },
     });
 
@@ -173,22 +196,33 @@ export function KravFelt({
         <span className={LABEL}>Utgifter du vil ha erstattet (valgfritt)</span>
         <p className={HJELP}>Utgifter du har hatt på grunn av feilen, og som du har kvittering for.</p>
         {utgifter.map((u, n) => (
-          <div key={n} role="group" aria-label={`Utgift ${n + 1}`} className="flex items-center gap-2">
-            <select aria-label="Type utgift" value={u.type} onChange={(e) => endreUtgift(n, { type: e.target.value as Utgift["type"] })} className={`${INPUT} min-w-0 flex-[3] px-2.5`}>
-              {UTGIFT_TYPER.map((t) => (
-                <option key={t} value={t}>
-                  {UTGIFT_TEKST[t]}
-                </option>
-              ))}
-            </select>
-            <input aria-label="Beløp i kroner" inputMode="numeric" placeholder="kr" value={gruppert(u.belop)} onChange={(e) => endreUtgift(n, { belop: bareSiffer(e.target.value) })} className={`${INPUT} min-w-0 flex-[2] px-2.5`} />
-            <button type="button" onClick={() => setUtgifter((x) => x.filter((_, i) => i !== n))} className="text-[13px] font-medium text-[#5b6472]">
-              Fjern
-            </button>
+          <div key={n} role="group" aria-label={`Utgift ${n + 1}`} className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <select aria-label="Type utgift" value={u.type} onChange={(e) => endreUtgift(n, { type: e.target.value as Utgift["type"] })} className={`${INPUT} min-w-0 flex-[3] px-2.5`}>
+                {UTGIFT_TYPER.map((t) => (
+                  <option key={t} value={t}>
+                    {UTGIFT_TEKST[t]}
+                  </option>
+                ))}
+              </select>
+              <input aria-label="Beløp i kroner" inputMode="numeric" placeholder="kr" value={gruppert(u.belop)} onChange={(e) => endreUtgift(n, { belop: bareSiffer(e.target.value) })} className={`${INPUT} min-w-0 flex-[2] px-2.5`} />
+              <button type="button" onClick={() => setUtgifter((x) => x.filter((_, i) => i !== n))} className="text-[13px] font-medium text-[#5b6472]">
+                Fjern
+              </button>
+            </div>
+            {u.type === "annet" && (
+              <input
+                aria-label="Hva var utgiften?"
+                placeholder="Hva var utgiften? F.eks. drivstoff til verkstedet"
+                value={u.beskrivelse}
+                onChange={(e) => endreUtgift(n, { beskrivelse: e.target.value.slice(0, UTGIFT_BESKRIVELSE_MAKS) })}
+                className={INPUT}
+              />
+            )}
           </div>
         ))}
         {utgifter.length < MAKS_UTGIFTER && (
-          <button type="button" onClick={() => setUtgifter((u) => [...u, { type: "verksted", belop: "" }])} className="self-start text-[14px] font-medium text-[#1f3a5f] underline underline-offset-2">
+          <button type="button" onClick={() => setUtgifter((u) => [...u, { type: "verksted", belop: "", beskrivelse: "" }])} className="self-start text-[14px] font-medium text-[#1f3a5f] underline underline-offset-2">
             Legg til utgift
           </button>
         )}

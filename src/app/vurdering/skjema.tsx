@@ -1,5 +1,8 @@
 "use client";
 
+import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
+import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
 import { TID_TIL_VEDTAK } from "@/lib/vurdering/tid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -81,8 +84,6 @@ const nesteTekst = (steger: readonly Steg[], steg: Steg) => {
 
 const INNHOLD = "flex flex-col gap-5 px-6 pt-[22px] md:gap-9 md:px-0 md:pt-0";
 const LABEL = "font-ui text-[14px] font-semibold text-[#17263d] md:text-[15px]";
-const KNAPP =
-  "w-full rounded-[6px] bg-[#17263d] p-[18px] text-center font-ui text-[16px] font-semibold text-[#f6f4ef] disabled:cursor-not-allowed disabled:opacity-40";
 
 // Completed steps are buttons back to that step; the ones ahead cannot be opened, so each step is
 // still validated before the next.
@@ -150,8 +151,9 @@ function Valg<T extends string>({
   deaktivert?: (v: T) => boolean;
 }) {
   return (
-    <div
-      role="radiogroup"
+    <RadioGroupPrimitive.Root
+      value={valgt}
+      onValueChange={(v) => velg(v as T)}
       aria-labelledby={id}
       className={`flex flex-col gap-2.5 ${rad ? "md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6 md:border-b md:border-[#eceae4] md:py-5 md:last:border-b-0" : "md:gap-3"}`}
     >
@@ -162,20 +164,17 @@ function Valg<T extends string>({
         {verdier.map((v) => {
           const er = valgt === v;
           return (
-            <button
+            <RadioGroupPrimitive.Item
               key={v}
-              type="button"
-              role="radio"
-              aria-checked={er}
+              value={v}
               disabled={deaktivert?.(v)}
-              onClick={() => velg(v)}
-              className={`disabled:cursor-not-allowed disabled:opacity-40 ${
+              className={`outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-40 ${
                 kort
                   ? `flex items-center gap-[11px] rounded-lg bg-white px-4 py-[13px] text-left font-ui text-[14px] md:gap-3 md:px-[19px] md:py-4 md:text-[15px] ${
-                      er ? "border-2 border-[#17263d] font-semibold" : "border border-[#bfbab0] py-[14px] font-medium md:py-[17px]"
+                      er ? "border-2 border-primary font-semibold" : "border border-input py-[14px] font-medium md:py-[17px]"
                     }`
                   : `whitespace-nowrap rounded-full px-[21px] py-2.5 font-ui text-[14px] ${
-                      er ? "bg-[#17263d] font-semibold text-[#f6f4ef]" : "border border-[#bfbab0] bg-white font-medium text-[#17263d]"
+                      er ? "bg-primary font-semibold text-primary-foreground" : "border border-input bg-white font-medium text-primary"
                     }`
               }`}
             >
@@ -183,16 +182,16 @@ function Valg<T extends string>({
                 <span
                   aria-hidden
                   className={`box-border h-[17px] w-[17px] flex-none rounded-full md:h-[18px] md:w-[18px] ${
-                    er ? "border-[5px] border-[#17263d] md:border-[5.5px]" : "border-[1.5px] border-[#8a94a3]"
+                    er ? "border-[5px] border-primary md:border-[5.5px]" : "border-[1.5px] border-[#8a94a3]"
                   }`}
                 />
               )}
               {tekst[v]}
-            </button>
+            </RadioGroupPrimitive.Item>
           );
         })}
       </div>
-    </div>
+    </RadioGroupPrimitive.Root>
   );
 }
 
@@ -347,20 +346,21 @@ function Neste({
       {kjoretoy === null && (
         <div role="group" aria-label="Bilen mangler" className="flex flex-col items-start gap-2.5 rounded-[6px] border border-[rgba(246,244,239,.35)] p-4 text-[14px] leading-[1.5]">
           <span>Brevet skrives for én bil. Legg inn registreringsnummeret først.</span>
-          <button type="button" onClick={velgBil} className="rounded-[6px] bg-[#f6f4ef] px-4 py-2.5 font-semibold text-[#17263d]">
+          <Button type="button" variant="secondary" onClick={velgBil}>
             Legg inn registreringsnummer
-          </button>
+          </Button>
         </div>
       )}
       <Vipps tekst="Betal med" onClick={apne} disabled={apner || !kjoretoy} />
-      <button
+      <Button
         type="button"
+        variant="outline"
         onClick={apne}
         disabled={apner || !kjoretoy}
-        className="block rounded-[6px] border border-[rgba(246,244,239,.45)] p-3.5 text-center font-ui text-[15px] font-semibold text-[#f6f4ef] md:p-[15px]"
+        className="h-auto border-[rgba(246,244,239,.45)] bg-transparent p-3.5 font-ui text-[15px] text-[#f6f4ef] hover:bg-white/10 hover:text-[#f6f4ef] disabled:text-[#f6f4ef] disabled:opacity-50 md:p-[15px]"
       >
         Betal med kort
-      </button>
+      </Button>
       {feil && (
         <p role="alert" className="m-0 font-ui text-[13px] leading-[1.5] text-[#ffb4a6]">
           {feil}
@@ -444,13 +444,9 @@ function Utenfor({ endre }: { endre: () => void }) {
         Har du svart feil, kan du endre svarene. Ellers kan Forbrukerrådet gi
         gratis veiledning om hva du kan gjøre.
       </p>
-      <button
-        type="button"
-        onClick={endre}
-        className="rounded-[6px] bg-[#17263d] p-3.5 text-center font-ui text-[15px] font-semibold text-[#f6f4ef]"
-      >
+      <Button type="button" onClick={endre} className="h-auto p-3.5 font-ui text-[15px]">
         Endre svar
-      </button>
+      </Button>
       <a
         href="https://www.forbrukerradet.no"
         target="_blank"
@@ -479,15 +475,15 @@ function Vurdering({
     <div className="flex min-h-screen flex-col bg-[#f6f4ef] font-ui text-[#17263d]">
       <div className="hidden items-center justify-between border-b border-[#dcd8cf] px-16 py-[22px] md:flex">
         <Logo />
-        <button type="button" onClick={endre} className="text-[14px] text-[#5b6472]">
+        <Button type="button" variant="ghost" onClick={endre} className="font-normal">
           ← Endre svar
-        </button>
+        </Button>
       </div>
       <div className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col md:grid md:flex-none md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:items-start md:gap-16 md:px-16 md:pb-20 md:pt-14">
         <div className="flex flex-col gap-6 px-6 pb-6 pt-[52px] md:gap-9 md:p-0">
-          <button type="button" onClick={endre} className="self-start text-[14px] text-[#5b6472] md:hidden">
+          <Button type="button" variant="ghost" onClick={endre} className="-ml-2.5 self-start font-normal md:hidden">
             ← Endre svar
-          </button>
+          </Button>
           <div className="flex flex-col gap-3.5 md:gap-4">
             <h1 className="m-0 font-brev text-[28px] font-semibold leading-[1.15] md:text-[44px] md:leading-[1.12] md:tracking-[-.01em] md:[text-wrap:balance]">
               {resultat.tittel}
@@ -777,19 +773,16 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
                 </span>
                 <div className="flex flex-wrap gap-2 md:gap-2.5">
                   {FEILTYPER_KNAPPER.map((f) => (
-                    <button
+                    <Toggle
                       key={f}
-                      type="button"
-                      aria-pressed={d.feiltyper.includes(f)}
-                      onClick={() =>
-                        sett("feiltyper", d.feiltyper.includes(f) ? d.feiltyper.filter((x) => x !== f) : [...d.feiltyper, f])
-                      }
-                      className={`rounded-full px-3.5 py-2.5 font-ui text-[14px] font-medium md:px-5 md:py-3 md:text-[15px] ${
-                        d.feiltyper.includes(f) ? "bg-[#17263d] text-[#f6f4ef]" : "border border-[#bfbab0] bg-white text-[#17263d]"
-                      }`}
+                      variant="pille"
+                      size="pille"
+                      pressed={d.feiltyper.includes(f)}
+                      onPressedChange={(pa) => sett("feiltyper", pa ? [...d.feiltyper, f] : d.feiltyper.filter((x) => x !== f))}
+                      className="px-3.5 py-2.5 font-ui font-medium md:px-5 md:py-3 md:text-[15px]"
                     >
                       {FEILTYPE_TEKST[f]}
-                    </button>
+                    </Toggle>
                   ))}
                 </div>
               </div>
@@ -892,9 +885,9 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
                 {feil}
               </p>
             )}
-            <button type="submit" className={`${KNAPP} md:w-auto md:min-w-[240px] md:px-8 md:py-[17px]`} disabled={!kanGaVidere || sender}>
+            <Button type="submit" size="lg" className="h-auto w-full p-[18px] font-ui disabled:opacity-40 md:w-auto md:min-w-[240px] md:px-8 md:py-[17px]" disabled={!kanGaVidere || sender}>
               {sender ? "Vurderer saken …" : nesteTekst(steger, steg)}
-            </button>
+            </Button>
           </div>
         </div>
       </form>

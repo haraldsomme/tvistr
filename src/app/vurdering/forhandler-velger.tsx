@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { Input } from "@/components/ui/input";
 import type { Forhandler } from "@/lib/vurdering/typer";
 import { tilForhandler, tittel, type Forslag } from "@/lib/brreg";
 
@@ -17,7 +18,7 @@ export function ForhandlerVelger({
 }: {
   value: Forhandler;
   onChange: (v: Forhandler) => void;
-  inputClass: string;
+  inputClass?: string;
   labelClass: string;
   placeholder?: string;
 }) {
@@ -81,7 +82,7 @@ export function ForhandlerVelger({
       <label htmlFor={id} className={labelClass}>
         Forhandler
       </label>
-      <input
+      <Input
         id={id}
         role="combobox"
         aria-expanded={visListe}

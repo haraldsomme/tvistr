@@ -177,7 +177,7 @@ function mangelOgBevisbyrde(input: KlageInput, idag: string, u: Utfylling): stri
 // The dealer may try to repair first (§ 29). Once the dealer has refused or tried without success,
 // the buyer can go on to a price reduction or cancelling (§§ 31 and 32). The form does not ask how
 // serious the defect is, so the choice between the two is the buyer's, made on the letter page.
-const harFatt = (retting: Retting | undefined) =>
+export const harFatt = (retting: Retting | undefined) =>
   retting === "avvist" || retting === "forsokt" || retting === "reparert_selv";
 
 const MATE: Record<Reklamasjon["mate"], string> = {

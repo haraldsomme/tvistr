@@ -5,7 +5,8 @@ import { norskDato } from "@/lib/brev/brev";
 import { type Feilen } from "@/lib/brev/utfylling";
 import { FEILTYPE_TEKST } from "@/app/vurdering/tekster";
 import type { KlageInput } from "@/lib/vurdering/typer";
-import { HJELP, KNAPP, Sammendrag } from "../felt";
+import { Button } from "@/components/ui/button";
+import { HJELP, Sammendrag } from "../felt";
 
 // The defect is described in step 3 of the wizard (`/brev/[id]/veiviser?steg=feilen`), where the
 // interview has room; here the step shows what was saved, or the way there. «Endre» goes there too.
@@ -20,9 +21,9 @@ export function FeilenFelt({ sakId, input, verdi, aktiv }: { sakId: string; inpu
   return (
     <div className="flex flex-col gap-3">
       <p className={HJELP}>Feil du har oppgitt: {feiltyper}. Du beskriver feilen på en egen side, der vi hjelper deg med spørsmål og et forslag til tekst.</p>
-      <Link href={`/brev/${sakId}/veiviser?steg=feilen&tilbake=brev`} className={`${KNAPP} self-start`}>
-        Beskriv feilen
-      </Link>
+      <Button asChild className="self-start">
+        <Link href={`/brev/${sakId}/veiviser?steg=feilen&tilbake=brev`}>Beskriv feilen</Link>
+      </Button>
     </div>
   );
 }

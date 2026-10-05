@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useId, useState } from "react";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 
@@ -45,9 +47,9 @@ export function Regnr({ kjoretoy, funnet }: { kjoretoy: Kjoretoy | null; funnet:
               {[`${kjoretoy.merke} ${kjoretoy.modell}`, kjoretoy.ar, "hentet fra Statens vegvesen"].filter(Boolean).join(" · ")}
             </span>
           </div>
-          <button type="button" onClick={() => funnet(null)} className="whitespace-nowrap text-[14px] font-medium text-[#5b6472]">
+          <Button type="button" variant="ghost" size="sm" onClick={() => funnet(null)} className="text-[14px] font-medium">
             Endre
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -59,7 +61,7 @@ export function Regnr({ kjoretoy, funnet }: { kjoretoy: Kjoretoy | null; funnet:
         Registreringsnummer
       </label>
       <div className="flex gap-2">
-        <input
+        <Input
           id={id}
           aria-invalid={feil ? true : undefined}
           value={regnr}
@@ -74,16 +76,11 @@ export function Regnr({ kjoretoy, funnet }: { kjoretoy: Kjoretoy | null; funnet:
           spellCheck={false}
           maxLength={8}
           placeholder="AB 12345"
-          className="min-w-0 flex-1 rounded-[6px] border border-[#bfbab0] bg-white p-[14px] font-kode text-[16px] tracking-[.06em] text-[#17263d] outline-none placeholder:text-[#8a94a3] focus:border-[#17263d] focus:shadow-[0_0_0_.5px_#17263d]"
+          className="h-auto min-w-0 flex-1 p-[14px] font-kode tracking-[.06em]"
         />
-        <button
-          type="button"
-          onClick={() => void hent()}
-          disabled={!regnr.trim() || henter}
-          className="whitespace-nowrap rounded-[6px] bg-[#17263d] px-[18px] font-ui text-[14px] font-semibold text-[#f6f4ef] disabled:bg-[#dcd8cf] disabled:text-[#8a94a3]"
-        >
+        <Button type="button" onClick={() => void hent()} disabled={!regnr.trim() || henter} className="h-auto font-ui">
           {henter ? "Henter …" : "Hent bilen"}
-        </button>
+        </Button>
       </div>
       {feil && (
         <p role="alert" className="m-0 text-[13px] leading-[1.5] text-[#a23b2a]">

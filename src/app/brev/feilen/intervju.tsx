@@ -1,23 +1,42 @@
 "use client";
 
-import { useId, useState } from "react";
-import { norskDato } from "@/lib/brev/brev";
+import { useEffect, useId, useState } from "react";
 import type { FeilMedSporsmal, Sporsmal, Utelatt } from "@/lib/brev/feilbeskrivelse";
 import { BESKRIVELSE_MAKS, BESKRIVELSE_MIN, FEILBESKRIVELSE, type Fakta, type Feilen, type Utfylling } from "@/lib/brev/utfylling";
 import { FRA_AR, gyldigKjopsdato, medKjopsdato, type Innsending } from "@/lib/vurdering/innsending";
-import { HJELP, INPUT, KNAPP, LABEL, TEKSTOMRADE, Tekstfelt } from "../felt";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Field, FieldDescription, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Toggle } from "@/components/ui/toggle";
+import { Datofelt } from "../datofelt";
+import { HJELP, LABEL } from "../felt";
 
 // The interview about the defect, in three steps: the buyer writes freely; the model asks what a fixed
-// checklist says is missing; the buyer edits the model's draft and approves it. Nothing goes in the
-// letter before «Sett inn i brevet». «Bruk teksten min som den er» saves the buyer's own text without
+// checklist says is missing; the buyer compares the draft with their own text and inserts one of them.
+// Nothing goes in the letter before «Bruk vårt forslag» or «Bruk din tekst». «Bruk din tekst» saves the buyer's own text without
 // sending it anywhere. It is step 3 of the wizard after buying, which gives it the page around it.
 
 type Trinn = "skriv" | "sporsmal" | "utkast";
-const TRINN: Trinn[] = ["skriv", "sporsmal", "utkast"];
+
+// Everything the buyer has typed or chosen in the interview. The wizard keeps it while the buyer
+// moves to other steps and back, because the step is unmounted when it is left.
+export type IntervjuUtkast = {
+  kjopsdato: string;
+  dato: string;
+  egen: string;
+  egenForUtkast: string;
+  grupper: FeilMedSporsmal[];
+  svarene: Record<string, Svar>;
+  forslagTekst: string;
+  titler: string[];
+  utelatt: Utelatt[];
+  trinn: Trinn;
+};
 
 const STEG_NAVN: Record<Utelatt["steg"], string> = { kravet: "Kravet", kontakt: "Kontakt med forhandleren", for_kjopet: "Før kjøpet", bevis: "Bevis og vedlegg" };
 const FORSLAG_FEILET = "Vi klarte ikke å lage et forslag akkurat nå. Du kan bruke din egen tekst i brevet.";
-const LENKE = "text-[14px] font-medium text-[#5b6472] underline underline-offset-2 disabled:text-[#8a94a3]";
 
 const nokkel = (feil: number, sporsmal: number) => `${feil}-${sporsmal}`;
 const melding = (e: unknown, ellers: string) => (e instanceof Error && !(e instanceof TypeError) && !(e instanceof SyntaxError) && e.message) || ellers;
@@ -65,15 +84,15 @@ function SporsmalFelt({ sporsmal, verdi, sett }: { sporsmal: Sporsmal; verdi: Sv
             {sporsmal.alternativer.map((a) => {
               const pa = verdi.valgt.includes(a);
               return (
-                <button
+                <Toggle
                   key={a}
-                  type="button"
-                  aria-pressed={pa}
-                  onClick={() => velg(a)}
-                  className={`rounded-full border px-3.5 py-1.5 text-[14px] ${pa ? "border-[#17263d] bg-[#17263d] text-[#f6f4ef]" : "border-[#bfbab0] bg-white"}`}
+                  pressed={pa}
+                  onPressedChange={() => velg(a)}
+                  variant="pille"
+                  size="pille"
                 >
                   {sporsmal.flervalg && pa ? `✓ ${a}` : a}
-                </button>
+                </Toggle>
               );
             })}
           </div>
@@ -82,12 +101,11 @@ function SporsmalFelt({ sporsmal, verdi, sett }: { sporsmal: Sporsmal; verdi: Sv
       <label htmlFor={id} className="sr-only">
         {harValg ? `Utdyp: ${sporsmal.tekst}` : sporsmal.tekst}
       </label>
-      <input
+      <Input
         id={id}
         value={verdi.utdyp}
         onChange={(e) => sett({ ...verdi, utdyp: e.target.value.slice(0, FEILBESKRIVELSE.svarMaks) })}
         placeholder={harValg ? "Utdyp eller skriv noe annet (valgfritt)" : "Vet du ikke, la feltet stå tomt."}
-        className={INPUT}
       />
     </div>
   );
@@ -100,8 +118,13 @@ export function Intervju({
   feiltyper,
   forslagKjopsdato,
   verdi,
+  utkast: husket,
+  settUtkast,
   lagret,
   ferdig,
+  tilbake,
+  tilbakeTekst,
+  hoppOver,
 }: {
   id: string;
   svar: Innsending;
@@ -109,26 +132,54 @@ export function Intervju({
   feiltyper: string[];
   forslagKjopsdato: string | null;
   verdi: Feilen | undefined;
+  utkast: IntervjuUtkast | null;
+  settUtkast: (u: IntervjuUtkast) => void;
   // What the server stored, so the wizard shows the same as the letter will.
   lagret: (svar: Innsending | undefined, utfylling: Utfylling) => void;
   ferdig: () => void;
+  // «Tilbake» on the first screen leaves the step; on the others it goes back one screen here.
+  tilbake: () => void;
+  tilbakeTekst: string;
+  hoppOver?: () => void;
 }) {
   const skjemaId = useId();
   const manglerKjopsdato = !gyldigKjopsdato(svar.kjopsdato, idag);
-  const [start] = useState(() => lagredeSvar(verdi?.fakta));
-  const [kjopsdato, setKjopsdato] = useState(forslagKjopsdato ?? "");
-  const [dato, setDato] = useState(verdi?.dato ?? "");
-  const [egen, setEgen] = useState(verdi?.egen ?? "");
-  // The text the current draft was made from, so step 1 can go back to the draft without a model call.
-  const [egenForUtkast, setEgenForUtkast] = useState(verdi?.egen ?? "");
+  const [start] = useState<IntervjuUtkast>(() => {
+    if (husket) return husket;
+    const lagrede = lagredeSvar(verdi?.fakta);
+    return {
+      kjopsdato: forslagKjopsdato ?? "",
+      dato: verdi?.dato ?? "",
+      egen: verdi?.egen ?? "",
+      // The text the current draft was made from, so step 1 can go back to the draft without a model call.
+      egenForUtkast: verdi?.egen ?? "",
+      grupper: lagrede.grupper,
+      svarene: lagrede.svar,
+      // The draft is one text; a blank line starts a new paragraph.
+      forslagTekst: (verdi?.avsnitt ?? []).join("\n\n"),
+      titler: verdi?.feil ?? [],
+      utelatt: [],
+      trinn: verdi ? "utkast" : "skriv",
+    };
+  });
+  const [kjopsdato, setKjopsdato] = useState(start.kjopsdato);
+  const [dato, setDato] = useState(start.dato);
+  const [egen, setEgen] = useState(start.egen);
+  const [egenForUtkast, setEgenForUtkast] = useState(start.egenForUtkast);
   const [grupper, setGrupper] = useState<FeilMedSporsmal[]>(start.grupper);
-  const [svarene, setSvarene] = useState<Record<string, Svar>>(start.svar);
-  const [avsnitt, setAvsnitt] = useState<string[]>(verdi?.avsnitt ?? []);
-  const [titler, setTitler] = useState<string[]>(verdi?.feil ?? []);
-  const [utelatt, setUtelatt] = useState<Utelatt[]>([]);
-  const [trinn, setTrinn] = useState<Trinn>(verdi ? "utkast" : "skriv");
+  const [svarene, setSvarene] = useState<Record<string, Svar>>(start.svarene);
+  const [forslagTekst, setForslagTekst] = useState(start.forslagTekst);
+  const [titler, setTitler] = useState<string[]>(start.titler);
+  const [utelatt, setUtelatt] = useState<Utelatt[]>(start.utelatt);
+  const [trinn, setTrinn] = useState<Trinn>(start.trinn);
   const [arbeider, setArbeider] = useState<"sporsmal" | "utkast" | "lagrer" | null>(null);
+  const [settInnHva, setSettInnHva] = useState<"forslag" | "original" | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
+
+  useEffect(() => {
+    settUtkast({ kjopsdato, dato, egen, egenForUtkast, grupper, svarene, forslagTekst, titler, utelatt, trinn });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `settUtkast` only stores what is passed.
+  }, [kjopsdato, dato, egen, egenForUtkast, grupper, svarene, forslagTekst, titler, utelatt, trinn]);
 
   const kjop = manglerKjopsdato ? kjopsdato : svar.kjopsdato;
   const kjopOk = gyldigKjopsdato(kjop, idag);
@@ -139,8 +190,15 @@ export function Intervju({
     .flatMap((g, n) => g.sporsmal.map((s, m) => ({ feil: g.tittel, sporsmal: s.tekst, svar: somTekst(svarene[nokkel(n, m)] ?? TOMT) })))
     .filter((f) => f.svar !== "");
   const harSporsmal = grupper.some((g) => g.sporsmal.length > 0);
-  const lengde = avsnitt.reduce((n, a) => n + a.trim().length, 0);
-  const utkastOk = avsnitt.length > 0 && avsnitt.every((a) => a.trim().length >= FEILBESKRIVELSE.avsnittMin) && lengde <= FEILBESKRIVELSE.totalMaks;
+  const avsnitt = forslagTekst.split(/\n\s*\n/).map((a) => a.trim()).filter(Boolean);
+  const lengde = avsnitt.reduce((n, a) => n + a.length, 0);
+  const forslagFeil =
+    avsnitt.length === 0 ? "Forslaget er tomt."
+    : avsnitt.length > FEILBESKRIVELSE.maksAvsnitt ? `Forslaget har for mange avsnitt: ${avsnitt.length} av ${FEILBESKRIVELSE.maksAvsnitt}.`
+    : avsnitt.some((a) => a.length < FEILBESKRIVELSE.avsnittMin) ? "Et avsnitt er for kort. Skriv mer i det, eller fjern det."
+    : lengde > FEILBESKRIVELSE.totalMaks ? `Teksten er for lang: ${lengde} av ${FEILBESKRIVELSE.totalMaks} tegn.`
+    : null;
+  const utkastOk = forslagFeil === null;
 
   async function forslag(body: Record<string, unknown>): Promise<Record<string, unknown>> {
     const res = await fetch(`/api/sak/${id}/feilen`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -154,7 +212,7 @@ export function Intervju({
     setFeil(null);
     try {
       const json = await forslag({ trinn: "utkast", beskrivelse: egen, fakta: med });
-      setAvsnitt(json.avsnitt as string[]);
+      setForslagTekst((json.avsnitt as string[]).join("\n\n"));
       setTitler(json.titler as string[]);
       setUtelatt(json.utelatt as Utelatt[]);
       setEgenForUtkast(egen);
@@ -204,118 +262,150 @@ export function Intervju({
     }
   }
 
-  const brukEgen = () => lagre({ dato, egen, feil: [], avsnitt: [egen] });
-  const settInn = () => lagre({ dato, egen, feil: titler, ...(fakta.length > 0 && { fakta }), avsnitt: avsnitt.map((a) => a.trim()) });
-  const brukEgenKnapp = (
-    <button type="button" disabled={!skrivKlar} onClick={brukEgen} className={LENKE}>
-      Bruk teksten min som den er
-    </button>
+  const brukEgen = () => {
+    setSettInnHva("original");
+    return lagre({ dato, egen, feil: [], avsnitt: [egen] });
+  };
+  const settInn = () => {
+    setSettInnHva("forslag");
+    return lagre({ dato, egen, feil: titler, ...(fakta.length > 0 && { fakta }), avsnitt });
+  };
+  const navigasjon = (tilbakeFra: () => void, tekst = "Tilbake") => (
+    <>
+      <Button type="button" variant="ghost" disabled={arbeider !== null} onClick={tilbakeFra}>
+        {tekst}
+      </Button>
+      {hoppOver && (
+        <Button type="button" variant="link" disabled={arbeider !== null} onClick={hoppOver} className="px-2.5">
+          Hopp over
+        </Button>
+      )}
+    </>
   );
 
+  const beskrivTekst =
+    feiltyper.length === 0
+      ? "Beskriv feilen med dine egne ord"
+      : `Beskriv feilene på ${feiltyper.length === 1 ? feiltyper[0] : `${feiltyper.slice(0, -1).join(", ")} og ${feiltyper[feiltyper.length - 1]}`} med dine egne ord`;
   const skriv = (
     <>
       {manglerKjopsdato && (
-        <Tekstfelt label="Når kjøpte du bilen?" hjelp={forslagKjopsdato && kjopsdato === forslagKjopsdato ? "Foreslått fra Statens vegvesen: datoen bilen ble registrert på deg. Rett den hvis den ikke stemmer med kjøpekontrakten." : "Datoen står i kjøpekontrakten."} type="date" min={`${FRA_AR}-01-01`} max={idag} value={kjopsdato} onChange={(e) => setKjopsdato(e.target.value)} />
+        <Datofelt
+          label="Når kjøpte du bilen?"
+          hjelp={forslagKjopsdato && kjopsdato === forslagKjopsdato ? "Foreslått fra Statens vegvesen: datoen bilen ble registrert på deg. Rett den hvis den ikke stemmer med kjøpekontrakten." : "Datoen står i kjøpekontrakten."}
+          min={`${FRA_AR}-01-01`}
+          max={idag}
+          verdi={kjopsdato}
+          settVerdi={setKjopsdato}
+        />
       )}
-      <Tekstfelt
+      <Datofelt
         label="Når viste den første feilen seg?"
-        hjelp={kjopOk ? `Tidligst ${norskDato(kjop)}, den dagen du kjøpte bilen, og senest i dag.` : "Senest i dag."}
-        type="date"
         min={kjopOk ? kjop : undefined}
         max={idag}
-        value={dato}
-        onChange={(e) => setDato(e.target.value)}
+        verdi={dato}
+        settVerdi={setDato}
       />
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={`${skjemaId}-egen`} className={LABEL}>
-          Beskriv feilen eller feilene med dine egne ord
-        </label>
-        <textarea
+      <Field className="gap-1.5">
+        <FieldLabel htmlFor={`${skjemaId}-egen`}>{beskrivTekst}</FieldLabel>
+        <Textarea
           id={`${skjemaId}-egen`}
           aria-describedby={`${skjemaId}-egen-hjelp`}
           value={egen}
           onChange={(e) => setEgen(e.target.value.slice(0, BESKRIVELSE_MAKS))}
           placeholder="Motorlampen lyser, og bilen mister trekkraft i motbakker …"
-          className={`${TEKSTOMRADE} min-h-[180px]`}
+          className="min-h-[180px]"
         />
-        <p id={`${skjemaId}-egen-hjelp`} className={HJELP}>
-          Hva skjer, når og hvor ofte? Har bilen flere feil, ta med alle. Ikke skriv navn på personer. Når du trykker «Fortsett», sendes teksten til en språkmodell (Claude fra Anthropic), som stiller deg noen spørsmål og foreslår en tekst. Ingenting kommer i brevet før du har godkjent det.
-        </p>
-      </div>
+        <FieldDescription id={`${skjemaId}-egen-hjelp`} className={HJELP}>
+          Hva skjer, når og hvor ofte? Har bilen flere feil, ta med alle. Ikke skriv navn på personer. Bruk minst {BESKRIVELSE_MIN} tegn for å kunne gå videre.
+        </FieldDescription>
+      </Field>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <button type="button" disabled={!skrivKlar} onClick={fortsett} className={KNAPP}>
-          {arbeider === "sporsmal" ? "Leser beskrivelsen …" : arbeider === "utkast" ? "Lager forslag …" : "Fortsett"}
-        </button>
-        {avsnitt.length > 0 && egen === egenForUtkast && (
-          <button type="button" disabled={!datoOk || arbeider !== null} onClick={() => setTrinn("utkast")} className={LENKE}>
+        <Button type="button" disabled={!skrivKlar} onClick={fortsett}>
+          {arbeider === "sporsmal" ? (
+            <>
+              <Spinner aria-hidden data-icon="inline-start" /> Leser beskrivelsen
+            </>
+          ) : arbeider === "utkast" ? (
+            <>
+              <Spinner aria-hidden data-icon="inline-start" /> Lager forslag
+            </>
+          ) : (
+            "Fortsett"
+          )}
+        </Button>
+        {forslagTekst.trim() !== "" && egen === egenForUtkast && (
+          <Button type="button" variant="link" disabled={!datoOk || arbeider !== null} onClick={() => setTrinn("utkast")}>
             Tilbake til forslaget
-          </button>
+          </Button>
         )}
-        {brukEgenKnapp}
+        {navigasjon(tilbake, tilbakeTekst)}
       </div>
-      {!skrivKlar && arbeider === null && (
-        <p className={HJELP}>
-          {!kjopOk ? "Fyll ut kjøpsdatoen for å gå videre." : !datoOk ? "Fyll ut datoen feilen viste seg for å gå videre." : `Beskriv feilen med minst ${BESKRIVELSE_MIN} tegn for å gå videre.`}
-        </p>
-      )}
+      {!skrivKlar && arbeider === null && !kjopOk && <p className={HJELP}>Fyll ut kjøpsdatoen for å gå videre.</p>}
     </>
   );
 
   const sporsmal = (
     <>
-      <p className={HJELP}>Svar på det du vet. Det du ikke vet, hopper du over.</p>
+      <p className={HJELP}>Vi trenger å stille deg noen flere spørsmål ut fra beskrivelsen du har lagt inn. Svar så godt du kan. Det du ikke vet, hopper du over.</p>
       {grupper.map(
         (g, n) =>
           g.sporsmal.length > 0 && (
-            <fieldset key={n} className="m-0 flex flex-col gap-4 border-0 p-0">
-              <legend className="mb-1 p-0 text-[15px] font-semibold">{g.tittel}</legend>
+            <FieldSet key={n} className="m-0 gap-4 border-0 p-0">
+              <FieldLegend className="mb-1 p-0 text-[15px] font-semibold">{g.tittel}</FieldLegend>
               {g.sporsmal.map((s, m) => (
                 <SporsmalFelt key={m} sporsmal={s} verdi={svarene[nokkel(n, m)] ?? TOMT} sett={(v) => setSvarene((f) => ({ ...f, [nokkel(n, m)]: v }))} />
               ))}
-            </fieldset>
+            </FieldSet>
           ),
       )}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <button type="button" disabled={arbeider !== null} onClick={() => lagUtkast(fakta)} className={KNAPP}>
-          {arbeider === "utkast" ? "Lager forslag …" : "Lag forslag"}
-        </button>
-        <button type="button" disabled={arbeider !== null} onClick={() => setTrinn("skriv")} className={LENKE}>
-          Endre det du skrev
-        </button>
+        <Button type="button" disabled={arbeider !== null} onClick={() => lagUtkast(fakta)}>
+          {arbeider === "utkast" ? (
+            <>
+              <Spinner aria-hidden data-icon="inline-start" /> Lager forslag
+            </>
+          ) : (
+            "Lag forslag"
+          )}
+        </Button>
+        {navigasjon(() => setTrinn("skriv"))}
       </div>
     </>
   );
 
   const utkast = (
     <>
-      <p className={HJELP}>Les nøye. Står det noe som ikke stemmer, rett det. Brevet sendes i ditt navn.</p>
-      <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_260px]">
-        <div className="flex flex-col gap-3">
-          {avsnitt.map((a, n) => (
-            <div key={n} className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label htmlFor={`${skjemaId}-avsnitt-${n}`} className={LABEL}>
-                  Avsnitt {n + 1}
-                </label>
-                {avsnitt.length > 1 && (
-                  <button type="button" onClick={() => {
-                      // One paragraph per defect: the title goes with it.
-                      if (avsnitt.length === titler.length) setTitler((t) => t.filter((_, i) => i !== n));
-                      setAvsnitt((l) => l.filter((_, i) => i !== n));
-                    }} className="text-[13px] font-medium text-[#5b6472]">
-                    Fjern
-                  </button>
-                )}
-              </div>
-              <textarea id={`${skjemaId}-avsnitt-${n}`} value={a} onChange={(e) => setAvsnitt((l) => l.map((x, i) => (i === n ? e.target.value : x)))} className={TEKSTOMRADE} />
-            </div>
-          ))}
-        </div>
-        <aside className="flex flex-col gap-1.5 rounded-md bg-[#f6f4ef] p-4">
-          <h2 className="m-0 text-[13px] font-semibold">Det du skrev</h2>
-          <p className="m-0 whitespace-pre-wrap text-[14px] leading-[1.5] text-[#3d4757]">{egen}</p>
-        </aside>
+      <p className={HJELP}>Les begge tekstene og velg hvilken som skal i brevet. Du kan rette forslaget først. Et nytt avsnitt starter med en blank linje.</p>
+      <div className="grid gap-5 md:grid-cols-2">
+        <Field className="gap-1.5">
+          <FieldLabel htmlFor={`${skjemaId}-forslag`}>Forslag til tekst</FieldLabel>
+          <Textarea id={`${skjemaId}-forslag`} value={forslagTekst} onChange={(e) => setForslagTekst(e.target.value)} className="min-h-[260px]" />
+          <Button type="button" disabled={!utkastOk || arbeider !== null} onClick={settInn} className="self-start">
+            {arbeider === "lagrer" && settInnHva === "forslag" ? (
+              <>
+                <Spinner aria-hidden data-icon="inline-start" /> Setter inn
+              </>
+            ) : (
+              "Bruk vårt forslag"
+            )}
+          </Button>
+        </Field>
+        <Field className="gap-1.5">
+          <FieldLabel htmlFor={`${skjemaId}-original`}>Din originale tekst</FieldLabel>
+          <Textarea id={`${skjemaId}-original`} value={egen} readOnly className="min-h-[260px] bg-muted/50" />
+          <Button type="button" variant="outline" disabled={!datoOk || arbeider !== null} onClick={brukEgen} className="self-start">
+            {arbeider === "lagrer" && settInnHva === "original" ? (
+              <>
+                <Spinner aria-hidden data-icon="inline-start" /> Setter inn
+              </>
+            ) : (
+              "Bruk din tekst"
+            )}
+          </Button>
+        </Field>
       </div>
+      {!utkastOk && <p className={HJELP}>{forslagFeil}</p>}
       {utelatt.length > 0 && (
         <div className="flex flex-col gap-1">
           <p className={`m-0 ${LABEL}`}>Dette står ikke i feilbeskrivelsen fordi det fylles ut i et annet steg:</p>
@@ -328,32 +418,12 @@ export function Intervju({
           </ul>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <button type="button" disabled={!utkastOk || arbeider !== null} onClick={settInn} className={KNAPP}>
-          {arbeider === "lagrer" ? "Setter inn …" : "Sett inn i brevet"}
-        </button>
-        {harSporsmal && (
-          <button type="button" disabled={arbeider !== null} onClick={() => setTrinn("sporsmal")} className={LENKE}>
-            Endre svarene
-          </button>
-        )}
-        <button type="button" disabled={arbeider !== null} onClick={() => setTrinn("skriv")} className={LENKE}>
-          Endre det du skrev
-        </button>
-        {brukEgenKnapp}
-      </div>
-      {!utkastOk && (
-        <p className={HJELP}>{lengde > FEILBESKRIVELSE.totalMaks ? `Teksten er for lang: ${lengde} av ${FEILBESKRIVELSE.totalMaks} tegn.` : "Et avsnitt er tomt. Skriv i det, eller fjern det."}</p>
-      )}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">{navigasjon(() => setTrinn(harSporsmal ? "sporsmal" : "skriv"))}</div>
     </>
   );
 
   return (
     <div className="flex flex-col gap-4">
-      <p className={HJELP}>
-        Feil du har oppgitt: {feiltyper.join(", ")}. Beskrivelsen er det forhandleren, og senere Forbrukerklageutvalget, leser for å forstå hva som er galt.
-      </p>
-      <p className="m-0 text-[13px] font-semibold text-[#5b6472]">Trinn {TRINN.indexOf(trinn) + 1} av 3</p>
       {trinn === "skriv" && skriv}
       {trinn === "sporsmal" && sporsmal}
       {trinn === "utkast" && utkast}

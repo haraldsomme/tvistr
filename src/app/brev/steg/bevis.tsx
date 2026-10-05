@@ -6,7 +6,9 @@ import { VEDLEGG, type Utfylling, type Vedlegg } from "@/lib/brev/utfylling";
 import { JA_NEI_TEKST } from "@/app/vurdering/tekster";
 import { JA_NEI, type Innsending } from "@/lib/vurdering/innsending";
 import type { KlageInput } from "@/lib/vurdering/typer";
-import { HJELP, Nedtrekk, Sammendrag, Skjema, type Felles } from "../felt";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { HJELP, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } from "../felt";
 
 const VEDLEGG_TEKST: Record<Vedlegg, string> = {
   kjopekontrakt: "Kjøpekontrakt",
@@ -38,32 +40,18 @@ export function BevisFelt({ input, svar, utfylling, aktiv, lagre, avbryt }: Fell
 
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt} knapp="Bekreft vedlegg">
-      <Nedtrekk label="Har du en verksted- eller tilstandsrapport?" value={rapport} onChange={(e) => setRapport(e.target.value as Innsending["verkstedrapport"])}>
-        <option value="">Velg</option>
-        {JA_NEI.map((v) => (
-          <option key={v} value={v}>
-            {JA_NEI_TEKST[v]}
-          </option>
-        ))}
-      </Nedtrekk>
-      {rapport === "ja" && (
-        <Nedtrekk label="Sier rapporten at feilen sannsynligvis var til stede før kjøpet?" value={rapportSier} onChange={(e) => setRapportSier(e.target.value as Innsending["rapportSierForKjop"])}>
-          <option value="">Velg</option>
-          {JA_NEI.map((v) => (
-            <option key={v} value={v}>
-              {JA_NEI_TEKST[v]}
-            </option>
-          ))}
-        </Nedtrekk>
-      )}
+      <Valgfelt label="Har du en verksted- eller tilstandsrapport?" verdi={rapport} velg={setRapport} valg={valgAv(JA_NEI, JA_NEI_TEKST)} />
+      {rapport === "ja" && <Valgfelt label="Sier rapporten at feilen sannsynligvis var til stede før kjøpet?" verdi={rapportSier} velg={setRapportSier} valg={valgAv(JA_NEI, JA_NEI_TEKST)} />}
       <div className="flex flex-col gap-2">
         <p className={HJELP}>Kryss av for det du legger ved brevet.</p>
         <div className="flex flex-col gap-1.5">
           {VEDLEGG.map((v) => (
-            <label key={v} className="flex cursor-pointer items-center gap-2.5 text-[14px]">
-              <input type="checkbox" checked={valgt.includes(v)} onChange={(e) => setValgt((x) => (e.target.checked ? [...x, v] : x.filter((y) => y !== v)))} className="h-[18px] w-[18px] accent-[#17263d]" />
-              {VEDLEGG_TEKST[v]}
-            </label>
+            <Field key={v} orientation="horizontal" className="gap-2.5">
+              <Checkbox id={`vedlegg-${v}`} checked={valgt.includes(v)} onCheckedChange={(c) => setValgt((x) => (c === true ? [...x, v] : x.filter((y) => y !== v)))} />
+              <FieldLabel htmlFor={`vedlegg-${v}`} className="text-[14px] font-normal">
+                {VEDLEGG_TEKST[v]}
+              </FieldLabel>
+            </Field>
           ))}
         </div>
       </div>

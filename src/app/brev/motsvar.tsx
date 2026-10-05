@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import type { Motargument } from "@/lib/brev/motsvar";
-
-const KNAPP_LITEN = "rounded-[6px] border border-[#bfbab0] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#17263d] disabled:text-[#8a94a3]";
 
 // The tab beside the letter: what the dealer is likely to answer, and what to say back. The ones that
 // fit the case come first and are open.
@@ -33,9 +32,9 @@ export function Motsvar({ motargumenter }: { motargumenter: Motargument[] }) {
               {m.relevant && <span className="ml-2 text-[12px] font-normal text-[#6b5618]">passer saken din</span>}
             </summary>
             <p className="mb-2 mt-2">{m.svar}</p>
-            <button type="button" onClick={() => kopier(m.nokkel, m.svar)} className={KNAPP_LITEN}>
+            <Button type="button" variant="outline" size="sm" onClick={() => kopier(m.nokkel, m.svar)}>
               {kopiert === m.nokkel ? "Kopiert" : "Kopier svar"}
-            </button>
+            </Button>
           </details>
         ))}
       </div>

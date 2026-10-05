@@ -6,7 +6,8 @@ import { REKLAMASJON_MATER, type Reklamasjon } from "@/lib/brev/utfylling";
 import { KONTAKT_TEKST } from "@/app/vurdering/tekster";
 import { kjopsdatoAv, type Innsending } from "@/lib/vurdering/innsending";
 import { KONTAKT_VALG, rettingValgFor, type Kontakt, type Retting } from "@/lib/vurdering/typer";
-import { HJELP, Nedtrekk, Sammendrag, Skjema, Tekstfelt, type Felles } from "../felt";
+import { Datofelt } from "../datofelt";
+import { HJELP, Nedtrekk, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } from "../felt";
 
 export const RETTING_TEKST: Record<Retting, string> = {
   ingen: "Nei, feilen er ikke reparert",
@@ -39,9 +40,9 @@ export function KontaktFelt({
   avbryt,
 }: Felles & { svar: Innsending; idag: string; retting: Retting | undefined; reklamasjon: Reklamasjon | undefined }) {
   const [kontakt, setKontakt] = useState<Kontakt>(svar.kontakt || "nei");
-  const [valgtRetting, setValgtRetting] = useState<string>(retting ?? (kontakt === "nei" ? "ingen" : ""));
+  const [valgtRetting, setValgtRetting] = useState<Retting | "">(retting ?? (kontakt === "nei" ? "ingen" : ""));
   const [dato, setDato] = useState(reklamasjon?.dato ?? "");
-  const [mate, setMate] = useState<string>(reklamasjon?.mate ?? "");
+  const [mate, setMate] = useState<Reklamasjon["mate"] | "">(reklamasjon?.mate ?? "");
   const [forsok, setForsok] = useState(reklamasjon?.forsok ? String(reklamasjon.forsok) : "");
 
   if (!aktiv) {
@@ -72,62 +73,34 @@ export function KontaktFelt({
 
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt}>
-      <Nedtrekk
+      <Valgfelt
         label="Har du tatt opp feilen med forhandleren?"
-        value={kontakt}
-        onChange={(e) => {
-          const v = e.target.value as Kontakt;
+        verdi={kontakt}
+        velg={(v) => {
           setKontakt(v);
           setValgtRetting(v === "nei" ? "ingen" : "");
         }}
-      >
-        {KONTAKT_VALG.map((v) => (
-          <option key={v} value={v}>
-            {KONTAKT_TEKST[v]}
-          </option>
-        ))}
-      </Nedtrekk>
+        valg={valgAv(KONTAKT_VALG, KONTAKT_TEKST)}
+      />
       {kontakt === "nei" && (
         <p className={HJELP}>Forhandleren har rett til å forsøke å rette feilen først. Reparerer du den andre steder før de har fått sjansen, kan du miste retten til å få kostnaden dekket.</p>
       )}
       {kontakt !== "nei" && (
         <>
-          <Tekstfelt
+          <Datofelt
             label="Når tok du opp feilen første gang?"
             hjelp={min ? `Tidligst ${norskDato(min)}, den dagen du kjøpte bilen, og senest i dag.` : "Senest i dag."}
-            type="date"
             min={min || undefined}
             max={idag}
-            value={dato}
-            onChange={(e) => setDato(e.target.value)}
+            verdi={dato}
+            settVerdi={setDato}
           />
-          <Nedtrekk label="Hvordan tok du kontakt?" value={mate} onChange={(e) => setMate(e.target.value)}>
-            <option value="">Velg</option>
-            {REKLAMASJON_MATER.map((m) => (
-              <option key={m} value={m}>
-                {MATE_TEKST[m]}
-              </option>
-            ))}
-          </Nedtrekk>
+          <Valgfelt label="Hvordan tok du kontakt?" verdi={mate} velg={setMate} valg={valgAv(REKLAMASJON_MATER, MATE_TEKST)} />
         </>
       )}
-      <Nedtrekk label={kontakt === "nei" ? "Har du fått feilen reparert?" : "Hva har forhandleren gjort?"} value={valgtRetting} onChange={(e) => setValgtRetting(e.target.value)}>
-        <option value="">Velg</option>
-        {rettingValgFor(kontakt).map((v) => (
-          <option key={v} value={v}>
-            {RETTING_TEKST[v]}
-          </option>
-        ))}
-      </Nedtrekk>
+      <Valgfelt label={kontakt === "nei" ? "Har du fått feilen reparert?" : "Hva har forhandleren gjort?"} verdi={valgtRetting} velg={setValgtRetting} valg={valgAv(rettingValgFor(kontakt), RETTING_TEKST)} />
       {kontakt !== "nei" && forsokt && (
-        <Nedtrekk label="Hvor mange ganger har forhandleren forsøkt å rette feilen?" value={forsok} onChange={(e) => setForsok(e.target.value)}>
-          <option value="">Velg</option>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-        </Nedtrekk>
+        <Nedtrekk label="Hvor mange ganger har forhandleren forsøkt å rette feilen?" verdi={forsok} velg={setForsok} valg={["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((n) => ({ verdi: n, tekst: n }))} />
       )}
     </Skjema>
   );

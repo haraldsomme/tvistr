@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useId, useState, type ReactNode } from "react";
 import { Logo } from "@/app/logo";
+import { Button } from "@/components/ui/button";
+import { BekreftKnapp, useBekreftLagring } from "./bekreft";
 import { KontaktFelt } from "./steg/kontakt";
 import { lagSteg } from "./steg/liste";
 import { byggBrev, harPlassholder, henvisningFor } from "@/lib/brev/brev";
@@ -41,9 +43,9 @@ function Steg({ id, nr, tittel, tittelId, status, endre, children }: { id: strin
           </h3>
           {status === "aktiv" && !endre && <span className={MERKE_MANGLER}>Mangler</span>}
           {status === "ferdig" && endre && (
-            <button type="button" onClick={endre} className="whitespace-nowrap text-[14px] font-medium text-[#5b6472]">
+            <Button type="button" variant="ghost" size="sm" onClick={endre} className="text-[14px] font-medium">
               Endre
-            </button>
+            </Button>
           )}
         </div>
         {status !== "venter" && children}
@@ -52,36 +54,14 @@ function Steg({ id, nr, tittel, tittelId, status, endre, children }: { id: strin
   );
 }
 
-// Deleting is final, so it takes two clicks.
+// Deleting is final, so it asks first.
 function SlettSak({ slett }: { slett: () => Promise<void> }) {
-  const [spor, setSpor] = useState(false);
-  const [sletter, setSletter] = useState(false);
-  if (!spor) {
-    return (
-      <button type="button" onClick={() => setSpor(true)} className="self-start text-[13px] text-[#5b6472] underline underline-offset-2">
-        Slett saken
-      </button>
-    );
-  }
   return (
-    <div role="group" aria-label="Slett saken" className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] leading-[1.5] text-[#3d4757]">
-      <span>Brevet og alt du har fylt inn blir slettet for godt.</span>
-      <button
-        type="button"
-        disabled={sletter}
-        onClick={async () => {
-          setSletter(true);
-          await slett();
-          setSletter(false);
-        }}
-        className="font-semibold text-[#a23b2a]"
-      >
-        {sletter ? "Sletter …" : "Ja, slett"}
-      </button>
-      <button type="button" onClick={() => setSpor(false)} className="font-medium text-[#5b6472]">
-        Avbryt
-      </button>
-    </div>
+    <BekreftKnapp tittel="Slette saken?" tekst="Brevet og alt du har fylt inn blir slettet for godt. Det kan ikke angres." handling="Slett saken" destruktiv utfor={slett}>
+      <Button type="button" variant="link" className="self-start text-[13px] font-normal">
+        Slett saken
+      </Button>
+    </BekreftKnapp>
   );
 }
 
@@ -156,6 +136,10 @@ export function BrevSide({
     }
   }
 
+  // The steps' saves ask first when they make the letter weaker. The folder's saves (the checklist, the
+  // date the letter was sent) ask on their own.
+  const bekreft = useBekreftLagring(lagre, { svar, utfylling }, idag);
+
   async function slett() {
     setFeil(null);
     try {
@@ -213,7 +197,7 @@ export function BrevSide({
   // The steps in order (`steg/liste.tsx`). «Forhandleren» looks up the dealer itself and handles its
   // own «Endre» (it clears the value); «Feilen» is changed in the wizard; the rest keep their value
   // while it is being changed.
-  const steg = lagSteg({ sakId: id, input, svar, utfylling, idag, idBase, lagre });
+  const steg = lagSteg({ sakId: id, input, svar, utfylling, idag, idBase, lagre: bekreft.lagre });
   const aktivId = redigerer ?? steg.find((s) => !s.ferdig)?.id ?? null;
   function erAktiv(stegId: string) {
     return aktivId === stegId;
@@ -329,6 +313,7 @@ export function BrevSide({
           </div>
         </>
       )}
+      {bekreft.dialog}
     </Ramme>
   );
 }

@@ -4,7 +4,9 @@ import { useId, useState } from "react";
 import { OPPLYSNING_KILDER, type Opplysning } from "@/lib/brev/utfylling";
 import { OPPLYST_TEKST } from "@/app/vurdering/tekster";
 import { OPPLYST_VALG, type Innsending } from "@/lib/vurdering/innsending";
-import { HJELP, INPUT, LABEL, Nedtrekk, Sammendrag, Skjema, type Felles } from "../felt";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
+import { HJELP, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } from "../felt";
 
 const KILDE_TEKST: Record<Opplysning["kilde"], string> = { annonse: "Annonsen", kontrakt: "Kjøpekontrakten", melding: "Melding fra forhandleren", muntlig: "Muntlig før kjøpet" };
 
@@ -23,7 +25,7 @@ export function ForKjopetFelt({
   const id = useId();
   const [visste, setVisste] = useState(svar.opplystForKjop);
   const [opplyst, setOpplyst] = useState<"ja" | "nei" | "">(feilopplyst ?? "");
-  const [kilde, setKilde] = useState<string>(verdi?.kilde ?? "");
+  const [kilde, setKilde] = useState<Opplysning["kilde"] | "">(verdi?.kilde ?? "");
   const [tekst, setTekst] = useState(verdi?.tekst ?? "");
 
   if (!aktiv) {
@@ -45,38 +47,26 @@ export function ForKjopetFelt({
 
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt}>
-      <Nedtrekk label="Visste du om feilen før du kjøpte?" value={visste} onChange={(e) => setVisste(e.target.value as Innsending["opplystForKjop"])}>
-        <option value="">Velg</option>
-        {OPPLYST_VALG.map((v) => (
-          <option key={v} value={v}>
-            {OPPLYST_TEKST[v]}
-          </option>
-        ))}
-      </Nedtrekk>
-      <Nedtrekk label="Sa annonsen eller selgeren noe om bilen som ikke stemte?" value={opplyst} onChange={(e) => setOpplyst(e.target.value as "ja" | "nei")}>
-        <option value="">Velg</option>
-        <option value="ja">Ja</option>
-        <option value="nei">Nei</option>
-      </Nedtrekk>
+      <Valgfelt label="Visste du om feilen før du kjøpte?" verdi={visste} velg={setVisste} valg={valgAv(OPPLYST_VALG, OPPLYST_TEKST)} />
+      <Valgfelt
+        label="Sa annonsen eller selgeren noe om bilen som ikke stemte?"
+        verdi={opplyst}
+        velg={setOpplyst}
+        valg={[
+          { verdi: "ja", tekst: "Ja" },
+          { verdi: "nei", tekst: "Nei" },
+        ]}
+      />
       {opplyst === "ja" && (
         <>
-          <Nedtrekk label="Hvor ble det opplyst?" value={kilde} onChange={(e) => setKilde(e.target.value)}>
-            <option value="">Velg</option>
-            {OPPLYSNING_KILDER.map((k) => (
-              <option key={k} value={k}>
-                {KILDE_TEKST[k]}
-              </option>
-            ))}
-          </Nedtrekk>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${id}-tekst`} className={LABEL}>
-              Hva ble opplyst?
-            </label>
-            <textarea id={`${id}-tekst`} aria-describedby={`${id}-hjelp`} value={tekst} onChange={(e) => setTekst(e.target.value.slice(0, 500))} placeholder="Ny clutch i 2025" className={`${INPUT} min-h-[76px] resize-y text-[15px] leading-[1.55]`} />
-            <p id={`${id}-hjelp`} className={HJELP}>
+          <Valgfelt label="Hvor ble det opplyst?" verdi={kilde} velg={setKilde} valg={valgAv(OPPLYSNING_KILDER, KILDE_TEKST)} />
+          <Field className="gap-1.5">
+            <FieldLabel htmlFor={`${id}-tekst`}>Hva ble opplyst?</FieldLabel>
+            <Textarea id={`${id}-tekst`} aria-describedby={`${id}-hjelp`} value={tekst} onChange={(e) => setTekst(e.target.value.slice(0, 500))} placeholder="Ny clutch i 2025" className="min-h-[76px]" />
+            <FieldDescription id={`${id}-hjelp`} className={HJELP}>
               Skriv det så ordrett du kan. Det står i anførselstegn i brevet.
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
         </>
       )}
     </Skjema>

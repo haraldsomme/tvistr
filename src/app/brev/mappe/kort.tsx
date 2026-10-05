@@ -1,7 +1,11 @@
 "use client";
 
 import { useId, useState, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { norskDato } from "@/lib/brev/brev";
+import { BekreftKnapp } from "../bekreft";
+import { Datofelt } from "../datofelt";
 import type { Endring, SjekkNokkel } from "@/lib/brev/utfylling";
 import type { AktorKort } from "@/lib/mappe/kort/aktorer";
 import type { AvgjordeKort } from "@/lib/mappe/kort/avgjorde";
@@ -18,7 +22,6 @@ import type { Treff, ValgtHenvisning } from "@/lib/vurdering/henvisninger";
 const pct = (x: number) => Math.round(x * 100);
 const kr = (n: number) => `${String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} kr`;
 const SMA = "m-0 text-[13px] leading-[1.55] text-[#5b6472]";
-const KNAPP_LITEN = "rounded-[6px] border border-[#bfbab0] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#17263d] disabled:text-[#8a94a3]";
 
 export function Kort({ tittel, children }: { tittel: string; children: ReactNode }) {
   const id = useId();
@@ -256,7 +259,7 @@ export function StyrkInnhold({ punkter, sjekket, lagre }: { punkter: Sjekkpunkt[
         return (
           <li key={p.nokkel} className="flex flex-col gap-1">
             <label htmlFor={id} className="flex items-start gap-2.5 font-semibold">
-              <input id={id} type="checkbox" checked={lokal.includes(p.nokkel)} onChange={() => bytt(p.nokkel)} className="mt-1" />
+              <Checkbox id={id} checked={lokal.includes(p.nokkel)} onCheckedChange={() => bytt(p.nokkel)} className="mt-1" />
               {p.tittel}
             </label>
             <p className="m-0 pl-[26px]">{p.tekst}</p>
@@ -273,7 +276,6 @@ export function StyrkInnhold({ punkter, sjekket, lagre }: { punkter: Sjekkpunkt[
 }
 
 export function VidereInnhold({ k, sakId, sendt, idag, lagre }: { k: VidereKort; sakId: string; sendt: string | undefined; idag: string; lagre: (e: Endring) => Promise<boolean> }) {
-  const id = useId();
   const [dato, setDato] = useState(sendt ?? "");
   return (
     <>
@@ -293,37 +295,41 @@ export function VidereInnhold({ k, sakId, sendt, idag, lagre }: { k: VidereKort;
           if (dato) void lagre({ sendt: dato });
         }}
       >
-        <div className="flex flex-col gap-1">
-          <label htmlFor={id} className="text-[13px] font-semibold">
-            Dato brevet ble sendt
-          </label>
-          <input id={id} type="date" max={idag} value={dato} onChange={(e) => setDato(e.target.value)} className="rounded-[6px] border border-[#bfbab0] bg-white px-3 py-2 text-[15px]" />
+        <div className="min-w-[200px] flex-1">
+          <Datofelt label="Dato brevet ble sendt" max={idag} verdi={dato} settVerdi={setDato} />
         </div>
-        <button type="submit" disabled={!dato} className={KNAPP_LITEN}>
+        <Button type="submit" variant="outline" disabled={!dato}>
           Lagre dato
-        </button>
+        </Button>
         {sendt && (
-          <button
-            type="button"
-            onClick={() => {
-              setDato("");
-              void lagre({ sendt: null });
+          <BekreftKnapp
+            tittel="Fjerne datoen brevet ble sendt?"
+            tekst="Fristene for forhandlerens svar og purringen regnes fra denne datoen. Uten den forsvinner de fra saksmappen."
+            handling="Fjern datoen"
+            destruktiv
+            utfor={async () => {
+              if (await lagre({ sendt: null })) setDato("");
             }}
-            className={KNAPP_LITEN}
           >
-            Fjern datoen
-          </button>
+            <Button type="button" variant="outline">
+              Fjern datoen
+            </Button>
+          </BekreftKnapp>
         )}
       </form>
       {sendt && (
         <div className="flex flex-wrap items-center gap-3">
           <strong>Purring til forhandleren</strong>
-          <a href={`/api/sak/${sakId}/dokument/purring.pdf`} download className={KNAPP_LITEN}>
-            Last ned purring (PDF)
-          </a>
-          <a href={`/api/sak/${sakId}/dokument/purring.docx`} download className={KNAPP_LITEN}>
-            Last ned purring (Word)
-          </a>
+          <Button asChild variant="outline" size="sm">
+            <a href={`/api/sak/${sakId}/dokument/purring.pdf`} download>
+              Last ned purring (PDF)
+            </a>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <a href={`/api/sak/${sakId}/dokument/purring.docx`} download>
+              Last ned purring (Word)
+            </a>
+          </Button>
         </div>
       )}
       <p className={SMA}>{k.ventetid}</p>

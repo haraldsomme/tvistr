@@ -5,6 +5,8 @@ import { expect, idFra, mockKjoretoy, test } from "./fixtures";
 // not the number of decisions, which changes when `hent` adds more.
 
 test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ page, skjema, brev, veiviser, sak }) => {
+  // The letter steps' questions with a few answers are radio groups named by the question.
+  const velg = (sporsmal: string, svar: string) => page.getByRole("radiogroup", { name: sporsmal }).getByRole("radio", { name: svar, exact: true }).click();
   await mockKjoretoy(page);
   await page.goto("/");
   await page.getByRole("link", { name: "Start vurderingen" }).click();
@@ -78,7 +80,7 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
 
   // The registry gave no purchase date, so the first step asks for it.
   await expect(veiviser.tittel("Om kjøpet")).toBeVisible();
-  await page.getByLabel("Når kjøpte du bilen?").fill("2024-03-12");
+  await page.getByLabel("Når kjøpte du bilen?").fill("12.03.2024");
   await page.getByLabel("Hva kostet bilen?").fill("250000");
   await page.getByRole("radio", { name: "Ja, bilen ble solgt «som den er»" }).check();
   await veiviser.neste();
@@ -90,24 +92,29 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
 
   // The defect in the buyer's own words: nothing goes to the language model.
   await expect(veiviser.tittel("Beskriv feilen")).toBeVisible();
-  await page.getByLabel("Når viste den første feilen seg?").fill("2024-06-01");
+  await page.getByLabel("Når viste den første feilen seg?").fill("01.06.2024");
   await page.getByLabel("Beskriv feilen eller feilene med dine egne ord").fill("Motorlampen lyser, og bilen mister kraft i motbakker.");
   await page.getByRole("button", { name: "Bruk teksten min som den er" }).click();
 
   await expect(veiviser.tittel("Hva visste du før kjøpet?")).toBeVisible();
-  await page.getByLabel("Visste du om feilen før du kjøpte?").selectOption({ label: "Nei" });
-  await page.getByLabel("Sa annonsen eller selgeren noe om bilen som ikke stemte?").selectOption({ label: "Nei" });
+  await velg("Visste du om feilen før du kjøpte?", "Nei");
+  await velg("Sa annonsen eller selgeren noe om bilen som ikke stemte?", "Nei");
   await veiviser.neste();
 
   await expect(veiviser.tittel("Har du tatt opp feilen med forhandleren?")).toBeVisible();
-  await page.getByLabel("Når tok du opp feilen første gang?").fill("2024-06-10");
-  await page.getByLabel("Hvordan tok du kontakt?").selectOption({ label: "E-post" });
-  await page.getByLabel("Hva har forhandleren gjort?").selectOption({ label: "Forhandleren vil forsøke, eller har ikke svart ennå" });
+  await page.getByLabel("Når tok du opp feilen første gang?").fill("10.06.2024");
+  await velg("Hvordan tok du kontakt?", "E-post");
+  await velg("Hva har forhandleren gjort?", "Forhandleren vil forsøke, eller har ikke svart ennå");
   await veiviser.neste();
 
   await expect(veiviser.tittel("Hva har du av dokumentasjon?")).toBeVisible();
-  await page.getByLabel("Har du en verksted- eller tilstandsrapport?").selectOption({ label: "Nei" });
+  await velg("Har du en verksted- eller tilstandsrapport?", "Nei");
   await page.getByRole("button", { name: "Bekreft vedlegg" }).click();
+  // The assessment had a report that points to before the purchase; taking it back weakens the case,
+  // so the save asks first.
+  const svakere = page.getByRole("alertdialog", { name: "Dette gjør brevet svakere" });
+  await expect(svakere).toContainText("rapport");
+  await svakere.getByRole("button", { name: "Lagre likevel" }).click();
 
   // The dealer has not had the chance to repair yet, so the claim is repair: nothing to choose.
   await expect(veiviser.tittel("Hva krever du?")).toBeVisible();

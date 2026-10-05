@@ -13,6 +13,12 @@ import {
   type Lagring,
   type Utgift,
 } from "@/lib/brev/utfylling";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // The primitives the steps on the letter page share: form chrome, inputs, and formatting. The steps
 // themselves live in `./steg/`; `KravFelt` and `AvsenderFelt` stay here because neither is folded into
@@ -21,8 +27,7 @@ import {
 export type Felles = { aktiv: boolean; lagre: (lagring: Lagring) => Promise<boolean>; avbryt?: () => void };
 
 export const LABEL = "text-[13px] font-semibold";
-export const INPUT = "w-full rounded-[6px] border border-[#bfbab0] bg-white px-3.5 py-3 text-[16px] placeholder:text-[#8a94a3]";
-export const HJELP = "m-0 text-[13px] leading-[1.5] text-[#5b6472]";
+export const HJELP = "m-0 text-[13px] leading-[1.5] text-muted-foreground";
 
 export const kroner = (n: number) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} kr`;
 export const gruppert = (siffer: string) => siffer.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -43,8 +48,6 @@ export function Sammendrag({ linjer }: { linjer: ReactNode[] }) {
 export type Veiviser = { neste: () => void; tilbake: () => void; hoppOver?: () => void; nesteTekst: string };
 export const VeiviserKontekst = createContext<Veiviser | null>(null);
 
-export const VEIVISER_LENKE = "px-2.5 py-[11px] text-[14px] font-medium text-[#5b6472]";
-
 // The form of a step: saves on submit and shows the two buttons (in the wizard: «Neste», «Tilbake»
 // and «Hopp over»).
 export function Skjema({ klar, send, avbryt, children, knapp = "Lagre" }: { klar: boolean; send: () => Promise<boolean>; avbryt?: () => void; children: ReactNode; knapp?: string }) {
@@ -62,65 +65,136 @@ export function Skjema({ klar, send, avbryt, children, knapp = "Lagre" }: { klar
     <form onSubmit={submit} className="flex flex-col gap-3">
       {children}
       <div className="flex flex-wrap items-center gap-2">
-        <button type="submit" disabled={!klar || lagrer} className="rounded-[6px] bg-[#17263d] px-[18px] py-[11px] text-[14px] font-semibold text-[#f6f4ef] disabled:bg-[#dcd8cf] disabled:text-[#8a94a3]">
-          {lagrer ? "Lagrer …" : veiviser && knapp === "Lagre" ? veiviser.nesteTekst : knapp}
-        </button>
+        <Button type="submit" disabled={!klar || lagrer}>
+          {lagrer ? (
+            <>
+              <Spinner aria-hidden data-icon="inline-start" /> Lagrer
+            </>
+          ) : veiviser && knapp === "Lagre" ? veiviser.nesteTekst : knapp}
+        </Button>
         {veiviser && (
           <>
-            <button type="button" disabled={lagrer} onClick={veiviser.tilbake} className={VEIVISER_LENKE}>
+            <Button type="button" variant="ghost" disabled={lagrer} onClick={veiviser.tilbake}>
               Tilbake
-            </button>
+            </Button>
             {veiviser.hoppOver && (
-              <button type="button" disabled={lagrer} onClick={veiviser.hoppOver} className={`${VEIVISER_LENKE} underline underline-offset-2`}>
+              <Button type="button" variant="link" disabled={lagrer} onClick={veiviser.hoppOver} className="px-2.5">
                 Hopp over
-              </button>
+              </Button>
             )}
           </>
         )}
         {!veiviser && avbryt && (
-          <button type="button" onClick={avbryt} className="px-2.5 py-[11px] text-[14px] font-medium text-[#5b6472]">
+          <Button type="button" variant="ghost" onClick={avbryt}>
             Avbryt
-          </button>
+          </Button>
         )}
       </div>
     </form>
   );
 }
 
-export function Tekstfelt({ label, hjelp, ...input }: { label: string; hjelp?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+export function Tekstfelt({ label, hjelp, feil, ...input }: { label: string; hjelp?: string; feil?: string | null } & React.InputHTMLAttributes<HTMLInputElement>) {
   const id = useId();
+  const beskrevet = [hjelp && `${id}-hjelp`, feil && `${id}-feil`].filter(Boolean).join(" ") || undefined;
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className={LABEL}>
-        {label}
-      </label>
-      <input id={id} aria-describedby={hjelp ? `${id}-hjelp` : undefined} className={INPUT} {...input} />
+    <Field data-invalid={feil ? true : undefined} className="gap-1.5">
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Input id={id} aria-describedby={beskrevet} aria-invalid={feil ? true : undefined} {...input} />
       {hjelp && (
-        <p id={`${id}-hjelp`} className={HJELP}>
+        <FieldDescription id={`${id}-hjelp`} className={HJELP}>
           {hjelp}
-        </p>
+        </FieldDescription>
       )}
-    </div>
+      {feil && (
+        <FieldError id={`${id}-feil`} className="text-[13px] leading-[1.5]">
+          {feil}
+        </FieldError>
+      )}
+    </Field>
   );
 }
 
-export function Nedtrekk({ label, children, ...select }: { label: string; children: ReactNode } & React.SelectHTMLAttributes<HTMLSelectElement>) {
+export type Alternativ<T extends string> = { verdi: T; tekst: string; hjelp?: string };
+export const valgAv = <T extends string>(verdier: readonly T[], tekst: Record<T, string>): Alternativ<T>[] => verdier.map((verdi) => ({ verdi, tekst: tekst[verdi] }));
+
+// A question with a few answers, all shown. `kort` makes each answer a card with a title and an
+// explanation under it.
+export function Valgfelt<T extends string>({
+  label,
+  hjelp,
+  verdi,
+  velg,
+  valg,
+  kort,
+}: {
+  label: string;
+  hjelp?: string;
+  verdi: T | "" | null | undefined;
+  velg: (v: T) => void;
+  valg: readonly Alternativ<T>[];
+  kort?: boolean;
+}) {
   const id = useId();
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className={LABEL}>
+    <FieldSet className="m-0 gap-2 border-0 p-0">
+      <FieldLegend id={`${id}-sporsmal`} variant="label" className={`${LABEL} mb-1`}>
         {label}
-      </label>
-      <select id={id} className={INPUT} {...select}>
-        {children}
-      </select>
-    </div>
+      </FieldLegend>
+      {hjelp && <FieldDescription className={HJELP}>{hjelp}</FieldDescription>}
+      <RadioGroup aria-labelledby={`${id}-sporsmal`} value={verdi ?? ""} onValueChange={(v) => velg(v as T)} className="gap-2">
+        {valg.map((a) =>
+          kort ? (
+            <FieldLabel key={a.verdi} htmlFor={`${id}-${a.verdi}`} className="rounded-lg bg-white has-data-checked:border-2 has-data-checked:border-primary has-data-checked:bg-white">
+              <Field orientation="horizontal" className="items-start gap-3 px-3.5! py-3!">
+                <RadioGroupItem value={a.verdi} id={`${id}-${a.verdi}`} aria-labelledby={`${id}-${a.verdi}-tittel`} aria-describedby={a.hjelp ? `${id}-${a.verdi}-hjelp` : undefined} className="mt-0.5" />
+                <FieldContent>
+                  <FieldTitle id={`${id}-${a.verdi}-tittel`} className="text-[15px] font-semibold">
+                    {a.tekst}
+                  </FieldTitle>
+                  {a.hjelp && (
+                    <FieldDescription id={`${id}-${a.verdi}-hjelp`} className={HJELP}>
+                      {a.hjelp}
+                    </FieldDescription>
+                  )}
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+          ) : (
+            <Field key={a.verdi} orientation="horizontal" className="items-start gap-2.5">
+              <RadioGroupItem value={a.verdi} id={`${id}-${a.verdi}`} className="mt-0.5" />
+              <FieldLabel htmlFor={`${id}-${a.verdi}`} className="text-[14px] leading-[1.45] font-normal">
+                {a.tekst}
+              </FieldLabel>
+            </Field>
+          ),
+        )}
+      </RadioGroup>
+    </FieldSet>
   );
 }
 
-export const KNAPP = "rounded-[6px] bg-[#17263d] px-[18px] py-[11px] text-[14px] font-semibold text-[#f6f4ef] disabled:bg-[#dcd8cf] disabled:text-[#8a94a3]";
-export const KNAPP_LYS = "rounded-[6px] border border-[#bfbab0] bg-white px-[18px] py-[11px] text-[14px] font-semibold text-[#17263d] disabled:text-[#8a94a3]";
-export const TEKSTOMRADE = `${INPUT} min-h-[112px] resize-y text-[15px] leading-[1.55]`;
+// A question with many answers, as a drop-down.
+export function Nedtrekk<T extends string>({ label, verdi, velg, valg }: { label: string; verdi: T | "" | undefined; velg: (v: T) => void; valg: readonly Alternativ<T>[] }) {
+  const id = useId();
+  return (
+    <Field className="gap-1.5">
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Select value={verdi ?? ""} onValueChange={(v) => velg(v as T)}>
+        <SelectTrigger id={id}>
+          <SelectValue placeholder="Velg" />
+        </SelectTrigger>
+        <SelectContent position="popper">
+          {valg.map((a) => (
+            <SelectItem key={a.verdi} value={a.verdi}>
+              {a.tekst}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </Field>
+  );
+}
 
 const KRAV_TEKST: Record<NonNullable<Krav["type"]>, { tittel: string; tekst: string }> = {
   prisavslag: { tittel: "Prisavslag", tekst: "Du beholder bilen og får tilbake en del av kjøpesummen, vanligvis det det koster å rette feilen." },
@@ -139,7 +213,6 @@ export function KravFelt({
   lagre,
   avbryt,
 }: Felles & { kanVelge: boolean; verdi: Krav | undefined }) {
-  const id = useId();
   const [type, setType] = useState<Krav["type"]>(verdi?.type);
   const [utbedring, setUtbedring] = useState(verdi?.utbedringNok ? String(verdi.utbedringNok) : "");
   const [utgifter, setUtgifter] = useState<UtgiftUtkast[]>(() => (verdi?.utgifter ?? []).map((u) => ({ type: u.type, belop: String(u.belopNok), beskrivelse: u.beskrivelse ?? "" })));
@@ -165,20 +238,7 @@ export function KravFelt({
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt}>
       {kanVelge ? (
-        <div role="radiogroup" aria-labelledby={`${id}-krav`} className="flex flex-col gap-2">
-          <span id={`${id}-krav`} className={LABEL}>
-            Hva krever du?
-          </span>
-          {KRAV_TYPER.map((k) => (
-            <label key={k} className={`flex cursor-pointer gap-3 rounded-lg border bg-white px-3.5 py-3 ${type === k ? "border-2 border-[#17263d]" : "border-[#bfbab0]"}`}>
-              <input type="radio" name={`${id}-krav`} checked={type === k} onChange={() => setType(k)} className="mt-1 accent-[#17263d]" />
-              <span className="flex flex-col gap-0.5">
-                <span className="text-[15px] font-semibold">{KRAV_TEKST[k].tittel}</span>
-                <span className={HJELP}>{KRAV_TEKST[k].tekst}</span>
-              </span>
-            </label>
-          ))}
-        </div>
+        <Valgfelt label="Hva krever du?" kort verdi={type} velg={setType} valg={KRAV_TYPER.map((k) => ({ verdi: k, tekst: KRAV_TEKST[k].tittel, hjelp: KRAV_TEKST[k].tekst }))} />
       ) : (
         <p className={HJELP}>Forhandleren har rett til å forsøke å rette feilen først. Brevet krever derfor at feilen rettes uten kostnad for deg.</p>
       )}
@@ -198,33 +258,37 @@ export function KravFelt({
         {utgifter.map((u, n) => (
           <div key={n} role="group" aria-label={`Utgift ${n + 1}`} className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <select aria-label="Type utgift" value={u.type} onChange={(e) => endreUtgift(n, { type: e.target.value as Utgift["type"] })} className={`${INPUT} min-w-0 flex-[3] px-2.5`}>
-                {UTGIFT_TYPER.map((t) => (
-                  <option key={t} value={t}>
-                    {UTGIFT_TEKST[t]}
-                  </option>
-                ))}
-              </select>
-              <input aria-label="Beløp i kroner" inputMode="numeric" placeholder="kr" value={gruppert(u.belop)} onChange={(e) => endreUtgift(n, { belop: bareSiffer(e.target.value) })} className={`${INPUT} min-w-0 flex-[2] px-2.5`} />
-              <button type="button" onClick={() => setUtgifter((x) => x.filter((_, i) => i !== n))} className="text-[13px] font-medium text-[#5b6472]">
+              <Select value={u.type} onValueChange={(v) => endreUtgift(n, { type: v as Utgift["type"] })}>
+                <SelectTrigger aria-label="Type utgift" className="min-w-0 flex-[3] px-2.5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {UTGIFT_TYPER.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {UTGIFT_TEKST[t]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input aria-label="Beløp i kroner" inputMode="numeric" placeholder="kr" value={gruppert(u.belop)} onChange={(e) => endreUtgift(n, { belop: bareSiffer(e.target.value) })} className="min-w-0 flex-[2] px-2.5" />
+              <Button type="button" variant="ghost" size="sm" onClick={() => setUtgifter((x) => x.filter((_, i) => i !== n))}>
                 Fjern
-              </button>
+              </Button>
             </div>
             {u.type === "annet" && (
-              <input
+              <Input
                 aria-label="Hva var utgiften?"
                 placeholder="Hva var utgiften? F.eks. drivstoff til verkstedet"
                 value={u.beskrivelse}
                 onChange={(e) => endreUtgift(n, { beskrivelse: e.target.value.slice(0, UTGIFT_BESKRIVELSE_MAKS) })}
-                className={INPUT}
               />
             )}
           </div>
         ))}
         {utgifter.length < MAKS_UTGIFTER && (
-          <button type="button" onClick={() => setUtgifter((u) => [...u, { type: "verksted", belop: "", beskrivelse: "" }])} className="self-start text-[14px] font-medium text-[#1f3a5f] underline underline-offset-2">
+          <Button type="button" variant="link" onClick={() => setUtgifter((u) => [...u, { type: "verksted", belop: "", beskrivelse: "" }])} className="self-start text-[14px] text-[#1f3a5f]">
             Legg til utgift
-          </button>
+          </Button>
         )}
       </div>
     </Skjema>

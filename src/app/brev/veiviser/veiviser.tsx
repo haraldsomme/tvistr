@@ -6,9 +6,10 @@ import { Logo } from "@/app/logo";
 import { FEILTYPE_TEKST } from "@/app/vurdering/tekster";
 import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
-import { HJELP, KNAPP, VEIVISER_LENKE, VeiviserKontekst } from "../felt";
-import { Intervju } from "../feilen/intervju";
-import { ForhandlerFelt } from "../steg/forhandler";
+import { Button } from "@/components/ui/button";
+import { useBekreftLagring } from "../bekreft";
+import { VeiviserKontekst } from "../felt";
+import { Intervju, type IntervjuUtkast } from "../feilen/intervju";
 import { lagSteg, type StegId } from "../steg/liste";
 
 // The wizard after buying: a thank-you, then every fill-in step of the letter on a screen of its own,
@@ -53,7 +54,8 @@ export function Veiviser({
   const [svar, setSvar] = useState(startSvar);
   const [utfylling, setUtfylling] = useState(startUtfylling);
   const [feil, setFeil] = useState<string | null>(null);
-  const [avslutter, setAvslutter] = useState(false);
+  // What the buyer has typed in «Feilen», kept while other steps are open.
+  const [intervjuUtkast, setIntervjuUtkast] = useState<IntervjuUtkast | null>(null);
   const parsed = tilKlageInput(svar, idag);
   const input = parsed.ok ? parsed.input : null;
 
@@ -73,7 +75,8 @@ export function Veiviser({
     }
   }
 
-  const steg = input ? lagSteg({ sakId: id, input, svar, utfylling, idag, idBase, forslagKjopsdato, lagre }) : [];
+  const bekreft = useBekreftLagring(lagre, { svar, utfylling }, idag);
+  const steg = input ? lagSteg({ sakId: id, input, svar, utfylling, idag, idBase, forslagKjopsdato, lagre: bekreft.lagre }) : [];
   // A step given in the address; else the thank-you while nothing has been filled in (some steps are
   // done from the assessment's answers alone); else the first step not done.
   const nySak = Object.keys(startUtfylling).every((k) => k === "kjoretoy" || k === "sprakvask");
@@ -105,9 +108,7 @@ export function Veiviser({
 
   // The end: the case is marked as gone through once, so the link opens the letter from now on.
   async function slutt() {
-    setAvslutter(true);
     if (!utfylling.gjennomgatt && !(await lagre({ gjennomgatt: true }))) {
-      setAvslutter(false);
       return;
     }
     router.push(`/brev/${id}`);
@@ -130,33 +131,14 @@ export function Veiviser({
         <p className="m-0 max-w-[640px] text-[16px] leading-[1.6] text-[#3d4757]">
           Vi stiller deg noen spørsmål om kjøpet, feilen og hva som har skjedd siden. Svarene blir til brevet, så ta deg god tid og svar så presist du kan. Har du kjøpekontrakten, annonsen og meldingene med forhandleren for hånden, går det raskere. Det tar omtrent 10–15 minutter. Det du ikke vet nå, kan du hoppe over og fylle ut senere.
         </p>
-        <button type="button" onClick={() => gaTil(steg[0].id)} className={`${KNAPP} self-start`}>
+        <Button type="button" onClick={() => gaTil(steg[0].id)} className="self-start">
           Start
-        </button>
+        </Button>
       </Ramme>
     );
   }
 
   const aktivt = steg[nr];
-  // The navigation for the steps that have no form of their own to carry it.
-  const egenNavigasjon = (kanGaVidere: boolean | null) => (
-    <div className="flex flex-wrap items-center gap-2">
-      {!tilbakeTilBrev && kanGaVidere !== null && (
-        <button type="button" disabled={!kanGaVidere || avslutter} onClick={neste} className={KNAPP}>
-          {nr === steg.length - 1 ? "Se brevet" : "Neste"}
-        </button>
-      )}
-      <button type="button" onClick={tilbake} className={VEIVISER_LENKE}>
-        {tilbakeTilBrev ? "Tilbake til brevet uten å endre" : "Tilbake"}
-      </button>
-      {hoppOver && (
-        <button type="button" onClick={hoppOver} className={`${VEIVISER_LENKE} underline underline-offset-2`}>
-          Hopp over
-        </button>
-      )}
-    </div>
-  );
-
   let innhold: ReactNode;
   if (aktivt.id === "feilen") {
     innhold = (
@@ -168,29 +150,17 @@ export function Veiviser({
           feiltyper={[...new Set(input.feilen.typer)].map((t) => FEILTYPE_TEKST[t])}
           forslagKjopsdato={forslagKjopsdato}
           verdi={utfylling.feilen}
+          utkast={intervjuUtkast}
+          settUtkast={setIntervjuUtkast}
           lagret={(s, u) => {
             if (s) setSvar(s);
             setUtfylling(u);
           }}
           ferdig={neste}
+          tilbake={tilbake}
+          tilbakeTekst={tilbakeTilBrev ? "Tilbake til brevet uten å endre" : "Tilbake"}
+          hoppOver={hoppOver}
         />
-        {/* The interview's own buttons save; «Neste» here would drop an edited draft. */}
-        <div className="border-t border-[#eceae4] pt-3">{egenNavigasjon(null)}</div>
-      </>
-    );
-  } else if (aktivt.id === "forhandler") {
-    innhold = (
-      <>
-        <ForhandlerFelt
-          forhandler={utfylling.forhandler ?? null}
-          funnet={async (f) => {
-            const ok = await lagre({ forhandler: f });
-            if (ok && f) neste();
-            return ok;
-          }}
-          tittelId={`${idBase}-${aktivt.id}`}
-        />
-        {egenNavigasjon(aktivt.ferdig)}
       </>
     );
   } else {
@@ -213,12 +183,12 @@ export function Veiviser({
         <h1 ref={overskrift} tabIndex={-1} id={`${idBase}-${aktivt.id}`} className="m-0 font-brev text-[28px] font-semibold leading-[1.2] outline-none md:text-[34px]">
           {aktivt.sporsmal}
         </h1>
-        {aktivt.id === "forhandler" && <p className={HJELP}>Forhandleren er mottakeren av brevet.</p>}
       </div>
       <section aria-labelledby={`${idBase}-${aktivt.id}`} className="flex flex-col gap-4 rounded-lg border border-[#dcd8cf] bg-white p-5 md:p-7" key={aktivt.id}>
         {innhold}
       </section>
       {feilmelding}
+      {bekreft.dialog}
     </Ramme>
   );
 }

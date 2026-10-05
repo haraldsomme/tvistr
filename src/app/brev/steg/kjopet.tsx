@@ -5,7 +5,8 @@ import { norskDato } from "@/lib/brev/brev";
 import { FORBEHOLD_VALG, type Forbehold } from "@/lib/brev/utfylling";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 import { FRA_AR, gyldigKjopsdato, medKjopsdato, type Innsending } from "@/lib/vurdering/innsending";
-import { bareSiffer, type Felles, gruppert, HJELP, kroner, LABEL, Skjema, Tekstfelt } from "../felt";
+import { Datofelt } from "../datofelt";
+import { bareSiffer, type Felles, gruppert, HJELP, kroner, Skjema, Tekstfelt, valgAv, Valgfelt } from "../felt";
 
 // What the letter needs about the purchase itself: the day, the price, the mileage, and whether the
 // contract made a disclaimer. The car itself came from the assessment and cannot change here.
@@ -54,18 +55,17 @@ export function KjopetFelt({
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt}>
       <p className={HJELP}>{bil} (bilen kan ikke endres)</p>
-      <Tekstfelt label="Når kjøpte du bilen?" hjelp={forslagKjopsdato && !svar.kjopsdato && dato === forslagKjopsdato ? "Foreslått fra Statens vegvesen: datoen bilen ble registrert på deg. Rett den hvis den ikke stemmer med kjøpekontrakten." : undefined} type="date" min={`${FRA_AR}-01-01`} max={idag} value={dato} onChange={(e) => setDato(e.target.value)} />
+      <Datofelt
+        label="Når kjøpte du bilen?"
+        hjelp={forslagKjopsdato && !svar.kjopsdato && dato === forslagKjopsdato ? "Foreslått fra Statens vegvesen: datoen bilen ble registrert på deg. Rett den hvis den ikke stemmer med kjøpekontrakten." : undefined}
+        min={`${FRA_AR}-01-01`}
+        max={idag}
+        verdi={dato}
+        settVerdi={setDato}
+      />
       <Tekstfelt label="Hva kostet bilen?" inputMode="numeric" autoComplete="off" placeholder="Kroner" value={gruppert(sum)} onChange={(e) => setSum(bareSiffer(e.target.value))} />
       <Tekstfelt label="Kilometerstand ved kjøpet (valgfritt)" inputMode="numeric" autoComplete="off" placeholder="Kilometer" value={gruppert(km)} onChange={(e) => setKm(bareSiffer(e.target.value))} />
-      <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
-        <legend className={`${LABEL} mb-1`}>Sto det «solgt som den er» eller noe om garanti i kontrakten eller annonsen?</legend>
-        {FORBEHOLD_VALG.map((v) => (
-          <label key={v} className="flex items-start gap-2.5 text-[14px] leading-[1.45]">
-            <input type="radio" name="forbehold" value={v} checked={forbehold === v} onChange={() => setForbehold(v)} className="mt-1" />
-            {FORBEHOLD_TEKST[v]}
-          </label>
-        ))}
-      </fieldset>
+      <Valgfelt label="Sto det «solgt som den er» eller noe om garanti i kontrakten eller annonsen?" verdi={forbehold} velg={setForbehold} valg={valgAv(FORBEHOLD_VALG, FORBEHOLD_TEKST)} />
     </Skjema>
   );
 }

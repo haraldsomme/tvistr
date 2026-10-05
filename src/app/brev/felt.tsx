@@ -14,6 +14,7 @@ import {
   type Utgift,
 } from "@/lib/brev/utfylling";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldContent, FieldDescription, FieldError, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,9 @@ export function Sammendrag({ linjer }: { linjer: ReactNode[] }) {
 // «Hopp over» show beside it.
 export type Veiviser = { neste: () => void; tilbake: () => void; hoppOver?: () => void; nesteTekst: string };
 export const VeiviserKontekst = createContext<Veiviser | null>(null);
+// On mobile the wizard's buttons are fixed to the bottom of the screen, with the step scrolling behind
+// them; the wizard's frame leaves room for them (`Ramme` in veiviser.tsx).
+export const VEIVISER_KNAPPER = "fixed inset-x-0 bottom-0 z-10 border-t border-[#d3cec3] bg-[#f6f4ef] px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] md:static md:border-0 md:bg-transparent md:p-0";
 
 // The form of a step: saves on submit and shows the two buttons (in the wizard: «Neste», «Tilbake»
 // and «Hopp over»).
@@ -64,31 +68,31 @@ export function Skjema({ klar, send, avbryt, children, knapp = "Lagre" }: { klar
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       {children}
-      <div className="flex flex-wrap items-center gap-2">
-        <Button type="submit" disabled={!klar || lagrer}>
-          {lagrer ? (
-            <>
-              <Spinner aria-hidden data-icon="inline-start" /> Lagrer
-            </>
-          ) : veiviser && knapp === "Lagre" ? veiviser.nesteTekst : knapp}
-        </Button>
+      <div className={`flex flex-wrap items-center gap-2 ${veiviser ? VEIVISER_KNAPPER : ""}`}>
         {veiviser && (
-          <>
-            <Button type="button" variant="ghost" disabled={lagrer} onClick={veiviser.tilbake}>
-              Tilbake
-            </Button>
-            {veiviser.hoppOver && (
-              <Button type="button" variant="link" disabled={lagrer} onClick={veiviser.hoppOver} className="px-2.5">
-                Hopp over
-              </Button>
-            )}
-          </>
-        )}
-        {!veiviser && avbryt && (
-          <Button type="button" variant="ghost" onClick={avbryt}>
-            Avbryt
+          <Button type="button" variant="ghost" disabled={lagrer} onClick={veiviser.tilbake}>
+            Tilbake
           </Button>
         )}
+        <div className={`flex flex-wrap items-center gap-2 ${veiviser ? "ml-auto justify-end" : ""}`}>
+          {veiviser?.hoppOver && (
+            <Button type="button" variant="link" disabled={lagrer} onClick={veiviser.hoppOver} className="px-2.5">
+              Hopp over
+            </Button>
+          )}
+          <Button type="submit" disabled={!klar || lagrer}>
+            {lagrer ? (
+              <>
+                <Spinner aria-hidden data-icon="inline-start" /> Lagrer
+              </>
+            ) : veiviser && knapp === "Lagre" ? veiviser.nesteTekst : knapp}
+          </Button>
+          {!veiviser && avbryt && (
+            <Button type="button" variant="ghost" onClick={avbryt}>
+              Avbryt
+            </Button>
+          )}
+        </div>
       </div>
     </form>
   );
@@ -115,61 +119,105 @@ export function Tekstfelt({ label, hjelp, feil, ...input }: { label: string; hje
   );
 }
 
-export type Alternativ<T extends string> = { verdi: T; tekst: string; hjelp?: string };
+// `deaktivert` greys out an answer that cannot be true given the other answers.
+export type Alternativ<T extends string> = { verdi: T; tekst: string; hjelp?: string; deaktivert?: boolean };
 export const valgAv = <T extends string>(verdier: readonly T[], tekst: Record<T, string>): Alternativ<T>[] => verdier.map((verdi) => ({ verdi, tekst: tekst[verdi] }));
 
-// A question with a few answers, all shown. `kort` makes each answer a card with a title and an
-// explanation under it.
+// The look of one answer: a row with a border, the radio or tick at the left, a title and an
+// optional explanation under it. The whole row is the click target; the chosen row is filled.
+export const VALGRAD = "min-h-11 cursor-pointer rounded-lg bg-white transition-colors hover:bg-muted/50 has-data-checked:border-primary has-data-checked:bg-muted/40 has-disabled:cursor-not-allowed has-disabled:opacity-50 has-disabled:hover:bg-white";
+const VALGRAD_INNHOLD = "items-start gap-3 px-3.5! py-3!";
+const SPORSMAL = "text-[15px] font-semibold";
+
+// A question with a few answers, all shown as rows with one chosen. An answer's `hjelp` is the
+// explanation under its title.
 export function Valgfelt<T extends string>({
   label,
   hjelp,
   verdi,
   velg,
   valg,
-  kort,
 }: {
   label: string;
   hjelp?: string;
   verdi: T | "" | null | undefined;
   velg: (v: T) => void;
   valg: readonly Alternativ<T>[];
-  kort?: boolean;
 }) {
   const id = useId();
   return (
     <FieldSet className="m-0 gap-2 border-0 p-0">
-      <FieldLegend id={`${id}-sporsmal`} variant="label" className={`${LABEL} mb-1`}>
+      <FieldLegend id={`${id}-sporsmal`} variant="label" className={`${SPORSMAL} mb-1`}>
         {label}
       </FieldLegend>
       {hjelp && <FieldDescription className={HJELP}>{hjelp}</FieldDescription>}
       <RadioGroup aria-labelledby={`${id}-sporsmal`} value={verdi ?? ""} onValueChange={(v) => velg(v as T)} className="gap-2">
-        {valg.map((a) =>
-          kort ? (
-            <FieldLabel key={a.verdi} htmlFor={`${id}-${a.verdi}`} className="rounded-lg bg-white has-data-checked:border-2 has-data-checked:border-primary has-data-checked:bg-white">
-              <Field orientation="horizontal" className="items-start gap-3 px-3.5! py-3!">
-                <RadioGroupItem value={a.verdi} id={`${id}-${a.verdi}`} aria-labelledby={`${id}-${a.verdi}-tittel`} aria-describedby={a.hjelp ? `${id}-${a.verdi}-hjelp` : undefined} className="mt-0.5" />
-                <FieldContent>
-                  <FieldTitle id={`${id}-${a.verdi}-tittel`} className="text-[15px] font-semibold">
-                    {a.tekst}
-                  </FieldTitle>
-                  {a.hjelp && (
-                    <FieldDescription id={`${id}-${a.verdi}-hjelp`} className={HJELP}>
-                      {a.hjelp}
-                    </FieldDescription>
-                  )}
-                </FieldContent>
-              </Field>
-            </FieldLabel>
-          ) : (
-            <Field key={a.verdi} orientation="horizontal" className="items-start gap-2.5">
-              <RadioGroupItem value={a.verdi} id={`${id}-${a.verdi}`} className="mt-0.5" />
-              <FieldLabel htmlFor={`${id}-${a.verdi}`} className="text-[14px] leading-[1.45] font-normal">
-                {a.tekst}
-              </FieldLabel>
+        {valg.map((a) => (
+          <FieldLabel key={a.verdi} htmlFor={`${id}-${a.verdi}`} className={VALGRAD}>
+            <Field orientation="horizontal" className={VALGRAD_INNHOLD}>
+              <RadioGroupItem value={a.verdi} id={`${id}-${a.verdi}`} disabled={a.deaktivert} aria-labelledby={`${id}-${a.verdi}-tittel`} aria-describedby={a.hjelp ? `${id}-${a.verdi}-hjelp` : undefined} className="mt-0.5" />
+              <FieldContent>
+                <FieldTitle id={`${id}-${a.verdi}-tittel`} className="text-[15px] font-medium">
+                  {a.tekst}
+                </FieldTitle>
+                {a.hjelp && (
+                  <FieldDescription id={`${id}-${a.verdi}-hjelp`} className={HJELP}>
+                    {a.hjelp}
+                  </FieldDescription>
+                )}
+              </FieldContent>
             </Field>
-          ),
-        )}
+          </FieldLabel>
+        ))}
       </RadioGroup>
+    </FieldSet>
+  );
+}
+
+// The same rows for a question where several answers can be true.
+export function Flervalgsfelt<T extends string>({
+  label,
+  hjelp = "Velg alt som stemmer.",
+  verdi,
+  velg,
+  valg,
+}: {
+  label: string;
+  hjelp?: string;
+  verdi: readonly T[];
+  velg: (v: T[]) => void;
+  valg: readonly Alternativ<T>[];
+}) {
+  const id = useId();
+  return (
+    <FieldSet className="m-0 gap-2 border-0 p-0">
+      <FieldLegend id={`${id}-sporsmal`} variant="label" className={`${SPORSMAL} mb-1`}>
+        {label}
+      </FieldLegend>
+      <FieldDescription className={HJELP}>{hjelp}</FieldDescription>
+      <div role="group" aria-labelledby={`${id}-sporsmal`} className="flex flex-col gap-2">
+        {valg.map((a) => (
+          <FieldLabel key={a.verdi} htmlFor={`${id}-${a.verdi}`} className={VALGRAD}>
+            <Field orientation="horizontal" className={VALGRAD_INNHOLD}>
+              <Checkbox
+                id={`${id}-${a.verdi}`}
+                checked={verdi.includes(a.verdi)}
+                onCheckedChange={(c) => velg(c === true ? [...verdi.filter((x) => x !== a.verdi), a.verdi] : verdi.filter((x) => x !== a.verdi))}
+                aria-describedby={a.hjelp ? `${id}-${a.verdi}-hjelp` : undefined}
+                className="mt-0.5"
+              />
+              <FieldContent>
+                <FieldTitle className="text-[15px] font-medium">{a.tekst}</FieldTitle>
+                {a.hjelp && (
+                  <FieldDescription id={`${id}-${a.verdi}-hjelp`} className={HJELP}>
+                    {a.hjelp}
+                  </FieldDescription>
+                )}
+              </FieldContent>
+            </Field>
+          </FieldLabel>
+        ))}
+      </div>
     </FieldSet>
   );
 }
@@ -238,7 +286,7 @@ export function KravFelt({
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt}>
       {kanVelge ? (
-        <Valgfelt label="Hva krever du?" kort verdi={type} velg={setType} valg={KRAV_TYPER.map((k) => ({ verdi: k, tekst: KRAV_TEKST[k].tittel, hjelp: KRAV_TEKST[k].tekst }))} />
+        <Valgfelt label="Hva krever du?" verdi={type} velg={setType} valg={KRAV_TYPER.map((k) => ({ verdi: k, tekst: KRAV_TEKST[k].tittel, hjelp: KRAV_TEKST[k].tekst }))} />
       ) : (
         <p className={HJELP}>Forhandleren har rett til å forsøke å rette feilen først. Brevet krever derfor at feilen rettes uten kostnad for deg.</p>
       )}

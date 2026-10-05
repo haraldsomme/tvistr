@@ -31,15 +31,25 @@ function Brevutsnitt() {
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f6f4ef] font-ui text-[#17263d]">
-      <header className="flex items-center justify-between border-b border-[#dcd8cf] px-6 pb-[18px] pt-[52px] md:px-16 md:py-[22px]">
+      <header className="relative flex items-center justify-between border-b border-[#dcd8cf] px-6 py-[18px] md:px-16 md:py-[22px]">
         <Logo liten />
         <nav className="hidden text-[14px] font-medium text-[#3d4757] md:block">
           <a href="#slik-fungerer-det">Slik fungerer det</a>
         </nav>
+        <details className="md:hidden">
+          <summary aria-label="Meny" className="-m-3 flex size-12 cursor-pointer list-none flex-col justify-center gap-[5px] p-3 [&::-webkit-details-marker]:hidden">
+            <span className="h-0.5 w-[22px] bg-[#17263d]" />
+            <span className="h-0.5 w-[22px] bg-[#17263d]" />
+            <span className="h-0.5 w-[22px] bg-[#17263d]" />
+          </summary>
+          <nav className="absolute inset-x-0 top-full z-10 border-b border-[#dcd8cf] bg-[#f6f4ef] px-6 text-[16px] font-medium text-[#1f3a5f]">
+            <a href="#slik-fungerer-det" className="block py-4">Slik fungerer det</a>
+          </nav>
+        </details>
       </header>
 
-      <section className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col md:grid md:flex-none md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:items-center md:gap-[72px] md:px-16 md:pb-[88px] md:pt-24">
-        <div className="flex flex-col gap-5 px-6 pt-10 md:gap-7 md:p-0">
+      <section className="mx-auto flex w-full max-w-[1280px] flex-col md:grid md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:items-center md:gap-[72px] md:px-16 md:pb-[88px] md:pt-24">
+        <div className="flex flex-col gap-5 px-6 pb-10 pt-10 md:gap-7 md:p-0">
           <div className="text-[13px] font-medium text-[#1f3a5f] md:tracking-[.02em]">For deg som har kjøpt bruktbil fra forhandler</div>
           <h1 className="m-0 font-brev text-[38px] font-semibold leading-[1.08] tracking-[-.01em] md:text-[60px] md:leading-[1.06] md:tracking-[-.015em] md:[text-wrap:balance]">
             Feil på bilen? Få et reklamasjonsbrev som holder.
@@ -50,24 +60,18 @@ export default function Home() {
               Svar på noen få spørsmål om kjøpet og feilen. Du får en gratis vurdering av saken, og kan deretter kjøpe et ferdig brev som du sender til forhandleren selv.
             </span>
           </p>
-          <div className="hidden items-center gap-4 md:flex">
-            <Link href="/vurdering" className="rounded-[6px] bg-[#17263d] px-7 py-[18px] text-[16px] font-semibold text-[#f6f4ef]">
+          <div className="flex flex-col items-center gap-3 pt-2 md:flex-row md:gap-4 md:pt-0">
+            <Link href="/vurdering" className="w-full rounded-[6px] bg-[#17263d] p-[18px] text-center text-[16px] font-semibold text-[#f6f4ef] md:w-auto md:px-7">
               Start vurderingen
             </Link>
-            <span className="text-[14px] text-[#5b6472]">Gratis · tar ca. 5 minutter</span>
+            <span className="text-[13px] text-[#5b6472] md:text-[14px]">Gratis · tar ca. 5 minutter</span>
           </div>
         </div>
         <Brevutsnitt />
-        <div className="mt-auto flex flex-col items-center gap-3 p-6 md:hidden">
-          <Link href="/vurdering" className="w-full rounded-[6px] bg-[#17263d] p-[18px] text-center text-[16px] font-semibold text-[#f6f4ef]">
-            Start vurderingen
-          </Link>
-          <span className="text-[13px] text-[#5b6472]">Gratis · tar ca. 5 minutter</span>
-        </div>
       </section>
 
-      <section id="slik-fungerer-det" className="hidden border-t border-[#dcd8cf] md:block">
-        <div className="mx-auto grid max-w-[1280px] grid-cols-3 gap-12 px-16 pb-[72px] pt-14">
+      <section id="slik-fungerer-det" className="border-t border-[#dcd8cf]">
+        <div className="mx-auto grid max-w-[1280px] gap-8 px-6 pb-12 pt-10 md:grid-cols-3 md:gap-12 md:px-16 md:pb-[72px] md:pt-14">
           {STEG.map((s) => (
             <div key={s.nr} className="flex flex-col gap-2.5">
               <div className="font-kode text-[13px] font-semibold text-[#1f3a5f]">{s.nr}</div>
@@ -78,8 +82,8 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="hidden bg-[#17263d] text-[#c9d2df] md:block">
-        <div className="mx-auto flex max-w-[1280px] items-start justify-between gap-12 px-16 pb-12 pt-10 text-[14px] leading-[1.5]">
+      <footer className="bg-[#17263d] text-[#c9d2df]">
+        <div className="mx-auto flex max-w-[1280px] items-start justify-between gap-12 px-6 pb-10 pt-8 md:px-16 md:pb-12 md:pt-10 text-[14px] leading-[1.5]">
           <div className="flex flex-col gap-2">
             <span className="text-[15px] font-semibold text-[#f6f4ef]">tvistr.no</span>
             <a href="mailto:kontakt@tvistr.no">kontakt@tvistr.no</a>

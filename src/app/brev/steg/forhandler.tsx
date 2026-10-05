@@ -49,7 +49,7 @@ export function ForhandlerFelt({ forhandler, funnet, tittelId }: { forhandler: F
   return (
     <Skjema klar={navn.length >= 2} send={() => funnet({ type: "fritekst", navn })}>
       <div className="flex flex-col gap-2.5">
-        <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472]">Skriv navnet på forhandleren eller organisasjonsnummeret. Vi finner firmaet i Enhetsregisteret.</p>
+        <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472]">Hvem kjøpte du bilen av? Skriv navnet på forhandleren eller organisasjonsnummeret. Vi finner firmaet i Enhetsregisteret.</p>
         <div role="group" aria-labelledby={tittelId}>
           <ForhandlerVelger
             value={utkast}

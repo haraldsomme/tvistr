@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import type { FeilMedSporsmal, Sporsmal, Utelatt } from "@/lib/brev/feilbeskrivelse";
 import { BESKRIVELSE_MAKS, BESKRIVELSE_MIN, FEILBESKRIVELSE, type Fakta, type Feilen, type Utfylling } from "@/lib/brev/utfylling";
 import { FRA_AR, gyldigKjopsdato, medKjopsdato, type Innsending } from "@/lib/vurdering/innsending";
@@ -9,9 +9,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldDescription, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Toggle } from "@/components/ui/toggle";
 import { Datofelt } from "../datofelt";
-import { HJELP, LABEL } from "../felt";
+import { Flervalgsfelt, HJELP, LABEL, Valgfelt, VEIVISER_KNAPPER } from "../felt";
 
 // The interview about the defect, in three steps: the buyer writes freely; the model asks what a fixed
 // checklist says is missing; the buyer compares the draft with their own text and inserts one of them.
@@ -35,7 +34,7 @@ export type IntervjuUtkast = {
   trinn: Trinn;
 };
 
-const STEG_NAVN: Record<Utelatt["steg"], string> = { kravet: "Kravet", kontakt: "Kontakt med forhandleren", for_kjopet: "Før kjøpet", bevis: "Bevis og vedlegg" };
+const STEG_NAVN: Record<Utelatt["steg"], string> = { kravet: "Kravet", kontakt: "Kontakt med forhandleren", for_kjopet: "Før kjøpet", bevis: "Tilstandsrapport" };
 const FORSLAG_FEILET = "Vi klarte ikke å lage et forslag akkurat nå. Du kan bruke din egen tekst i brevet.";
 
 const nokkel = (feil: number, sporsmal: number) => `${feil}-${sporsmal}`;
@@ -66,38 +65,13 @@ function lagredeSvar(fakta: Fakta[] = []) {
 // skipped question.
 function SporsmalFelt({ sporsmal, verdi, sett }: { sporsmal: Sporsmal; verdi: Svar; sett: (v: Svar) => void }) {
   const id = useId();
-  const velg = (a: string) => {
-    const pa = verdi.valgt.includes(a);
-    const valgt = sporsmal.flervalg ? (pa ? verdi.valgt.filter((x) => x !== a) : [...verdi.valgt, a]) : pa ? [] : [a];
-    sett({ ...verdi, valgt });
-  };
   const harValg = sporsmal.alternativer.length > 0;
+  const valg = sporsmal.alternativer.map((a) => ({ verdi: a, tekst: a }));
   return (
     <div className="flex flex-col gap-2">
-      <p id={`${id}-sporsmal`} className={`m-0 ${LABEL}`}>
-        {sporsmal.tekst}
-      </p>
-      {harValg && (
-        <>
-          {sporsmal.flervalg && <p className={HJELP}>Velg alt som stemmer.</p>}
-          <div role="group" aria-labelledby={`${id}-sporsmal`} className="flex flex-wrap gap-2">
-            {sporsmal.alternativer.map((a) => {
-              const pa = verdi.valgt.includes(a);
-              return (
-                <Toggle
-                  key={a}
-                  pressed={pa}
-                  onPressedChange={() => velg(a)}
-                  variant="pille"
-                  size="pille"
-                >
-                  {sporsmal.flervalg && pa ? `✓ ${a}` : a}
-                </Toggle>
-              );
-            })}
-          </div>
-        </>
-      )}
+      {harValg && sporsmal.flervalg && <Flervalgsfelt label={sporsmal.tekst} verdi={verdi.valgt} velg={(valgt) => sett({ ...verdi, valgt })} valg={valg} />}
+      {harValg && !sporsmal.flervalg && <Valgfelt label={sporsmal.tekst} verdi={verdi.valgt[0]} velg={(a) => sett({ ...verdi, valgt: [a] })} valg={valg} />}
+      {!harValg && <p className={`m-0 ${LABEL}`}>{sporsmal.tekst}</p>}
       <label htmlFor={id} className="sr-only">
         {harValg ? `Utdyp: ${sporsmal.tekst}` : sporsmal.tekst}
       </label>
@@ -270,17 +244,22 @@ export function Intervju({
     setSettInnHva("forslag");
     return lagre({ dato, egen, feil: titler, ...(fakta.length > 0 && { fakta }), avsnitt });
   };
-  const navigasjon = (tilbakeFra: () => void, tekst = "Tilbake") => (
-    <>
+  // «Tilbake» at the left; «Hopp over» and the main button at the right, the main button last.
+  const navigasjon = (tilbakeFra: () => void, tekst = "Tilbake", ekstra?: ReactNode, hoved?: ReactNode) => (
+    <div className={`flex flex-wrap items-center gap-2 ${VEIVISER_KNAPPER}`}>
       <Button type="button" variant="ghost" disabled={arbeider !== null} onClick={tilbakeFra}>
         {tekst}
       </Button>
-      {hoppOver && (
-        <Button type="button" variant="link" disabled={arbeider !== null} onClick={hoppOver} className="px-2.5">
-          Hopp over
-        </Button>
-      )}
-    </>
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+        {ekstra}
+        {hoppOver && (
+          <Button type="button" variant="link" disabled={arbeider !== null} onClick={hoppOver} className="px-2.5">
+            Hopp over
+          </Button>
+        )}
+        {hoved}
+      </div>
+    </div>
   );
 
   const beskrivTekst =
@@ -320,7 +299,14 @@ export function Intervju({
           Hva skjer, når og hvor ofte? Har bilen flere feil, ta med alle. Ikke skriv navn på personer. Bruk minst {BESKRIVELSE_MIN} tegn for å kunne gå videre.
         </FieldDescription>
       </Field>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      {navigasjon(
+        tilbake,
+        tilbakeTekst,
+        forslagTekst.trim() !== "" && egen === egenForUtkast && (
+          <Button type="button" variant="link" disabled={!datoOk || arbeider !== null} onClick={() => setTrinn("utkast")}>
+            Tilbake til forslaget
+          </Button>
+        ),
         <Button type="button" disabled={!skrivKlar} onClick={fortsett}>
           {arbeider === "sporsmal" ? (
             <>
@@ -333,14 +319,8 @@ export function Intervju({
           ) : (
             "Fortsett"
           )}
-        </Button>
-        {forslagTekst.trim() !== "" && egen === egenForUtkast && (
-          <Button type="button" variant="link" disabled={!datoOk || arbeider !== null} onClick={() => setTrinn("utkast")}>
-            Tilbake til forslaget
-          </Button>
-        )}
-        {navigasjon(tilbake, tilbakeTekst)}
-      </div>
+        </Button>,
+      )}
       {!skrivKlar && arbeider === null && !kjopOk && <p className={HJELP}>Fyll ut kjøpsdatoen for å gå videre.</p>}
     </>
   );
@@ -359,7 +339,10 @@ export function Intervju({
             </FieldSet>
           ),
       )}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      {navigasjon(
+        () => setTrinn("skriv"),
+        "Tilbake",
+        undefined,
         <Button type="button" disabled={arbeider !== null} onClick={() => lagUtkast(fakta)}>
           {arbeider === "utkast" ? (
             <>
@@ -368,9 +351,8 @@ export function Intervju({
           ) : (
             "Lag forslag"
           )}
-        </Button>
-        {navigasjon(() => setTrinn("skriv"))}
-      </div>
+        </Button>,
+      )}
     </>
   );
 
@@ -418,7 +400,7 @@ export function Intervju({
           </ul>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">{navigasjon(() => setTrinn(harSporsmal ? "sporsmal" : "skriv"))}</div>
+      {navigasjon(() => setTrinn(harSporsmal ? "sporsmal" : "skriv"))}
     </>
   );
 

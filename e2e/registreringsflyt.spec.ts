@@ -69,7 +69,8 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   };
   await vurdering();
 
-  await page.getByRole("button", { name: "Betal med vipps" }).click();
+  // On a phone a bar at the bottom has the same button until the card is in view; pay in the card.
+  await page.getByRole("complementary", { name: "Få reklamasjonsbrevet" }).getByRole("button", { name: "Betal med vipps" }).click();
   await expect(page).toHaveURL(/\/brev\/[\w-]{22}\/veiviser$/);
   sak.rydd(idFra(page.url()));
 
@@ -79,48 +80,51 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await page.getByRole("button", { name: "Start" }).click();
 
   // The registry gave no purchase date, so the first step asks for it.
-  await expect(veiviser.tittel("Om kjøpet")).toBeVisible();
+  await expect(veiviser.tittel("Kjøpet")).toBeVisible();
   await page.getByLabel("Når kjøpte du bilen?").fill("12.03.2024");
   await page.getByLabel("Hva kostet bilen?").fill("250000");
   await page.getByRole("radio", { name: "Ja, bilen ble solgt «som den er»" }).check();
   await veiviser.neste();
 
-  await expect(veiviser.tittel("Hvem kjøpte du bilen av?")).toBeVisible();
+  await expect(veiviser.tittel("Forhandler")).toBeVisible();
   await brev.forhandler.fill("Testbil AS");
-  // Choosing the dealer moves on by itself.
-  await page.getByRole("button", { name: /Bruk «.*» som skrevet/ }).click();
+  // A name not found in the register is saved as written.
+  await veiviser.neste();
 
   // The defect in the buyer's own words: nothing goes to the language model.
-  await expect(veiviser.tittel("Beskriv feilen")).toBeVisible();
+  await expect(veiviser.tittel("Feilen")).toBeVisible();
   await page.getByLabel("Når viste den første feilen seg?").fill("01.06.2024");
-  await page.getByLabel("Beskriv feilen eller feilene med dine egne ord").fill("Motorlampen lyser, og bilen mister kraft i motbakker.");
+  await page.getByLabel(/^Beskriv feil.* med dine egne ord$/).fill("Motorlampen lyser, og bilen mister kraft i motbakker.");
   await page.getByRole("button", { name: "Bruk teksten min som den er" }).click();
 
-  await expect(veiviser.tittel("Hva visste du før kjøpet?")).toBeVisible();
+  await expect(veiviser.tittel("Før kjøpet")).toBeVisible();
   await velg("Visste du om feilen før du kjøpte?", "Nei");
   await velg("Sa annonsen eller selgeren noe om bilen som ikke stemte?", "Nei");
   await veiviser.neste();
 
-  await expect(veiviser.tittel("Har du tatt opp feilen med forhandleren?")).toBeVisible();
+  await expect(veiviser.tittel("Kontakt med forhandleren")).toBeVisible();
   await page.getByLabel("Når tok du opp feilen første gang?").fill("10.06.2024");
   await velg("Hvordan tok du kontakt?", "E-post");
   await velg("Hva har forhandleren gjort?", "Forhandleren vil forsøke, eller har ikke svart ennå");
   await veiviser.neste();
 
-  await expect(veiviser.tittel("Hva har du av dokumentasjon?")).toBeVisible();
+  await expect(veiviser.tittel("Tilstandsrapport")).toBeVisible();
   await velg("Har du en verksted- eller tilstandsrapport?", "Nei");
-  await page.getByRole("button", { name: "Bekreft vedlegg" }).click();
+  await veiviser.neste();
   // The assessment had a report that points to before the purchase; taking it back weakens the case,
   // so the save asks first.
   const svakere = page.getByRole("alertdialog", { name: "Dette gjør brevet svakere" });
   await expect(svakere).toContainText("rapport");
   await svakere.getByRole("button", { name: "Lagre likevel" }).click();
 
+  await expect(veiviser.tittel("Vedlegg")).toBeVisible();
+  await page.getByRole("button", { name: "Bekreft vedlegg" }).click();
+
   // The dealer has not had the chance to repair yet, so the claim is repair: nothing to choose.
-  await expect(veiviser.tittel("Hva krever du?")).toBeVisible();
+  await expect(veiviser.tittel("Kravet")).toBeVisible();
   await veiviser.neste();
 
-  await expect(veiviser.tittel("Hvem sender brevet?")).toBeVisible();
+  await expect(veiviser.tittel("Om deg")).toBeVisible();
   await page.getByLabel("Navn").fill("Test Testesen");
   await page.getByLabel("Adresse").fill("Testveien 1");
   await page.getByLabel("Postnummer").fill("0184");

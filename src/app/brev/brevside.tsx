@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useId, useState, type ReactNode } from "react";
 import { Logo } from "@/app/logo";
+import { DownloadIcon, FileTextIcon, FolderOpenIcon, MessageSquareReplyIcon, PencilLineIcon, WrenchIcon, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BekreftKnapp, useBekreftLagring } from "./bekreft";
 import { KontaktFelt } from "./steg/kontakt";
 import { lagSteg } from "./steg/liste";
@@ -77,9 +79,27 @@ function Ramme({ children }: { children: ReactNode }) {
   );
 }
 
-type Fane = "fyll" | "brev" | "motsvar" | "mappe";
-const FANER: Fane[] = ["fyll", "brev", "motsvar", "mappe"];
-const FANE_TEKST: Record<Fane, string> = { fyll: "Fyll inn", brev: "Brev", motsvar: "Motsvar", mappe: "Saksmappe" };
+// The letter and the fill-in list are tabs (the list only on a narrow screen, where it sits beside the
+// letter otherwise); the tools for after the letter is written, and its downloads, are in a menu at
+// the right.
+type Fane = "brev" | "fyll" | "motsvar" | "mappe";
+const FANER = ["brev", "fyll"] as const;
+const VERKTOY = ["motsvar", "mappe"] as const;
+const FANE_TEKST: Record<Fane, string> = { brev: "Brev", fyll: "Endre", motsvar: "Motsvar", mappe: "Saksmappe" };
+const FANE_IKON: Record<Fane, LucideIcon> = { brev: FileTextIcon, fyll: PencilLineIcon, motsvar: MessageSquareReplyIcon, mappe: FolderOpenIcon };
+const NEDLASTINGER = [
+  { fil: "brev.pdf", tekst: "Last ned PDF", hjelp: "Last ned brevet i PDF-format" },
+  { fil: "brev.docx", tekst: "Last ned Word", hjelp: "Last ned brevet i redigerbart Word-format" },
+] as const;
+
+function FaneIkon({ fane }: { fane: Fane }) {
+  const Ikon = FANE_IKON[fane];
+  return <Ikon aria-hidden className="size-[18px] shrink-0" />;
+}
+const VERKTOY_HJELP: Record<(typeof VERKTOY)[number], string> = {
+  motsvar: "Svar når forhandleren avviser kravet",
+  mappe: "Lignende saker, forhandleren og veien videre",
+};
 
 // The letter page is where the buyer lands after buying, so there is no way back to the assessment:
 // the answers it gave are corrected in the step they belong to, and the vehicle is fixed from the start.
@@ -206,29 +226,71 @@ export function BrevSide({
 
   const brev = byggBrev(input, idag, utfylling);
   const henvisning = henvisningFor(input, idag, utfylling);
+  const iVerktoy = fane === "motsvar" || fane === "mappe";
+  const faneKlasse = (valgt: boolean) =>
+    `-mb-px flex items-center gap-2 rounded-t-md border-b-2 px-4 py-3 text-[15px] font-semibold outline-none focus-visible:bg-[#dcd8cf]/70 ${valgt ? "border-[#17263d] text-[#17263d]" : "border-transparent text-[#5b6472]"}`;
   const faner = (
-    <div role="tablist" aria-label="Sakens deler" className="flex w-full gap-1 border-b border-[#d3cec3] lg:col-span-2">
-      {FANER.map((f) => (
-        <button
-          key={f}
-          type="button"
-          role="tab"
-          id={`fane-${f}`}
-          aria-selected={fane === f}
-          aria-controls={`panel-${f}`}
-          tabIndex={fane === f ? 0 : -1}
-          onClick={() => setFane(f)}
-          onKeyDown={(e) => {
-            if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-            const annen = FANER[(FANER.indexOf(f) + (e.key === "ArrowRight" ? 1 : FANER.length - 1)) % FANER.length];
-            setFane(annen);
-            document.getElementById(`fane-${annen}`)?.focus();
-          }}
-          className={`-mb-px border-b-2 px-4 py-3 text-[15px] font-semibold lg:last:ml-auto ${f === "fyll" ? "lg:hidden" : ""} ${fane === f ? "border-[#17263d] text-[#17263d]" : "border-transparent text-[#5b6472]"}`}
-        >
-          {FANE_TEKST[f]}
-        </button>
-      ))}
+    <div className="flex w-full items-end border-b border-[#d3cec3] lg:col-span-2">
+      <div role="tablist" aria-label="Brevet" className="flex gap-1">
+        {FANER.map((f) => (
+          <button
+            key={f}
+            type="button"
+            role="tab"
+            id={`fane-${f}`}
+            aria-selected={fane === f}
+            aria-controls={`panel-${f}`}
+            // With a tool open no tab is chosen; the letter's tab is then the one Tab reaches.
+            tabIndex={fane === f || (iVerktoy && f === "brev") ? 0 : -1}
+            onClick={() => setFane(f)}
+            onKeyDown={(e) => {
+              if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+              const annen = FANER[(FANER.indexOf(f) + 1) % FANER.length];
+              const knapp = document.getElementById(`fane-${annen}`);
+              // «Endre» is hidden on a wide screen, where the list is always beside the letter.
+              if (!knapp?.getClientRects().length) return;
+              setFane(annen);
+              knapp.focus();
+            }}
+            // On a wide screen the list is beside the letter, so «Brev» is the chosen tab there for both.
+            className={`${faneKlasse(fane === f)} ${f === "fyll" ? "lg:hidden" : fane === "fyll" ? "lg:border-[#17263d] lg:text-[#17263d]" : ""}`}
+          >
+            <FaneIkon fane={f} />
+            {FANE_TEKST[f]}
+          </button>
+        ))}
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger className={`${faneKlasse(iVerktoy)} ml-auto`}>
+          {iVerktoy ? <FaneIkon fane={fane} /> : <WrenchIcon aria-hidden className="size-[18px] shrink-0" />}
+          {iVerktoy ? FANE_TEKST[fane] : "Verktøy"}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-auto min-w-[260px] p-1.5">
+          {VERKTOY.map((v) => (
+            <DropdownMenuItem key={v} onSelect={() => setFane(v)} className="items-start gap-3 px-3 py-2.5">
+              <span className="mt-0.5 text-[#17263d]">
+                <FaneIkon fane={v} />
+              </span>
+              <span className="flex flex-col gap-0.5">
+                <span className="text-[15px] font-semibold text-[#17263d]">{FANE_TEKST[v]}</span>
+                <span className="text-[13px] leading-[1.4] text-muted-foreground">{VERKTOY_HJELP[v]}</span>
+              </span>
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
+          {NEDLASTINGER.map((n) => (
+            <DropdownMenuItem key={n.fil} asChild className="items-start gap-3 px-3 py-2.5">
+              <a href={`/api/sak/${id}/dokument/${n.fil}`} download>
+                <DownloadIcon aria-hidden className="mt-0.5 size-[18px] shrink-0 text-[#17263d]" />
+                <span className="flex flex-col gap-0.5">
+                  <span className="text-[15px] font-semibold text-[#17263d]">{n.tekst}</span>
+                  <span className="text-[13px] leading-[1.4] text-muted-foreground">{n.hjelp}</span>
+                </span>
+              </a>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
   // The numbers in the saksmappe follow the answers, the claim and the dealer; ticks do not change
@@ -237,7 +299,8 @@ export function BrevSide({
 
   const fyllKolonne = (
     <section aria-labelledby="mangler-tittel" className={`flex w-full max-w-[820px] flex-col gap-4 ${fane === "fyll" ? "" : "hidden lg:flex"}`}>
-      <div className="flex items-baseline justify-between gap-3">
+      {/* On a narrow screen the tab «Endre» names the list; the heading is for the column beside the letter. */}
+      <div className="flex items-baseline justify-between gap-3 max-lg:sr-only">
         <h2 id="mangler-tittel" className="m-0 font-brev text-[22px] font-semibold leading-[1.3]">
           Fyll inn det som mangler
         </h2>
@@ -277,19 +340,11 @@ export function BrevSide({
             : "Med disse svarene gjelder ikke forbrukerkjøpsloven for kjøpet (kjøp fra en privatperson eller gjennom et firma). Brevet står som det er, men forhandleren kan avvise kravet. Sjekk at svarene fra vurderingen stemmer."}
         </p>
       )}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <a href={`/api/sak/${id}/dokument/brev.pdf`} download className="rounded-[6px] bg-[#17263d] px-[18px] py-[11px] text-[14px] font-semibold text-[#f6f4ef]">
-          Last ned PDF
-        </a>
-        <a href={`/api/sak/${id}/dokument/brev.docx`} download className="rounded-[6px] border border-[#bfbab0] bg-white px-[18px] py-[11px] text-[14px] font-semibold text-[#17263d]">
-          Last ned Word
-        </a>
-        {harPlassholder(brev) && (
-          <p role="status" className="m-0 text-[13px] leading-[1.5] text-[#6b5618]">
-            Brevet har felt som mangler (markert gult). Du kan laste det ned nå og fylle ut for hånd.
-          </p>
-        )}
-      </div>
+      {harPlassholder(brev) && (
+        <p role="status" className="m-0 text-[13px] leading-[1.5] text-[#6b5618]">
+          Brevet har felt som mangler (markert gult). Du kan laste det ned under «Verktøy» nå og fylle ut for hånd.
+        </p>
+      )}
       <Brevark brev={brev} apne={apneSteg} />
     </div>
   );
@@ -298,11 +353,11 @@ export function BrevSide({
     <Ramme>
       {faner}
       {fane === "mappe" ? (
-        <div role="tabpanel" id="panel-mappe" aria-labelledby="fane-mappe" className="flex w-full justify-center lg:col-span-2">
+        <div className="flex w-full justify-center lg:col-span-2">
           <Saksmappe sakId={id} avhengighet={avhengighet} utfylling={utfylling} henvisning={henvisning} lagre={lagre} />
         </div>
       ) : fane === "motsvar" ? (
-        <div role="tabpanel" id="panel-motsvar" aria-labelledby="fane-motsvar" className="flex w-full justify-center lg:col-span-2">
+        <div className="flex w-full justify-center lg:col-span-2">
           <Motsvar motargumenter={motsvar(beregnFaktorer(input, idag), utfylling)} />
         </div>
       ) : (

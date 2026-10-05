@@ -1,13 +1,12 @@
 "use client";
 
-import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { TID_TIL_VEDTAK } from "@/lib/vurdering/tid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/app/logo";
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { lesKjoretoy } from "@/lib/brev/utfylling";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 import {
@@ -36,6 +35,7 @@ import {
   OPPDAGET_VALG,
   type Niva,
 } from "@/lib/vurdering/typer";
+import { valgAv, Valgfelt } from "@/app/brev/felt";
 import { Bilkort, Regnr } from "./regnr";
 import {
   FEILTYPE_TEKST,
@@ -126,82 +126,6 @@ function Tittel({ tittel }: { tittel: string }) {
   );
 }
 
-// Radio group built from buttons, styled like the sketches. Default is pills; `kort` makes radio
-// cards (stacked on mobile, three across from md). `rad` puts the question and the pills on one
-// row from md, for use inside `Radliste`.
-function Valg<T extends string>({
-  id,
-  label,
-  verdier,
-  tekst,
-  valgt,
-  velg,
-  kort,
-  rad,
-  deaktivert,
-}: {
-  id: string;
-  label: string;
-  verdier: readonly T[];
-  tekst: Record<T, string>;
-  valgt: T | "";
-  velg: (v: T) => void;
-  kort?: boolean;
-  rad?: boolean;
-  deaktivert?: (v: T) => boolean;
-}) {
-  return (
-    <RadioGroupPrimitive.Root
-      value={valgt}
-      onValueChange={(v) => velg(v as T)}
-      aria-labelledby={id}
-      className={`flex flex-col gap-2.5 ${rad ? "md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6 md:border-b md:border-[#eceae4] md:py-5 md:last:border-b-0" : "md:gap-3"}`}
-    >
-      <span id={id} className={`${LABEL} ${rad ? "md:text-[16px] md:font-medium md:leading-[1.45]" : ""}`}>
-        {label}
-      </span>
-      <div className={kort ? "flex flex-col gap-2 md:grid md:grid-cols-3 md:gap-3" : "flex flex-wrap gap-2 md:justify-end"}>
-        {verdier.map((v) => {
-          const er = valgt === v;
-          return (
-            <RadioGroupPrimitive.Item
-              key={v}
-              value={v}
-              disabled={deaktivert?.(v)}
-              className={`outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-40 ${
-                kort
-                  ? `flex items-center gap-[11px] rounded-lg bg-white px-4 py-[13px] text-left font-ui text-[14px] md:gap-3 md:px-[19px] md:py-4 md:text-[15px] ${
-                      er ? "border-2 border-primary font-semibold" : "border border-input py-[14px] font-medium md:py-[17px]"
-                    }`
-                  : `whitespace-nowrap rounded-full px-[21px] py-2.5 font-ui text-[14px] ${
-                      er ? "bg-primary font-semibold text-primary-foreground" : "border border-input bg-white font-medium text-primary"
-                    }`
-              }`}
-            >
-              {kort && (
-                <span
-                  aria-hidden
-                  className={`box-border h-[17px] w-[17px] flex-none rounded-full md:h-[18px] md:w-[18px] ${
-                    er ? "border-[5px] border-primary md:border-[5.5px]" : "border-[1.5px] border-[#8a94a3]"
-                  }`}
-                />
-              )}
-              {tekst[v]}
-            </RadioGroupPrimitive.Item>
-          );
-        })}
-      </div>
-    </RadioGroupPrimitive.Root>
-  );
-}
-
-// The question rows sit in a white card from md; on mobile they are just stacked.
-function Radliste({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-5 md:gap-0 md:rounded-lg md:border md:border-[#dcd8cf] md:bg-white md:px-7 md:py-2">{children}</div>
-  );
-}
-
 // Points for the case get a green plus, points against it a red minus.
 const VEKT_TEGN = {
   for: { tegn: "+", farge: "oklch(0.42 0.1 160)", bakgrunn: "oklch(0.95 0.04 160)", tekst: "Taler for saken" },
@@ -269,12 +193,13 @@ function lagretKjoretoy(): Kjoretoy | null {
   }
 }
 
-function Vipps({ tekst, onClick, disabled }: { tekst: string; onClick: () => void; disabled: boolean }) {
+function Vipps({ tekst, onClick, disabled, tabIndex }: { tekst: string; onClick: () => void; disabled: boolean; tabIndex?: number }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
+      tabIndex={tabIndex}
       className="flex items-center justify-center gap-2 rounded-full bg-[#ff5b24] p-4 font-ui text-[16px] font-semibold text-white shadow-[0_1px_0_rgba(0,0,0,.12)] md:text-[17px]"
     >
       <span>{tekst}</span>
@@ -304,6 +229,7 @@ function Neste({
   kjoretoy: Kjoretoy | null | undefined;
   velgBil: () => void;
 }) {
+  const id = useId();
   const punkter = [BREV_MED_LIGNENDE, ...NESTE_PUNKTER];
   const [apner, setApner] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
@@ -317,59 +243,94 @@ function Neste({
       setApner(false);
     }
   }
+
+  // On a phone the card comes after the whole assessment, so a bar with the Vipps button stays at the
+  // bottom of the screen until the card's own button reaches it. Never both at once.
+  const kortKnapp = useRef<HTMLDivElement>(null);
+  const linje = useRef<HTMLDivElement>(null);
+  const [kortUnder, setKortUnder] = useState(false);
+  useEffect(() => {
+    const el = kortKnapp.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([e]) => setKortUnder(!e.isIntersecting && e.boundingClientRect.top > 0), {
+      rootMargin: `0px 0px -${linje.current?.offsetHeight ?? 0}px 0px`,
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const visLinje = kortUnder && !!kjoretoy;
+
   return (
-    <aside className="flex flex-col gap-3 bg-[#17263d] px-6 pb-6 pt-5 text-[#f6f4ef] md:sticky md:top-6 md:gap-5 md:self-start md:rounded-lg md:p-9">
-      <div className="font-ui text-[12px] font-medium uppercase tracking-[.04em] text-[#8a9bb5] md:text-[13px]">Neste steg</div>
-      <div className="flex items-baseline justify-between gap-4">
-        <h2 className="m-0 font-brev text-[17px] font-semibold leading-[1.3] md:text-[28px] md:leading-[1.2]">
-          Få reklamasjonsbrevet
-        </h2>
-        <span className="font-brev text-[20px] font-semibold md:hidden">{PRIS_NOK} kr</span>
-      </div>
-      <ul className="m-0 flex list-none flex-col gap-2 border-b border-[rgba(246,244,239,.18)] p-0 pb-3.5 text-[13px] leading-[1.5] text-[#c9d2df] md:gap-2.5 md:pb-3.5 md:text-[14px]">
-        {punkter.map((p) => (
-          <li key={p} className="flex items-baseline gap-2.5">
-            <span aria-hidden className="text-[#8a9bb5]">
-              ✓
-            </span>
-            <span>{p}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="hidden items-baseline justify-between md:flex">
-        <span className="font-ui text-[16px] font-semibold">Totalt</span>
-        <span className="font-brev text-[28px] font-semibold">{PRIS_NOK} kr</span>
-      </div>
-      {/* The buyer sees which car the letter is for before paying, and cannot change it here. A shared
-          link or an emptied tab has the answers but not the car: it is chosen in the first step. */}
-      {kjoretoy && <Bilkort kjoretoy={kjoretoy} />}
-      {kjoretoy === null && (
-        <div role="group" aria-label="Bilen mangler" className="flex flex-col items-start gap-2.5 rounded-[6px] border border-[rgba(246,244,239,.35)] p-4 text-[14px] leading-[1.5]">
-          <span>Brevet skrives for én bil. Legg inn registreringsnummeret først.</span>
-          <Button type="button" variant="secondary" onClick={velgBil}>
-            Legg inn registreringsnummer
-          </Button>
+    <>
+      <aside aria-labelledby={`${id}-tittel`} className="flex flex-col gap-3 bg-[#17263d] px-6 pb-6 pt-5 text-[#f6f4ef] md:sticky md:top-6 md:gap-5 md:self-start md:rounded-lg md:p-9">
+        <div className="font-ui text-[12px] font-medium uppercase tracking-[.04em] text-[#8a9bb5] md:text-[13px]">Neste steg</div>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 id={`${id}-tittel`} className="m-0 font-brev text-[17px] font-semibold leading-[1.3] md:text-[28px] md:leading-[1.2]">
+            Få reklamasjonsbrevet
+          </h2>
+          <span className="font-brev text-[20px] font-semibold md:hidden">{PRIS_NOK} kr</span>
         </div>
-      )}
-      <Vipps tekst="Betal med" onClick={apne} disabled={apner || !kjoretoy} />
-      <Button
-        type="button"
-        variant="outline"
-        onClick={apne}
-        disabled={apner || !kjoretoy}
-        className="h-auto border-[rgba(246,244,239,.45)] bg-transparent p-3.5 font-ui text-[15px] text-[#f6f4ef] hover:bg-white/10 hover:text-[#f6f4ef] disabled:text-[#f6f4ef] disabled:opacity-50 md:p-[15px]"
-      >
-        Betal med kort
-      </Button>
-      {feil && (
-        <p role="alert" className="m-0 font-ui text-[13px] leading-[1.5] text-[#ffb4a6]">
-          {feil}
+        <ul className="m-0 flex list-none flex-col gap-2 border-b border-[rgba(246,244,239,.18)] p-0 pb-3.5 text-[13px] leading-[1.5] text-[#c9d2df] md:gap-2.5 md:pb-3.5 md:text-[14px]">
+          {punkter.map((p) => (
+            <li key={p} className="flex items-baseline gap-2.5">
+              <span aria-hidden className="text-[#8a9bb5]">
+                ✓
+              </span>
+              <span>{p}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden items-baseline justify-between md:flex">
+          <span className="font-ui text-[16px] font-semibold">Totalt</span>
+          <span className="font-brev text-[28px] font-semibold">{PRIS_NOK} kr</span>
+        </div>
+        {/* The buyer sees which car the letter is for before paying, and cannot change it here. A shared
+            link or an emptied tab has the answers but not the car: it is chosen in the first step. */}
+        {kjoretoy && <Bilkort kjoretoy={kjoretoy} />}
+        {kjoretoy === null && (
+          <div role="group" aria-label="Bilen mangler" className="flex flex-col items-start gap-2.5 rounded-[6px] border border-[rgba(246,244,239,.35)] p-4 text-[14px] leading-[1.5]">
+            <span>Brevet skrives for én bil. Legg inn registreringsnummeret først.</span>
+            <Button type="button" variant="secondary" onClick={velgBil}>
+              Legg inn registreringsnummer
+            </Button>
+          </div>
+        )}
+        <div ref={kortKnapp} className="flex flex-col">
+          <Vipps tekst="Betal med" onClick={apne} disabled={apner || !kjoretoy} />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={apne}
+          disabled={apner || !kjoretoy}
+          className="h-auto border-[rgba(246,244,239,.45)] bg-transparent p-3.5 font-ui text-[15px] text-[#f6f4ef] hover:bg-white/10 hover:text-[#f6f4ef] disabled:text-[#f6f4ef] disabled:opacity-50 md:p-[15px]"
+        >
+          Betal med kort
+        </Button>
+        {feil && (
+          <p role="alert" className="m-0 font-ui text-[13px] leading-[1.5] text-[#ffb4a6]">
+            {feil}
+          </p>
+        )}
+        <p className="m-0 text-center font-ui text-[12px] text-[#aab6c7] md:text-left md:text-[13px] md:leading-[1.55]">
+          Engangsbeløp, ingen abonnement.<span className="hidden md:inline"> {TID_TIL_VEDTAK}</span>
         </p>
-      )}
-      <p className="m-0 text-center font-ui text-[12px] text-[#aab6c7] md:text-left md:text-[13px] md:leading-[1.55]">
-        Engangsbeløp, ingen abonnement.<span className="hidden md:inline"> {TID_TIL_VEDTAK}</span>
-      </p>
-    </aside>
+      </aside>
+      {/* Hidden rather than removed while the card is in view, so it can slide; `inert` keeps it out of
+          reach for keyboard and screen reader then. */}
+      <div
+        ref={linje}
+        inert={!visLinje}
+        aria-hidden={!visLinje}
+        className={`fixed inset-x-0 bottom-0 z-10 flex flex-col gap-2.5 border-t border-[#dcd8cf] bg-[#f6f4ef] px-6 pb-[max(16px,env(safe-area-inset-bottom))] pt-3 motion-safe:transition-[translate,box-shadow] motion-safe:duration-200 md:hidden ${visLinje ? "translate-y-0 shadow-[0_-4px_16px_rgba(23,38,61,.08)]" : "translate-y-full"}`}
+      >
+        <p className="m-0 text-center font-ui text-[15px] text-[#17263d]">
+          Få hele brevet for kun <span className="font-semibold">{PRIS_NOK} kr</span>
+        </p>
+        <Vipps tekst="Betal med" onClick={apne} disabled={apner || !kjoretoy} tabIndex={visLinje ? undefined : -1} />
+        {feil && <p className="m-0 text-center font-ui text-[13px] leading-[1.5] text-[#a23b2a]">{feil}</p>}
+      </div>
+    </>
   );
 }
 
@@ -740,26 +701,10 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
             <div className={INNHOLD}>
               <Regnr kjoretoy={kjoretoy ?? null} funnet={velgKjoretoy} />
               <div className="flex flex-col gap-2">
-                <Valg
-                  id={`${id}-kjopalder`}
-                  label={SPORSMAL.kjopAlder}
-                  verdier={KJOPSALDER_VALG}
-                  tekst={KJOPSALDER_TEKST}
-                  valgt={d.kjopAlder}
-                  velg={velgKjopsalder}
-                  kort
-                />
+                <Valgfelt label={SPORSMAL.kjopAlder} valg={valgAv(KJOPSALDER_VALG, KJOPSALDER_TEKST)} verdi={d.kjopAlder} velg={velgKjopsalder} />
                 {datoFraRegister && <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472]">Valgt ut fra Statens vegvesen: dagen bilen ble registrert på deg. Velg et annet alternativ hvis det ikke stemmer.</p>}
               </div>
-              <Valg
-                id={`${id}-kjopsform`}
-                label={SPORSMAL.kjopsform}
-                verdier={KJOPSFORM_VALG}
-                tekst={KJOPSFORM_TEKST}
-                valgt={d.kjopsform}
-                velg={(v) => sett("kjopsform", v)}
-                kort
-              />
+              <Valgfelt label={SPORSMAL.kjopsform} valg={valgAv(KJOPSFORM_VALG, KJOPSFORM_TEKST)} verdi={d.kjopsform} velg={(v) => sett("kjopsform", v)} />
             </div>
           </>
         )}
@@ -787,15 +732,11 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
                 </div>
               </div>
               <div className="flex flex-col gap-3">
-                <Valg
-                  id={`${id}-oppdaget`}
+                <Valgfelt
                   label={SPORSMAL.oppdaget}
-                  verdier={OPPDAGET_VALG}
-                  tekst={OPPDAGET_TEKST}
-                  valgt={d.oppdaget}
+                  valg={OPPDAGET_VALG.map((v) => ({ verdi: v, tekst: OPPDAGET_TEKST[v], deaktivert: !oppdagetMulig(d, v) }))}
+                  verdi={d.oppdaget}
                   velg={(v) => sett("oppdaget", v)}
-                  kort
-                  deaktivert={(v) => !oppdagetMulig(d, v)}
                 />
                 {/* The period turns on 1 January, so the year alone decides it. */}
                 {d.kjopAlder && (
@@ -812,34 +753,11 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
           <>
             <div className={INNHOLD}>
               {sporOmOpplysning(d) && (
-                <Valg
-                  id={`${id}-opplyst`}
-                  label={SPORSMAL.opplyst}
-                  verdier={OPPLYST_VALG}
-                  tekst={OPPLYST_TEKST}
-                  valgt={d.opplystForKjop}
-                  velg={(v) => sett("opplystForKjop", v)}
-                  kort
-                />
+                <Valgfelt label={SPORSMAL.opplyst} valg={valgAv(OPPLYST_VALG, OPPLYST_TEKST)} verdi={d.opplystForKjop} velg={(v) => sett("opplystForKjop", v)} />
               )}
-              <Valg
-                id={`${id}-kontakt`}
-                label={SPORSMAL.kontakt}
-                verdier={KONTAKT_VALG}
-                tekst={KONTAKT_TEKST}
-                valgt={d.kontakt}
-                velg={(v) => sett("kontakt", v)}
-                kort
-              />
+              <Valgfelt label={SPORSMAL.kontakt} valg={valgAv(KONTAKT_VALG, KONTAKT_TEKST)} verdi={d.kontakt} velg={(v) => sett("kontakt", v)} />
               {sporOmFemarsfrist(d) && (
-                <Valg
-                  id={`${id}-reklamert`}
-                  label={SPORSMAL.reklamert}
-                  verdier={JA_NEI}
-                  tekst={JA_NEI_TEKST}
-                  valgt={d.reklamertInnenFemAr}
-                  velg={(v) => sett("reklamertInnenFemAr", v)}
-                />
+                <Valgfelt label={SPORSMAL.reklamert} valg={valgAv(JA_NEI, JA_NEI_TEKST)} verdi={d.reklamertInnenFemAr} velg={(v) => sett("reklamertInnenFemAr", v)} />
               )}
             </div>
           </>
@@ -848,36 +766,18 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
         {steg === 4 && (
           <>
             <div className={INNHOLD}>
-              <Radliste>
-                <Valg
-                  id={`${id}-rapport`}
-                  label={SPORSMAL.rapport}
-                  verdier={JA_NEI}
-                  tekst={JA_NEI_TEKST}
-                  valgt={d.verkstedrapport}
-                  velg={(v) => sett("verkstedrapport", v)}
-                  rad
-                />
-                {d.verkstedrapport === "ja" && (
-                  <Valg
-                    id={`${id}-rapport-sier`}
-                    label={SPORSMAL.rapportSier}
-                    verdier={JA_NEI}
-                    tekst={JA_NEI_TEKST}
-                    valgt={d.rapportSierForKjop}
-                    velg={(v) => sett("rapportSierForKjop", v)}
-                    rad
-                  />
-                )}
-              </Radliste>
-              <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472] md:-mt-4">
-                En rapport som peker bakover i tid er det sterkeste beviset ditt. Du kan laste den opp etter vurderingen.
+              <Valgfelt label={SPORSMAL.rapport} valg={valgAv(JA_NEI, JA_NEI_TEKST)} verdi={d.verkstedrapport} velg={(v) => sett("verkstedrapport", v)} />
+              {d.verkstedrapport === "ja" && (
+                <Valgfelt label={SPORSMAL.rapportSier} valg={valgAv(JA_NEI, JA_NEI_TEKST)} verdi={d.rapportSierForKjop} velg={(v) => sett("rapportSierForKjop", v)} />
+              )}
+              <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472]">
+                En rapport som peker bakover i tid er det sterkeste beviset ditt. Etter vurderingen kan du gjengi hva den sier i brevet.
               </p>
             </div>
           </>
         )}
 
-        <div className="mt-auto flex flex-col gap-3 p-6 md:mt-0 md:flex-row md:items-center md:justify-between md:gap-6 md:border-t md:border-[#dcd8cf] md:p-0 md:pt-6">
+        <div className="sticky bottom-0 z-10 mt-auto flex flex-col gap-3 border-t border-[#dcd8cf] bg-[#f6f4ef] px-6 pb-[max(16px,env(safe-area-inset-bottom))] pt-4 md:static md:mt-0 md:flex-row md:items-center md:justify-between md:gap-6 md:border-t md:border-[#dcd8cf] md:p-0 md:pt-6">
           <p className="m-0 hidden text-[13px] text-[#5b6472] md:block">Svarene lagres ikke før du går videre</p>
           <div className="flex flex-col gap-3 md:items-end">
             {feil && (

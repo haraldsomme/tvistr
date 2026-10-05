@@ -24,6 +24,9 @@ export type Utfylling = {
   reklamasjon?: Reklamasjon;
   krav?: Krav;
   vedlegg?: Vedlegg[];
+  // What the report says about the cause and when the defect arose; only when the buyer answered that
+  // the report puts the defect before the purchase. Quoted in the letter as written.
+  rapport?: Rapport;
   avsender?: Avsender;
   forbehold?: Forbehold;
   sjekket?: SjekkNokkel[];
@@ -63,6 +66,11 @@ export const UTGIFT_TYPER = ["verksted", "tauing", "leiebil", "annet"] as const;
 export type Utgift = { type: (typeof UTGIFT_TYPER)[number]; belopNok: number; beskrivelse?: string };
 export const UTGIFT_BESKRIVELSE_MAKS = 80;
 export type Krav = { type?: (typeof KRAV_TYPER)[number]; utbedringNok?: number; utgifter: Utgift[] };
+
+// Who wrote the workshop or condition report (a firm), its date, and the buyer's transcript of what it
+// says about the cause and the time. Typed by the buyer, never by the language model.
+export type Rapport = { fra: string; dato: string; sitat: string };
+export const RAPPORT_SITAT_MAKS = 500;
 
 export const VEDLEGG = ["kjopekontrakt", "verkstedrapport", "bilder", "annonse", "meldinger", "kvitteringer"] as const;
 export type Vedlegg = (typeof VEDLEGG)[number];
@@ -208,6 +216,13 @@ function lesOpplysning(v: unknown): Opplysning | null {
   return t ? { kilde: v.kilde, tekst: t } : null;
 }
 
+function lesRapport(v: unknown, k: Kontekst): Rapport | null {
+  if (!erObjekt(v) || !etterKjop(v.dato, k)) return null;
+  const fra = tekst(v.fra, 100, 2);
+  const sitat = tekst(v.sitat, RAPPORT_SITAT_MAKS, 5);
+  return fra && sitat ? { fra, dato: v.dato, sitat } : null;
+}
+
 function lesReklamasjon(v: unknown, k: Kontekst): Reklamasjon | null {
   if (!erObjekt(v) || !etterKjop(v.dato, k) || !blant(REKLAMASJON_MATER, v.mate)) return null;
   if (v.forsok === undefined) return { dato: v.dato, mate: v.mate };
@@ -280,6 +295,7 @@ const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } 
   reklamasjon: lesReklamasjon,
   krav: lesKrav,
   vedlegg: lesVedlegg,
+  rapport: lesRapport,
   avsender: lesAvsender,
   forbehold: lesForbehold,
   sjekket: lesSjekket,
@@ -308,7 +324,7 @@ export function lesEndring(raw: unknown, kontekst: Kontekst): { ok: true; endrin
 // purchase date (or after today) can no longer be true, so it is dropped and the step is asked again.
 export function tilpassTilSvar(u: Utfylling, svar: Pick<Innsending, "kjopsdato">, idag: string): Utfylling {
   const ny: Utfylling = { ...u };
-  for (const felt of ["feilen", "reklamasjon"] as const) {
+  for (const felt of ["feilen", "reklamasjon", "rapport"] as const) {
     const dato = ny[felt]?.dato;
     if (dato !== undefined && !(dato >= svar.kjopsdato && dato <= idag)) delete ny[felt];
   }

@@ -64,7 +64,7 @@ export function ForKjopetFelt({
             <FieldLabel htmlFor={`${id}-tekst`}>Hva ble opplyst?</FieldLabel>
             <Textarea id={`${id}-tekst`} aria-describedby={`${id}-hjelp`} value={tekst} onChange={(e) => setTekst(e.target.value.slice(0, 500))} placeholder="Ny clutch i 2025" className="min-h-[76px]" />
             <FieldDescription id={`${id}-hjelp`} className={HJELP}>
-              Skriv det så ordrett du kan. Det står i anførselstegn i brevet.
+              Skriv så ordrett du kan, dette vil stå sitert i anførselstegn i brevet.
             </FieldDescription>
           </Field>
         </>

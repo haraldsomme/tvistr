@@ -8,7 +8,7 @@ import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import { Button } from "@/components/ui/button";
 import { useBekreftLagring } from "../bekreft";
-import { VeiviserKontekst } from "../felt";
+import { VEIVISER_KNAPPER, VeiviserKontekst } from "../felt";
 import { Intervju, type IntervjuUtkast } from "../feilen/intervju";
 import { lagSteg, type StegId } from "../steg/liste";
 
@@ -25,7 +25,7 @@ function Ramme({ children }: { children: ReactNode }) {
       <div className="flex items-center border-b border-[#d3cec3] bg-[#f6f4ef] px-6 pb-[18px] pt-[52px] md:px-16 md:py-[22px]">
         <Logo liten />
       </div>
-      <main className="mx-auto flex w-full max-w-[880px] flex-col gap-6 px-4 pb-12 pt-6 md:px-16 md:pb-[72px] md:pt-12">{children}</main>
+      <main className="mx-auto flex w-full max-w-[880px] flex-col gap-6 px-4 pb-32 pt-6 md:px-16 md:pb-[72px] md:pt-12">{children}</main>
     </div>
   );
 }
@@ -131,9 +131,11 @@ export function Veiviser({
         <p className="m-0 max-w-[640px] text-[16px] leading-[1.6] text-[#3d4757]">
           Vi stiller deg noen spørsmål om kjøpet, feilen og hva som har skjedd siden. Svarene blir til brevet, så ta deg god tid og svar så presist du kan. Har du kjøpekontrakten, annonsen og meldingene med forhandleren for hånden, går det raskere. Det tar omtrent 10–15 minutter. Det du ikke vet nå, kan du hoppe over og fylle ut senere.
         </p>
-        <Button type="button" onClick={() => gaTil(steg[0].id)} className="self-start">
-          Start
-        </Button>
+        <div className={VEIVISER_KNAPPER}>
+          <Button type="button" onClick={() => gaTil(steg[0].id)} className="w-full md:w-auto">
+            Start
+          </Button>
+        </div>
       </Ramme>
     );
   }
@@ -181,7 +183,7 @@ export function Veiviser({
           </div>
         )}
         <h1 ref={overskrift} tabIndex={-1} id={`${idBase}-${aktivt.id}`} className="m-0 font-brev text-[28px] font-semibold leading-[1.2] outline-none md:text-[34px]">
-          {aktivt.sporsmal}
+          {aktivt.tittel}
         </h1>
       </div>
       <section aria-labelledby={`${idBase}-${aktivt.id}`} className="flex flex-col gap-4 rounded-lg border border-[#dcd8cf] bg-white p-5 md:p-7" key={aktivt.id}>

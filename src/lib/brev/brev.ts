@@ -142,6 +142,9 @@ const OPPLYSNING_KILDE: Record<Opplysning["kilde"], string> = {
   muntlig: "Muntlig før kjøpet",
 };
 
+// A quote ends inside the sentence that carries it, so its own full stop goes.
+export const utenSluttegn = (t: string) => t.replace(/[.!?]+$/, "");
+
 function mangelOgBevisbyrde(input: KlageInput, idag: string, u: Utfylling): string {
   const f = beregnFaktorer(input, idag);
   const setninger = ["Bilen har etter dette en mangel etter forbrukerkjøpsloven § 16."];
@@ -155,18 +158,22 @@ function mangelOgBevisbyrde(input: KlageInput, idag: string, u: Utfylling): stri
   }
   // A report that points backward in time is evidence either way: inside the presumption it backs it
   // up, outside it is what the buyer has instead of it (§ 18 first paragraph).
+  // When the buyer has written down what the report says, the letter names it and quotes it as written.
   if (f.rapportSierForKjop === true) {
+    const r = u.rapport;
+    const rapport = r ? `En rapport fra ${r.fra} datert ${norskDato(r.dato)}` : "En verksted- eller tilstandsrapport";
     setninger.push(
       f.presumsjon
-        ? "En verksted- eller tilstandsrapport støtter også at feilen var der allerede da jeg overtok bilen."
-        : "En verksted- eller tilstandsrapport sier at feilen sannsynligvis var til stede før jeg overtok bilen, jf. § 18 første ledd.",
+        ? `${rapport} støtter også at feilen var der allerede da jeg overtok bilen.`
+        : `${rapport} sier at feilen sannsynligvis var til stede før jeg overtok bilen, jf. § 18 første ledd.`,
     );
+    if (r) setninger.push(`Der står det: «${utenSluttegn(r.sitat)}».`);
   }
   // The buyer answered that the ad or the dealer said something that was not true.
   if (input.feilen.feilOpplysning !== "nei") {
     setninger.push(
       u.opplysning
-        ? `${OPPLYSNING_KILDE[u.opplysning.kilde]} ble det opplyst følgende om bilen: «${u.opplysning.tekst.replace(/[.!?]+$/, "")}». Dette stemmer ikke, og bilen svarer dermed ikke til opplysningene dere har gitt, jf. § 16.`
+        ? `${OPPLYSNING_KILDE[u.opplysning.kilde]} ble det opplyst følgende om bilen: «${utenSluttegn(u.opplysning.tekst)}». Dette stemmer ikke, og bilen svarer dermed ikke til opplysningene dere har gitt, jf. § 16.`
         : OPPLYSNING_PLASSHOLDER,
     );
   }

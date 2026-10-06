@@ -6,11 +6,13 @@ import { Logo } from "@/app/logo";
 import { DownloadIcon, FileTextIcon, FolderOpenIcon, MessageSquareReplyIcon, PencilLineIcon, WrenchIcon, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { BekreftKnapp, useBekreftLagring } from "./bekreft";
+import { AlertDialog } from "@/components/ui/alert-dialog";
+import { BekreftKnapp, Dialoginnhold, useBekreftLagring } from "./bekreft";
 import { KontaktFelt } from "./steg/kontakt";
 import { lagSteg } from "./steg/liste";
 import { byggBrev, harPlassholder, henvisningFor } from "@/lib/brev/brev";
 import { motsvar } from "@/lib/brev/motsvar";
+import { sjekkBrev, type Advarsel } from "@/lib/brev/sjekk";
 import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { beregnFaktorer } from "@/lib/vurdering/faktorer";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
@@ -64,6 +66,49 @@ function SlettSak({ slett }: { slett: () => Promise<void> }) {
         Slett saken
       </Button>
     </BekreftKnapp>
+  );
+}
+
+// A demand for interest sent only by e-mail counts only if the dealer has accepted e-mail (forsinkelsesrenteloven § 2).
+const SENDING = "Send brevet som rekommandert brev, og gjerne også på e-post, slik at du kan dokumentere at det er sendt. Et krav om rente sendt bare på e-post gjelder bare hvis forhandleren har godtatt e-post. Behold en kopi.";
+
+// Starts a download of one of the letter's files.
+function lastNed(href: string) {
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = "";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+// What to check before the letter is sent: what is still yellow, and the weaknesses that leave no yellow
+// field (`sjekkBrev`), the serious ones first, each with a way to the step that fixes it.
+function SjekkFoerSending({ plassholdere, advarsler, apne }: { plassholdere: boolean; advarsler: Advarsel[]; apne: (steg: string) => void }) {
+  if (!plassholdere && advarsler.length === 0) return null;
+  const hard = plassholdere || advarsler.some((a) => a.alvor === "hard");
+  return (
+    <section
+      aria-labelledby="sjekk-tittel"
+      className={`flex flex-col gap-2 rounded-lg border px-[18px] py-3.5 ${hard ? "border-[oklch(0.72_0.11_85)] bg-[oklch(0.96_0.07_85)]" : "border-[#dcd8cf] bg-white"}`}
+    >
+      <h2 id="sjekk-tittel" className="m-0 text-[15px] font-semibold text-[#17263d]">
+        Sjekk før du sender
+      </h2>
+      <ul className="m-0 flex list-disc flex-col gap-2 pl-5 text-[13px] leading-[1.5] text-[#3d4757]">
+        {plassholdere && <li className="font-semibold text-[#6b5618]">Brevet har felt som mangler (markert gult). Trykk på et gult felt for å fylle det ut.</li>}
+        {advarsler.map((a) => (
+          <li key={a.id} className={a.alvor === "hard" ? "font-semibold text-[#6b5618]" : undefined}>
+            {a.tekst}{" "}
+            {a.steg && (
+              <Button type="button" variant="link" onClick={() => apne(a.steg!)} className="h-auto p-0 align-baseline text-[13px]">
+                Rett dette
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -123,6 +168,8 @@ export function BrevSide({
   const alleredeFerdig = parsed0.ok && !harPlassholder(byggBrev(parsed0.input, idag, startUtfylling));
   const [fane, setFane] = useState<Fane>(alleredeFerdig ? "brev" : "fyll");
   const [feil, setFeil] = useState<string | null>(null);
+  // A download waiting for the buyer to confirm it, while the letter still has something to fix.
+  const [nedlasting, setNedlasting] = useState<string | null>(null);
   const router = useRouter();
   const idBase = useId();
   // The defect is described in the wizard, which comes back to the letter when it is saved.
@@ -204,7 +251,7 @@ export function BrevSide({
           </p>
           <ol className="m-0 list-none divide-y divide-[#eceae4] rounded-lg border border-[#dcd8cf] bg-white p-0">
             <Steg id="kontakt" nr={1} tittel="Kontakt med forhandleren" tittelId={`${idBase}-kontakt`} status="aktiv">
-              <KontaktFelt svar={svar} idag={idag} retting={retting} reklamasjon={utfylling.reklamasjon} aktiv lagre={lagre} />
+              <KontaktFelt svar={svar} idag={idag} retting={retting} reklamasjon={utfylling.reklamasjon} reparasjon={utfylling.reparasjon} aktiv lagre={lagre} />
             </Steg>
           </ol>
           {feilmelding}
@@ -226,6 +273,10 @@ export function BrevSide({
 
   const brev = byggBrev(input, idag, utfylling);
   const henvisning = henvisningFor(input, idag, utfylling);
+  const plassholdere = harPlassholder(brev);
+  const advarsler = sjekkBrev(input, utfylling, idag);
+  const harde = advarsler.filter((a) => a.alvor === "hard");
+  const maBekrefte = plassholdere || harde.length > 0;
   const iVerktoy = fane === "motsvar" || fane === "mappe";
   const faneKlasse = (valgt: boolean) =>
     `-mb-px flex items-center gap-2 rounded-t-md border-b-2 px-4 py-3 text-[15px] font-semibold outline-none focus-visible:bg-[#dcd8cf]/70 ${valgt ? "border-[#17263d] text-[#17263d]" : "border-transparent text-[#5b6472]"}`;
@@ -278,17 +329,18 @@ export function BrevSide({
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
-          {NEDLASTINGER.map((n) => (
-            <DropdownMenuItem key={n.fil} asChild className="items-start gap-3 px-3 py-2.5">
-              <a href={`/api/sak/${id}/dokument/${n.fil}`} download>
+          {NEDLASTINGER.map((n) => {
+            const href = `/api/sak/${id}/dokument/${n.fil}`;
+            return (
+              <DropdownMenuItem key={n.fil} onSelect={() => (maBekrefte ? setNedlasting(href) : lastNed(href))} className="items-start gap-3 px-3 py-2.5">
                 <DownloadIcon aria-hidden className="mt-0.5 size-[18px] shrink-0 text-[#17263d]" />
                 <span className="flex flex-col gap-0.5">
                   <span className="text-[15px] font-semibold text-[#17263d]">{n.tekst}</span>
                   <span className="text-[13px] leading-[1.4] text-muted-foreground">{n.hjelp}</span>
                 </span>
-              </a>
-            </DropdownMenuItem>
-          ))}
+              </DropdownMenuItem>
+            );
+          })}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -340,12 +392,9 @@ export function BrevSide({
             : "Med disse svarene gjelder ikke forbrukerkjøpsloven for kjøpet (kjøp fra en privatperson eller gjennom et firma). Brevet står som det er, men forhandleren kan avvise kravet. Sjekk at svarene fra vurderingen stemmer."}
         </p>
       )}
-      {harPlassholder(brev) && (
-        <p role="status" className="m-0 text-[13px] leading-[1.5] text-[#6b5618]">
-          Brevet har felt som mangler (markert gult). Du kan laste det ned under «Verktøy» nå og fylle ut for hånd.
-        </p>
-      )}
+      <SjekkFoerSending plassholdere={plassholdere} advarsler={advarsler} apne={apneSteg} />
       <Brevark brev={brev} apne={apneSteg} />
+      <p className="m-0 text-[13px] leading-[1.55] text-[#5b6472]">{SENDING}</p>
     </div>
   );
 
@@ -369,6 +418,30 @@ export function BrevSide({
         </>
       )}
       {bekreft.dialog}
+      <AlertDialog open={nedlasting !== null} onOpenChange={(apen) => !apen && setNedlasting(null)}>
+        {nedlasting && (
+          <Dialoginnhold
+            tittel="Brevet er ikke klart"
+            tekst={
+              <>
+                <ul className="m-0 flex list-disc flex-col gap-1 pl-5">
+                  {plassholdere && <li>Brevet har felt som mangler (markert gult). De står med hakeparenteser i filen.</li>}
+                  {harde.map((a) => (
+                    <li key={a.id}>{a.tekst}</li>
+                  ))}
+                </ul>
+                <p className="m-0 mt-2">Du kan laste ned brevet og rette det for hånd, men et brev med feil eller hull kan forhandleren bruke mot deg.</p>
+              </>
+            }
+            handling="Last ned likevel"
+            arbeider={false}
+            bekreft={() => {
+              lastNed(nedlasting);
+              setNedlasting(null);
+            }}
+          />
+        )}
+      </AlertDialog>
     </Ramme>
   );
 }

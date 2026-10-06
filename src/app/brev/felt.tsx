@@ -8,6 +8,9 @@ import {
   MAKS_UTGIFTER,
   UTGIFT_BESKRIVELSE_MAKS,
   UTGIFT_TYPER,
+  gyldigKontonummer,
+  kontonummerGruppert,
+  kontonummerSiffer,
   type Avsender,
   type Krav,
   type Lagring,
@@ -343,17 +346,56 @@ export function KravFelt({
   );
 }
 
-// The sender of the letter: the buyer's name and address.
+// The sender of the letter: the buyer's name and address, and how to reach and pay them.
 export function AvsenderFelt({ verdi, aktiv, lagre, avbryt }: Felles & { verdi: Avsender | undefined }) {
-  const [a, setA] = useState({ navn: verdi?.navn ?? "", adresse: verdi?.adresse ?? "", postnummer: verdi?.postnummer ?? "", poststed: verdi?.poststed ?? "", telefon: verdi?.telefon ?? "" });
+  const [a, setA] = useState({
+    navn: verdi?.navn ?? "",
+    adresse: verdi?.adresse ?? "",
+    postnummer: verdi?.postnummer ?? "",
+    poststed: verdi?.poststed ?? "",
+    telefon: verdi?.telefon ?? "",
+    epost: verdi?.epost ?? "",
+    kontonummer: verdi?.kontonummer ?? "",
+  });
   const sett = (felt: keyof typeof a) => (e: React.ChangeEvent<HTMLInputElement>) => setA((x) => ({ ...x, [felt]: e.target.value }));
   if (!aktiv) {
     if (!verdi) return null;
-    return <Sammendrag linjer={[verdi.navn, `${verdi.adresse}, ${verdi.postnummer} ${verdi.poststed}`, verdi.telefon ? `Tlf. ${verdi.telefon}` : null]} />;
+    return (
+      <Sammendrag
+        linjer={[
+          verdi.navn,
+          `${verdi.adresse}, ${verdi.postnummer} ${verdi.poststed}`,
+          verdi.telefon ? `Tlf. ${verdi.telefon}` : null,
+          verdi.epost ? verdi.epost : null,
+          verdi.kontonummer ? `Konto ${kontonummerGruppert(verdi.kontonummer)}` : null,
+        ]}
+      />
+    );
   }
-  const klar = a.navn.trim().length >= 2 && a.adresse.trim().length >= 2 && /^\d{4}$/.test(a.postnummer) && a.poststed.trim() !== "" && (a.telefon.trim() === "" || /^\+?[\d ]{8,16}$/.test(a.telefon.trim()));
+  const epostOk = a.epost.trim() === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.epost.trim());
+  const kontoOk = a.kontonummer === "" || gyldigKontonummer(a.kontonummer);
+  const klar =
+    a.navn.trim().length >= 2 &&
+    a.adresse.trim().length >= 2 &&
+    /^\d{4}$/.test(a.postnummer) &&
+    a.poststed.trim() !== "" &&
+    (a.telefon.trim() === "" || /^\+?[\d ]{8,16}$/.test(a.telefon.trim())) &&
+    epostOk &&
+    kontoOk;
+  const send = () =>
+    lagre({
+      avsender: {
+        navn: a.navn,
+        adresse: a.adresse,
+        postnummer: a.postnummer,
+        poststed: a.poststed,
+        ...(a.telefon.trim() && { telefon: a.telefon }),
+        ...(a.epost.trim() && { epost: a.epost.trim() }),
+        ...(a.kontonummer && { kontonummer: a.kontonummer }),
+      },
+    });
   return (
-    <Skjema klar={klar} send={() => lagre({ avsender: { navn: a.navn, adresse: a.adresse, postnummer: a.postnummer, poststed: a.poststed, ...(a.telefon.trim() && { telefon: a.telefon }) } })} avbryt={avbryt}>
+    <Skjema klar={klar} send={send} avbryt={avbryt}>
       <p className={HJELP}>Navnet og adressen din står øverst i brevet, slik at forhandleren kan svare deg.</p>
       <Tekstfelt label="Navn" autoComplete="name" maxLength={100} value={a.navn} onChange={sett("navn")} />
       <Tekstfelt label="Adresse" autoComplete="street-address" maxLength={100} value={a.adresse} onChange={sett("adresse")} />
@@ -362,6 +404,25 @@ export function AvsenderFelt({ verdi, aktiv, lagre, avbryt }: Felles & { verdi: 
         <Tekstfelt label="Sted" autoComplete="address-level2" maxLength={50} value={a.poststed} onChange={sett("poststed")} />
       </div>
       <Tekstfelt label="Telefon (valgfritt)" autoComplete="tel" inputMode="tel" maxLength={16} value={a.telefon} onChange={sett("telefon")} />
+      <Tekstfelt
+        label="E-post (anbefalt)"
+        hjelp="Står i brevet, så forhandleren kan svare deg skriftlig."
+        type="email"
+        autoComplete="email"
+        maxLength={100}
+        value={a.epost}
+        onChange={sett("epost")}
+        feil={epostOk ? null : "Skriv en hel e-postadresse."}
+      />
+      <Tekstfelt
+        label="Kontonummer (anbefalt)"
+        hjelp="Står i brevet når du krever penger tilbake, så forhandleren vet hvor beløpet skal betales."
+        inputMode="numeric"
+        placeholder="1234 56 78903"
+        value={kontonummerGruppert(a.kontonummer)}
+        onChange={(e) => setA((x) => ({ ...x, kontonummer: kontonummerSiffer(e.target.value).replace(/\D/g, "").slice(0, 11) }))}
+        feil={kontoOk || a.kontonummer.length < 11 ? null : "Kontonummeret stemmer ikke. Sjekk sifrene."}
+      />
     </Skjema>
   );
 }

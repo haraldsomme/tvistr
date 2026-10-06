@@ -22,6 +22,9 @@ export type Utfylling = {
   // What the dealer has done about the defect; asked when the buyer has taken it up with the dealer.
   retting?: Retting;
   reklamasjon?: Reklamasjon;
+  // When the buyer had the defect repaired elsewhere, and why the dealer did not get to repair it
+  // first. Only with `retting: "reparert_selv"`.
+  reparasjon?: Reparasjon;
   krav?: Krav;
   vedlegg?: Vedlegg[];
   // What the report says about the cause and when the defect arose; only when the buyer answered that
@@ -54,8 +57,20 @@ export const OPPLYSNING_KILDER = ["annonse", "kontrakt", "melding", "muntlig"] a
 export type Opplysning = { kilde: (typeof OPPLYSNING_KILDER)[number]; tekst: string };
 
 // The first complaint to the dealer. `forsok` is how many times the dealer has tried to repair.
+// `svarDato` is the day the dealer refused, or the last attempt to repair: the dealer's answer on the
+// time line. Optional.
 export const REKLAMASJON_MATER = ["epost", "sms", "telefon", "oppmote", "brev"] as const;
-export type Reklamasjon = { dato: string; mate: (typeof REKLAMASJON_MATER)[number]; forsok?: number };
+export type Reklamasjon = { dato: string; mate: (typeof REKLAMASJON_MATER)[number]; forsok?: number; svarDato?: string };
+
+// A repair elsewhere: the day, and why the dealer was not the one to repair (fkjl §§ 29 and 30 give
+// the dealer the first try). avvist = the dealer refused; ikke_rettet = the dealer did not answer or
+// did not repair within reasonable time; nodvendig = the car had to be repaired to be usable; ingen =
+// no reason given (the dealer was not asked first).
+export const REPARASJON_GRUNNER = ["avvist", "ikke_rettet", "nodvendig", "ingen"] as const;
+export type Reparasjon = { dato: string; grunn: (typeof REPARASJON_GRUNNER)[number] };
+// The reasons that make sense: without contact the dealer cannot have refused or stalled.
+export const reparasjonGrunnerFor = (kontakt: "ja" | "nei"): readonly Reparasjon["grunn"][] =>
+  kontakt === "nei" ? ["nodvendig", "ingen"] : ["avvist", "ikke_rettet", "nodvendig"];
 
 // What the buyer claims. `type` is the choice once the dealer has refused or failed to repair;
 // `utbedringNok` is the cost of repair, when known, for a price reduction; `utgifter` are costs
@@ -72,7 +87,7 @@ export type Krav = { type?: (typeof KRAV_TYPER)[number]; utbedringNok?: number; 
 export type Rapport = { fra: string; dato: string; sitat: string };
 export const RAPPORT_SITAT_MAKS = 500;
 
-export const VEDLEGG = ["kjopekontrakt", "verkstedrapport", "bilder", "annonse", "meldinger", "kvitteringer"] as const;
+export const VEDLEGG = ["kjopekontrakt", "verkstedrapport", "faktura", "tilbud", "bilder", "annonse", "meldinger", "kvitteringer"] as const;
 export type Vedlegg = (typeof VEDLEGG)[number];
 
 // What the contract or the ad said about the car being sold as it is, or about a warranty.
@@ -83,7 +98,27 @@ export type Forbehold = (typeof FORBEHOLD_VALG)[number];
 export const SJEKK_NOKLER = ["rapport_tidspunkt", "bilder", "annonse", "meldinger", "kontrakt", "kvitteringer"] as const;
 export type SjekkNokkel = (typeof SJEKK_NOKLER)[number];
 
-export type Avsender = { navn: string; adresse: string; postnummer: string; poststed: string; telefon?: string };
+// The sender. E-mail is where the dealer can answer in writing; the account number is where the money
+// goes, and stands in the letter only when it claims money. Both optional; the letter check asks for them.
+export type Avsender = { navn: string; adresse: string; postnummer: string; poststed: string; telefon?: string; epost?: string; kontonummer?: string };
+
+const EPOST = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TELEFON = /^\+?[\d ]{8,16}$/;
+
+// A Norwegian bank account number: 11 digits with a MOD11 check digit. Takes the digits with or
+// without spaces and dots.
+export function gyldigKontonummer(v: string): boolean {
+  const s = v.replace(/[\s.]/g, "");
+  if (!/^\d{11}$/.test(s)) return false;
+  const vekter = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+  const sum = vekter.reduce((acc, w, i) => acc + w * Number(s[i]), 0);
+  const rest = sum % 11;
+  const kontroll = rest === 0 ? 0 : 11 - rest;
+  return kontroll < 10 && kontroll === Number(s[10]);
+}
+export const kontonummerSiffer = (v: string) => v.replace(/[\s.]/g, "");
+// 1234 56 78903, as banks print it.
+export const kontonummerGruppert = (siffer: string) => siffer.replace(/^(\d{4})(\d{2})(\d{5})$/, "$1 $2 $3");
 
 // What a save is checked against: the answers from the assessment and today's date.
 export type Kontekst = { svar: Pick<Innsending, "kjopsdato">; idag: string };
@@ -135,7 +170,10 @@ function lesForhandler(v: unknown): Forhandler | null {
   if (!erObjekt(v)) return null;
   if (v.type === "fritekst") {
     const navn = tekst(v.navn, 100, 2);
-    return navn ? { type: "fritekst", navn } : null;
+    if (!navn) return null;
+    if (v.adresse === undefined) return { type: "fritekst", navn };
+    const adresse = lesAdresse(v.adresse);
+    return adresse ? { type: "fritekst", navn, adresse } : null;
   }
   if (v.type !== "brreg") return null;
   const navn = tekst(v.navn, 100, 2);
@@ -225,8 +263,21 @@ function lesRapport(v: unknown, k: Kontekst): Rapport | null {
 
 function lesReklamasjon(v: unknown, k: Kontekst): Reklamasjon | null {
   if (!erObjekt(v) || !etterKjop(v.dato, k) || !blant(REKLAMASJON_MATER, v.mate)) return null;
-  if (v.forsok === undefined) return { dato: v.dato, mate: v.mate };
-  return heltall(v.forsok, 1, 9) ? { dato: v.dato, mate: v.mate, forsok: v.forsok } : null;
+  const r: Reklamasjon = { dato: v.dato, mate: v.mate };
+  if (v.forsok !== undefined) {
+    if (!heltall(v.forsok, 1, 9)) return null;
+    r.forsok = v.forsok;
+  }
+  if (v.svarDato !== undefined) {
+    if (!etterKjop(v.svarDato, k) || v.svarDato < v.dato) return null;
+    r.svarDato = v.svarDato;
+  }
+  return r;
+}
+
+function lesReparasjon(v: unknown, k: Kontekst): Reparasjon | null {
+  if (!erObjekt(v) || !etterKjop(v.dato, k) || !blant(REPARASJON_GRUNNER, v.grunn)) return null;
+  return { dato: v.dato, grunn: v.grunn };
 }
 
 const MAKS_BELOP = 50_000_000;
@@ -262,9 +313,19 @@ function lesAvsender(v: unknown): Avsender | null {
   const adresse = tekst(v.adresse, 100, 2);
   const poststed = tekst(v.poststed, 50);
   if (!navn || !adresse || !poststed || typeof v.postnummer !== "string" || !/^\d{4}$/.test(v.postnummer)) return null;
-  if (v.telefon === undefined || v.telefon === "") return { navn, adresse, postnummer: v.postnummer, poststed };
-  const telefon = typeof v.telefon === "string" ? v.telefon.replace(/\s+/g, " ").trim() : "";
-  return /^\+?[\d ]{8,16}$/.test(telefon) ? { navn, adresse, postnummer: v.postnummer, poststed, telefon } : null;
+  const a: Avsender = { navn, adresse, postnummer: v.postnummer, poststed };
+  // Each optional field is either left out, empty, or valid.
+  const valgfri = (x: unknown): string | null | undefined => (x === undefined || x === "" ? undefined : typeof x === "string" ? x.replace(/\s+/g, " ").trim() : null);
+  const telefon = valgfri(v.telefon);
+  if (telefon === null || (telefon !== undefined && !TELEFON.test(telefon))) return null;
+  if (telefon) a.telefon = telefon;
+  const epost = valgfri(v.epost);
+  if (epost === null || (epost !== undefined && (epost.length > 100 || !EPOST.test(epost)))) return null;
+  if (epost) a.epost = epost;
+  const konto = valgfri(v.kontonummer);
+  if (konto === null || (konto !== undefined && !gyldigKontonummer(konto))) return null;
+  if (konto) a.kontonummer = kontonummerSiffer(konto);
+  return a;
 }
 
 const lesRetting = (v: unknown): Retting | null =>
@@ -293,6 +354,7 @@ const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } 
   opplysning: lesOpplysning,
   retting: lesRetting,
   reklamasjon: lesReklamasjon,
+  reparasjon: lesReparasjon,
   krav: lesKrav,
   vedlegg: lesVedlegg,
   rapport: lesRapport,
@@ -320,11 +382,14 @@ export function lesEndring(raw: unknown, kontekst: Kontekst): { ok: true; endrin
   return { ok: true, endring: endring as Endring };
 }
 
+// The fill-in with a date that a new purchase date can make impossible.
+export const DATERTE_FELT = ["feilen", "reklamasjon", "reparasjon", "rapport"] as const;
+
 // The fill-in after the answers of the assessment were changed. A date that falls before the new
 // purchase date (or after today) can no longer be true, so it is dropped and the step is asked again.
 export function tilpassTilSvar(u: Utfylling, svar: Pick<Innsending, "kjopsdato">, idag: string): Utfylling {
   const ny: Utfylling = { ...u };
-  for (const felt of ["feilen", "reklamasjon", "rapport"] as const) {
+  for (const felt of DATERTE_FELT) {
     const dato = ny[felt]?.dato;
     if (dato !== undefined && !(dato >= svar.kjopsdato && dato <= idag)) delete ny[felt];
   }

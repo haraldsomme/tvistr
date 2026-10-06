@@ -61,16 +61,14 @@ describe("byggBrev", () => {
   describe("bevisbyrde (§ 18)", () => {
     it("viser til § 18 innenfor presumsjonsperioden, med to år for kjøp fra 2024", () => {
       const t = tekst(byggBrev(grunn(), IDAG));
-      expect(t).toContain("§ 18");
-      expect(t).toContain("innen seks måneder etter levering");
-      expect(t).toContain("antas å ha eksistert ved leveringen");
-      expect(t).toContain("innen to år");
+      expect(t).toContain("Feilen viste seg innen to år etter levering, og det følger da av § 18 andre ledd at en mangel som viser seg innen to år antas å ha eksistert ved leveringen");
+      expect(t).not.toContain("innen seks måneder etter levering");
     });
 
     it("bruker seks måneder som periode for kjøp før 2024", () => {
       const i = grunn();
       i.bilOgKjop.kjopsdato = "2023-05-31";
-      expect(tekst(byggBrev(i, IDAG))).toMatch(/§ 18 at en mangel som viser seg innen seks måneder/);
+      expect(tekst(byggBrev(i, IDAG))).toMatch(/§ 18 andre ledd at en mangel som viser seg innen seks måneder/);
     });
 
     it("utelater § 18 utenfor presumsjonsperioden", () => {
@@ -111,7 +109,12 @@ describe("byggBrev", () => {
       i.feilen.kontakt = "ja";
       i.feilen.reklamertInnenFemAr = true;
       const t = tekst(byggBrev(i, IDAG, { retting: "avvist" }));
-      expect(t).toContain("Det er mer enn fem år siden jeg overtok bilen, men jeg tok dette opp med dere innen fem år, slik at fristen i § 27 andre ledd er overholdt.");
+      expect(t).toContain("Det er mer enn fem år siden jeg overtok bilen, men jeg tok dette opp med dere innen fem år, slik at fristen er overholdt.");
+      expect(t).toContain("fristen for å reklamere er derfor fem år, jf. § 27 andre ledd.");
+      // With the date of the first complaint, the date carries it, once.
+      const medDato = tekst(byggBrev(i, IDAG, { retting: "avvist", reklamasjon: { dato: "2024-12-01", mate: "brev" } }));
+      expect(medDato).toContain("første gang 1. desember 2024 i brev, innen fem år etter at jeg overtok bilen,");
+      expect(medDato).not.toContain("slik at fristen er overholdt");
     });
 
     it("ingen slik setning innenfor fem år, eller når fristen er ute", () => {
@@ -124,7 +127,7 @@ describe("byggBrev", () => {
   });
 
   it("sier at feilen ikke ble opplyst bare når svaret er nei", () => {
-    expect(tekst(byggBrev(grunn(), IDAG))).toContain("Jeg ble heller ikke opplyst om feilen før kjøpet.");
+    expect(tekst(byggBrev(grunn(), IDAG))).toContain("Jeg kjente ikke til feilen da jeg kjøpte bilen, og dere opplyste ikke om den.");
     const i = grunn();
     i.feilen.opplystForKjop = "ja";
     expect(tekst(byggBrev(i, IDAG))).not.toContain("ikke opplyst");
@@ -274,7 +277,7 @@ describe("byggBrev", () => {
     it.each([
       ["kontrakt", "I kjøpekontrakten ble det opplyst"],
       ["melding", "I en melding fra dere ble det opplyst"],
-      ["muntlig", "Muntlig før kjøpet ble det opplyst"],
+      ["muntlig", "Før kjøpet fikk jeg muntlig opplyst følgende om bilen"],
     ] as const)("kilde %s", (kilde, start) => {
       expect(tekst(byggBrev(medFeilopplysning(), IDAG, { opplysning: { kilde, tekst: "Ny clutch" } }))).toContain(start);
     });
@@ -306,6 +309,44 @@ describe("byggBrev", () => {
     it("tas ikke med når forhandleren ikke er kontaktet", () => {
       expect(tekst(byggBrev(grunn(), IDAG, { reklamasjon: { dato: "2026-09-03", mate: "epost" } }))).not.toContain("tok opp feilen");
     });
+
+    it("sier at reklamasjonen kom innen to måneder, og bekrefter den skriftlig", () => {
+      const feilen = { dato: "2026-08-20", egen: "Motorlampen lyser hver morgen.", feil: [], avsnitt: ["Motorlampen lyser hver morgen."] };
+      const t = tekst(brevFor("venter", { feilen, reklamasjon: { dato: "2026-09-03", mate: "epost" } }));
+      expect(t).toContain("første gang 3. september 2026 på e-post, mindre enn to måneder etter at jeg oppdaget den.");
+      expect(t).toContain("Jeg bekrefter herved reklamasjonen skriftlig, jf. forbrukerkjøpsloven § 27.");
+      const sent = tekst(brevFor("venter", { feilen: { ...feilen, dato: "2026-06-20" }, reklamasjon: { dato: "2026-09-03", mate: "epost" } }));
+      expect(sent).not.toContain("mindre enn to måneder");
+    });
+
+    it("dater forhandlerens svar", () => {
+      expect(tekst(brevFor("avvist", { reklamasjon: { dato: "2026-09-03", mate: "epost", svarDato: "2026-09-10" } }))).toContain("men dere avviste 10. september 2026 å rette den.");
+      expect(tekst(brevFor("forsokt", { reklamasjon: { dato: "2026-09-03", mate: "telefon", forsok: 2, svarDato: "2026-09-20" } }))).toContain("Dere har forsøkt å rette feilen to ganger, sist 20. september 2026, uten å lykkes.");
+    });
+  });
+
+  describe("reparert hos et annet verksted", () => {
+    it("med kontakt: nevner den første reklamasjonen, så reparasjonen med dato og grunn", () => {
+      const i = grunn();
+      i.feilen.kontakt = "ja";
+      const t = tekst(byggBrev(i, IDAG, { retting: "reparert_selv", reklamasjon: { dato: "2026-09-03", mate: "epost" }, reparasjon: { dato: "2026-09-25", grunn: "ikke_rettet" } }));
+      expect(t).toContain("Jeg tok opp feilen med dere første gang 3. september 2026 på e-post. Da feilen ikke ble rettet innen rimelig tid, fikk jeg den utbedret hos et annet verksted 25. september 2026.");
+    });
+
+    it("uten kontakt: sier hvorfor, uten å nevne en reklamasjon som ikke er gjort", () => {
+      const t = tekst(byggBrev(grunn(), IDAG, { retting: "reparert_selv", reparasjon: { dato: "2026-09-25", grunn: "nodvendig" } }));
+      expect(t).toContain("Feilen gjorde at jeg ikke kunne bruke bilen, og jeg måtte derfor få den utbedret hos et annet verksted 25. september 2026.");
+      expect(t).not.toContain("tok opp feilen");
+      expect(t).toContain("Jeg reklamerer herved");
+    });
+
+    it("uten dato og grunn står det en plassholder", () => {
+      expect(tekst(byggBrev(grunn(), IDAG, { retting: "reparert_selv" }))).toContain("[dato, og hvorfor dere ikke rettet feilen]");
+    });
+
+    it("foreslår fakturaen som vedlegg", () => {
+      expect(tekst(byggBrev(grunn(), IDAG, { retting: "reparert_selv" }))).toContain("Vedlagt følger kjøpekontrakt og faktura for reparasjonen.");
+    });
   });
 
   describe("kravet", () => {
@@ -329,6 +370,16 @@ describe("byggBrev", () => {
       const t = tekst(byggBrev(grunn(), IDAG, { krav: { type: "heving", utgifter: [] } }));
       expect(t).toContain("jf. § 29 og § 30");
       expect(t).not.toContain("hever kjøpet");
+    });
+
+    it("forsinkelsesrenten løper fra 30 dager etter brevets dato", () => {
+      expect(tekst(brevFor("avvist", { krav: { type: "prisavslag", utgifter: [] } }))).toContain("fra 30 dager etter at dette brevet er sendt (1. november 2026 hvis det sendes i dag) til betaling skjer.");
+    });
+
+    it("oppgir kontonummeret når brevet krever penger, ellers ikke", () => {
+      const avsender = { navn: "Test Testesen", adresse: "Testveien 1", postnummer: "0184", poststed: "Oslo", kontonummer: "12345678903" };
+      expect(tekst(brevFor("avvist", { avsender, krav: { type: "prisavslag", utgifter: [] } }))).toContain("Beløpet bes innbetalt til kontonummer 1234 56 78903.");
+      expect(tekst(brevFor("venter", { avsender, krav: { utgifter: [] } }))).not.toContain("kontonummer");
     });
 
     it("utgifter kreves erstattet med poster og sum", () => {
@@ -372,6 +423,12 @@ describe("byggBrev", () => {
 
     it("tar med telefon når den er oppgitt", () => {
       expect(byggBrev(grunn(), IDAG, { avsender: { ...avsender, telefon: "400 00 000" } }).avsender).toEqual(["Test Testesen", "Testveien 1", "0184 Oslo", "Tlf. 400 00 000"]);
+    });
+
+    it("tar med e-post i avsenderen og ber om svar dit", () => {
+      const b = byggBrev(grunn(), IDAG, { avsender: { ...avsender, epost: "test@example.com" } });
+      expect(b.avsender).toContain("E-post: test@example.com");
+      expect(tekst(b)).toContain("gjerne på e-post til test@example.com.");
     });
   });
 

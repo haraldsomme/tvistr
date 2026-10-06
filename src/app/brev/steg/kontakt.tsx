@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { norskDato } from "@/lib/brev/brev";
-import { REKLAMASJON_MATER, type Reklamasjon } from "@/lib/brev/utfylling";
+import { REKLAMASJON_MATER, reparasjonGrunnerFor, type Reklamasjon, type Reparasjon } from "@/lib/brev/utfylling";
 import { KONTAKT_TEKST } from "@/app/vurdering/tekster";
 import { kjopsdatoAv, type Innsending } from "@/lib/vurdering/innsending";
 import { KONTAKT_VALG, rettingValgFor, type Kontakt, type Retting } from "@/lib/vurdering/typer";
@@ -14,7 +14,14 @@ export const RETTING_TEKST: Record<Retting, string> = {
   venter: "Forhandleren vil forsøke, eller har ikke svart ennå",
   avvist: "Forhandleren nekter å rette feilen",
   forsokt: "Forhandleren har forsøkt, uten hell",
+  ikke_rettet: "Forhandleren har ikke rettet feilen innen rimelig tid, selv om de kunne fått bilen",
   reparert_selv: "Jeg har fått feilen reparert andre steder",
+};
+const GRUNN_TEKST: Record<Reparasjon["grunn"], string> = {
+  avvist: "Forhandleren nektet å rette feilen",
+  ikke_rettet: "Forhandleren rettet den ikke innen rimelig tid",
+  nodvendig: "Bilen måtte repareres for at jeg skulle kunne bruke den",
+  ingen: "Forhandleren fikk ikke sjansen først",
 };
 const MATE_TEKST: Record<Reklamasjon["mate"], string> = {
   epost: "E-post",
@@ -35,15 +42,19 @@ export function KontaktFelt({
   idag,
   retting,
   reklamasjon,
+  reparasjon,
   aktiv,
   lagre,
   avbryt,
-}: Felles & { svar: Innsending; idag: string; retting: Retting | undefined; reklamasjon: Reklamasjon | undefined }) {
+}: Felles & { svar: Innsending; idag: string; retting: Retting | undefined; reklamasjon: Reklamasjon | undefined; reparasjon?: Reparasjon }) {
   const [kontakt, setKontakt] = useState<Kontakt>(svar.kontakt || "nei");
   const [valgtRetting, setValgtRetting] = useState<Retting | "">(retting ?? (kontakt === "nei" ? "ingen" : ""));
   const [dato, setDato] = useState(reklamasjon?.dato ?? "");
   const [mate, setMate] = useState<Reklamasjon["mate"] | "">(reklamasjon?.mate ?? "");
   const [forsok, setForsok] = useState(reklamasjon?.forsok ? String(reklamasjon.forsok) : "");
+  const [svarDato, setSvarDato] = useState(reklamasjon?.svarDato ?? "");
+  const [repDato, setRepDato] = useState(reparasjon?.dato ?? "");
+  const [grunn, setGrunn] = useState<Reparasjon["grunn"] | "">(reparasjon?.grunn ?? "");
 
   if (!aktiv) {
     const vistRetting = retting ?? (kontakt === "nei" ? "ingen" : undefined);
@@ -55,20 +66,30 @@ export function KontaktFelt({
           kontakt !== "nei" && reklamasjon && `${norskDato(reklamasjon.dato)} · ${MATE_TEKST[reklamasjon.mate].toLowerCase()}`,
           RETTING_TEKST[vistRetting],
           reklamasjon?.forsok ? `${reklamasjon.forsok} rettingsforsøk` : null,
+          kontakt !== "nei" && reklamasjon?.svarDato ? `${vistRetting === "avvist" ? "Avvist" : "Sist forsøkt"} ${norskDato(reklamasjon.svarDato)}` : null,
+          vistRetting === "reparert_selv" && reparasjon ? `Reparert ${norskDato(reparasjon.dato)} · ${GRUNN_TEKST[reparasjon.grunn].toLowerCase()}` : null,
         ]}
       />
     );
   }
 
   const forsokt = valgtRetting === "forsokt";
+  const harSvar = valgtRetting === "avvist" || forsokt;
+  const reparert = valgtRetting === "reparert_selv";
+  const grunner = reparasjonGrunnerFor(kontakt);
   const min = kjopsdatoAv(svar, idag);
   const reklamasjonKlar = kontakt === "nei" || (dato >= min && dato <= idag && mate !== "" && (!forsokt || forsok !== ""));
-  const klar = valgtRetting !== "" && reklamasjonKlar;
+  const reparasjonKlar = !reparert || (repDato >= min && repDato <= idag && grunn !== "" && grunner.includes(grunn));
+  const klar = valgtRetting !== "" && reklamasjonKlar && reparasjonKlar;
   const send = () =>
     lagre({
       svar: { ...svar, kontakt },
       retting: valgtRetting as Retting,
-      reklamasjon: kontakt === "nei" ? null : { dato, mate: mate as Reklamasjon["mate"], ...(forsokt && { forsok: Number(forsok) }) },
+      reklamasjon:
+        kontakt === "nei"
+          ? null
+          : { dato, mate: mate as Reklamasjon["mate"], ...(forsokt && { forsok: Number(forsok) }), ...(harSvar && svarDato >= dato && { svarDato }) },
+      reparasjon: reparert ? { dato: repDato, grunn: grunn as Reparasjon["grunn"] } : null,
     });
 
   return (
@@ -79,6 +100,7 @@ export function KontaktFelt({
         velg={(v) => {
           setKontakt(v);
           setValgtRetting(v === "nei" ? "ingen" : "");
+          setGrunn("");
         }}
         valg={valgAv(KONTAKT_VALG, KONTAKT_TEKST)}
       />
@@ -101,6 +123,27 @@ export function KontaktFelt({
       <Valgfelt label={kontakt === "nei" ? "Har du fått feilen reparert?" : "Hva har forhandleren gjort?"} verdi={valgtRetting} velg={setValgtRetting} valg={valgAv(rettingValgFor(kontakt), RETTING_TEKST)} />
       {kontakt !== "nei" && forsokt && (
         <Nedtrekk label="Hvor mange ganger har forhandleren forsøkt å rette feilen?" verdi={forsok} velg={setForsok} valg={["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((n) => ({ verdi: n, tekst: n }))} />
+      )}
+      {kontakt !== "nei" && harSvar && (
+        <Datofelt
+          label={forsokt ? "Når forsøkte forhandleren sist å rette feilen? (valgfritt)" : "Når avviste forhandleren å rette feilen? (valgfritt)"}
+          hjelp="Med datoen er tidslinjen i brevet komplett."
+          min={dato || min || undefined}
+          max={idag}
+          verdi={svarDato}
+          settVerdi={setSvarDato}
+        />
+      )}
+      {reparert && (
+        <>
+          <Datofelt label="Når ble feilen reparert?" hjelp="Datoen på fakturaen fra verkstedet." min={min || undefined} max={idag} verdi={repDato} settVerdi={setRepDato} />
+          <Valgfelt label="Hvorfor ble feilen ikke rettet av forhandleren?" verdi={grunn} velg={setGrunn} valg={valgAv(grunner, GRUNN_TEKST)} />
+          {grunn === "ingen" && (
+            <p className={HJELP}>
+              Forhandleren har rett til å forsøke å rette feilen først (§ 29 og § 30). Fikk forhandleren ikke sjansen, kan de kreve at beløpet settes ned til det de selv ville brukt, eller avvise kravet. Brevet sier det som det er.
+            </p>
+          )}
+        </>
       )}
     </Skjema>
   );

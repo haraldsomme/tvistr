@@ -12,7 +12,12 @@ export function motsvar(f: Faktorer, u: Utfylling): Motargument[] {
     {
       nokkel: "forbehold",
       tittel: "«Bilen er solgt som den er»",
-      svar: "Et forbehold om at bilen selges «som den er» kan ikke innskrenke rettighetene til en forbruker etter forbrukerkjøpsloven, jf. § 3. Bilen skal svare til det som er avtalt og det jeg kunne forvente.",
+      // Before 2024 the reservation was valid, but the car is still defective when it is worse than the
+      // buyer could expect (§ 17 as it read then); from 2024 a general reservation has no effect (§ 15 second paragraph).
+      svar:
+        f.presumsjonManeder === 6
+          ? "Selv om bilen ble solgt «som den er», har den en mangel når den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente ut fra forbeholdet, kjøpesummen og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a slik den lød da vi inngikk avtalen."
+          : "Et alminnelig forbehold om at bilen selges «som den er», har ingen virkning overfor en forbruker, jf. § 3. Bare et avvik jeg ble spesielt opplyst om og uttrykkelig og særskilt godtok, kan gjøres gjeldende mot meg, jf. § 15 andre ledd.",
       relevant: u.forbehold === "som_den_er",
     },
     {
@@ -38,7 +43,10 @@ export function motsvar(f: Faktorer, u: Utfylling): Motargument[] {
     {
       nokkel: "kjent_feil",
       tittel: "«Du visste om feilen»",
-      svar: "Det som ble opplyst før kjøpet, svarte ikke til det jeg faktisk fikk. Jeg viser til annonsen og meldingene som viser hva som ble sagt.",
+      svar:
+        f.presumsjonManeder === 24
+          ? "Det er ikke nok at jeg kjente til feilen. Bare et avvik jeg ble spesielt opplyst om og uttrykkelig og særskilt godtok, kan holdes mot meg, jf. § 15 andre ledd. Det har dere ikke vist."
+          : "Det som ble opplyst før kjøpet, svarte ikke til det jeg faktisk fikk. Feilen er mer omfattende enn det jeg kjente til, og jeg viser til annonsen og meldingene som viser hva som ble sagt.",
       relevant: f.opplystForKjop === "ja",
     },
   ];

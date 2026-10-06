@@ -23,7 +23,8 @@ export type FeilKnapp =
 
 // The postal address of a dealer found in Brreg: street lines, then postcode and place.
 export type Adresse = { linjer: string[]; postnummer: string; poststed: string };
-export type Forhandler = { type: "brreg"; orgnr: string; navn: string; adresse?: Adresse } | { type: "fritekst"; navn: string };
+// A dealer typed freely (missing from Brreg, or a sole proprietorship) can have its address typed too.
+export type Forhandler = { type: "brreg"; orgnr: string; navn: string; adresse?: Adresse } | { type: "fritekst"; navn: string; adresse?: Adresse };
 
 // Has the buyer taken the defect up with the dealer? The assessment only needs yes or no (the deadlines
 // in § 27); what has happened since is asked on the letter page (`RETTING_VALG`).
@@ -32,12 +33,14 @@ export type Kontakt = (typeof KONTAKT_VALG)[number];
 
 // What has happened about repairing the defect (fkjl §§ 29 and 30), asked on the letter page: ingen = nothing
 // yet; venter = the dealer will try or has not answered; avvist = refused; forsokt = tried without
-// success; reparert_selv = the buyer had it repaired elsewhere before the dealer could try.
+// success; ikke_rettet = the dealer has not repaired it within reasonable time; reparert_selv = the buyer had
+// it repaired elsewhere.
 export const RETTING_VALG = [
   "ingen",
   "venter",
   "avvist",
   "forsokt",
+  "ikke_rettet",
   "reparert_selv",
 ] as const;
 export type Retting = (typeof RETTING_VALG)[number];
@@ -47,7 +50,7 @@ export type Retting = (typeof RETTING_VALG)[number];
 export const rettingValgFor = (kontakt: Kontakt): readonly Retting[] =>
   kontakt === "nei"
     ? ["ingen", "reparert_selv"]
-    : ["venter", "avvist", "forsokt", "reparert_selv"];
+    : ["venter", "avvist", "forsokt", "ikke_rettet", "reparert_selv"];
 export const gyldigRetting = (
   kontakt: Kontakt,
   retting: Retting | undefined,

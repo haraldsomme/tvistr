@@ -1,6 +1,6 @@
 import { endreSak, hentSak, slettSak } from "@/lib/brev/sak";
 import { avledSvar, kontrollerRettelse, rettSvar } from "@/lib/brev/svar";
-import { erSakId, lesEndring, medEndring, tilpassTilSvar } from "@/lib/brev/utfylling";
+import { DATERTE_FELT, erSakId, lesEndring, medEndring, tilpassTilSvar } from "@/lib/brev/utfylling";
 import { ipFra, lagGrense, lesJson } from "@/lib/rategrense";
 import { iDag } from "@/lib/vurdering/faktorer";
 
@@ -46,7 +46,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     // Dates the new purchase date dropped are cleared together with the step's own save, so one
     // write leaves the fill-in and the derived answers in step with each other.
     const fjernet: Record<string, null> = {};
-    for (const felt of ["feilen", "reklamasjon", "sendt"] as const) {
+    for (const felt of [...DATERTE_FELT, "sendt"] as const) {
       if (sak.utfylling[felt] !== undefined && utfylling[felt] === undefined) fjernet[felt] = null;
     }
     const samletEndring = { ...fjernet, ...lestEndring.endring };

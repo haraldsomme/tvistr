@@ -21,7 +21,7 @@ import {
 
 type Innhold = { tittel: string; tekst: ReactNode; handling: string; destruktiv?: boolean };
 
-function Dialoginnhold({ tittel, tekst, handling, destruktiv, arbeider, bekreft }: Innhold & { arbeider: boolean; bekreft: () => void }) {
+export function Dialoginnhold({ tittel, tekst, handling, destruktiv, arbeider, bekreft }: Innhold & { arbeider: boolean; bekreft: () => void }) {
   return (
     <AlertDialogContent className="data-[size=default]:max-w-[calc(100%-2rem)] data-[size=default]:sm:max-w-md">
       <AlertDialogHeader>

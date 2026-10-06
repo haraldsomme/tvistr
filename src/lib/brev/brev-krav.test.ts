@@ -13,11 +13,17 @@ const klage = (feilen: Partial<KlageInput["feilen"]> = {}, bil: Partial<KlageInp
 const tekst = (input: KlageInput, idag: string, u: Utfylling = {}) => byggBrev(input, idag, { retting: "avvist", ...u }).avsnitt.join("\n");
 
 describe("heving og prisavslag", () => {
-  it("heving har subsidiært krav om prisavslag og krav om rente", () => {
-    const t = tekst(klage(), IDAG, { krav: { type: "heving", utgifter: [] } });
-    expect(t).toContain("hever kjøpet, jf. § 32");
+  it("heving har subsidiært krav om prisavslag, sier at mangelen ikke er uvesentlig, og krever rente fra reklamasjonen", () => {
+    const t = tekst(klage(), IDAG, { krav: { type: "heving", utgifter: [] }, reklamasjon: { dato: "2026-09-03", mate: "epost" } });
+    expect(t).toContain("Jeg hever kjøpet, jf. § 32");
+    expect(t).toContain("Mangelen er ikke uvesentlig, og det er dere som må bevise noe annet, jf. § 32.");
     expect(t).toContain("subsidiært");
-    expect(t).toContain("forsinkelsesrenteloven §§ 2 og 3");
+    expect(t).toContain("Etter forbrukerkjøpsloven § 50 andre ledd skal dere betale forsinkelsesrente av kjøpesummen fra 3. september 2026, da jeg reklamerte, til betaling skjer.");
+  });
+
+  it("«som den er» følger loven på kjøpsdagen", () => {
+    expect(tekst(klage({}, { kjopsdato: "2023-05-02" }), IDAG, { forbehold: "som_den_er" })).toContain("jf. forbrukerkjøpsloven § 17 første ledd bokstav a slik den lød da vi inngikk avtalen");
+    expect(tekst(klage(), IDAG, { forbehold: "som_den_er" })).toContain("har ingen virkning overfor meg som forbruker, jf. § 15 andre ledd og § 3. Jeg godtok ikke feilen uttrykkelig og særskilt ved kjøpet.");
   });
 
   it("subsidiært prisavslag bruker utbedringskostnaden når den er oppgitt", () => {
@@ -67,17 +73,17 @@ describe("henvisning til vedtak", () => {
     const b = byggBrev(i, IDAG, { retting: "avvist" });
     const iMangel = b.avsnitt.findIndex((a) => a.includes("mangel etter forbrukerkjøpsloven § 16"));
     const iHenvisning = b.avsnitt.findIndex((a) => a.includes(v!.henvisning.ref));
-    const iKrav = b.avsnitt.findIndex((a) => a.includes("Jeg reklamerer herved"));
+    const iKrav = b.avsnitt.findIndex((a) => a.includes("forbrukerkjøpsloven § 27"));
     expect(iHenvisning).toBe(iMangel + 1);
     expect(iHenvisning).toBeLessThan(iKrav);
     expect(b.avsnitt[iHenvisning]).toMatch(KILDE);
-    expect(b.avsnitt[iHenvisning]).toMatch(/^Forbruker(klage|tvist)utvalget har (behandlet en lignende sak|lagt det samme til grunn i tidligere saker|vurdert hva en kjøper kan forvente av en eldre bil)\./);
-    expect(b.avsnitt[iHenvisning]).toMatch(/Jeg ber dere ta hensyn til at utvalget har vurdert (en tilsvarende sak|tilsvarende saker) slik\.$/);
+    expect(b.avsnitt[iHenvisning]).toMatch(/^Forbruker(klage|tvist)utvalget har (behandlet en lignende sak|behandlet en sak om samme type feil|lagt det samme til grunn tidligere|vurdert hva en kjøper kan forvente av en eldre bil)\./);
+    expect(b.avsnitt[iHenvisning]).toMatch(/Jeg ber dere ta hensyn til at utvalget har vurdert en tilsvarende sak slik\.$/);
     expect(b.avsnitt.filter((a) => KILDE.test(a))).toHaveLength(1);
   });
 
   it("«Annet» gir en regel-sak", () => {
-    expect(tekst(klage({ typer: ["annet"] }), IDAG)).toContain("har lagt det samme til grunn i tidligere saker");
+    expect(tekst(klage({ typer: ["annet"] }), IDAG)).toContain("har lagt det samme til grunn tidligere");
   });
 
   it("en kjøpsdato før 2024 gir aldri en sak vunnet på formodningsregelen for feil etter 6–24 måneder", () => {

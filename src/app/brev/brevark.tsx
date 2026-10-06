@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { FEIL_PLASSHOLDER, KRAV_ALTERNATIV, OPPLYSNING_PLASSHOLDER, type Brev } from "@/lib/brev/brev";
+import { FEIL_PLASSHOLDER, KONTAKT_PLASSHOLDER, KRAV_ALTERNATIV, OPPLYSNING_PLASSHOLDER, REPARASJON_PLASSHOLDER, type Brev } from "@/lib/brev/brev";
 
 // Anything in square brackets is something the buyer has to fill in; it is marked in yellow so it is
 // not missed. What has been filled in reads as ordinary letter text. When the fill-in list is on
@@ -17,6 +17,7 @@ function stegForPlassholder(tekst: string): string | null {
   if (tekst === FEIL_PLASSHOLDER) return "feilen";
   if (tekst === OPPLYSNING_PLASSHOLDER) return "for-kjopet";
   if (tekst === KRAV_ALTERNATIV) return "krav";
+  if (tekst === REPARASJON_PLASSHOLDER || tekst === KONTAKT_PLASSHOLDER) return "kontakt";
   return null;
 }
 

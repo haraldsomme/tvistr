@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { gyldigKjopsdato, type Innsending } from "@/lib/vurdering/innsending";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
+import { harFatt } from "@/lib/brev/brev";
 import { AvsenderFelt, KravFelt } from "../felt";
 import { FeilenFelt } from "./feilen";
 import { ForhandlerFelt } from "./forhandler";
@@ -36,8 +37,10 @@ export function lagSteg({ sakId, input, svar, utfylling, idag, idBase, forslagKj
   const retting = gyldigRetting(svar.kontakt || "nei", utfylling.retting);
   const kjopetFerdig = gyldigKjopsdato(svar.kjopsdato, idag) && /^\d+$/.test(svar.kjopesum) && utfylling.forbehold !== undefined;
   const kontakt = svar.kontakt || "nei";
-  const kontaktFerdig = kontakt === "nei" || (retting !== undefined && utfylling.reklamasjon !== undefined && (retting !== "forsokt" || utfylling.reklamasjon.forsok !== undefined));
-  const kanVelgeKrav = retting === "avvist" || retting === "forsokt" || retting === "reparert_selv";
+  const reparasjonFerdig = retting !== "reparert_selv" || utfylling.reparasjon !== undefined;
+  const kontaktFerdig =
+    reparasjonFerdig && (kontakt === "nei" || (retting !== undefined && utfylling.reklamasjon !== undefined && (retting !== "forsokt" || utfylling.reklamasjon.forsok !== undefined)));
+  const kanVelgeKrav = harFatt(retting);
   const felles = (f: { aktiv: boolean; avbryt?: () => void }) => ({ ...f, lagre });
 
   return [
@@ -69,7 +72,7 @@ export function lagSteg({ sakId, input, svar, utfylling, idag, idBase, forslagKj
       id: "kontakt",
       tittel: "Kontakt med forhandleren",
       ferdig: kontaktFerdig,
-      innhold: (f) => <KontaktFelt svar={svar} idag={idag} retting={retting} reklamasjon={utfylling.reklamasjon} {...felles(f)} />,
+      innhold: (f) => <KontaktFelt svar={svar} idag={idag} retting={retting} reklamasjon={utfylling.reklamasjon} reparasjon={utfylling.reparasjon} {...felles(f)} />,
     },
     {
       // The answers come from the assessment. During the first pass of the wizard a report that points

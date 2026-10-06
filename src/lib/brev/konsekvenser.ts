@@ -1,10 +1,11 @@
 import { harFatt } from "@/lib/brev/brev";
 import { avledSvar, kontrollerRettelse, rettSvar } from "@/lib/brev/svar";
-import { medEndring, tilpassTilSvar, type Lagring, type Utfylling } from "@/lib/brev/utfylling";
+import { DATERTE_FELT, medEndring, tilpassTilSvar, type Lagring, type Utfylling } from "@/lib/brev/utfylling";
 import { beregnFaktorer } from "@/lib/vurdering/faktorer";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import { gyldigRetting } from "@/lib/vurdering/typer";
 import { vurderFraFaktorer } from "@/lib/vurdering/vurder";
+import { sjekkBrev } from "./sjekk";
 
 // What a save would cost the letter, worked out before it is sent, so the page can ask first. Runs the
 // same steps as `PATCH /api/sak/[id]` (`rettSvar`, `tilpassTilSvar`, `medEndring`, `avledSvar`,
@@ -15,9 +16,11 @@ import { vurderFraFaktorer } from "@/lib/vurdering/vurder";
 
 export type Konsekvenser = { avvist: string | null; tap: string[] };
 
-const FJERNET: Record<"feilen" | "reklamasjon" | "sendt", string> = {
+const FJERNET: Record<(typeof DATERTE_FELT)[number] | "sendt", string> = {
   feilen: "Feilbeskrivelsen du har skrevet, blir slettet, fordi datoen feilen viste seg ikke passer med kjøpsdatoen. Du må beskrive feilen på nytt.",
   reklamasjon: "Datoen og måten du tok opp feilen med forhandleren på, blir slettet.",
+  reparasjon: "Datoen for reparasjonen blir slettet.",
+  rapport: "Det du har skrevet av fra rapporten, blir slettet.",
   sendt: "Datoen brevet ble sendt, blir slettet. Fristene og purringen i saksmappen forsvinner.",
 };
 const KRAV_NAVN = { prisavslag: "prisavslag", heving: "heving av kjøpet" } as const;
@@ -28,7 +31,13 @@ function vurdering({ svar, utfylling }: Sak, idag: string) {
   const parsed = tilKlageInput(svar, idag);
   if (!parsed.ok) return null;
   const v = vurderFraFaktorer(beregnFaktorer(parsed.input, idag), null);
-  return { niva: v.niva, svakheter: v.grunnlag.filter((p) => p.vekt !== "for").map((p) => p.tekst), kanVelgeKrav: harFatt(gyldigRetting(parsed.input.feilen.kontakt, utfylling.retting)) };
+  return {
+    niva: v.niva,
+    svakheter: v.grunnlag.filter((p) => p.vekt !== "for").map((p) => p.tekst),
+    kanVelgeKrav: harFatt(gyldigRetting(parsed.input.feilen.kontakt, utfylling.retting)),
+    // The letter's own serious weaknesses (`sjekkBrev`), by id.
+    harde: new Map(sjekkBrev(parsed.input, utfylling, idag).filter((a) => a.alvor === "hard").map((a) => [a.id, a.tekst])),
+  };
 }
 
 export function konsekvenserAv(for_: Sak, lagring: Lagring, idag: string): Konsekvenser {
@@ -48,7 +57,7 @@ export function konsekvenserAv(for_: Sak, lagring: Lagring, idag: string): Konse
   if (avvist) return { avvist, tap: [] };
 
   const tap: string[] = [];
-  for (const felt of ["feilen", "reklamasjon", "sendt"] as const) {
+  for (const felt of [...DATERTE_FELT, "sendt"] as const) {
     if (for_.utfylling[felt] !== undefined && etter.utfylling[felt] === undefined) tap.push(FJERNET[felt]);
   }
 
@@ -61,6 +70,7 @@ export function konsekvenserAv(for_: Sak, lagring: Lagring, idag: string): Konse
     if (b.svakheter.length > a.svakheter.length) {
       for (const p of b.svakheter.filter((t) => !a.svakheter.includes(t))) tap.push(`Nytt punkt som svekker saken: ${p}`);
     }
+    for (const [id, tekst] of b.harde) if (!a.harde.has(id)) tap.push(tekst);
   }
   return { avvist: null, tap };
 }

@@ -1,7 +1,10 @@
-import { brevForSak, purringForSak } from "@/lib/brev/dokument";
 import { tilDocx, tilPdf } from "@/lib/brev/eksport";
 import { hentSak } from "@/lib/brev/sak";
+import { byggPurring } from "@/lib/brev/purring";
+import { brevFraSak } from "@/lib/brev/skriving/render";
 import { erSakId } from "@/lib/brev/utfylling";
+import { iDag } from "@/lib/vurdering/faktorer";
+import { tilKlageInput } from "@/lib/vurdering/innsending";
 import { ipFra, lagGrense } from "@/lib/rategrense";
 
 const forMange = lagGrense({ antall: 30, vinduMs: 60_000 });
@@ -23,7 +26,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   try {
     const sak = await hentSak(id);
     if (!sak) return Response.json(FINNES_IKKE, { status: 404 });
-    const brev = await (fil.startsWith("purring") ? purringForSak(sak) : brevForSak(sak));
+    const idag = iDag();
+    const lest = tilKlageInput(sak.svar, idag);
+    const brev = fil.startsWith("purring") ? (lest.ok ? await byggPurring(lest.input, idag, sak.utfylling) : null) : await brevFraSak(sak, idag);
     if (!brev) return Response.json({ feil: fil.startsWith("purring") || sak.utfylling.brev ? "Svarene i saken gir ikke et brev. Rett svarene først." : "Brevet er ikke skrevet ennå." }, { status: 409 });
     const f = FILER[fil as keyof typeof FILER];
     const bytes = fil.endsWith(".pdf") ? await tilPdf(brev) : await tilDocx(brev);

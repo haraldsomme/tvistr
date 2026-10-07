@@ -11,7 +11,7 @@ import { HJELP, Kildefelt, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } f
 const KILDE_TEKST: Record<Opplysning["kilde"], string> = { annonse: "Annonsen", kontrakt: "Kjøpekontrakten", melding: "Melding fra forhandleren", muntlig: "Muntlig før kjøpet" };
 
 // Two questions the assessment leaves for the letter page: did the buyer know about the defect before
-// buying (pre-filled from the assessment, corrected here), and did the ad or the dealer say something
+// buying (pre-filled from the assessment, asked again only after the wizard, to correct it; `visVisste`), and did the ad or the dealer say something
 // about the car that was not true. A «ja» to the second asks where and what, quoted in the letter as
 // written, so it is not reworded; whether that is documented follows from where it was said.
 export function ForKjopetFelt({
@@ -19,10 +19,11 @@ export function ForKjopetFelt({
   verdi,
   feilopplyst,
   kilder,
+  visVisste,
   aktiv,
   lagre,
   avbryt,
-}: Felles & { svar: Innsending; verdi: Opplysning | undefined; feilopplyst: "ja" | "nei" | undefined; kilder: Kilder | undefined }) {
+}: Felles & { svar: Innsending; verdi: Opplysning | undefined; feilopplyst: "ja" | "nei" | undefined; kilder: Kilder | undefined; visVisste: boolean }) {
   const id = useId();
   const [visste, setVisste] = useState(svar.opplystForKjop);
   const [opplyst, setOpplyst] = useState<"ja" | "nei" | "">(feilopplyst ?? "");
@@ -39,7 +40,7 @@ export function ForKjopetFelt({
     );
   }
 
-  const klar = visste !== "" && (opplyst === "nei" || (opplyst === "ja" && kilde !== "" && tekst.trim().length >= 5));
+  const klar = (!visVisste || visste !== "") && (opplyst === "nei" || (opplyst === "ja" && kilde !== "" && tekst.trim().length >= 5));
   const send = () =>
     lagre({
       svar: { ...svar, opplystForKjop: visste },
@@ -51,7 +52,7 @@ export function ForKjopetFelt({
 
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt}>
-      <Valgfelt label="Visste du om feilen før du kjøpte?" verdi={visste} velg={setVisste} valg={valgAv(OPPLYST_VALG, OPPLYST_TEKST)} />
+      {visVisste && <Valgfelt label="Visste du om feilen før du kjøpte?" verdi={visste} velg={setVisste} valg={valgAv(OPPLYST_VALG, OPPLYST_TEKST)} />}
       <Valgfelt
         label="Sa annonsen eller selgeren noe om bilen som ikke stemte?"
         verdi={opplyst}

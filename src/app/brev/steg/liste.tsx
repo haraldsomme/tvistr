@@ -67,7 +67,7 @@ export function lagSteg({ sakId, input, svar, utfylling, idag, idBase, forslagKj
       id: "for-kjopet",
       tittel: "Før kjøpet",
       ferdig: utfylling.feilopplyst !== undefined,
-      innhold: (f) => <ForKjopetFelt svar={svar} verdi={utfylling.opplysning} feilopplyst={utfylling.feilopplyst} kilder={utfylling.kilder} {...felles(f)} />,
+      innhold: (f) => <ForKjopetFelt svar={svar} verdi={utfylling.opplysning} feilopplyst={utfylling.feilopplyst} kilder={utfylling.kilder} visVisste={utfylling.gjennomgatt === true} {...felles(f)} />,
     },
     {
       id: "kontakt",

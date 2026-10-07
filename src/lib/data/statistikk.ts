@@ -10,8 +10,6 @@ const rows = async <T = Rad>(q: SQL) => (await db.execute(q)).rows as T[];
 
 export type Gruppe = { gruppe: string; n: number; vunnet: number; andel: number; lav: number; hoy: number };
 
-export { wilson };
-
 function tilGrupper(r: { gruppe: string | null; n: number; vunnet: number }[]): Gruppe[] {
   return r
     .map((x) => {

@@ -1,6 +1,6 @@
 import { sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { wilson } from "@/lib/data/statistikk";
+import { wilson } from "@/lib/wilson";
 import type { Faktorer } from "./faktorer";
 
 export type Statistikk = {

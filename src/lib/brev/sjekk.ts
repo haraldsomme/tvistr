@@ -1,13 +1,14 @@
 import { beregnFaktorer, leggTilManeder, PRESUMSJON_TO_AR_FRA, RIMELIG_TID_MANEDER } from "@/lib/vurdering/faktorer";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
-import { byggBrev, harFatt, kreverPenger, kroner, norskDato, REKLAMASJON_ALLTID_I_TIDE_MANEDER, vedleggBrevetByggerPa, vedleggFor, VEDLEGG_NAVN } from "./brev";
+import { harFatt, kreverPenger, kroner, norskDato, REKLAMASJON_ALLTID_I_TIDE_MANEDER, vedleggBrevetByggerPa, vedleggFor, VEDLEGG_NAVN } from "./brev";
 import type { Utfylling } from "./utfylling";
 
 // What can make the letter weak without leaving a yellow field: a complaint that came late, a repair
 // elsewhere the dealer did not get to try first, dates that do not fit together, amounts that cannot be
-// right or are claimed twice, an attachment the letter rests on but does not list, words that make the
-// buyer sound angry, and no way to pay the buyer. Pure, so the letter page, the download and the save
-// dialog (`konsekvenserAv`) agree. The texts speak to the buyer, not the dealer. Not reviewed by a lawyer.
+// right or are claimed twice, an attachment the letter rests on but does not list, and no way to pay the
+// buyer. What the buyer typed is checked by the clarifying round and the letter by the writing engine's
+// check and review (src/lib/brev/skriving/). Pure, so the letter page, the download and the save dialog
+// (`konsekvenserAv`) agree. The texts speak to the buyer, not the dealer. Not reviewed by a lawyer.
 //
 // `hard` is a point that can sink the claim or makes the letter contradict itself: the page asks before
 // the letter is downloaded, and a save that adds one asks first. `myk` is shown above the letter only.
@@ -23,13 +24,6 @@ const dager = (fra: string, til: string) => Math.round((Date.parse(`${til}T00:00
 // The dealer needs some days to answer and repair; a repair elsewhere sooner than this after the
 // complaint is hard to call the dealer's failure to repair within reasonable time.
 const MIN_DAGER_FOR_IKKE_RETTET = 14;
-// Less than this is no description of a defect («Bilen funker ikke»).
-const FEILTEKST_FOR_KORT = 40;
-const FEILTEKST_KORT = 100;
-// About two minutes of reading.
-const MAKS_ORD = 550;
-// The buyer can only shorten the description; the rest of the letter is fixed.
-const LANG_FEILTEKST_ORD = 150;
 const LAV_KJOPESUM = 5000;
 // Foreldelsesloven: a claim for a defect is time-barred three years after delivery (§ 3 nr. 2, § 2), but
 // never before a year after the buyer learned of it (§ 10 nr. 1). A complaint to the dealer does not stop it.
@@ -41,28 +35,8 @@ const FORELDELSE_VARSEL_DAGER = 60;
 // be a few weeks earlier. Purchases this close after the change in 2024 are asked to check.
 const NAER_LOVENDRING_DAGER = 31;
 
-// Whole words that make a letter sound angry or unserious, and repeated marks. Checked on what the buyer
-// typed. Letters on both sides keep «tyverialarm», «politikontroll» and «multimedia» out.
-const ORD = (ord: string) => `(?<!\\p{L})(?:${ord})(?!\\p{L})`;
-const SINT = new RegExp(
-  `!{2,}|\\?{2,}|${ORD("svindl\\p{L}*|kjeltring\\p{L}*|idiot\\p{L}*|politiet|politianmeld\\p{L}*|anmelde|anmelder|anmeldt|facebook|sosiale medier|avisen|lol|faen|jævl\\p{L}*|drit\\p{L}*|helvete|tyv|tyver|tyven|kriminell\\p{L}*|lurt meg|lurte meg")}`,
-  "iu",
-);
-// A lot of capitals, after codes like P0299, EGR or DPF are taken out.
-const forMangeStore = (t: string) => {
-  const bokstaver = t.replace(/\b[PCBU]\d{4}\b/g, "").replace(/\b[A-ZÆØÅ]{2,5}\b/g, "").replace(/[^A-Za-zÆØÅæøå]/g, "");
-  return bokstaver.length >= 20 && bokstaver.replace(/[^A-ZÆØÅ]/g, "").length / bokstaver.length > 0.5;
-};
-// A report that says nothing about when the defect arose does not show it was there at delivery.
-const OM_TIDSPUNKT = new RegExp(
-  `${ORD("før")}|kjøp|lever|overt|oppst|til stede|tilstede|eksister|lenge|alder|slitasje|over tid|gammel|gamle|eldre|tidligere|produksjon|fra ny|siden|${ORD("år")}|måned|utviklet|gradvis|over flere|over lang|langvarig|allerede|historisk`,
-  "iu",
-);
 // A report should come from a workshop, an assessor or the like, not a relative.
 const FAGLIG_KILDE = /(\bAS\b|\bASA\b|\bENK\b|\bDA\b|\bANS\b|verksted|bil|naf|takst|mekan|service|motor|senter|center|teknikk|auto|lakk|dekk|garasje|forhandler|merkeverksted|vegvesen|eu-kontroll)/i;
-// Costs in the defect description belong in the claim.
-const BELOP = /\d[\d .]*\s?(kr\b|kroner|,-)/i;
-const NEVNER_KONTAKT = /(ringt|ringte|kontaktet|tok opp|tatt opp|nekte|avvis|klaget|reklamert|sendt e-?post|sendte e-?post)/i;
 const REPARASJON_I_UTGIFT = /(repar|bytt|ny |nytt |deler|motor|girkasse|clutch|utbedr)/i;
 const IKKE_OKONOMISK = /(tort|svie|stress|ulempe|plage|irritasjon|egen tid|min tid|tapt tid|bryderi)/i;
 const OKONOMISK = /(inntekt|lønn|arbeid|fravær)/i;
@@ -83,25 +57,6 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
   // § 27 (1): within two months is always in time; past six months we call it late.
   const forSentEtter = (fra: string, til: string): "hard" | "myk" | null =>
     til > leggTilManeder(fra, RIMELIG_TID_MANEDER) ? "hard" : til > leggTilManeder(fra, REKLAMASJON_ALLTID_I_TIDE_MANEDER) ? "myk" : null;
-
-  // What the buyer typed: no anger, no threats, no notes to self.
-  const fritekst: { tekst: string; steg: string; sitat?: boolean }[] = [
-    ...(u.feilen?.avsnitt ?? []).map((tekst) => ({ tekst, steg: "feilen" })),
-    ...(u.rapport ? [{ tekst: `${u.rapport.fra} ${u.rapport.sitat ?? ""}`, steg: "rapport", sitat: true }] : []),
-    ...(u.opplysning && input.feilen.feilOpplysning !== "nei" ? [{ tekst: u.opplysning.tekst, steg: "for-kjopet" }] : []),
-    ...utgifter.filter((x) => x.beskrivelse).map((x) => ({ tekst: x.beskrivelse!, steg: "krav" })),
-  ];
-  // A transcript of a report may be in capitals; it is quoted as written.
-  const sint = fritekst.find((x) => SINT.test(x.tekst) || (!x.sitat && forMangeStore(x.tekst)));
-  if (sint) {
-    const ord = sint.tekst.match(SINT)?.[0];
-    legg({
-      id: "tone",
-      alvor: "hard",
-      steg: sint.steg,
-      tekst: `Brevet har ${ord ? `ord som kan virke sinte eller truende («${ord}»)` : "mye tekst med store bokstaver"}. Et saklig brev står sterkere hos forhandleren og i Forbrukerklageutvalget. Skriv det om.`,
-    });
-  }
 
   // The complaint and when it came.
   if (kontakt === "nei") {
@@ -289,39 +244,13 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
     legg({ id: "ikke_okonomisk_tap", alvor: "myk", steg: "krav", tekst: "Erstatning etter § 33 dekker økonomisk tap du kan dokumentere, ikke ulempe eller tort og svie. Fjern den utgiften under «Kravet»." });
   }
 
-  // The defect description.
-  const feiltekst = (u.feilen?.avsnitt ?? []).join(" ");
-  if (u.feilen && feiltekst.length < FEILTEKST_KORT) {
-    legg({
-      id: "feil_kort",
-      alvor: feiltekst.length < FEILTEKST_FOR_KORT ? "hard" : "myk",
-      steg: "feilen",
-      tekst: "Feilbeskrivelsen er kort. Skriv hva som skjer, når og hvor ofte, hva verkstedet har funnet, og hva det betyr for bruken av bilen.",
-    });
-  }
-  if (BELOP.test(feiltekst)) {
-    legg({ id: "feil_med_belop", alvor: "myk", steg: "feilen", tekst: "Feilbeskrivelsen nevner et beløp. Beløp hører hjemme under «Kravet», der de får riktig hjemmel." });
-  }
-  if (kontakt === "nei" && NEVNER_KONTAKT.test(feiltekst)) {
-    legg({ id: "feil_motsier_kontakt", alvor: "myk", steg: "kontakt", tekst: "Feilbeskrivelsen sier at du har vært i kontakt med forhandleren, men du har svart at du ikke har tatt opp feilen. Rett svaret under «Kontakt med forhandleren», så kommer datoen med i brevet." });
-  }
-
   // The report.
-  if (f.rapportSierForKjop === true && !u.rapport) {
-    legg({ id: "rapport_uten_sitat", alvor: "myk", steg: "rapport", tekst: "Brevet viser til en rapport uten å si hvem som skrev den, når, eller hva den sier. Skriv av det rapporten sier om årsaken, så står det sitert i brevet." });
-  }
   if (u.rapport && feilDato && u.rapport.dato < feilDato) {
     legg({ id: "rapport_for_feilen", alvor: "myk", steg: "rapport", tekst: `Rapporten er datert ${norskDato(u.rapport.dato)}, før feilen viste seg ${norskDato(feilDato)}. Sjekk datoen.` });
   }
   if (u.rapport && !FAGLIG_KILDE.test(u.rapport.fra)) {
     legg({ id: "rapport_fra_privat", alvor: "myk", steg: "rapport", tekst: `Rapporten er fra «${u.rapport.fra}». Den veier mest når den er skrevet av et verksted, NAF eller en takstmann. Står det et firmanavn på rapporten, skriv det.` });
   }
-  // What the report says: the buyer's transcript from before, or the pasted text.
-  const rapportTekst = u.rapport?.sitat ?? u.kilder?.rapport;
-  if (u.rapport && f.rapportSierForKjop === true && rapportTekst && !OM_TIDSPUNKT.test(rapportTekst)) {
-    legg({ id: "rapport_sitat_uten_tid", alvor: "myk", steg: "rapport", tekst: "Sitatet fra rapporten sier ikke når feilen oppsto, men brevet bruker det som bevis for at feilen var der da du kjøpte bilen. Skriv av det rapporten sier om årsaken og tidspunktet." });
-  }
-
   // Attachments: everything the letter rests on should be listed (and enclosed), and nothing it does not mention.
   const medRetting = { ...u, retting };
   const vedlagt = vedleggFor(input, medRetting);
@@ -363,13 +292,6 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
   }
   if (u.avsender && kreverPenger(medRetting) && !u.avsender.kontonummer) {
     legg({ id: "kontonummer_mangler", alvor: "myk", steg: "avsender", tekst: "Brevet krever penger, men har ikke kontonummeret ditt. Fyll det inn under «Om deg», så vet forhandleren hvor beløpet skal betales." });
-  }
-
-  // Length: about two minutes of reading.
-  const brev = byggBrev(input, idag, u);
-  const ord = [brev.emne, ...brev.avsnitt].join(" ").split(/\s+/).length;
-  if (ord > MAKS_ORD && feiltekst.split(/\s+/).length > LANG_FEILTEKST_ORD) {
-    legg({ id: "langt_brev", alvor: "myk", steg: "feilen", tekst: `Brevet er ${ord} ord langt. Et kort brev blir lest: kort ned feilbeskrivelsen til det viktigste.` });
   }
 
   return [...ut.filter((a) => a.alvor === "hard"), ...ut.filter((a) => a.alvor === "myk")];

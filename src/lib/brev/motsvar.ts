@@ -8,6 +8,8 @@ export type Motargument = { nokkel: "slitasje" | "forbehold" | "for_sent" | "opp
 // model output; legal wording as in JURIDISK (brev.ts) and not yet reviewed by a lawyer. Pure, so the
 // tab beside the letter builds it from the same answers as the letter.
 export function motsvar(f: Faktorer, u: Utfylling): Motargument[] {
+  // The words from the report the written letter quotes; else the buyer's transcript from before.
+  const rapportSitat = u.brev?.utkast.sitater.find((x) => x.kilde === "rapport")?.tekst ?? u.rapport?.sitat;
   const mal: Motargument[] = [
     {
       nokkel: "forbehold",
@@ -37,7 +39,7 @@ export function motsvar(f: Faktorer, u: Utfylling): Motargument[] {
       tittel: "«Feilen oppsto etter kjøpet»",
       svar: f.presumsjon
         ? `Feilen viste seg innen ${f.presumsjonManeder === 24 ? "to år" : "seks måneder"} etter levering. Etter § 18 antas den da å ha eksistert ved leveringen, og det er forhandleren som må bevise noe annet.`
-        : `${u.rapport ? `Rapporten fra ${u.rapport.fra} datert ${norskDato(u.rapport.dato)} ${u.rapport.sitat ? `sier: «${utenSluttegn(u.rapport.sitat)}». ` : "viser at feilen var til stede ved levering. "}` : "Jeg har dokumentasjon på at feilen har en årsak som var til stede ved levering. "}Be forhandleren legge fram sin dokumentasjon for at feilen oppsto senere.`,
+        : `${u.rapport ? `Rapporten fra ${u.rapport.fra} datert ${norskDato(u.rapport.dato)} ${rapportSitat ? `sier: «${utenSluttegn(rapportSitat)}». ` : "viser at feilen var til stede ved levering. "}` : "Jeg har dokumentasjon på at feilen har en årsak som var til stede ved levering. "}Be forhandleren legge fram sin dokumentasjon for at feilen oppsto senere.`,
       relevant: !f.presumsjon || f.rapportSierForKjop === false,
     },
     {

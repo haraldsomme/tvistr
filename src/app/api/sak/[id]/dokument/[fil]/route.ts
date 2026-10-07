@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const sak = await hentSak(id);
     if (!sak) return Response.json(FINNES_IKKE, { status: 404 });
     const brev = await (fil.startsWith("purring") ? purringForSak(sak) : brevForSak(sak));
-    if (!brev) return Response.json({ feil: "Svarene i saken gir ikke et brev. Rett svarene først." }, { status: 409 });
+    if (!brev) return Response.json({ feil: fil.startsWith("purring") || sak.utfylling.brev ? "Svarene i saken gir ikke et brev. Rett svarene først." : "Brevet er ikke skrevet ennå." }, { status: 409 });
     const f = FILER[fil as keyof typeof FILER];
     const bytes = fil.endsWith(".pdf") ? await tilPdf(brev) : await tilDocx(brev);
     return new Response(Buffer.from(bytes), {

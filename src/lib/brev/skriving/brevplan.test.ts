@@ -175,6 +175,41 @@ describe("planlegg", () => {
     expect(p.henvisning === null || p.henvisning.dato <= "2024-03-01").toBe(true);
   });
 
+  // Carried over from the tests of the template (brev.test.ts), which went with it.
+  it("forbeholdet: «som den er» etter loven før og etter 2024, og garantien", () => {
+    const foring = (g: Parameters<typeof modell>[0]) => plan(g).argumenter.find((a) => a.id === "forbehold")?.foring ?? "";
+    expect(foring({ utfylling: { feilen, forbehold: "som_den_er" } })).toContain("ingen virkning");
+    expect(foring({ svar: svar({ kjopAlder: "2_5", kjopsdato: "2023-05-31" }), utfylling: { feilen: { ...feilen, dato: "2023-08-01" }, forbehold: "som_den_er" } })).toContain("slik den lød");
+    expect(foring({ utfylling: { feilen, forbehold: "garanti" } })).toContain("Garantien");
+    expect(ider({ utfylling: { feilen, forbehold: "ingen" } })).not.toContain("forbehold");
+  });
+
+  it("slitasje er et argument for feil slitasje kan forklare, ikke for kilometer og historikk", () => {
+    expect(ider({ svar: svar({ feiltyper: ["rust"] }) })).toContain("slitasje");
+    expect(forbudte({ svar: svar({ feiltyper: ["km_service"] }) })).toContain("slitasje");
+  });
+
+  it("vedleggene er det brevet bygger på: kontrakt, rapport og faktura for reparasjon andre steder", () => {
+    const p = plan({ svar: svar({ verkstedrapport: "ja", rapportSierForKjop: "ja" }), utfylling: { feilen, retting: "reparert_selv", reparasjon: { dato: "2026-04-10", grunn: "nodvendig" } } });
+    expect(p.argumenter.find((a) => a.id === "vedlegg")?.data.vedlegg).toEqual(["kjøpekontrakt", "verkstedrapport", "faktura for reparasjonen"]);
+  });
+
+  it("en uriktig opplysning uten tekst blir en plassholder", () => {
+    const p = plan({ svar: svar({ feilOpplysning: "ja_udokumentert" }), utfylling: { feilen } });
+    expect(p.argumenter.map((a) => a.id)).toContain("opplysning");
+    expect(p.mangler.map((m) => m.tekst)).toContain("hva annonsen eller selgeren opplyste som ikke stemte");
+  });
+
+  it("gjør gunstige svar på momenter om til argumenter, og ugunstige til svakheter", () => {
+    const avklaring = (svar: string) => ({ runde: 1, moment: "km_etter_kjop", tema: "feilen" as const, sporsmal: "Hvor langt hadde du kjørt?", svar });
+    const gunstig = plan({ utfylling: { feilen, avklaringer: [avklaring("Under 1 000 km")] } });
+    const m = gunstig.argumenter.find((a) => a.id === "momenter");
+    expect(m?.foring).toContain("lite sannsynlig at feilen har oppstått etter overtakelsen");
+    const ugunstig = plan({ utfylling: { feilen, avklaringer: [avklaring("Over 15 000 km")] } });
+    expect(ugunstig.argumenter.map((a) => a.id)).not.toContain("momenter");
+    expect(ugunstig.advarsler.map((a) => a.id)).toContain("moment-km_etter_kjop");
+  });
+
   it("tar tekstreglene ut av advarslene", () => {
     const p = plan({ utfylling: { feilen: { ...feilen, egen: "Feil", avsnitt: ["Feil."] } } });
     expect(p.advarsler.map((a) => a.id)).not.toContain("feil_kort");

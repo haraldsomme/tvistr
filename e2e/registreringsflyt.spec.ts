@@ -79,6 +79,30 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await expect(veiviser.tittel("Takk! Nå lager vi brevet ditt.")).toBeVisible();
   // The clarifying round calls the language model; here it answers with one question, then «klar».
   let avklaringer = 0;
+  // Writing the letter calls the language model; here a made-up letter comes back as the stream would,
+  // laid on the case as the server has it (an empty save returns it unchanged).
+  await page.route("**/api/sak/*/skriv", async (route) => {
+    const lagret = await route.fetch({ url: route.request().url().replace(/\/skriv$/, ""), method: "PATCH", headers: { "Content-Type": "application/json" }, postData: "{}" });
+    const { utfylling } = (await lagret.json()) as { utfylling: Record<string, unknown> };
+    const setning = (tekst: string) => ({ tekst, argumenter: [] });
+    const brev = {
+      utkast: {
+        sitater: [],
+        avsnitt: [
+          { setninger: [setning("Jeg viser til kjøpet av bilen fra dere 12. mars 2024 for 250 000 kr."), setning("Motorlampen lyser, og bilen mister kraft i motbakker.")] },
+          { setninger: [setning("Et alminnelig forbehold om at bilen selges «som den er», har ingen virkning overfor meg som forbruker, jf. § 15 andre ledd og § 3.")] },
+          { setninger: [setning("Jeg ber om skriftlig svar innen {{dato:svarfrist}}.")] },
+        ],
+      },
+      avvik: [],
+      funn: [],
+      grunnlag: "test",
+      versjon: "test",
+      skrevet: "2026-10-07T00:00:00.000Z",
+    };
+    const linjer = [{ fremdrift: "skriver" }, { fremdrift: "leser" }, { ferdig: true, utfylling: { ...utfylling, brev } }];
+    return route.fulfill({ contentType: "application/x-ndjson", body: linjer.map((l) => JSON.stringify(l)).join("\n") + "\n" });
+  });
   await page.route("**/api/sak/*/avklaring", (route) => {
     avklaringer++;
     const sporsmal = [{ id: "r1s1", tema: "feilen", tekst: "Hvor ofte lyser motorlampen?", alternativer: ["Hver gang bilen kjøres", "Av og til"], flervalg: false }];
@@ -153,6 +177,6 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await expect(brev.ark).toContainText("Testbil AS");
   // Bought in 2024: a general «som den er» has no effect against a consumer (§ 15 andre ledd).
   await expect(brev.ark).toContainText("selges «som den er», har ingen virkning");
-  await expect(brev.ark).not.toContainText("[Beskriv feilen");
   await expect(brev.ark).not.toContainText("[Ditt navn]");
+  await expect(brev.ark).not.toContainText("{{");
 });

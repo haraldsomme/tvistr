@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { Logo } from "@/app/logo";
 import { DownloadIcon, FileTextIcon, FolderOpenIcon, MessageSquareReplyIcon, PencilLineIcon, WrenchIcon, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,11 @@ import { AlertDialog } from "@/components/ui/alert-dialog";
 import { BekreftKnapp, Dialoginnhold, useBekreftLagring } from "./bekreft";
 import { KontaktFelt } from "./steg/kontakt";
 import { lagSteg } from "./steg/liste";
-import { byggBrev, harPlassholder, henvisningFor } from "@/lib/brev/brev";
+import { harPlassholder, henvisningFor } from "@/lib/brev/brev";
+import { planlegg } from "@/lib/brev/skriving/brevplan";
+import { grunnlagFor } from "@/lib/brev/skriving/grunnlag";
+import { skrevetBrev } from "@/lib/brev/skriving/render";
+import { lagSaksmodell } from "@/lib/brev/skriving/saksmodell";
 import { motsvar } from "@/lib/brev/motsvar";
 import { sjekkBrev, type Advarsel } from "@/lib/brev/sjekk";
 import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
@@ -20,6 +24,7 @@ import { gyldigRetting } from "@/lib/vurdering/typer";
 import { Brevark } from "./brevark";
 import { Saksmappe } from "./mappe/saksmappe";
 import { Motsvar } from "./motsvar";
+import { useSkriving, Venteskjerm } from "./skriving";
 
 const MERKE_MANGLER = "whitespace-nowrap rounded bg-[oklch(0.96_0.07_85)] px-2 py-[3px] text-[12px] font-semibold text-[#6b5618]";
 
@@ -80,6 +85,35 @@ function lastNed(href: string) {
   document.body.appendChild(a);
   a.click();
   a.remove();
+}
+
+// Before the letter is written: why it is not there yet, and the way to it.
+function IkkeSkrevet({ avklart, feil, skriv, gjennomgang }: { avklart: boolean; feil: string | null; skriv: () => void; gjennomgang: string }) {
+  return (
+    <section className="flex w-full flex-col gap-3 rounded-lg border border-[#dcd8cf] bg-white px-6 py-8 text-[#17263d]">
+      <h2 className="m-0 font-brev text-[20px] font-semibold">Brevet er ikke skrevet ennå</h2>
+      <p className="m-0 text-[14px] leading-[1.55] text-[#3d4757]">
+        {avklart
+          ? "Vi skriver brevet ut fra det du har fylt inn."
+          : "Vi skriver brevet ut fra det du har fylt inn. Går du gjennom spørsmålene om saken først, blir brevet mer presist."}
+      </p>
+      {feil && (
+        <p role="alert" className="m-0 text-[13px] leading-[1.5] text-[#a23b2a]">
+          {feil}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" onClick={skriv}>
+          {feil ? "Prøv igjen" : "Skriv brevet"}
+        </Button>
+        {!avklart && (
+          <Button asChild variant="ghost">
+            <a href={gjennomgang}>Gå gjennom spørsmålene først</a>
+          </Button>
+        )}
+      </div>
+    </section>
+  );
 }
 
 // What to check before the letter is sent: what is still yellow, and the weaknesses that leave no yellow
@@ -164,16 +198,12 @@ export function BrevSide({
   const [utfylling, setUtfylling] = useState(startUtfylling);
   // On a narrow screen only one of the fill-in list and the letter shows at a time (on a wide screen
   // both always do); a letter with something still missing opens on the list, a finished one on itself.
-  const parsed0 = tilKlageInput(startSvar, idag);
-  const alleredeFerdig = parsed0.ok && !harPlassholder(byggBrev(parsed0.input, idag, startUtfylling));
-  const [fane, setFane] = useState<Fane>(alleredeFerdig ? "brev" : "fyll");
+  const [fane, setFane] = useState<Fane>(startUtfylling.brev ? "brev" : "fyll");
   const [feil, setFeil] = useState<string | null>(null);
   // A download waiting for the buyer to confirm it, while the letter still has something to fix.
   const [nedlasting, setNedlasting] = useState<string | null>(null);
   const router = useRouter();
   const idBase = useId();
-  // The defect is described in the wizard, which comes back to the letter when it is saved.
-  const feilenAdresse = `/brev/${id}/veiviser?steg=feilen&tilbake=brev`;
   // A finished step the user is changing. It is the open step until it is saved or cancelled.
   const [redigerer, setRedigerer] = useState<string | null>(null);
   const parsed = tilKlageInput(svar, idag);
@@ -218,12 +248,21 @@ export function BrevSide({
     }
   }
 
+  // Writing the letter; the case comes back with it stored.
+  const skriving = useSkriving(id, setUtfylling);
+  // After the clarifying round the letter is written without asking; a case left before it gets a button.
+  const skrivNa = !!utfylling.avklart && !utfylling.brev && !skriving.feil;
+  useEffect(() => {
+    if (!skrivNa) return;
+    // In a callback, so the effect does not set state itself; the hook starts one writing at a time.
+    const t = setTimeout(() => void skriving.skriv(), 0);
+    return () => clearTimeout(t);
+    // `skriving` changes every render; `skrivNa` decides.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skrivNa]);
+
   // Opens the step a clicked placeholder in the letter belongs to.
   function apneSteg(stegId: string) {
-    if (stegId === "feilen") {
-      router.push(feilenAdresse);
-      return;
-    }
     setFane("fyll");
     setRedigerer(stegId);
     requestAnimationFrame(() => document.getElementById(`steg-${stegId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
@@ -262,8 +301,7 @@ export function BrevSide({
   }
 
   // The steps in order (`steg/liste.tsx`). «Forhandleren» looks up the dealer itself and handles its
-  // own «Endre» (it clears the value); «Feilen» is changed in the wizard; the rest keep their value
-  // while it is being changed.
+  // own «Endre» (it clears the value); the rest keep their value while it is being changed.
   const steg = lagSteg({ sakId: id, input, svar, utfylling, idag, idBase, lagre: bekreft.lagre });
   const aktivId = redigerer ?? steg.find((s) => !s.ferdig)?.id ?? null;
   function erAktiv(stegId: string) {
@@ -271,12 +309,21 @@ export function BrevSide({
   }
   const ferdigAntall = steg.filter((s) => s.ferdig).length;
 
-  const brev = byggBrev(input, idag, utfylling);
+  // The letter as written, shown with today's date and the marks filled in from the case as it is now.
+  const lest = lagSaksmodell({ svar, utfylling }, idag);
+  const plan = lest.ok ? planlegg(lest.modell) : null;
+  const brev = utfylling.brev && lest.ok && plan ? skrevetBrev(utfylling.brev.utkast, plan, lest.modell, idag) : null;
+  const utdatert = !!utfylling.brev && lest.ok && plan !== null && grunnlagFor(lest.modell, plan) !== utfylling.brev.grunnlag;
   const henvisning = henvisningFor(input, idag, utfylling);
-  const plassholdere = harPlassholder(brev);
-  const advarsler = sjekkBrev(input, utfylling, idag);
+  const plassholdere = brev !== null && harPlassholder(brev);
+  // The weaknesses of the case, what the check could not fix, and the review's remarks.
+  const advarsler: Advarsel[] = [
+    ...sjekkBrev(input, utfylling, idag),
+    ...(utfylling.brev?.avvik ?? []).map((a, n): Advarsel => ({ id: `avvik-${n}`, tekst: `Brevet har en feil vi ikke klarte å rette: ${a.tekst}`, steg: null, alvor: "hard" })),
+    ...(utfylling.brev?.funn ?? []).map((f, n): Advarsel => ({ id: `funn-${n}`, tekst: `Merknad fra gjennomlesingen: ${f.hvorfor}`, steg: null, alvor: "myk" })),
+  ];
   const harde = advarsler.filter((a) => a.alvor === "hard");
-  const maBekrefte = plassholdere || harde.length > 0;
+  const maBekrefte = brev !== null && (plassholdere || harde.length > 0 || utdatert);
   const iVerktoy = fane === "motsvar" || fane === "mappe";
   const faneKlasse = (valgt: boolean) =>
     `-mb-px flex items-center gap-2 rounded-t-md border-b-2 px-4 py-3 text-[15px] font-semibold outline-none focus-visible:bg-[#dcd8cf]/70 ${valgt ? "border-[#17263d] text-[#17263d]" : "border-transparent text-[#5b6472]"}`;
@@ -332,7 +379,7 @@ export function BrevSide({
           {NEDLASTINGER.map((n) => {
             const href = `/api/sak/${id}/dokument/${n.fil}`;
             return (
-              <DropdownMenuItem key={n.fil} onSelect={() => (maBekrefte ? setNedlasting(href) : lastNed(href))} className="items-start gap-3 px-3 py-2.5">
+              <DropdownMenuItem key={n.fil} disabled={!brev} onSelect={() => (maBekrefte ? setNedlasting(href) : lastNed(href))} className="items-start gap-3 px-3 py-2.5">
                 <DownloadIcon aria-hidden className="mt-0.5 size-[18px] shrink-0 text-[#17263d]" />
                 <span className="flex flex-col gap-0.5">
                   <span className="text-[15px] font-semibold text-[#17263d]">{n.tekst}</span>
@@ -354,7 +401,7 @@ export function BrevSide({
       {/* On a narrow screen the tab «Endre» names the list; the heading is for the column beside the letter. */}
       <div className="flex items-baseline justify-between gap-3 max-lg:sr-only">
         <h2 id="mangler-tittel" className="m-0 font-brev text-[22px] font-semibold leading-[1.3]">
-          Fyll inn det som mangler
+          Dette bygger brevet på
         </h2>
         <span className="whitespace-nowrap text-[13px] text-[#5b6472]">
           {ferdigAntall} av {steg.length}
@@ -369,7 +416,7 @@ export function BrevSide({
             tittel={s.tittel}
             tittelId={`${idBase}-${s.id}`}
             status={s.id === aktivId ? "aktiv" : s.ferdig ? "ferdig" : "venter"}
-            endre={s.id !== "forhandler" && s.ferdig ? () => (s.id === "feilen" ? router.push(feilenAdresse) : setRedigerer(s.id)) : undefined}
+            endre={s.id !== "forhandler" && s.ferdig ? () => setRedigerer(s.id) : undefined}
           >
             {s.innhold({ aktiv: erAktiv(s.id), avbryt: redigerer === s.id ? () => setRedigerer(null) : undefined })}
           </Steg>
@@ -392,8 +439,29 @@ export function BrevSide({
             : "Med disse svarene gjelder ikke forbrukerkjøpsloven for kjøpet (kjøp fra en privatperson eller gjennom et firma). Brevet står som det er, men forhandleren kan avvise kravet. Sjekk at svarene fra vurderingen stemmer."}
         </p>
       )}
-      <SjekkFoerSending plassholdere={plassholdere} advarsler={advarsler} apne={apneSteg} />
-      <Brevark brev={brev} apne={apneSteg} />
+      {skriving.fremdrift ? (
+        <Venteskjerm fremdrift={skriving.fremdrift} />
+      ) : !brev ? (
+        <IkkeSkrevet avklart={!!utfylling.avklart} feil={skriving.feil} skriv={() => void skriving.skriv()} gjennomgang={`/brev/${id}/veiviser?steg=gjennomgang&tilbake=brev`} />
+      ) : (
+        <>
+          {utdatert && (
+            <div role="status" className="flex flex-wrap items-center gap-3 rounded-lg border border-[oklch(0.72_0.11_85)] bg-[oklch(0.96_0.07_85)] px-[18px] py-3.5 text-[14px] leading-[1.55] text-[#6b5618]">
+              <span className="flex-1">Du har endret opplysninger etter at brevet ble skrevet.</span>
+              <Button type="button" size="sm" onClick={() => void skriving.skriv()}>
+                Skriv brevet på nytt
+              </Button>
+            </div>
+          )}
+          {skriving.feil && (
+            <p role="alert" className="m-0 text-[13px] leading-[1.5] text-[#a23b2a]">
+              {skriving.feil}
+            </p>
+          )}
+          <SjekkFoerSending plassholdere={plassholdere} advarsler={advarsler} apne={apneSteg} />
+          <Brevark brev={brev} apne={apneSteg} mangler={plan?.mangler} />
+        </>
+      )}
       <p className="m-0 text-[13px] leading-[1.55] text-[#5b6472]">{SENDING}</p>
     </div>
   );
@@ -425,6 +493,7 @@ export function BrevSide({
             tekst={
               <>
                 <ul className="m-0 flex list-disc flex-col gap-1 pl-5">
+                  {utdatert && <li>Du har endret opplysninger etter at brevet ble skrevet. Skriv brevet på nytt for å få dem med.</li>}
                   {plassholdere && <li>Brevet har felt som mangler (markert gult). De står med hakeparenteser i filen.</li>}
                   {harde.map((a) => (
                     <li key={a.id}>{a.tekst}</li>

@@ -13,7 +13,9 @@
       "Den sier bare hva som er galt eller må byttes",
       "Jeg har ingen skriftlig vurdering fra verksted"
     ],
-    "gunstig": ["Den angir en konkret årsak etter å ha undersøkt bilen"],
+    "gunstig": [
+      "Den angir en konkret årsak etter å ha undersøkt bilen"
+    ],
     "argument": "Verkstedet undersøkte bilen og konkluderte med at feilen skyldes «(årsaken verkstedet oppga)». Årsaken er dermed kjent og ligger i bilen selv."
   },
   {
@@ -26,11 +28,14 @@
     "sporsmal": "Sier verkstedet eller rapporten noe om feilen er vanlig for en bil med denne alderen og kilometerstanden?",
     "alternativer": [
       "Ja, at delen normalt skal vare mye lenger",
-      "Ja, at det er en kjent svakhet ved denne modellen",
+      "Ja, at det er en konstruksjons- eller produksjonsfeil ved modellen",
       "Ja, at slik feil er vanlig for alderen og kilometerstanden",
       "Nei, den sier ikke noe om det"
     ],
-    "gunstig": ["Ja, at delen normalt skal vare mye lenger", "Ja, at det er en kjent svakhet ved denne modellen"],
+    "gunstig": [
+      "Ja, at delen normalt skal vare mye lenger",
+      "Ja, at det er en konstruksjons- eller produksjonsfeil ved modellen"
+    ],
     "argument": "Ifølge «(hvem som skrev vurderingen)» er dette ikke en feil man må regne med på en bil med denne alderen og kilometerstanden: «(det vurderingen sier)». Bilen var derfor i dårligere stand enn jeg hadde grunn til å regne med, jf. § 15."
   },
   {
@@ -46,7 +51,9 @@
       "Ja, at det er min bruk, slitasje eller ytre skade, uten å vise til noen undersøkelse",
       "Ja, og forhandleren viser til en undersøkelse eller rapport om bilen"
     ],
-    "gunstig": ["Ja, at det er min bruk, slitasje eller ytre skade, uten å vise til noen undersøkelse"],
+    "gunstig": [
+      "Ja, at det er min bruk, slitasje eller ytre skade, uten å vise til noen undersøkelse"
+    ],
     "argument": "Dere har hevdet at feilen skyldes «(det forhandleren har sagt)», men har ikke lagt fram noe som underbygger det for denne bilen. En påstand uten dokumentasjon svekker ikke det som ellers viser at feilen var der da jeg overtok bilen."
   },
   {
@@ -62,8 +69,10 @@
       "Ja, men den nevner ikke feilen",
       "Nei, jeg har ikke sett noen slike"
     ],
-    "gunstig": ["Ja, og den nevner feilen eller tegn på den"],
-    "argument": "Feilen var registrert allerede før salget: «(dokumentet, datoen og det det sier)». Feilen fantes altså da jeg overtok bilen, og dere som forhandler burde ha kjent til den og opplyst om den, jf. § 16."
+    "gunstig": [
+      "Ja, og den nevner feilen eller tegn på den"
+    ],
+    "argument": "Feilen var registrert allerede før salget: «(dokumentet, datoen og det det sier)». Feilen fantes altså da jeg overtok bilen, og dere som forhandler burde ha kjent til den og opplyst om den, og det hadde hatt betydning for kjøpet, jf. § 16."
   },
   {
     "id": "udokumenterte_tilleggsfeil",
@@ -79,7 +88,10 @@
       "Bare noen av feilene er dokumentert",
       "Ingen av feilene er dokumentert ennå"
     ],
-    "gunstig": ["Jeg klager bare på én feil", "Ja, alle feilene er dokumentert"],
+    "gunstig": [
+      "Jeg klager bare på én feil",
+      "Ja, alle feilene er dokumentert"
+    ],
     "argument": "Kravet mitt gjelder «(feilen eller feilene)», og hver av dem er dokumentert med «(dokumentasjonen)»."
   },
   {
@@ -88,7 +100,17 @@
     "beskrivelse": "Til stede når feilen gjelder en del som slites ved vanlig bruk og byttes jevnlig (for eksempel bremser, dekk, clutch, støtdempere, 12-voltsbatteri, mansjetter, eksosfester), eller en del med fast byttetid som var nådd eller passert. Ikke til stede når delen normalt skal vare bilens levetid eller vesentlig lenger enn bilen var kjørt (for eksempel motorblokk, girkasse, registerkjede, styreenheter, ledningsnett), eller når en slitedel er skadet av noe annet enn slitasje.",
     "retning": "mot",
     "tema": "forventning",
-    "gjelder": { "grupper": ["motor", "elektrisk", "understell", "bremser", "girkasse", "klimaanlegg", "batteri"] },
+    "gjelder": {
+      "grupper": [
+        "motor",
+        "elektrisk",
+        "understell",
+        "bremser",
+        "girkasse",
+        "klimaanlegg",
+        "batteri"
+      ]
+    },
     "sporsmal": "Hva slags del er det som har sviktet?",
     "alternativer": [
       "En del som normalt skal vare like lenge som bilen",
@@ -96,8 +118,11 @@
       "En del med anbefalt byttetid, som var nådd eller passert",
       "En del som slites og byttes jevnlig"
     ],
-    "gunstig": ["En del som normalt skal vare like lenge som bilen", "En del med anbefalt byttetid, som ikke var nådd"],
-    "argument": "Delen som har sviktet, «(delen)», er ikke en slitedel, men en del som normalt skal vare «(det kjøperen svarte)». At den svikter nå, er mer enn jeg kunne regne med ut fra bilens alder, kilometerstand og pris, jf. § 15."
+    "gunstig": [
+      "En del som normalt skal vare like lenge som bilen",
+      "En del med anbefalt byttetid, som ikke var nådd"
+    ],
+    "argument": "Delen som har sviktet, «(delen)», er ikke en slitedel, men en del som normalt skal vare «(hvor lenge delen normalt varer)». At den svikter nå, er mer enn jeg kunne regne med ut fra bilens alder, kilometerstand og pris, jf. § 15."
   },
   {
     "id": "skjult_feil",
@@ -113,8 +138,11 @@
       "Ja, den kunne ses eller merkes, men jeg la ikke merke til den",
       "Ja, en varsellampe lyste eller feilen var tydelig"
     ],
-    "gunstig": ["Nei, den var skjult og krevde undersøkelse på verksted", "Nei, den viste seg bare under bestemte forhold"],
-    "argument": "Feilen kunne ikke oppdages da jeg så på og prøvekjørte bilen, fordi «(det kjøperen svarte)». Jeg hadde ingen plikt til å undersøke bilen nærmere og kan ikke regnes for å ha kjent til feilen."
+    "gunstig": [
+      "Nei, den var skjult og krevde undersøkelse på verksted",
+      "Nei, den viste seg bare under bestemte forhold"
+    ],
+    "argument": "Feilen kunne ikke oppdages da jeg så på og prøvekjørte bilen, fordi «(hvorfor feilen ikke kunne oppdages)». Jeg hadde ingen plikt til å undersøke bilen nærmere og kan ikke regnes for å ha kjent til feilen."
   },
   {
     "id": "positiv_beskrivelse",
@@ -122,7 +150,12 @@
     "beskrivelse": "Til stede når annonsen, kontrakten eller forhandleren før kjøpet beskrev bilens stand i positive og konkrete ord («velholdt», «godt vedlikeholdt», «nylig EU-godkjent», «alt virker», «nærmest ny», «gode dekk»), eller svarte bekreftende på konkrete spørsmål fra kjøperen om tilstanden. Det løfter hva kjøperen hadde grunn til å forvente. Ikke til stede når annonsen bare ga tekniske spesifikasjoner, eller selv opplyste om feil, slitasje eller at bilen trengte reparasjon.",
     "retning": "for",
     "tema": "forventning",
-    "gjelder": { "grunnlag": ["forventning", "opplysning"] },
+    "gjelder": {
+      "grunnlag": [
+        "forventning",
+        "opplysning"
+      ]
+    },
     "sporsmal": "Hvordan beskrev annonsen eller forhandleren bilens stand før du kjøpte den?",
     "alternativer": [
       "Med konkrete ord som «velholdt», «nylig EU-godkjent» eller «alt virker»",
@@ -130,16 +163,23 @@
       "Annonsen hadde mest tekniske opplysninger",
       "Annonsen nevnte feil, slitasje eller at bilen trengte reparasjon"
     ],
-    "gunstig": ["Med konkrete ord som «velholdt», «nylig EU-godkjent» eller «alt virker»", "Forhandleren svarte ja da jeg spurte konkret om tilstanden"],
+    "gunstig": [
+      "Med konkrete ord som «velholdt», «nylig EU-godkjent» eller «alt virker»",
+      "Forhandleren svarte ja da jeg spurte konkret om tilstanden"
+    ],
     "argument": "Bilen ble beskrevet som «(det annonsen eller forhandleren sa)». Det ga meg grunn til å forvente en bil i god stand, og feilen er mer enn jeg kunne regne med etter en slik beskrivelse, jf. § 15."
   },
   {
     "id": "uriktig_service_arbeid_utstyr",
     "navn": "Uriktig om service, utført arbeid eller utstyr",
-    "beskrivelse": "Til stede når annonsen, kontrakten eller forhandleren ga en konkret opplysning om servicehistorikk («full servicehistorikk», «service fulgt»), om arbeid som var gjort eller skulle gjøres (byttet registerreim, ny motor, nye bremser, ny service, overhalt girkasse) eller om utstyr bilen hadde, og opplysningen viste seg å være uriktig. Utvalget regner slike opplysninger som sentrale og antar at de har virket inn på kjøpet. Ikke til stede når opplysningen var vag (for eksempel «service etter fabrikkens retningslinjer» uten mer), eller når den stemte.",
+    "beskrivelse": "Til stede når annonsen, kontrakten eller forhandleren ga en konkret opplysning om servicehistorikk («full servicehistorikk», «service fulgt»), om arbeid som var gjort eller skulle gjøres (byttet registerreim, ny motor, nye bremser, ny service, overhalt girkasse) eller om utstyr bilen hadde, og opplysningen viste seg å være uriktig. Utvalget regner slike opplysninger som sentrale og antar at de har virket inn på kjøpet. Ikke til stede når opplysningen stemte.",
     "retning": "for",
     "tema": "opplysning",
-    "gjelder": { "grunnlag": ["opplysning"] },
+    "gjelder": {
+      "grunnlag": [
+        "opplysning"
+      ]
+    },
     "sporsmal": "Hva handlet opplysningen som ikke stemte, om?",
     "alternativer": [
       "Service eller servicehistorikk",
@@ -147,7 +187,11 @@
       "Utstyr bilen skulle ha",
       "Bilens stand generelt"
     ],
-    "gunstig": ["Service eller servicehistorikk", "Deler som var byttet eller arbeid som var gjort", "Utstyr bilen skulle ha"],
+    "gunstig": [
+      "Service eller servicehistorikk",
+      "Deler som var byttet eller arbeid som var gjort",
+      "Utstyr bilen skulle ha"
+    ],
     "argument": "Opplysningen om «(det opplysningen gjaldt)» var konkret og uten forbehold, og den stemmer ikke. Slike opplysninger er sentrale når man kjøper bruktbil, og den har virket inn på at jeg kjøpte bilen, jf. § 16."
   },
   {
@@ -162,12 +206,14 @@
       "Ja, tidligere skade, kondemnering eller innløsning",
       "Ja, omlakkering eller dårlig utført reparasjon",
       "Ja, tidligere bruk som drosje, skolebil eller utleiebil",
+      "Ja, noe annet om bilens historie",
       "Nei"
     ],
     "gunstig": [
       "Ja, tidligere skade, kondemnering eller innløsning",
       "Ja, omlakkering eller dårlig utført reparasjon",
-      "Ja, tidligere bruk som drosje, skolebil eller utleiebil"
+      "Ja, tidligere bruk som drosje, skolebil eller utleiebil",
+      "Ja, noe annet om bilens historie"
     ],
     "argument": "Dere opplyste ikke at bilen «(det kjøperen har fått vite)». Som forhandler burde dere kjent til dette, og det er en opplysning jeg hadde grunn til å regne med å få fordi den påvirker bilens verdi, jf. § 16."
   },
@@ -184,7 +230,9 @@
       "Ja, den var bruktimportert, og det ble opplyst",
       "Nei, den var ikke bruktimportert"
     ],
-    "gunstig": ["Ja, den var bruktimportert, og det ble ikke opplyst"],
+    "gunstig": [
+      "Ja, den var bruktimportert, og det ble ikke opplyst"
+    ],
     "argument": "Bilen er bruktimportert, men det sto verken i annonsen eller i kontrakten. Bruktimport senker bilens verdi og er noe dere skulle ha opplyst om, jf. § 16."
   },
   {
@@ -207,7 +255,7 @@
       "Jeg fikk ikke vite hva garantien dekket eller hvilke vilkår den hadde",
       "Kontrakten sa forskjellige ting om garantien"
     ],
-    "argument": "Dere oppga at bilen hadde «(garantien slik den ble beskrevet)», men «(det som ikke stemte eller manglet)». Opplysningen om garantien var uriktig eller uklar, jf. § 16, og uklarhet i en avtale dere selv har skrevet, må gå ut over dere."
+    "argument": "Dere oppga at bilen hadde «(garantien slik den ble beskrevet)», men «(det som ikke stemte eller manglet)». En uriktig opplysning om garantien er en mangel, jf. § 16 første ledd bokstav c. Er det ikke angitt tydelig hvilke feil garantien dekker og hvilke krav jeg kan gjøre gjeldende, gjelder den som en alminnelig garanti for feil som oppstår i garantitiden, jf. § 18 a andre ledd. Uklarhet i en avtale dere selv har skrevet, må gå ut over dere."
   },
   {
     "id": "rettet_for_kjop",
@@ -215,14 +263,21 @@
     "beskrivelse": "Til stede når forhandleren tydelig rettet en uriktig opplysning før kjøperen skrev under, for eksempel i kontrakten eller i en melding samme dag. Ikke til stede når opplysningen aldri ble rettet, eller bare med et generelt forbehold om «feil i annonsen» eller en utstyrsliste kjøperen ikke fikk; det er ikke nok etter utvalgets praksis.",
     "retning": "mot",
     "tema": "opplysning",
-    "gjelder": { "grunnlag": ["opplysning"] },
+    "gjelder": {
+      "grunnlag": [
+        "opplysning"
+      ]
+    },
     "sporsmal": "Rettet forhandleren opplysningen før du skrev under på kjøpet?",
     "alternativer": [
       "Nei, den ble ikke rettet",
       "Det sto bare et generelt forbehold om feil i annonsen",
       "Ja, det sto riktig i kontrakten eller i en melding før kjøpet"
     ],
-    "gunstig": ["Nei, den ble ikke rettet", "Det sto bare et generelt forbehold om feil i annonsen"],
+    "gunstig": [
+      "Nei, den ble ikke rettet",
+      "Det sto bare et generelt forbehold om feil i annonsen"
+    ],
     "argument": "Dere rettet ikke opplysningen før jeg skrev under. Et generelt forbehold om feil i annonsen er ikke nok til å rette en konkret opplysning, jf. § 16."
   },
   {
@@ -231,15 +286,22 @@
     "beskrivelse": "Til stede når feilen ga tegn kort tid etter overtakelsen (varsellampe, feilmelding, ulyd, lekkasje, startproblemer), dette er dokumentert skriftlig fra den tiden (verkstedbesøk, testrapport, melding til forhandleren, datert bilde), og tegnene gjelder samme feil som det klages over. Veier tyngst når feilen ble påvist eller reklamert mer enn seks måneder etter kjøpet. Ikke til stede når de tidlige tegnene bare bygger på kjøperens forklaring, eller hadde et annet symptom enn den senere feilen.",
     "retning": "for",
     "tema": "tidspunkt",
-    "gjelder": { "botter": ["middels", "sen"] },
+    "gjelder": {
+      "botter": [
+        "middels",
+        "sen"
+      ]
+    },
     "sporsmal": "Merket du noe til feilen de første ukene etter kjøpet, og finnes det noe skriftlig fra den tiden?",
     "alternativer": [
       "Ja, og det er dokumentert skriftlig fra den tiden",
       "Ja, men det ble ikke skrevet ned noe sted",
       "Nei, feilen kom senere"
     ],
-    "gunstig": ["Ja, og det er dokumentert skriftlig fra den tiden"],
-    "argument": "Allerede «(hvor lenge)» etter at jeg overtok bilen, viste det seg tegn på feilen: «(hva som skjedde og hvor det er dokumentert)». Det er den samme feilen, og det viser at den var der da jeg overtok bilen."
+    "gunstig": [
+      "Ja, og det er dokumentert skriftlig fra den tiden"
+    ],
+    "argument": "Allerede «(hvor lenge)» etter at jeg overtok bilen, viste det seg tegn på feilen: «(hva som skjedde og hvor det er dokumentert)». Dette er tegn på den samme feilen, og det taler for at feilen var der da jeg overtok bilen."
   },
   {
     "id": "km_etter_kjop",
@@ -247,11 +309,24 @@
     "beskrivelse": "Til stede når kjøperen kjørte bilen langt (flere tusen kilometer) eller brukte den lenge uten problemer før feilen viste seg eller ble reklamert. Utvalget tar det som tegn på at feilen kan ha oppstått etter overtakelsen eller skyldes slitasje. Ikke til stede når feilen viste seg etter kort kjøring.",
     "retning": "mot",
     "tema": "bruk",
-    "gjelder": { "botter": ["middels", "sen"] },
+    "gjelder": {
+      "botter": [
+        "middels",
+        "sen"
+      ]
+    },
     "sporsmal": "Omtrent hvor langt hadde du kjørt bilen da feilen viste seg?",
-    "alternativer": ["Under 1 000 km", "1 000–5 000 km", "5 000–15 000 km", "Over 15 000 km"],
-    "gunstig": ["Under 1 000 km", "1 000–5 000 km"],
-    "argument": "Feilen viste seg etter at jeg hadde kjørt bilen bare «(omtrent hvor langt)». Så kort kjøring kan ikke forklare feilen."
+    "alternativer": [
+      "Under 1 000 km",
+      "1 000–5 000 km",
+      "5 000–15 000 km",
+      "Over 15 000 km"
+    ],
+    "gunstig": [
+      "Under 1 000 km",
+      "1 000–5 000 km"
+    ],
+    "argument": "Feilen viste seg etter at jeg hadde kjørt bilen bare «(omtrent hvor langt)». Så kort kjøring gjør det lite sannsynlig at feilen har oppstått etter overtakelsen."
   },
   {
     "id": "egen_bruk",
@@ -262,13 +337,15 @@
     "gjelder": {},
     "sporsmal": "Har noe ved bruken av bilen etter kjøpet kunnet påvirke feilen?",
     "alternativer": [
-      "Nei, vanlig bruk, og service er fulgt",
+      "Nei, vanlig bruk, og service er fulgt eller ikke forfalt ennå",
       "Service eller oljeskift er ikke gjort når det skulle",
       "Jeg har kjørt med tilhenger eller tung last",
       "Jeg kjørte videre etter at en varsellampe tente",
       "Uhell, ytre skade eller egne inngrep"
     ],
-    "gunstig": ["Nei, vanlig bruk, og service er fulgt"],
+    "gunstig": [
+      "Nei, vanlig bruk, og service er fulgt eller ikke forfalt ennå"
+    ],
     "argument": "Jeg har brukt bilen på vanlig måte og fulgt servicen etter kjøpet. Det er ingenting ved min bruk som kan forklare feilen."
   },
   {
@@ -285,8 +362,10 @@
       "Ja, men med forbehold om at det var av velvilje",
       "Nei"
     ],
-    "gunstig": ["Ja, skriftlig, eller ved å reparere eller betale uten forbehold"],
-    "argument": "Dere har selv «(det forhandleren gjorde eller skrev)», uten forbehold. Dermed har dere i praksis godtatt at feilen er en mangel dere har ansvaret for."
+    "gunstig": [
+      "Ja, skriftlig, eller ved å reparere eller betale uten forbehold"
+    ],
+    "argument": "Dere har selv «(det forhandleren gjorde eller skrev)», uten forbehold. Det viser at dere har regnet feilen som deres ansvar, og det taler for at feilen var der da jeg overtok bilen."
   },
   {
     "id": "avslo_tilbud",
@@ -302,8 +381,12 @@
       "Ja, gratis, og jeg takket ja",
       "Ja, gratis, men jeg takket nei eller fikk det gjort et annet sted"
     ],
-    "gunstig": ["Nei", "Ja, men bare hvis jeg betalte en del eller godtok andre vilkår", "Ja, gratis, og jeg takket ja"],
-    "argument": "Dere tilbød bare å rette feilen dersom «(vilkåret)». Retting skal skje uten kostnad for meg, så dette var ikke et tilbud om retting, jf. § 29."
+    "gunstig": [
+      "Nei",
+      "Ja, men bare hvis jeg betalte en del eller godtok andre vilkår",
+      "Ja, gratis, og jeg takket ja"
+    ],
+    "argument": "Dere tilbød bare å rette feilen dersom «(vilkåret)». Retting skal skje uten kostnad for meg, så dette var ikke et tilbud om retting, jf. § 30 første ledd. (Brukes bare når forhandleren satte vilkår.)"
   },
   {
     "id": "kravet_bare_mangelen",
@@ -318,7 +401,9 @@
       "Nei, den tar også med service, dekk, EU-kontroll eller annet arbeid",
       "Jeg har ingen faktura eller pristilbud ennå"
     ],
-    "gunstig": ["Ja, bare reparasjon av feilen"],
+    "gunstig": [
+      "Ja, bare reparasjon av feilen"
+    ],
     "argument": "Beløpet jeg krever, gjelder bare reparasjonen av feilen og utgifter som er en direkte følge av den, og er dokumentert med «(faktura eller tilbud)»."
   },
   {
@@ -327,14 +412,21 @@
     "beskrivelse": "Til stede når kjøperen har skriftlig dokumentasjon på hvor mye mangelen senker bilens verdi: takst eller verdivurdering, uttalelse fra forhandler eller takstmann, eller avslag og lave bud ved innbytte eller salg på grunn av forholdet. Viktigst når mangelen ikke kan repareres bort (skadehistorikk, bruktimport, servicehistorikk, garanti). Ikke til stede når kravet om prisavslag bare bygger på kjøperens eget anslag; da setter utvalget prisavslaget skjønnsmessig og ofte lavt.",
     "retning": "for",
     "tema": "krav",
-    "gjelder": { "grunnlag": ["opplysning"] },
+    "gjelder": {
+      "grunnlag": [
+        "opplysning"
+      ]
+    },
     "sporsmal": "Har du noe skriftlig som viser hvor mye forholdet senker bilens verdi?",
     "alternativer": [
       "Ja, en takst eller verdivurdering",
       "Ja, svar fra forhandlere ved innbytte eller salg",
       "Nei, bare mitt eget anslag"
     ],
-    "gunstig": ["Ja, en takst eller verdivurdering", "Ja, svar fra forhandlere ved innbytte eller salg"],
+    "gunstig": [
+      "Ja, en takst eller verdivurdering",
+      "Ja, svar fra forhandlere ved innbytte eller salg"
+    ],
     "argument": "Forholdet senker bilens verdi med «(beløpet)», slik «(takst eller vurdering)» viser. Prisavslaget jeg krever, bygger på dette."
   },
   {
@@ -351,7 +443,10 @@
       "Med ny del, etter bare ett tilbud",
       "Det er ikke bestemt ennå"
     ],
-    "gunstig": ["Med brukt eller overhalt del tilsvarende den gamle", "Med ny del, etter det rimeligste av flere tilbud"],
+    "gunstig": [
+      "Med brukt eller overhalt del tilsvarende den gamle",
+      "Med ny del, etter det rimeligste av flere tilbud"
+    ],
     "argument": "Reparasjonen er gjort så rimelig som mulig, «(hvordan den er gjort)», og gjør ikke bilen mer verdt enn den skulle vært da jeg kjøpte den."
   },
   {
@@ -368,8 +463,11 @@
       "Bilen kan brukes, men feilen er til hinder",
       "Feilen er mest kosmetisk"
     ],
-    "gunstig": ["Bilen kan ikke kjøres, eller den er farlig å kjøre", "Bilen stopper eller svikter av og til"],
-    "argument": "Feilen gjør at «(det kjøperen svarte)». Den rammer bilens grunnleggende bruk og sikkerhet, og mangelen er derfor ikke uvesentlig."
+    "gunstig": [
+      "Bilen kan ikke kjøres, eller den er farlig å kjøre",
+      "Bilen stopper eller svikter av og til"
+    ],
+    "argument": "Feilen gjør at «(hva feilen gjør med bilen)». Den rammer bilens grunnleggende bruk og sikkerhet. (Krever jeg heving, betyr det at mangelen ikke er uvesentlig, jf. § 32.)"
   },
   {
     "id": "rust_baerende",
@@ -377,14 +475,23 @@
     "beskrivelse": "Til stede når rusten sitter i bærende eller sikkerhetsviktige deler (ramme, bærearmer, understell, bremserør, kanaler) eller har gått gjennom platen, og en sakkyndig beskriver omfanget som større enn bilens alder og kjørelengde tilsier, eller som utviklet over lang tid. Ikke til stede når rusten er overflaterust eller kosmetisk, eller når omfanget ved kjøpet ikke er beskrevet; utvalget regner noe rust som påregnelig på eldre biler.",
     "retning": "for",
     "tema": "bevis",
-    "gjelder": { "grupper": ["rust", "understell", "bremser", "skade"] },
+    "gjelder": {
+      "grupper": [
+        "rust",
+        "understell",
+        "bremser",
+        "skade"
+      ]
+    },
     "sporsmal": "Hvor sitter rusten, og hvor alvorlig er den?",
     "alternativer": [
       "Gjennomtæring eller rust i ramme, bærearmer eller bremserør",
       "Overflaterust på understell eller bærende deler",
       "Rust i lakk, skjermer eller dører"
     ],
-    "gunstig": ["Gjennomtæring eller rust i ramme, bærearmer eller bremserør"],
+    "gunstig": [
+      "Gjennomtæring eller rust i ramme, bærearmer eller bremserør"
+    ],
     "argument": "Rusten sitter i «(hvor rusten sitter)», og «(hvem som vurderte den)» beskriver den slik: «(det vurderingen sier)». Rust i bærende deler av dette omfanget er mer enn jeg kunne regne med ut fra bilens alder og kjørelengde, jf. § 15."
   }
 ]

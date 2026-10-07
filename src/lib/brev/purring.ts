@@ -1,13 +1,14 @@
 import { leggTilDager, PURRING_DAGER } from "@/lib/mappe/kort/videre";
 import { iDag } from "@/lib/vurdering/faktorer";
 import type { KlageInput } from "@/lib/vurdering/typer";
-import { byggBrev, norskDato, SVARFRIST_DAGER, type Brev } from "./brev";
+import { brevhode, norskDato, SVARFRIST_DAGER, type Brev } from "./brev";
 import type { Utfylling } from "./utfylling";
 
 // The reminder sent when the dealer has not answered by the deadline of the first letter. Same
 // sender, recipient and car as the letter; only the subject line and the body differ.
-export function byggPurring(input: KlageInput, idag = iDag(), u: Utfylling = {}): Brev {
-  const grunn = byggBrev(input, idag, u);
+// `input` is kept for the callers; the reminder needs only the parts around the paragraphs.
+export function byggPurring(_input: KlageInput, idag = iDag(), u: Utfylling = {}): Brev {
+  const grunn = brevhode(u, idag);
   const sendt = u.sendt ? norskDato(u.sendt) : "[dato for brevet]";
   const frist = u.sendt ? norskDato(leggTilDager(u.sendt, SVARFRIST_DAGER)) : "[svarfristen]";
   return {

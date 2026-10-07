@@ -2,9 +2,9 @@
 // Resumable: decisions already read are skipped. Stops on account errors.
 //
 //   npm run moment-les -- --trinn uttrekk [--grense 3]       Sonnet: what the committee weighed, with quotes
-//   npm run moment-les -- --trinn klassifiser [--grense 3]   Sonnet and Opus against the catalogue; a third
-//                                                            reading where they disagree; then the counts and
-//                                                            scripts/momenter-belegg.json
+//   npm run moment-les -- --trinn klassifiser [--grense 3]   Sonnet and Opus against the catalogue (with
+//                                                            --tredje, a third reading where they disagree);
+//                                                            then the counts and scripts/momenter-belegg.json
 //   npm run moment-les -- --trinn telling                    only the counts and the evidence file
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -18,7 +18,9 @@ import { normaliserSitat } from "../src/lib/brev/skriving/kontroll";
 import { kjorParallelt } from "../src/lib/parallell";
 
 const { values: args } = parseArgs({
-  options: { trinn: { type: "string" }, grense: { type: "string" }, samtidig: { type: "string", default: "6" } },
+  // --tredje: a third reading (Opus, medium) where Sonnet and Opus disagree. Off by default: it is needed
+  // in nearly every decision and doubles the cost; disagreement then counts as «uklart».
+  options: { trinn: { type: "string" }, grense: { type: "string" }, samtidig: { type: "string", default: "6" }, tredje: { type: "boolean", default: false } },
 });
 
 const UT = "data/explore/momenter";
@@ -169,7 +171,7 @@ async function klassifiser() {
     });
     vurdert += katalog.length;
     uenige += uenig.length;
-    const tredje = uenig.length ? vask(await kall<{ svar: Svar[] }>(MODELL_FORFATTER, system, verktoy, bruker, "medium")) : undefined;
+    const tredje = uenig.length && args.tredje ? vask(await kall<{ svar: Svar[] }>(MODELL_FORFATTER, system, verktoy, bruker, "medium")) : undefined;
     // Two of three decide; with one reading «uklart», the first two decide only when they agree.
     const endelig = katalog.map((k): Svar => {
       const lesninger = [svarFor(a, k.id), svarFor(b, k.id), tredje && svarFor(tredje, k.id)].filter((x): x is Svar => !!x);

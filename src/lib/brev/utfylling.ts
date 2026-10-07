@@ -2,6 +2,7 @@ import { normaliserRegnr, type Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 import { orgnrFra } from "@/lib/brreg";
 import { erDato } from "@/lib/vurdering/faktorer";
 import type { Innsending } from "@/lib/vurdering/innsending";
+import type { Avvik, Funn, Utkast } from "./skriving/typer";
 import {
   RETTING_VALG,
   type Adresse,
@@ -43,14 +44,20 @@ export type Utfylling = {
   avklaringer?: Avklaring[];
   // The clarifying round is done; the letter can be written.
   avklart?: true;
+  // The letter as written (src/lib/brev/skriving/). Set by the server only; the page cannot.
+  brev?: LagretBrev;
   // How many suggestions the language model has made for this case. Counted on the server; the
   // page cannot set it.
   sprakvask?: number;
 };
 
+// The written letter as stored: the draft with its marks, what the check and the review left, and what
+// it was written from (`grunnlagFor`), so the page can tell when the case has changed since.
+export type LagretBrev = { utkast: Utkast; avvik: Avvik[]; funn: Funn[]; grunnlag: string; versjon: string; skrevet: string };
+
 // What the page can save: everything but the server's own counter and the vehicle, which is chosen
 // in the assessment and is part of the case from the day it is opened.
-type Felt = Exclude<keyof Utfylling, "sprakvask" | "kjoretoy">;
+type Felt = Exclude<keyof Utfylling, "sprakvask" | "kjoretoy" | "brev">;
 
 // The defect: the day the first defect showed, the buyer's own words, the defects the model found
 // (titles; more than one changes the sentence before the text), the answers to its questions, and the
@@ -238,8 +245,9 @@ export const BESKRIVELSE_MIN = 20;
 export const BESKRIVELSE_MAKS = 3000;
 // The limits of the description in the letter and of what the interview stores.
 export const FEILBESKRIVELSE = { maksAvsnitt: 6, avsnittMin: 5, totalMaks: 3000, maksFeil: 6, feilTittelMaks: 80, maksFakta: 8, sporsmalMaks: 200, svarMaks: 300 } as const;
-// How many calls to the language model one case gets; one round of the interview is two.
-export const MAKS_SPRAKVASK = 20;
+// How many calls to the language model one case gets: a round of the clarifying round is one, writing
+// the letter two to five.
+export const MAKS_SPRAKVASK = 40;
 
 // The buyer's description of the defect, as it must be to be saved or sent to the language model.
 export const lesBeskrivelse = (v: unknown): string | null => tekst(v, BESKRIVELSE_MAKS, BESKRIVELSE_MIN);

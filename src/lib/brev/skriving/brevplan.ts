@@ -14,6 +14,7 @@ import {
   vedleggFor,
   VEDLEGG_NAVN,
 } from "../brev";
+import { MOMENTER } from "../momenter";
 import { sjekkBrev, type Advarsel } from "../sjekk";
 import { rensTekst, type Saksmodell } from "./saksmodell";
 
@@ -31,6 +32,7 @@ export const ARGUMENT_IDER = [
   "rapport_bevis",
   "opplysning",
   "kjente_ikke",
+  "momenter",
   "henvisning",
   "forbehold",
   "slitasje",
@@ -70,9 +72,6 @@ export type Brevplan = {
   // The points of `sjekkBrev` about the case, not the text: the author must not contradict them.
   advarsler: Advarsel[];
 };
-
-// `sjekkBrev` rules about the text the buyer typed; the author, the check and the review cover them now.
-const TEKSTREGLER = new Set(["feil_kort", "feil_med_belop", "feil_motsier_kontakt", "rapport_uten_sitat", "rapport_sitat_uten_tid", "tone", "langt_brev"]);
 
 export function planlegg(m: Saksmodell): Brevplan {
   const { input, faktorer: f, utfylling: u, idag, kjopsdato } = m;
@@ -128,6 +127,24 @@ export function planlegg(m: Saksmodell): Brevplan {
     legg("opplysning", "Det dere opplyste om bilen før kjøpet, stemmer ikke, og bilen svarer dermed ikke til opplysningene dere har gitt, jf. § 16.", { kilde: u.opplysning?.kilde ?? null, kanSiteres: Boolean(m.kilder.opplysning) });
   } else forby("opplysning", "Kjøperen har ikke sagt at dere ga uriktige opplysninger.");
   if (input.feilen.opplystForKjop === "nei") legg("kjente_ikke", "Jeg kjente ikke til feilen da jeg kjøpte bilen, og dere opplyste ikke om den.");
+
+  // The moments the buyer answered in the clarifying round: a favourable answer becomes an argument in the
+  // moment's own wording; an unfavourable one is a weakness the author must not contradict.
+  const gunstige: string[] = [];
+  const svake: Advarsel[] = [];
+  for (const a of m.avklaringer) {
+    const moment = a.moment ? MOMENTER.find((x) => x.id === a.moment) : undefined;
+    if (!moment || !a.svar) continue;
+    const svar = rens(a.svar);
+    if (moment.gunstig.some((g) => a.svar!.includes(g))) gunstige.push(`${moment.navn}: ${moment.argument} Kjøperens svar: «${svar}».`);
+    else svake.push({ id: `moment-${moment.id}`, tekst: `${moment.navn}: kjøperen svarte «${svar}».`, steg: null, alvor: "myk" });
+  }
+  if (gunstige.length) {
+    legg(
+      "momenter",
+      `Bruk disse forholdene, som Forbrukerklageutvalget har lagt vekt på i lignende saker, der de hører hjemme i brevet. Plassholderne i parentes fylles med det kjøperen har svart; skriv ingenting kjøperen ikke har svart. ${gunstige.join(" ")}`,
+    );
+  } else forby("momenter", "Kjøperen har ikke gitt gunstige svar om forhold utvalget legger vekt på.");
 
   // The decision the letter cites, chosen as the assessment chose it; its source is a mark.
   // Never a decision from after the letter's own date.
@@ -240,8 +257,6 @@ export function planlegg(m: Saksmodell): Brevplan {
   const vedlagt = vedleggFor(input, u).map((v) => VEDLEGG_NAVN[v]);
   if (vedlagt.length) legg("vedlegg", `Vedlagt følger ${liste(vedlagt)}.`, { vedlegg: vedlagt });
 
-  const advarsler = sjekkBrev(input, u, idag)
-    .filter((a) => !TEKSTREGLER.has(a.id))
-    .map((a) => ({ ...a, tekst: rens(a.tekst) }));
+  const advarsler = [...sjekkBrev(input, u, idag).map((a) => ({ ...a, tekst: rens(a.tekst) })), ...svake];
   return { argumenter, forbudt, mangler, henvisning, merker, advarsler };
 }

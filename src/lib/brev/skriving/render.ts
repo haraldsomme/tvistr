@@ -1,7 +1,8 @@
 import { brevhode, norskDato, plussDager, SVARFRIST_DAGER, utenSluttegn, type Brev } from "../brev";
-import { kontonummerGruppert } from "../utfylling";
-import type { Brevplan } from "./brevplan";
-import type { Saksmodell } from "./saksmodell";
+import { kontonummerGruppert, type Utfylling } from "../utfylling";
+import type { Innsending } from "@/lib/vurdering/innsending";
+import { planlegg, type Brevplan } from "./brevplan";
+import { lagSaksmodell, type Saksmodell } from "./saksmodell";
 import type { Utkast } from "./typer";
 
 // The written letter as it is shown and sent: each mark replaced by its value, computed from the
@@ -31,4 +32,13 @@ export function fyllInn(utkast: Utkast, plan: Brevplan, m: Saksmodell, brevdato:
 
 export function skrevetBrev(utkast: Utkast, plan: Brevplan, m: Saksmodell, brevdato: string): Brev {
   return { ...brevhode(m.utfylling, brevdato), avsnitt: fyllInn(utkast, plan, m, brevdato) };
+}
+
+// The stored letter of a case as it is shown and sent, dated `idag`: null before it is written, or when
+// the answers no longer give a letter. The page and the files use this, so they show the same.
+export function brevFraSak(sak: { svar: Innsending; utfylling: Utfylling }, idag: string): Brev | null {
+  if (!sak.utfylling.brev) return null;
+  const lest = lagSaksmodell({ svar: sak.svar, utfylling: sak.utfylling }, idag);
+  if (!lest.ok) return null;
+  return skrevetBrev(sak.utfylling.brev.utkast, planlegg(lest.modell), lest.modell, idag);
 }

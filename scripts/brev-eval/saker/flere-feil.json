@@ -2,7 +2,9 @@
   "id": "flere-feil",
   "tittel": "To feil: motor og ryggekamera",
   "feller": [
-    "Datoen den første feilen viste seg står én gang"
+    "Datoen den første feilen viste seg står én gang",
+    "Ryggekameraet er ikke tatt opp med forhandleren: brevet er reklamasjonen for den feilen (avklaringsrunden)",
+    "Gunstig svar på momentet km_etter_kjop skal bli et argument"
   ],
   "idag": "2026-10-06",
   "svar": {
@@ -71,10 +73,29 @@
     "argumenter": [
       "formodning",
       "historikk",
-      "krav_retting"
+      "krav_retting",
+      "momenter"
     ],
     "ikkeTekst": [
       "viste seg første gang[\\s\\S]*viste seg første gang"
+    ],
+    "tekst": [
+      "[Rr]yggekamera"
     ]
-  }
+  },
+  "avklaringer": [
+    {
+      "runde": 1,
+      "tema": "kontakt",
+      "sporsmal": "Har du tatt opp ryggekameraet med forhandleren, og når?",
+      "svar": "Nei, ikke ennå"
+    },
+    {
+      "runde": 1,
+      "moment": "km_etter_kjop",
+      "tema": "feilen",
+      "sporsmal": "Omtrent hvor langt hadde du kjørt bilen etter kjøpet da den første feilen viste seg?",
+      "svar": "Under 1 000 km"
+    }
+  ]
 }

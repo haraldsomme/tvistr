@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { FEIL_PLASSHOLDER, KONTAKT_PLASSHOLDER, KRAV_ALTERNATIV, OPPLYSNING_PLASSHOLDER, REPARASJON_PLASSHOLDER, type Brev } from "@/lib/brev/brev";
+import type { Brev } from "@/lib/brev/brev";
 
 // Anything in square brackets is something the buyer has to fill in; it is marked in yellow so it is
 // not missed. What has been filled in reads as ordinary letter text. When the fill-in list is on
@@ -9,16 +9,13 @@ const MANGLER = "rounded-[2px] border-b-2 border-[oklch(0.72_0.11_85)] bg-[oklch
 const MANGLER_KNAPP = `${MANGLER} cursor-pointer underline decoration-dotted underline-offset-2`;
 
 // Which step in the fill-in list a placeholder in free-running text (the subject line and the body)
-// belongs to, or null when there is none to open (the vehicle, locked from the assessment, never
-// actually shows as a placeholder on this page).
-function stegForPlassholder(tekst: string): string | null {
+// belongs to: «[Sted]» is the sender's, and «[MANGLER: …]» the step the plan says fills it in
+// (`plan.mangler`). null when there is none to open.
+type Mangler = readonly { tekst: string; steg: string }[];
+function stegForPlassholder(tekst: string, mangler: Mangler): string | null {
   if (tekst === "[Sted]") return "avsender";
-  if (tekst.includes("kjøpsdato") || tekst.includes("kjøpesum")) return "kjopet";
-  if (tekst === FEIL_PLASSHOLDER) return "feilen";
-  if (tekst === OPPLYSNING_PLASSHOLDER) return "for-kjopet";
-  if (tekst === KRAV_ALTERNATIV) return "krav";
-  if (tekst === REPARASJON_PLASSHOLDER || tekst === KONTAKT_PLASSHOLDER) return "kontakt";
-  return null;
+  const mangel = /^\[MANGLER: (.+)\]$/.exec(tekst)?.[1];
+  return mangler.find((m) => m.tekst === mangel)?.steg ?? null;
 }
 
 // A link in the letter (the decision it cites) is clickable on the page too.
@@ -38,10 +35,10 @@ function MedLenker({ tekst }: { tekst: string }): ReactNode {
 // `steg` fixes the step for every placeholder in the text (the address blocks, where the same
 // placeholder text, «[Postnummer og sted]», belongs to different steps depending on whose address it
 // is); left out, each placeholder is resolved on its own text.
-function Tekst({ children, steg, apne }: { children: string; steg?: string; apne?: (steg: string) => void }): ReactNode {
+function Tekst({ children, steg, apne, mangler = [] }: { children: string; steg?: string; apne?: (steg: string) => void; mangler?: Mangler }): ReactNode {
   return children.split(PLASSHOLDER).map((del, n) => {
     if (n % 2 === 0) return <MedLenker key={n} tekst={del} />;
-    const malSteg = steg ?? stegForPlassholder(del);
+    const malSteg = steg ?? stegForPlassholder(del, mangler);
     if (apne && malSteg)
       return (
         <button key={n} type="button" onClick={() => apne(malSteg)} className={MANGLER_KNAPP}>
@@ -72,7 +69,7 @@ function Linjer({ linjer, hoyre, steg, apne }: { linjer: string[]; hoyre?: boole
 
 // `apne` opens a step in the fill-in list, when the letter is shown next to it. The downloaded PDF and
 // Word file have no such affordance; there the mark is simply a mark.
-export function Brevark({ brev, apne }: { brev: Brev; apne?: (steg: string) => void }) {
+export function Brevark({ brev, apne, mangler = [] }: { brev: Brev; apne?: (steg: string) => void; mangler?: Mangler }) {
   return (
     <article
       aria-label="Reklamasjonsbrev"
@@ -86,11 +83,15 @@ export function Brevark({ brev, apne }: { brev: Brev; apne?: (steg: string) => v
         <Tekst apne={apne}>{brev.stedDato}</Tekst>
       </div>
       <h1 className="m-0 pt-1.5 font-brev text-[20px] font-semibold leading-[1.35]">
-        <Tekst apne={apne}>{brev.emne}</Tekst>
+        <Tekst apne={apne} mangler={mangler}>
+          {brev.emne}
+        </Tekst>
       </h1>
       {brev.avsnitt.map((a, n) => (
         <p key={n} className="m-0 font-brev text-[15px] leading-[1.8]">
-          <Tekst apne={apne}>{a}</Tekst>
+          <Tekst apne={apne} mangler={mangler}>
+            {a}
+          </Tekst>
         </p>
       ))}
       <p className="m-0 font-brev text-[15px] leading-[1.8]">

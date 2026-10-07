@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { brevsak } from "@/db/schema";
 import { lesInnsending, type Innsending } from "@/lib/vurdering/innsending";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
-import { erSakId, lesLagret, medEndring, utloperEtter, type Endring, type Utfylling } from "./utfylling";
+import { erSakId, lesLagret, medEndring, utloperEtter, type Endring, type LagretBrev, type Utfylling } from "./utfylling";
 
 // The stored letter cases. A case holds personal data, so: the id is unguessable and is the only
 // way in, nothing from a case is logged, and a case is deleted when it expires or the user asks.
@@ -51,12 +51,23 @@ export async function endreSak(id: string, svar: Innsending, endring: Endring, s
   return lesLagret(rad?.utfylling ?? medEndring(sak.utfylling, endring));
 }
 
-// Counts one more suggestion from the language model for a case just read with `hentSak`.
-export async function tellSprakvask(sak: Sak): Promise<void> {
+// Counts calls to the language model for a case just read with `hentSak`.
+export async function tellSprakvask(sak: Sak, antall = 1): Promise<void> {
   await db
     .update(brevsak)
-    .set({ utfylling: sql`jsonb_set(${brevsak.utfylling}, '{sprakvask}', to_jsonb(coalesce((${brevsak.utfylling}->>'sprakvask')::int, 0) + 1))` })
+    .set({ utfylling: sql`jsonb_set(${brevsak.utfylling}, '{sprakvask}', to_jsonb(coalesce((${brevsak.utfylling}->>'sprakvask')::int, 0) + ${antall}))` })
     .where(eq(brevsak.id, sak.id));
+}
+
+// Stores the written letter with the case; a change to the case keeps it alive as any save does.
+export async function lagreBrev(sak: Sak, brev: LagretBrev): Promise<Utfylling> {
+  const na = new Date();
+  const [rad] = await db
+    .update(brevsak)
+    .set({ utfylling: sql`jsonb_set(${brevsak.utfylling}, '{brev}', ${JSON.stringify(brev)}::jsonb)`, endret: na, utloper: utloperEtter(na) })
+    .where(eq(brevsak.id, sak.id))
+    .returning({ utfylling: brevsak.utfylling });
+  return lesLagret(rad?.utfylling ?? { ...sak.utfylling, brev });
 }
 
 export async function slettSak(id: string): Promise<void> {

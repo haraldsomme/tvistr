@@ -37,6 +37,12 @@ export type Utfylling = {
   sendt?: string;
   // The buyer has been through the wizard once; the link then opens the letter.
   gjennomgatt?: true;
+  // Texts the buyer pasted in: the only thing the written letter may quote.
+  kilder?: Kilder;
+  // What the clarifying round asked and the buyer answered.
+  avklaringer?: Avklaring[];
+  // The clarifying round is done; the letter can be written.
+  avklart?: true;
   // How many suggestions the language model has made for this case. Counted on the server; the
   // page cannot set it.
   sprakvask?: number;
@@ -84,7 +90,28 @@ export type Krav = { type?: (typeof KRAV_TYPER)[number]; utbedringNok?: number; 
 
 // Who wrote the workshop or condition report (a firm), its date, and the buyer's transcript of what it
 // says about the cause and the time. Typed by the buyer, never by the language model.
-export type Rapport = { fra: string; dato: string; sitat: string };
+// `sitat` is kept for cases saved before the report text could be pasted in (`kilder.rapport`).
+export type Rapport = { fra: string; dato: string; sitat?: string };
+
+// Texts the buyer pasted in: the report, the ad/contract/message, the dealer's written answer. Line
+// breaks are kept.
+export const KILDE_NOKLER = ["rapport", "opplysning", "svar"] as const;
+export type Kilder = Partial<Record<(typeof KILDE_NOKLER)[number], string>>;
+export const KILDE_MAKS = 8000;
+
+// What the clarifying round asked and the buyer answered (null = skipped), by round.
+export const AVKLARING_TEMAER = ["kjopet", "feilen", "for_kjopet", "kontakt", "rapport", "krav"] as const;
+export type Avklaring = { runde: number; moment?: string; tema: (typeof AVKLARING_TEMAER)[number]; sporsmal: string; svar: string | null };
+export const MAKS_AVKLARINGER = 24;
+
+// The pasted texts with one of them set (or cleared when empty); null when none is left.
+export function medKilde(k: Kilder | undefined, nokkel: keyof Kilder, tekst: string): Kilder | null {
+  const ny: Kilder = { ...k };
+  if (tekst.trim()) ny[nokkel] = tekst;
+  else delete ny[nokkel];
+  return Object.keys(ny).length ? ny : null;
+}
+export const MAKS_RUNDER = 3;
 export const RAPPORT_SITAT_MAKS = 500;
 
 export const VEDLEGG = ["kjopekontrakt", "verkstedrapport", "faktura", "tilbud", "bilder", "annonse", "meldinger", "kvitteringer"] as const;
@@ -145,6 +172,23 @@ function tekst(v: unknown, maks: number, min = 1): string | null {
   if (typeof v !== "string") return null;
   const t = v.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\[/g, "(").replace(/\]/g, ")").replace(/\s+/g, " ").trim();
   return t.length >= min && t.length <= maks ? t : null;
+}
+
+// A pasted text: control characters and square brackets out as in `tekst`, but line breaks kept (at
+// most one empty line in a row) and each line trimmed. null when empty or too long.
+function kildetekst(v: unknown, maks: number): string | null {
+  if (typeof v !== "string") return null;
+  const t = v
+    .replace(/\r\n?/g, "\n")
+    .replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, " ")
+    .replace(/\[/g, "(")
+    .replace(/\]/g, ")")
+    .split("\n")
+    .map((l) => l.replace(/\s+/g, " ").trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return t.length > 0 && t.length <= maks ? t : null;
 }
 
 // The vehicle from the registry lookup, as the assessment sends it when the case is opened.
@@ -257,8 +301,10 @@ function lesOpplysning(v: unknown): Opplysning | null {
 function lesRapport(v: unknown, k: Kontekst): Rapport | null {
   if (!erObjekt(v) || !etterKjop(v.dato, k)) return null;
   const fra = tekst(v.fra, 100, 2);
+  if (!fra) return null;
+  if (v.sitat === undefined) return { fra, dato: v.dato };
   const sitat = tekst(v.sitat, RAPPORT_SITAT_MAKS, 5);
-  return fra && sitat ? { fra, dato: v.dato, sitat } : null;
+  return sitat ? { fra, dato: v.dato, sitat } : null;
 }
 
 function lesReklamasjon(v: unknown, k: Kontekst): Reklamasjon | null {
@@ -347,6 +393,33 @@ const lesSendt = (v: unknown, k: Kontekst): string | null => (etterKjop(v, k) ? 
 
 const lesGjennomgatt = (v: unknown): true | null => (v === true ? true : null);
 
+// Each known text read with its line breaks; an empty text drops its key, and no text at all is null.
+function lesKilder(v: unknown): Kilder | null {
+  if (!erObjekt(v) || Object.keys(v).some((k) => !blant(KILDE_NOKLER, k))) return null;
+  const k: Kilder = {};
+  for (const n of KILDE_NOKLER) {
+    if (v[n] === undefined || v[n] === "") continue;
+    const t = kildetekst(v[n], KILDE_MAKS);
+    if (t === null) return null;
+    k[n] = t;
+  }
+  return Object.keys(k).length ? k : null;
+}
+
+function lesAvklaringer(v: unknown): Avklaring[] | null {
+  if (!Array.isArray(v) || v.length > MAKS_AVKLARINGER) return null;
+  const ut: Avklaring[] = [];
+  for (const a of v) {
+    if (!erObjekt(a) || !heltall(a.runde, 1, MAKS_RUNDER) || !blant(AVKLARING_TEMAER, a.tema)) return null;
+    const sporsmal = tekst(a.sporsmal, 300);
+    const svar = a.svar === null ? null : tekst(a.svar, 500);
+    const moment = a.moment === undefined ? undefined : tekst(a.moment, 60);
+    if (!sporsmal || svar === undefined || (a.svar !== null && svar === null) || moment === null) return null;
+    ut.push({ runde: a.runde, tema: a.tema, sporsmal, svar, ...(moment && { moment }) });
+  }
+  return ut;
+}
+
 const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } = {
   forhandler: lesForhandler,
   feilen: lesFeilen,
@@ -363,6 +436,9 @@ const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } 
   sjekket: lesSjekket,
   sendt: lesSendt,
   gjennomgatt: lesGjennomgatt,
+  kilder: lesKilder,
+  avklaringer: lesAvklaringer,
+  avklart: lesGjennomgatt,
 };
 
 // Parses an untrusted save from the page. Every field is checked; one bad field rejects the save.

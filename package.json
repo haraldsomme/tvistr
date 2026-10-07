@@ -27,7 +27,10 @@
     "rydd": "tsx --env-file=.env.local scripts/rydd.ts",
     "henvisning-kandidater": "tsx --env-file=.env.local scripts/henvisning-kandidater.ts",
     "sjekk-henvisninger": "tsx --env-file=.env.local scripts/sjekk-henvisninger.ts",
-    "brev-eval": "tsx --env-file=.env.local scripts/brev-eval.ts"
+    "brev-eval": "tsx --env-file=.env.local scripts/brev-eval.ts",
+    "moment-kandidater": "tsx --env-file=.env.local scripts/moment-kandidater.ts",
+    "moment-les": "tsx --env-file=.env.local scripts/moment-les.ts",
+    "sjekk-momenter": "tsx --env-file=.env.local scripts/sjekk-momenter.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

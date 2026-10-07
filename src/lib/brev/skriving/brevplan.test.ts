@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { momenterFor, type Moment } from "../momenter";
+import { rettelseTilLagring } from "./avklaring";
 import { planlegg, type ArgumentId } from "./brevplan";
 import { forfatterBruker } from "@/lib/ai/prompter";
 import { sakForModell } from "./saksmodell";
@@ -72,6 +74,14 @@ describe("saksmodell", () => {
     const kontakt = JSON.stringify((sakForModell(m) as { kontakt: unknown }).kontakt);
     expect(kontakt).toContain("sisteForsok");
     expect(kontakt).not.toContain("svarDato");
+  });
+
+  it("leser kildetekster og avklaringer fra utfyllingen, og lar dem som gis direkte vinne", () => {
+    const utfylling = { feilen, kilder: { rapport: "Reimen er slitt." }, avklaringer: [{ runde: 1, tema: "feilen" as const, sporsmal: "Hvor ofte?", svar: "Hver dag" }] };
+    const m = modell({ utfylling });
+    expect(m.kilder.rapport).toBe("Reimen er slitt.");
+    expect(m.avklaringer).toHaveLength(1);
+    expect(modell({ utfylling, kilder: { rapport: "Annen tekst." } }).kilder.rapport).toBe("Annen tekst.");
   });
 
   it("dropper et svar om retting som ikke passer kontaktsvaret", () => {
@@ -168,5 +178,48 @@ describe("planlegg", () => {
   it("tar tekstreglene ut av advarslene", () => {
     const p = plan({ utfylling: { feilen: { ...feilen, egen: "Feil", avsnitt: ["Feil."] } } });
     expect(p.advarsler.map((a) => a.id)).not.toContain("feil_kort");
+  });
+});
+
+describe("momenterFor", () => {
+  const moment = (id: string, gjelder: Moment["gjelder"], skiller = true): Moment => ({
+    id,
+    navn: id,
+    tema: "bevis",
+    retning: "for",
+    gjelder,
+    sporsmal: "?",
+    alternativer: ["Ja", "Nei"],
+    gunstig: ["Ja"],
+    argument: "",
+    forekomst: { vunnet: 10, tapt: 2, skiller },
+  });
+  const katalog = [moment("alle", {}), moment("rust", { grupper: ["rust"] }), moment("svak", {}, false), moment("sen", { botter: ["sen"] })];
+
+  it("tar med momenter som gjelder saken og skiller vunne fra tapte", () => {
+    expect(momenterFor(modell().faktorer, katalog).map((m) => m.id)).toEqual(["alle"]);
+  });
+
+  it("tar med momenter avgrenset til sakens feilgruppe og tidsrom", () => {
+    const m = modell({ svar: svar({ feiltyper: ["rust"], kjopAlder: "2_5", kjopsdato: "2023-05-31", oppdaget: "over_2_ar" }), utfylling: { feilen: { ...feilen, dato: "2026-08-01" } } });
+    expect(momenterFor(m.faktorer, katalog).map((x) => x.id)).toEqual(["alle", "rust", "sen"]);
+  });
+});
+
+describe("rettelseTilLagring", () => {
+  const sak = { svar: svar({ kontakt: "ja" }), utfylling: { feilen, reklamasjon: { dato: "2026-04-05", mate: "epost" as const } } };
+  const r = (felt: Parameters<typeof rettelseTilLagring>[0]["felt"], verdi: string) => rettelseTilLagring({ felt, verdi, begrunnelse: "" }, sak);
+
+  it("retter svar, datoer i utfyllingen og beløp", () => {
+    expect(r("kjopesum", "240000")).toEqual({ svar: { ...sak.svar, kjopesum: "240000" } });
+    expect(r("feilen.dato", "2026-04-03")).toEqual({ feilen: { ...feilen, dato: "2026-04-03" } });
+    expect(r("reklamasjon.svarDato", "2026-04-20")).toEqual({ reklamasjon: { dato: "2026-04-05", mate: "epost", svarDato: "2026-04-20" } });
+    expect(r("krav.utbedringNok", "15000")).toEqual({ krav: { utgifter: [], utbedringNok: 15000 } });
+  });
+
+  it("gir null for ugyldige verdier og felt saken ikke har", () => {
+    expect(r("kjopsdato", "12.03.2026")).toBeNull();
+    expect(r("reparasjon.dato", "2026-05-01")).toBeNull();
+    expect(r("kjopesum", "mange")).toBeNull();
   });
 });

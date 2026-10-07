@@ -3,13 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Logo } from "@/app/logo";
-import { FEILTYPE_TEKST } from "@/app/vurdering/tekster";
 import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import { Button } from "@/components/ui/button";
 import { useBekreftLagring } from "../bekreft";
 import { VEIVISER_KNAPPER, VeiviserKontekst } from "../felt";
-import { Intervju, type IntervjuUtkast } from "../feilen/intervju";
 import { lagSteg, type StegId } from "../steg/liste";
 
 // The wizard after buying: a thank-you, then every fill-in step of the letter on a screen of its own,
@@ -54,8 +52,6 @@ export function Veiviser({
   const [svar, setSvar] = useState(startSvar);
   const [utfylling, setUtfylling] = useState(startUtfylling);
   const [feil, setFeil] = useState<string | null>(null);
-  // What the buyer has typed in «Feilen», kept while other steps are open.
-  const [intervjuUtkast, setIntervjuUtkast] = useState<IntervjuUtkast | null>(null);
   const parsed = tilKlageInput(svar, idag);
   const input = parsed.ok ? parsed.input : null;
 
@@ -141,33 +137,9 @@ export function Veiviser({
   }
 
   const aktivt = steg[nr];
-  let innhold: ReactNode;
-  if (aktivt.id === "feilen") {
-    innhold = (
-      <>
-        <Intervju
-          id={id}
-          svar={svar}
-          idag={idag}
-          feiltyper={[...new Set(input.feilen.typer)].map((t) => FEILTYPE_TEKST[t])}
-          forslagKjopsdato={forslagKjopsdato}
-          verdi={utfylling.feilen}
-          utkast={intervjuUtkast}
-          settUtkast={setIntervjuUtkast}
-          lagret={(s, u) => {
-            if (s) setSvar(s);
-            setUtfylling(u);
-          }}
-          ferdig={neste}
-          tilbake={tilbake}
-          tilbakeTekst={tilbakeTilBrev ? "Tilbake til brevet uten å endre" : "Tilbake"}
-          hoppOver={hoppOver}
-        />
-      </>
-    );
-  } else {
-    innhold = <VeiviserKontekst.Provider value={{ neste, tilbake, hoppOver, nesteTekst: tilbakeTilBrev ? "Lagre" : nr === steg.length - 1 ? "Se brevet" : "Neste" }}>{aktivt.innhold({ aktiv: true })}</VeiviserKontekst.Provider>;
-  }
+  const innhold = (
+    <VeiviserKontekst.Provider value={{ neste, tilbake, hoppOver, nesteTekst: tilbakeTilBrev ? "Lagre" : nr === steg.length - 1 ? "Se brevet" : "Neste" }}>{aktivt.innhold({ aktiv: true })}</VeiviserKontekst.Provider>
+  );
 
   return (
     <Ramme>

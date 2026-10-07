@@ -4,6 +4,7 @@ import { createContext, useContext, useId, useState, type FormEvent, type ReactN
 import {
   BESKRIVELSE_MAKS,
   BESKRIVELSE_MIN,
+  KILDE_MAKS,
   KRAV_TYPER,
   MAKS_UTGIFTER,
   UTGIFT_BESKRIVELSE_MAKS,
@@ -23,6 +24,7 @@ import { Field, FieldContent, FieldDescription, FieldError, FieldLabel, FieldLeg
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 // The primitives the steps on the letter page share: form chrome, inputs, and formatting. The steps
 // themselves live in `./steg/`; `KravFelt` and `AvsenderFelt` stay here because neither is folded into
@@ -428,3 +430,18 @@ export function AvsenderFelt({ verdi, aktiv, lagre, avbryt }: Felles & { verdi: 
 }
 
 export const BESKRIVELSE = { min: BESKRIVELSE_MIN, maks: BESKRIVELSE_MAKS };
+
+// A pasted text (the report, the ad, the dealer's answer): long, with its line breaks. Optional; the
+// written letter quotes only from texts like these.
+export function Kildefelt({ label, hjelp, verdi, sett }: { label: string; hjelp: string; verdi: string; sett: (v: string) => void }) {
+  const id = useId();
+  return (
+    <Field className="gap-1.5">
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Textarea id={id} aria-describedby={`${id}-hjelp`} value={verdi} onChange={(e) => sett(e.target.value.slice(0, KILDE_MAKS))} className="min-h-35" />
+      <FieldDescription id={`${id}-hjelp`} className={HJELP}>
+        {hjelp}
+      </FieldDescription>
+    </Field>
+  );
+}

@@ -87,7 +87,7 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
   // What the buyer typed: no anger, no threats, no notes to self.
   const fritekst: { tekst: string; steg: string; sitat?: boolean }[] = [
     ...(u.feilen?.avsnitt ?? []).map((tekst) => ({ tekst, steg: "feilen" })),
-    ...(u.rapport ? [{ tekst: `${u.rapport.fra} ${u.rapport.sitat}`, steg: "rapport", sitat: true }] : []),
+    ...(u.rapport ? [{ tekst: `${u.rapport.fra} ${u.rapport.sitat ?? ""}`, steg: "rapport", sitat: true }] : []),
     ...(u.opplysning && input.feilen.feilOpplysning !== "nei" ? [{ tekst: u.opplysning.tekst, steg: "for-kjopet" }] : []),
     ...utgifter.filter((x) => x.beskrivelse).map((x) => ({ tekst: x.beskrivelse!, steg: "krav" })),
   ];
@@ -316,7 +316,9 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
   if (u.rapport && !FAGLIG_KILDE.test(u.rapport.fra)) {
     legg({ id: "rapport_fra_privat", alvor: "myk", steg: "rapport", tekst: `Rapporten er fra «${u.rapport.fra}». Den veier mest når den er skrevet av et verksted, NAF eller en takstmann. Står det et firmanavn på rapporten, skriv det.` });
   }
-  if (u.rapport && f.rapportSierForKjop === true && !OM_TIDSPUNKT.test(u.rapport.sitat)) {
+  // What the report says: the buyer's transcript from before, or the pasted text.
+  const rapportTekst = u.rapport?.sitat ?? u.kilder?.rapport;
+  if (u.rapport && f.rapportSierForKjop === true && rapportTekst && !OM_TIDSPUNKT.test(rapportTekst)) {
     legg({ id: "rapport_sitat_uten_tid", alvor: "myk", steg: "rapport", tekst: "Sitatet fra rapporten sier ikke når feilen oppsto, men brevet bruker det som bevis for at feilen var der da du kjøpte bilen. Skriv av det rapporten sier om årsaken og tidspunktet." });
   }
 

@@ -48,7 +48,7 @@ function likhet(a: string[], b: string[]): number {
   const felles = [...x].filter((t) => y.has(t)).length;
   return felles / (x.size + y.size - felles || 1);
 }
-const normaliserSitat = (t: string) => t.replace(/[«»"“”„]/g, '"').replace(/[‐-―]/g, "-").replace(/\s+/g, " ").trim().toLowerCase().replace(/[.!?,;:]+$/, "");
+export const normaliserSitat = (t: string) => t.replace(/[«»"“”„]/g, '"').replace(/[‐-―]/g, "-").replace(/\s+/g, " ").trim().toLowerCase().replace(/[.!?,;:]+$/, "");
 
 // The dates and numbers the letter may contain: those in the case, the pasted texts and the plan.
 function tillatt(m: Saksmodell, plan: Brevplan) {

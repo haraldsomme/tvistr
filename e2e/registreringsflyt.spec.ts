@@ -77,6 +77,13 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   // Right after buying, a wizard asks for everything the letter needs, one step per screen, before
   // the letter is shown. Every step, in order, to a finished letter.
   await expect(veiviser.tittel("Takk! Nå lager vi brevet ditt.")).toBeVisible();
+  // The clarifying round calls the language model; here it answers with one question, then «klar».
+  let avklaringer = 0;
+  await page.route("**/api/sak/*/avklaring", (route) => {
+    avklaringer++;
+    const sporsmal = [{ id: "r1s1", tema: "feilen", tekst: "Hvor ofte lyser motorlampen?", alternativer: ["Hver gang bilen kjøres", "Av og til"], flervalg: false }];
+    return route.fulfill({ json: avklaringer === 1 ? { status: "sporsmal", runde: 1, sporsmal, rettelser: [] } : { status: "klar", runde: 2, sporsmal: [], rettelser: [] } });
+  });
   await page.getByRole("button", { name: "Start" }).click();
 
   // The registry gave no purchase date, so the first step asks for it.
@@ -94,8 +101,8 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   // The defect in the buyer's own words: nothing goes to the language model.
   await expect(veiviser.tittel("Feilen")).toBeVisible();
   await page.getByLabel("Når viste den første feilen seg?").fill("01.06.2024");
-  await page.getByLabel(/^Beskriv feil.* med dine egne ord$/).fill("Motorlampen lyser, og bilen mister kraft i motbakker.");
-  await page.getByRole("button", { name: "Bruk teksten min som den er" }).click();
+  await page.getByLabel("Beskriv feilen med dine egne ord").fill("Motorlampen lyser, og bilen mister kraft i motbakker.");
+  await veiviser.neste();
 
   await expect(veiviser.tittel("Før kjøpet")).toBeVisible();
   await velg("Visste du om feilen før du kjøpte?", "Nei");
@@ -129,6 +136,13 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await page.getByLabel("Adresse").fill("Testveien 1");
   await page.getByLabel("Postnummer").fill("0184");
   await page.getByLabel("Sted").fill("Oslo");
+  await veiviser.neste();
+
+  // The clarifying round (the model is mocked): one question, then nothing more to ask.
+  await expect(veiviser.tittel("Gjennomgang")).toBeVisible();
+  await velg("Hvor ofte lyser motorlampen?", "Hver gang bilen kjøres");
+  await veiviser.neste();
+  await expect(page.getByText("Vi har det vi trenger for å skrive brevet.")).toBeVisible();
   await page.getByRole("button", { name: "Se brevet" }).click();
   await expect(page).toHaveURL(/\/brev\/[\w-]{22}$/);
 
@@ -137,7 +151,8 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await expect(brev.ark).not.toContainText("[reg.nr.]");
   await expect(brev.ark).toContainText("Test Testesen");
   await expect(brev.ark).toContainText("Testbil AS");
-  await expect(brev.ark).toContainText("solgt «som den er»");
+  // Bought in 2024: a general «som den er» has no effect against a consumer (§ 15 andre ledd).
+  await expect(brev.ark).toContainText("selges «som den er», har ingen virkning");
   await expect(brev.ark).not.toContainText("[Beskriv feilen");
   await expect(brev.ark).not.toContainText("[Ditt navn]");
 });

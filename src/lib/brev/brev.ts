@@ -215,7 +215,7 @@ function mangelOgBevisbyrde(input: KlageInput, idag: string, u: Utfylling): stri
         ? `${rapport} støtter også at feilen var der allerede da jeg overtok bilen.`
         : `${rapport} sier at feilen sannsynligvis var til stede før jeg overtok bilen, jf. § 18 første ledd.`,
     );
-    if (r) setninger.push(`Der står det: «${utenSluttegn(r.sitat)}».`);
+    if (r?.sitat) setninger.push(`Der står det: «${utenSluttegn(r.sitat)}».`);
   }
   // The buyer answered that the ad or the dealer said something that was not true.
   if (input.feilen.feilOpplysning !== "nei") {

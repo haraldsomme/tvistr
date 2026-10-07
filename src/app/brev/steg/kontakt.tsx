@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { norskDato } from "@/lib/brev/brev";
-import { REKLAMASJON_MATER, reparasjonGrunnerFor, type Reklamasjon, type Reparasjon } from "@/lib/brev/utfylling";
+import { medKilde, REKLAMASJON_MATER, reparasjonGrunnerFor, type Kilder, type Reklamasjon, type Reparasjon } from "@/lib/brev/utfylling";
 import { KONTAKT_TEKST } from "@/app/vurdering/tekster";
 import { kjopsdatoAv, type Innsending } from "@/lib/vurdering/innsending";
 import { KONTAKT_VALG, rettingValgFor, type Kontakt, type Retting } from "@/lib/vurdering/typer";
 import { Datofelt } from "../datofelt";
-import { HJELP, Nedtrekk, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } from "../felt";
+import { HJELP, Kildefelt, Nedtrekk, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } from "../felt";
 
 export const RETTING_TEKST: Record<Retting, string> = {
   ingen: "Nei, feilen er ikke reparert",
@@ -43,10 +43,11 @@ export function KontaktFelt({
   retting,
   reklamasjon,
   reparasjon,
+  kilder,
   aktiv,
   lagre,
   avbryt,
-}: Felles & { svar: Innsending; idag: string; retting: Retting | undefined; reklamasjon: Reklamasjon | undefined; reparasjon?: Reparasjon }) {
+}: Felles & { svar: Innsending; idag: string; retting: Retting | undefined; reklamasjon: Reklamasjon | undefined; reparasjon?: Reparasjon; kilder?: Kilder }) {
   const [kontakt, setKontakt] = useState<Kontakt>(svar.kontakt || "nei");
   const [valgtRetting, setValgtRetting] = useState<Retting | "">(retting ?? (kontakt === "nei" ? "ingen" : ""));
   const [dato, setDato] = useState(reklamasjon?.dato ?? "");
@@ -55,6 +56,7 @@ export function KontaktFelt({
   const [svarDato, setSvarDato] = useState(reklamasjon?.svarDato ?? "");
   const [repDato, setRepDato] = useState(reparasjon?.dato ?? "");
   const [grunn, setGrunn] = useState<Reparasjon["grunn"] | "">(reparasjon?.grunn ?? "");
+  const [svarTekst, setSvarTekst] = useState(kilder?.svar ?? "");
 
   if (!aktiv) {
     const vistRetting = retting ?? (kontakt === "nei" ? "ingen" : undefined);
@@ -90,6 +92,7 @@ export function KontaktFelt({
           ? null
           : { dato, mate: mate as Reklamasjon["mate"], ...(forsokt && { forsok: Number(forsok) }), ...(harSvar && svarDato >= dato && { svarDato }) },
       reparasjon: reparert ? { dato: repDato, grunn: grunn as Reparasjon["grunn"] } : null,
+      kilder: medKilde(kilder, "svar", kontakt === "nei" ? "" : svarTekst),
     });
 
   return (
@@ -132,6 +135,14 @@ export function KontaktFelt({
           max={idag}
           verdi={svarDato}
           settVerdi={setSvarDato}
+        />
+      )}
+      {kontakt !== "nei" && valgtRetting !== "" && valgtRetting !== "ingen" && (
+        <Kildefelt
+          label="Lim inn forhandlerens skriftlige svar (valgfritt)"
+          hjelp="Har forhandleren svart på e-post, SMS eller brev, lim inn svaret her. Brevet kan da sitere det."
+          verdi={svarTekst}
+          sett={setSvarTekst}
         />
       )}
       {reparert && (

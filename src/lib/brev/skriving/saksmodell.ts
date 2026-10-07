@@ -3,7 +3,7 @@ import { NAAR } from "@/lib/vurdering/grunnlag";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
 import { avledSvar } from "../svar";
-import type { Utfylling } from "../utfylling";
+import { AVKLARING_TEMAER, type Avklaring as LagretAvklaring, type Utfylling } from "../utfylling";
 
 // The case as the writing engine sees it: the answers from the assessment with the facts from the letter
 // page laid over them (`avledSvar`), the time line, the texts the buyer pasted in (cleaned of personal
@@ -15,10 +15,11 @@ export const KILDER = ["rapport", "opplysning", "svar"] as const;
 export type Kilde = (typeof KILDER)[number];
 export type Kildetekster = Partial<Record<Kilde, string>>;
 
-export const TEMAER = ["kjopet", "feilen", "for_kjopet", "kontakt", "rapport", "krav"] as const;
+export const TEMAER = AVKLARING_TEMAER;
 export type Tema = (typeof TEMAER)[number];
-// A question from the clarifying round and the buyer's answer; null when it was skipped.
-export type Avklaring = { moment?: string; tema: Tema; sporsmal: string; svar: string | null };
+// A question from the clarifying round and the buyer's answer; null when it was skipped. The round is
+// optional so the golden cases can give answers without one.
+export type Avklaring = Omit<LagretAvklaring, "runde"> & { runde?: number };
 
 export type Grunnlag = { svar: Innsending; utfylling: Utfylling; kilder?: Kildetekster; avklaringer?: Avklaring[] };
 
@@ -93,7 +94,8 @@ export function lagSaksmodell(g: Grunnlag, idag: string): { ok: true; modell: Sa
   const utfylling: Utfylling = { ...g.utfylling, retting: gyldigRetting(input.feilen.kontakt, g.utfylling.retting) };
   const kjente = kjenteOpplysninger(utfylling);
   const kilder: Kildetekster = {};
-  for (const [k, t] of Object.entries(g.kilder ?? {}) as [Kilde, string | undefined][]) if (t?.trim()) kilder[k] = rensTekst(t.trim(), kjente);
+  // The texts and answers given directly (the golden cases) win over those stored with the case.
+  for (const [k, t] of Object.entries(g.kilder ?? g.utfylling.kilder ?? {}) as [Kilde, string | undefined][]) if (t?.trim()) kilder[k] = rensTekst(t.trim(), kjente);
   return {
     ok: true,
     modell: {
@@ -104,7 +106,7 @@ export function lagSaksmodell(g: Grunnlag, idag: string): { ok: true; modell: Sa
       kjopsdato: kjopsdatoFor(input.bilOgKjop, idag),
       tidslinje: tidslinjeFor(input, utfylling),
       kilder,
-      avklaringer: g.avklaringer ?? [],
+      avklaringer: g.avklaringer ?? g.utfylling.avklaringer ?? [],
       kjente,
     },
   };
@@ -157,7 +159,7 @@ export function sakForModell(m: Saksmodell): Record<string, unknown> {
     },
     rapport:
       input.bevis.verkstedrapport || u.rapport
-        ? { sierAtFeilenVarDerForKjop: input.bevis.rapportSierForKjop, fra: u.rapport ? rens(u.rapport.fra) : null, dato: u.rapport?.dato ?? null, kjoperensGjengivelse: u.rapport ? rens(u.rapport.sitat) : null }
+        ? { sierAtFeilenVarDerForKjop: input.bevis.rapportSierForKjop, fra: u.rapport ? rens(u.rapport.fra) : null, dato: u.rapport?.dato ?? null, kjoperensGjengivelse: u.rapport?.sitat ? rens(u.rapport.sitat) : null }
         : null,
     krav: u.krav ? { ...u.krav, utgifter: u.krav.utgifter.map((x) => ({ ...x, ...(x.beskrivelse && { beskrivelse: rens(x.beskrivelse) }) })) } : null,
     avklaringer: m.avklaringer.map((a) => ({ ...a, svar: a.svar === null ? null : rens(a.svar) })),

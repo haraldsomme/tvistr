@@ -83,6 +83,7 @@ Få tester med vilje: små features skal gå raskt å bygge.
 
 - **Vitest (`npm test`)** dekker bare vurderingsmotoren (`src/lib/vurdering/`: samme input gir forventet vurdering) og brevet (`src/lib/brev/brev.test.ts`, `brev-krav.test.ts`: brevet bygges riktig ut fra input). Ikke skriv enhetstester for andre deler.
 - **Playwright (`npm run test:e2e`)** har én test: `e2e/registreringsflyt.spec.ts`, fra forsiden gjennom stegene og vurderingen til ferdig brev. Oppslag mot Statens vegvesen mockes; `/api/vurder` går mot ekte database.
+- **Brev-eval (`npm run brev-eval`)**: gullsakene i `scripts/brev-eval/saker/` skrives med hele kjeden i `src/lib/brev/skriving/` (plan, forfatter, kontroll, gjennomsyn), og rapporten havner i `docs/brev-eval/`. Kjøres ved hver endring i prompt eller plan. Koster penger (cirka 0,6 USD per brev) og er ikke en del av `npm test`.
 - **Ikke lag nye tester (Vitest eller Playwright) uten at brukeren ber om det.** Ingen «E2E-tester»-seksjon i planer.
 - Underveis i avanserte features kan Playwright (MCP) brukes til å sjekke UI-et i nettleseren. Det er verktøy for utvikling, ikke tester som sjekkes inn.
 - Rød test: les feilen før noe endres. Skyldes den en bevisst endring, oppdater testen; skyldes den en feil i appen, rett appen. Aldri svekk forventninger eller bruk `skip`/`fixme` for å få grønt.

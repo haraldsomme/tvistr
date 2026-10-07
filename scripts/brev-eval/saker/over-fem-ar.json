@@ -1,0 +1,75 @@
+{
+  "id": "over-fem-ar",
+  "tittel": "Kjøp over fem år siden, reklamert innen fem år",
+  "feller": [
+    "Femårsfristen og at den er overholdt",
+    "Ingen formodning"
+  ],
+  "idag": "2026-10-06",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "over_5",
+    "kjopsdato": "2021-03-01",
+    "kjopesum": "159000",
+    "kmVedKjop": "130000",
+    "feiltyper": [
+      "fukt"
+    ],
+    "oppdaget": "over_2_ar",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "nei",
+    "kontakt": "ja",
+    "reklamertInnenFemAr": "ja",
+    "verkstedrapport": "nei",
+    "rapportSierForKjop": "",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10015",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2017
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000015",
+      "navn": "Testbil AS"
+    },
+    "forbehold": "ingen",
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo"
+    },
+    "feilen": {
+      "dato": "2025-11-20",
+      "egen": "Vann renner inn fra soltaket ved kraftig regn.",
+      "feil": [
+        "Lekkasje"
+      ],
+      "avsnitt": [
+        "Vann renner inn fra soltaket ved kraftig regn."
+      ]
+    },
+    "retting": "venter",
+    "reklamasjon": {
+      "dato": "2025-12-01",
+      "mate": "brev"
+    }
+  },
+  "forventet": {
+    "argumenter": [
+      "tidspunkt",
+      "femarsfrist",
+      "frist_overholdt",
+      "historikk",
+      "reklamasjon",
+      "krav_retting"
+    ],
+    "ikke": [
+      "formodning"
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "id": "annonse-sitat",
+  "tittel": "Annonsen sa «Service fulgt»; annonseteksten er limt inn",
+  "feller": [
+    "Annonsen skal siteres ordrett",
+    "Forhandlerens telefonnummer i annonsen skal ikke med"
+  ],
+  "idag": "2026-10-06",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "2026-01-10",
+    "kjopesum": "239000",
+    "kmVedKjop": "88000",
+    "feiltyper": [
+      "km_service"
+    ],
+    "oppdaget": "innen_6_mnd",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "ja_dokumentert",
+    "kontakt": "nei",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "nei",
+    "rapportSierForKjop": "",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10010",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2019
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000010",
+      "navn": "Testbil AS"
+    },
+    "forbehold": "ingen",
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo"
+    },
+    "feilen": {
+      "dato": "2026-06-02",
+      "egen": "Ved service hos merkeverksted kom det fram at to servicer mangler, ved 60 000 og 75 000 km.",
+      "feil": [
+        "Servicehistorikken"
+      ],
+      "avsnitt": [
+        "Ved service hos merkeverksted kom det fram at to servicer mangler, ved 60 000 og 75 000 km."
+      ]
+    },
+    "feilopplyst": "ja",
+    "opplysning": {
+      "kilde": "annonse",
+      "tekst": "Annonsen sa at service var fulgt"
+    }
+  },
+  "kilder": {
+    "opplysning": "Pent brukt familiebil. Service fulgt etter fabrikkens program. Ny EU-kontroll. Kontakt oss på 22 33 44 55."
+  },
+  "forventet": {
+    "argumenter": [
+      "formodning",
+      "opplysning",
+      "reklamasjon",
+      "krav_retting"
+    ],
+    "tekst": [
+      "«[^»]*[Ss]ervice fulgt[^»]*»"
+    ],
+    "ikkeTekst": [
+      "22 33 44 55"
+    ]
+  }
+}

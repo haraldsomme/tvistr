@@ -1,0 +1,82 @@
+{
+  "id": "rapport-uten-tid",
+  "tittel": "Lekkasje; svaret sier at rapporten tidfester feilen, teksten gjør det ikke",
+  "feller": [
+    "Kjent konflikt: svaret sier at rapporten tidfester feilen, men teksten gjør det ikke. Avklaringsrunden i fase 3 skal fange dette; her ser vi bare om gjennomsynet flagger det."
+  ],
+  "idag": "2026-10-06",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "2026-02-01",
+    "kjopesum": "98000",
+    "kmVedKjop": "170000",
+    "feiltyper": [
+      "fukt"
+    ],
+    "oppdaget": "innen_6_mnd",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "nei",
+    "kontakt": "ja",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "ja",
+    "rapportSierForKjop": "ja",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10007",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2011
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000007",
+      "navn": "Testbil AS"
+    },
+    "forbehold": "ingen",
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo"
+    },
+    "feilen": {
+      "dato": "2026-02-25",
+      "egen": "Det kommer vann inn bak høyre dør når det regner, og teppet blir vått.",
+      "feil": [
+        "Lekkasje"
+      ],
+      "avsnitt": [
+        "Det kommer vann inn bak høyre dør når det regner, og teppet blir vått."
+      ]
+    },
+    "retting": "avvist",
+    "reklamasjon": {
+      "dato": "2026-03-02",
+      "mate": "epost",
+      "svarDato": "2026-03-09"
+    },
+    "rapport": {
+      "fra": "Testverksted AS",
+      "dato": "2026-03-05",
+      "sitat": "Tetningslisten er dårlig"
+    },
+    "krav": {
+      "type": "prisavslag",
+      "utbedringNok": 4900,
+      "utgifter": []
+    }
+  },
+  "kilder": {
+    "rapport": "Lekkasje fra bakre høyre dør. Tetningslisten er sprukket og må byttes. Pris inkl. arbeid 4 900 kr."
+  },
+  "forventet": {
+    "argumenter": [
+      "formodning",
+      "rapport_bevis",
+      "krav_prisavslag"
+    ]
+  }
+}

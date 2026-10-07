@@ -1,0 +1,83 @@
+{
+  "id": "for-2024-som-den-er",
+  "tittel": "Kjøp før 2024 «som den er», understell innen seks måneder",
+  "feller": [
+    "Seks måneders formodning etter gammel lov",
+    "«som den er» etter § 17 slik den lød"
+  ],
+  "idag": "2024-03-01",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "2023-09-01",
+    "kjopesum": "69000",
+    "kmVedKjop": "230000",
+    "feiltyper": [
+      "understell"
+    ],
+    "oppdaget": "innen_6_mnd",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "nei",
+    "kontakt": "ja",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "nei",
+    "rapportSierForKjop": "",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10011",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2009
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000011",
+      "navn": "Testbil AS"
+    },
+    "forbehold": "som_den_er",
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo"
+    },
+    "feilen": {
+      "dato": "2024-01-15",
+      "egen": "Det smeller i forstillingen over humper, og verkstedet fant knekt fjær og slitte bærebruer.",
+      "feil": [
+        "Forstillingen"
+      ],
+      "avsnitt": [
+        "Det smeller i forstillingen over humper, og verkstedet fant knekt fjær og slitte bærebruer."
+      ]
+    },
+    "retting": "avvist",
+    "reklamasjon": {
+      "dato": "2024-01-20",
+      "mate": "brev",
+      "svarDato": "2024-02-01"
+    },
+    "krav": {
+      "type": "prisavslag",
+      "utgifter": []
+    }
+  },
+  "forventet": {
+    "argumenter": [
+      "formodning",
+      "forbehold",
+      "historikk",
+      "krav_prisavslag",
+      "rente"
+    ],
+    "tekst": [
+      "seks måneder",
+      "«som den er»"
+    ],
+    "ikkeTekst": [
+      "to år etter levering"
+    ]
+  }
+}

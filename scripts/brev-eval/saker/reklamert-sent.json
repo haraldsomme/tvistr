@@ -1,0 +1,67 @@
+{
+  "id": "reklamert-sent",
+  "tittel": "Rust, kjøperen har ventet over ett år med å reklamere",
+  "feller": [
+    "Brevet skal ikke påstå at reklamasjonen kom i tide"
+  ],
+  "idag": "2026-10-06",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "2025-06-01",
+    "kjopesum": "89000",
+    "kmVedKjop": "210000",
+    "feiltyper": [
+      "rust"
+    ],
+    "oppdaget": "innen_6_mnd",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "nei",
+    "kontakt": "nei",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "nei",
+    "rapportSierForKjop": "",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10004",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2008
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000004",
+      "navn": "Testbil AS"
+    },
+    "forbehold": "ingen",
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo"
+    },
+    "feilen": {
+      "dato": "2025-07-01",
+      "egen": "Rust under dørene og i hjulbuene, og EU-kontrollen ga merknad.",
+      "feil": [
+        "Rust"
+      ],
+      "avsnitt": [
+        "Rust under dørene og i hjulbuene, og EU-kontrollen ga merknad."
+      ]
+    }
+  },
+  "forventet": {
+    "argumenter": [
+      "formodning",
+      "reklamasjon",
+      "krav_retting"
+    ],
+    "ikkeTekst": [
+      "mindre enn to måneder",
+      "i tide"
+    ]
+  }
+}

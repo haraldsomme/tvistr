@@ -1,0 +1,77 @@
+{
+  "id": "rapport-parafrase",
+  "tittel": "Clutch; kjøperen har bare gjengitt rapporten med egne ord",
+  "feller": [
+    "Uten kildetekst: ingen anførselstegn"
+  ],
+  "idag": "2026-10-06",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "2026-03-01",
+    "kjopesum": "175000",
+    "kmVedKjop": "120000",
+    "feiltyper": [
+      "girkasse"
+    ],
+    "oppdaget": "innen_6_mnd",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "nei",
+    "kontakt": "ja",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "ja",
+    "rapportSierForKjop": "ja",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10008",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2015
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000008",
+      "navn": "Testbil AS"
+    },
+    "forbehold": "ingen",
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo"
+    },
+    "feilen": {
+      "dato": "2026-04-10",
+      "egen": "Clutchen sluror i høye gir.",
+      "feil": [
+        "Clutchen"
+      ],
+      "avsnitt": [
+        "Clutchen sluror i høye gir."
+      ]
+    },
+    "retting": "venter",
+    "reklamasjon": {
+      "dato": "2026-04-12",
+      "mate": "sms"
+    },
+    "rapport": {
+      "fra": "Testverksted AS",
+      "dato": "2026-04-15",
+      "sitat": "Mekanikeren mente clutchen har vært dårlig lenge, sikkert før kjøpet"
+    }
+  },
+  "forventet": {
+    "argumenter": [
+      "formodning",
+      "rapport_bevis",
+      "historikk",
+      "krav_retting"
+    ],
+    "ikkeTekst": [
+      "«"
+    ]
+  }
+}

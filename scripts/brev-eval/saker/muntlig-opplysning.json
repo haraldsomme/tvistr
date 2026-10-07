@@ -1,0 +1,73 @@
+{
+  "id": "muntlig-opplysning",
+  "tittel": "Muntlig opplysning om overhalt motor, uten skriftlig kilde",
+  "feller": [
+    "Uten kildetekst: ingen anførselstegn",
+    "«nettopp» i gjengitt tale er ikke en relativ tidsangivelse"
+  ],
+  "idag": "2026-10-06",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "2026-05-15",
+    "kjopesum": "115000",
+    "kmVedKjop": "150000",
+    "feiltyper": [
+      "motor"
+    ],
+    "oppdaget": "innen_6_mnd",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "ja_udokumentert",
+    "kontakt": "nei",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "nei",
+    "rapportSierForKjop": "",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10009",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2013
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000009",
+      "navn": "Testbil AS"
+    },
+    "forbehold": "ingen",
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo"
+    },
+    "feilen": {
+      "dato": "2026-08-30",
+      "egen": "Motoren bruker mye olje og ryker blått ved oppstart.",
+      "feil": [
+        "Motoren"
+      ],
+      "avsnitt": [
+        "Motoren bruker mye olje og ryker blått ved oppstart."
+      ]
+    },
+    "feilopplyst": "ja",
+    "opplysning": {
+      "kilde": "muntlig",
+      "tekst": "Selgeren sa at motoren nettopp var overhalt og ikke hadde hatt problemer."
+    }
+  },
+  "forventet": {
+    "argumenter": [
+      "formodning",
+      "opplysning",
+      "reklamasjon",
+      "krav_retting"
+    ],
+    "ikkeTekst": [
+      "«"
+    ]
+  }
+}

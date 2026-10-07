@@ -51,7 +51,7 @@ const FEIL_I_SETNING: Record<FeilKnapp, string | null> = {
   annet: null,
 };
 
-const MANEDER = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
+export const MANEDER = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
 // How long the dealer gets to answer.
 export const SVARFRIST_DAGER = 14;
 // Interest on late payment runs from 30 days after a written demand (forsinkelsesrenteloven § 2).
@@ -79,7 +79,7 @@ export function plussDager(iso: string, dager: number): string {
 
 export const kroner = (n: number) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} kr`;
 
-function liste(ledd: string[]): string {
+export function liste(ledd: string[]): string {
   return ledd.length <= 1 ? (ledd[0] ?? "") : `${ledd.slice(0, -1).join(", ")} og ${ledd[ledd.length - 1]}`;
 }
 
@@ -104,9 +104,9 @@ function forbeholdAvsnitt(forbehold: Forbehold, presumsjonManeder: 6 | 24, visst
 export const JURIDISK = {
   hevingSubsidiart: (utbedringNok?: number) =>
     utbedringNok ? `Dersom dere ikke godtar heving, krever jeg subsidiært prisavslag på ${kroner(utbedringNok)}, jf. § 31.` : "Dersom dere ikke godtar heving, krever jeg subsidiært et forholdsmessig prisavslag, jf. § 31.",
-  // Interest runs from 30 days after a written demand is sent (forsinkelsesrenteloven § 2).
-  rente: (idag: string) =>
-    `Jeg krever også forsinkelsesrente etter forsinkelsesrenteloven §§ 2 og 3 av det beløpet dere skylder meg, fra ${RENTE_FORFALL_DAGER} dager etter at dette brevet er sendt (${norskDato(plussDager(idag, RENTE_FORFALL_DAGER))} hvis det sendes i dag) til betaling skjer.`,
+  // Interest runs from 30 days after a written demand is sent (forsinkelsesrenteloven § 2). The day the
+  // letter is sent is not known, so no date is given.
+  rente: `Jeg krever også forsinkelsesrente etter forsinkelsesrenteloven §§ 2 og 3 av det beløpet dere skylder meg, fra ${RENTE_FORFALL_DAGER} dager etter at dette brevet er sendt, til betaling skjer.`,
   // When the purchase price is paid back, interest runs from the day the buyer complained (§ 50 second paragraph).
   renteHeving: (reklamert: string | null) =>
     `Etter forbrukerkjøpsloven § 50 andre ledd skal dere betale forsinkelsesrente av kjøpesummen fra ${reklamert ? `${norskDato(reklamert)}, da jeg reklamerte,` : "datoen for dette brevet"} til betaling skjer. Krever dere vederlag for bruken av bilen, løper renten fra den dagen dere mottok betalingen.`,
@@ -195,10 +195,13 @@ function mangelOgBevisbyrde(input: KlageInput, idag: string, u: Utfylling): stri
   const setninger = ["Bilen har etter dette en mangel etter forbrukerkjøpsloven § 16."];
   if (f.presumsjon) {
     const periode = f.presumsjonManeder === 24 ? "to år" : "seks måneder";
+    // The defect paragraph above already gives the day it showed; the rule follows from it.
     setninger.push(
-      `Feilen viste seg innen ${periode} etter levering, og det følger da av § 18 andre ledd at en mangel som viser seg innen ${periode} antas å ha eksistert ved leveringen, med mindre dere beviser noe annet.`,
+      u.feilen
+        ? `Det følger av § 18 andre ledd at en mangel som viser seg innen ${periode} etter levering, antas å ha eksistert ved leveringen, med mindre dere beviser noe annet.`
+        : `Feilen viste seg innen ${periode} etter levering, og det følger da av § 18 andre ledd at en mangel som viser seg innen ${periode} antas å ha eksistert ved leveringen, med mindre dere beviser noe annet.`,
     );
-  } else {
+  } else if (!u.feilen) {
     setninger.push(`Feilen viste seg ${NAAR[f.oppdaget]} etter levering.`);
   }
   // A report that points backward in time is evidence either way: inside the presumption it backs it
@@ -327,15 +330,15 @@ function krav(input: KlageInput, f: Faktorer, u: Utfylling, idag: string): strin
     const avslag = u.krav.utbedringNok
       ? `${start} Jeg krever prisavslag på ${kroner(u.krav.utbedringNok)}, ${grunnlag}, jf. § 31.`
       : `${start} Jeg krever et forholdsmessig prisavslag, jf. § 31.`;
-    return `${avslag} ${JURIDISK.rente(idag)}`;
+    return `${avslag} ${JURIDISK.rente}`;
   }
   return `${start} Jeg krever ${KRAV_ALTERNATIV}, jf. § 31 og § 32.`;
 }
 
-const UTGIFT: Record<Utgift["type"], string> = { verksted: "verksted og feilsøking", tauing: "tauing", leiebil: "leiebil", annet: "andre utgifter" };
+export const UTGIFT: Record<Utgift["type"], string> = { verksted: "verksted og feilsøking", tauing: "tauing", leiebil: "leiebil", annet: "andre utgifter" };
 
 // Costs claimed as damages (§ 33), and what the buyer reserves the right to claim later.
-function erstatningOgForbehold(u: Utfylling, idag: string): string {
+function erstatningOgForbehold(u: Utfylling): string {
   const utgifter = u.krav?.utgifter ?? [];
   const sum = utgifter.reduce((s, x) => s + x.belopNok, 0);
   const erstatning = utgifter.length
@@ -344,11 +347,11 @@ function erstatningOgForbehold(u: Utfylling, idag: string): string {
   const konto = kreverPenger(u) && u.avsender?.kontonummer ? `Beløpet bes innbetalt til kontonummer ${kontonummerGruppert(u.avsender.kontonummer)}. ` : "";
   // The claim paragraph carries the interest on a price reduction, which covers what the dealer owes; with
   // cancelling it covers only the price, so costs get their own.
-  const rente = utgifter.length && !(harFatt(u.retting) && u.krav?.type === "prisavslag") ? `${JURIDISK.rente(idag)} ` : "";
+  const rente = utgifter.length && !(harFatt(u.retting) && u.krav?.type === "prisavslag") ? `${JURIDISK.rente} ` : "";
   if (harFatt(u.retting)) {
     return `${erstatning}${rente}${konto}${utgifter.length ? "Jeg forbeholder meg retten til å kreve erstatning for ytterligere tap." : "Jeg forbeholder meg også retten til erstatning for mitt økonomiske tap etter § 33."}`;
   }
-  return `${erstatning}${rente}${konto}Dersom retting ikke skjer innen rimelig tid, forbeholder jeg meg retten til å kreve prisavslag eller heving av kjøpet etter § 31 og § 32, samt ${utgifter.length ? "ytterligere erstatning" : "erstatning for mitt økonomiske tap"} etter § 33.${konto}`;
+  return `${erstatning}${rente}${konto}Dersom retting ikke skjer innen rimelig tid, forbeholder jeg meg retten til å kreve prisavslag eller heving av kjøpet etter § 31 og § 32, samt ${utgifter.length ? "ytterligere erstatning" : "erstatning for mitt økonomiske tap"} etter § 33.`;
 }
 
 // Does the letter claim money now: a price reduction or cancelling once the dealer has had its try, or
@@ -404,6 +407,32 @@ export function henvisningFor(input: KlageInput, idag: string, u: Utfylling): Va
   return velgHenvisning(beregnFaktorer(medBilAr(input, u), idag));
 }
 
+// The parts of the letter around its paragraphs: sender, recipient, place and date, subject and
+// signature. Shared by the template and the written letter (`skriving/render.ts`).
+export function brevhode(u: Utfylling, idag: string): Omit<Brev, "avsnitt"> {
+  const { kjoretoy, forhandler, avsender } = u;
+  const bil =
+    kjoretoy &&
+    `${kjoretoy.merke} ${kjoretoy.modell}${kjoretoy.ar ? ` (${kjoretoy.ar})` : ""}`;
+  const orgnrLinje =
+    forhandler?.type === "brreg"
+      ? `Org.nr. ${gruppert(forhandler.orgnr)}`
+      : null;
+  const adresse = forhandler?.adresse;
+  const adresseLinjer = adresse ? [...adresse.linjer, `${adresse.postnummer} ${adresse.poststed}`] : [];
+  const avsenderLinjer = avsender
+    ? [avsender.navn, avsender.adresse, `${avsender.postnummer} ${avsender.poststed}`, ...(avsender.telefon ? [`Tlf. ${avsender.telefon}`] : []), ...(avsender.epost ? [`E-post: ${avsender.epost}`] : [])]
+    : [];
+  return {
+    avsender: avsender ? avsenderLinjer : ["[Ditt navn]", "[Din adresse]", "[Postnummer og sted]"],
+    mottaker: [forhandler?.navn.trim() || "[Forhandlerens navn]", ...(orgnrLinje ? [orgnrLinje] : []), ...(adresse ? adresseLinjer : ["[Forhandlerens adresse]", "[Postnummer og sted]"])],
+    stedDato: `${avsender?.poststed ?? "[Sted]"}, ${norskDato(idag)}`,
+    emne: kjoretoy ? `Reklamasjon på mangel – ${bil}, reg.nr. ${kjoretoy.regnr}` : "Reklamasjon på mangel – [merke og modell], reg.nr. [reg.nr.]",
+    hilsen: "Med vennlig hilsen",
+    underskrift: avsender?.navn ?? "[Ditt navn]",
+  };
+}
+
 // The letter from the answers of the assessment and what the buyer has filled in on the letter
 // page. Whatever is not filled in yet is a placeholder in square brackets.
 export function byggBrev(
@@ -418,36 +447,18 @@ export function byggBrev(
     ...utfylt,
     retting: gyldigRetting(input.feilen.kontakt, utfylt.retting),
   };
-  const { kjoretoy, forhandler, avsender } = u;
-  const bil =
-    kjoretoy &&
-    `${kjoretoy.merke} ${kjoretoy.modell}${kjoretoy.ar ? ` (${kjoretoy.ar})` : ""}`;
-  const orgnrLinje =
-    forhandler?.type === "brreg"
-      ? `Org.nr. ${gruppert(forhandler.orgnr)}`
-      : null;
-  const adresse = forhandler?.adresse;
-  const adresseLinjer = adresse ? [...adresse.linjer, `${adresse.postnummer} ${adresse.poststed}`] : [];
-  const avsenderLinjer = avsender
-    ? [avsender.navn, avsender.adresse, `${avsender.postnummer} ${avsender.poststed}`, ...(avsender.telefon ? [`Tlf. ${avsender.telefon}`] : []), ...(avsender.epost ? [`E-post: ${avsender.epost}`] : [])]
-    : [];
   const vedlagt = vedleggFor(input, u);
   return {
-    avsender: avsender ? avsenderLinjer : ["[Ditt navn]", "[Din adresse]", "[Postnummer og sted]"],
-    mottaker: [forhandler?.navn.trim() || "[Forhandlerens navn]", ...(orgnrLinje ? [orgnrLinje] : []), ...(adresse ? adresseLinjer : ["[Forhandlerens adresse]", "[Postnummer og sted]"])],
-    stedDato: `${avsender?.poststed ?? "[Sted]"}, ${norskDato(idag)}`,
-    emne: kjoretoy ? `Reklamasjon på mangel – ${bil}, reg.nr. ${kjoretoy.regnr}` : "Reklamasjon på mangel – [merke og modell], reg.nr. [reg.nr.]",
+    ...brevhode(u, idag),
     avsnitt: [
       ...kjopetOgFeilen(input, u),
       mangelOgBevisbyrde(input, idag, u),
       ...(henvisning ? [JURIDISK.henvisning(henvisning, f)] : []),
       ...innvendinger(input, f, u),
       krav(input, f, u, idag),
-      erstatningOgForbehold(u, idag),
-      `Jeg ber om skriftlig svar innen ${SVARFRIST_DAGER} dager fra dette brevets dato, det vil si innen ${norskDato(plussDager(idag, SVARFRIST_DAGER))}${avsender?.epost ? `, gjerne på e-post til ${avsender.epost}` : ""}. Får jeg ikke svar innen fristen, eller avviser dere kravet, vil jeg klage saken inn til Forbrukertilsynet for mekling og eventuelt behandling i Forbrukerklageutvalget.`,
+      erstatningOgForbehold(u),
+      `Jeg ber om skriftlig svar innen ${SVARFRIST_DAGER} dager fra dette brevets dato, det vil si innen ${norskDato(plussDager(idag, SVARFRIST_DAGER))}${u.avsender?.epost ? `, gjerne på e-post til ${u.avsender.epost}` : ""}. Får jeg ikke svar innen fristen, eller avviser dere kravet, vil jeg klage saken inn til Forbrukertilsynet for mekling og eventuelt behandling i Forbrukerklageutvalget.`,
       ...(vedlagt.length ? [`Vedlagt følger ${liste(vedlagt.map((v) => VEDLEGG_NAVN[v]))}.`] : []),
     ],
-    hilsen: "Med vennlig hilsen",
-    underskrift: avsender?.navn ?? "[Ditt navn]",
   };
 }

@@ -2,9 +2,15 @@ import Anthropic from "@anthropic-ai/sdk";
 import { sjekkSkjema } from "./skjemasjekk";
 
 export const MODELL = "claude-sonnet-5-5";
+// Writes the whole complaint letter; the rest of the app uses MODELL.
+export const MODELL_FORFATTER = "claude-opus-5-5";
+export type Modell = typeof MODELL | typeof MODELL_FORFATTER;
 
-// USD per million tokens for claude-sonnet-5-5.
-const PRIS = { inn: 2, ut: 10, cacheSkriv: 2.5, cacheLes: 0.2 };
+// USD per million tokens.
+const PRISER: Record<Modell, { inn: number; ut: number; cacheSkriv: number; cacheLes: number }> = {
+  "claude-sonnet-5-5": { inn: 2, ut: 10, cacheSkriv: 2.5, cacheLes: 0.2 },
+  "claude-opus-5-5": { inn: 4, ut: 20, cacheSkriv: 5, cacheLes: 0.2 },
+};
 
 let klient: Anthropic | null = null;
 function hentKlient() {
@@ -37,14 +43,17 @@ export async function kallVerktoy<T>(opts: {
   effort: "low" | "medium" | "high";
   maksTokens: number;
   strict?: boolean;
+  modell?: Modell;
 }): Promise<VerktoySvar<T>> {
+  const modell = opts.modell ?? MODELL;
+  const PRIS = PRISER[modell];
   const strict = opts.strict ?? true;
   const forbruk: Forbruk = { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 };
   let sisteFeil = "";
 
   for (let forsok = 1; forsok <= 3; forsok++) {
     const svar = await hentKlient().beta.messages.create({
-      model: MODELL,
+      model: modell,
       max_tokens: opts.maksTokens,
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",

@@ -372,8 +372,10 @@ describe("byggBrev", () => {
       expect(t).not.toContain("hever kjøpet");
     });
 
-    it("forsinkelsesrenten løper fra 30 dager etter brevets dato", () => {
-      expect(tekst(brevFor("avvist", { krav: { type: "prisavslag", utgifter: [] } }))).toContain("fra 30 dager etter at dette brevet er sendt (1. november 2026 hvis det sendes i dag) til betaling skjer.");
+    it("forsinkelsesrenten løper fra 30 dager etter at brevet er sendt, uten en dato som forutsetter når", () => {
+      const t = tekst(brevFor("avvist", { krav: { type: "prisavslag", utgifter: [] } }));
+      expect(t).toContain("fra 30 dager etter at dette brevet er sendt, til betaling skjer.");
+      expect(t).not.toContain("hvis det sendes i dag");
     });
 
     it("oppgir kontonummeret når brevet krever penger, ellers ikke", () => {
@@ -449,6 +451,23 @@ describe("byggBrev", () => {
     const alt = [...b.avsender, ...b.mottaker, b.stedDato, b.emne, ...b.avsnitt, b.hilsen, b.underskrift].join("\n");
     expect(alt).not.toMatch(/[\[\]]/);
     expect(alt).not.toMatch(/undefined|null|NaN/);
+  });
+
+  it("skriver kontonummeret én gang når forhandleren ennå kan rette og det kreves utgifter", () => {
+    const avsender = { navn: "Test Testesen", adresse: "Testveien 1", postnummer: "0184", poststed: "Oslo", kontonummer: "12345678903" };
+    const t = tekst(brevFor("venter", { avsender, krav: { utgifter: [{ type: "verksted", belopNok: 4500 }] } }));
+    expect(t.match(/kontonummer 1234 56 78903/g)).toHaveLength(1);
+  });
+
+  it("gjentar ikke når feilen viste seg når beskrivelsen av feilen står i brevet", () => {
+    const feilen = { dato: "2026-04-02", egen: "Motoren stopper.", feil: [], avsnitt: ["Motoren stopper."] };
+    const innenfor = tekst(byggBrev(grunn(), IDAG, { feilen }));
+    expect(innenfor.match(/viste seg/g)).toHaveLength(1);
+    expect(innenfor).toContain("Det følger av § 18 andre ledd at en mangel som viser seg innen to år etter levering, antas å ha eksistert ved leveringen, med mindre dere beviser noe annet.");
+    const i = grunn();
+    i.feilen.oppdaget = "over_2_ar";
+    const utenfor = tekst(byggBrev(i, IDAG, { feilen }));
+    expect(utenfor.match(/viste seg/g)).toHaveLength(1);
   });
 
   it("lekker ikke undefined, null eller tomme avsnitt", () => {

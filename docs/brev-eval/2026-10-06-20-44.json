@@ -1,0 +1,122 @@
+{
+  "annonse-sitat": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 0,
+    "tekstfeil": 0
+  },
+  "elbil-motor": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 2,
+    "tekstfeil": 0
+  },
+  "etter-to-ar": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 4,
+    "tekstfeil": 0
+  },
+  "flere-feil": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 5,
+    "tekstfeil": 0
+  },
+  "for-2024-som-den-er": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 0,
+    "tekstfeil": 0
+  },
+  "heving-utgifter": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 0,
+    "tekstfeil": 0
+  },
+  "motor-rapport-sitat": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 1,
+    "tekstfeil": 0
+  },
+  "muntlig-opplysning": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 0,
+    "tekstfeil": 0
+  },
+  "mye-mangler": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 0,
+    "tekstfeil": 0
+  },
+  "over-fem-ar": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 2,
+    "tekstfeil": 0
+  },
+  "rapport-parafrase": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 1,
+    "tekstfeil": 0
+  },
+  "rapport-uten-tid": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 0,
+    "tekstfeil": 0
+  },
+  "reklamert-sent": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 1,
+    "tekstfeil": 0
+  },
+  "reparert-for-forhandler": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 0,
+    "tekstfeil": 0
+  },
+  "sint-tekst": {
+    "kjoringer": 3,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 1,
+    "tekstfeil": 0
+  }
+}

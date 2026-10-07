@@ -1,0 +1,80 @@
+{
+  "id": "flere-feil",
+  "tittel": "To feil: motor og ryggekamera",
+  "feller": [
+    "Datoen den første feilen viste seg står én gang"
+  ],
+  "idag": "2026-10-06",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "2026-02-20",
+    "kjopesum": "205000",
+    "kmVedKjop": "99000",
+    "feiltyper": [
+      "motor",
+      "elektrisk"
+    ],
+    "oppdaget": "innen_6_mnd",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "nei",
+    "kontakt": "ja",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "nei",
+    "rapportSierForKjop": "",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10012",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2018
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000012",
+      "navn": "Testbil AS"
+    },
+    "forbehold": "ingen",
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo"
+    },
+    "feilen": {
+      "dato": "2026-03-28",
+      "egen": "Motoren hakker på tomgang. I tillegg virker ikke ryggekameraet.",
+      "feil": [
+        "Motoren",
+        "Ryggekameraet"
+      ],
+      "avsnitt": [
+        "Motoren hakker på tomgang. I tillegg virker ikke ryggekameraet."
+      ],
+      "fakta": [
+        {
+          "feil": "Ryggekameraet",
+          "sporsmal": "Når viste det seg?",
+          "svar": "Rundt 15. april"
+        }
+      ]
+    },
+    "retting": "venter",
+    "reklamasjon": {
+      "dato": "2026-04-05",
+      "mate": "epost"
+    }
+  },
+  "forventet": {
+    "argumenter": [
+      "formodning",
+      "historikk",
+      "krav_retting"
+    ],
+    "ikkeTekst": [
+      "viste seg første gang[\\s\\S]*viste seg første gang"
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "mye-mangler",
+  "tittel": "Nesten ingenting er fylt ut",
+  "feller": [
+    "Hver mangel som [MANGLER: …], og ingenting annet i hakeparentes"
+  ],
+  "idag": "2026-10-06",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "",
+    "kjopesum": "",
+    "kmVedKjop": "",
+    "feiltyper": [
+      "annet"
+    ],
+    "oppdaget": "innen_6_mnd",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "nei",
+    "kontakt": "ja",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "nei",
+    "rapportSierForKjop": "",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10014",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2017
+    }
+  },
+  "forventet": {
+    "argumenter": [
+      "krav_retting"
+    ],
+    "tekst": [
+      "\\[MANGLER: kjøpsdato\\]",
+      "\\[MANGLER: kjøpesum\\]",
+      "\\[MANGLER: beskrivelse av feilen",
+      "\\[MANGLER: dato og måte"
+    ]
+  }
+}

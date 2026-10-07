@@ -1,0 +1,112 @@
+{
+  "id": "heving-utgifter",
+  "tittel": "Girkasse, to mislykkede forsøk, heving med utgifter og kontonummer",
+  "feller": [
+    "Heving med utgifter: rente av kjøpesummen og av utgiftene, og kontonummeret én gang",
+    "Kjøp fra 2024: kjøperen kan avvise flere forsøk (§ 30 fjerde ledd)"
+  ],
+  "idag": "2026-10-06",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "2025-01-10",
+    "kjopesum": "189000",
+    "kmVedKjop": "98000",
+    "feiltyper": [
+      "girkasse"
+    ],
+    "oppdaget": "innen_6_mnd",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "nei",
+    "kontakt": "ja",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "nei",
+    "rapportSierForKjop": "",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10001",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2016
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000001",
+      "navn": "Testbil Vest AS"
+    },
+    "feilen": {
+      "dato": "2025-04-02",
+      "egen": "Girkassen rykker når den skifter fra 2. til 3. gir, og varsellampen for girkassen lyser.",
+      "feil": [
+        "Girkassen"
+      ],
+      "fakta": [
+        {
+          "feil": "Girkassen",
+          "sporsmal": "Hvor ofte skjer det?",
+          "svar": "Hver gang bilen er kald"
+        }
+      ],
+      "avsnitt": [
+        "Girkassen rykker når den skifter fra andre til tredje gir, og varsellampen for girkassen lyser. Det skjer hver gang bilen er kald."
+      ]
+    },
+    "forbehold": "ingen",
+    "retting": "forsokt",
+    "reklamasjon": {
+      "dato": "2025-04-04",
+      "mate": "epost",
+      "forsok": 2,
+      "svarDato": "2025-06-15"
+    },
+    "krav": {
+      "type": "heving",
+      "utbedringNok": 60000,
+      "utgifter": [
+        {
+          "type": "leiebil",
+          "belopNok": 4000
+        },
+        {
+          "type": "tauing",
+          "belopNok": 1500
+        }
+      ]
+    },
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo",
+      "kontonummer": "12345678903",
+      "epost": "test@example.com"
+    }
+  },
+  "forventet": {
+    "argumenter": [
+      "historikk",
+      "avviser_nytt_forsok",
+      "krav_heving",
+      "vesentlig",
+      "subsidiaert_prisavslag",
+      "rente_heving",
+      "rente",
+      "erstatning",
+      "kontonummer"
+    ],
+    "ikke": [
+      "krav_retting",
+      "krav_prisavslag"
+    ],
+    "tekst": [
+      "1234 56 78903"
+    ],
+    "ikkeTekst": [
+      "1234 56 78903[\\s\\S]*1234 56 78903",
+      "hvis det sendes",
+      "blitt verre"
+    ]
+  }
+}

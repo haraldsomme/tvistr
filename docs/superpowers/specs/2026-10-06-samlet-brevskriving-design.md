@@ -27,9 +27,9 @@ Målet er et brev som leser som om én person skrev det, der hvert faktum står 
 - **Gullsaker kjøres som eval-skript,** ikke som en del av `npm test`.
 - **Rubrikken bygges av** `sjekkBrev`-reglene, utredningens punkter og momentkatalogen.
 
-## Arkitektur (`src/lib/brev/`)
+## Arkitektur (`src/lib/brev/skriving/`)
 
-1. **`sak.ts` → `lagSak(svar, utfylling, idag): Sak`** (ren funksjon). Den samler:
+1. **`saksmodell.ts` → `lagSaksmodell({svar, utfylling, kilder?, avklaringer?}, idag): Saksmodell`** (ren funksjon; `sak.ts`/`Sak` er allerede de lagrede sakene). Den samler:
    - partene som roller, ikke navn
    - kjøpet
    - `tidslinje[{type, dato, kilde}]` med kjøpet, når feilen viste seg, reklamasjon, forhandlerens svar, reparasjon og rapporten
@@ -56,7 +56,7 @@ Målet er et brev som leser som om én person skrev det, der hvert faktum står 
    - `rettelser` kan bare gjelde en lukket liste med felt. De går gjennom `rettSvar` → `tilpassTilSvar` → `avledSvar` → `kontrollerRettelse`, og en rettelse som svekker brevet går gjennom `konsekvenserAv` / `useBekreftLagring`.
    - Svarene lagres i `utfylling.avklaringer[{moment?, tema, sporsmal, svar}]`.
 4. **Forfatter** (`forfatter.ts`), med Opus 5.5 og verktøyet `skriv_brev`. Svaret er `{avsnitt[{setninger[{tekst, argumenter[]}]}], sitater[{id, kilde, tekst}]}`.
-   - Merkene er `{{sitat:id}}`, `{{henvisning}}`, `{{dato:svarfrist}}` og `{{dato:rente}}`. Datoene regnes fra brevdatoen når brevet vises.
+   - Merkene er `{{sitat:id}}`, `{{henvisning}}`, `{{dato:svarfrist}}` (regnes fra brevdatoen når brevet vises), `{{kontonummer}}` og `{{epost}}` (så modellen aldri ser dem). Renten har ingen dato: den løper fra 30 dager etter at brevet er sendt, og den dagen kjenner vi ikke.
    - Bare fakta fra saken, `[MANGLER: …]` bare for det i `plan.mangler`, og bare absolutte datoer.
 5. **`kontroll.ts`** (kode) sjekker:
    - at hvert argument som må med, er dekket, og at det ikke er forbudte eller ukjente id-er
@@ -116,7 +116,7 @@ Målet er et brev som leser som om én person skrev det, der hvert faktum står 
 |---|---|---|
 | 0 | Rask retting i dagens mal: `${konto}` to ganger, «hvis det sendes i dag» og «blitt verre» i `FEILEN_SJEKKLISTE`. Oppdater `brev.test.ts:376`. | Ingenting |
 | 1 | Momentkatalogen | Ingenting |
-| 2 | Motoren: `lagSak`, `planlegg`, forfatter, kontroll, gjennomsyn, render, gullsaker og `npm run brev-eval`. Kjøres bare fra skript. | Ingenting |
+| 2 | Motoren: `lagSaksmodell`, `planlegg`, forfatter, kontroll, gjennomsyn, render, gullsaker og `npm run brev-eval`. Kjøres bare fra skript. | Ingenting |
 | 3 | Innsamling: kildetekster, Feilen uten AI, Gjennomgang med avklaringsrunden, migrering | 2 (og 1 for katalogen) |
 | 4 | Bytte: brevsiden, eksport, motsvar, fjerning av gammel kode, CLAUDE.md | 2 og 3 |
 

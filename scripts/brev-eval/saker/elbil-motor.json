@@ -1,0 +1,78 @@
+{
+  "id": "elbil-motor",
+  "tittel": "Elbil med feil i drivlinjen; kjøperen valgte «motor»",
+  "feller": [
+    "Brevet skal ikke finne på symptomer fra forbrenningsmotor"
+  ],
+  "idag": "2026-10-06",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "2026-01-20",
+    "kjopesum": "259000",
+    "kmVedKjop": "45000",
+    "feiltyper": [
+      "motor",
+      "batteri"
+    ],
+    "oppdaget": "innen_6_mnd",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "nei",
+    "kontakt": "ja",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "nei",
+    "rapportSierForKjop": "",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10005",
+      "merke": "Testmerke",
+      "modell": "Kombi",
+      "ar": 2021
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000005",
+      "navn": "Testbil AS"
+    },
+    "forbehold": "ingen",
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo"
+    },
+    "feilen": {
+      "dato": "2026-04-28",
+      "egen": "Bilen er en elbil. Den mister effekt i motbakker og viser feilmelding om drivsystemet. Rekkevidden har falt fra 380 til 240 km på en lading.",
+      "feil": [
+        "Drivsystemet"
+      ],
+      "avsnitt": [
+        "Bilen er en elbil. Den mister effekt i motbakker og viser feilmelding om drivsystemet. Rekkevidden har falt fra 380 til 240 km på en lading."
+      ]
+    },
+    "retting": "venter",
+    "reklamasjon": {
+      "dato": "2026-05-03",
+      "mate": "telefon"
+    }
+  },
+  "forventet": {
+    "argumenter": [
+      "formodning",
+      "historikk",
+      "reklamasjon",
+      "krav_retting"
+    ],
+    "ikkeTekst": [
+      "olje",
+      "eksos",
+      "turbo",
+      "registerreim",
+      "kamreim",
+      "motorlampe"
+    ]
+  }
+}

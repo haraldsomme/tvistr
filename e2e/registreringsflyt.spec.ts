@@ -1,6 +1,6 @@
 import { expect, idFra, mockKjoretoy, test } from "./fixtures";
 
-// The one flow test: from the landing page, through the four steps and the assessment, to the finished letter.
+// The one flow test: from the landing page, through the two steps and the assessment, to the finished letter.
 // Runs against the real /api/vurder and the database, so it checks the shape of the assessment and
 // not the number of decisions, which changes when `hent` adds more.
 
@@ -20,22 +20,13 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await skjema.svar("Hvem kjøpte du bilen av?", "Bilforhandler");
   await skjema.neste();
 
-  await expect(skjema.tittel("Hva er galt med bilen?")).toBeVisible();
+  // The assessment asks only what can stop the claim and when the defect showed; the defect type, contact
+  // and the report are asked after purchase.
+  await expect(skjema.tittel("Når viste feilen seg?")).toBeVisible();
   await expect(skjema.nesteKnapp).toBeDisabled();
-  await skjema.velgFeiltype("Motor");
-  await skjema.svar("Hvor lenge etter kjøpet oppdaget du feilen?", "Innen 6 måneder");
-  await skjema.neste();
-
-  await expect(skjema.tittel("Hva har forhandleren sagt?")).toBeVisible();
+  await skjema.svar("Hvor lenge etter kjøpet viste feilen seg?", "Innen 6 måneder");
   await expect(skjema.nesteKnapp).toBeDisabled();
-  await skjema.svar("Visste du om feilen før du kjøpte?", "Nei");
-  await skjema.svar("Har du tatt opp feilen med forhandleren?", "Ja");
-  await skjema.neste();
-
-  await expect(skjema.tittel("Hvilke bevis har du?")).toBeVisible();
-  await expect(skjema.nesteKnapp).toBeDisabled();
-  await skjema.svar("Har du en verksted- eller tilstandsrapport?", "Ja");
-  await skjema.svar("Sier rapporten at feilen sannsynligvis var til stede før kjøpet?", "Ja");
+  await skjema.svar("Visste du om feilen da du kjøpte bilen?", "Nei");
   await expect(skjema.nesteKnapp).toHaveText("Se vurderingen →");
 
   // Hold the answer back so the waiting page is certain to be on screen when we look for it.
@@ -50,17 +41,15 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   slipp();
 
   const vurdering = async () => {
-    await expect(page.getByRole("heading", { level: 1 })).not.toBeEmpty();
-    await expect(page.getByText(/Vi har sjekket saken din opp mot \d+ (lignende )?vedtak/)).toBeVisible();
-    await expect(page.getByRole("link", { name: /^Forbruker(klage|tvist)utvalget, (FKU|FTU)-\d{4}-\d+/ })).toBeVisible();
-    const grunnlag = page.getByRole("region", { name: "Dette styrker saken din" });
-    await expect(grunnlag.getByRole("listitem")).toHaveCount(3);
-    // The presumption and the report both rest on § 18.
-    const paragraf18 = grunnlag.getByRole("link", { name: "forbrukerkjøpsloven § 18" });
-    await expect(paragraf18).toHaveCount(2);
-    await expect(paragraf18.first()).toHaveAttribute("href", /lovdata\.no/);
-    // What the dealer may object (wear on an engine) stands in its own list, not in the title.
-    await expect(page.getByRole("region", { name: "Dette svekker saken din" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Du kan ha en sak mot forhandleren.");
+    // Bought less than two years ago: inside the two-year presumption, so the dealer has the burden of proof.
+    await expect(page.getByRole("note", { name: "Dette må du vite" })).toHaveText(
+      "Feilen viste seg innen 2 år etter kjøpet. Da er det forhandleren som må vise at den ikke var der da du kjøpte bilen.",
+    );
+    await expect(page.getByText(/^Vi har sjekket saken din opp mot \d+ vedtak om bruktbil kjøpt fra forhandler som fikk medhold\./)).toBeVisible();
+    // No lists of strengths and weaknesses before purchase.
+    await expect(page.getByRole("region", { name: "Dette styrker saken din" })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Dette svekker saken din" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Få reklamasjonsbrevet" })).toBeVisible();
     // Before paying, the car the letter is for is shown, and cannot be changed there.
     await expect(page.getByRole("group", { name: "Brevet skrives for" })).toContainText("Testmerke Modell X");
@@ -122,18 +111,23 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   // A name not found in the register is saved as written.
   await veiviser.neste();
 
-  // The defect in the buyer's own words: nothing goes to the language model.
+  // What the defect concerns, then the defect in the buyer's own words: nothing goes to the language model.
   await expect(veiviser.tittel("Feilen")).toBeVisible();
+  await page.getByRole("group", { name: "Hva gjelder feilen?" }).getByRole("button", { name: "Motor", exact: true }).click();
   await page.getByLabel("Når viste den første feilen seg?").fill("01.06.2024");
   await page.getByLabel("Beskriv feilen med dine egne ord").fill("Motorlampen lyser, og bilen mister kraft i motbakker.");
   await veiviser.neste();
 
-  // «Visste du om feilen» was answered in the assessment; the step asks it again only after the wizard.
+  // «Visste du om feilen» was answered in the assessment and stands pre-filled.
   await expect(veiviser.tittel("Før kjøpet")).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "Visste du om feilen da du kjøpte bilen?" }).getByRole("radio", { name: "Nei", exact: true })).toBeChecked();
   await velg("Sa annonsen eller selgeren noe om bilen som ikke stemte?", "Nei");
   await veiviser.neste();
 
+  // Not asked in the assessment, so nothing is chosen yet.
   await expect(veiviser.tittel("Kontakt med forhandleren")).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "Har du tatt opp feilen med forhandleren?" }).getByRole("radio", { checked: true })).toHaveCount(0);
+  await velg("Har du tatt opp feilen med forhandleren?", "Ja");
   await page.getByLabel("Når tok du opp feilen første gang?").fill("10.06.2024");
   await velg("Hvordan tok du kontakt?", "E-post");
   await velg("Hva har forhandleren gjort?", "Forhandleren vil forsøke, eller har ikke svart ennå");
@@ -142,11 +136,6 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await expect(veiviser.tittel("Tilstandsrapport")).toBeVisible();
   await velg("Har du en verksted- eller tilstandsrapport?", "Nei");
   await veiviser.neste();
-  // The assessment had a report that points to before the purchase; taking it back weakens the case,
-  // so the save asks first.
-  const svakere = page.getByRole("alertdialog", { name: "Dette gjør brevet svakere" });
-  await expect(svakere).toContainText("rapport");
-  await svakere.getByRole("button", { name: "Lagre likevel" }).click();
 
   // The dealer has not had the chance to repair yet, so the claim is repair: nothing to choose.
   await expect(veiviser.tittel("Kravet")).toBeVisible();

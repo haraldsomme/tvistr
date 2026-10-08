@@ -135,7 +135,6 @@ const TITTEL: Record<"god" | "svak" | "utenfor", RegExp> = {
   utenfor: /^(Forbrukerkjøpsloven gjelder ikke for dette kjøpet\.|Forbrukerkjøpsloven gjelder ikke når du kjøper av en privatperson\.|Fristen for å reklamere er trolig ute\.)$/,
 };
 
-const MAL = /^I 20\d\d fikk kjøper(en|ne) av en .+ (delvis )?medhold etter å ha klaget på .+ (etter|som) kjøpet\. Utvalget (tilkjente [\d ]+ kr|kom til at .+)\.$/;
 
 describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
   beforeAll(() => {
@@ -160,9 +159,9 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
     expect(avvist).toEqual([]);
   });
 
-  it("gir forventet vurdering og et eksempelvedtak i alle fire statistikkscenarier", async () => {
+  it("gir forventet vurdering i alle fire statistikkscenarier", async () => {
     const avvik: string[] = [];
-    const teller = { god: 0, svak: 0, utenfor: 0, sammeFeil: 0 };
+    const teller = { god: 0, svak: 0, utenfor: 0 };
 
     for (const [n, i] of innsendinger.entries()) {
       const parsed = tilKlageInput(i, IDAG);
@@ -193,20 +192,9 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
 
         // A claim the law stops has one reason, no example, no advice and no statistics.
         if (f.niva === "utenfor") {
-          if (v.grunnlag.length !== 1 || v.eksempel !== null || v.tiltak.length !== 0 || v.statistikk !== null) avvik.push(`${merke}: stoppet sak skal ha ett grunnlag og ingen eksempel, tiltak eller statistikk`);
+          if (v.grunnlag.length !== 1 || v.tiltak.length !== 0 || v.statistikk !== null) avvik.push(`${merke}: stoppet sak skal ha ett grunnlag og ingen tiltak eller statistikk`);
           continue;
         }
-
-        const e = v.eksempel;
-        if (!e) {
-          avvik.push(`${merke}: INGEN henvisning`);
-          continue;
-        }
-        const h = e.henvisning;
-        if (s === SCENARIER[0] && e.likheter.includes("feil")) teller.sammeFeil++;
-        if (!MAL.test(h.setning)) avvik.push(`${merke}: setning følger ikke malen: ${h.setning}`);
-        if (!h.kildeUrl.startsWith("https://") || !h.ref) avvik.push(`${merke}: henvisningen mangler kilde`);
-        if (/ ikke medhold /.test(h.setning)) avvik.push(`${merke}: henvisningen skal være en sak kjøperen vant: ${h.setning}`);
       }
     }
 
@@ -215,8 +203,6 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
     expect(avvik).toHaveLength(0);
     expect(teller.god).toBeGreaterThan(50);
     expect(teller.svak).toBeGreaterThan(50);
-    // The defect type is the last thing the selection weighs, but most cases still get one with the same defect.
-    expect(teller.sammeFeil).toBeGreaterThan(300);
   });
 
   it("API-ruten gir samme resultat og lekker ikke statistikk", async () => {
@@ -238,15 +224,13 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
       }
       if (json.niva !== f.niva) avvik.push(`${merke}: forventet ${f.niva}, fikk ${json.niva}`);
       if (f.niva === "utenfor") {
-        if (json.eksempel !== null || json.styrker.length !== 0 || json.svakheter.length !== 1) avvik.push(`${merke}: stoppet sak skal bare ha ett punkt og ingen eksempel`);
-      } else if (!json.eksempel?.setning || !json.eksempel?.kildeUrl || !json.eksempel?.ref || !json.eksempel?.organ) {
-        avvik.push(`${merke}: ruten ga ingen henvisning`);
+        if (json.styrker.length !== 0 || json.svakheter.length !== 1) avvik.push(`${merke}: stoppet sak skal bare ha ett punkt`);
       }
       // Strengths: exactly three for a good case; weaknesses never hold a point that speaks for the case.
       if (f.niva === "god" && json.styrker.length !== 3) avvik.push(`${merke}: god sak skal ha tre styrker, fikk ${json.styrker.length}`);
       if (json.styrker.some((p: { vekt: string }) => p.vekt !== "for") || json.svakheter.some((p: { vekt: string }) => p.vekt === "for")) avvik.push(`${merke}: punkt i feil liste`);
       const nokler = Object.keys(json).sort().join(",");
-      if (nokler !== "begrunnelse,eksempel,niva,styrker,svakheter,tiltak,tittel,utvalg") avvik.push(`${merke}: uventede felt i svaret: ${nokler}`);
+      if (nokler !== "begrunnelse,niva,styrker,svakheter,tiltak,tittel,utvalg") avvik.push(`${merke}: uventede felt i svaret: ${nokler}`);
       if (f.niva !== "svak" && json.tiltak.some((t: { tekst?: string }) => t.tekst !== undefined)) avvik.push(`${merke}: tiltakstekst skal ikke sendes ut gratis`);
     }
     expect(avvik.slice(0, 15)).toEqual([]);

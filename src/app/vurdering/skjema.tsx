@@ -65,7 +65,6 @@ type Resultat = {
   tiltak: { tittel: string; tekst?: string }[];
   // null when the five-year deadline has passed, so no comparison was made.
   utvalg: { n: number; vunnet: number; spesifikk: boolean } | null;
-  eksempel: { setning: string; ref: string; organ: string; kildeUrl: string } | null;
 };
 
 const STEG_TEKST: Record<Steg, { navn: string; tittel: string }> = {
@@ -131,17 +130,13 @@ const VEKT_TEGN = {
 } as const;
 
 // The comparison point shown right under the title: how many similar decisions that got medhold the case
-// was checked against, then the one example decision (always one the buyer won), if any.
-function sammenligningTekst(
-  utvalg: Resultat["utvalg"],
-  eksempel: Resultat["eksempel"],
-): { ramme: string; setning: string | null } | null {
+// was checked against. The letter chooses the decision it cites after purchase.
+function sammenligningTekst(utvalg: Resultat["utvalg"]): { ramme: string } | null {
   if (!utvalg) return null;
   const gruppe = utvalg.spesifikk ? "lignende vedtak" : "vedtak om bruktbil kjøpt fra forhandler";
-  const grunnsetning = `Vi har sjekket saken din opp mot ${utvalg.vunnet} ${gruppe} fra Forbrukerklageutvalget som fikk medhold.`;
-  return eksempel
-    ? { ramme: `${grunnsetning} Her er en lignende sak:`, setning: eksempel.setning }
-    : { ramme: grunnsetning, setning: null };
+  return {
+    ramme: `Vi har sjekket saken din opp mot ${utvalg.vunnet} ${gruppe} fra Forbrukerklageutvalget som fikk medhold. I brevet viser vi til den av dem som passer best, og går gjennom det utvalget la vekt på, punkt for punkt mot din sak, så forhandleren ser hvorfor din sak står minst like sterkt.`,
+  };
 }
 const KORT = "overflow-hidden rounded-lg border border-[#dcd8cf] bg-white";
 const RAD = "flex gap-3.5 border-b border-[#eceae4] px-6 py-[18px] last:border-b-0";
@@ -203,14 +198,14 @@ function Vipps({ tekst, onClick, disabled, tabIndex }: { tekst: string; onClick:
 
 
 // Payment is not built yet: both buttons open the letter. Payment goes in front of it later.
-const BREV_MED_LIGNENDE = "Ferdig brev med lovhenvisninger og argumentasjon vi vet har vunnet lignende saker";
+const BREV_MED_LIGNENDE = "Vi finner en lignende sak som fikk medhold, og argumenterer for hvorfor din sak står minst like sterkt";
 const NESTE_PUNKTER = [
+  "Mangler du noe utvalget la vekt på, for eksempel en vurdering fra verksted, sier vi fra før du sender",
   "Frist for svar, og hva du gjør om forhandleren avviser",
   "Saksmappe med verktøy for håndtering av saken videre",
   "Brev i PDF og Word-fil til nedlasting",
 ];
 
-// Every letter that can be bought cites a decision (velgHenvisning).
 // `apneBrev` opens the letter and returns an error message if that failed.
 function Neste({
   apneBrev,
@@ -424,7 +419,7 @@ function Vurdering({
   apneBrev: () => Promise<string | null>;
   kjoretoy: Kjoretoy | null | undefined;
 }) {
-  const sammenligning = sammenligningTekst(resultat.utvalg, resultat.eksempel);
+  const sammenligning = sammenligningTekst(resultat.utvalg);
   return (
     <div className="flex min-h-screen flex-col bg-[#f6f4ef] font-ui text-[#17263d]">
       <div className="hidden items-center justify-between border-b border-[#dcd8cf] px-16 py-[22px] md:flex">
@@ -447,19 +442,6 @@ function Vurdering({
                 <p className="m-0 max-w-[600px] text-[15px] leading-[1.6] text-[#5b6472] [text-wrap:pretty]">
                   {sammenligning.ramme}
                 </p>
-                {sammenligning.setning && (
-                  <p className="m-0 max-w-[600px] text-[15px] font-semibold leading-[1.6] text-[#17263d] [text-wrap:pretty]">
-                    {sammenligning.setning}
-                  </p>
-                )}
-                {resultat.eksempel && (
-                  <>
-                    <a href={resultat.eksempel.kildeUrl} target="_blank" rel="noreferrer" className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
-                      {resultat.eksempel.organ}, {resultat.eksempel.ref}
-                    </a>
-                    <p className="m-0 text-[14px] font-medium text-[#1f3a5f]">Brevet ditt viser til denne saken.</p>
-                  </>
-                )}
               </div>
             )}
           </div>
@@ -557,7 +539,6 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
         svakheter: json.svakheter ?? [],
         tiltak: json.tiltak ?? [],
         utvalg: json.utvalg ?? null,
-        eksempel: json.eksempel ?? null,
       });
       return null;
     } catch (e) {

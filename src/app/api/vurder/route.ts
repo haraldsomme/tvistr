@@ -42,12 +42,6 @@ export async function POST(request: Request) {
       tittel: v.tittel,
       begrunnelse: v.begrunnelse,
       ...(v.niva === "utenfor" ? { styrker: [], svakheter: v.grunnlag } : synligGrunnlag(v.niva, v.grunnlag, v.faktorer)),
-      eksempel: v.eksempel && {
-        setning: v.eksempel.henvisning.setning,
-        ref: v.eksempel.henvisning.ref,
-        organ: v.eksempel.henvisning.organ,
-        kildeUrl: v.eksempel.henvisning.kildeUrl,
-      },
       tiltak: v.tiltak.map((t) => (v.niva === "svak" ? t : { tittel: t.tittel })),
       utvalg: v.statistikk && { n: v.statistikk.n, vunnet: v.statistikk.vunnet, spesifikk: v.statistikk.spesifikk },
     });

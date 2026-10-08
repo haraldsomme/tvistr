@@ -41,7 +41,6 @@ describe("frister", () => {
     const v = await vurder(i, d);
     expect(v.niva).toBe("utenfor");
     expect(v.begrunnelse).toMatch(/mer enn fem år/);
-    expect(v.eksempel).toBeNull();
     expect(v.grunnlag[0]).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 27" });
     expect(v.grunnlag[0].tekst).toMatch(/garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt/);
     expect(d.hentStatistikk).not.toHaveBeenCalled();
@@ -103,7 +102,6 @@ describe("tak", () => {
     i.bevis.bilder = true;
     const v = await vurder(i, dep(0.9));
     expect(v.niva).toBe("god");
-    expect(v.eksempel?.henvisning.setning).not.toMatch(/gjort kjent med feilen/);
   });
 
   it("ikke klaget ennå senker ikke nivået når feilen er oppdaget nylig", async () => {
@@ -129,7 +127,7 @@ describe("tak", () => {
     expect((await vurder(i, dep(0.8))).niva).toBe("god");
   });
 
-  it("kjøp fra firma eller privatperson stopper saken uten statistikk og eksempel", async () => {
+  it("kjøp fra firma eller privatperson stopper saken uten statistikk", async () => {
     for (const [kjopsform, tittel] of [
       ["firma", /Forbrukerkjøpsloven gjelder ikke for dette kjøpet/],
       ["privatperson", /gjelder ikke når du kjøper av en privatperson/],
@@ -140,8 +138,7 @@ describe("tak", () => {
       const v = await vurder(i, d);
       expect(v.niva).toBe("utenfor");
       expect(v.tittel).toMatch(tittel);
-      expect(v.eksempel).toBeNull();
-      expect(v.tiltak).toEqual([]);
+        expect(v.tiltak).toEqual([]);
       expect(v.grunnlag).toHaveLength(1);
       expect(d.hentStatistikk).not.toHaveBeenCalled();
     }
@@ -247,13 +244,6 @@ describe("tittel og begrunnelse", () => {
     const svak = await vurder(hent(6), dep());
     expect(svak.niva).toBe("svak");
     expect(svak.tittel).toBe(tittel);
-  });
-
-  it("også en svak sak får en henvisning til en sak kjøperen vant", async () => {
-    const v = await vurder(hent(6), dep());
-    expect(v.niva).toBe("svak");
-    expect(v.eksempel?.henvisning.setning).toMatch(/ medhold /);
-    expect(v.eksempel?.henvisning.setning).not.toMatch(/ ikke medhold /);
   });
 
   it("begrunnelsen er én setning med tidspunkt, opplysning og dokumentasjon", async () => {

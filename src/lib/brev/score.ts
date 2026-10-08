@@ -31,7 +31,8 @@ export function scoreFor(a: {
     ...(!a.skrevet || a.utdatert
       ? [{ id: "skriv", handling: "skriv", tekst: a.skrevet ? "Skriv brevet på nytt, så endringene kommer med." : "Skriv brevet.", steg: null, poeng: POENG.skriv, ma: false }]
       : []),
-    ...a.ubesvarte.map((u) => ({ id: `ubesvart-${u.id}`, handling: `moment:${u.id}`, tekst: `Svar på: ${u.tekst}`, steg: u.steg, poeng: POENG.ubesvart, ma: false })),
+    // The report's questions are answered from the workshop's assessment, the same action as getting one.
+    ...a.ubesvarte.map((u) => ({ id: `ubesvart-${u.id}`, handling: u.id.startsWith("rapport_") ? "verksted" : `moment:${u.id}`, tekst: `Svar på: ${u.tekst}`, steg: u.steg, poeng: POENG.ubesvart, ma: false })),
   ];
   // One action, one deduction: the largest of those it would fix.
   const per = new Map<string, Trekk & { handling: string }>();

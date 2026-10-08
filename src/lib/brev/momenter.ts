@@ -357,6 +357,8 @@ export type SporsmalKontekst = {
   retting?: string;
   bruktimportert?: boolean;
   opplystForKjop?: string;
+  // «Sa annonsen eller selgeren noe om bilen som ikke stemte?» in «Før kjøpet».
+  feilopplyst?: string;
 };
 export function vistSporsmal(id: string, k: SporsmalKontekst): boolean {
   switch (id) {
@@ -373,6 +375,8 @@ export function vistSporsmal(id: string, k: SporsmalKontekst): boolean {
       return k.bruktimportert !== false;
     case "skjult_feil":
       return !k.opplystForKjop?.startsWith("ja");
+    case "uriktig_service_arbeid_utstyr":
+      return k.feilopplyst === "ja";
     default:
       return true;
   }

@@ -3,7 +3,7 @@ import { NAAR } from "@/lib/vurdering/grunnlag";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import type { Kjoper } from "@/lib/vurdering/henvisninger";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
-import { besvarteMomenter, momenterFor, vistSporsmal } from "../momenter";
+import { besvarteMomenter, momenterFor, vistSporsmal, type SporsmalKontekst } from "../momenter";
 import { avledSvar } from "../svar";
 import { AVKLARING_TEMAER, type Avklaring as LagretAvklaring, type Utfylling } from "../utfylling";
 
@@ -116,17 +116,25 @@ export function lagSaksmodell(g: Grunnlag, idag: string): { ok: true; modell: Sa
 
 // What the cited decision is compared with besides the answers: the moments asked in this case, those the
 // buyer has a favourable answer to (own words do not count), and what the buyer was told before buying.
-export function kjoperFor(m: Pick<Saksmodell, "faktorer" | "utfylling" | "avklaringer" | "input">): Kjoper {
+// The saved answers a step's moment question hangs on (`vistSporsmal`), as the steps read them.
+export function sporsmalKontekst(m: Pick<Saksmodell, "utfylling" | "input">): SporsmalKontekst {
   const u = m.utfylling;
-  // Only the questions the steps show: a hidden one is unknown, not missing.
-  const kontekst = {
+  return {
     forbehold: u.forbehold,
     rapport: m.input.bevis.verkstedrapport ? "ja" : "nei",
     kontakt: m.input.feilen.kontakt,
+    // Already only an answer the contact allows (`gyldigRetting` in `lagSaksmodell`), as in the steps.
     retting: u.retting,
     bruktimportert: u.kjoretoy?.bruktimportert,
     opplystForKjop: m.input.feilen.opplystForKjop,
+    feilopplyst: u.feilopplyst,
   };
+}
+
+export function kjoperFor(m: Pick<Saksmodell, "faktorer" | "utfylling" | "avklaringer" | "input">): Kjoper {
+  const u = m.utfylling;
+  // Only the questions the steps show: a hidden one is unknown, not missing.
+  const kontekst = sporsmalKontekst(m);
   const sporbare = new Set(momenterFor(m.faktorer).filter((mo) => mo.steg && vistSporsmal(mo.id, kontekst)).map((mo) => mo.id));
   const besvart = besvarteMomenter(u.momenter, { vedKjop: m.input.bilOgKjop.kmVedKjop, vedFeil: u.kmVedFeil }, m.avklaringer);
   const dekket = new Set(besvart.filter((b) => b.gunstig).map((b) => b.moment.id));

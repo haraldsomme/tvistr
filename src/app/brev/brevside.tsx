@@ -15,10 +15,10 @@ import { henvisningFor, henvisningIMappen } from "@/lib/brev/skriving/henvisning
 import { planlegg } from "@/lib/brev/skriving/brevplan";
 import { grunnlagFor } from "@/lib/brev/skriving/grunnlag";
 import { lagretBrev } from "@/lib/brev/skriving/render";
-import { lagSaksmodell } from "@/lib/brev/skriving/saksmodell";
+import { kjoperFor, lagSaksmodell, sporsmalKontekst } from "@/lib/brev/skriving/saksmodell";
 import { motsvar } from "@/lib/brev/motsvar";
 import { sjekkBrev, type Advarsel } from "@/lib/brev/sjekk";
-import { momenterFor, vistSporsmal } from "@/lib/brev/momenter";
+import { besvarteMomenter, momenterFor, vistSporsmal } from "@/lib/brev/momenter";
 import { scoreFor } from "@/lib/brev/score";
 import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { beregnFaktorer } from "@/lib/vurdering/faktorer";
@@ -299,20 +299,19 @@ export function BrevSide({
     ...(utfylling.brev?.funn ?? []).map((f, n): Advarsel => ({ id: `funn-${n}`, tekst: `Merknad fra gjennomlesingen: ${f.hvorfor}`, steg: null, alvor: "myk" })),
   ];
   const harde = advarsler.filter((a) => a.alvor === "hard");
-  // The moments the steps ask in this case and the buyer has not answered.
-  const kontekst = {
-    forbehold: utfylling.forbehold,
-    rapport: svar.verkstedrapport,
-    kontakt: svar.kontakt,
-    retting: utfylling.retting,
-    bruktimportert: utfylling.kjoretoy?.bruktimportert,
-    opplystForKjop: svar.opplystForKjop,
-  };
-  const ubesvarte = lest.ok
-    ? momenterFor(lest.modell.faktorer)
-        .filter((mo) => mo.steg && vistSporsmal(mo.id, kontekst) && !utfylling.momenter?.[mo.id])
-        .map((mo) => ({ id: mo.id, steg: mo.steg ?? null, tekst: mo.sporsmal.length > 90 ? mo.navn : mo.sporsmal }))
-    : [];
+  // The moments the steps ask in this case that have no answer: from the steps, worked out (the distance
+  // driven) or from the clarifying round, or covered otherwise (a report on the defect before the purchase).
+  // The same sources as the choice of the decision (`kjoperFor`).
+  const ubesvarte = (() => {
+    if (!lest.ok) return [];
+    const m = lest.modell;
+    const kontekst = sporsmalKontekst(m);
+    const besvart = new Set(besvarteMomenter(utfylling.momenter, { vedKjop: m.input.bilOgKjop.kmVedKjop, vedFeil: utfylling.kmVedFeil }, m.avklaringer).map((b) => b.moment.id));
+    const { dekket } = kjoperFor(m);
+    return momenterFor(m.faktorer)
+      .filter((mo) => mo.steg && vistSporsmal(mo.id, kontekst) && !besvart.has(mo.id) && !dekket.has(mo.id))
+      .map((mo) => ({ id: mo.id, steg: mo.steg ?? null, tekst: mo.sporsmal.length > 90 ? mo.navn : mo.sporsmal }));
+  })();
   // A letter written before the cited decision was stored with it has a yellow field only writing again fills.
   const utenVedtak = !!utfylling.brev && utfylling.brev.henvisning === undefined;
   const score = scoreFor({ advarsler, gule: (plan?.mangler ?? []).map((g) => ({ tekst: g.tekst, steg: g.steg ?? null })), skrevet: !!brev, utdatert: utdatert || utenVedtak, ubesvarte });

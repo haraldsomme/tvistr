@@ -55,7 +55,7 @@ export function ForKjopetFelt({
   const klar = visste !== "" && (opplyst === "nei" || (opplyst === "ja" && kilde !== "" && tekst.trim().length >= 5));
   // The rule the letter rests on follows the saved answers; a «ja» given now shows its questions at once.
   const beskrivelse = m.gjelder("positiv_beskrivelse") || opplyst === "ja";
-  const tjeneste = opplyst === "ja";
+  const tjeneste = vistSporsmal("uriktig_service_arbeid_utstyr", { feilopplyst: opplyst });
   const importSporres = m.gjelder("bruktimport_ikke_opplyst") && vistSporsmal("bruktimport_ikke_opplyst", { bruktimportert });
   const viste = [
     beskrivelse && "positiv_beskrivelse",

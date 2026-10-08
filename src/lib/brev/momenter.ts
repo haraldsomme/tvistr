@@ -35,6 +35,7 @@ export const MOMENTER: readonly Moment[] = [
     tema: "bevis",
     retning: "for",
     gjelder: {},
+    steg: "rapport",
     sporsmal: "Hva sier verkstedet eller rapporten om hvorfor feilen oppsto?",
     alternativer: ["Den angir en konkret årsak etter å ha undersøkt bilen", "Den nevner bare mulige årsaker", "Den sier bare hva som er galt eller må byttes", "Jeg har ingen skriftlig vurdering fra verksted"],
     gunstig: ["Den angir en konkret årsak etter å ha undersøkt bilen"],
@@ -60,6 +61,7 @@ export const MOMENTER: readonly Moment[] = [
     tema: "bevis",
     retning: "for",
     gjelder: {},
+    steg: "kontakt",
     sporsmal: "Har forhandleren sagt noe om hva feilen skyldes?",
     alternativer: ["Nei, forhandleren har ikke sagt noe om årsaken", "Ja, at det er min bruk, slitasje eller ytre skade, uten å vise til noen undersøkelse", "Ja, og forhandleren viser til en undersøkelse eller rapport om bilen"],
     gunstig: ["Ja, at det er min bruk, slitasje eller ytre skade, uten å vise til noen undersøkelse"],
@@ -324,13 +326,15 @@ const grupperFor = (f: Faktorer): Gruppe[] => GRUPPER.filter((g) => f.feilgruppe
 
 // The moments to ask a buyer about: those that separate won from lost cases and apply to this case's
 // defect, timing and the rule the letter rests on.
+// Asked although they do not separate won from lost cases: the description and a claim to cancel need
+// `bruksstans_sikkerhet`, and the cited decision is compared on the other two (docs/superpowers/specs/2026-10-08-henvisning-a-fortiori-design.md).
+export const ALLTID_SPURT: readonly string[] = ["bruksstans_sikkerhet", "rapport_arsak", "forhandler_annen_arsak"];
 export function momenterFor(f: Faktorer, katalog: readonly Moment[] = MOMENTER): Moment[] {
   const grupper = grupperFor(f);
   const grunnlag = regelgrunnlag(f);
   return katalog.filter(
     (m) =>
-      // `bruksstans_sikkerhet` does not separate won from lost cases, but the description and a claim to cancel need it.
-      (m.forekomst.skiller || m.id === "bruksstans_sikkerhet") &&
+      (m.forekomst.skiller || ALLTID_SPURT.includes(m.id)) &&
       (!m.gjelder.grupper?.length || m.gjelder.grupper.some((g) => grupper.includes(g))) &&
       (!m.gjelder.botter?.length || m.gjelder.botter.includes(f.reklamasjonsbotte)) &&
       (!m.gjelder.grunnlag?.length || m.gjelder.grunnlag.includes(grunnlag)),

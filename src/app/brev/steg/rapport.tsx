@@ -62,10 +62,11 @@ export function RapportFelt({
   const fylt = fra.trim().length >= 2 && dato !== "";
   const klar = jaNei(rapport) && (rapport !== "ja" || jaNei(rapportSier)) && (!pekerBakover || tom || fylt);
   const vanlig = m.gjelder("rapport_upaaregnelig") && rapport === "ja";
+  const arsak = m.gjelder("rapport_arsak") && rapport === "ja";
   const send = () =>
     lagre({
       verksted: undersokt === "" ? null : { undersokt, ...(undersokt === "ja" && funn.trim().length >= 2 && { funn: funn.trim() }) },
-      momenter: m.lagring("rapport", vanlig ? ["rapport_upaaregnelig"] : []),
+      momenter: m.lagring("rapport", [...(vanlig ? ["rapport_upaaregnelig"] : []), ...(arsak ? ["rapport_arsak"] : [])]),
       svar: { ...svar, verkstedrapport: rapport, rapportSierForKjop: rapport === "ja" ? rapportSier : "" },
       rapport: pekerBakover && fylt ? { fra, dato, ...(verdi?.sitat && { sitat: verdi.sitat }) } : null,
       kilder: medKilde(kilder, "rapport", rapport === "ja" ? tekst : ""),
@@ -99,6 +100,7 @@ export function RapportFelt({
           sett={setTekst}
         />
       )}
+      {arsak && <MomentFelt id="rapport_arsak" svar={m.svar} sett={m.sett} />}
       {vanlig && <MomentFelt id="rapport_upaaregnelig" svar={m.svar} sett={m.sett} />}
     </Skjema>
   );

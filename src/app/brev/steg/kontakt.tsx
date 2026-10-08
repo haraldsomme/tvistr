@@ -88,9 +88,10 @@ export function KontaktFelt({
   const reparasjonKlar = !reparert || (repDato >= min && repDato <= idag && grunn !== "" && grunner.includes(grunn));
   const klar = valgtRetting !== "" && reklamasjonKlar && reparasjonKlar;
   const godtatt = m.gjelder("forhandler_erkjente") && kontakt !== "nei";
+  const annenArsak = m.gjelder("forhandler_annen_arsak") && valgtRetting === "avvist";
   const send = () =>
     lagre({
-      ...(momenter && { momenter: m.lagring("kontakt", godtatt ? ["forhandler_erkjente"] : []) }),
+      ...(momenter && { momenter: m.lagring("kontakt", [...(godtatt ? ["forhandler_erkjente"] : []), ...(annenArsak ? ["forhandler_annen_arsak"] : [])]) }),
       svar: { ...svar, kontakt },
       retting: valgtRetting as Retting,
       reklamasjon:
@@ -152,6 +153,7 @@ export function KontaktFelt({
         />
       )}
       {godtatt && <MomentFelt id="forhandler_erkjente" svar={m.svar} sett={m.sett} />}
+      {annenArsak && <MomentFelt id="forhandler_annen_arsak" svar={m.svar} sett={m.sett} />}
       {reparert && (
         <>
           <Datofelt label="Når ble feilen reparert?" hjelp="Datoen på fakturaen fra verkstedet." min={min || undefined} max={idag} verdi={repDato} settVerdi={setRepDato} />

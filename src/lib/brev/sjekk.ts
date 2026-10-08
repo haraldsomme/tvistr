@@ -1,6 +1,10 @@
 import { beregnFaktorer, leggTilManeder, maneder, PRESUMSJON_TO_AR_FRA, RIMELIG_TID_MANEDER } from "@/lib/vurdering/faktorer";
+import type { ValgtHenvisning } from "@/lib/vurdering/henvisninger";
+import { grupperFor } from "@/lib/vurdering/henvisninger";
+import { VERKSTED_RAD } from "@/lib/vurdering/tiltak";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
 import { harFatt, kreverPenger, kroner, norskDato, REKLAMASJON_ALLTID_I_TIDE_MANEDER, vedleggBrevetByggerPa, vedleggFor, VEDLEGG_NAVN } from "./brev";
+import { moment } from "./momenter";
 import type { Utfylling } from "./utfylling";
 
 // What can make the letter weak without leaving a yellow field: a complaint that came late, a repair
@@ -13,7 +17,8 @@ import type { Utfylling } from "./utfylling";
 // `hard` is a point that can sink the claim or makes the letter contradict itself: the page asks before
 // the letter is downloaded, and a save that adds one asks first. `myk` is shown above the letter only.
 
-export type Advarsel = { id: string; tekst: string; steg: string | null; alvor: "hard" | "myk" };
+export type Advarsel = { id: string; tekst: string; steg: string | null; alvor: "hard" | "myk"; fast?: true; handling?: string };
+// `fast`: nothing the buyer can fill in or obtain changes it. `handling`: the kind of action that fixes it (merged on the page).
 
 const dager = (fra: string, til: string) => Math.round((Date.parse(`${til}T00:00:00Z`) - Date.parse(`${fra}T00:00:00Z`)) / 86_400_000);
 
@@ -37,7 +42,7 @@ const REPARASJON_I_UTGIFT = /(repar|bytt|ny |nytt |deler|motor|girkasse|clutch|u
 const IKKE_OKONOMISK = /(tort|svie|stress|ulempe|plage|irritasjon|egen tid|min tid|tapt tid|bryderi)/i;
 const OKONOMISK = /(inntekt|lønn|arbeid|fravær)/i;
 
-export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advarsel[] {
+export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string, valgt?: ValgtHenvisning | null): Advarsel[] {
   const f = beregnFaktorer(input, idag);
   const ut: Advarsel[] = [];
   const legg = (a: Advarsel) => ut.push(a);
@@ -81,6 +86,7 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
       if (alvor)
         legg({
           id: "reklamert_sent",
+      fast: true,
           alvor,
           steg: "kontakt",
           tekst: `Det gikk ${maneder(feilDato, r.dato)} måneder fra feilen viste seg til du tok den opp med forhandleren. Forhandleren kan mene at du reklamerte for sent. Tok du den opp tidligere, også muntlig, bruk den første datoen.`,
@@ -98,6 +104,7 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
   if (retting === "venter" && r && idag > leggTilManeder(r.dato, 2)) {
     legg({
       id: "venter_lenge",
+      fast: true,
       alvor: "myk",
       steg: "kontakt",
       tekst: `Du tok opp feilen ${norskDato(r.dato)}, for ${maneder(r.dato, idag)} måneder siden, og forhandleren har ikke rettet den. Brevet krever fortsatt at forhandleren retter feilen. Har forhandleren ikke rettet den innen rimelig tid, velg det under «Kontakt med forhandleren», så kan brevet kreve prisavslag eller heving.`,
@@ -113,6 +120,7 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
   } else if (idag > foreldes) {
     legg({
       id: "foreldet",
+      fast: true,
       alvor: "hard",
       steg: null,
       tekst: `Kravet ditt kan være foreldet. Et krav etter et bilkjøp foreldes tre år etter at du fikk bilen, men tidligst ett år etter at du oppdaget feilen (foreldelsesloven). For deg var det ${norskDato(foreldes)}. En reklamasjon til forhandleren stanser ikke foreldelsen. Har forhandleren skriftlig eller tydelig erkjent at de er ansvarlige for feilen, kan en ny frist på tre år ha begynt å løpe (foreldelsesloven §§ 14 og 20), men et forsøk på å rette feilen regnes ikke alltid som en slik erkjennelse. Snakk med Forbrukerrådet før du sender brevet.`,
@@ -132,7 +140,27 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
       id: "uten_bevis",
       alvor: "hard",
       steg: "rapport",
-      tekst: `Feilen viste seg mer enn ${f.presumsjonManeder === 24 ? "to år" : "seks måneder"} etter kjøpet. Da er det du som må vise at feilen var der da du kjøpte bilen, og brevet har ikke noe bevis for det. Be et verksted vurdere når feilen oppsto, og fyll inn det rapporten sier under «Tilstandsrapport».`,
+      handling: "verksted",
+      tekst: `Feilen viste seg mer enn ${f.presumsjonManeder === 24 ? "to år" : "seks måneder"} etter kjøpet. Da er det du som må vise at feilen var der da du kjøpte bilen. ${VERKSTED_RAD}${valgt?.mangler.some((id) => id.startsWith("rapport_")) ? " I vedtaket brevet viser til, la utvalget vekt på en slik vurdering." : ""} Fyll inn det verkstedet skriver under «Tilstandsrapport».`,
+    });
+  }
+
+  // Brakes, clutch and the like wear out; the dealer will call it normal wear unless a workshop says otherwise.
+  const slitedel = moment("slitedel")?.gjelder.grupper ?? [];
+  const upaaregnelig = u.momenter?.rapport_upaaregnelig?.svar && moment("rapport_upaaregnelig")!.gunstig.includes(u.momenter.rapport_upaaregnelig.svar);
+  if (f.slitasjeAktuelt && grupperFor(f).some((g) => slitedel.includes(g)) && !upaaregnelig)
+    legg({ id: "slitasje_uten_vurdering", alvor: "myk", steg: "rapport", handling: "verksted", tekst: "Forhandleren vil trolig si at dette er normal slitasje. Be verkstedet skrive om feilen er mer enn det som er vanlig for en bil med denne alderen og kilometerstanden." });
+
+  // What the decision the letter cites was won on, and the other cases like this one, that the buyer lacks.
+  for (const id of valgt?.mangler ?? []) {
+    const mo = moment(id);
+    if (!mo) continue;
+    legg({
+      id: `moment_mangler_${id}`,
+      alvor: "myk",
+      steg: mo.steg ?? null,
+      handling: id.startsWith("rapport_") ? "verksted" : `moment:${id}`,
+      tekst: `Vedtaket brevet viser til, og de andre som ligner din sak, ble vunnet blant annet fordi: ${mo.navn.toLowerCase()}. Det har du ikke ennå.${id.startsWith("rapport_") ? ` ${VERKSTED_RAD}` : ""}`,
     });
   }
 
@@ -154,6 +182,7 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
       if (rep.grunn === "ingen" || (kontakt === "nei" && rep.grunn !== "nodvendig")) {
         legg({
           id: "reparert_uten_kontakt",
+      fast: true,
           alvor: "hard",
           steg: "kontakt",
           tekst: "Forhandleren har rett til å forsøke å rette feilen selv (§ 29 og § 30). Du fikk den reparert et annet sted uten at forhandleren fikk sjansen. Da kan forhandleren kreve at beløpet settes ned til det de selv ville brukt på å rette feilen, eller i verste fall avvise kravet.",
@@ -193,13 +222,14 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
   }
   // Before 2024 the dealer normally had two tries before the buyer could go on to a price reduction or cancelling.
   if (retting === "forsokt" && r?.forsok === 1 && f.presumsjonManeder === 6 && krav?.type) {
-    legg({ id: "ett_forsok", alvor: "hard", steg: "kontakt", tekst: "Forhandleren har forsøkt å rette feilen én gang. For kjøp før 2024 har forhandleren normalt rett til to forsøk før du kan kreve prisavslag eller heving." });
+    legg({ id: "ett_forsok", fast: true, alvor: "hard", steg: "kontakt", tekst: "Forhandleren har forsøkt å rette feilen én gang. For kjøp før 2024 har forhandleren normalt rett til to forsøk før du kan kreve prisavslag eller heving." });
   }
 
   // What the buyer knew.
   if (input.feilen.opplystForKjop === "ja" && input.feilen.feilOpplysning === "nei") {
     legg({
       id: "visste_om_feilen",
+      fast: true,
       alvor: f.presumsjonManeder === 6 ? "hard" : "myk",
       steg: "for-kjopet",
       tekst:
@@ -242,10 +272,10 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string): Advars
 
   // The report.
   if (u.rapport && feilDato && u.rapport.dato < feilDato) {
-    legg({ id: "rapport_for_feilen", alvor: "myk", steg: "rapport", tekst: `Rapporten er datert ${norskDato(u.rapport.dato)}, før feilen viste seg ${norskDato(feilDato)}. Sjekk datoen.` });
+    legg({ id: "rapport_for_feilen", alvor: "myk", steg: "rapport", handling: "verksted", tekst: `Rapporten er datert ${norskDato(u.rapport.dato)}, før feilen viste seg ${norskDato(feilDato)}. Sjekk datoen.` });
   }
   if (u.rapport && !FAGLIG_KILDE.test(u.rapport.fra)) {
-    legg({ id: "rapport_fra_privat", alvor: "myk", steg: "rapport", tekst: `Rapporten er fra «${u.rapport.fra}». Den veier mest når den er skrevet av et verksted, NAF eller en takstmann. Står det et firmanavn på rapporten, skriv det.` });
+    legg({ id: "rapport_fra_privat", alvor: "myk", steg: "rapport", handling: "verksted", tekst: `Rapporten er fra «${u.rapport.fra}». Den veier mest når den er skrevet av et verksted, NAF eller en takstmann. Står det et firmanavn på rapporten, skriv det.` });
   }
   // Attachments: everything the letter rests on should be listed (and enclosed), and nothing it does not mention.
   const medRetting = { ...u, retting };

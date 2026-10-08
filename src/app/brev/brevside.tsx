@@ -319,7 +319,7 @@ export function BrevSide({
   const plassholdere = brev !== null && harPlassholder(brev);
   // The weaknesses of the case, what the check could not fix, and the review's remarks.
   const advarsler: Advarsel[] = [
-    ...sjekkBrev(input, utfylling, idag),
+    ...sjekkBrev(input, utfylling, idag, henvisning),
     ...(utfylling.brev?.avvik ?? []).map((a, n): Advarsel => ({ id: `avvik-${n}`, tekst: `Brevet har en feil vi ikke klarte å rette: ${a.tekst}`, steg: null, alvor: "hard" })),
     ...(utfylling.brev?.funn ?? []).map((f, n): Advarsel => ({ id: `funn-${n}`, tekst: `Merknad fra gjennomlesingen: ${f.hvorfor}`, steg: null, alvor: "myk" })),
   ];

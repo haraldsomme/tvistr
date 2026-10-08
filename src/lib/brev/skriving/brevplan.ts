@@ -334,6 +334,6 @@ export function planlegg(m: Saksmodell): Brevplan {
   const vedlagt = vedleggFor(input, u).map((v) => VEDLEGG_NAVN[v]);
   if (vedlagt.length) legg("vedlegg", `Vedlagt følger ${liste(vedlagt)}.`, { vedlegg: vedlagt });
 
-  const advarsler = [...sjekkBrev(input, u, idag).map((a) => ({ ...a, tekst: rens(a.tekst) })), ...svake];
+  const advarsler = [...sjekkBrev(input, u, idag, valgt).map((a) => ({ ...a, tekst: rens(a.tekst) })), ...svake];
   return { argumenter, forbudt, mangler, henvisning, merker, advarsler };
 }

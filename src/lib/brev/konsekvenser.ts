@@ -5,6 +5,8 @@ import { beregnFaktorer } from "@/lib/vurdering/faktorer";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import { gyldigRetting } from "@/lib/vurdering/typer";
 import { vurderFraFaktorer } from "@/lib/vurdering/vurder";
+import { henvisningFor } from "./skriving/henvisning";
+import { lagSaksmodell } from "./skriving/saksmodell";
 import { sjekkBrev } from "./sjekk";
 
 // What a save would cost the letter, worked out before it is sent, so the page can ask first. Runs the
@@ -31,12 +33,15 @@ function vurdering({ svar, utfylling }: Sak, idag: string) {
   const parsed = tilKlageInput(svar, idag);
   if (!parsed.ok) return null;
   const v = vurderFraFaktorer(beregnFaktorer(parsed.input, idag), null);
+  // The decision the letter cites, for the points about what it was won on (`moment_mangler_*`).
+  const modell = lagSaksmodell({ svar, utfylling }, idag);
+  const valgt = modell.ok ? henvisningFor(modell.modell) : null;
   return {
     niva: v.niva,
     svakheter: v.grunnlag.filter((p) => p.vekt !== "for").map((p) => p.tekst),
     kanVelgeKrav: harFatt(gyldigRetting(parsed.input.feilen.kontakt, utfylling.retting)),
     // The letter's own serious weaknesses (`sjekkBrev`), by id.
-    harde: new Map(sjekkBrev(parsed.input, utfylling, idag).filter((a) => a.alvor === "hard").map((a) => [a.id, a.tekst])),
+    harde: new Map(sjekkBrev(parsed.input, utfylling, idag, valgt).filter((a) => a.alvor === "hard").map((a) => [a.id, a.tekst])),
   };
 }
 

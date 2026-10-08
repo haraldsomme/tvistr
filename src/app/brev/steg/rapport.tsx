@@ -4,6 +4,7 @@ import { useState } from "react";
 import { norskDato } from "@/lib/brev/brev";
 import { medKilde, VERKSTED_FUNN_MAKS, type Kilder, type Rapport, type Verksted } from "@/lib/brev/utfylling";
 import { JA_NEI_TEKST } from "@/app/vurdering/tekster";
+import { VERKSTED_RAD } from "@/lib/vurdering/tiltak";
 import { JA_NEI, kjopsdatoAv, type Innsending } from "@/lib/vurdering/innsending";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
@@ -85,6 +86,7 @@ export function RapportFelt({
         </Field>
       )}
       <Valgfelt label="Har du en verksted- eller tilstandsrapport?" verdi={rapport} velg={setRapport} valg={valgAv(JA_NEI, JA_NEI_TEKST)} />
+      {rapport === "nei" && <p className={HJELP}>{VERKSTED_RAD}</p>}
       {rapport === "ja" && <Valgfelt label="Sier rapporten at feilen sannsynligvis var til stede før kjøpet?" verdi={rapportSier} velg={setRapportSier} valg={valgAv(JA_NEI, JA_NEI_TEKST)} />}
       {pekerBakover && (
         <>

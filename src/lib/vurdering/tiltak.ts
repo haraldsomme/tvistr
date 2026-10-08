@@ -1,5 +1,8 @@
 import type { Faktorer } from "./faktorer";
 
+export const VERKSTED_RAD =
+  "Be et uavhengig verksted undersøke feilen og skrive hva den er, hva som er årsaken, om den sannsynligvis var til stede da du kjøpte bilen, og om den er mer enn normal slitasje for bilens alder og kilometerstand. De to siste er ofte avgjørende for resultatet. Ta vare på fakturaen.";
+
 export type Tiltak = { tittel: string; tekst: string };
 
 // What the user can do to strengthen the case, based on the answers about evidence. A well
@@ -15,7 +18,7 @@ export function foreslaTiltak(f: Faktorer): Tiltak[] {
     tiltak.push({
       tittel: "Få en verksted- eller tilstandsrapport",
       tekst:
-        "Be et uavhengig verksted undersøke feilen og skrive hva den er, hva som er årsaken, om den sannsynligvis var til stede da du kjøpte bilen, og om den er mer enn normal slitasje for bilens alder og kilometerstand. De to siste er ofte avgjørende for resultatet. Ta vare på fakturaen.",
+        VERKSTED_RAD,
     });
   } else if (f.rapportSierForKjop === false) {
     tiltak.push({

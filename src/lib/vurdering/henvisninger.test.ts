@@ -70,8 +70,21 @@ describe("velgHenvisning", () => {
   });
 
   it("aldri formodningsregelen eller ny lov kjøperen ikke har", () => {
-    const bibliotek = [post({ vedtakId: 30, presumsjon: true, botte: "rask" }), post({ vedtakId: 31, lov: "etter_2024" }), post({ vedtakId: 32, alder: 30 })];
+    const bibliotek = [post({ vedtakId: 30, presumsjon: true, alder: 30 }), post({ vedtakId: 31, lov: "etter_2024", alder: 30 }), post({ vedtakId: 32 })];
     expect(velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2013 }, bibliotek)?.henvisning.vedtakId).toBe(32);
+  });
+
+  it("tid: et vedtak der feilen kom tidligere enn hos kjøperen gir svakere", () => {
+    const v = velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01" }, [post({ botte: "rask" })]);
+    expect(v?.svakere).toEqual(["tid"]);
+    expect(v?.sterkere).toEqual(["pris"]);
+  });
+
+  it("med like fakta foretrekkes samme feiltype", () => {
+    const bibliotek = [post({ vedtakId: 50, gruppe: "rust" }), post({ vedtakId: 51, gruppe: "bremser" })];
+    const v = velg({ typer: ["bremser"], oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01" }, bibliotek);
+    expect(v?.henvisning.vedtakId).toBe(51);
+    expect(v?.annenFeil).toBe(false);
   });
 
   it("nærmeste alder ved likt, så nyeste vedtak", () => {

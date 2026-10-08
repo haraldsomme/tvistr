@@ -1,5 +1,5 @@
 import { KNAPP_TIL_FEILTYPE, type Faktorer, type Reklamasjonsbotte } from "@/lib/vurdering/faktorer";
-import { GRUPPER, regelgrunnlag, type Gruppe, type Regelgrunnlag } from "@/lib/vurdering/henvisninger";
+import { GRUPPER, grupperFor, regelgrunnlag, type Gruppe, type Regelgrunnlag } from "@/lib/vurdering/henvisninger";
 import type { Momentsvar } from "./utfylling";
 
 // What Forbrukerklageutvalget weighed in dealer cases, as kinds of facts a buyer can be asked about:
@@ -320,9 +320,6 @@ export const MOMENTER: readonly Moment[] = [
     forekomst: { vunnet: 3, tapt: 3, skiller: false },
   },
 ];
-
-// The defect groups of a case, as the library of decisions names them.
-const grupperFor = (f: Faktorer): Gruppe[] => GRUPPER.filter((g) => f.feilgrupper.some((fg) => KNAPP_TIL_FEILTYPE[g][0] === fg[0]));
 
 // The moments to ask a buyer about: those that separate won from lost cases and apply to this case's
 // defect, timing and the rule the letter rests on.

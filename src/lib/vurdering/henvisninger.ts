@@ -1302,6 +1302,7 @@ export function velgHenvisning(f: Faktorer, k: Kjoper, bibliotek: readonly Henvi
       a.ukjent.length - b.ukjent.length ||
       b.sterkere.length - b.svakere.length - (a.sterkere.length - a.svakere.length) ||
       Number(b.sporsmal.includes("levering")) - Number(a.sporsmal.includes("levering")) ||
+      Number(a.annenFeil) - Number(b.annenFeil) ||
       aldersforskjell(a.henvisning) - aldersforskjell(b.henvisning) ||
       b.henvisning.dato.localeCompare(a.henvisning.dato),
   );

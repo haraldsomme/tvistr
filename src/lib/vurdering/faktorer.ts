@@ -29,6 +29,8 @@ export type Faktorer = {
   bilAlder: number | null;
   // The mileage at purchase. null when not given.
   kmVedKjop: number | null;
+  // The purchase price. null when not given.
+  kjopesumNok: number | null;
   // null = not asked.
   verkstedrapport: boolean | null;
   bilder: boolean | null;
@@ -163,6 +165,7 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
     feilgrupper,
     bilAlder: b.bilAr ? Math.max(0, Number(kjopsdato.slice(0, 4)) - b.bilAr) : null,
     kmVedKjop: b.kmVedKjop ?? null,
+    kjopesumNok: b.kjopesumNok ?? null,
     verkstedrapport: bevis.verkstedrapport,
     bilder: bevis.bilder,
     rapportSierForKjop: bevis.verkstedrapport ? bevis.rapportSierForKjop : null,

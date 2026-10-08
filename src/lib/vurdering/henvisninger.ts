@@ -57,7 +57,27 @@ export type Henvisning = {
   utfall: string;
 };
 
-export type ValgtHenvisning = { henvisning: Henvisning };
+export type Faktum = "alder" | "km" | "pris" | "opplyst" | "tid";
+// What the letter knows about the buyer beyond Faktorer: the moments asked in this case (sporbare), those
+// with a favourable answer (dekket), and what they were told before buying.
+export type Kjoper = { sporbare: ReadonlySet<string>; dekket: ReadonlySet<string>; opplyst: Opplyst };
+export type ValgtHenvisning = {
+  henvisning: Henvisning;
+  // The buyer's question is the one the decision decided; false for the fallback.
+  sammeSporsmal: boolean;
+  // Shared with the buyer, main question first.
+  sporsmal: Sporsmal[];
+  // In vekt, asked, favourable answer.
+  dekket: string[];
+  // In vekt, asked, no favourable answer.
+  mangler: string[];
+  // In vekt, not asked in this case.
+  ukjent: string[];
+  sterkere: Faktum[];
+  likt: Faktum[];
+  svakere: Faktum[];
+  annenFeil: boolean;
+};
 
 // Filled from the curation in docs/henvisninger.md; checked by `npm run sjekk-henvisninger`.
 export const HENVISNINGER: readonly Henvisning[] = [
@@ -1220,6 +1240,7 @@ export const HENVISNINGER: readonly Henvisning[] = [
 ];
 
 const GRUPPE_FOR = Object.fromEntries(GRUPPER.map((g) => [KNAPP_TIL_FEILTYPE[g][0], g])) as Partial<Record<Feiltype, Gruppe>>;
+export const grupperFor = (f: Faktorer): Gruppe[] => GRUPPER.filter((g) => f.feilgrupper.some((fg) => GRUPPE_FOR[fg[0]] === g));
 
 export function regelgrunnlag(f: Faktorer): Regelgrunnlag {
   if (f.presumsjon) return "formodning";
@@ -1228,12 +1249,61 @@ export function regelgrunnlag(f: Faktorer): Regelgrunnlag {
   return "forventning";
 }
 
+// The question the letter rests on: wrong information when the buyer says so, or when the defect is not
+// one wear can explain (wrong mileage or history, an earlier damage); otherwise what the buyer could expect.
+export const hovedsporsmal = (f: Faktorer): "forventning" | "opplysning" => (f.feilOpplysninger || !f.slitasjeAktuelt ? "opplysning" : "forventning");
+// Whether the defect was there at delivery is also in question: outside the presumption, or with a report on it.
+export const trengerLevering = (f: Faktorer) => !f.presumsjon || f.rapportSierForKjop === true;
+
 // Never a decision won on something the buyer does not have: the presumption, or the 2024 rules.
 const forenlig = (h: Henvisning, f: Faktorer) => (!h.presumsjon || f.presumsjon) && (h.lov === "før_2024" || f.presumsjonManeder === 24);
 
-// Placeholder until the new selection (the buyer stands at least as strong on what the committee relied on) replaces it.
-export function velgHenvisning(f: Faktorer, bibliotek: readonly Henvisning[] = HENVISNINGER): ValgtHenvisning | null {
+const TIDSROM: Record<Reklamasjonsbotte, number> = { rask: 0, middels: 1, sen: 2 };
+const FAKTA: Faktum[] = ["alder", "km", "pris", "opplyst", "tid"];
+// How the buyer compares on one fact: 1 stronger, 0 the same, -1 weaker, null unknown. Stronger means a
+// newer car, fewer km, a dearer car, less disclosed, the defect showing earlier.
+function sammenlign(fakt: Faktum, h: Henvisning, f: Faktorer, k: Kjoper): number | null {
+  const tegn = (a: number, b: number) => Math.sign(a - b);
+  switch (fakt) {
+    case "alder": return f.bilAlder === null ? null : tegn(h.alder, f.bilAlder);
+    case "km": return f.kmVedKjop === null || h.km === null ? null : tegn(h.km, f.kmVedKjop);
+    case "pris": return f.kjopesumNok === null ? null : tegn(f.kjopesumNok, h.pris);
+    case "opplyst": return tegn(OPPLYST.indexOf(h.opplyst), OPPLYST.indexOf(k.opplyst));
+    case "tid": return tegn(TIDSROM[h.botte], TIDSROM[f.reklamasjonsbotte]);
+  }
+}
+
+export function velgHenvisning(f: Faktorer, k: Kjoper, bibliotek: readonly Henvisning[] = HENVISNINGER): ValgtHenvisning | null {
+  // A claim the law stops gets no letter, and a won decision would mislead.
   if (f.stopp) return null;
-  const valgt = bibliotek.filter((h) => forenlig(h, f)).sort((a, b) => b.dato.localeCompare(a.dato))[0];
-  return valgt ? { henvisning: valgt } : null;
+  const hoved = hovedsporsmal(f);
+  const levering = trengerLevering(f);
+  const grupper = grupperFor(f);
+  const kandidater = bibliotek.filter((h) => forenlig(h, f));
+  const samme = kandidater.filter((h) => h.sporsmal.includes(hoved));
+  const pool = samme.length ? samme : kandidater;
+  const vurdert = pool.map((h) => {
+    const dekket = h.vekt.filter((id) => k.sporbare.has(id) && k.dekket.has(id));
+    const mangler = h.vekt.filter((id) => k.sporbare.has(id) && !k.dekket.has(id));
+    const ukjent = h.vekt.filter((id) => !k.sporbare.has(id));
+    const sterkere: Faktum[] = [], likt: Faktum[] = [], svakere: Faktum[] = [];
+    for (const fakt of FAKTA) {
+      const s = sammenlign(fakt, h, f, k);
+      if (s === null) continue;
+      (s > 0 ? sterkere : s < 0 ? svakere : likt).push(fakt);
+    }
+    const sporsmal = [hoved, ...(levering ? (["levering"] as const) : [])].filter((s) => h.sporsmal.includes(s));
+    return { henvisning: h, sammeSporsmal: samme.length > 0, sporsmal, dekket, mangler, ukjent, sterkere, likt, svakere, annenFeil: grupper.length > 0 && !grupper.includes(h.gruppe) };
+  });
+  const aldersforskjell = (h: Henvisning) => (f.bilAlder === null ? 0 : Math.abs(h.alder - f.bilAlder));
+  vurdert.sort(
+    (a, b) =>
+      a.mangler.length - b.mangler.length ||
+      a.ukjent.length - b.ukjent.length ||
+      b.sterkere.length - b.svakere.length - (a.sterkere.length - a.svakere.length) ||
+      Number(b.sporsmal.includes("levering")) - Number(a.sporsmal.includes("levering")) ||
+      aldersforskjell(a.henvisning) - aldersforskjell(b.henvisning) ||
+      b.henvisning.dato.localeCompare(a.henvisning.dato),
+  );
+  return vurdert[0] ?? null;
 }

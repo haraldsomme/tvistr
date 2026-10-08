@@ -1,104 +1,93 @@
 import { describe, expect, it } from "vitest";
+import { MOMENTER } from "@/lib/brev/momenter";
 import { beregnFaktorer } from "./faktorer";
-import { HENVISNINGER, REGELGRUNNLAG, velgHenvisning, type Henvisning } from "./henvisninger";
+import { HENVISNINGER, velgHenvisning, type Henvisning, type Kjoper } from "./henvisninger";
 import { FEILTYPER_KNAPPER } from "./innsending";
 import { OPPDAGET_VALG, type FeilKnapp, type FeilOpplysning, type KlageInput, type Kjopsform, type Oppdaget } from "./typer";
 
 const IDAG = "2026-10-01";
 
-type Valg = { typer?: FeilKnapp[]; oppdaget?: Oppdaget; kjopsdato?: string; bilAr?: number; rapport?: boolean; feilOpplysning?: FeilOpplysning; opplystForKjop?: "ja" | "nei"; kjopsform?: Kjopsform };
+type Valg = { typer?: FeilKnapp[]; oppdaget?: Oppdaget; kjopsdato?: string; bilAr?: number; rapport?: boolean; km?: number; pris?: number; feilOpplysning?: FeilOpplysning; opplystForKjop?: "ja" | "nei"; kjopsform?: Kjopsform };
 const klage = (o: Valg = {}): KlageInput => ({
-  bilOgKjop: { kjopsform: o.kjopsform ?? "forhandler", kjopsdato: o.kjopsdato ?? "2025-03-01", kjopesumNok: 150000, ...(o.bilAr !== undefined && { bilAr: o.bilAr }) },
+  bilOgKjop: { kjopsform: o.kjopsform ?? "forhandler", kjopsdato: o.kjopsdato ?? "2025-03-01", kjopesumNok: o.pris ?? 150000, ...(o.km !== undefined && { kmVedKjop: o.km }), ...(o.bilAr !== undefined && { bilAr: o.bilAr }) },
   feilen: { typer: o.typer ?? ["motor"], oppdaget: o.oppdaget ?? "innen_6_mnd", opplystForKjop: o.opplystForKjop ?? "nei", feilOpplysning: o.feilOpplysning ?? "nei", kontakt: "ja" },
   bevis: { verkstedrapport: o.rapport ?? false, rapportSierForKjop: o.rapport ? true : null, bilder: null },
 });
-const velg = (o: Valg, bibliotek: Henvisning[]) => velgHenvisning(beregnFaktorer(klage(o), IDAG), bibliotek);
+const kjoper = (o: Partial<Kjoper> = {}): Kjoper => ({ sporbare: new Set(), dekket: new Set(), opplyst: "ingenting", ...o });
+const velg = (o: Valg, bibliotek: Henvisning[], k: Kjoper = kjoper()) => velgHenvisning(beregnFaktorer(klage(o), IDAG), k, bibliotek);
 
 // Made-up posts: the selection rules are tested here, the real library in «biblioteket» below.
 let neste = 1;
 const post = (o: Partial<Henvisning> = {}): Henvisning => ({
-  vedtakId: neste++,
-  ref: "FKU-2024-1",
-  organ: "Forbrukerklageutvalget",
-  dato: "2024-01-31",
-  kildeUrl: "https://example.test/v.pdf",
-  gruppe: "motor",
-  botte: "middels",
-  alder: 10,
-  km: null,
-  lov: "før_2024",
-  presumsjon: false,
-  setning: "I 2024 fikk kjøperen av en Testbil medhold etter å ha klaget på motorfeil ett år etter kjøpet. Utvalget tilkjente 10 000 kr.",
-  likhet: "En testbil kjøpt hos forhandler fikk motorfeil.",
-  konklusjon: "Utvalget kom til at bilen hadde en mangel.",
-  ...o,
+  vedtakId: neste++, ref: "FKU-2024-1", organ: "Forbrukerklageutvalget", dato: "2024-01-31", kildeUrl: "https://example.test/v.pdf",
+  lov: "før_2024", presumsjon: false, sporsmal: ["forventning", "levering"], vekt: [], begrunnelse: "Utvalget la vekt på at feilen var uvanlig.",
+  alder: 10, km: 150000, pris: 100000, opplyst: "ingenting", botte: "middels", tid: "ett år etter kjøpet", gruppe: "motor",
+  feil: "motorhavari", utfall: "heving av kjøpet", ...o,
 });
 
 describe("velgHenvisning", () => {
-  it("bilens alder teller mer enn feiltypen", () => {
-    // The buyer's car was 2 years old with a brake defect; a 2-year-old car with another defect beats a 16-year-old with brakes.
-    const bibliotek = [post({ vedtakId: 100, alder: 2, gruppe: "klimaanlegg" }), post({ vedtakId: 101, alder: 16, gruppe: "bremser" })];
-    const v = velg({ typer: ["bremser"], oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2021 }, bibliotek);
-    expect(v?.henvisning.vedtakId).toBe(100);
-    expect(v?.likheter).toEqual(["alder", "tidsrom"]);
+  it("samme rettsspørsmål først", () => {
+    const bibliotek = [post({ vedtakId: 1, sporsmal: ["opplysning"], alder: 20 }), post({ vedtakId: 2, sporsmal: ["forventning"], alder: 3 })];
+    const v = velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2013 }, bibliotek);
+    expect(v?.henvisning.vedtakId).toBe(2);
+    expect(v?.sammeSporsmal).toBe(true);
   });
 
-  it("med lik alder avgjør tidsrommet, så feiltypen", () => {
-    const bibliotek = [post({ vedtakId: 110, botte: "sen" }), post({ vedtakId: 111, gruppe: "rust" }), post({ vedtakId: 112 })];
-    expect(velg({ typer: ["motor"], oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2013 }, bibliotek)?.henvisning.vedtakId).toBe(112);
-    expect(velg({ typer: ["rust"], oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2013 }, bibliotek)?.henvisning.vedtakId).toBe(111);
+  it("uten vedtak med kjøperens spørsmål brukes reserven, og den sier det", () => {
+    const v = velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01" }, [post({ sporsmal: ["opplysning"] })]);
+    expect(v?.sammeSporsmal).toBe(false);
   });
 
-  it("en nyere bil teller mer mot enn en like mye eldre", () => {
-    // The buyer's car was 10: a 7-year-old car is 3 years newer, a 13-year-old 3 years older.
-    const bibliotek = [post({ vedtakId: 120, alder: 7 }), post({ vedtakId: 121, alder: 13 })];
-    expect(velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2013 }, bibliotek)?.henvisning.vedtakId).toBe(121);
+  it("færrest manglende momenter går foran fakta", () => {
+    const bibliotek = [post({ vedtakId: 10, vekt: ["rapport_upaaregnelig"], alder: 20, km: 300000, pris: 20000 }), post({ vedtakId: 11, vekt: ["bruksstans_sikkerhet"], alder: 1 })];
+    const v = velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2013, km: 150000, pris: 100000 }, bibliotek, kjoper({ sporbare: new Set(["rapport_upaaregnelig", "bruksstans_sikkerhet"]), dekket: new Set(["bruksstans_sikkerhet"]) }));
+    expect(v?.henvisning.vedtakId).toBe(11);
+    expect(v?.mangler).toEqual([]);
   });
 
-  it("aldri en sak vunnet på formodningsregelen for en kjøper som ikke har den", () => {
-    // Bought 2023, defect after 6–24 months: the six-month presumption does not reach it.
-    const bibliotek = [post({ vedtakId: 130, botte: "rask", presumsjon: true }), post({ vedtakId: 131, alder: 30 })];
-    expect(velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2013 }, bibliotek)?.henvisning.vedtakId).toBe(131);
-    // Bought 2025, defect after 6–24 months: inside the two-year presumption, so the closer car fits.
-    expect(velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2025-03-01", bilAr: 2015 }, bibliotek)?.henvisning.vedtakId).toBe(130);
+  it("et moment kjøperen ikke blir spurt om, er ukjent, ikke manglende", () => {
+    const v = velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01" }, [post({ vekt: ["slitedel"] })], kjoper());
+    expect(v?.mangler).toEqual([]);
+    expect(v?.ukjent).toEqual(["slitedel"]);
   });
 
-  it("en sak etter ny lov brukes bare for kjøp fra 2024, og foretrekkes da", () => {
-    const bibliotek = [post({ vedtakId: 140 }), post({ vedtakId: 141, lov: "etter_2024" })];
-    expect(velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01" }, bibliotek)?.henvisning.vedtakId).toBe(140);
-    expect(velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2025-03-01" }, bibliotek)?.henvisning.vedtakId).toBe(141);
+  it("a fortiori: vedtaket der kjøperen står sterkere på flest fakta", () => {
+    // The buyer: 2 years, 22 000 km, 520 000 kr, nothing disclosed.
+    const svak = post({ vedtakId: 20, alder: 16, km: 191397, pris: 80000, opplyst: "feilen_opplyst" });
+    const lik = post({ vedtakId: 21, alder: 2, km: 22000, pris: 520000 });
+    const v = velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2021, km: 22000, pris: 520000 }, [lik, svak]);
+    expect(v?.henvisning.vedtakId).toBe(20);
+    expect(v?.sterkere).toEqual(["alder", "km", "pris", "opplyst"]);
+    expect(v?.likt).toEqual(["tid"]);
   });
 
-  it("samme regel teller når brevet bygger på en rapport eller en uriktig opplysning", () => {
-    const bibliotek = [post({ vedtakId: 150 }), post({ vedtakId: 151, alder: 11, grunnlag: "rapport", regel: "I en sak om en testbil la utvalget vekt på en rapport." })];
-    const v = velg({ oppdaget: "over_2_ar", kjopsdato: "2023-03-01", bilAr: 2013, rapport: true }, bibliotek);
-    expect(v?.henvisning.vedtakId).toBe(151);
-    expect(v?.likheter).toContain("regel");
-    expect(velg({ oppdaget: "over_2_ar", kjopsdato: "2023-03-01", bilAr: 2013 }, bibliotek)?.henvisning.vedtakId).toBe(150);
+  it("ukjente fakta hos kjøperen telles ikke, og saken får likevel en henvisning", () => {
+    // No car year and no mileage: only price (150 000 kr in klage(), the post has 100 000), disclosure and timing compare.
+    const v = velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01" }, [post({ km: null })]);
+    expect(v?.henvisning).toBeDefined();
+    expect(v?.sterkere).toEqual(["pris"]);
+    expect(v?.likt).toEqual(["opplyst", "tid"]);
   });
 
-  it("ukjent alder gir den eldste bilen", () => {
-    const bibliotek = [post({ vedtakId: 160, alder: 4 }), post({ vedtakId: 161, alder: 12 })];
-    expect(velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01" }, bibliotek)?.henvisning.vedtakId).toBe(161);
+  it("aldri formodningsregelen eller ny lov kjøperen ikke har", () => {
+    const bibliotek = [post({ vedtakId: 30, presumsjon: true, botte: "rask" }), post({ vedtakId: 31, lov: "etter_2024" }), post({ vedtakId: 32, alder: 30 })];
+    expect(velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2013 }, bibliotek)?.henvisning.vedtakId).toBe(32);
   });
 
-  it("kjøperen visste om feilen: fortsatt en henvisning", () => {
-    expect(velg({ opplystForKjop: "ja" }, [post({ vedtakId: 170 })])?.henvisning.vedtakId).toBe(170);
+  it("nærmeste alder ved likt, så nyeste vedtak", () => {
+    const bibliotek = [post({ vedtakId: 40, alder: 14 }), post({ vedtakId: 41, alder: 11 }), post({ vedtakId: 42, alder: 11, dato: "2025-01-01" })];
+    expect(velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2013 }, bibliotek)?.henvisning.vedtakId).toBe(42);
+  });
+
+  it("annen feiltype merkes", () => {
+    const v = velg({ typer: ["bremser"], oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01" }, [post({ gruppe: "rust" })]);
+    expect(v?.annenFeil).toBe(true);
   });
 
   it("når loven stopper kravet, er det ingen henvisning", () => {
     expect(velg({ kjopsform: "privatperson" }, [post()])).toBeNull();
   });
 });
-
-// The sentence for the buyer, unchanged from the earlier examples.
-const MAL = /^I 20\d\d fikk kjøper(en|ne) av en .+ (delvis )?medhold etter å ha klaget på .+ (etter|som) kjøpet\. Utvalget (tilkjente [\d ]+ kr|kom til at .+)\.$/;
-
-// The most the cited car's age may differ from the buyer's. Without the presumption only up to 20 years:
-// the database has no won dealer decision on a car over 17 years where the defect showed after six months
-// (checked October 2026, docs/henvisninger.md).
-const MAKS_ALDERSFORSKJELL = 4;
-const DEKKET_UTEN_FORMODNING_AR = 20;
 
 describe("biblioteket", () => {
   it("alle saker loven ikke stopper får en henvisning, og den er aldri vunnet på en fordel kjøperen mangler", () => {
@@ -115,7 +104,7 @@ describe("biblioteket", () => {
                   if (kjopsdato === "2025-03-01" && oppdaget === "over_2_ar") continue;
                   const bilAr = alder === null ? undefined : Number(kjopsdato.slice(0, 4)) - alder;
                   const f = beregnFaktorer(klage({ typer, oppdaget, kjopsdato, bilAr, rapport, feilOpplysning, opplystForKjop }), IDAG);
-                  const v = velgHenvisning(f);
+                  const v = velgHenvisning(f, kjoper());
                   const merke = JSON.stringify({ typer, oppdaget, kjopsdato, alder, rapport, feilOpplysning, opplystForKjop });
                   if (!v) {
                     avvik.push(`${merke}: ingen henvisning`);
@@ -124,31 +113,26 @@ describe("biblioteket", () => {
                   const h = v.henvisning;
                   if (h.presumsjon && !f.presumsjon) avvik.push(`${merke}: #${h.vedtakId} er vunnet på formodningsregelen`);
                   if (h.lov === "etter_2024" && f.presumsjonManeder !== 24) avvik.push(`${merke}: #${h.vedtakId} er etter ny lov`);
-                  // The library covers car ages well enough that the cited car is never far off.
-                  const dekket = f.bilAlder !== null && (f.presumsjon || f.bilAlder <= DEKKET_UTEN_FORMODNING_AR);
-                  if (dekket && Math.abs(h.alder - f.bilAlder!) > MAKS_ALDERSFORSKJELL) avvik.push(`${merke}: #${h.vedtakId} er ${h.alder} år, kjøperens bil ${f.bilAlder}`);
                 }
     expect(avvik.slice(0, 15)).toEqual([]);
   });
 
-  it("hvert grunnlag har en sak med regel etter gammel lov, og bare formodning bygger på formodningsregelen", () => {
-    for (const g of REGELGRUNNLAG) expect(HENVISNINGER.some((h) => h.regel && h.grunnlag === g && h.lov === "før_2024"), g).toBe(true);
-    for (const h of HENVISNINGER) if (h.grunnlag === "formodning") expect(h.presumsjon, `#${h.vedtakId}`).toBe(true);
+  it("hvert hovedspørsmål har vedtak med og uten formodning", () => {
+    for (const s of ["forventning", "opplysning"] as const)
+      for (const presumsjon of [true, false]) expect(HENVISNINGER.some((h) => h.sporsmal.includes(s) && h.presumsjon === presumsjon), `${s} ${presumsjon}`).toBe(true);
   });
 
-  it("alle poster er fullstendige, unike og følger malen", () => {
+  it("alle poster er fullstendige og unike", () => {
     expect(new Set(HENVISNINGER.map((h) => h.vedtakId)).size).toBe(HENVISNINGER.length);
+    const momentIder = new Set(MOMENTER.map((m) => m.id));
     for (const h of HENVISNINGER) {
       const navn = `#${h.vedtakId}`;
-      expect(h.setning, navn).toMatch(MAL);
+      expect(h.sporsmal.length, navn).toBeGreaterThan(0);
+      for (const id of h.vekt) expect(momentIder.has(id), `${navn} ${id}`).toBe(true);
       expect(h.ref, navn).toMatch(/^(FKU|FTU)-\d{4}-\d+(-\d+)?$/);
       expect(h.kildeUrl, navn).toMatch(/^https:\/\/\S+$/);
       expect(h.dato, navn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-      const tekster = [h.likhet, h.konklusjon, ...(h.regel ? [h.regel] : [])];
-      for (const t of tekster) {
-        expect(t, navn).toMatch(/^[A-ZÆØÅ].+\.$/);
-        expect(t, navn).not.toMatch(/[[\]]|\d+ ?kr\b/);
-      }
+      expect(h.begrunnelse, navn).toMatch(/^Utvalget .+\.$/);
     }
   });
 });

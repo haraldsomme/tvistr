@@ -10,7 +10,8 @@ import { AlertDialog } from "@/components/ui/alert-dialog";
 import { BekreftKnapp, Dialoginnhold, useBekreftLagring } from "./bekreft";
 import { KontaktFelt } from "./steg/kontakt";
 import { lagSteg } from "./steg/liste";
-import { harPlassholder, henvisningFor } from "@/lib/brev/brev";
+import { harPlassholder } from "@/lib/brev/brev";
+import { henvisningFor } from "@/lib/brev/skriving/henvisning";
 import { planlegg } from "@/lib/brev/skriving/brevplan";
 import { grunnlagFor } from "@/lib/brev/skriving/grunnlag";
 import { skrevetBrev } from "@/lib/brev/skriving/render";
@@ -314,7 +315,7 @@ export function BrevSide({
   const plan = lest.ok ? planlegg(lest.modell) : null;
   const brev = utfylling.brev && lest.ok && plan ? skrevetBrev(utfylling.brev.utkast, plan, lest.modell, idag) : null;
   const utdatert = !!utfylling.brev && lest.ok && plan !== null && grunnlagFor(lest.modell, plan) !== utfylling.brev.grunnlag;
-  const henvisning = henvisningFor(input, idag, utfylling);
+  const henvisning = lest.ok ? henvisningFor(lest.modell) : null;
   const plassholdere = brev !== null && harPlassholder(brev);
   // The weaknesses of the case, what the check could not fix, and the review's remarks.
   const advarsler: Advarsel[] = [
@@ -471,7 +472,7 @@ export function BrevSide({
       {faner}
       {fane === "mappe" ? (
         <div className="flex w-full justify-center lg:col-span-2">
-          <Saksmappe sakId={id} avhengighet={avhengighet} utfylling={utfylling} henvisning={henvisning} lagre={lagre} />
+          <Saksmappe sakId={id} avhengighet={avhengighet} utfylling={utfylling} henvisning={henvisning} fakta={lest.ok ? lest.modell.faktorer : { bilAlder: null, kmVedKjop: null, kjopesumNok: null }} lagre={lagre} />
         </div>
       ) : fane === "motsvar" ? (
         <div className="flex w-full justify-center lg:col-span-2">

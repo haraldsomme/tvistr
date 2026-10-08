@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentProps } from "react";
 import type { Endring, Utfylling } from "@/lib/brev/utfylling";
 import type { Mappe } from "@/lib/mappe/typer";
 import type { ValgtHenvisning } from "@/lib/vurdering/henvisninger";
@@ -15,6 +15,7 @@ export function Saksmappe({
   avhengighet,
   utfylling,
   henvisning,
+  fakta,
   lagre,
 }: {
   sakId: string;
@@ -22,6 +23,7 @@ export function Saksmappe({
   utfylling: Utfylling;
   // The decision the letter cites, chosen the same way as in the letter.
   henvisning: ValgtHenvisning | null;
+  fakta: ComponentProps<typeof AvgjordeInnhold>["fakta"];
   lagre: (e: Endring) => Promise<boolean>;
 }) {
   const [t, setT] = useState<Tilstand>({ type: "laster" });
@@ -66,7 +68,7 @@ export function Saksmappe({
         <BelopInnhold k={m.belop} />
       </Kort>
       <Kort tittel="Hva avgjorde lignende saker?">
-        <AvgjordeInnhold k={m.avgjorde} henvisning={henvisning} />
+        <AvgjordeInnhold k={m.avgjorde} henvisning={henvisning} fakta={fakta} />
       </Kort>
       <Kort tittel="Forhandleren og bilen">
         <AktorInnhold k={m.aktorer} />

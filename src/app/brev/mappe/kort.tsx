@@ -3,7 +3,7 @@
 import { useId, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { norskDato } from "@/lib/brev/brev";
+import { kroner, norskDato } from "@/lib/brev/brev";
 import { BekreftKnapp } from "../bekreft";
 import { Datofelt } from "../datofelt";
 import type { Endring, SjekkNokkel } from "@/lib/brev/utfylling";
@@ -14,7 +14,9 @@ import type { StyrkeKort } from "@/lib/mappe/kort/styrke";
 import type { Sjekkpunkt } from "@/lib/mappe/kort/styrk";
 import type { VidereKort } from "@/lib/mappe/kort/videre";
 import { erForFa, type Andel, type ForFa } from "@/lib/mappe/typer";
-import type { Likhet, ValgtHenvisning } from "@/lib/vurdering/henvisninger";
+import { moment } from "@/lib/brev/momenter";
+import type { Faktorer } from "@/lib/vurdering/faktorer";
+import type { Faktum, ValgtHenvisning } from "@/lib/vurdering/henvisninger";
 
 // The cards of the saksmappe. Every share is shown with the number of decisions behind it; a sample
 // below its threshold is shown as «for få saker», never as a number.
@@ -145,45 +147,71 @@ export function BelopInnhold({ k }: { k: BelopKort }) {
 
 const UTFALL: Record<string, string> = { medhold: "Medhold", delvis_medhold: "Delvis medhold", ikke_medhold: "Tapt sak" };
 
-// What the cited case has in common with the buyer's, as the selection found it (velgHenvisning).
-const LIKHET_TEKST: Record<Likhet, string> = {
-  alder: "bilen var omtrent like gammel som din",
-  tidsrom: "feilen viste seg omtrent like lenge etter kjøpet",
-  regel: "utvalget brukte den samme regelen som brevet ditt bygger på",
-  feil: "saken gjaldt samme type feil",
-};
-const ogListe = (d: string[]) => (d.length < 2 ? d.join("") : `${d.slice(0, -1).join(", ")} og ${d[d.length - 1]}`);
-function hvorfor(likheter: Likhet[]): string {
-  const deler = likheter.map((l) => LIKHET_TEKST[l]);
-  return deler.length
-    ? `Valgt fordi ${ogListe(deler)}, og kjøperen vant mot forhandleren.`
-    : "Valgt som den saken kjøperen vant mot forhandleren, som ligner mest på din.";
-}
+type Fakta = Pick<Faktorer, "bilAlder" | "kmVedKjop" | "kjopesumNok">;
 
-// The decision the letter cites, as it stands in the letter. Chosen for the buyer, not by them.
-function Henvisningsblokk({ v }: { v: ValgtHenvisning }) {
+// The decision the letter cites, set against the buyer's case. Chosen for the buyer, not by them.
+function Henvisningsblokk({ v, f }: { v: ValgtHenvisning; f: Fakta }) {
   const h = v.henvisning;
+  const rader: [Faktum, string, string, string | null][] = [
+    ["alder", "Bilens alder ved kjøpet", `${h.alder} år`, f.bilAlder !== null ? `${f.bilAlder} år` : null],
+    ["km", "Kilometerstand", h.km !== null ? `${h.km.toLocaleString("nb-NO")} km` : "–", f.kmVedKjop !== null ? `${f.kmVedKjop.toLocaleString("nb-NO")} km` : null],
+    ["pris", "Kjøpesum", kroner(h.pris), f.kjopesumNok !== null ? kroner(f.kjopesumNok) : null],
+    ["tid", "Feilen viste seg", h.tid, null],
+  ];
+  const sammenlign = (x: Faktum) => (v.sterkere.includes(x) ? "Sterkere" : v.svakere.includes(x) ? "Svakere" : v.likt.includes(x) ? "Likt" : "");
+  const navn = (id: string) => moment(id)?.navn ?? id;
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-[#c9d3e3] bg-[#f4f7fb] p-3.5">
-      <strong className="text-[13px] uppercase tracking-[.04em] text-[#5b6472]">Brevet ditt viser til</strong>
+    <div className="flex flex-col gap-2 rounded-md border bg-muted p-3.5">
+      <strong className="text-[13px] uppercase tracking-[.04em] text-muted-foreground">Brevet ditt viser til</strong>
       <strong>
         {h.organ}, {h.ref} · {norskDato(h.dato)}
       </strong>
-      <p className="m-0">{h.regel && v.likheter.includes("regel") ? h.regel : `${h.likhet} ${h.konklusjon}`}</p>
-      <p className={SMA}>
-        {hvorfor(v.likheter)} Bilen i saken var {h.alder} år gammel da den ble kjøpt.
-      </p>
-      <a href={h.kildeUrl} target="_blank" rel="noreferrer" className="self-start text-[14px] font-semibold text-[#1f3a5f] underline underline-offset-2">
+      <p className="m-0">{h.begrunnelse}</p>
+      <p className={SMA}>Kjøperen fikk {h.utfall}.</p>
+      <table className="w-full border-collapse text-[14px]">
+        <thead>
+          <tr className="text-left text-muted-foreground">
+            <th className="py-1 pr-2 font-normal" />
+            <th className="py-1 pr-2 font-normal">I vedtaket</th>
+            <th className="py-1 pr-2 font-normal">Din sak</th>
+            <th className="py-1 font-normal" />
+          </tr>
+        </thead>
+        <tbody>
+          {rader.map(([x, tittel, vedtak, din]) => (
+            <tr key={x} className="border-t">
+              <td className="py-1 pr-2">{tittel}</td>
+              <td className="py-1 pr-2">{vedtak}</td>
+              <td className="py-1 pr-2">{din ?? "–"}</td>
+              <td className="py-1 font-semibold">{sammenlign(x)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {(v.dekket.length > 0 || v.mangler.length > 0 || v.ukjent.length > 0) && (
+        <ul className="m-0 flex list-none flex-col gap-1 p-0">
+          {v.dekket.map((id) => (
+            <li key={id}>✓ {navn(id)}</li>
+          ))}
+          {v.mangler.map((id) => (
+            <li key={id}>Mangler: {navn(id)}</li>
+          ))}
+          {v.ukjent.map((id) => (
+            <li key={id}>Ikke spurt i din sak: {navn(id)}</li>
+          ))}
+        </ul>
+      )}
+      <a href={h.kildeUrl} target="_blank" rel="noreferrer" className="self-start text-[14px] font-semibold text-primary underline underline-offset-2">
         Les vedtaket
       </a>
     </div>
   );
 }
 
-export function AvgjordeInnhold({ k, henvisning }: { k: AvgjordeKort; henvisning: ValgtHenvisning | null }) {
+export function AvgjordeInnhold({ k, henvisning, fakta }: { k: AvgjordeKort; henvisning: ValgtHenvisning | null; fakta: Fakta }) {
   return (
     <>
-      {henvisning && <Henvisningsblokk v={henvisning} />}
+      {henvisning && <Henvisningsblokk v={henvisning} f={fakta} />}
       {k.temaer.length > 0 && (
         <div className="flex flex-col gap-1.5">
           <strong className="text-[13px] uppercase tracking-[.04em] text-[#5b6472]">Hva som kom opp i vunne og tapte saker</strong>

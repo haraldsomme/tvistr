@@ -1,482 +1,505 @@
 # Henvisninger: vedtakene brevet viser til
 
-Brevet og vurderingen viser til samme vedtak, valgt av `velgHenvisning` i `src/lib/vurdering/henvisninger.ts` fra listen `HENVISNINGER`. Denne filen sier hvordan vedtakene ble valgt og kontrollert, og hva som ble forkastet.
+Brevet viser til ett vedtak, valgt av `velgHenvisning` i `src/lib/vurdering/henvisninger.ts` fra listen `HENVISNINGER`. Denne filen sier hvordan vedtakene ble kurert og kontrollert, hvordan valget skal fungere, og hva som ble forkastet. Hvert vedtak er lest for det utvalget tok stilling til (`sporsmal`), hva det la vekt på (`vekt`, id-er i momentkatalogen), hvorfor (`begrunnelse`), hva kjøperen var gjort kjent med (`opplyst`) og hva kjøperen fikk (`utfall`). Vurderingen viser ikke vedtaket; det gjør bare brevet.
 
 ## Valget (fra oktober 2026)
 
-Alle vedtakene i listen er kandidater for alle kjøpere. `velgHenvisning` regner ut en avstand til kjøperens sak, målt i år bilalder (`VEKT`), og velger den nærmeste:
+Spesifikasjon: `docs/superpowers/specs/2026-10-08-henvisning-a-fortiori-design.md`. Vedtaket velges ut fra det utvalget la vekt på, holdt opp mot kjøperens svar, og så ut fra fakta, slik at brevet kan si at kjøperens sak står minst like sterkt (a fortiori).
 
-- **Bilens alder** teller mest: hvert år den siterte bilen er nyere enn kjøperens, teller 1,5; hvert år eldre teller 1. En nyere bil med samme problem inviterer til «normal slitasje», en eldre er det sterkeste sammenligningsgrunnlaget.
-- **Tidsrommet** fra kjøp til feilen viste seg (innen 6 måneder, 6 måneder til 2 år, mer enn 2 år): 3 per steg.
-- **Kilometerstanden** ved kjøpet: 1 per 50 000 km, høyst 3.
-- **Samme regel**: 2 når brevet bygger på en verkstedrapport eller en uriktig opplysning og vedtaket ikke er lest for den regelen (`grunnlag`).
-- **Feiltypen**: 2 når vedtaket gjelder en annen feilgruppe enn kjøperens.
-- **Loven**: 2 når vedtaket er etter en annen lov enn kjøperens (ny lov fra 1.1.2024).
+```
+velgHenvisning(sak):
+  stopp → null
+  kandidater = forenlig(h, f)                           // presumsjon og lov
+  pool = kandidater med kjøperens hovedspørsmål i h.sporsmal, ellers alle kandidater
+  for hvert vedtak:
+    mangler  = momenter i h.vekt som ikke er dekket hos kjøperen
+    for hvert faktum (alder, km, pris, opplyst, tid) der begge er kjent:
+      sterkere (kjøperen står bedre), likt, svakere
+  sorter: færrest mangler; flest sterkere − svakere; dekker levering når kjøperen trenger det;
+          nærmeste alder; nyeste vedtak
+```
 
-Ved lik avstand vinner den nærmeste alderen, så den eldste bilen, så det nyeste vedtaket. Tidligere gikk valget i en stige med samme feilgruppe først og en regel-sak sist; det ga for eksempel en 16 år gammel bil med rust til en kjøper med en 2 år gammel bil og bremsefeil.
+- **Hovedspørsmål:** `opplysning` når kjøperen sier at det som ble opplyst var feil, eller feilen ikke er av en type slitasje kan forklare. Ellers `forventning`. `levering` er tilleggsspørsmål når feilen viste seg etter formodningsperioden eller kjøperen har en rapport om at feilen var der før kjøpet.
+- **Momenter:** et moment i `vekt` er dekket når kjøperen har et gunstig svar på det.
+- **Fakta:** `opplyst` rangeres `ingenting` < `som_den_er` < `feilen_opplyst` (svakeste kjøperstilling sist).
+- **Aldri vunnet på en fordel kjøperen mangler.** Endringene i forbrukerkjøpsloven fra 1. januar 2024 gjelder bare avtaler inngått etter den datoen (LOV-2023-06-16-60), og alle styrket kjøperen: formodningsregelen gikk fra 6 måneder til 2 år, og «som den er» virker ikke lenger (§ 15 andre ledd). Derfor: ingen sak vunnet på formodningsregelen for en kjøper uten den, og ingen sak etter ny lov for kjøp før 2024. Basen har ennå ingen brukbare vedtak om kjøp etter 1.1.2024, så alle postene er etter gammel lov.
 
-Vedtak som er lest for regelen utvalget brukte, har `grunnlag` og en `regel`-setning; brevet bruker den når kjøperens brev bygger på samme regel. Hvert grunnlag har minst én slik sak.
-
-**Aldri vunnet på en fordel kjøperen mangler.** Endringene i forbrukerkjøpsloven fra 1. januar 2024 gjelder bare avtaler inngått etter den datoen (LOV-2023-06-16-60), og alle styrket kjøperen: formodningsregelen gikk fra 6 måneder til 2 år, og «som den er» virker ikke lenger (§ 15 andre ledd). En sak vunnet etter gammel lov holder derfor også etter ny lov, unntatt når kjøperen vant fordi formodningsregelen gjaldt og brukeren ikke har den. Derfor: ingen sak vunnet på formodningsregelen for en kjøper uten den, og ingen sak etter ny lov for kjøp før 2024. Basen har ennå ingen brukbare vedtak om kjøp etter 1.1.2024 (#3023 brukte toårsregelen, men forhandleren svarte ikke), så alle postene er etter gammel lov.
+Valget i koden kommer i en senere oppgave (Task 4); inntil da velger `velgHenvisning` det nyeste forenlige vedtaket.
 
 ## Slik ble de valgt (oktober 2026)
 
-1. **Kandidater:** `npm run henvisning-kandidater` hentet de ti nyeste vunne forhandlersakene (personbil og varebil, ikke merket for kontroll) for hver kombinasjon av feilgruppe, tidsrom og aldersgruppe (0–7 og 8+ år ved kjøpet), og for hvert regelgrunnlag: 70 lister.
-2. **Utvelgelse:** tre uavhengige vurderere (agenter) leste kandidatene og valgte ett vedtak eller ingen per liste, etter kriteriene: kjøperen vant på akkurat denne feilen eller regelen; forhandleren svarte; vanlige mangelsregler, ikke garanti; tid og alder stemmer med teksten (databasens dager til reklamasjon var feil i flere saker); enstemmig og ikke «under tvil»; så nytt som mulig; gjenkjennelig bil og klart utfall. Flertallet var enige i 68 av 70 lister.
-3. **Avgjørelse:** en fjerde agent avgjorde uenighetene, la hvert vedtak i bare én liste, og prøvde flertallsvalgene mot kriteriene på nytt (ni ble byttet ut eller satt til ingen). Regel-sakene ble valgt for seg, blant vedtak som ikke var brukt som lignende sak, med eldre biler slik at de passer alle kjøpere med samme grunnlag.
-4. **Tekst og belegg:** en agent skrev setningene og et ordrett sitat for hver påstand (`scripts/henvisninger-belegg.json`).
-5. **Kontroll:** en uavhengig agent sjekket hver påstand mot vedtaksteksten. Rettede poster ble kontrollert på nytt av en ny agent. To poster ble forkastet.
-6. **Skript:** `npm run sjekk-henvisninger` sjekker id, forhandler, utfall, lenke, dato, ref, organ, lov, formodning, alder, alle tall i setningene og alle sitater mot databasen og vedtaksteksten. Det må gi 0 feil.
+1. **Kandidater:** `npm run henvisning-kandidater` hentet de ti nyeste vunne forhandlersakene (personbil og varebil, ikke merket for kontroll) for hver kombinasjon av feilgruppe, tidsrom og aldersgruppe, og for hvert regelgrunnlag.
+2. **Utvelgelse og kontroll:** agenter leste kandidatene og valgte vedtak etter kriteriene: kjøperen vant på akkurat denne feilen eller regelen; forhandleren svarte; vanlige mangelsregler, ikke garanti; tid og alder stemmer med teksten; enstemmig og ikke «under tvil»; så nytt som mulig. En uavhengig agent kontrollerte hver påstand mot vedtaksteksten. To poster ble forkastet. Et eget søk fant vedtak om biler på 17–32 år.
+3. **Kurering på ny (oktober 2026):** alle 54 vedtak ble lest på nytt av to agenter hver for seg (`scripts/henvisninger-kurering.json`): `sporsmal`, `vekt`, `begrunnelse`, `opplyst`, `tid`, `feil` og `utfall`, med ordrett belegg for hver påstand i `scripts/henvisninger-belegg.json` (nøklene `sporsmal`, `vekt:<id>`, `opplyst` der den ikke er «ingenting», og `utfallsform` for utfallet). Uavhengige kontrollører rettet begrunnelser, momentvalg og tidsangivelser (blant annet #2235, #3067, #3125, #3165, #1967). `pris` hentes fra databasen (`kjopesum_nok`).
+4. **Skript:** `npm run sjekk-henvisninger` sjekker id, forhandler, utfall, lenke, dato, ref, organ, lov, formodning, alder, km, pris, at id-ene i `vekt` finnes i `MOMENTER`, at `begrunnelse`, `feil`, `utfall` og `tid` ikke nevner merke, modell, beløp eller forhandlerens navn, at alle tall står i vedtaket, og alle sitater ordrett mot vedtaksteksten. Hvert hovedspørsmål (`forventning`, `opplysning`) må ha minst én post med og én uten formodningsregelen. Det må gi 0 feil.
 
-Brevet oppgir ikke beløp; setningen til kjøperen i vurderingen gjør det, uten renter og saksbehandlingsgebyr.
+Brevet oppgir ikke tilkjent beløp, bare type og beregningsmåte (`utfall`).
 
-## Eldre biler (oktober 2026)
+## Vedtakene, etter feilgruppe
 
-Etter at valget ble lagt om til å vekte bilens alder først, manglet det saker om biler på 18–30 år. En agent leste alle vunne forhandlersaker med biler på 17–32 år (personbil og varebil, ikke merket for kontroll, kjøp før 2024) etter de samme kriteriene som over, og en uavhengig agent kontrollerte hver påstand mot vedtaksteksten (#1579 og #224 ble rettet).
-
-**17 år, 6 måneder til 2 år** (`rust`, grunnlag `forventning`)
-
-> En Peugeot Boxer som var 17 år gammel og hadde gått 287 000 km, ble kjøpt hos forhandler som reparasjonsobjekt på grunn av startproblemer, og om lag åtte måneder etter kjøpet ble den underkjent ved EU-kontroll på grunn av alvorlig korrosjon i understellet. None
-
-- **Sak:** #967 · FTU-2015-1829 · 2016-03-31 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2016002708&dokid=217840&versjon=2&variant=P&)
-- **Til kjøperen:** I 2016 fikk kjøperen av en Peugeot Boxer delvis medhold etter å ha klaget på rust om lag åtte måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 12 000 kr etter fradrag for bruken av bilen.
-
-**18 år, innen 6 måneder** (`rust`)
-
-> En Subaru Forester som var 18 år gammel og hadde gått 114 000 km, ble kjøpt hos forhandler nylig EU-godkjent, og om lag tre måneder etter kjøpet ble det påvist betydelige mengder rust i de bakre hjulbuene. None
-
-- **Sak:** #1579 · FKU-2024-81 · 2024-09-18 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024047333&dokid=1217790&versjon=1&variant=A&)
-- **Til kjøperen:** I 2024 fikk kjøperen av en Subaru Forester medhold etter å ha klaget på rust om lag tre måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 57 000 kr.
-
-**18 år, innen 6 måneder** (`bremser`, grunnlag `forventning`)
-
-> En Toyota Rav4 som var 18 år gammel og hadde gått 180 000 km, ble kjøpt hos forhandler «as is» etter å ha blitt annonsert som velholdt, og en uke etter kjøpet viste det seg at bremseklossene foran var helt nedslitt. None
-
-- **Sak:** #2184 · FKU-2021-12654 · 2022-11-30 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022099685&dokid=796852&versjon=2&variant=A&)
-- **Til kjøperen:** I 2022 fikk kjøperen av en Toyota Rav4 delvis medhold etter å ha klaget på bremsefeil en uke etter kjøpet. Utvalget tilkjente 6 333 kr.
-
-**22 år, innen 6 måneder** (`rust`, grunnlag `forventning`)
-
-> En Jeep Grand Cherokee som var 22 år gammel og hadde gått 260 841 km, ble kjøpt hos forhandler og EU-godkjent uten feil, og to måneder etter kjøpet ble den avskiltet som trafikkfarlig etter funn av alvorlig rust på bremserør, bærearmer og bakaksel. None
-
-- **Sak:** #438 · FKU-2017-217 · 2017-09-21 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017006830&dokid=297713&versjon=1&variant=A&)
-- **Til kjøperen:** I 2017 fikk kjøperen av en Jeep Grand Cherokee delvis medhold etter å ha klaget på rust i understellet om lag to måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 49 000 kr, og tilkjente i tillegg 8 500 kr i erstatning.
-
-**24 år, innen 6 måneder** (`km_service`)
-
-> En BMW 318is som var 24 år gammel og hadde gått 201 500 km ifølge kilometertelleren, ble kjøpt hos forhandler «som den er», og innen fem måneder etter kjøpet viste det seg at telleren var tilbakestilt med minst 60 000 km. None
-
-- **Sak:** #357 · FKU-2017-805 · 2017-11-30 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017019947&dokid=326900&versjon=1&variant=A&)
-- **Til kjøperen:** I 2017 fikk kjøperen av en BMW 318is delvis medhold etter å ha klaget på tilbakestilt kilometerteller innen fem måneder etter kjøpet. Utvalget tilkjente 25 000 kr.
-
-**26 år, innen 6 måneder** (`girkasse`, grunnlag `forventning`)
-
-> En Toyota Corolla som var 26 år gammel og hadde gått 140 000 km, ble kjøpt hos forhandler «som den er» etter å ha blitt annonsert som servicefulgt og velholdt, og i underkant av to måneder etter kjøpet fikk den en feil på girkassen som gjorde at den ikke kunne kjøres. None
-
-- **Sak:** #805 · FTU-2016-736 · 2016-09-30 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2016020203&dokid=247228&versjon=1&variant=A&)
-- **Til kjøperen:** I 2016 fikk kjøperen av en Toyota Corolla medhold etter å ha klaget på feil på girkassen i underkant av to måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 26 000 kr, og tilkjente i tillegg 3 000 kr i erstatning.
-
-**28 år, innen 6 måneder** (`rust`, grunnlag `opplysning`)
-
-> En BMW 325i som var 28 år gammel og hadde gått 166 000 km, ble kjøpt hos forhandler med opplysning i annonsen om at bilen var fri for rust, og om lag fire måneder etter kjøpet oppdaget kjøperen omfattende rust; et verksted fant deretter også en feil utbedret kollisjonsskade. None
-
-- **Sak:** #224 · FKU-2018-809 · 2018-12-05 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2018019439&dokid=382372&versjon=1&variant=A&)
-- **Til kjøperen:** I 2018 fikk kjøperen av en BMW 325i medhold etter å ha klaget på rust om lag fire måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 215 000 kr, og tilkjente i tillegg 1 008 kr i erstatning.
-
-**31 år, innen 6 måneder** (`km_service`, grunnlag `opplysning`)
-
-> En Volkswagen Caravelle som var 31 år gammel og hadde gått 306 000 km, ble kjøpt hos forhandler med opplysning i annonsen om ny registerreim og vannpumpe, og knapt en måned etter kjøpet fant en NAF-test ingen dokumentasjon på at byttet var gjort. None
-
-- **Sak:** #2475 · FKU-2021-4002 · 2022-04-27 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022028900&dokid=642081&versjon=1&variant=A&)
-- **Til kjøperen:** I 2022 fikk kjøperen av en Volkswagen Caravelle delvis medhold etter å ha klaget på uriktige opplysninger om bytte av registerreim og vannpumpe knapt en måned etter kjøpet. Utvalget kom til at opplysningene var uriktige og satte prisavslaget til 7 000 kr.
-
-**Forkastet:** #1728 og #3268 («i tvil»/«under tvil»), #1304 («under tvil»), #3332 (forhandleren svarte ikke, «under noe tvil»), #1283 og #2208 (forhandleren svarte ikke), #687 (depositum, ikke mangel), #900 (manglende papirer på ombygging), #1765 (tidspunkt ukjent, usikkert om selger var forhandler), #838 (uklart om feilen viste seg før eller etter seks måneder), #2663 (feil fra to tidsrom avgjort samlet), #745 og #512 (gyldige, men overlapper #224 og #1579).
-
-**Hull:** basen har ingen vunnet forhandlersak med en bil over 17 år der feilen viste seg mer enn seks måneder etter kjøpet (#2099, 20 år, er merket for kontroll og har ukjent tidspunkt). En kjøper uten formodningsregelen med en bil over 20 år får derfor #967 (17 år) eller #2298 (37 år). Testen «biblioteket» krever dekning innen 4 år bare opp til 20 år for disse kjøperne.
-
-## Saker lest for regelen (`grunnlag` og `regel`)
-
-### Formodningsregelen (§ 18) (`regel/formodning`)
-
-> I en sak om en 14 år gammel Volkswagen Tiguan kjøpt hos forhandler kom utvalget til at et motorhavari som viste seg om lag halvannen måned etter kjøpet, skyldtes forhold som måtte anses å ha vært der ved leveringen, fordi forhandleren ikke hadde sannsynliggjort noe annet.
-
-- **Sak:** #1758 · FKU-2023-4974 · 2023-10-04 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023069233&dokid=993879&versjon=1&variant=A&)
-- **Til kjøperen:** I 2023 fikk kjøperen av en Volkswagen Tiguan medhold etter å ha klaget på motorhavari om lag halvannen måned etter kjøpet. Utvalget kom til at kjøpet kunne heves.
-- **Bil:** 14 år, 201 000 km · lov: før_2024
-
-### Rapport viser at feilen var der ved levering (`regel/rapport`)
-
-> I en sak om en 11 år gammel Mitsubishi Outlander kjøpt hos forhandler la utvalget vekt på en verkstedrapport om at store rustskader i bærende deler av understellet hadde kommet over tid og var der da kjøperen kjøpte bilen, og fant det sannsynliggjort at rusten kunne knyttes til leveringen, selv om den ble oppdaget først nesten åtte måneder etter kjøpet.
-
-- **Sak:** #2694 · FKU-2021-4419 · 2021-10-13 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021075274&dokid=489776&versjon=1&variant=A&)
-- **Til kjøperen:** I 2021 fikk kjøperen av en Mitsubishi Outlander medhold etter å ha klaget på rust nesten åtte måneder etter kjøpet. Utvalget kom til at kjøpet kunne heves.
-- **Bil:** 11 år, 186 000 km · lov: før_2024
-
-### Uriktige opplysninger (§ 16) (`regel/opplysning`)
-
-> I en sak om en 10 år gammel Ford S-max kjøpt hos forhandler kom utvalget til at bilen hadde en mangel fordi den ikke svarte til opplysningen i annonsen om at serviceheftet var komplett.
-
-- **Sak:** #1992 · FKU-2022-2868 · 2023-03-22 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023006127&dokid=845007&versjon=1&variant=A&)
-- **Til kjøperen:** I 2023 fikk kjøperen av en Ford S-max delvis medhold etter å ha klaget på uriktige opplysninger om servicehistorikken drøyt halvannet år etter kjøpet. Utvalget tilkjente 7 000 kr.
-- **Bil:** 10 år, 106 500 km · lov: før_2024
-
-### Dårligere enn kjøperen kunne forvente (§ 15) (`regel/forventning`)
-
-> I en sak om en 16 år gammel Nissan Patrol med 191 397 km kjøpt hos forhandler kom utvalget til at omfattende rustskader var mer enn kjøperen måtte regne med ut fra alder og kilometerstand, selv om forhandleren hadde opplyst at bilen hadde rustskader.
-
-- **Sak:** #2612 · FKU-2021-4203 · 2021-12-01 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021095135&dokid=537047&versjon=1&variant=A&)
-- **Til kjøperen:** I 2021 fikk kjøperen av en Nissan Patrol medhold etter å ha klaget på omfattende rustskader om lag halvannet år etter kjøpet. Utvalget kom til at kjøpet kunne heves.
-- **Bil:** 16 år, 191 397 km · lov: før_2024
-
-## Andre saker, etter feilgruppe
+Hver post: `sporsmal` (det utvalget tok stilling til), `vekt` (momentene det la vekt på), `begrunnelse`, `utfall` og fakta (`feil`, `tid`, alder, km, pris, `opplyst`, lov).
 
 ### Motor
 
-**innen 6 måneder, 7 år gammel bil** (`motor/rask`)
+**#3065 · FKU-2026-66298 · 2026-03-04** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-66298.pdf)
 
-> En BMW 316i som var 7 år gammel og hadde gått 136 400 km, ble kjøpt hos forhandler og fikk slakk i registerkjedet om lag to måneder etter kjøpet. Utvalget kom til at feilen med registerkjedet var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `positiv_beskrivelse`, `rapport_upaaregnelig`, `slitedel`, `avslo_tilbud`
+- **Begrunnelse:** Utvalget la vekt på at salgsannonsen og verkstedkontrollen før kjøpet ga en berettiget forventning om at bilen var i god stand, og at en sakkyndig hadde uttalt at registerkjedet skal vare bilens levetid og at feilen er kjent for modellen. Forhandleren hadde ikke lagt frem noe som viste at feilen ikke forelå ved kjøpet, og hadde bare tilbudt å dekke en del av reparasjonen.
+- **Utfall:** prisavslag satt lik reparasjonskostnaden, begrenset til egenandelen kjøperen betalte etter forsikringsoppgjøret
+- **Fakta:** slakk i registerkjedet; om lag to måneder etter kjøpet; 7 år, 136 400 km, 195 000 kr; opplyst: `ingenting`; lov: før_2024; formodningsregelen
 
-- **Sak:** #3065 · FKU-2026-66298 · 2026-03-04 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-66298.pdf)
-- **Til kjøperen:** I 2026 fikk kjøperen av en BMW 316i delvis medhold etter å ha klaget på motorfeil om lag to måneder etter kjøpet. Utvalget kom til at feilen med registerkjedet var en mangel og satte prisavslaget for den til 12 000 kr.
+**#3086 · FKU-2026-104368 · 2026-02-02** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-104368.pdf)
 
-**innen 6 måneder, 12 år gammel bil** (`motor/rask`)
+- **Spørsmål:** forventning
+- **Vekt:** `rapport_upaaregnelig`, `slitedel`, `avslo_tilbud`
+- **Begrunnelse:** Utvalget la vekt på at en sakkyndig hadde uttalt at elmotoren og girkassen forventes å ha vesentlig lengre levetid enn bilens alder og kjørelengde, slik at det ikke var påregnelig å måtte skifte dem. Forhandlerens tilbud om å dele reparasjonskostnaden oppfylte ikke lovens krav til avhjelp.
+- **Utfall:** heving av kjøpet
+- **Fakta:** ulyd fra lagrene i elmotoren og innvendig feil i reduksjonskassen; om lag ni måneder etter kjøpet; 5 år, 2 079 km, 63 000 kr; opplyst: `ingenting`; lov: før_2024
 
-> En Toyota Avensis som var 12 år gammel og hadde gått 126 269 km, ble kjøpt hos forhandler og fikk startproblemer tre dager etter kjøpet. Utvalget kom til at startproblemene var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.
+**#3127 · FKU-2025-61654 · 2025-11-11** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-61654.pdf)
 
-- **Sak:** #3127 · FKU-2025-61654 · 2025-11-11 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-61654.pdf)
-- **Til kjøperen:** I 2025 fikk kjøperen av en Toyota Avensis delvis medhold etter å ha klaget på motorfeil tre dager etter kjøpet. Utvalget tilkjente 14 287 kr.
+- **Spørsmål:** forventning, levering
+- **Vekt:** ingen
+- **Begrunnelse:** Utvalget la vekt på at verkstedene hadde dokumentert at bilen var tungstartet og periodisk ikke startet, og at kjøperen klaget på startproblemene tre dager etter kjøpet. Bilen var dermed i dårligere stand enn kjøperen hadde grunn til å forvente, selv om den var solgt «som den er».
+- **Utfall:** erstatning for kostnadene til undersøkelse og reparasjon av startproblemene
+- **Fakta:** startproblemer; tre dager etter kjøpet; 12 år, 126 269 km, 79 900 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-**6 måneder til 2 år, 5 år gammel bil** (`motor/middels`)
+**#1758 · FKU-2023-4974 · 2023-10-04** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023069233&dokid=993879&versjon=1&variant=A&)
 
-> En Renault Twizy som var fem år gammel og hadde gått 2 079 km, ble kjøpt hos forhandler og fikk påvist feil på elmotoren og girkassen om lag ni måneder etter kjøpet. Utvalget kom til at feilen på elmotoren og girkassen var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `positiv_beskrivelse`, `egen_bruk`
+- **Begrunnelse:** Utvalget la vekt på at feilen etter formodningsregelen forelå ved leveringen, fordi forhandleren ikke hadde sannsynliggjort at den oppsto senere, og på at annonsen beskrev bilen som pen og velholdt med nylig service og ny registerreim, slik at kjøperen tross alder og kjørelengde ikke hadde grunn til å vente et registerreimhavari. Forhandlerens påstand om at kjøperen hadde oversett et varsellys, var ikke sannsynliggjort.
+- **Utfall:** heving av kjøpet og erstatning for undersøkelse og bilberging
+- **Fakta:** registerreimhavari med motorskade; om lag halvannen måned etter kjøpet; 14 år, 201 000 km, 61 729 kr; opplyst: `ingenting`; lov: før_2024; formodningsregelen
 
-- **Sak:** #3086 · FKU-2026-104368 · 2026-02-02 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-104368.pdf)
-- **Til kjøperen:** I 2026 fikk kjøperen av en Renault Twizy medhold etter å ha klaget på motorfeil om lag ni måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 63 000 kr.
+**#2235 · FKU-2021-8891 · 2022-11-03** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022088606&dokid=772157&versjon=1&variant=A&)
 
-**6 måneder til 2 år, 14 år gammel bil** (`motor/middels`)
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`
+- **Begrunnelse:** Utvalget la vekt på at verkstedet hadde konkludert med at turboskaden var en følge av en tidligere reparasjon, og fant derfor at feilen skyldtes annet enn slitasje og bilens alder. En slik skade var ikke påregnelig ved kjøpet, selv om bilen var gammel, langt kjørt og solgt «som den er».
+- **Utfall:** erstatning redusert til det utbedringen ville kostet forhandleren, med fradrag for standardheving
+- **Fakta:** skadet turbo etter en tidligere reparasjon; om lag åtte måneder etter kjøpet; 14 år, 136 000 km, 37 000 kr; opplyst: `som_den_er`; lov: før_2024
 
-> En Volvo V50 som var 14 år gammel og hadde gått 136 000 km, ble kjøpt hos forhandler og fikk en skadet turbo sju til åtte måneder etter kjøpet. Utvalget kom til at turboskaden, som verkstedet knyttet til en tidligere reparasjon, var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.
+**#465 · FKU-2017-56 · 2017-08-24** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017007533&dokid=313350&versjon=1&variant=A&)
 
-- **Sak:** #2235 · FKU-2021-8891 · 2022-11-03 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022088606&dokid=772157&versjon=1&variant=A&)
-- **Til kjøperen:** I 2022 fikk kjøperen av en Volvo V50 delvis medhold etter å ha klaget på motorfeil sju til åtte måneder etter kjøpet. Utvalget tilkjente 10 000 kr.
-
-**mer enn 2 år, 2 år gammel bil** (`motor/sen`)
-
-> En Audi Q7 3.0 TDI som var 2 år gammel og hadde gått 50 000 km, ble kjøpt hos forhandler og fikk motorhavari fordi en innsprøytningsdyse hadde sprengt ut fra festet, om lag to og et halvt år etter kjøpet. Utvalget kom til at feilen med festet til innsprøytningsdysen var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.
-
-- **Sak:** #465 · FKU-2017-56 · 2017-08-24 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017007533&dokid=313350&versjon=1&variant=A&)
-- **Til kjøperen:** I 2017 fikk kjøperen av en Audi Q7 3.0 TDI delvis medhold etter å ha klaget på motorfeil om lag to og et halvt år etter kjøpet. Utvalget tilkjente 40 000 kr.
-
-Uten lignende sak: sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_upaaregnelig`, `rapport_arsak`, `forhandler_annen_arsak`
+- **Begrunnelse:** Utvalget la avgjørende vekt på at et merkeverksted hadde funnet at feilen var at festet til en innsprøytningsdyse hadde gitt etter, at feilen ikke var kjent for verkstedet, og at verkstedet ut fra bilens historikk anså den som en monteringsfeil fra fabrikken. Forhandlerens generelle forklaringer på hvorfor dyser svikter, var ikke relevante, og det var ikke grunnlag for at feilen skyldtes bruk og slitasje.
+- **Utfall:** erstatning for reparasjonen med skjønnsmessig fradrag for standardheving
+- **Fakta:** motorhavari etter at en innsprøytningsdyse løsnet fra festet; om lag to og et halvt år etter kjøpet; 2 år, 50 000 km, 770 000 kr; opplyst: `ingenting`; lov: før_2024
 
 ### Elektrisk
 
-**innen 6 måneder, 4 år gammel bil** (`elektrisk/rask`)
+**#3053 · FKU-2026-137555 · 2026-03-11** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-137555.pdf)
 
-> En Volkswagen Golf som var 4 år gammel og hadde gått 35 500 km, ble kjøpt hos forhandler og fikk en elektrisk feil i en sensor til klimaanlegget om lag fem måneder etter kjøpet. Utvalget kom til at feilen i sensoren var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+- **Spørsmål:** opplysning, levering
+- **Vekt:** `tidligere_skade_ikke_opplyst`, `rapport_arsak`, `dokument_for_salg`
+- **Begrunnelse:** Utvalget la vekt på at en sakkyndig hadde funnet at ledninger til en sensor var kuttet og loddet sammen igjen før kjøperens eiertid, og at kvitteringer for tidligere arbeid viste at problemene hadde gått igjen. Dette var forhold forhandleren som profesjonell part burde kjenne til og opplyse om.
+- **Utfall:** heving av kjøpet og erstatning for reparasjon og sakkyndig uttalelse
+- **Fakta:** feil i det elektriske anlegget etter tidligere reparasjoner som ikke var faglig utført; rett under tre måneder etter kjøpet; 16 år, 205 000 km, 81 729 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-- **Sak:** #1869 · FKU-2022-10322 · 2023-06-01 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023030866&dokid=902671&versjon=1&variant=A&)
-- **Til kjøperen:** I 2023 fikk kjøperen av en Volkswagen Golf medhold etter å ha klaget på elektrisk feil om lag fem måneder etter kjøpet. Utvalget tilkjente 11 149 kr.
+**#1525 · FKU-2024-3868 · 2025-01-13** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024064380&dokid=1248687&versjon=2&variant=A&)
 
-**innen 6 måneder, 16 år gammel bil** (`elektrisk/rask`)
+- **Spørsmål:** forventning, levering
+- **Vekt:** `egen_bruk`
+- **Begrunnelse:** Utvalget la vekt på at verkstedet hadde funnet en intern elektrisk feil i styreenheten for ryggekameraet som ikke skyldtes manglende programvareoppdatering, og at feilens karakter tilsa at den verken var en brukerfeil eller skyldtes ytre forhold.
+- **Utfall:** prisavslag satt lik kostnaden ved å sette inn en brukt styreenhet, og erstatning for undersøkelsen
+- **Fakta:** intern elektrisk feil i styreenheten for ryggekameraet; over fire år etter kjøpet; 1 år, 12 000 km, 269 000 kr; opplyst: `ingenting`; lov: før_2024
 
-> En Nissan X-Trail som var 16 år gammel og hadde gått 205 000 km, ble kjøpt hos forhandler og fikk feil i det elektriske anlegget om lag tre måneder etter kjøpet. Utvalget kom til at feilene i det elektriske anlegget var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.
+**#1869 · FKU-2022-10322 · 2023-06-01** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023030866&dokid=902671&versjon=1&variant=A&)
 
-- **Sak:** #3053 · FKU-2026-137555 · 2026-03-11 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-137555.pdf)
-- **Til kjøperen:** I 2026 fikk kjøperen av en Nissan X-Trail delvis medhold etter å ha klaget på elektrisk feil om lag tre måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 81 729 kr, og tilkjente i tillegg 10 876 kr i erstatning.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_upaaregnelig`, `rapport_arsak`
+- **Begrunnelse:** Utvalget la vekt på at verkstedet hadde uttalt at feilen var en elektrisk feil i sensoren som ikke skyldtes slitasje, og at den ikke var påregnelig for en bil med denne alderen og kjørelengden. Feilen ble derfor ansett som en fabrikasjonsfeil.
+- **Utfall:** prisavslag satt lik utbedringskostnadene etter pristilbud
+- **Fakta:** intern elektrisk feil i en sensor til klimaanlegget; om lag fem måneder etter kjøpet; 4 år, 35 500 km, 169 000 kr; opplyst: `ingenting`; lov: før_2024; formodningsregelen
 
-**6 måneder til 2 år, 7 år gammel bil** (`elektrisk/middels`)
+**#2837 · FKU-2021-2759 · 2021-03-24** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021017255&dokid=359852&versjon=1&variant=A&)
 
-> En Mercedes-Benz Sprinter som var 7 år gammel og hadde gått rundt 136 000 km, ble kjøpt hos forhandler og fikk påvist feil på varsellys og parkeringsvarmer i overkant av sju måneder etter kjøpet. Utvalget kom til at feilene var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `km_etter_kjop`, `positiv_beskrivelse`
+- **Begrunnelse:** Utvalget la vekt på at feilene ble påvist etter relativt kort kjørelengde, slik at de sannsynligvis forelå ved kjøpet, og at annonsen beskrev bilen som godt vedlikeholdt og nevnte utstyret som sviktet. Kjøperen kunne derfor forvente at bilen ikke hadde et umiddelbart utbedringsbehov av denne størrelsen, selv om den var solgt «som forevist».
+- **Utfall:** prisavslag fastsatt skjønnsmessig
+- **Fakta:** feil på parkeringsvarmer og varsellys; i overkant av sju måneder etter kjøpet; 7 år, 136 000 km, 147 000 kr; opplyst: `som_den_er`; lov: før_2024
 
-- **Sak:** #2837 · FKU-2021-2759 · 2021-03-24 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021017255&dokid=359852&versjon=1&variant=A&)
-- **Til kjøperen:** I 2021 fikk kjøperen av en Mercedes-Benz Sprinter delvis medhold etter å ha klaget på elektrisk feil i overkant av sju måneder etter kjøpet. Utvalget tilkjente 25 000 kr.
+**#1355 · FTU-2014-164 · 2014-04-11** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2014006347&dokid=151734&versjon=10&variant=P&)
 
-**6 måneder til 2 år, 8 år gammel bil** (`elektrisk/middels`)
-
-> En Audi A6 3.0 TDI Q som var 8 år gammel og hadde gått 118 642 km, ble kjøpt hos forhandler og stoppet i overkant av 8 måneder etter kjøpet fordi vann hadde trengt inn i el-boksen og skadet ledningsnettet. Utvalget kom til at skadene på ledningsnettet og motorstyreenheten var en mangel forhandleren var ansvarlig for, og kjøperen fikk dekket reparasjonene.
-
-- **Sak:** #1355 · FTU-2014-164 · 2014-04-11 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2014006347&dokid=151734&versjon=10&variant=P&)
-- **Til kjøperen:** I 2014 fikk kjøperen av en Audi A6 3.0 TDI Q medhold etter å ha klaget på elektrisk feil i overkant av 8 måneder etter kjøpet. Utvalget tilkjente 62 562 kr.
-
-**mer enn 2 år, 1 år gammel bil** (`elektrisk/sen`)
-
-> En Kia Niro som var 1 år gammel og hadde gått 12 000 km, ble kjøpt hos forhandler og fikk en elektrisk feil i styreenheten for ryggekameraet over fire år etter kjøpet. Utvalget kom til at feilen i styreenheten for ryggekameraet var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
-
-- **Sak:** #1525 · FKU-2024-3868 · 2025-01-13 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024064380&dokid=1248687&versjon=2&variant=A&)
-- **Til kjøperen:** I 2025 fikk kjøperen av en Kia Niro medhold etter å ha klaget på elektrisk feil over fire år etter kjøpet. Utvalget tilkjente 45 836 kr.
-
-Uten lignende sak: sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `avslo_tilbud`
+- **Begrunnelse:** Utvalget la vekt på at verkstedet hadde funnet at motorstoppet skyldtes vanninntrenging i el-boksen som følge av at bilen var chipet, og at skadens omfang tilsa at den ikke kunne ha oppstått etter kjøpet. Forhandleren hadde avvist ansvar og verken tilbudt eller utført retting.
+- **Utfall:** erstatning og prisavslag satt lik de dokumenterte reparasjonskostnadene
+- **Fakta:** vanninntrenging i el-boksen som skadet ledningsnettet og motorstyreenheten; i overkant av åtte måneder etter kjøpet; 8 år, 118 642 km, 315 000 kr; opplyst: `ingenting`; lov: før_2024
 
 ### Understell og hjul
 
-**innen 6 måneder, 14 år gammel bil** (`understell/rask`)
+**#3067 · FKU-2026-77134 · 2026-03-11** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-77134.pdf)
 
-> En Nissan Qashqai som var 14 år gammel og hadde gått 178 800 km, ble kjøpt hos forhandler og fikk påvist feil på understellet, bremsene og flere andre deler om lag fire måneder etter kjøpet. Utvalget kom til at feilene var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.
+- **Spørsmål:** opplysning, levering
+- **Vekt:** `bruksstans_sikkerhet`
+- **Begrunnelse:** Utvalget la vekt på at en test fire måneder etter kjøpet viste en rekke feil og at bilen var trafikkfarlig, og at forhandleren burde ha undersøkt bilen før salget og opplyst kjøperen om tilstanden. Feilene viste seg innen seks måneder, og forhandleren hadde ikke sannsynliggjort at de oppsto senere.
+- **Utfall:** heving av kjøpet
+- **Fakta:** slitte bremser, virkningsløs parkeringsbrems, korrosjon i bærearmene og flere andre feil; innen fire måneder etter kjøpet; 14 år, 178 800 km, 59 729 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-- **Sak:** #3067 · FKU-2026-77134 · 2026-03-11 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-77134.pdf)
-- **Til kjøperen:** I 2026 fikk kjøperen av en Nissan Qashqai medhold etter å ha klaget på feil på understellet om lag fire måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 59 729 kr.
+**#3170 · FKU-2025-140833 · 2025-05-21** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-140833.pdf)
 
-**6 måneder til 2 år, 4 år gammel bil** (`understell/middels`)
-
-> En Tesla Model S som var 4 år gammel og hadde gått 61 200 km, ble kjøpt hos forhandler og fikk en sprukket tannstang i styringen om lag 22 måneder etter kjøpet. Utvalget kom til at feilen med tannstangen var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.
-
-- **Sak:** #3170 · FKU-2025-140833 · 2025-05-21 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-140833.pdf)
-- **Til kjøperen:** I 2025 fikk kjøperen av en Tesla Model S medhold etter å ha klaget på feil på understellet om lag 22 måneder etter kjøpet. Utvalget tilkjente 50 363 kr.
-
-Uten lignende sak: rask · yngre, sen · yngre, sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `rapport_upaaregnelig`, `slitedel`
+- **Begrunnelse:** Utvalget la vekt på at en sakkyndig hadde funnet en sprekk i tannstangen med materialtretthet eller produksjonsfeil som sannsynlig årsak, og at delen er ment å vare vesentlig lengre. Feilen skyldtes derfor ikke normal slitasje eller forhold etter leveringen.
+- **Utfall:** erstatning for utbedringskostnadene og utgiftene til sakkyndige uttalelser
+- **Fakta:** sprekk i tannstangen i styringen; om lag 22 måneder etter kjøpet; 4 år, 61 200 km, 545 000 kr; opplyst: `ingenting`; lov: før_2024
 
 ### Kilometer og servicehistorikk
 
-**innen 6 måneder, 5 år gammel bil** (`km_service/rask`)
+**#3040 · FKU-2026-28973 · 2026-04-29** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-28973.pdf)
 
-> En Volvo V60 som var 5 år gammel og hadde gått 35 000 km, ble kjøpt hos forhandler og viste seg om lag seks uker etter kjøpet ikke å ha fått service etter fabrikkens program, selv om annonsen sa at serviceprogrammet var fulgt. Utvalget kom til at den uriktige opplysningen om service var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+- **Spørsmål:** opplysning
+- **Vekt:** `uriktig_service_arbeid_utstyr`, `verditap_dokumentert`
+- **Begrunnelse:** Utvalget la vekt på at annonsen opplyste om full servicehistorikk, mens et testsenter fant at service etter bilens intervaller ikke var fulgt. Prisavslaget ble satt etter en uttalelse fra en forhandler om hvor mye den manglende servicehistorikken trakk ned innbytteverdien.
+- **Utfall:** prisavslag satt lik verditapet en forhandler anslo ved innbytte
+- **Fakta:** ufullstendig servicehistorikk; om lag 17 måneder etter kjøpet; 5 år, 88 000 km, 500 000 kr; opplyst: `som_den_er`; lov: før_2024
 
-- **Sak:** #3081 · FKU-2026-73613 · 2026-02-18 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-73613.pdf)
-- **Til kjøperen:** I 2026 fikk kjøperen av en Volvo V60 delvis medhold etter å ha klaget på uriktige opplysninger om kilometerstand eller service om lag seks uker etter kjøpet. Utvalget tilkjente 7 000 kr.
+**#3081 · FKU-2026-73613 · 2026-02-18** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-73613.pdf)
 
-**innen 6 måneder, 10 år gammel bil** (`km_service/rask`)
+- **Spørsmål:** opplysning
+- **Vekt:** `uriktig_service_arbeid_utstyr`
+- **Begrunnelse:** Utvalget la vekt på at annonsen sa at serviceprogrammet var fulgt etter fabrikkens retningslinjer, noe som ga inntrykk av komplett servicehistorikk, mens servicehistorikken ikke var komplett. Forhandleren hadde ikke dokumentert at de manglende servicene var unødvendige.
+- **Utfall:** prisavslag fastsatt skjønnsmessig
+- **Fakta:** ufullstendig servicehistorikk; om lag fem uker etter kjøpet; 5 år, 35 000 km, 382 000 kr; opplyst: `ingenting`; lov: før_2024; formodningsregelen
 
-> En Volkswagen Tiguan som var ti år gammel og hadde gått 126 000 km, ble kjøpt hos forhandler med opplysning om at registerreimen var skiftet og at det nylig var tatt stor service, og om lag fire måneder etter kjøpet viste en NAF-test at registerreimen var ti år gammel. Utvalget kom til at registerreimen som ikke var skiftet og den manglende dokumentasjonen på service var mangler forhandleren var ansvarlig for, og kjøperen fikk prisavslag og erstatning.
+**#3141 · FKU-2025-115321 · 2025-09-17** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-115321.pdf)
 
-- **Sak:** #3141 · FKU-2025-115321 · 2025-09-17 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-115321.pdf)
-- **Til kjøperen:** I 2025 fikk kjøperen av en Volkswagen Tiguan delvis medhold etter å ha klaget på uriktige opplysninger om service og skifte av registerreim tre til fire måneder etter kjøpet. Utvalget tilkjente 22 315 kr.
+- **Spørsmål:** opplysning
+- **Vekt:** `uriktig_service_arbeid_utstyr`
+- **Begrunnelse:** Utvalget la vekt på at annonsen sa at registerreimen var skiftet og at det nylig var tatt stor service, mens en test viste at registerreimen var like gammel som bilen og dokumentasjon på den store servicen manglet. Forhandleren var nærmest til å legge frem dokumentasjon på arbeidet.
+- **Utfall:** prisavslag fastsatt skjønnsmessig og erstatning for skifte av registerreimen, uten deler kjøperen ikke hadde krav på
+- **Fakta:** registerreimen var ikke skiftet, og dokumentasjon på stor service manglet; om lag fire måneder etter kjøpet; 10 år, 126 000 km, 199 995 kr; opplyst: `ingenting`; lov: før_2024; formodningsregelen
 
-**6 måneder til 2 år, 5 år gammel bil** (`km_service/middels`)
+**#1941 · FKU-2021-16984 · 2023-04-19** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023009979&dokid=853932&versjon=2&variant=A&)
 
-> En Volkswagen Golf som var 5 år gammel og hadde gått 88 000 km, ble kjøpt hos forhandler med opplyst full servicehistorikk, og om lag 17 måneder etter kjøpet viste det seg at ikke alle servicer var utført. Utvalget kom til at den manglende servicehistorikken var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+- **Spørsmål:** opplysning
+- **Vekt:** `uriktig_service_arbeid_utstyr`
+- **Begrunnelse:** Utvalget la vekt på at opplysningen om servicehistorikk i annonsen måtte forstås slik at serviceintervallene var overholdt, mens servicene ikke var utført etter fabrikkens intervaller.
+- **Utfall:** prisavslag fastsatt skjønnsmessig
+- **Fakta:** servicehistorikken fulgte ikke fabrikkens intervaller; om lag to år og fem måneder etter kjøpet; 2 år, 66 850 km, 214 900 kr; opplyst: `ingenting`; lov: før_2024
 
-- **Sak:** #3040 · FKU-2026-28973 · 2026-04-29 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-28973.pdf)
-- **Til kjøperen:** I 2026 fikk kjøperen av en Volkswagen Golf delvis medhold etter å ha klaget på at ikke alle servicer var utført selv om annonsen opplyste om full servicehistorikk, om lag 17 måneder etter kjøpet. Utvalget kom til at den manglende servicehistorikken var en mangel og satte prisavslaget til 50 000 kr.
+**#1992 · FKU-2022-2868 · 2023-03-22** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023006127&dokid=845007&versjon=1&variant=A&)
 
-**6 måneder til 2 år, 8 år gammel bil** (`km_service/middels`)
+- **Spørsmål:** opplysning
+- **Vekt:** `uriktig_service_arbeid_utstyr`
+- **Begrunnelse:** Utvalget la vekt på at annonsen opplyste om komplett servicehefte, slik at kjøperen hadde grunn til å regne med at produsentens serviceprogram var fulgt, mens serviceheftet viste at det ikke var anmerket service på flere år og forhandleren ikke dokumenterte annet. Opplysninger om servicehistorikk er sentrale ved kjøp av bruktbil og må antas å ha virket inn på kjøpet.
+- **Utfall:** prisavslag fastsatt skjønnsmessig i mangel av dokumentasjon på verditapet
+- **Fakta:** uriktig opplysning i annonsen om komplett servicehefte; drøyt halvannet år etter kjøpet; 10 år, 106 500 km, 100 000 kr; opplyst: `ingenting`; lov: før_2024
 
-> En Ford Focus som var 8 år gammel og hadde gått 138 940 km, ble kjøpt hos forhandler med annonsen «Service historikk fulgt», og om lag 14 måneder etter kjøpet klaget kjøperen på at service ikke var fulgt. Utvalget kom til at de uriktige opplysningene om servicehistorikken var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+**#10 · FKU-2021-9897 · 2023-02-01** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023000879&dokid=832691&versjon=1&variant=A&)
 
-- **Sak:** #10 · FKU-2021-9897 · 2023-02-01 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023000879&dokid=832691&versjon=1&variant=A&)
-- **Til kjøperen:** I 2023 fikk kjøperen av en Ford Focus delvis medhold etter å ha klaget på uriktige opplysninger om kilometerstand eller service om lag 14 måneder etter kjøpet. Utvalget tilkjente 10 000 kr.
+- **Spørsmål:** opplysning
+- **Vekt:** `uriktig_service_arbeid_utstyr`, `rettet_for_kjop`
+- **Begrunnelse:** Utvalget la vekt på at annonsens opplysning om at servicehistorikken var fulgt, ga uttrykk for at serviceintervallene var overholdt, mens servicene i serviceheftet ikke fulgte intervallene. Et generelt forbehold om feil i annonsen var ikke tilstrekkelig til å rette opplysningen. Kjøperen hadde etter annonsen ingen oppfordring til å undersøke serviceheftet nærmere.
+- **Utfall:** prisavslag fastsatt skjønnsmessig
+- **Fakta:** servicehistorikken var ikke fulgt slik annonsen opplyste; om lag 14 måneder etter kjøpet; 8 år, 138 940 km, 65 000 kr; opplyst: `ingenting`; lov: før_2024
 
-**mer enn 2 år, 2 år gammel bil** (`km_service/sen`)
+**#2475 · FKU-2021-4002 · 2022-04-27** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022028900&dokid=642081&versjon=1&variant=A&)
 
-> En Volkswagen e-Golf som var 2 år gammel og hadde gått 66 850 km, ble kjøpt hos forhandler og viste seg om lag to år og fem måneder etter kjøpet ikke å ha fått service etter fabrikkens intervaller, selv om annonsen oppga servicehistorikk. Utvalget kom til at de uriktige opplysningene om servicehistorikken var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+- **Spørsmål:** opplysning
+- **Vekt:** `uriktig_service_arbeid_utstyr`
+- **Begrunnelse:** Utvalget la vekt på at annonsen opplyste om nylig bytte av registerreim og vannpumpe, at en sakkyndig ikke fant holdepunkter for at byttet var gjort, og at forhandleren ikke hadde lagt frem dokumentasjon på arbeidet. Opplysningen var derfor uriktig og hadde innvirket på kjøpet.
+- **Utfall:** prisavslag fastsatt skjønnsmessig ut fra bilens alder og kilometerstand, og erstatning for utgiftene til NAF-test
+- **Fakta:** uriktige opplysninger om bytte av registerreim og vannpumpe; knapt en måned etter kjøpet, ved NAF-test; 31 år, 306 000 km, 47 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-- **Sak:** #1941 · FKU-2021-16984 · 2023-04-19 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023009979&dokid=853932&versjon=2&variant=A&)
-- **Til kjøperen:** I 2023 fikk kjøperen av en Volkswagen e-Golf delvis medhold etter å ha klaget på uriktige opplysninger om kilometerstand eller service om lag to år og fem måneder etter kjøpet. Utvalget tilkjente 5 000 kr.
+**#357 · FKU-2017-805 · 2017-11-30** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017019947&dokid=326900&versjon=1&variant=A&)
 
-Uten lignende sak: sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+- **Spørsmål:** opplysning
+- **Vekt:** ingen
+- **Begrunnelse:** Utvalget la vekt på at det var sannsynliggjort at kilometertelleren var manipulert, at bilens reelle kilometerstand var høyst uklar og utgjorde et salgslyte, og at kilometerstanden er en sentral opplysning ved bruktbilkjøp der avviket måtte anses betydelig.
+- **Utfall:** prisavslag fastsatt skjønnsmessig etter en helhetsvurdering
+- **Fakta:** tilbakestilt kilometerteller med et betydelig avvik; innen fem måneder etter kjøpet; 24 år, 201 500 km, 91 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
 ### Rust
 
-**innen 6 måneder, 3 år gammel bil** (`rust/rask`)
+**#1579 · FKU-2024-81 · 2024-09-18** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024047333&dokid=1217790&versjon=1&variant=A&)
 
-> En Skoda Superb som var tre år gammel og hadde gått 136 500 km, ble kjøpt hos forhandler, og kjøperen oppdaget rust rundt skiltlysene bak dagen etter kjøpet. Utvalget kom til at rusten var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+- **Spørsmål:** levering
+- **Vekt:** `forhandler_erkjente`, `rust_baerende`
+- **Begrunnelse:** Utvalget la vekt på at verkstedenes uttalelser, at rustskader oppstår over tid og at feilen ble konstatert kort tid etter overtakelsen, viste at skadene forelå ved leveringen, og at forhandleren hadde erkjent mangelen ved å gjennomføre et utbedringsforsøk for egen regning uten forbehold. Heving ble begrunnet med at skadene i bærende struktur var så alvorlige at reparasjon ville koste mer enn bilen var verdt.
+- **Utfall:** heving av kjøpet
+- **Fakta:** omfattende rust i bakre hjulbuer, hjulhus og dempertårn; om lag tre måneder etter kjøpet; 18 år, 114 000 km, 57 000 kr; opplyst: `ingenting`; lov: før_2024; formodningsregelen
 
-- **Sak:** #3294 · FKU-2019-748 · 2020-02-26 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2020001273&dokid=433590&versjon=1&variant=A&)
-- **Til kjøperen:** I 2020 fikk kjøperen av en Skoda Superb delvis medhold etter å ha klaget på rust få dager etter kjøpet. Utvalget tilkjente 10 000 kr.
+**#1689 · FKU-2023-10066 · 2024-02-05** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023109660&dokid=1089894&versjon=2&variant=A&)
 
-**innen 6 måneder, 7 år gammel bil** (`rust/rask`)
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_upaaregnelig`
+- **Begrunnelse:** Utvalget la vekt på uttalelser fra to verksteder om at rusten var til stede ved kjøpet og var upåregnelig sett hen til bilens alder og kilometerstand.
+- **Utfall:** erstatning for reparasjonen av bremsene og prisavslag satt lik utbedringskostnadene for dørene
+- **Fakta:** rust på bremsecalipere, bremserør og nedre kant av dørene; om lag fire måneder etter kjøpet; 7 år, 179 800 km, 540 500 kr; opplyst: `ingenting`; lov: før_2024; formodningsregelen
 
-> En Toyota Land Cruiser som var sju og et halvt år gammel og hadde gått 179 800 km, ble kjøpt hos forhandler og fikk påvist rust på bremsecalipere, bremserør og dører omtrent fire måneder etter kjøpet. Utvalget kom til at rusten var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning og prisavslag.
+**#2102 · FKU-2021-17769 · 2023-01-18** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022109676&dokid=819450&versjon=1&variant=A&)
 
-- **Sak:** #1689 · FKU-2023-10066 · 2024-02-05 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023109660&dokid=1089894&versjon=2&variant=A&)
-- **Til kjøperen:** I 2024 fikk kjøperen av en Toyota Land Cruiser delvis medhold etter å ha klaget på rust omtrent fire måneder etter kjøpet. Utvalget tilkjente 65 050 kr.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `tidligere_skade_ikke_opplyst`, `rust_baerende`
+- **Begrunnelse:** Utvalget la vekt på omfanget av rusten, at skum i bærende deler var overmalt, og at bilens historikk ble bekreftet av en tidligere eier, slik at skummet og rusten var der ved overtakelsen. Omfanget gikk betydelig ut over det kjøperen hadde grunn til å forvente, også for en gammel og langt kjørt bil som ikke var solgt «som den er».
+- **Utfall:** heving av kjøpet
+- **Fakta:** for stor korrosjon i rammebjelke og innerskjermer, reparert med overmalt skum; om lag 17 måneder etter kjøpet; 17 år, 233 000 km, 75 000 kr; opplyst: `ingenting`; lov: før_2024
 
-**6 måneder til 2 år, 6 år gammel bil** (`rust/middels`)
+**#2612 · FKU-2021-4203 · 2021-12-01** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021095135&dokid=537047&versjon=1&variant=A&)
 
-> En Mazda CX-5 2.2DESport som var 6 år gammel og hadde gått 62 600 km, ble kjøpt hos forhandler og fikk rustbobler på bakluken i overkant av sju måneder etter kjøpet. Utvalget kom til at rusten på bakluken var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `rust_baerende`, `bruksstans_sikkerhet`
+- **Begrunnelse:** Utvalget la vekt på at sakkyndige uttalte at rusten hadde oppstått over tid og ikke kunne ha kommet etter kjøpet, og at skadene, med gjennomrustede hull og komponenter som var rustet løs, var så omfattende at de ga en trafikksikkerhetsrisiko og nesten kostet bilens verdi å utbedre. Det gikk ut over det kjøperen måtte regne med, selv om alder og kjørelengde tilsa noe rust og forhandleren hadde opplyst om rustskader.
+- **Utfall:** heving av kjøpet
+- **Fakta:** omfattende rust i ramme, tverrbjelke og bremserør med gjennomrustede hull; om lag halvannet år etter kjøpet, ved EU-kontroll; 16 år, 191 397 km, 80 000 kr; opplyst: `feilen_opplyst`; lov: før_2024
 
-- **Sak:** #3387 · FKU-2019-432 · 2019-06-27 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2019008533&dokid=410376&versjon=1&variant=A&)
-- **Til kjøperen:** I 2019 fikk kjøperen av en Mazda CX-5 2.2DESport delvis medhold etter å ha klaget på rust i overkant av sju måneder etter kjøpet. Utvalget tilkjente 17 205 kr.
+**#2694 · FKU-2021-4419 · 2021-10-13** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021075274&dokid=489776&versjon=1&variant=A&)
 
-**6 måneder til 2 år, 17 år gammel bil** (`rust/middels`)
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `rust_baerende`
+- **Begrunnelse:** Utvalget la vekt på at en verkstedrapport uttalte at de store rustskadene i bærende deler hadde kommet over tid og var der da kjøperen kjøpte bilen, slik at rusten kunne knyttes til leveringen. Selv om noe rust må påregnes på en så gammel bil, gikk skader av dette omfanget ut over det kjøperen hadde grunn til å forvente når forhandleren bare hadde opplyst om kosmetiske feil og dårlige bremser.
+- **Utfall:** heving av kjøpet
+- **Fakta:** store rustskader i bærende deler av for- og bakstilling; nesten åtte måneder etter kjøpet, ved periodisk kontroll; 11 år, 186 000 km, 82 219 kr; opplyst: `ingenting`; lov: før_2024
 
-> En Mitsubishi Pajero som var 17 år gammel og hadde gått 233 000 km, ble kjøpt hos forhandler og fikk påvist for stor korrosjon i bærende deler om lag halvannet år etter kjøpet. Utvalget kom til at rusten var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.
+**#3294 · FKU-2019-748 · 2020-02-26** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2020001273&dokid=433590&versjon=1&variant=A&)
 
-- **Sak:** #2102 · FKU-2021-17769 · 2023-01-18 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022109676&dokid=819450&versjon=1&variant=A&)
-- **Til kjøperen:** I 2023 fikk kjøperen av en Mitsubishi Pajero delvis medhold etter å ha klaget på rust om lag halvannet år etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake kjøpesummen.
+- **Spørsmål:** opplysning, levering
+- **Vekt:** `skjult_feil`
+- **Begrunnelse:** Utvalget la vekt på at rusten ble oppdaget så kort tid etter leveringen at den sannsynligvis var der ved kjøpet, og at den ikke var lett å oppdage ved en rask undersøkelse. Forhandleren burde som profesjonell part kjenne til rustskadene og opplyse om dem.
+- **Utfall:** prisavslag fastsatt skjønnsmessig
+- **Fakta:** rust rundt skiltlysene på bakluken; dagen etter kjøpet; 3 år, 136 500 km, 285 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-**mer enn 2 år, 3 år gammel bil** (`rust/sen`)
+**#3387 · FKU-2019-432 · 2019-06-27** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2019008533&dokid=410376&versjon=1&variant=A&)
 
-> En Volkswagen Passat som var tre år gammel og hadde gått 42 855 km, ble kjøpt hos forhandler og fikk rust nærmere tre år etter kjøpet. Utvalget kom til at rusten var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `skjult_feil`
+- **Begrunnelse:** Utvalget la vekt på at en sakkyndig etter undersøkelse med lupe fant at rustboblene i hovedsak kom fra innsiden, fra en urenhet i platen eller slipp i sinkbelegget, og at et verksted opplyste at slik feil ikke kan oppdages før lakken begynner å boble. Rusten skyldtes derfor mest sannsynlig en latent feil som forelå ved leveringen.
+- **Utfall:** prisavslag satt lik kostnaden ved ny bakluke
+- **Fakta:** rustbobler på bakluken fra innsiden av platen; i overkant av sju måneder etter kjøpet; 6 år, 62 600 km, 247 000 kr; opplyst: `ingenting`; lov: før_2024
 
-- **Sak:** #606 · FKU-2016-1844 · 2017-04-25 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017001606&dokid=288585&versjon=1&variant=A&)
-- **Til kjøperen:** I 2017 fikk kjøperen av en Volkswagen Passat delvis medhold etter å ha klaget på rust om lag tre år etter kjøpet. Utvalget tilkjente 82 650 kr.
+**#224 · FKU-2018-809 · 2018-12-05** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2018019439&dokid=382372&versjon=1&variant=A&)
 
-Uten lignende sak: sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+- **Spørsmål:** opplysning, levering
+- **Vekt:** `positiv_beskrivelse`, `rapport_arsak`, `rettet_for_kjop`
+- **Begrunnelse:** Utvalget la vekt på at annonsen, som var en del av avtalegrunnlaget, opplyste at bilen var fri for rust, mens en verkstedrapport sannsynliggjorde at bilen ved levering hadde store rustskader og en feil utbedret kollisjonsskade som førte til vannlekkasje. Forhandleren hadde verken rettet opplysningen før kjøpet eller sannsynliggjort at den ikke hadde virket inn.
+- **Utfall:** heving av kjøpet og erstatning for sakkyndig undersøkelse
+- **Fakta:** omfattende rust i hjulhus og gulv og en feil utbedret kollisjonsskade som ga vannlekkasje; om lag fire måneder etter kjøpet; 28 år, 166 000 km, 215 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
+
+**#438 · FKU-2017-217 · 2017-09-21** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017006830&dokid=297713&versjon=1&variant=A&)
+
+- **Spørsmål:** forventning
+- **Vekt:** `positiv_beskrivelse`, `rust_baerende`, `bruksstans_sikkerhet`
+- **Begrunnelse:** Utvalget la vekt på at bilen var EU-godkjent uten feil to dager etter kjøpet, slik at kjøperen hadde en berettiget forventning om at den ikke hadde umiddelbare reparasjonsbehov, og at kontrollen to måneder senere påviste alvorlig rust på bremserør, bærearmer og bakaksel og avskiltet bilen som trafikkfarlig.
+- **Utfall:** heving av kjøpet og erstatning for bortkastede utgifter
+- **Fakta:** alvorlig rust på bremserør, bærearmer og bakaksel; om lag to måneder etter kjøpet, ved kontroll hos Statens vegvesen; 22 år, 260 841 km, 49 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
+
+**#606 · FKU-2016-1844 · 2017-04-25** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017001606&dokid=288585&versjon=1&variant=A&)
+
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_upaaregnelig`
+- **Begrunnelse:** Utvalget la vekt på at en sakkyndig hadde uttalt at skadene ikke skyldtes ytre påvirkning og var unormale sett i forhold til alder og kjørelengde. Selv om uttalelsen var kort og det var gått nær tre år, fant utvalget det mer sannsynlig at rusten skyldtes en svakhet som forelå ved leveringen, enn forhold på kjøperens side.
+- **Utfall:** prisavslag satt lik utbedringskostnadene
+- **Fakta:** rust i panser, tak, dører og bakskjerm; nær tre år etter kjøpet; 3 år, 42 855 km, 344 900 kr; opplyst: `ingenting`; lov: før_2024
+
+**#967 · FTU-2015-1829 · 2016-03-31** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2016002708&dokid=217840&versjon=2&variant=P&)
+
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rust_baerende`, `bruksstans_sikkerhet`, `positiv_beskrivelse`
+- **Begrunnelse:** Utvalget la vekt på at EU-kontrollen sannsynliggjorde at bilen allerede ved kjøpet hadde alvorlige rustskader i understellet som gjorde den trafikkfarlig, og at annonsen ga kjøperen grunn til å tro at reparasjonsbehovet gjaldt startvanskene og at bilen ellers var i normal stand. Det lå da ikke innenfor det påregnelige, selv for et reparasjonsobjekt, at bilen ikke kunne godkjennes uten uforholdsmessige kostnader.
+- **Utfall:** heving av kjøpet med skjønnsmessig fradrag for bruken
+- **Fakta:** alvorlig korrosjon i understell og bærende deler og korroderte bremserør; om lag åtte måneder etter kjøpet, ved EU-kontroll; 17 år, 287 000 km, 17 000 kr; opplyst: `som_den_er`; lov: før_2024
 
 ### Bremser
 
-**6 måneder til 2 år, 37 år gammel bil** (`bremser/middels`)
+**#2184 · FKU-2021-12654 · 2022-11-30** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022099685&dokid=796852&versjon=2&variant=A&)
 
-> En Porsche 911 som var 37 år gammel og hadde gått 143 000 km, ble kjøpt hos forhandler og fikk de uoriginale bremsene underkjent ved EU-kontroll sju til åtte måneder etter kjøpet. Utvalget kom til at de ikke-godkjente bremsene var en mangel forhandleren var ansvarlig for, og kjøperen fikk dekket reparasjonen.
+- **Spørsmål:** forventning
+- **Vekt:** `bruksstans_sikkerhet`, `positiv_beskrivelse`
+- **Begrunnelse:** Utvalget la vekt på at bremsene var helt nedslitt med umiddelbart behov for utskifting, slik at bilen ikke var i kjørbar stand, og at bilen var beskrevet som velholdt. Selv om bremser i utgangspunktet er slitedeler, lå dette utenfor det kjøperen kunne forvente, også etter et «as is»-forbehold på en gammel bil med høy kjørelengde.
+- **Utfall:** erstatning for utskifting av bremseskiver og bremseklosser
+- **Fakta:** helt nedslitte bremser foran; en uke etter kjøpet; 18 år, 180 000 km, 38 500 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-- **Sak:** #2298 · FKU-2021-4001 · 2022-09-28 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022059346&dokid=705701&versjon=1&variant=A&)
-- **Til kjøperen:** I 2022 fikk kjøperen av en Porsche 911 medhold etter å ha klaget på bremsefeil sju til åtte måneder etter kjøpet. Utvalget tilkjente 23 000 kr.
+**#2298 · FKU-2021-4001 · 2022-09-28** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022059346&dokid=705701&versjon=1&variant=A&)
 
-**innen 6 måneder, nesten 2 år gammel bil** (`bremser/rask`)
+- **Spørsmål:** forventning
+- **Vekt:** `positiv_beskrivelse`
+- **Begrunnelse:** Utvalget la vekt på at annonsen sa at bilen nylig var EU-godkjent og hadde fått nye bremser, noe som ga kjøperen en berettiget forventning om at bremsene var godkjent for bilen. At kjøperen visste at bremsene var hentet fra en annen modell, endret ikke dette.
+- **Utfall:** erstatning for utbedringskostnadene
+- **Fakta:** uoriginale bremser som ikke var godkjent for bilen; om lag sju måneder etter kjøpet; 37 år, 143 000 km, 370 000 kr; opplyst: `som_den_er`; lov: før_2024
 
-> En BMW 3-serie som var nesten to år gammel og hadde gått 56 633 km, ble kjøpt hos forhandler og fikk kast og rust i alle bremseskivene under en måned etter kjøpet. Utvalget kom til at det var upåregnelig at bremsene måtte skiftes så kort tid etter kjøpet, at bilen var mangelfull, og kjøperen fikk erstatning.
+**#265 · FKU-2018-219 · 2018-06-20** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2018009312&dokid=361108&versjon=1&variant=A&)
 
-- **Sak:** #265 · FKU-2018-219 · 2018-06-20 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2018009312&dokid=361108&versjon=1&variant=A&)
-- **Til kjøperen:** I 2018 fikk kjøperen av en BMW 3-serie delvis medhold etter å ha klaget på bremsefeil under en måned etter kjøpet. Utvalget tilkjente 11 763 kr.
-
-Uten lignende sak: rask · eldre, middels · yngre, sen · yngre, sen · eldre. Der brukes nabotidsrommet eller regel-saken.
-
-**Bremser, oktober 2026:** databasen har ingen bremsesak vunnet etter mer enn seks måneder som holder kriteriene. De som ble lest og forkastet: #2454 (Toyota Rav4, «under noe tvil»), #1086 (Mercedes, «under noe tvil», uriktig opplysning om klossene), #677 (Audi A8, bare bakbremsene, 14 km etter kjøpet), #2316, #3105, #3174 og #1203 (bremsene var slitasje eller sidepunkt; vunnet på clutch/girkasse, batteri, rust). En kjøper med bremsefeil etter mer enn seks måneder får derfor regel-saken.
+- **Spørsmål:** forventning
+- **Vekt:** `positiv_beskrivelse`
+- **Begrunnelse:** Utvalget la vekt på at bilen ble markedsført som «nybil» og «100 % strøken», var to år gammel, hadde gått under 60 000 km og hadde en høy kjøpesum, slik at det var upåregnelig at bremsene måtte skiftes under en måned etter kjøpet.
+- **Utfall:** erstatning for utbedringskostnadene med halvparten trukket fra for standardheving
+- **Fakta:** kast og rust i alle bremseskivene; under en måned etter kjøpet; 1 år, 56 633 km, 468 900 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
 ### Girkasse og clutch
 
-**innen 6 måneder, 6 år gammel bil** (`girkasse/rask`)
+**#1600 · FKU-2023-16164 · 2024-08-14** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024038848&dokid=1202556&versjon=1&variant=A&)
 
-> En Volkswagen Golf GTE som var 6 år gammel og hadde gått 145 000 km, ble kjøpt hos forhandler «som den er» og fikk feil på girkassens mekatronikk to måneder etter kjøpet. Utvalget kom til at feilen på girkassens mekatronikk var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `slitedel`, `rapport_arsak`
+- **Begrunnelse:** Utvalget la vekt på at en sakkyndig rapport viste at boltene til drivakselen hadde løsnet og falt ut over tid, og at drivakselen ikke er en typisk slitedel som det er påregnelig å måtte bytte ved denne kilometerstanden. Feilen viste seg innen seks måneder, og unntakene fra formodningsregelen var ikke anvendelige.
+- **Utfall:** heving av kjøpet
+- **Fakta:** drivakselen løsnet og slo hull i girkassen; om lag tre måneder etter kjøpet; 13 år, 97 000 km, 79 000 kr; opplyst: `ingenting`; lov: før_2024; formodningsregelen
 
-- **Sak:** #1905 · FKU-2022-4730 · 2023-05-03 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023028760&dokid=897733&versjon=1&variant=A&)
-- **Til kjøperen:** I 2023 fikk kjøperen av en Volkswagen Golf GTE delvis medhold etter å ha klaget på feil på girkassen to måneder etter kjøpet. Utvalget tilkjente 40 000 kr.
+**#1776 · FKU-2022-906 · 2023-09-06** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023072630&dokid=1002019&versjon=1&variant=A&)
 
-**innen 6 måneder, 13 år gammel bil** (`girkasse/rask`)
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `rapport_upaaregnelig`
+- **Begrunnelse:** Utvalget la vekt på at en sakkyndig uttalelse konkluderte med at ulyden skyldtes skade på hovedlagrene i girkassen, at slik ulyd ikke var vanlig for en bil med denne kjørelengden og fulgt service, og at feilen måtte ha vært til stede ved kjøpet.
+- **Utfall:** prisavslag fastsatt skjønnsmessig ut fra bilens alder og kjøpesum, og erstatning for utgiftene til sakkyndig uttalelse
+- **Fakta:** skade på hovedlagrene i girkassen og oljelekkasje fra motoren; knapt sju måneder etter kjøpet, etter om lag 3 400 km; 9 år, 125 000 km, 55 400 kr; opplyst: `som_den_er`; lov: før_2024
 
-> En Volkswagen Golf som var 13 år gammel og hadde gått 97 000 km, ble kjøpt hos forhandler og fikk hull i girkassen etter at en drivaksel løsnet, om lag tre måneder etter kjøpet. Utvalget kom til at skadene på drivakselen og girkassen var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.
+**#1905 · FKU-2022-4730 · 2023-05-03** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023028760&dokid=897733&versjon=1&variant=A&)
 
-- **Sak:** #1600 · FKU-2023-16164 · 2024-08-14 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024038848&dokid=1202556&versjon=1&variant=A&)
-- **Til kjøperen:** I 2024 fikk kjøperen av en Volkswagen Golf delvis medhold etter å ha klaget på feil på girkassen om lag tre måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake kjøpesummen.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `positiv_beskrivelse`, `slitedel`, `rapport_upaaregnelig`
+- **Begrunnelse:** Utvalget la vekt på at forhandleren før kjøpet opplyste at bilen var velholdt og hadde god servicehistorikk, og at kjøperen hadde dokumentert at mekatronikken ikke er en slitedel og at feilen mest sannsynlig var en iboende svakhet. Feilen viste seg innen seks måneder, og forhandleren hadde ikke sannsynliggjort at den ikke forelå ved leveringen.
+- **Utfall:** erstatning for reparasjonen med skjønnsmessig fradrag for standardheving
+- **Fakta:** feil på girkassens mekatronikk; to måneder etter kjøpet; 6 år, 145 000 km, 129 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-**6 måneder til 2 år, 7 år gammel bil** (`girkasse/middels`)
+**#2316 · FKU-2021-6457 · 2022-09-21** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022071563&dokid=732899&versjon=1&variant=A&)
 
-> En Fiat Scudo som var sju år gammel og hadde gått 94 000 km, ble kjøpt hos forhandler og fikk påvist unormal slitasje i girkassen og ulyd fra clutchen om lag 14 måneder etter kjøpet. Utvalget kom til at feilen på girkassen og clutchen var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_upaaregnelig`, `slitedel`, `bruksstans_sikkerhet`
+- **Begrunnelse:** Utvalget la vekt på sakkyndige uttalelser om at det var unormal slitasje på deler som ved normal bruk og vedlikehold har vesentlig lengre levetid, og at feilen derfor mest sannsynlig hadde begynt før kjøpet. Girkassen og clutchen er nødvendige for at bilen skal fungere.
+- **Utfall:** heving av kjøpet og erstatning for undersøkelse og sakkyndig vurdering
+- **Fakta:** unormal slitasje i girkassen og ulyd fra clutchen; om lag 14 måneder etter kjøpet; 7 år, 94 000 km, 79 900 kr; opplyst: `som_den_er`; lov: før_2024
 
-- **Sak:** #2316 · FKU-2021-6457 · 2022-09-21 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022071563&dokid=732899&versjon=1&variant=A&)
-- **Til kjøperen:** I 2022 fikk kjøperen av en Fiat Scudo medhold etter å ha klaget på feil på girkassen om lag 14 måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet, og tilkjente 82 950 kr.
+**#551 · FKU-2016-2138 · 2017-06-01** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017002902&dokid=303020&versjon=2&variant=A&)
 
-**6 måneder til 2 år, 9 år gammel bil** (`girkasse/middels`)
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `rapport_upaaregnelig`, `forhandler_annen_arsak`
+- **Begrunnelse:** Utvalget la vekt på at grundige og godt begrunnede sakkyndige uttalelser viste at lagrene i fordelerkassen var montert for trangt, slik at feilen var en fabrikasjonsfeil som forelå ved leveringen og ikke påregnelig slitasje, og at forhandleren ikke hadde lagt frem noen sakkyndig uttalelse om bilen som trakk i en annen retning.
+- **Utfall:** erstatning for reparasjonen uten fradrag for standardheving, og for utgifter til feilsøking og reise
+- **Fakta:** skadde lagre i fordelerkassen fordi lagrene var montert for trangt; våren 2016, drøyt to år etter kjøpet; 3 år, 74 064 km, 430 000 kr; opplyst: `ingenting`; lov: før_2024
 
-> En Opel Astra Sports Tourer som var 9 år gammel og hadde gått 125 000 km, ble kjøpt hos forhandler og fikk påvist skade på hovedlagrene i girkassen om lag sju måneder etter kjøpet. Utvalget kom til at girkassefeilen, sammen med en oljelekkasje, var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.
+**#805 · FTU-2016-736 · 2016-09-30** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2016020203&dokid=247228&versjon=1&variant=A&)
 
-- **Sak:** #1776 · FKU-2022-906 · 2023-09-06 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023072630&dokid=1002019&versjon=1&variant=A&)
-- **Til kjøperen:** I 2023 fikk kjøperen av en Opel Astra Sports Tourer delvis medhold etter å ha klaget på feil på girkassen og en oljelekkasje om lag sju måneder etter kjøpet. Utvalget kom til at bilen var i dårligere stand enn kjøperen kunne forvente, og satte prisavslaget til 15 000 kr.
-
-**mer enn 2 år, 3 år gammel bil** (`girkasse/sen`)
-
-> En Mercedes-Benz GLK Offroad CDI 4Matic som var 3 år gammel og hadde gått 74 064 km, ble kjøpt hos forhandler og fikk ulyder fra girkassen, som skyldtes for trangt monterte lagre i fordelerkassen, drøyt to år etter kjøpet. Utvalget kom til at feilen ved girkassen var en mangel forhandleren var ansvarlig for, og kjøperen fikk dekket reparasjonen.
-
-- **Sak:** #551 · FKU-2016-2138 · 2017-06-01 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017002902&dokid=303020&versjon=2&variant=A&)
-- **Til kjøperen:** I 2017 fikk kjøperen av en Mercedes-Benz GLK Offroad CDI 4Matic delvis medhold etter å ha klaget på feil på girkassen drøyt to år etter kjøpet. Utvalget tilkjente 39 829 kr.
-
-Uten lignende sak: sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `positiv_beskrivelse`, `rapport_arsak`, `km_etter_kjop`, `bruksstans_sikkerhet`
+- **Begrunnelse:** Utvalget la vekt på at girkassefeilen etter uttalelsene mest sannsynlig skyldtes kjøring med for lite olje over tid, og at den oppsto under to måneder etter overtakelsen og etter kort kjøring, slik at den kunne føres tilbake til kjøpet. Avgjørende vekt fikk annonsens rosende omtale av bilen som servicefulgt og godt vedlikeholdt, og feilen gjorde bilen ukjørbar.
+- **Utfall:** heving av kjøpet og erstatning for transport av bilen
+- **Fakta:** feil i girkassen etter kjøring med for lite olje over tid; i underkant av to måneder etter kjøpet, etter om lag 1 000 km; 26 år, 140 000 km, 26 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
 ### Fukt og lekkasje
 
-**innen 6 måneder, 4 år gammel bil** (`fukt/rask`)
+**#3129 · FKU-2025-136079 · 2025-05-26** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-136079.pdf)
 
-> En Mercedes-Benz C 300DE som var 4 år gammel og hadde gått 108 000 km, ble kjøpt hos forhandler og fikk påvist vann og is på innsiden av begge frontlyktene om lag fire måneder etter kjøpet. Utvalget kom til at feilen med frontlyktene var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet, blant annet på grunn av denne mangelen.
+- **Spørsmål:** opplysning, forventning, levering
+- **Vekt:** `uriktig_service_arbeid_utstyr`, `rettet_for_kjop`, `bruksstans_sikkerhet`
+- **Begrunnelse:** Utvalget la vekt på at bilen manglet en funksjon som var særskilt fremhevet i annonsen, uten at opplysningen var rettet før kjøpet, og på at vann i frontlyktene, som etter formodningsregelen forelå ved leveringen, gikk ut over det en kjøper av en fire år gammel bil kunne forvente og gjorde at bilen ikke kunne brukes lovlig.
+- **Utfall:** heving av kjøpet
+- **Fakta:** vann og is i frontlyktene, manglende hev- og senkfunksjon som var annonsert, og skadde vinterfelger; noen dager etter overtakelsen (annonsert utstyr manglet); om lag fire måneder etter kjøpet ved periodisk kjøretøykontroll (vann i frontlyktene); 4 år, 108 000 km, 410 000 kr; opplyst: `ingenting`; lov: før_2024; formodningsregelen
 
-- **Sak:** #3129 · FKU-2025-136079 · 2025-05-26 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-136079.pdf)
-- **Til kjøperen:** I 2025 fikk kjøperen av en Mercedes-Benz C 300DE medhold etter å ha klaget på fukt eller lekkasje fire til fem måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet, blant annet fordi vann i frontlyktene gjorde at bilen ikke kunne brukes lovlig.
+**#1916 · FKU-2022-4734 · 2023-04-26** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023028939&dokid=898144&versjon=1&variant=A&)
 
-**innen 6 måneder, 8 år gammel bil** (`fukt/rask`)
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `tidligere_skade_ikke_opplyst`, `forhandler_annen_arsak`
+- **Begrunnelse:** Utvalget la vekt på at feilen etter formodningsregelen forelå ved leveringen, og på at verkstedet dokumenterte sammenhengen mellom en feilmontert uoriginal frontrute, vannlekkasjen og feilen i det elektriske anlegget. Når ikke annet var opplyst, kunne kjøperen forvente at tidligere reparasjoner var utført forsvarlig, og forhandleren hadde ikke sannsynliggjort at feilen ville vist seg tidligere.
+- **Utfall:** erstatning for reparasjonen av det elektriske anlegget
+- **Fakta:** vannlekkasje ved feilmontert frontrute som ga feil på det elektriske anlegget; om lag fem måneder etter kjøpet; 8 år, 118 000 km, 159 900 kr; opplyst: `ingenting`; lov: før_2024; formodningsregelen
 
-> En Ford Transit Custom som var åtte år gammel og hadde gått 118 000 km, ble kjøpt hos forhandler og fikk vannlekkasje ved frontruten som ga feil på det elektriske anlegget om lag fem måneder etter kjøpet. Utvalget kom til at vannlekkasjen og feilen på det elektriske anlegget var en mangel forhandleren var ansvarlig for, og kjøperen fikk dekket reparasjonen.
+**#2355 · FKU-2021-5035 · 2022-08-31** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022056587&dokid=700048&versjon=1&variant=A&)
 
-- **Sak:** #1916 · FKU-2022-4734 · 2023-04-26 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023028939&dokid=898144&versjon=1&variant=A&)
-- **Til kjøperen:** I 2023 fikk kjøperen av en Ford Transit Custom delvis medhold etter å ha klaget på fukt eller lekkasje under seks måneder etter kjøpet. Utvalget tilkjente 17 364 kr.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `egen_bruk`
+- **Begrunnelse:** Utvalget la vekt på at to verksteder hadde påvist en lekkasje fra taket, at det ikke var å forvente en feil av en slik karakter på en relativt ny bil med lav kilometerstand, og at det ikke var holdepunkter for at feilen kunne knyttes til kjøperens bruk.
+- **Utfall:** prisavslag satt lik utbedringskostnadene, og erstatning for utgiftene til feilsøking
+- **Fakta:** vannlekkasje fra fugemassen i taket med fukt og rust i bagasjerommet; vinteren 2019/2020, om lag 21 måneder etter kjøpet; 4 år, 34 250 km, 149 000 kr; opplyst: `ingenting`; lov: før_2024
 
-**6 måneder til 2 år, 4 år gammel bil** (`fukt/middels`)
+**#3470 · FKU-2019-116 · 2019-04-25** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2019004189&dokid=401510&versjon=1&variant=A&)
 
-> En Nissan Leaf som var 4 år gammel og hadde gått 34 250 km, ble kjøpt hos forhandler og fikk mye dugg og vann i bilen fra en lekkasje i taket om lag 21 måneder etter kjøpet. Utvalget kom til at lekkasjen var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag og erstatning.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `rapport_upaaregnelig`
+- **Begrunnelse:** Utvalget la vekt på at det var dokumentert at limet på den originale frontruten hadde løsnet, og at en sakkyndig uttalte at dette var en fabrikasjonsfeil fordi limet ikke skal løsne. På bakgrunn av den vurderingen fant utvalget at feilen forelå ved leveringen, selv om den viste seg drøye to år etter kjøpet.
+- **Utfall:** erstatning for ny frontrute og skjønnsmessig erstatning for rens av taket
+- **Fakta:** løsnet lim på den originale frontruten som ga vannlekkasje; drøye to år etter kjøpet; 4 år, 57 000 km, 130 000 kr; opplyst: `ingenting`; lov: før_2024
 
-- **Sak:** #2355 · FKU-2021-5035 · 2022-08-31 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022056587&dokid=700048&versjon=1&variant=A&)
-- **Til kjøperen:** I 2022 fikk kjøperen av en Nissan Leaf delvis medhold etter å ha klaget på fukt eller lekkasje om lag 21 måneder etter kjøpet. Utvalget tilkjente 29 631 kr.
+**#911 · FTU-2016-176 · 2016-04-15** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2016007477&dokid=224502&versjon=1&variant=A&)
 
-**6 måneder til 2 år, 11 år gammel bil** (`fukt/middels`)
-
-> En Volvo XC70 som var 11 år gammel og hadde gått 247 300 km, ble kjøpt hos forhandler og fikk vannlekkasje fra frontruten med følgefeil på det elektriske anlegget om lag ni måneder etter kjøpet. Utvalget kom til at vannlekkasjen og følgefeilene var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.
-
-- **Sak:** #911 · FTU-2016-176 · 2016-04-15 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2016007477&dokid=224502&versjon=1&variant=A&)
-- **Til kjøperen:** I 2016 fikk kjøperen av en Volvo XC70 delvis medhold etter å ha klaget på fukt eller lekkasje om lag ni måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet.
-
-**mer enn 2 år, 4 år gammel bil** (`fukt/sen`)
-
-> En Audi A1 som var 4 år gammel og hadde gått 57 000 km, ble kjøpt hos forhandler og fikk vannlekkasje ved frontruta drøye to år etter kjøpet. Utvalget kom til at lekkasjen, som skyldtes at limet på den originale frontruta hadde sluppet, var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.
-
-- **Sak:** #3470 · FKU-2019-116 · 2019-04-25 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2019004189&dokid=401510&versjon=1&variant=A&)
-- **Til kjøperen:** I 2019 fikk kjøperen av en Audi A1 delvis medhold etter å ha klaget på fukt eller lekkasje drøye to år etter kjøpet. Utvalget tilkjente 8 548 kr.
-
-Uten lignende sak: sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_arsak`, `tidlige_tegn`, `egen_bruk`, `positiv_beskrivelse`, `bruksstans_sikkerhet`
+- **Begrunnelse:** Utvalget la vekt på at verkstedets uttalelser om at lekkasjen kom fra frontruten trakk klart i retning av at årsaken forelå ved leveringen, at kjøperen beviselig hadde reklamert på feil ved lysene noen uker etter overtakelsen, og at ingenting tydet på forhold på kjøperens side. I lys av at bilen var annonsert som velholdt, var den i dårligere stand enn kjøperen hadde grunn til å forvente. Hevingen ble begrunnet med at bilen ikke var kjørbar og at utbedringen var kostbar.
+- **Utfall:** heving av kjøpet med skjønnsmessig fradrag for bruken, og erstatning for utgiftene til verkstedundersøkelse
+- **Fakta:** vannlekkasje fra frontruten med følgefeil på det elektriske anlegget; om lag ni måneder etter kjøpet, med feil ved lysene noen uker etter overtakelsen; 11 år, 247 300 km, 100 000 kr; opplyst: `ingenting`; lov: før_2024
 
 ### Klimaanlegg
 
-**innen 6 måneder, 6 år gammel bil** (`klimaanlegg/rask`)
+**#3165 · FKU-2025-141296 · 2025-06-23** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-141296.pdf)
 
-> En Volkswagen Caddy Maxi som var seks år gammel og hadde gått 109 600 km, ble kjøpt hos forhandler, og om lag sju uker etter kjøpet oppdaget kjøperen at klimaanlegget ikke virket. Utvalget kom til at feilen på klimaanlegget var en mangel forhandleren var ansvarlig for, og kjøperen fikk dekket reparasjonen.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `positiv_beskrivelse`
+- **Begrunnelse:** Utvalget la vekt på at feilene etter formodningsregelen forelå ved leveringen, og at kjøperen, selv med et alminnelig «som den er»-forbehold på en gammel bil med høy kjørelengde, i det minste kunne forvente at utstyret som var oppført i annonsen, fungerte ved overtakelsen. Øvrige feil var normal slitasje eller opplyst før kjøpet.
+- **Utfall:** prisavslag fastsatt skjønnsmessig ut fra et rimeligere tilbud med brukte deler, og erstatning for utgiftene til NAF-test
+- **Fakta:** klimaanlegg, hengerfeste, xenonlys og ryggekamera som var oppført i annonsen, virket ikke; under én måned etter kjøpet; 12 år, 205 287 km, 213 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-- **Sak:** #1566 · FKU-2024-1215 · 2024-10-09 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024042231&dokid=1208671&versjon=1&variant=A&)
-- **Til kjøperen:** I 2024 fikk kjøperen av en Volkswagen Caddy Maxi delvis medhold etter å ha klaget på feil på klimaanlegget om lag to måneder etter kjøpet. Utvalget tilkjente 34 336 kr.
+**#1566 · FKU-2024-1215 · 2024-10-09** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024042231&dokid=1208671&versjon=1&variant=A&)
 
-**innen 6 måneder, 12 år gammel bil** (`klimaanlegg/rask`)
+- **Spørsmål:** opplysning, forventning, levering
+- **Vekt:** `dokument_for_salg`, `slitedel`, `egen_bruk`
+- **Begrunnelse:** Utvalget la vekt på at feilene etter formodningsregelen forelå ved leveringen, at feilen ved klimaanlegget og oljelekkasjen var bemerket i en tilstandsrapport fra før kjøpet uten at kjøperen ble opplyst om dem, og at vannpumpen sviktet lenge før anbefalt bytteintervall uten holdepunkter for forhold på kjøperens side.
+- **Utfall:** erstatning for utbedringene og for utgiftene til sakkyndige uttalelser
+- **Fakta:** defekt kompressor i klimaanlegget, lekkende vannpumpe og sprukket bunnpanne med oljelekkasje; om lag sju uker etter kjøpet (klimaanlegget); vannpumpen kort tid etter overtakelsen; 6 år, 109 600 km, 129 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-> En Volkswagen Touareg som var 12 år gammel og hadde gått 205 287 km, ble kjøpt hos forhandler og fikk påvist feil på blant annet klimaanlegget under én måned etter kjøpet. Utvalget kom til at feilene på klimaanlegget og annet utstyr oppført i annonsen var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag og erstatning.
+**#2510 · FKU-2021-4356 · 2022-03-23** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022017294&dokid=617370&versjon=1&variant=A&)
 
-- **Sak:** #3165 · FKU-2025-141296 · 2025-06-23 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-141296.pdf)
-- **Til kjøperen:** I 2025 fikk kjøperen av en Volkswagen Touareg delvis medhold etter å ha klaget på feil på klimaanlegget under én måned etter kjøpet. Utvalget tilkjente 22 710 kr.
-
-**mer enn 2 år, 2 år gammel bil** (`klimaanlegg/sen`)
-
-> En Volkswagen E-golf som var 2 år gammel og hadde gått 9 990 km, ble kjøpt hos forhandler og fikk feil på sensorene til klimaanlegget, og senere lekkasje i ventil og pakninger, drøyt to år etter kjøpet. Utvalget kom til at de defekte sensorene og lekkasjen i klimaanlegget var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.
-
-- **Sak:** #2510 · FKU-2021-4356 · 2022-03-23 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022017294&dokid=617370&versjon=1&variant=A&)
-- **Til kjøperen:** I 2022 fikk kjøperen av en Volkswagen E-golf medhold etter å ha klaget på feil på klimaanlegget drøyt to år etter kjøpet. Utvalget tilkjente 21 165 kr.
-
-Uten lignende sak: middels · yngre, middels · eldre, sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+- **Spørsmål:** forventning, levering
+- **Vekt:** `rapport_upaaregnelig`, `slitedel`, `forhandler_annen_arsak`
+- **Begrunnelse:** Utvalget la vekt på at kjøperen av en to år gammel bil med lav kjørelengde hadde grunn til å forvente at den var i rimelig god stand, at verkstedet mente delene burde vare mer enn fem år, slik at feilen ikke knyttet seg til en slitedel, og at det ikke var holdepunkter for forhandlerens påstand om ytre påvirkning.
+- **Utfall:** erstatning for reparasjon, nødvendig feilsøking og fremtidig reparasjon etter tilbud, uten utgifter til vanlig service
+- **Fakta:** defekte trykksensorer og lekkasje fra ekspansjonsventil og pakninger i klimaanlegget; drøyt to år etter kjøpet, ved årlig service; 2 år, 9 990 km, 265 000 kr; opplyst: `ingenting`; lov: før_2024
 
 ### Tidligere skade
 
-**innen 6 måneder, 7 år gammel bil** (`skade/rask`)
+**#3125 · FKU-2025-55355 · 2025-10-01** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-55355.pdf)
 
-> En Toyota Auris som var 7 år gammel og hadde gått 171 000 km, ble kjøpt hos forhandler og fikk påvist en tidligere kollisjonsskade foran om lag seks uker etter kjøpet. Utvalget kom til at skaden var en mangel forhandleren var ansvarlig for, og kjøperne fikk prisavslag.
+- **Spørsmål:** opplysning, forventning, levering
+- **Vekt:** `rapport_arsak`, `uriktig_service_arbeid_utstyr`, `rettet_for_kjop`, `positiv_beskrivelse`
+- **Begrunnelse:** Utvalget la vekt på at skaden etter formodningsregelen og en skadetakst om at den oppsto før kjøpet forelå ved leveringen, og at en tidligere kollisjonsskade ikke er slitasje som må påregnes ut fra alder og kilometerstand. For utstyret og dekkene la utvalget vekt på at annonsen listet opp utstyret og lovet «gode dekk», og at et generelt forbehold om feil i annonsen ikke rettet opplysningene på en tydelig måte.
+- **Utfall:** prisavslag satt lik utbedringskostnadene for skaden og det manglende utstyret, skjønnsmessig prisavslag for utstyr som ikke kan ettermonteres, og erstatning for dekk med fradrag for standardheving
+- **Fakta:** tidligere kollisjonsskade foran, manglende annonsert utstyr og slitte vinterdekk; om lag seks uker etter kjøpet; 7 år, 171 000 km, 150 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-- **Sak:** #3125 · FKU-2025-55355 · 2025-10-01 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-55355.pdf)
-- **Til kjøperen:** I 2025 fikk kjøperne av en Toyota Auris delvis medhold etter å ha klaget på en tidligere kollisjonsskade om lag seks uker etter kjøpet. Utvalget kom til at skaden var en mangel og satte prisavslaget for den til 21 976 kr.
+**#3143 · FKU-2025-116737 · 2025-08-27** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-116737.pdf)
 
-**innen 6 måneder, 8 år gammel bil** (`skade/rask`)
+- **Spørsmål:** opplysning
+- **Vekt:** `tidligere_skade_ikke_opplyst`, `uriktig_service_arbeid_utstyr`
+- **Begrunnelse:** Utvalget la vekt på at forhandleren hadde unnlatt å opplyse om at bilen tidligere hadde hatt omfattende skader, og at dokumenter i bilens dokumentmappe ikke var nok til at kjøperen hadde fått denne informasjonen. Utvalget la også vekt på at annonsen uriktig hadde opplyst at service var fulgt opp og at bestemt utstyr fulgte med.
+- **Utfall:** heving av kjøpet på grunn av manglene samlet, og erstatning for utgiftene til NAF-test
+- **Fakta:** tidligere omfattende skader som ikke var opplyst, manglende annonsert utstyr og service som ikke var fulgt; knapt fire uker etter kjøpet; 8 år, 68 800 km, 81 000 kr; opplyst: `som_den_er`; lov: før_2024; formodningsregelen
 
-> En Nissan Leaf som var åtte år gammel og hadde gått 68 800 km, ble kjøpt hos forhandler, og innen fire uker etter kjøpet oppdaget kjøperen at den tidligere hadde hatt omfattende skader som forhandleren ikke hadde opplyst om. Utvalget kom til at de tidligere skadene, som kjøperen ikke var blitt opplyst om, var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet på grunn av manglene samlet.
+**#1967 · FKU-2022-6291 · 2023-03-29** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023021551&dokid=880996&versjon=1&variant=A&)
 
-- **Sak:** #3143 · FKU-2025-116737 · 2025-08-27 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-116737.pdf)
-- **Til kjøperen:** I 2025 fikk kjøperen av en Nissan Leaf medhold etter å ha klaget på blant annet en tidligere kollisjonsskade om lag fire uker etter kjøpet. Utvalget kom til at manglene samlet ga kjøperen rett til å heve kjøpet og få tilbake 81 000 kr, og tilkjente i tillegg 2 710 kr i erstatning.
+- **Spørsmål:** opplysning
+- **Vekt:** `tidligere_skade_ikke_opplyst`
+- **Begrunnelse:** Utvalget la vekt på at en kjøper av en seks år gammel bil til en relativt høy pris må kunne regne med å få opplysninger om skadehistorikk som går ut over normal bruksslitasje, at forhandleren ikke hadde dokumentert at skaden var bagatellmessig, og at kjøperen hadde dokumentert at skadehistorikken fikk potensielle kjøpere til å trekke seg.
+- **Utfall:** prisavslag fastsatt skjønnsmessig
+- **Fakta:** tidligere skade og delvis omlakkering som ikke var opplyst; om lag 17 måneder etter kjøpet, ved en NAF-test før videresalg; 6 år, 80 573 km, 365 000 kr; opplyst: `ingenting`; lov: før_2024
 
-**6 måneder til 2 år, 6 år gammel bil** (`skade/middels`)
+**#2486 · FKU-2021-5368 · 2022-04-20** · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022027852&dokid=639892&versjon=1&variant=A&)
 
-> En Volvo XC60 som var 6 år gammel og hadde gått 80 573 km, ble kjøpt hos forhandler, og om lag 17 måneder etter kjøpet viste en NAF-test at bilen var delvis omlakkert etter en tidligere skade. Utvalget kom til at det var en mangel at forhandleren ikke hadde opplyst om den tidligere skaden, og kjøperen fikk prisavslag.
-
-- **Sak:** #1967 · FKU-2022-6291 · 2023-03-29 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023021551&dokid=880996&versjon=1&variant=A&)
-- **Til kjøperen:** I 2023 fikk kjøperen av en Volvo XC60 delvis medhold etter å ha klaget på en tidligere skade som ikke var opplyst, om lag 17 måneder etter kjøpet. Utvalget tilkjente 25 000 kr.
-
-**mer enn 2 år, 2 år gammel bil** (`skade/sen`)
-
-> En Volvo XC60 som var 2 år gammel og hadde gått 49 600 km, ble kjøpt hos forhandler og viste seg om lag to år og tre måneder etter kjøpet å ha hatt en tidligere skade og delvis omlakkering som forhandleren ikke hadde opplyst om. Utvalget kom til at det var en mangel at forhandleren ikke hadde opplyst om den tidligere skaden, og kjøperen fikk prisavslag.
-
-- **Sak:** #2486 · FKU-2021-5368 · 2022-04-20 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022027852&dokid=639892&versjon=1&variant=A&)
-- **Til kjøperen:** I 2022 fikk kjøperen av en Volvo XC60 medhold etter å ha klaget på en tidligere skade forhandleren ikke hadde opplyst om, om lag to år og tre måneder etter kjøpet. Utvalget tilkjente 25 000 kr.
-
-Uten lignende sak: sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+- **Spørsmål:** opplysning
+- **Vekt:** `tidligere_skade_ikke_opplyst`
+- **Begrunnelse:** Utvalget la vekt på at en kjøper av en nyere bil til en relativt høy pris må kunne regne med å få opplysninger om skadehistorikk som går ut over normal bruksslitasje, at forhandleren burde kjent til skaden, og at forhandleren ikke hadde sannsynliggjort at skaden var bagatellmessig eller ikke hadde innvirket på kjøpet.
+- **Utfall:** prisavslag fastsatt skjønnsmessig i mangel av dokumentasjon på verditapet
+- **Fakta:** tidligere skade og delvis omlakkering som ikke var opplyst; om lag to år og tre måneder etter kjøpet, ved en NAF-test før garantien løp ut; 2 år, 49 600 km, 500 000 kr; opplyst: `ingenting`; lov: før_2024
 
 ### Batteri (elbil)
 
-**6 måneder til 2 år, 7 år gammel bil** (`batteri/middels`)
+**#3105 · FKU-2026-117158 · 2025-11-11** · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-117158.pdf)
 
-> En Tesla Model S som var sju år gammel og hadde gått 109 765 km, ble kjøpt fra en næringsdrivende på auksjon og fikk feil på høyvoltsbatteriet vel 14 måneder etter kjøpet. Utvalget kom til at feilene med batteriet og sikkerhetsfunksjonene samlet sett var en mangel selgeren var ansvarlig for, og kjøperen fikk prisavslag og erstatning.
-
-- **Sak:** #3105 · FKU-2026-117158 · 2025-11-11 · [vedtaket](https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-117158.pdf)
-- **Til kjøperen:** I 2025 fikk kjøperen av en Tesla Model S delvis medhold etter å ha klaget på feil på elbilbatteriet vel 14 måneder etter kjøpet. Utvalget tilkjente 70 540 kr.
-
-Uten lignende sak: rask · yngre, rask · eldre, middels · eldre, sen · yngre, sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+- **Spørsmål:** forventning
+- **Vekt:** `bruksstans_sikkerhet`
+- **Begrunnelse:** Utvalget la vekt på at sikkerhetsfunksjoner som automatisk nødbrems er en forutsetning for at bilen trygt kan brukes, og at feilen ved disse sammen med lavere kapasitet i høyvoltsbatteriet samlet sett gjorde bilen dårligere enn kjøperen hadde grunn til å forvente, også etter et «som den er»-forbehold.
+- **Utfall:** prisavslag fastsatt skjønnsmessig, og erstatning for egenandeler og sakkyndig erklæring
+- **Fakta:** svikt i høyvoltsbatteriet og sikkerhetsfunksjoner som slo seg av under kjøring; vel 14 måneder etter kjøpet; 7 år, 109 765 km, 350 990 kr; opplyst: `som_den_er`; lov: før_2024
 
 ## Forkastet
 
 - **I kontrollen:** #1548 (Land Cruiser): vunnet på at kontrakten lovet nye luftfjærer, mens selve feilene i understellet ble ansett som påregnelige. #382 (Audi A3): hevingen ble avgjort «under noe tvil».
 - **Ved avgjørelsen:** #3545 (vunnet på «helt ny motor», ikke på motorfeilen), #3005 (vant bare på DAB-radio), #2263 (12 V-startbatteri), #1035 (ladeenhet, ikke drivbatteri), #2454 og #899 (avgjort «under (noe) tvil»/«med tvil»), #3117 (kjølevæske i drivenhet, ikke fukt), #1872 (takskade med følgerust), #1689 flyttet fra bremser til rust.
 - **Av vurdererne, blant annet:** #3154, #1598, #1936, #3023 og flere andre der forhandleren ikke svarte; #1684, #2034, #2469 «under tvil»; #1579 og #3128 der feilen viste seg innen seks måneder selv om databasen sa noe annet.
-- **Fra de tidligere eksempelsakene** er #3154, #1598 og #1936 (forhandleren svarte ikke) og #1684 og #2454 («under noe tvil») tatt ut.
+- **Eldre biler:** #1728 og #3268 («i tvil»/«under tvil»), #1304 («under tvil»), #3332 (forhandleren svarte ikke, «under noe tvil»), #1283 og #2208 (forhandleren svarte ikke). Basen har ingen vunnet forhandlersak med en bil over 17 år der feilen viste seg mer enn seks måneder etter kjøpet (#2099, 20 år, er merket for kontroll).
 
 ## Vedlikehold
 
-Når nye vedtak er hentet og tolket: kjør `npm run henvisning-kandidater`, kurater listene som har fått nye kandidater på samme måte, og kjør `npm run sjekk-henvisninger` og `npm test`. Vedtak om kjøp fra 2024 foretrekkes når de holder; de får `lov: "etter_2024"` og brukes bare for kjøp fra 2024.
+Når nye vedtak er hentet og tolket: kjør `npm run henvisning-kandidater`, kurater listene som har fått nye kandidater på samme måte (med `sporsmal`, `vekt`, `begrunnelse`, `opplyst`, `tid`, `feil`, `utfall` og belegg), og kjør `npm run sjekk-henvisninger` og `npm test`. Vedtak om kjøp fra 2024 foretrekkes når de holder; de får `lov: "etter_2024"` og brukes bare for kjøp fra 2024. Mangler et moment utvalget la vekt på i `MOMENTER`, legges det til der (`npm run sjekk-momenter`).

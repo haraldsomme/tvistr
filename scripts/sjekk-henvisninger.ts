@@ -1,6 +1,6 @@
 // Checks every decision in the library the letter cites against the database and the decision
 // text: id, dealer, outcome, link, date, case reference, committee, law, presumption, car age,
-// every number in the sentences, and a verbatim quote behind every claim. Read-only; exits 1 on
+// price, factors, every number in the sentences, and a verbatim quote behind every claim. Read-only; exits 1 on
 // any error, so the library cannot drift from its sources.
 //
 //   npm run sjekk-henvisninger
@@ -9,10 +9,11 @@ import { readFileSync } from "node:fs";
 import { sql } from "drizzle-orm";
 import { db } from "../src/db";
 import { sitatFinnes } from "../src/lib/validering";
-import { HENVISNINGER, REGELGRUNNLAG, type Henvisning, type Organ } from "../src/lib/vurdering/henvisninger";
+import { MOMENTER } from "../src/lib/brev/momenter";
+import { HENVISNINGER, type Organ } from "../src/lib/vurdering/henvisninger";
 
 const kjerne = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
-const beleggKreves = (h: Henvisning) => ["feil", "tid", "bil", "utfall", ...(h.regel ? ["regel"] : [])];
+const BELEGG_KREVES = ["feil", "tid", "bil", "utfall", "utfallsform", "sporsmal"];
 
 // The committee cites its own decisions as FKU-2019-759 for case 19/759; the newer case numbers already have that form.
 function refFor(saksnummer: string, organ: Organ): string {
@@ -26,12 +27,13 @@ async function main() {
   if (HENVISNINGER.length === 0) feil.push("biblioteket er tomt");
   const ider = HENVISNINGER.map((h) => h.vedtakId);
   for (const id of new Set(ider)) if (ider.filter((x) => x === id).length > 1) feil.push(`#${id} står flere ganger`);
-  for (const g of REGELGRUNNLAG)
-    if (!HENVISNINGER.some((h) => h.regel && h.grunnlag === g && h.lov === "før_2024")) feil.push(`grunnlaget ${g} mangler en post med regel etter gammel lov`);
+  for (const s of ["forventning", "opplysning"] as const)
+    for (const med of [true, false])
+      if (!HENVISNINGER.some((h) => h.sporsmal.includes(s) && h.presumsjon === med)) feil.push(`hovedspørsmålet ${s} mangler en post ${med ? "med" : "uten"} presumsjon`);
 
   const rader = ider.length
     ? ((
-        await db.execute(sql`select id, saksnummer, vedtaksdato::text vedtaksdato, kjopsdato::text kjopsdato, kilde_url, selger_type, utfall, selger_navn, alder_ved_kjop, fulltekst_renset
+        await db.execute(sql`select id, saksnummer, vedtaksdato::text vedtaksdato, kjopsdato::text kjopsdato, kilde_url, selger_type, utfall, selger_navn, alder_ved_kjop, fulltekst_renset, merke, modell, kjopesum_nok
         from vedtak where id in (${sql.join(ider.map((i) => sql`${i}`), sql`, `)})`)
       ).rows as Record<string, unknown>[])
     : [];
@@ -64,12 +66,22 @@ async function main() {
 
     const presumsjon = h.botte === "rask" || (h.lov === "etter_2024" && h.botte === "middels");
     if (h.presumsjon !== presumsjon) ut(`presumsjon ${h.presumsjon}, ventet ${presumsjon}`);
-    if (h.regel && !h.grunnlag) ut("regel uten grunnlag");
-    if (h.grunnlag === "formodning" && !h.presumsjon) ut("grunnlag formodning uten presumsjon");
 
-    const setninger = [h.setning, h.likhet, h.konklusjon, ...(h.regel ? [h.regel] : [])];
-    for (const s of setninger) {
-      if (/[[\]]/.test(s)) ut(`hakeparentes i «${s}»`);
+    if (h.sporsmal.length === 0) ut("sporsmal er tom");
+    const b = belegg[String(h.vedtakId)];
+    for (const id of h.vekt) {
+      if (!MOMENTER.some((m) => m.id === id)) ut(`vekt: ${id} finnes ikke i MOMENTER`);
+      if (!b?.[`vekt:${id}`]) ut(`mangler belegg for vekt:${id}`);
+    }
+    if (!kjerne(tekst).includes(String(h.pris))) ut(`pris ${h.pris} står ikke i vedtaket`);
+    if (Number(r.kjopesum_nok) !== h.pris) ut(`pris ${h.pris}, databasen har ${r.kjopesum_nok}`);
+    // Whole words, so «oppfordring» is not «Ford».
+    const merkeModell = [r.merke, r.modell].filter(Boolean).map((x) => String(x).toLowerCase().trim()).filter((x) => kjerne(x).length >= 3);
+    const nevner = (s: string, x: string) => new RegExp(`(?<![\\p{L}\\p{N}])${x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}])`, "u").test(s.toLowerCase());
+    for (const [navn, s] of [["begrunnelse", h.begrunnelse], ["feil", h.feil], ["utfall", h.utfall], ["tid", h.tid]] as const) {
+      if (merkeModell.some((x) => nevner(s, x))) ut(`${navn} nevner merke eller modell`);
+      if (/\d[\d\s\u00a0]*\s?kr\b|kroner/.test(s)) ut(`${navn} har et beløp`);
+      if (/[[\]]/.test(s)) ut(`hakeparentes i ${navn}`);
       if (r.selger_navn && kjerne(String(r.selger_navn)).length >= 3 && kjerne(s).includes(kjerne(String(r.selger_navn)))) ut(`forhandlerens navn i «${s}»`);
       // Amounts and mileage must be in the text; small numbers (months, days) are often worked out from dates.
       for (const t of s.match(/\d[\d  ]*\d/g) ?? []) {
@@ -78,10 +90,9 @@ async function main() {
       }
     }
 
-    const b = belegg[String(h.vedtakId)];
     if (!b) ut("mangler belegg");
     else {
-      for (const k of beleggKreves(h)) if (!b[k]) ut(`mangler belegg for «${k}»`);
+      for (const k of [...BELEGG_KREVES, ...(h.opplyst !== "ingenting" ? ["opplyst"] : [])]) if (!b[k]) ut(`mangler belegg for «${k}»`);
       for (const [k, sitat] of Object.entries(b)) if (!sitatFinnes(sitat, tekst)) ut(`belegget for «${k}» står ikke ordrett i vedtaket: «${sitat}»`);
     }
   }

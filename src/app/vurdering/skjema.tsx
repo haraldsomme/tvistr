@@ -112,7 +112,7 @@ const VEKT_TEGN = {
 // letter chooses the decision it cites after purchase.
 function sammenligningTekst(utvalg: Resultat["utvalg"]): string | null {
   if (!utvalg) return null;
-  return `Vi har sjekket saken din opp mot ${utvalg.vunnet} vedtak om bruktbil kjøpt fra forhandler som fikk medhold. I brevet viser vi til den av dem som passer best, og går gjennom det utvalget la vekt på, punkt for punkt mot din sak, så forhandleren ser hvorfor din sak står minst like sterkt.`;
+  return `Vi har sjekket saken din opp mot ${utvalg.vunnet} vedtak om bruktbil kjøpt fra forhandler som fikk medhold. I brevet viser vi til den saken som passer best, og går gjennom det utvalget la vekt på, punkt for punkt mot din sak.`;
 }
 const KORT = "overflow-hidden rounded-lg border border-[#dcd8cf] bg-white";
 const RAD = "flex gap-3.5 border-b border-[#eceae4] px-6 py-[18px] last:border-b-0";
@@ -174,7 +174,7 @@ function Vipps({ tekst, onClick, disabled, tabIndex }: { tekst: string; onClick:
 
 
 // Payment is not built yet: both buttons open the letter. Payment goes in front of it later.
-const BREV_MED_LIGNENDE = "Vi finner en lignende sak som fikk medhold, og argumenterer for hvorfor din sak står minst like sterkt";
+const BREV_MED_LIGNENDE = "Vi finner en lignende sak som fikk medhold, og viser punkt for punkt hvordan din sak står mot den";
 const NESTE_PUNKTER = [
   "Mangler du noe utvalget la vekt på, for eksempel en vurdering fra verksted, sier vi fra før du sender",
   "Frist for svar, og hva du gjør om forhandleren avviser",

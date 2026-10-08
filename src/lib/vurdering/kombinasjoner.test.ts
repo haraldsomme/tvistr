@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { FEILTYPER_KNAPPER, kjopsalderAv, oppdagetMulig, sporOmFemarsfrist, tilKlageInput, type Innsending } from "./innsending";
+import { kjopsalderAv, oppdagetMulig, sporOmFemarsfrist, tilKlageInput, TOM_INNSENDING, type Innsending } from "./innsending";
 import type { Statistikk } from "./statistikk";
-import { FEILOPPLYSNING_VALG, KJOPSFORM_VALG, KONTAKT_VALG, OPPDAGET_VALG } from "./typer";
+import { KJOPSFORM_VALG, OPPDAGET_VALG, OPPLYST_VALG } from "./typer";
 import { vurder } from "./vurder";
 import { POST } from "@/app/api/vurder/route";
 
@@ -11,8 +11,10 @@ vi.mock("@/lib/vurdering/statistikk", () => ({
 }));
 
 // 1000 random but valid form submissions, run through the same path as the real form: validation,
-// the engine and the API route. The expected level is worked out here from the rules as the user
-// would state them, not by calling the engine's own functions.
+// the engine and the API route. Only what the assessment asks before purchase is answered: when the car
+// was bought, who from, whether the dealer was told within five years (over five years only), how long
+// after the purchase the defect showed and whether the buyer knew about it. The expected level is worked
+// out here from the rules as the user would state them, not by calling the engine's own functions.
 
 const IDAG = "2026-10-01";
 const ANTALL = 1000;
@@ -41,37 +43,17 @@ function kjopMaaned(): { ar: number; maned: number } {
 function lagInnsending(): Innsending {
   const { ar, maned } = kjopMaaned();
   const i: Innsending = {
+    ...TOM_INNSENDING,
     // Two thirds from a dealer; the rest is stopped by the law at the first step.
     kjopsform: velg(["forhandler", "forhandler", "forhandler", "forhandler", "privatperson", "firma"] as const),
-    feiltyper: [],
     // The end of the month, but not after today: the form no longer accepts a purchase in the future.
-    kjopAlder: "",
     kjopsdato: maanedsslutt(ar, maned) > IDAG ? IDAG : maanedsslutt(ar, maned),
-    kjopesum: "",
-    kmVedKjop: "",
-    oppdaget: "",
-    opplystForKjop: velg(["ja", "nei"] as const),
-    feilOpplysning: velg(FEILOPPLYSNING_VALG),
-    kontakt: velg(KONTAKT_VALG),
-    reklamertInnenFemAr: "",
-    verkstedrapport: velg(["ja", "nei"] as const),
-    rapportSierForKjop: "",
-    bilder: "",
+    opplystForKjop: velg(OPPLYST_VALG),
   };
-  const antall = 1 + Math.floor(tilfeldig() * 4);
-  while (i.feiltyper.length < antall) {
-    const f = velg(FEILTYPER_KNAPPER);
-    if (!i.feiltyper.includes(f)) i.feiltyper.push(f);
-  }
   const mulige = OPPDAGET_VALG.filter((o) => oppdagetMulig(i, o, IDAG));
   i.oppdaget = velg(mulige);
-  if (i.verkstedrapport === "ja") i.rapportSierForKjop = velg(["ja", "nei"] as const);
-  else i.bilder = velg(["ja", "nei"] as const);
   i.kjopAlder = kjopsalderAv(i, IDAG);
   if (sporOmFemarsfrist(i, IDAG)) i.reklamertInnenFemAr = velg(["ja", "nei"] as const);
-  // A third are cheap, a third far-driven, so every combination of the two shows up.
-  i.kjopesum = String(sjanse(0.33) ? 15_000 + Math.floor(tilfeldig() * 35_000) : 50_000 + Math.floor(tilfeldig() * 450_000));
-  i.kmVedKjop = String(sjanse(0.33) ? 200_001 + Math.floor(tilfeldig() * 150_000) : Math.floor(tilfeldig() * 200_001));
   return i;
 }
 
@@ -88,51 +70,43 @@ const SCENARIER: Scenario[] = [
 
 const maanedsslutt = (ar: number, maned: number) => new Date(Date.UTC(ar, maned, 0)).toISOString().slice(0, 10);
 
-// A date plus months; the 31st plus a month lands on the last day of a shorter month.
-function pluss(dato: string, maneder: number): string {
-  const [ar, maned, dag] = dato.split("-").map(Number);
-  const mal = maned - 1 + maneder;
-  const siste = new Date(Date.UTC(ar + Math.floor(mal / 12), (mal % 12) + 1, 0)).getUTCDate();
-  return new Date(Date.UTC(ar + Math.floor(mal / 12), mal % 12, Math.min(dag, siste))).toISOString().slice(0, 10);
-}
-
-type Forventet = { niva: "god" | "svak" | "utenfor"; stopp: "firma" | "privat" | "frist" | null };
+type Forventet = { niva: "sak" | "utenfor"; stopp: "firma" | "privat" | "frist" | "kjent" | null; varsler: RegExp[] };
 
 function forventet(i: Innsending): Forventet {
   const kjop = i.kjopsdato;
   const kjopAr = Number(kjop.slice(0, 4));
   const kjopManed = Number(kjop.slice(5, 7));
 
-  // Complaining is possible for five years. With no complaint yet it is today that counts; otherwise whether the first complaint came within them.
+  // Complaining is possible for five years: past them, the buyer must have complained within them.
   const fristSlutt = maanedsslutt(kjopAr + 5, kjopManed);
-  const fristUte = IDAG > fristSlutt && (i.kontakt === "nei" || i.reklamertInnenFemAr === "nei");
+  const fristUte = IDAG > fristSlutt && i.reklamertInnenFemAr === "nei";
+  // Before 2024 a defect the buyer knew of, as it is, cannot be complained about (§ 16 third paragraph as it read then).
+  const toAar = kjop >= "2024-01-01";
+  const kjent = i.opplystForKjop === "ja_som_opplyst" && !toAar;
 
-  // The law itself stops the claim: not a purchase from a dealer, or past the five-year limit.
-  const stopp = i.kjopsform === "firma" ? "firma" : i.kjopsform === "privatperson" ? "privat" : fristUte ? "frist" : null;
-  if (stopp) return { niva: "utenfor", stopp };
+  // The law itself stops the claim: not a purchase from a dealer, past the five-year limit, or a known defect.
+  const stopp = i.kjopsform === "firma" ? "firma" : i.kjopsform === "privatperson" ? "privat" : fristUte ? "frist" : kjent ? "kjent" : null;
+  if (stopp) return { niva: "utenfor", stopp, varsler: [] };
 
   // Presumption that the defect was there at delivery: six months, two years for purchases from 2024.
-  const toAar = kjop >= "2024-01-01";
   const presumsjon = i.oppdaget === "innen_6_mnd" || (i.oppdaget === "6_mnd_til_2_ar" && toAar);
-
-  const rapport = i.verkstedrapport === "ja";
-  const rapportSierFor = rapport && i.rapportSierForKjop === "ja";
-
-  // Outside the presumption only a report that points back to before the purchase lifts the case.
-  let niva: "god" | "svak" = !presumsjon && !rapportSierFor ? "svak" : "god";
-  // Knew about the defect: decisive for purchases before 2024; from 2024 the buyer must also have accepted it expressly.
-  if (i.opplystForKjop === "ja" && i.feilOpplysning === "nei" && !toAar) niva = "svak";
-  // Has not told the dealer, and the latest the defect can have shown is over a year ago («mer enn 2 år» has no latest).
-  const senest = { innen_6_mnd: 6, "6_mnd_til_2_ar": 24 }[i.oppdaget as "innen_6_mnd"];
-  if (i.kontakt === "nei" && senest !== undefined && IDAG > pluss(kjop, senest + 12)) niva = "svak";
-  return { niva, stopp: null };
+  const periode = toAar ? "2 år" : "6 måneder";
+  return {
+    niva: "sak",
+    stopp: null,
+    varsler: [
+      presumsjon
+        ? new RegExp(`^Feilen viste seg innen ${periode} etter kjøpet\\. Da er det forhandleren som må vise`)
+        : new RegExp(`^Feilen viste seg mer enn ${periode} etter kjøpet\\. Da må du vise .* vurdering fra verksted`),
+      ...(i.opplystForKjop === "ja_verre" ? [/^Du visste om feilen, men den er verre eller annerledes enn du fikk vite\. Brevet bygger på forskjellen\.$/] : []),
+    ],
+  };
 }
 
-const TITTEL: Record<"god" | "svak" | "utenfor", RegExp> = {
-  // The same title whatever the level; the page lists what speaks for and against the case.
-  god: /^Du kan ha en sak mot forhandleren\.$/,
-  svak: /^Du kan ha en sak mot forhandleren\.$/,
-  utenfor: /^(Forbrukerkjøpsloven gjelder ikke for dette kjøpet\.|Forbrukerkjøpsloven gjelder ikke når du kjøper av en privatperson\.|Fristen for å reklamere er trolig ute\.)$/,
+const TITTEL: Record<"sak" | "utenfor", RegExp> = {
+  // The same title for every case the law does not stop; the warning says what the buyer must know.
+  sak: /^Du kan ha en sak mot forhandleren\.$/,
+  utenfor: /^(Forbrukerkjøpsloven gjelder ikke for dette kjøpet\.|Forbrukerkjøpsloven gjelder ikke når du kjøper av en privatperson\.|Fristen for å reklamere er trolig ute\.|Du kan ikke klage på en feil du kjente til da du kjøpte bilen\.)$/,
 };
 
 
@@ -145,13 +119,14 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
 
   const innsendinger = Array.from({ length: ANTALL }, lagInnsending);
 
-  it("dekker feiltyper, tidspunkt, kontakt og bevis bredt", () => {
-    for (const f of FEILTYPER_KNAPPER) expect(innsendinger.filter((i) => i.feiltyper.includes(f)).length, f).toBeGreaterThan(150);
+  it("dekker kjøpsform, tidspunkt, opplysning og femårsfristen bredt, og svarer ikke på noe annet", () => {
     for (const o of OPPDAGET_VALG) expect(innsendinger.filter((i) => i.oppdaget === o).length, o).toBeGreaterThan(100);
-    for (const k of KONTAKT_VALG) expect(innsendinger.filter((i) => i.kontakt === k).length, k).toBeGreaterThan(150);
+    for (const o of OPPLYST_VALG) expect(innsendinger.filter((i) => i.opplystForKjop === o).length, o).toBeGreaterThan(150);
     for (const k of KJOPSFORM_VALG) expect(innsendinger.filter((i) => i.kjopsform === k).length, k).toBeGreaterThan(100);
     expect(innsendinger.filter((i) => i.reklamertInnenFemAr !== "").length).toBeGreaterThan(50);
-    expect(new Set(innsendinger.map((i) => JSON.stringify(i))).size).toBeGreaterThan(950);
+    expect(innsendinger.filter((i) => i.opplystForKjop === "ja_som_opplyst" && i.kjopsdato < "2024-01-01" && i.kjopsform === "forhandler").length).toBeGreaterThan(50);
+    for (const i of innsendinger) expect({ ...i, kjopsform: "", kjopAlder: "", kjopsdato: "", oppdaget: "", opplystForKjop: "", reklamertInnenFemAr: "" }).toEqual(TOM_INNSENDING);
+    expect(new Set(innsendinger.map((i) => JSON.stringify(i))).size).toBeGreaterThan(800);
   });
 
   it("alle godtas av valideringen", () => {
@@ -161,7 +136,7 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
 
   it("gir forventet vurdering i alle fire statistikkscenarier", async () => {
     const avvik: string[] = [];
-    const teller = { god: 0, svak: 0, utenfor: 0 };
+    const teller = { sak: 0, utenfor: 0 };
 
     for (const [n, i] of innsendinger.entries()) {
       const parsed = tilKlageInput(i, IDAG);
@@ -175,6 +150,8 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
         if (v.niva !== f.niva) avvik.push(`${merke}: forventet ${f.niva}, fikk ${v.niva}`);
         if (s === SCENARIER[0]) teller[v.niva]++;
 
+        if (f.niva === "sak" && (v.varsler.length !== f.varsler.length || f.varsler.some((r, n) => !r.test(v.varsler[n])))) avvik.push(`${merke}: varsler ${JSON.stringify(v.varsler)}`);
+        if (f.stopp === "kjent" && !/§ 16 tredje ledd/.test(v.begrunnelse)) avvik.push(`${merke}: kjent feil mangler forklaring`);
         if (f.stopp === "frist") {
           if (!v.grunnlag.some((g) => g.paragraf === "forbrukerkjøpsloven § 27")) avvik.push(`${merke}: frist ute mangler henvisning til § 27`);
           if (!/mer enn fem år/.test(v.begrunnelse)) avvik.push(`${merke}: frist ute mangler forklaring`);
@@ -190,19 +167,16 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
         if (v.grunnlag.length < 1) avvik.push(`${merke}: grunnlaget er tomt`);
         for (const g of v.grunnlag) if (Boolean(g.lenke) !== Boolean(g.paragraf)) avvik.push(`${merke}: paragraf og lenke må følges åt`);
 
-        // A claim the law stops has one reason, no example, no advice and no statistics.
-        if (f.niva === "utenfor") {
-          if (v.grunnlag.length !== 1 || v.tiltak.length !== 0 || v.statistikk !== null) avvik.push(`${merke}: stoppet sak skal ha ett grunnlag og ingen tiltak eller statistikk`);
-          continue;
-        }
+        // A claim the law stops has one reason, no warnings and no statistics.
+        if (f.niva === "utenfor" && (v.grunnlag.length !== 1 || v.varsler.length !== 0 || v.statistikk !== null)) avvik.push(`${merke}: stoppet sak skal ha ett grunnlag og ingen varsler eller statistikk`);
       }
     }
 
     console.info("Fordeling (nøytral statistikk):", teller);
     expect(avvik.slice(0, 15)).toEqual([]);
     expect(avvik).toHaveLength(0);
-    expect(teller.god).toBeGreaterThan(50);
-    expect(teller.svak).toBeGreaterThan(50);
+    expect(teller.sak).toBeGreaterThan(300);
+    expect(teller.utenfor).toBeGreaterThan(300);
   });
 
   it("API-ruten gir samme resultat og lekker ikke statistikk", async () => {
@@ -223,28 +197,28 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
         continue;
       }
       if (json.niva !== f.niva) avvik.push(`${merke}: forventet ${f.niva}, fikk ${json.niva}`);
-      if (f.niva === "utenfor") {
-        if (json.styrker.length !== 0 || json.svakheter.length !== 1) avvik.push(`${merke}: stoppet sak skal bare ha ett punkt`);
-      }
-      // Strengths: exactly three for a good case; weaknesses never hold a point that speaks for the case.
-      if (f.niva === "god" && json.styrker.length !== 3) avvik.push(`${merke}: god sak skal ha tre styrker, fikk ${json.styrker.length}`);
-      if (json.styrker.some((p: { vekt: string }) => p.vekt !== "for") || json.svakheter.some((p: { vekt: string }) => p.vekt === "for")) avvik.push(`${merke}: punkt i feil liste`);
+      // A stopped claim: the one point and no warnings. Otherwise the warnings, no points and the comparison.
+      if (f.niva === "utenfor" && (json.grunnlag.length !== 1 || json.varsler.length !== 0 || json.utvalg !== null)) avvik.push(`${merke}: stoppet sak skal bare ha ett punkt`);
+      if (f.niva === "sak" && (json.grunnlag.length !== 0 || json.varsler.length !== f.varsler.length || !json.utvalg)) avvik.push(`${merke}: sak skal ha varsler og utvalg, ingen punkter`);
       const nokler = Object.keys(json).sort().join(",");
-      if (nokler !== "begrunnelse,niva,styrker,svakheter,tiltak,tittel,utvalg") avvik.push(`${merke}: uventede felt i svaret: ${nokler}`);
-      if (f.niva !== "svak" && json.tiltak.some((t: { tekst?: string }) => t.tekst !== undefined)) avvik.push(`${merke}: tiltakstekst skal ikke sendes ut gratis`);
+      if (nokler !== "begrunnelse,grunnlag,niva,tittel,utvalg,varsler") avvik.push(`${merke}: uventede felt i svaret: ${nokler}`);
+      if (json.utvalg && Object.keys(json.utvalg).sort().join(",") !== "n,vunnet") avvik.push(`${merke}: uventede felt i utvalget`);
     }
     expect(avvik.slice(0, 15)).toEqual([]);
   });
 
   it("ruten avviser skjemaer som ikke kan stemme", async () => {
-    const mal = innsendinger.find((i) => i.kjopsdato.startsWith("2022") && i.verkstedrapport === "nei" && i.kjopsform === "forhandler")!;
+    const mal = innsendinger.find((i) => i.kjopsdato.startsWith("2022") && i.kjopsform === "forhandler" && i.opplystForKjop === "nei")!;
     const stor = { ...mal, kjopsdato: "2027-03-31" };
     const ukjentOppdaget = { ...mal, oppdaget: "aldri" };
-    const utenFeil = { ...mal, feiltyper: [] };
     const nyligKjop = { ...mal, kjopsdato: "2026-09-30", oppdaget: "over_2_ar" };
-    const uten = { ...mal, kontakt: "" };
+    const utenOpplyst = { ...mal, opplystForKjop: "" };
+    const ukjentOpplyst = { ...mal, opplystForKjop: "kanskje" };
+    const utenFemar = { ...mal, kjopsdato: "2019-05-31", reklamertInnenFemAr: "" };
     const utenKjopsform = { ...mal, kjopsform: "" };
-    for (const [navn, kropp] of Object.entries({ stor, ukjentOppdaget, utenFeil, nyligKjop, uten, utenKjopsform, tom: {}, liste: [] })) {
+    // What the assessment does not ask is still checked when it is sent.
+    const ugyldigRapport = { ...mal, verkstedrapport: "kanskje" };
+    for (const [navn, kropp] of Object.entries({ stor, ukjentOppdaget, nyligKjop, utenOpplyst, ukjentOpplyst, utenFemar, utenKjopsform, ugyldigRapport, tom: {}, liste: [] })) {
       const res = await POST(new Request("http://localhost/api/vurder", { method: "POST", headers: { "x-forwarded-for": `10.2.0.${navn.length}${navn.charCodeAt(0)}` }, body: JSON.stringify(kropp) }));
       expect(res.status, navn).toBe(400);
     }

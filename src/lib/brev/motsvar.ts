@@ -49,7 +49,7 @@ export function motsvar(f: Faktorer, u: Utfylling): Motargument[] {
         f.presumsjonManeder === 24
           ? "Det er ikke nok at jeg kjente til feilen. Bare et avvik jeg ble spesielt opplyst om og uttrykkelig og særskilt godtok, kan holdes mot meg, jf. § 15 andre ledd. Det har dere ikke vist."
           : "Det som ble opplyst før kjøpet, svarte ikke til det jeg faktisk fikk. Feilen er mer omfattende enn det jeg kjente til, og jeg viser til annonsen og meldingene som viser hva som ble sagt.",
-      relevant: f.opplystForKjop === "ja",
+      relevant: f.opplyst !== "nei",
     },
   ];
   return [...mal.filter((m) => m.relevant), ...mal.filter((m) => !m.relevant)];

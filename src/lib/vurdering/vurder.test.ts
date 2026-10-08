@@ -7,126 +7,40 @@ import { vurder, type Avhengigheter } from "./vurder";
 const IDAG = "2026-10-01";
 const hent = (id: number): KlageInput => structuredClone((klager as TestKlage[]).find((k) => k.id === id)!.input);
 
-// Case 4 has documented wrong information (+1); these tests want the plain presumption case.
-const hentNeutral = (id: number): KlageInput => {
-  const i = hent(id);
-  i.feilen.feilOpplysning = "nei";
-  return i;
-};
-
-// lav/hoy set ±0.05 around the share, compared with a baseline of 0.6: 0.6 is neutral, 0.8 counts +1,
-// 0.3 counts −1.
-const stat = (andel: number, spesifikk = true, basis = 0.6): Statistikk => ({
+const stat = (andel: number): Statistikk => ({
   n: 200,
   vunnet: Math.round(andel * 200),
   andel,
   lav: andel - 0.05,
   hoy: andel + 0.05,
-  basis,
+  basis: 0.6,
   trinn: 1,
   beskrivelse: "test",
-  spesifikk,
+  spesifikk: false,
 });
 
-const dep = (andel = 0.6, spesifikk = true, basis = 0.6): Avhengigheter => ({
-  hentStatistikk: vi.fn(async () => stat(andel, spesifikk, basis)),
+const dep = (andel = 0.6): Avhengigheter => ({
+  hentStatistikk: vi.fn(async () => stat(andel)),
   idag: IDAG,
 });
 
-describe("frister", () => {
-  it("over fem år uten kontakt stopper saken, med forklaring og uten å miste unntakene", async () => {
-    const i = hent(4);
-    i.bilOgKjop.kjopsdato = "2021-03-31";
-    const d = dep(0.9);
-    const v = await vurder(i, d);
-    expect(v.niva).toBe("utenfor");
-    expect(v.begrunnelse).toMatch(/mer enn fem år/);
-    expect(v.grunnlag[0]).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 27" });
-    expect(v.grunnlag[0].tekst).toMatch(/garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt/);
-    expect(d.hentStatistikk).not.toHaveBeenCalled();
-  });
+// Only what the assessment asks before purchase: the purchase, who it was from, when the defect showed and
+// whether the buyer knew about it. Defect type, contact and evidence are asked after purchase.
+const tynn = (kjopsdato: string, endre: Partial<KlageInput["feilen"]> = {}): KlageInput => ({
+  bilOgKjop: { kjopsform: "forhandler", kjopsdato },
+  feilen: { oppdaget: "innen_6_mnd", opplystForKjop: "nei", ...endre },
+  bevis: {},
 });
 
-describe("nivå", () => {
-  it("presumsjon gir god sak, med eller uten rapport, rettingsforsøk og statistikk", async () => {
-    expect((await vurder(hent(1), dep(0.8))).niva).toBe("god");
-    expect((await vurder(hentNeutral(4), dep())).niva).toBe("god");
-    expect((await vurder(hentNeutral(4), dep(0.3))).niva).toBe("god");
-  });
+const INNENFOR_TO_AR = "Feilen viste seg innen 2 år etter kjøpet. Da er det forhandleren som må vise at den ikke var der da du kjøpte bilen.";
+const INNENFOR_SEKS_MND = "Feilen viste seg innen 6 måneder etter kjøpet. Da er det forhandleren som må vise at den ikke var der da du kjøpte bilen.";
+const UTENFOR_SEKS_MND =
+  "Feilen viste seg mer enn 6 måneder etter kjøpet. Da må du vise at den var der da du kjøpte bilen, og du trenger en vurdering fra verksted. Etter kjøpet sier vi nøyaktig hva den må inneholde.";
+const UTENFOR_TO_AR =
+  "Feilen viste seg mer enn 2 år etter kjøpet. Da må du vise at den var der da du kjøpte bilen, og du trenger en vurdering fra verksted. Etter kjøpet sier vi nøyaktig hva den må inneholde.";
+const VERRE = "Du visste om feilen, men den er verre eller annerledes enn du fikk vite. Brevet bygger på forskjellen.";
 
-  it("utenfor presumsjon uten rapport gir svak, selv med god statistikk", async () => {
-    expect((await vurder(hent(6), dep())).niva).toBe("svak");
-    expect((await vurder(hent(6), dep(0.8))).niva).toBe("svak");
-  });
-
-  it("utenfor presumsjon løfter en rapport som sier «til stede ved kjøp» saken", async () => {
-    const i = hent(6);
-    i.bevis.verkstedrapport = true;
-    i.bevis.rapportSierForKjop = true;
-    expect((await vurder(i, dep())).niva).toBe("god");
-  });
-
-  it("utenfor presumsjon uten rapport er saken svak, uansett om forhandleren er kontaktet", async () => {
-    const i = hent(6);
-    i.feilen.kontakt = "ja";
-    expect((await vurder(i, dep(0.3))).niva).toBe("svak");
-    i.feilen.kontakt = "nei";
-    expect((await vurder(i, dep())).niva).toBe("svak");
-  });
-
-  it("statistikken avgjør ikke nivået, men følger med vurderingen", async () => {
-    const v = await vurder(hentNeutral(4), dep(0.8));
-    expect(v.niva).toBe("god");
-    expect(v.statistikk?.andel).toBe(0.8);
-  });
-
-  it("dokumenterte feilopplysninger nevnes i begrunnelsen", async () => {
-    const v = await vurder(hent(4), dep(0.6));
-    expect(v.begrunnelse).toMatch(/uriktige opplysninger/);
-    const udokumentert = hent(4);
-    udokumentert.feilen.feilOpplysning = "ja_udokumentert";
-    expect((await vurder(udokumentert, dep(0.6))).begrunnelse).not.toMatch(/uriktige opplysninger/);
-  });
-});
-
-describe("tak", () => {
-  it("opplyst feil gir svak når bilen er kjøpt før 2024", async () => {
-    const i = hent(3);
-    i.bilOgKjop.kjopsdato = "2023-12-31";
-    i.bevis.bilder = true;
-    expect((await vurder(i, dep(0.9))).niva).toBe("svak");
-  });
-
-  it("opplyst feil gir fortsatt god sak for kjøp fra 2024", async () => {
-    const i = hent(3);
-    i.bevis.bilder = true;
-    const v = await vurder(i, dep(0.9));
-    expect(v.niva).toBe("god");
-  });
-
-  it("ikke klaget ennå senker ikke nivået når feilen er oppdaget nylig", async () => {
-    const i = hent(1);
-    const for_ = await vurder(i, dep(0.8));
-    i.feilen.kontakt = "nei";
-    const v = await vurder(i, dep(0.8));
-    expect(v.niva).toBe(for_.niva);
-    expect(v.niva).not.toBe("svak");
-    expect(v.begrunnelse).not.toMatch(/ikke klaget/);
-  });
-
-  it("ikke klaget og feilen har helt sikkert vært kjent i over ett år gir svak sak med et punkt mot", async () => {
-    // Defect inside six months of a purchase in January 2022: known since July 2022 at the latest.
-    const i = hent(1);
-    i.bilOgKjop.kjopsdato = "2022-01-31";
-    i.feilen.kontakt = "nei";
-    const v = await vurder(i, dep(0.8));
-    expect(v.niva).toBe("svak");
-    expect(v.grunnlag.find((g) => /kjent til den i over ett år/.test(g.tekst))).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 27" });
-    expect(v.begrunnelse).toMatch(/trolig ventet over ett år/);
-    i.feilen.kontakt = "ja";
-    expect((await vurder(i, dep(0.8))).niva).toBe("god");
-  });
-
+describe("stopp", () => {
   it("kjøp fra firma eller privatperson stopper saken uten statistikk", async () => {
     for (const [kjopsform, tittel] of [
       ["firma", /Forbrukerkjøpsloven gjelder ikke for dette kjøpet/],
@@ -138,145 +52,111 @@ describe("tak", () => {
       const v = await vurder(i, d);
       expect(v.niva).toBe("utenfor");
       expect(v.tittel).toMatch(tittel);
-        expect(v.tiltak).toEqual([]);
       expect(v.grunnlag).toHaveLength(1);
+      expect(v.varsler).toEqual([]);
       expect(d.hentStatistikk).not.toHaveBeenCalled();
     }
   });
 
-  it("rapport som ikke sier noe om tidspunkt gir fortsatt god sak innenfor presumsjon", async () => {
-    const v = await vurder(hent(8), dep(0.8));
-    expect(v.niva).toBe("god");
-    expect(v.begrunnelse).toMatch(/verkstedrapporten sier ikke om feilen var til stede ved levering/);
+  it("over fem år uten reklamasjon innen fem år stopper saken, med forklaring og uten å miste unntakene", async () => {
+    for (const i of [
+      tynn("2021-03-31", { reklamertInnenFemAr: false }),
+      // An older case where the dealer was never told: the five years are past without a complaint.
+      { ...hent(4), bilOgKjop: { ...hent(4).bilOgKjop, kjopsdato: "2021-03-31" } },
+    ]) {
+      const d = dep(0.9);
+      const v = await vurder(i, d);
+      expect(v.niva).toBe("utenfor");
+      expect(v.begrunnelse).toMatch(/mer enn fem år/);
+      expect(v.grunnlag[0]).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 27" });
+      expect(v.grunnlag[0].tekst).toMatch(/garanti som varer lenger, eller har opptrådt uredelig eller grovt uaktsomt/);
+      expect(d.hentStatistikk).not.toHaveBeenCalled();
+    }
+    expect((await vurder(tynn("2021-03-31", { reklamertInnenFemAr: true }), dep())).niva).toBe("sak");
   });
 
-  it("opplyst feil med dokumentert villedende opplysning gir ikke tak", async () => {
-    const i = hent(3);
-    i.bilOgKjop.kjopsdato = "2023-12-31";
-    i.bilOgKjop.kjopesumNok = 139000; // case 3 is a cheap car, which has a cap of its own
-    i.bevis.bilder = true;
-    i.feilen.feilOpplysning = "ja_dokumentert";
-    const v = await vurder(i, dep(0.9));
-    expect(v.niva).toBe("god");
-    expect(v.begrunnelse).toMatch(/du visste om feilen, men du kan dokumentere at opplysningene var misvisende/);
+  it("en feil kjøperen kjente til slik den er, stopper saken for kjøp før 2024", async () => {
+    const d = dep(0.9);
+    const v = await vurder(tynn("2023-12-31", { opplystForKjop: "ja_som_opplyst" }), d);
+    expect(v.niva).toBe("utenfor");
+    expect(v.tittel).toBe("Du kan ikke klage på en feil du kjente til da du kjøpte bilen.");
+    expect(v.begrunnelse).toBe(
+      "Du kjøpte bilen før 1. januar 2024 og visste om feilen, slik den er. Etter forbrukerkjøpsloven § 16 tredje ledd, slik den gjaldt da, kan du ikke gjøre gjeldende som mangel noe du kjente til ved kjøpet. Er feilen verre eller annerledes enn du fikk vite, kan du gå tilbake og endre svaret.",
+    );
+    expect(v.grunnlag).toHaveLength(1);
+    expect(v.grunnlag[0].vekt).toBe("mot");
+    expect(d.hentStatistikk).not.toHaveBeenCalled();
   });
 
-  it("opplyst feil med udokumentert påstand om villedende opplysning gir fortsatt god sak", async () => {
-    const i = hent(3);
-    i.bilOgKjop.kjopsdato = "2023-12-31";
-    i.bevis.bilder = true;
-    i.feilen.feilOpplysning = "ja_udokumentert";
-    const v = await vurder(i, dep(0.9));
-    expect(v.niva).toBe("god");
-    expect(v.begrunnelse).toMatch(/du visste om feilen, men mener opplysningene var misvisende/);
+  it("en kjent feil stopper ikke for kjøp fra 2024", async () => {
+    const v = await vurder(tynn("2024-01-01", { opplystForKjop: "ja_som_opplyst" }), dep());
+    expect(v.niva).toBe("sak");
+    expect(v.varsler).toEqual([INNENFOR_TO_AR]);
+  });
+
+  it("uten nøyaktig dato stopper en kjent feil bare når kjøpet sikkert var før 2024", async () => {
+    const kjent = (kjopAlder: "under_2" | "2_5" | "over_5"): KlageInput => ({
+      bilOgKjop: { kjopsform: "forhandler", kjopAlder },
+      feilen: { oppdaget: "innen_6_mnd", opplystForKjop: "ja_som_opplyst", reklamertInnenFemAr: true },
+      bevis: {},
+    });
+    expect((await vurder(kjent("over_5"), dep())).faktorer.stopp).toBe("kjent");
+    // «2–5 år siden» can be a purchase from 2024: the exact date decides it after purchase.
+    expect((await vurder(kjent("2_5"), dep())).niva).toBe("sak");
+    expect((await vurder(kjent("under_2"), dep())).niva).toBe("sak");
+  });
+
+  it("«ja, men den er verre» stopper aldri, og gir et varsel om at brevet bygger på forskjellen", async () => {
+    for (const kjopsdato of ["2019-05-31", "2023-12-31", "2024-01-01", "2026-06-30"]) {
+      const v = await vurder(tynn(kjopsdato, { opplystForKjop: "ja_verre", reklamertInnenFemAr: true }), dep());
+      expect(v.niva, kjopsdato).toBe("sak");
+      expect(v.varsler.at(-1), kjopsdato).toBe(VERRE);
+    }
   });
 });
 
-describe("pris og kjørelengde (fkjl § 15)", () => {
-  it("billig bil eller høy kjørelengde endrer ikke nivået, men sier hvorfor", async () => {
-    for (const [pris, km, tekst] of [
-      [49999, 112000, /kostet under 50 000 kr\. Da kan du forvente mindre/],
-      [219000, 200001, /hadde gått over 200 000 km da du kjøpte den\. Da kan du forvente mindre/],
-      [35000, 240000, /kostet under 50 000 kr og hadde gått over 200 000 km/],
-    ] as const) {
-      const i = hent(1);
-      i.bilOgKjop.kjopesumNok = pris;
-      i.bilOgKjop.kmVedKjop = km;
-      const v = await vurder(i, dep(0.8));
-      expect(v.niva).toBe("god");
-      expect(v.grunnlag.find((g) => tekst.test(g.tekst))).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 15" });
+describe("varselet om bevisbyrden", () => {
+  it("innenfor formodningsperioden er det forhandleren som må bevise", async () => {
+    expect((await vurder(tynn("2026-02-14"), dep())).varsler).toEqual([INNENFOR_TO_AR]);
+    expect((await vurder(tynn("2023-06-15"), dep())).varsler).toEqual([INNENFOR_SEKS_MND]);
+    expect((await vurder(tynn("2025-07-01", { oppdaget: "6_mnd_til_2_ar" }), dep())).varsler).toEqual([INNENFOR_TO_AR]);
+  });
+
+  it("utenfor formodningsperioden må kjøperen bevise, med en vurdering fra verksted", async () => {
+    expect((await vurder(tynn("2023-06-15", { oppdaget: "6_mnd_til_2_ar" }), dep())).varsler).toEqual([UTENFOR_SEKS_MND]);
+    expect((await vurder(tynn("2023-06-15", { oppdaget: "over_2_ar" }), dep())).varsler).toEqual([UTENFOR_SEKS_MND]);
+    expect((await vurder(tynn("2024-03-31", { oppdaget: "over_2_ar" }), dep())).varsler).toEqual([UTENFOR_TO_AR]);
+  });
+
+  it("varselet om forskjellen kommer etter varselet om bevisbyrden", async () => {
+    expect((await vurder(tynn("2023-06-15", { oppdaget: "over_2_ar", opplystForKjop: "ja_verre" }), dep())).varsler).toEqual([UTENFOR_SEKS_MND, VERRE]);
+  });
+});
+
+describe("sak", () => {
+  it("alt som ikke stopper saken, er en sak, uansett rapport, kontakt, opplysninger og statistikk", async () => {
+    for (const id of [1, 3, 4, 5, 6, 7, 8, 10]) {
+      for (const andel of [0.3, 0.6, 0.9]) {
+        const v = await vurder(hent(id), dep(andel));
+        expect(v.niva, `${id} ${andel}`).toBe("sak");
+        expect(v.tittel).toBe("Du kan ha en sak mot forhandleren.");
+      }
     }
   });
 
-  it("grensene er 50 000 kr og 200 000 km, og manglende tall gir ikke tak", async () => {
-    const i = hent(1);
-    i.bilOgKjop.kjopesumNok = 50000;
-    i.bilOgKjop.kmVedKjop = 200000;
-    expect((await vurder(i, dep(0.8))).niva).toBe("god");
-    i.bilOgKjop.kjopesumNok = null;
-    i.bilOgKjop.kmVedKjop = undefined;
-    expect((await vurder(i, dep(0.8))).niva).toBe("god");
+  it("uten svar på feiltype, kontakt og bevis sammenlignes saken med alle forhandlervedtak i samme tidsrom", async () => {
+    const d = dep();
+    const v = await vurder(tynn("2026-02-14"), d);
+    expect(v.niva).toBe("sak");
+    expect(v.statistikk?.vunnet).toBe(120);
+    expect(d.hentStatistikk).toHaveBeenCalledWith(expect.objectContaining({ feilgrupper: [], statistikkbotte: "rask", kontakt: null, verkstedrapport: null }));
   });
 
-  it("gjelder ikke når feilen er uriktig kilometerstand eller historikk", async () => {
-    const i = hent(1);
-    i.feilen.typer = ["km_service"];
-    i.bilOgKjop.kjopesumNok = 35000;
-    const v = await vurder(i, dep(0.8));
-    expect(v.niva).toBe("god");
-    expect(v.grunnlag.some((g) => /vanlig slitasje/.test(g.tekst))).toBe(false);
-  });
-});
-
-describe("udokumentert feil", () => {
-  it("uten rapport og bilder er saken fortsatt god innenfor presumsjonen, uten å påstå noe om dokumentasjon", async () => {
-    const v = await vurder(hent(10), dep(0.8));
-    expect(v.niva).toBe("god");
-    expect(v.begrunnelse).not.toMatch(/dokumentasjon/);
-    expect(v.grunnlag.some((g) => /dokumentert selve feilen/.test(g.tekst))).toBe(false);
-  });
-});
-
-describe("kontakt med forhandleren", () => {
-  it("å ikke ha kontaktet forhandleren trekker ikke ned og nevnes ikke, men gir et tips om å la forhandleren rette først", async () => {
-    const i = hent(1);
-    i.feilen.kontakt = "nei";
-    const v = await vurder(i, dep(0.8));
-    expect(v.niva).toBe("god");
-    expect(v.begrunnelse).not.toMatch(/reklamert|reklamer|bør du/i);
-    expect(v.tiltak.map((t) => t.tittel)).toEqual(["La forhandleren rette feilen først"]);
-  });
-
-  it("å ha kontaktet forhandleren gir ikke noe tips", async () => {
-    const i = hent(1);
-    i.feilen.kontakt = "ja";
-    const v = await vurder(i, dep(0.8));
-    expect(v.niva).toBe("god");
-    expect(v.tiltak).toEqual([]);
-  });
-});
-
-describe("tittel og begrunnelse", () => {
-  it("tittelen er den samme for gode og svake saker", async () => {
-    const tittel = "Du kan ha en sak mot forhandleren.";
-    expect((await vurder(hent(1), dep(0.8))).tittel).toBe(tittel);
-    expect((await vurder(hentNeutral(4), dep())).tittel).toBe(tittel);
-    const svak = await vurder(hent(6), dep());
-    expect(svak.niva).toBe("svak");
-    expect(svak.tittel).toBe(tittel);
-  });
-
-  it("begrunnelsen er én setning med tidspunkt, opplysning og dokumentasjon", async () => {
-    const i = hent(1);
-    i.feilen.kontakt = "nei";
-    expect((await vurder(i, dep())).begrunnelse).toBe(
-      "Feilen ble oppdaget innen seks måneder etter kjøpet, du visste ikke om den før kjøpet, og verkstedrapporten peker på en feil som sannsynligvis var til stede ved levering.",
-    );
-    expect((await vurder(hent(3), dep())).begrunnelse).toMatch(/du visste om feilen før kjøpet/);
-    expect((await vurder(hent(6), dep())).begrunnelse).toMatch(/^Feilen ble oppdaget mer enn to år etter kjøpet/);
-  });
-
-  it("inneholder ingen tekniske rester", async () => {
+  it("begrunnelsen er varselet, og ingen tekst har tekniske rester", async () => {
     for (const id of [1, 3, 4, 5, 6, 7, 8, 10]) {
       const v = await vurder(hent(id), dep());
+      expect(v.begrunnelse).toBe(v.varsler.join(" "));
       expect(`${v.tittel} ${v.begrunnelse}`).not.toMatch(/undefined|NaN|null|XX\d|Testbil/);
     }
-  });
-});
-
-describe("tiltak", () => {
-  const titler = async (i: KlageInput) => (await vurder(i, dep())).tiltak.map((t) => t.tittel);
-
-  it("foreslår det som mangler, og ingenting når saken er dokumentert", async () => {
-    expect(await titler(hent(10))).toEqual(["Få en verksted- eller tilstandsrapport", "Dokumenter feilen med bilder eller film"]);
-    expect(await titler(hent(8))).toEqual(["Be et uavhengig verksted vurdere når feilen oppsto"]);
-    expect(await titler(hent(1))).toEqual([]);
-  });
-
-  it("foreslår å ta vare på annonsen når opplysningene var uriktige og ikke dokumentert", async () => {
-    const i = hent(5);
-    i.feilen.feilOpplysning = "ja_udokumentert";
-    expect(await titler(i)).toContain("Ta vare på annonsen og meldingene");
-    expect(await titler(hent(5))).not.toContain("Ta vare på annonsen og meldingene");
   });
 });

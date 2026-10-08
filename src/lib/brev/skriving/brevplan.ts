@@ -136,7 +136,12 @@ export function planlegg(m: Saksmodell): Brevplan {
   // The plan is sent to the author: what the buyer typed is cleaned as the case is.
   const rens = (t: string) => rensTekst(t, m.kjente);
   const { kjopesumNok, kmVedKjop } = input.bilOgKjop;
+  // What the assessment no longer asks is missing until its step is filled in: then the letter has a
+  // placeholder where it needs the answer, and says nothing about it otherwise.
+  const kontaktBesvart = input.feilen.kontakt !== undefined;
   const kontakt = input.feilen.kontakt === "ja";
+  const typerUkjent = !input.feilen.typer?.length;
+  const slitasje = f.slitasjeAktuelt && !typerUkjent;
   const retting = u.retting;
   const r = kontakt ? u.reklamasjon : undefined;
   const utgifter = u.krav?.utgifter ?? [];
@@ -149,6 +154,8 @@ export function planlegg(m: Saksmodell): Brevplan {
   if (kjopesumNok == null) mangel("kjøpesum", "kjopet");
   legg("innledning", "Vis til kjøpet av bilen fra dere, med kjøpsdatoen og kjøpesummen.", { kjopsdato: input.bilOgKjop.kjopsdato ?? null, kjopesumNok: kjopesumNok ?? null });
   if (!u.feilen) mangel("beskrivelse av feilen: når den viste seg, hva som skjer, og hva verkstedet har funnet", "feilen");
+  // The step that fills in the description asks the type first, so one placeholder covers both until then.
+  else if (typerUkjent) mangel("hva feilen gjelder", "feilen");
   legg(
     "feilen",
     "Beskriv feilen ut fra kjøperens egne opplysninger, som nøkterne observasjoner: hva som skjer, når og hvor ofte, hva det betyr for bruken av bilen, og hva et verksted har funnet (gjengitt som verkstedets funn).",
@@ -180,6 +187,7 @@ export function planlegg(m: Saksmodell): Brevplan {
   // What has happened between the buyer and the dealer, in the order it happened: events only; what they
   // mean under § 27 and § 30 stands in Rettslig grunnlag and Krav.
   const hendelser: string[] = [];
+  if (!kontaktBesvart) mangel("om du har tatt opp feilen med forhandleren", "kontakt");
   if (kontakt) {
     if (!u.reklamasjon) mangel("dato og måte du tok opp feilen med forhandleren", "kontakt");
     hendelser.push("Når og hvordan jeg tok opp feilen med dere første gang.");
@@ -200,7 +208,11 @@ export function planlegg(m: Saksmodell): Brevplan {
       retting: retting ?? null,
       reparasjon: retting === "reparert_selv" ? (u.reparasjon ?? null) : null,
     });
-  } else forby("historikk", "Kjøperen har ikke tatt opp feilen med dere før, og bilen er ikke reparert andre steder.");
+  } else
+    forby(
+      "historikk",
+      kontaktBesvart ? "Kjøperen har ikke tatt opp feilen med dere før, og bilen er ikke reparert andre steder." : "Det er ikke oppgitt om kjøperen har tatt opp feilen med dere før.",
+    );
 
   // Rettslig grunnlag: the burden of proof and the information given; the conclusion that the car has a
   // defect comes after them, as a lawyer would put it, then the decision and the deadlines.
@@ -219,21 +231,24 @@ export function planlegg(m: Saksmodell): Brevplan {
           : "En verksted- eller tilstandsrapport sier at feilen sannsynligvis var til stede før jeg overtok bilen, jf. § 18 første ledd.",
       { fra: u.rapport ? rens(u.rapport.fra) : null, dato: u.rapport?.dato ?? null, kanSiteres: Boolean(m.kilder.rapport) },
     );
+  } else if (input.bevis.verkstedrapport == null) {
+    mangel("om et verksted har skrevet en rapport om feilen", "rapport");
+    forby("rapport_bevis", "Det er ikke oppgitt om det finnes en rapport som sier at feilen var der før kjøpet.");
   } else forby("rapport_bevis", "Ingen rapport sier at feilen var der før kjøpet.");
-  if (input.feilen.feilOpplysning !== "nei") {
+  if (f.feilOpplysninger === true) {
     if (!u.opplysning) mangel("hva annonsen eller selgeren opplyste som ikke stemte", "for-kjopet");
     legg("opplysning", "Det dere opplyste om bilen før kjøpet, var uriktig. Bilen svarer dermed ikke til de opplysningene dere ga, jf. § 16.", { kilde: u.opplysning?.kilde ?? null, kanSiteres: Boolean(m.kilder.opplysning) });
   } else forby("opplysning", "Kjøperen har ikke sagt at dere ga uriktige opplysninger.");
 
   // What the dealer may object.
-  const forbehold = u.forbehold && JURIDISK.forbehold(u.forbehold, f.presumsjonManeder, input.feilen.opplystForKjop === "ja");
+  const forbehold = u.forbehold && JURIDISK.forbehold(u.forbehold, f.presumsjonManeder, f.opplyst !== "nei");
   if (forbehold) legg("forbehold", forbehold, { forbehold: u.forbehold });
   const nevnerSlitasje = /slit/i.test([u.rapport?.sitat ?? "", u.feilen?.egen ?? "", ...(u.feilen?.avsnitt ?? []), m.kilder.rapport ?? ""].join(" "));
-  if (f.slitasjeAktuelt) legg("slitasje", JURIDISK.slitasje(kmVedKjop, nevnerSlitasje), { kmVedKjop: kmVedKjop ?? null });
-  else forby("slitasje", "Feilen er ikke av en type slitasje kan forklare.");
+  if (slitasje) legg("slitasje", JURIDISK.slitasje(kmVedKjop, nevnerSlitasje), { kmVedKjop: kmVedKjop ?? null });
+  else forby("slitasje", typerUkjent ? "Det er ikke oppgitt hva feilen gjelder." : "Feilen er ikke av en type slitasje kan forklare.");
 
   // The conclusion, after what it rests on.
-  legg("mangel", `Bilen har etter dette ${flere ? "mangler" : "en mangel"} etter forbrukerkjøpsloven § 16${f.slitasjeAktuelt ? ", jf. § 15" : ""}.`);
+  legg("mangel", `Bilen har etter dette ${flere ? "mangler" : "en mangel"} etter forbrukerkjøpsloven § 16${slitasje ? ", jf. § 15" : ""}.`);
 
   // The decision the letter cites (spec 2026-10-08); its source is a mark, the numbers of both cases are data.
   // Never a decision from after the letter's own date.
@@ -271,7 +286,9 @@ export function planlegg(m: Saksmodell): Brevplan {
     "reklamasjon",
     kontakt
       ? `${komITide ? "Reklamasjonen kom innen to måneder etter at jeg oppdaget feilen, jf. § 27 første ledd. " : ""}Med dette brevet bekrefter jeg reklamasjonen skriftlig.`
-      : `Jeg reklamerer herved på ${mangelen}, jf. forbrukerkjøpsloven § 27${iTide ? ", innen to måneder etter at jeg oppdaget feilen" : ""}.`,
+      : kontaktBesvart
+        ? `Jeg reklamerer herved på ${mangelen}, jf. forbrukerkjøpsloven § 27${iTide ? ", innen to måneder etter at jeg oppdaget feilen" : ""}.`
+        : `Med dette brevet reklamerer jeg skriftlig på ${mangelen}, jf. forbrukerkjøpsloven § 27${iTide ? ", innen to måneder etter at jeg oppdaget feilen" : ""}.`,
   );
   if (retting === "forsokt" && f.presumsjonManeder === 24 && u.krav?.type) legg("avviser_nytt_forsok", JURIDISK.avviserNyttForsok);
 

@@ -3,11 +3,11 @@ import { MOMENTER } from "@/lib/brev/momenter";
 import { beregnFaktorer } from "./faktorer";
 import { HENVISNINGER, velgHenvisning, type Henvisning, type Kjoper } from "./henvisninger";
 import { FEILTYPER_KNAPPER } from "./innsending";
-import { OPPDAGET_VALG, type FeilKnapp, type FeilOpplysning, type KlageInput, type Kjopsform, type Oppdaget } from "./typer";
+import { OPPDAGET_VALG, type FeilKnapp, type FeilOpplysning, type KlageInput, type Kjopsform, type Oppdaget, type Opplyst } from "./typer";
 
 const IDAG = "2026-10-01";
 
-type Valg = { typer?: FeilKnapp[]; oppdaget?: Oppdaget; kjopsdato?: string; bilAr?: number; rapport?: boolean; km?: number; pris?: number; feilOpplysning?: FeilOpplysning; opplystForKjop?: "ja" | "nei"; kjopsform?: Kjopsform };
+type Valg = { typer?: FeilKnapp[]; oppdaget?: Oppdaget; kjopsdato?: string; bilAr?: number; rapport?: boolean; km?: number; pris?: number; feilOpplysning?: FeilOpplysning; opplystForKjop?: Opplyst; kjopsform?: Kjopsform };
 const klage = (o: Valg = {}): KlageInput => ({
   bilOgKjop: { kjopsform: o.kjopsform ?? "forhandler", kjopsdato: o.kjopsdato ?? "2025-03-01", kjopesumNok: o.pris ?? 150000, ...(o.km !== undefined && { kmVedKjop: o.km }), ...(o.bilAr !== undefined && { bilAr: o.bilAr }) },
   feilen: { typer: o.typer ?? ["motor"], oppdaget: o.oppdaget ?? "innen_6_mnd", opplystForKjop: o.opplystForKjop ?? "nei", feilOpplysning: o.feilOpplysning ?? "nei", kontakt: "ja" },
@@ -122,7 +122,7 @@ describe("biblioteket", () => {
           for (const alder of [null, 1, 6, 10, 15, 20, 25, 30])
             for (const rapport of [false, true])
               for (const feilOpplysning of ["nei", "ja_dokumentert"] as const)
-                for (const opplystForKjop of ["nei", "ja"] as const) {
+                for (const opplystForKjop of ["nei", "ja_verre"] as const) {
                   // A defect cannot show more than two years after a purchase 19 months ago.
                   if (kjopsdato === "2025-03-01" && oppdaget === "over_2_ar") continue;
                   const bilAr = alder === null ? undefined : Number(kjopsdato.slice(0, 4)) - alder;

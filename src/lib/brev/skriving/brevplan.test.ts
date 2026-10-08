@@ -171,6 +171,35 @@ describe("planlegg", () => {
     for (const t of tekster) expect(t).not.toMatch(/[[\]]/);
   });
 
+  it("en sak uten feiltype, kontakt og rapport gir plassholdere og ingen påstander om dem", () => {
+    // What the assessment no longer asks, not yet answered after purchase.
+    const m = modell({ svar: svar({ feiltyper: [], kontakt: "", verkstedrapport: "", bilder: "", feilOpplysning: "" }), utfylling: { feilen } });
+    const p = planlegg(m);
+    expect(p.mangler).toEqual(
+      expect.arrayContaining([
+        { tekst: "hva feilen gjelder", steg: "feilen" },
+        { tekst: "om du har tatt opp feilen med forhandleren", steg: "kontakt" },
+        { tekst: "om et verksted har skrevet en rapport om feilen", steg: "rapport" },
+      ]),
+    );
+    // Nothing is argued about them, either way.
+    const ider = p.argumenter.map((a) => a.id);
+    for (const id of ["historikk", "rapport_bevis", "opplysning", "slitasje"] as const) expect(ider).not.toContain(id);
+    expect(p.argumenter.find((a) => a.id === "reklamasjon")?.foring).not.toMatch(/bekrefter|herved/);
+    expect(p.argumenter.find((a) => a.id === "mangel")?.foring).not.toContain("§ 15");
+    const grunner = p.forbudt.filter((f) => ["historikk", "rapport_bevis", "slitasje"].includes(f.id)).map((f) => f.grunn);
+    for (const g of grunner) expect(g).toMatch(/ikke oppgitt/);
+    const sak = sakForModell(m) as { feilen: { kategorier: unknown }; kontakt: { tattOppMedForhandleren: unknown }; rapport: unknown };
+    expect(sak.feilen.kategorier).toEqual([]);
+    expect(sak.kontakt.tattOppMedForhandleren).toBeNull();
+    expect(sak.rapport).toBeNull();
+    // The same case with the answers gives none of these placeholders.
+    const besvart = planlegg(modell({ svar: svar(), utfylling: { feilen } })).mangler.map((x) => x.steg);
+    expect(besvart).not.toContain("kontakt");
+    expect(besvart).not.toContain("rapport");
+    expect(besvart).not.toContain("feilen");
+  });
+
   it("lar kilden til vedtaket stå som merke", () => {
     const p = plan();
     expect(p.henvisning).not.toBeNull();

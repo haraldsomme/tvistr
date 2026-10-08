@@ -10,14 +10,15 @@ import {
 } from "@/lib/vurdering/innsending";
 import type { Utfylling } from "./utfylling";
 
-// The answers from the assessment a step on the letter page corrects: the purchase (Kjøpet), whether
-// the buyer knew (Før kjøpet), contact with the dealer (Kontakt) and the report (Bevis). Who the car was
-// bought from and the defect are locked to the case like the vehicle, so a letter bought for one claim
+// The answers a step on the letter page gives or corrects: the purchase (Kjøpet), the defect type (Feilen),
+// whether the buyer knew (Før kjøpet), contact with the dealer (Kontakt) and the report (Tilstandsrapport).
+// Who the car was bought from is locked to the case like the vehicle, so a letter bought for one claim
 // cannot be turned into another; the rest are derived from the fill-in (`avledSvar`).
 export const REDIGERBARE_SVAR = [
   "kjopsdato",
   "kjopesum",
   "kmVedKjop",
+  "feiltyper",
   "opplystForKjop",
   "kontakt",
   "verkstedrapport",
@@ -53,6 +54,8 @@ const STOPPET: Record<Stopp, string> = {
     "Med dette svaret er fristen for å reklamere ute: det må skje senest fem år etter kjøpet. Vurderingen ville ikke gitt et brev, så endringen er ikke lagret. Sjekk kjøpsdatoen og det du har svart om kontakt med forhandleren.",
   privat: "Med dette svaret gjelder ikke forbrukerkjøpsloven for kjøpet, og vurderingen ville ikke gitt et brev. Endringen er ikke lagret.",
   firma: "Med dette svaret gjelder ikke forbrukerkjøpsloven for kjøpet, og vurderingen ville ikke gitt et brev. Endringen er ikke lagret.",
+  kjent:
+    "Med dette svaret kjente du til feilen slik den er da du kjøpte bilen, og for kjøp før 2024 kan du ikke klage på det. Vurderingen ville ikke gitt et brev, så endringen er ikke lagret. Sjekk kjøpsdatoen og svaret under «Før kjøpet».",
 };
 
 const likeSvar = (a: Innsending, b: Innsending) =>

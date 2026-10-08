@@ -1,21 +1,19 @@
 import { beregnFaktorer, iDag, type Faktorer } from "./faktorer";
-import { byggGrunnlag, fkjl, NAAR, type Grunnlag } from "./grunnlag";
-import { foreslaTiltak, type Tiltak } from "./tiltak";
+import { byggGrunnlag, fkjl, type Grunnlag } from "./grunnlag";
 import type { HentStatistikk, Statistikk } from "./statistikk";
 import type { KlageInput, Niva } from "./typer";
 
 export type Vurdering = {
   niva: Niva;
-  // One sentence: what the buyer most likely can claim.
   tittel: string;
-  // One or two sentences: the facts the level rests on.
+  // Stopped: why. Otherwise the warnings in one paragraph.
   begrunnelse: string;
-  // The same facts point by point, each with the rule it triggers and a reference to the law.
+  // Stopped: the one point shown, with the rule and a reference to the law. Otherwise the facts the case
+  // rests on (`byggGrunnlag`), kept for the letter page's save dialog and not shown before purchase.
   grunnlag: Grunnlag[];
-  // The decision the letter cites, shown to the buyer before purchase. null only when the law stops the claim.
-  // What the user can do to strengthen the case; empty when there is nothing to suggest. Not part
-  // of the free assessment: it is meant for the paid step.
-  tiltak: Tiltak[];
+  // What the buyer must know before buying the letter: who has the burden of proof, and that the letter
+  // builds on the difference when the buyer knew of the defect. Empty when stopped.
+  varsler: string[];
   // Kept for tests and the script; not shown to the user.
   faktorer: Faktorer;
   statistikk: Statistikk | null;
@@ -26,32 +24,21 @@ export type Avhengigheter = {
   idag?: string;
 };
 
-// The same title whatever the level: the page lists what speaks for and against the case, and the buyer
-// decides from that whether to buy the letter.
+// The same title for every case the law does not stop: the warning says what the buyer must know, and the
+// buyer decides from that whether to buy the letter.
 const TITTEL = "Du kan ha en sak mot forhandleren.";
 
-// The facts that decided the level, as one sentence: timing, what was said, the dealer, evidence.
-function begrunnelseFor(f: Faktorer): string {
-  const ledd = [`Feilen ble oppdaget ${NAAR[f.oppdaget]} etter kjøpet`];
-
-  if (f.opplystForKjop === "ja" && f.feilOpplysninger) {
-    ledd.push(
-      f.feilOpplysningerDokumentert
-        ? "du visste om feilen, men du kan dokumentere at opplysningene var misvisende"
-        : "du visste om feilen, men mener opplysningene var misvisende",
-    );
-  } else if (f.feilOpplysningerDokumentert) ledd.push("du kan dokumentere at du fikk uriktige opplysninger om bilen");
-  else if (f.opplystForKjop === "ja") ledd.push("du visste om feilen før kjøpet");
-  else if (f.opplystForKjop === "nei") ledd.push("du visste ikke om den før kjøpet");
-
-  if (f.venterOverEttAr) ledd.push("du har trolig ventet over ett år med å ta den opp med forhandleren");
-
-  if (f.rapportSierForKjop === true) ledd.push("verkstedrapporten peker på en feil som sannsynligvis var til stede ved levering");
-  else if (f.rapportSierForKjop === false) ledd.push("verkstedrapporten sier ikke om feilen var til stede ved levering");
-  else if (f.verkstedrapport === false) ledd.push("du har ingen verkstedrapport");
-
-  if (ledd.length === 1) return `${ledd[0]}.`;
-  return `${ledd.slice(0, -1).join(", ")}, og ${ledd[ledd.length - 1]}.`;
+// Inside the presumption period the dealer must prove the defect was not there; outside it the buyer must
+// prove it was, which takes a workshop's assessment (§ 18). Then, when the buyer knew of the defect but it is
+// worse or other than told, that the letter builds on the difference.
+function varslerFor(f: Faktorer): string[] {
+  const periode = f.presumsjonManeder === 24 ? "2 år" : "6 måneder";
+  return [
+    f.presumsjon
+      ? `Feilen viste seg innen ${periode} etter kjøpet. Da er det forhandleren som må vise at den ikke var der da du kjøpte bilen.`
+      : `Feilen viste seg mer enn ${periode} etter kjøpet. Da må du vise at den var der da du kjøpte bilen, og du trenger en vurdering fra verksted. Etter kjøpet sier vi nøyaktig hva den må inneholde.`,
+    ...(f.opplyst === "ja_verre" ? ["Du visste om feilen, men den er verre eller annerledes enn du fikk vite. Brevet bygger på forskjellen."] : []),
+  ];
 }
 
 // Where the law itself stops the claim: the title, the justification and the one point shown. The letter
@@ -82,6 +69,16 @@ const STOPP: Record<
       ...fkjl(1),
     },
   },
+  // The text the spec gives; § 16 third paragraph as it read before 2024 has no current text to link to.
+  kjent: {
+    tittel: "Du kan ikke klage på en feil du kjente til da du kjøpte bilen.",
+    begrunnelse:
+      "Du kjøpte bilen før 1. januar 2024 og visste om feilen, slik den er. Etter forbrukerkjøpsloven § 16 tredje ledd, slik den gjaldt da, kan du ikke gjøre gjeldende som mangel noe du kjente til ved kjøpet. Er feilen verre eller annerledes enn du fikk vite, kan du gå tilbake og endre svaret.",
+    grunnlag: {
+      tekst: "Det du kjente til da du kjøpte bilen, kan du ikke klage på (forbrukerkjøpsloven § 16 tredje ledd, slik den lød før 2024).",
+      vekt: "mot",
+    },
+  },
   frist: {
     tittel: "Fristen for å reklamere er trolig ute.",
     begrunnelse:
@@ -106,31 +103,22 @@ export function vurderFraFaktorer(
       tittel: stopp.tittel,
       begrunnelse: stopp.begrunnelse,
       grunnlag: [stopp.grunnlag],
-      tiltak: [],
+      varsler: [],
       faktorer: f,
       statistikk: null,
     };
   }
 
-  // The level is a short list of reasons for a weak case; everything else is a good case. The
-  // decisions show that cases are won or lost on the burden of proof (was the defect there at
-  // delivery?). Inside the presumption the dealer has that burden. Outside it the buyer has, which
-  // takes a report that points back to before the purchase. The dealer's attempts at repair are asked
-  // on the letter page and do not count here. The share of similar decisions is shown, but does not
-  // decide the level.
-  let niva: Niva = "god";
-  if (!f.presumsjon && f.rapportSierForKjop !== true) niva = "svak";
-  // Knew about the defect when buying, for purchases before 2024.
-  if (f.opplystTakSvak) niva = "svak";
-  // Has not told the dealer and found the defect over a year ago: probably not within reasonable time (§ 27).
-  if (f.venterOverEttAr) niva = "svak";
-
+  // Before purchase the assessment only says whether the claim is stopped. How strong it is turns on what
+  // is asked after purchase (the defect, contact, the report), where the steps, the score and the check
+  // before sending take it. The share of decisions is shown, but decides nothing.
+  const varsler = varslerFor(f);
   return {
-    niva,
+    niva: "sak",
     tittel: TITTEL,
-    begrunnelse: begrunnelseFor(f),
+    begrunnelse: varsler.join(" "),
     grunnlag: byggGrunnlag(f),
-    tiltak: foreslaTiltak(f),
+    varsler,
     faktorer: f,
     statistikk: s,
   };

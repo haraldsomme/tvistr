@@ -29,14 +29,15 @@ describe("grunnlag", () => {
     expect(punkt(gammel)).toMatch(/For kjøp før 2024 har forhandleren normalt rett til to forsøk/);
   });
 
-  it("opplyst feil viser til § 15 for kjøp fra 2024, og til det kjøperen kjente til før det", () => {
+  it("opplyst feil viser til § 15 for kjøp fra 2024, og en feil som er verre enn opplyst, gir ikke noe punkt", () => {
     const ny = grunnlag(hent(3)).find((g) => /visste om feilen/.test(g.tekst))!;
     expect(ny.paragraf).toBe("forbrukerkjøpsloven § 15");
     expect(ny.vekt).toBe("mot");
     expect(ny.tekst).toMatch(/uttrykkelig godtok/);
-    const i = hent(3);
-    i.bilOgKjop.kjopsdato = "2023-12-31";
-    expect(grunnlag(i).some((g) => /kan du normalt ikke klage på/.test(g.tekst))).toBe(true);
+    // «Verre eller annerledes enn jeg fikk vite»: the letter builds on the difference, no point against.
+    const verre = hent(3);
+    verre.feilen.opplystForKjop = "ja_verre";
+    expect(grunnlag(verre).some((g) => /visste om feilen/.test(g.tekst))).toBe(false);
   });
 
   it("slitasje nevnes innenfor presumsjonen, men ikke for kilometer, historikk og kollisjonsskade", () => {

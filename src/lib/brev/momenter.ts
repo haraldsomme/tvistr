@@ -1,5 +1,5 @@
-import { KNAPP_TIL_FEILTYPE, type Faktorer, type Reklamasjonsbotte } from "@/lib/vurdering/faktorer";
-import { GRUPPER, grupperFor, regelgrunnlag, type Gruppe, type Regelgrunnlag } from "@/lib/vurdering/henvisninger";
+import type { Faktorer, Reklamasjonsbotte } from "@/lib/vurdering/faktorer";
+import { grupperFor, regelgrunnlag, type Gruppe, type Regelgrunnlag } from "@/lib/vurdering/henvisninger";
 import type { Momentsvar } from "./utfylling";
 
 // What Forbrukerklageutvalget weighed in dealer cases, as kinds of facts a buyer can be asked about:
@@ -362,7 +362,7 @@ export function vistSporsmal(id: string, k: SporsmalKontekst): boolean {
     case "bruktimport_ikke_opplyst":
       return k.bruktimportert !== false;
     case "skjult_feil":
-      return k.opplystForKjop !== "ja";
+      return !k.opplystForKjop?.startsWith("ja");
     default:
       return true;
   }

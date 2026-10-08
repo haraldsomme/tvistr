@@ -31,7 +31,7 @@ export async function tolkFritekst(input: Pick<KlageInput["feilen"], "typer"> & 
   const { input: svar } = await kallVerktoy<{ feiltyper: Tolkning["feiltyper"]; mangelsgrunnlag: Tolkning["mangelsgrunnlag"]; beskrivelse_kvalitet: BeskrivelseKvalitet }>({
     system: VURDERING_SYSTEM,
     verktoy: VERKTOY,
-    bruker: vurderingBruker(input.beskrivelse, input.typer),
+    bruker: vurderingBruker(input.beskrivelse, input.typer ?? []),
     effort: "low",
     maksTokens: 1024,
   });

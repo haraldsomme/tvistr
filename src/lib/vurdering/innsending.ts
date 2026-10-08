@@ -3,30 +3,33 @@ import {
   iDag,
   kjopsalderFor,
   kjopsdatoFor,
+  kjoptFor2024,
   leggTilManeder,
 } from "./faktorer";
 import {
   FEILOPPLYSNING_VALG,
   KJOPSALDER_VALG,
   KJOPSFORM_VALG,
-  KONTAKT_VALG,
   OPPDAGET_VALG,
+  OPPLYST_VALG,
   type FeilKnapp,
   type KlageInput,
   type Kjopsalder,
   type Kjopsform,
   type Kontakt,
   type Oppdaget,
+  type Opplyst,
 } from "./typer";
 
-// What the form collects (steps 1–4) and the checks shared by the client (enables «Neste») and the
-// API route (never trusts the client). The assessment only asks for what decides the level: purchase
-// date, who the car was bought from, defect, when it showed, whether the buyer knew about it, contact
-// with the dealer, and what a report says, when there is one. A purchase that is not covered by the
-// consumer purchase act stops the form at step 1 (see `stoppGrunn`). The purchase price, mileage,
-// whether a false statement was in writing and pictures are left empty here: the letter page asks for
-// them in the step they belong to, and some are derived there instead of asked again
-// (`avledSvar` in `src/lib/brev/svar.ts`).
+// What the form collects (steps 1–2) and the checks shared by the client (enables «Neste») and the
+// API route (never trusts the client). The assessment only asks for what can stop the claim and when the
+// defect showed: when the car was bought, who it was bought from, whether the dealer was told within five
+// years (only for a purchase over five years old), how long after the purchase the defect showed, and
+// whether the buyer knew about it. A purchase that is not covered by the consumer purchase act, or past
+// the five-year deadline, stops the form at step 1 (see `stoppGrunn`). The defect type, contact with the
+// dealer, what was said, the report, pictures, the purchase price and the mileage are left empty here: the
+// letter page asks for them in the step they belong to, and some are derived there instead of asked again
+// (`avledSvar` in `src/lib/brev/svar.ts`). When they are given they are checked here too.
 
 export const FEILTYPER_KNAPPER: readonly FeilKnapp[] = [
   "motor",
@@ -42,7 +45,6 @@ export const FEILTYPER_KNAPPER: readonly FeilKnapp[] = [
   "skade",
   "annet",
 ];
-export const OPPLYST_VALG = ["ja", "nei"] as const;
 export const JA_NEI = ["ja", "nei"] as const;
 export const FRA_AR = 1990;
 const MAKS_KJOPESUM = 50_000_000;
@@ -50,7 +52,7 @@ const MAKS_KM = 2_000_000;
 
 type JaNei = (typeof JA_NEI)[number] | "";
 
-export type Steg = 1 | 2 | 3 | 4;
+export type Steg = 1 | 2;
 
 export type Innsending = {
   kjopAlder: Kjopsalder | ""; // how long ago the car was bought; the assessment asks for this
@@ -58,15 +60,15 @@ export type Innsending = {
   kjopsdato: string; // the exact day, ÅÅÅÅ-MM-DD; empty until the registry or the letter page gives it
   kjopesum: string; // whole kroner, digits only; not asked in the assessment
   kmVedKjop: string; // odometer at purchase, digits only; not asked in the assessment
-  feiltyper: FeilKnapp[];
+  feiltyper: FeilKnapp[]; // asked in «Feilen» after purchase
   oppdaget: Oppdaget | "";
-  opplystForKjop: (typeof OPPLYST_VALG)[number] | ""; // did the buyer know about the defect when buying
-  feilOpplysning: (typeof FEILOPPLYSNING_VALG)[number] | ""; // not asked in the assessment; answered on the letter page
-  kontakt: Kontakt | "";
-  reklamertInnenFemAr: JaNei; // asked when the purchase is over five years old and the dealer is contacted
-  verkstedrapport: JaNei; // asked unless the law stops the claim
-  rapportSierForKjop: JaNei; // asked when there is a report
-  bilder: JaNei; // not asked in the assessment
+  opplystForKjop: Opplyst | ""; // did the buyer know about the defect when buying
+  feilOpplysning: (typeof FEILOPPLYSNING_VALG)[number] | ""; // derived after purchase from «Før kjøpet»
+  kontakt: Kontakt | ""; // asked in «Kontakt med forhandleren» after purchase
+  reklamertInnenFemAr: JaNei; // asked when the purchase is over five years old
+  verkstedrapport: JaNei; // asked in «Tilstandsrapport» after purchase
+  rapportSierForKjop: JaNei; // asked there when there is a report
+  bilder: JaNei; // derived after purchase from the attachments
 };
 
 export const TOM_INNSENDING: Innsending = {
@@ -109,56 +111,33 @@ export function kjopsdatoAv(i: Pick<Innsending, "kjopsdato" | "kjopAlder">, idag
 
 // Has the purchase passed the five-year deadline, so that it matters whether the buyer first
 // complained within it? Same test as the engine, so the form asks exactly when the answer can change
-// the result.
+// the result. The assessment asks it without asking about contact first; after purchase a buyer who says
+// the dealer was never told has answered it already.
 export function sporOmFemarsfrist(i: Pick<Innsending, "kjopsdato" | "kjopAlder" | "kontakt">, idag = iDag()): boolean {
-  if (!i.kontakt || i.kontakt === "nei") return false;
-  return kjopsalderAv(i, idag) === "over_5";
+  return i.kontakt !== "nei" && kjopsalderAv(i, idag) === "over_5";
 }
 
-// Does the answer to «Visste du om feilen før du kjøpte?» decide anything? It does for every purchase:
-// before 2024 knowing about it closes the claim, from 2024 it weakens it (§ 16 third paragraph, § 15).
-export function sporOmOpplysning(
-  i: Pick<Innsending, "kjopsdato" | "kjopAlder">,
-  idag = iDag(),
-): boolean {
-  return kjopsdatoAv(i, idag) !== "";
-}
-
-// The law itself stops the claim: a purchase from a private person or through a company (the
-// consumer purchase act does not apply, § 1), or past the five-year deadline (§ 27). null when it does not.
-// Same rule as the engine's `stopp`, so the form stops asking exactly when the answer is settled.
-export type Stopp = "firma" | "privat" | "frist";
-export function stoppGrunn(
-  i: Pick<
-    Innsending,
-    "kjopsform" | "kjopsdato" | "kjopAlder" | "kontakt" | "reklamertInnenFemAr"
-  >,
-  idag = iDag(),
-): Stopp | null {
+// The law itself stops the claim: a purchase from a private person or through a company (the consumer
+// purchase act does not apply, § 1), past the five-year deadline (§ 27), or a defect the buyer knew of as
+// it is, for a purchase certainly made before 2024 (§ 16 third paragraph as it read then). null when it
+// does not. Same rule as the engine's `stopp`, so the form stops asking exactly when the answer is settled.
+export type Stopp = "firma" | "privat" | "frist" | "kjent";
+type StoppSvar = Pick<Innsending, "kjopsform" | "kjopsdato" | "kjopAlder" | "kontakt" | "reklamertInnenFemAr" | "opplystForKjop">;
+export function stoppGrunn(i: StoppSvar, idag = iDag()): Stopp | null {
   if (i.kjopsform === "firma") return "firma";
   if (i.kjopsform === "privatperson") return "privat";
-  if (!i.kontakt || kjopsalderAv(i, idag) !== "over_5") return null;
-  return i.kontakt === "nei" || i.reklamertInnenFemAr === "nei"
-    ? "frist"
-    : null;
+  const alder = kjopsalderAv(i, idag);
+  if (alder === "over_5" && (i.kontakt === "nei" || i.reklamertInnenFemAr === "nei")) return "frist";
+  const kjopsdato = gyldigKjopsdato(i.kjopsdato, idag) ? i.kjopsdato : undefined;
+  if (alder && i.opplystForKjop === "ja_som_opplyst" && kjoptFor2024({ kjopsdato, kjopAlder: alder }, idag)) return "kjent";
+  return null;
 }
 
-// The steps the form shows for these answers. A purchase that is not covered by the act stops at step 1,
-// and a missed deadline after step 3; every other case gets the evidence step.
-type StegSvar = Pick<
-  Innsending,
-  | "kjopsform"
-  | "kjopsdato"
-  | "kjopAlder"
-  | "oppdaget"
-  | "kontakt"
-  | "reklamertInnenFemAr"
->;
-export function stegFor(i: StegSvar, idag = iDag()): readonly Steg[] {
+// The steps the form shows for these answers: «Bilen», then «Feilen». A claim the law stops at the first
+// step (who the car was bought from, the five-year deadline) gets no second.
+export function stegFor(i: StoppSvar, idag = iDag()): readonly Steg[] {
   const stopp = stoppGrunn(i, idag);
-  if (stopp === "firma" || stopp === "privat") return [1];
-  if (stopp === "frist") return [1, 2, 3];
-  return [1, 2, 3, 4];
+  return stopp && stopp !== "kjent" ? [1] : [1, 2];
 }
 
 const MIN_MANEDER: Record<Oppdaget, number> = { innen_6_mnd: 0, "6_mnd_til_2_ar": 6, over_2_ar: 24 };
@@ -203,32 +182,25 @@ function feil(i: Innsending, steg: Steg, idag: string): string | null {
     if (!kjopsalderAv(i, idag)) return "Velg når du kjøpte bilen.";
     if (!KJOPSFORM_VALG.includes(i.kjopsform as Kjopsform))
       return "Svar på hvem du kjøpte bilen av.";
-    if (i.kjopesum && !heltall(i.kjopesum, 1, MAKS_KJOPESUM))
-      return "Oppgi hva bilen kostet i hele kroner.";
-    if (i.kmVedKjop && !heltall(i.kmVedKjop, 0, MAKS_KM))
-      return "Oppgi kilometerstanden som et tall.";
+    if (sporOmFemarsfrist(i, idag) && !jaNei(i.reklamertInnenFemAr))
+      return "Svar på om du tok opp feilen med forhandleren innen fem år etter kjøpet.";
   }
   if (steg === 2) {
-    if (i.feiltyper.length === 0) return "Velg hva som er galt.";
     if (!i.oppdaget || !OPPDAGET_VALG.includes(i.oppdaget)) return "Velg hvor lenge etter kjøpet feilen viste seg.";
     if (!oppdagetMulig(i, i.oppdaget, idag)) return "Feilen kan ikke ha vist seg så lenge etter kjøpet når kjøpet er så nylig.";
+    if (!OPPLYST_VALG.includes(i.opplystForKjop as Opplyst)) return "Svar på om du visste om feilen da du kjøpte bilen.";
   }
-  if (steg === 3) {
-    if (i.opplystForKjop && !OPPLYST_VALG.includes(i.opplystForKjop))
-      return "Svar på om du visste om feilen før kjøpet.";
-    if (i.feilOpplysning && !FEILOPPLYSNING_VALG.includes(i.feilOpplysning))
-      return "Svar på om annonsen eller selgeren sa noe som ikke stemte.";
-    if (sporOmOpplysning(i, idag) && !i.opplystForKjop)
-      return "Svar på om du visste om feilen før kjøpet.";
-    if (!i.kontakt || !KONTAKT_VALG.includes(i.kontakt))
-      return "Svar på om du har tatt opp feilen med forhandleren.";
-    if (sporOmFemarsfrist(i, idag) && !jaNei(i.reklamertInnenFemAr))
-      return "Svar på om du tok det opp med forhandleren innen fem år etter kjøpet.";
-  }
-  if (steg === 4) {
-    if (!jaNei(i.verkstedrapport)) return "Svar på om du har en verksted- eller tilstandsrapport.";
-    if (i.verkstedrapport === "ja" && !jaNei(i.rapportSierForKjop)) return "Svar på hva rapporten sier om feilen.";
-  }
+  return null;
+}
+
+// The answers the assessment does not ask, checked when they are given (after purchase, or in an older case).
+function valgfrieFeil(i: Innsending): string | null {
+  if (i.kjopesum && !heltall(i.kjopesum, 1, MAKS_KJOPESUM)) return "Oppgi hva bilen kostet i hele kroner.";
+  if (i.kmVedKjop && !heltall(i.kmVedKjop, 0, MAKS_KM)) return "Oppgi kilometerstanden som et tall.";
+  if (i.feilOpplysning && !FEILOPPLYSNING_VALG.includes(i.feilOpplysning)) return "Svar på om annonsen eller selgeren sa noe som ikke stemte.";
+  if (i.verkstedrapport && !jaNei(i.verkstedrapport)) return "Svar på om du har en verksted- eller tilstandsrapport.";
+  if (i.verkstedrapport === "ja" && i.rapportSierForKjop && !jaNei(i.rapportSierForKjop)) return "Svar på hva rapporten sier om feilen.";
+  if (i.bilder && !jaNei(i.bilder)) return "Svar på om du har bilder av feilen.";
   return null;
 }
 
@@ -265,7 +237,9 @@ export function lesInnsending(r: Record<string, unknown>, idag = iDag()): Innsen
     kmVedKjop: tekst(r.kmVedKjop),
     feiltyper: Array.isArray(r.feiltyper) ? (r.feiltyper.filter((t): t is FeilKnapp => FEILTYPER_KNAPPER.includes(t)) as FeilKnapp[]) : [],
     oppdaget: tekst(r.oppdaget) as Innsending["oppdaget"],
-    opplystForKjop: tekst(r.opplystForKjop) as Innsending["opplystForKjop"],
+    // Older saved cases hold «ja» from when the question had two answers: it is read as «worse than I was
+    // told», so no letter already bought is stopped by the third answer.
+    opplystForKjop: (tekst(r.opplystForKjop) === "ja" ? "ja_verre" : tekst(r.opplystForKjop)) as Innsending["opplystForKjop"],
     feilOpplysning: tekst(r.feilOpplysning) as Innsending["feilOpplysning"],
     // Older saved cases hold what the dealer did (venter, avvist, ...): any of those means «ja».
     kontakt: (tekst(r.kontakt) === "" || tekst(r.kontakt) === "nei"
@@ -308,13 +282,9 @@ export function tilKlageInput(raw: unknown, idag = iDag()): { ok: true; input: K
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return { ok: false, feil: "Ugyldig forespørsel." };
   const i = lesInnsending(raw as Record<string, unknown>, idag);
   // Only the steps the form shows for these answers: a stopped claim has no later answers.
-  const f = stegFor(i, idag).reduce<string | null>(
-    (funnet, s) => funnet ?? feil(i, s, idag),
-    null,
-  );
+  const f = stegFor(i, idag).reduce<string | null>((funnet, s) => funnet ?? feil(i, s, idag), null) ?? valgfrieFeil(i);
   if (f) return { ok: false, feil: f };
 
-  const rapport = i.verkstedrapport === "ja";
   const ja = (v: JaNei) => (v === "ja" ? true : v === "nei" ? false : null);
   // The vehicle's first registration year, sent alongside the answers from the registry lookup.
   const bilAr = (raw as Record<string, unknown>).bilAr;
@@ -331,17 +301,18 @@ export function tilKlageInput(raw: unknown, idag = iDag()): { ok: true; input: K
         ...(gyldigBilAr && { bilAr: bilAr as number }),
       },
       feilen: {
-        typer: [...new Set(i.feiltyper)],
-        oppdaget: i.oppdaget as Oppdaget,
-        opplystForKjop: i.opplystForKjop || null,
-        // Not answered means the buyer has not said that anything was wrong.
-        feilOpplysning: i.feilOpplysning || "nei",
-        kontakt: i.kontakt as Kontakt,
+        // A claim stopped at the first step has no second; the engine stops it before it looks at these.
+        oppdaget: (i.oppdaget || "innen_6_mnd") as Oppdaget,
+        opplystForKjop: (i.opplystForKjop || "nei") as Opplyst,
+        // What is asked after purchase is left out until it is answered, so nothing is claimed about it.
+        ...(i.feiltyper.length > 0 && { typer: [...new Set(i.feiltyper)] }),
+        ...(i.feilOpplysning && { feilOpplysning: i.feilOpplysning }),
+        ...(i.kontakt && { kontakt: i.kontakt }),
         ...(sporOmFemarsfrist(i, idag) && { reklamertInnenFemAr: i.reklamertInnenFemAr === "ja" }),
       },
       bevis: {
         verkstedrapport: ja(i.verkstedrapport),
-        rapportSierForKjop: rapport ? ja(i.rapportSierForKjop) : null,
+        rapportSierForKjop: i.verkstedrapport === "ja" ? ja(i.rapportSierForKjop) : null,
         bilder: ja(i.bilder),
       },
     },

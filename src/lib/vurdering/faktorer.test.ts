@@ -121,18 +121,38 @@ describe("beregnFaktorer", () => {
     expect(fakta(i).feilgrupper).toEqual([]);
   });
 
-  it("opplyst feil gir tak på svak for kjøp før 2024, med mindre kjøperen sier at opplysningene var uriktige", () => {
+  it("en kjent feil slik den ble opplyst stopper for kjøp før 2024, «verre» aldri", () => {
     const gammel = hent(3);
     gammel.bilOgKjop.kjopsdato = "2023-12-31";
-    expect(fakta(gammel)).toMatchObject({ opplystTakSvak: true, opplystEtter2024: false });
+    expect(fakta(gammel)).toMatchObject({ opplyst: "ja_som_opplyst", stopp: "kjent" });
     // From 2024 being told is not enough (§ 15 annet ledd).
-    expect(fakta(hent(3))).toMatchObject({ opplystTakSvak: false, opplystEtter2024: true });
-    const villedet = gammel;
-    villedet.feilen.feilOpplysning = "ja_udokumentert";
-    expect(fakta(villedet).opplystTakSvak).toBe(false);
-    villedet.feilen.feilOpplysning = "ja_dokumentert";
-    expect(fakta(villedet)).toMatchObject({ opplystTakSvak: false });
-    expect(fakta(hent(1)).opplystTakSvak).toBe(false);
+    expect(fakta(hent(3))).toMatchObject({ opplyst: "ja_som_opplyst", stopp: null });
+    gammel.feilen.opplystForKjop = "ja_verre";
+    expect(fakta(gammel)).toMatchObject({ opplyst: "ja_verre", stopp: null });
+    expect(fakta(hent(1))).toMatchObject({ opplyst: "nei", stopp: null });
+  });
+
+  it("svar som ikke er gitt, gir null, ingen feilgrupper og ingen sen reklamasjon", () => {
+    const i: KlageInput = { bilOgKjop: { kjopsform: "forhandler", kjopsdato: "2022-01-31" }, feilen: { oppdaget: "innen_6_mnd", opplystForKjop: "nei" }, bevis: {} };
+    expect(fakta(i)).toMatchObject({
+      feilgrupper: [],
+      kontakt: null,
+      feilOpplysninger: null,
+      feilOpplysningerDokumentert: false,
+      verkstedrapport: null,
+      rapportSierForKjop: null,
+      bilder: null,
+      reklamertForSent: false,
+      venterOverEttAr: false,
+      stopp: null,
+    });
+  });
+
+  it("femårsfristen er ute når kjøperen svarer nei, også uten å ha svart om kontakt", () => {
+    const i: KlageInput = { bilOgKjop: { kjopsform: "forhandler", kjopsdato: "2020-05-31" }, feilen: { oppdaget: "over_2_ar", opplystForKjop: "nei", reklamertInnenFemAr: false }, bevis: {} };
+    expect(fakta(i)).toMatchObject({ fristUte: true, stopp: "frist" });
+    i.feilen.reklamertInnenFemAr = true;
+    expect(fakta(i)).toMatchObject({ fristUte: false, stopp: null });
   });
 
   it("uten klage er reklamasjonen for sen når feilen må ha vært kjent i mer enn seks måneder", () => {

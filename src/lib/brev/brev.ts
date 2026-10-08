@@ -102,7 +102,7 @@ const SVAKERE: Record<Faktum, (f: Faktorer) => string> = {
   alder: () => "Min bil var eldre enn bilen i vedtaket.",
   km: () => "Min bil hadde gått lenger enn bilen i vedtaket.",
   pris: () => "Min bil kostet mindre enn bilen i vedtaket.",
-  opplyst: (f) => (f.opplystForKjop === "ja" ? "I min sak var feilen opplyst før kjøpet." : "I min sak ble bilen solgt «som den er»."),
+  opplyst: (f) => (f.opplyst !== "nei" ? "I min sak var feilen opplyst før kjøpet." : "I min sak ble bilen solgt «som den er»."),
   tid: () => "Feilen viste seg senere etter kjøpet i min sak enn i vedtaket.",
 };
 
@@ -219,8 +219,10 @@ export function vedleggBrevetByggerPa(input: KlageInput, u: Utfylling): Vedlegg[
   if (retting === "reparert_selv") trengs.add("faktura");
   // An amount claimed before a repair rests on a quote or a valuation.
   else if (harFatt(retting) && u.krav?.type && u.krav.utbedringNok) trengs.add("tilbud");
-  if (input.feilen.feilOpplysning !== "nei" && u.opplysning?.kilde === "annonse") trengs.add("annonse");
-  if (input.feilen.feilOpplysning !== "nei" && u.opplysning?.kilde === "melding") trengs.add("meldinger");
+  // Only when the buyer has said something untrue was said (not answered is not a yes).
+  const villedet = input.feilen.feilOpplysning !== undefined && input.feilen.feilOpplysning !== "nei";
+  if (villedet && u.opplysning?.kilde === "annonse") trengs.add("annonse");
+  if (villedet && u.opplysning?.kilde === "melding") trengs.add("meldinger");
   if (input.feilen.kontakt === "ja" && (u.reklamasjon?.mate === "epost" || u.reklamasjon?.mate === "sms" || u.reklamasjon?.mate === "brev")) trengs.add("meldinger");
   // The invoice for a repair elsewhere already documents a workshop cost; other costs need receipts.
   const reparert = trengs.has("faktura");

@@ -1,8 +1,9 @@
 import type { DRIVSTOFF, FEILTYPER, MANGELSGRUNNLAG } from "@/lib/ai/skjema";
 
-// The engine's input. The form only asks for what the level depends on; registration number,
-// dealer, mileage, amounts, the description of the defect and exact dates are optional or left out here and
-// will be collected for the letter. All dates are ÅÅÅÅ-MM-DD.
+// The engine's input. The assessment only asks for what can stop the claim and when the defect showed;
+// the defect type, contact with the dealer, what was said and the evidence are asked after purchase and are
+// missing until then. Registration number, dealer, mileage, amounts, the description of the defect and
+// exact dates are optional or left out here and are collected for the letter. All dates are ÅÅÅÅ-MM-DD.
 
 export type Drivstoff = (typeof DRIVSTOFF)[number];
 export type Feiltype = (typeof FEILTYPER)[number];
@@ -51,11 +52,12 @@ export const rettingValgFor = (kontakt: Kontakt): readonly Retting[] =>
   kontakt === "nei"
     ? ["ingen", "reparert_selv"]
     : ["venter", "avvist", "forsokt", "ikke_rettet", "reparert_selv"];
+// Without an answer about contact (a case opened before the step is filled in) there is no answer about repair either.
 export const gyldigRetting = (
-  kontakt: Kontakt,
+  kontakt: Kontakt | undefined,
   retting: Retting | undefined,
 ): Retting | undefined =>
-  retting && rettingValgFor(kontakt).includes(retting) ? retting : undefined;
+  kontakt && retting && rettingValgFor(kontakt).includes(retting) ? retting : undefined;
 
 // Who the car was bought from. Only a purchase from a dealer by a consumer is covered by the consumer
 // purchase act (§ 1); a purchase from a private person or through a company follows the purchase act.
@@ -69,6 +71,13 @@ export type Oppdaget = (typeof OPPDAGET_VALG)[number];
 
 // Did the ad or the dealer say something about the car that turned out to be wrong, and can the
 // buyer show what was said (the ad, the contract or messages)?
+// Did the buyer know about the defect when buying? «ja_verre»: yes, but it is worse or other than the buyer was
+// told, so the letter builds on the difference. «ja_som_opplyst»: yes, as it is; for a purchase before 2024
+// that stops the claim (§ 16 third paragraph as it read then). Saved cases from before can hold «ja», which is
+// read as «ja_verre», so no letter already bought is stopped by the change.
+export const OPPLYST_VALG = ["nei", "ja_verre", "ja_som_opplyst"] as const;
+export type Opplyst = (typeof OPPLYST_VALG)[number];
+
 export const FEILOPPLYSNING_VALG = ["nei", "ja_dokumentert", "ja_udokumentert"] as const;
 export type FeilOpplysning = (typeof FEILOPPLYSNING_VALG)[number];
 
@@ -95,31 +104,34 @@ export type KlageInput = {
     bilAr?: number;
   };
   feilen: {
-    typer: FeilKnapp[];
+    // Asked in «Feilen» after purchase; missing until then.
+    typer?: FeilKnapp[];
     oppdaget: Oppdaget;
-    // Did the buyer know about the defect when buying? null = not answered (old data).
-    opplystForKjop: "ja" | "nei" | null;
-    feilOpplysning: FeilOpplysning;
-    kontakt: Kontakt;
-    // Did the buyer first complain to the dealer within five years of the purchase? Only asked when
-    // the purchase is more than five years old and the dealer has been contacted; decides the § 27 deadline.
+    opplystForKjop: Opplyst;
+    // Asked in «Før kjøpet» after purchase; missing until then.
+    feilOpplysning?: FeilOpplysning;
+    // Asked in «Kontakt med forhandleren» after purchase; missing until then.
+    kontakt?: Kontakt;
+    // Did the buyer first complain to the dealer within five years of the purchase? Asked when the
+    // purchase is more than five years old (unless the buyer has said the dealer was never told); decides
+    // the § 27 deadline.
     reklamertInnenFemAr?: boolean;
     utbedringskostnadNok?: number | null;
   };
-  // Asked in the assessment unless the law stops the claim first. null = not asked; the buyer can
-  // answer on the letter page.
+  // Asked in «Tilstandsrapport» after purchase (pictures follow from the attachments). Missing or null =
+  // not answered.
   bevis: {
-    verkstedrapport: boolean | null;
-    // Only asked when a report exists: does it say the defect was probably there before purchase?
-    rapportSierForKjop: boolean | null;
-    // Not asked in the assessment; derived on the letter page from the attachments chosen there.
-    bilder: boolean | null;
+    verkstedrapport?: boolean | null;
+    // Only when a report exists: does it say the defect was probably there before purchase?
+    rapportSierForKjop?: boolean | null;
+    bilder?: boolean | null;
   };
 };
 
-// utenfor = the claim is stopped by the law itself (not a consumer purchase from a dealer, or past the
-// five-year deadline); the letter is not offered.
-export type Niva = "god" | "svak" | "utenfor";
+// utenfor = the claim is stopped by the law itself (not a consumer purchase from a dealer, past the five-year
+// deadline, or a defect the buyer knew of as it is, for a purchase before 2024); the letter is not offered.
+// sak = everything else: the buyer may have a case, and decides from the warning whether to buy the letter.
+export type Niva = "sak" | "utenfor";
 
 export type TestKlage = {
   id: number;

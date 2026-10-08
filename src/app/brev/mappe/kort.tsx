@@ -81,7 +81,12 @@ function Fordeling({ f }: { f: { fullt: number; delvis: number; avslag: number }
 }
 
 export function StyrkeInnhold({ k }: { k: StyrkeKort }) {
-  const utvalg = k.spesifikk ? `Utvalget: saker med ${k.beskrivelse.replace(/_/g, " ")}.` : "Vi fant ikke nok saker med samme feil, så tallet gjelder alle forhandlersaker.";
+  // `reklamasjonstid`: no defect type is given yet, so the decisions are matched on timing alone (`trinnFor`).
+  const utvalg = k.spesifikk
+    ? `Utvalget: saker med ${k.beskrivelse.replace(/_/g, " ")}.`
+    : k.beskrivelse === "reklamasjonstid"
+      ? "Du har ikke svart på hva feilen gjelder, så tallet gjelder forhandlersaker der feilen viste seg like lenge etter kjøpet."
+      : "Vi fant ikke nok saker med samme feil, så tallet gjelder alle forhandlersaker.";
   if (erForFa(k.medhold)) {
     return (
       <>

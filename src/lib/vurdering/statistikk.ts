@@ -41,6 +41,7 @@ function botteSql(f: Faktorer): SQL {
 export type Trinn = { beskrivelse: string; betingelse: SQL; spesifikk: boolean; medBotte: boolean };
 
 // Dealer cases only, from most to least specific; we use the first step with enough decisions.
+// The letter's case folder uses the same ladder, so the folder and the assessment agree.
 // Each button the buyer picked is a group of defect types, matched with any of them (&&). With
 // several groups we first require every group (AND), then any group (OR): matching on any alone
 // made every extra tick look like a stronger case. Report and disclaimer are not matched: within
@@ -60,6 +61,10 @@ export function trinnFor(f: Faktorer): Trinn[] {
     const noen = sql`(${sql.join(treff.map((t) => sql`(${t})`), sql` or `)})`;
     trinn.push({ beskrivelse: `${navn} og reklamasjonstid`, betingelse: sql`${noen} and ${botte}`, spesifikk: true, medBotte: true });
     trinn.push({ beskrivelse: navn, betingelse: noen, spesifikk: true, medBotte: false });
+  } else {
+    // Without a defect type (it is asked after purchase) the assessment compares with all dealer decisions
+    // in the same legal position on timing.
+    trinn.push({ beskrivelse: "reklamasjonstid", betingelse: botte, spesifikk: false, medBotte: true });
   }
   trinn.push({ beskrivelse: "alle forhandlersaker", betingelse: sql`true`, spesifikk: false, medBotte: false });
   return trinn;

@@ -1,5 +1,5 @@
 import type { Faktorer } from "./faktorer";
-import type { Niva, Oppdaget } from "./typer";
+import type { Oppdaget } from "./typer";
 
 // vekt: whether the point speaks for or against the case, or only informs; the page colours it.
 export type Vekt = "for" | "mot" | "noytral";
@@ -22,8 +22,10 @@ const LAV_FORVENTNING: Record<NonNullable<Faktorer["lavForventning"]>, string> =
 const LOV_URL = "https://lovdata.no/lov/2002-06-21-34";
 export const fkjl = (nr: number, visning = `§ ${nr}`) => ({ paragraf: `forbrukerkjøpsloven ${visning}`, lenke: `${LOV_URL}/§${nr}` });
 
-// The facts the assessment rests on, each with the rule it triggers: timing, evidence, what was
-// said before the purchase, and the dealer. Only rules that follow from the answers are included.
+// The facts a case that is not stopped rests on, each with the rule it triggers: timing, evidence, what
+// was said before the purchase, and the dealer. Only rules that follow from the answers are included. Not
+// shown before purchase (the page shows the warning about the burden of proof instead); after purchase a
+// save that adds a point against the case asks first (`konsekvenserAv`).
 export function byggGrunnlag(f: Faktorer): Grunnlag[] {
   const punkter: Grunnlag[] = [];
   const viste = `Feilen viste seg ${NAAR[f.oppdaget]} etter kjøpet.`;
@@ -63,13 +65,9 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
     });
   }
 
-  if (f.opplystTakSvak) {
-    punkter.push({
-      tekst:
-        "Du visste om feilen da du kjøpte bilen. Det du kjente til, kan du normalt ikke klage på (forbrukerkjøpsloven § 16 tredje ledd, slik den lød før 2024).",
-      vekt: "mot",
-    });
-  } else if (f.opplystEtter2024) {
+  // Knowing about the defect as it is stops the claim for a purchase before 2024 (`stopp`); from 2024 it
+  // only does when the buyer accepted it expressly and separately.
+  if (f.opplyst === "ja_som_opplyst" && f.presumsjonManeder === 24) {
     punkter.push({
       tekst:
         "Du visste om feilen da du kjøpte bilen. Det stenger bare for kravet hvis du ble spesielt opplyst om akkurat denne feilen og uttrykkelig godtok den. Forhandleren kan likevel hevde at du kjente til feilen.",
@@ -110,48 +108,4 @@ export function byggGrunnlag(f: Faktorer): Grunnlag[] {
   }
 
   return punkter;
-}
-
-// Rules that hold for every purchase from a dealer; they fill the list when the answers give fewer than
-// three points. A «solgt som den er» clause works differently before and after 1 January 2024.
-function generelle(f: Faktorer): Grunnlag[] {
-  return [
-    f.presumsjonManeder === 24
-      ? {
-          tekst:
-            "Et generelt forbehold som «solgt som den er» kan ikke gjøres gjeldende mot deg.",
-          vekt: "for",
-          ...fkjl(3, "§§ 3 og 15"),
-        }
-      : {
-          tekst:
-            "Et forbehold som «solgt som den er» hindrer ikke krav når bilen er i dårligere stand enn du hadde grunn til å regne med, eller ikke stemmer med opplysningene du fikk (forbrukerkjøpsloven § 17, slik den lød før 2024).",
-          vekt: "for",
-        },
-    {
-      tekst:
-        "Forhandleren kan ikke avtale seg bort fra rettighetene loven gir deg.",
-      vekt: "for",
-      ...fkjl(3),
-    },
-  ];
-}
-export const ANTALL_STYRKER = 3;
-
-// What the page shows in two lists. Strengths: for a good case exactly three points that speak for it,
-// in the order of byggGrunnlag (filled up with the rules that hold for every purchase); for a weak case
-// only the ones that really do. Weaknesses: what speaks against it, and what the dealer may object.
-export function synligGrunnlag(
-  niva: Niva,
-  punkter: Grunnlag[],
-  f: Faktorer,
-): { styrker: Grunnlag[]; svakheter: Grunnlag[] } {
-  const for_ = punkter.filter((p) => p.vekt === "for");
-  return {
-    styrker:
-      niva === "god"
-        ? [...for_, ...generelle(f)].slice(0, ANTALL_STYRKER)
-        : for_,
-    svakheter: punkter.filter((p) => p.vekt !== "for"),
-  };
 }

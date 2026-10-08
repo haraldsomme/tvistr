@@ -134,7 +134,7 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string, valgt?:
   }
 
   // Outside the presumption the buyer must show the defect was there at delivery (§ 18 first paragraph).
-  if (!f.presumsjon && f.rapportSierForKjop !== true && input.feilen.feilOpplysning === "nei" && (f.feilgrupper.length === 0 || f.feilgrupper.some((g) => g[0] !== "km_avvik" && g[0] !== "kollisjonsskade"))) {
+  if (!f.presumsjon && f.rapportSierForKjop !== true && f.feilOpplysninger !== true && (f.feilgrupper.length === 0 || f.feilgrupper.some((g) => g[0] !== "km_avvik" && g[0] !== "kollisjonsskade"))) {
     legg({
       id: "uten_bevis",
       alvor: "hard",
@@ -224,17 +224,18 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string, valgt?:
     legg({ id: "ett_forsok", fast: true, alvor: "hard", steg: "kontakt", tekst: "Forhandleren har forsøkt å rette feilen én gang. For kjøp før 2024 har forhandleren normalt rett til to forsøk før du kan kreve prisavslag eller heving." });
   }
 
-  // What the buyer knew.
-  if (input.feilen.opplystForKjop === "ja" && input.feilen.feilOpplysning === "nei") {
+  // What the buyer knew. A defect known as it is stops the claim for a purchase before 2024 (the assessment
+  // and a correction are refused); from 2024 the dealer can only rely on it when the buyer was told
+  // specifically and accepted it expressly and separately (§ 15 second paragraph). «Worse or other than I
+  // was told» is what the letter builds on, and no warning.
+  if (f.opplyst === "ja_som_opplyst" && f.presumsjonManeder === 24) {
     legg({
-      id: "visste_om_feilen",
+      id: "kjent_fra_2024",
       fast: true,
-      alvor: f.presumsjonManeder === 6 ? "hard" : "myk",
+      alvor: "hard",
       steg: "for-kjopet",
       tekst:
-        f.presumsjonManeder === 6
-          ? "Du har svart at du visste om feilen før kjøpet. For kjøp før 2024 kan du normalt ikke klage på det du kjente til (§ 16 tredje ledd), og brevet svarer ikke på det. Sjekk svaret under «Før kjøpet»."
-          : "Du har svart at du visste om feilen. Etter reglene fra 2024 kan forhandleren bare holde det mot deg hvis du ble spesielt opplyst om akkurat denne feilen og godtok den uttrykkelig og særskilt, for eksempel ved en egen linje i kontrakten (§ 15 andre ledd). Var det slik, er kravet svakt. Sjekk svaret under «Før kjøpet».",
+        "Du visste om feilen da du kjøpte bilen. For kjøp fra 2024 kan forhandleren bare avvise kravet hvis du ble gjort særskilt oppmerksom på feilen og godtok den uttrykkelig og særskilt, for eksempel ved at det sto i kontrakten. Sjekk kontrakten.",
     });
   }
 

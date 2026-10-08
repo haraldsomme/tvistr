@@ -125,7 +125,7 @@ export function kjoperFor(m: Pick<Saksmodell, "faktorer" | "utfylling" | "avklar
     kontakt: m.input.feilen.kontakt,
     retting: u.retting,
     bruktimportert: u.kjoretoy?.bruktimportert,
-    opplystForKjop: m.input.feilen.opplystForKjop ?? "",
+    opplystForKjop: m.input.feilen.opplystForKjop,
   };
   const sporbare = new Set(momenterFor(m.faktorer).filter((mo) => mo.steg && vistSporsmal(mo.id, kontekst)).map((mo) => mo.id));
   const besvart = besvarteMomenter(u.momenter, { vedKjop: m.input.bilOgKjop.kmVedKjop, vedFeil: u.kmVedFeil }, m.avklaringer);
@@ -135,7 +135,7 @@ export function kjoperFor(m: Pick<Saksmodell, "faktorer" | "utfylling" | "avklar
     sporbare.add("rapport_arsak");
     dekket.add("rapport_arsak");
   }
-  const opplyst = m.input.feilen.opplystForKjop === "ja" ? "feilen_opplyst" : u.forbehold === "som_den_er" ? "som_den_er" : "ingenting";
+  const opplyst = m.input.feilen.opplystForKjop !== "nei" ? "feilen_opplyst" : u.forbehold === "som_den_er" ? "som_den_er" : "ingenting";
   return { sporbare, dekket, opplyst };
 }
 
@@ -166,7 +166,7 @@ export function sakForModell(m: Saksmodell): Record<string, unknown> {
     },
     forhandler: u.forhandler ? { navn: u.forhandler.navn } : null,
     feilen: {
-      kategorier: input.feilen.typer,
+      kategorier: input.feilen.typer ?? [],
       titler: u.feilen?.feil ?? [],
       forsteGang: u.feilen?.dato ?? null,
       visteSegEtterLevering: NAAR[f.oppdaget],
@@ -183,7 +183,8 @@ export function sakForModell(m: Saksmodell): Record<string, unknown> {
       uriktigOpplysning: u.opplysning ? { kilde: u.opplysning.kilde, kjoperensGjengivelse: rens(u.opplysning.tekst) } : null,
     },
     kontakt: {
-      tattOppMedForhandleren: input.feilen.kontakt,
+      // null: not answered yet.
+      tattOppMedForhandleren: input.feilen.kontakt ?? null,
       forhandlerensHandling: u.retting ?? null,
       forsteReklamasjon: input.feilen.kontakt === "ja" && u.reklamasjon ? reklamasjonForModell(u) : null,
       reparasjonAndreSteder: u.retting === "reparert_selv" ? (u.reparasjon ?? null) : null,

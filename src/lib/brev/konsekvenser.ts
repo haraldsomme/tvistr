@@ -13,8 +13,8 @@ import { sjekkBrev } from "./sjekk";
 // same steps as `PATCH /api/sak/[id]` (`rettSvar`, `tilpassTilSvar`, `medEndring`, `avledSvar`,
 // `kontrollerRettelse`) on the case as the page has it, and compares before and after. `avvist` is the
 // message the server would refuse the save with. `tap` lists, in plain words, what the letter loses:
-// what is filled in that gets dropped, a claim that falls back to repair, a weaker level, and new
-// points against the case.
+// what is filled in that gets dropped, a claim that falls back to repair, new points against the case and
+// new serious warnings.
 
 export type Konsekvenser = { avvist: string | null; tap: string[] };
 
@@ -37,7 +37,6 @@ function vurdering({ svar, utfylling }: Sak, idag: string) {
   const modell = lagSaksmodell({ svar, utfylling }, idag);
   const valgt = modell.ok ? henvisningFor(modell.modell) : null;
   return {
-    niva: v.niva,
     svakheter: v.grunnlag.filter((p) => p.vekt !== "for").map((p) => p.tekst),
     kanVelgeKrav: harFatt(gyldigRetting(parsed.input.feilen.kontakt, utfylling.retting)),
     // The letter's own serious weaknesses (`sjekkBrev`), by id.
@@ -71,7 +70,6 @@ export function konsekvenserAv(for_: Sak, lagring: Lagring, idag: string): Konse
   if (a && b) {
     const kravType = for_.utfylling.krav?.type;
     if (a.kanVelgeKrav && !b.kanVelgeKrav && kravType) tap.push(`Brevet krever ikke lenger ${KRAV_NAVN[kravType]}, men at forhandleren retter feilen først.`);
-    if (a.niva === "god" && b.niva === "svak") tap.push("Saken din blir vurdert som svakere.");
     if (b.svakheter.length > a.svakheter.length) {
       for (const p of b.svakheter.filter((t) => !a.svakheter.includes(t))) tap.push(`Nytt punkt som svekker saken: ${p}`);
     }

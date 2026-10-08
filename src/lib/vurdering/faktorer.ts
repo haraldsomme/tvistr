@@ -1,4 +1,4 @@
-import type { FeilKnapp, Feiltype, KlageInput, Kjopsalder, Kontakt, Oppdaget } from "./typer";
+import type { FeilKnapp, Feiltype, KlageInput, Kjopsalder, Kontakt, Oppdaget, Opplyst } from "./typer";
 
 // Pure step: turns the form input into the facts the rules and the statistics use.
 
@@ -23,7 +23,8 @@ export const HOY_KM = 200_000;
 export type Reklamasjonsbotte = "rask" | "middels" | "sen";
 
 export type Faktorer = {
-  // One group per button the buyer picked; a group stands for any of its defect types. «Annet» gives no group.
+  // One group per button the buyer picked; a group stands for any of its defect types. «Annet», or no
+  // answer yet (the type is asked after purchase), gives none.
   feilgrupper: Feiltype[][];
   // The car's age in whole years at purchase, from its first registration. null when not known.
   bilAlder: number | null;
@@ -31,14 +32,15 @@ export type Faktorer = {
   kmVedKjop: number | null;
   // The purchase price. null when not given.
   kjopesumNok: number | null;
-  // null = not asked.
+  // null = not answered (asked after purchase).
   verkstedrapport: boolean | null;
   bilder: boolean | null;
   // null when there is no report, or it is not known whether there is one.
   rapportSierForKjop: boolean | null;
-  kontakt: Kontakt;
+  // null = not answered (asked after purchase).
+  kontakt: Kontakt | null;
   oppdaget: Oppdaget;
-  // Purchase to discovery as the buyer answered; picks the example decision.
+  // Purchase to discovery as the buyer answered.
   reklamasjonsbotte: Reklamasjonsbotte;
   // Which decisions the statistics compare the case with, by dager_til_reklamasjon. It follows the
   // legal position, not the calendar: nearly all decisions are from the six-month rule, so a defect
@@ -51,29 +53,29 @@ export type Faktorer = {
   // More than five years have passed since the purchase. With a first complaint inside the five years
   // the claim stands anyway.
   femAarGatt: boolean;
-  // More than five years from purchase to the first complaint, or to today when there has been none.
+  // More than five years have passed, and the buyer did not complain within them (answered «nei», or
+  // has never told the dealer).
   fristUte: boolean;
-  // The law itself stops the claim: not a purchase from a dealer by a consumer (§ 1), or past the
-  // five-year deadline (§ 27). Then there is no letter to offer.
-  stopp: "firma" | "privat" | "frist" | null;
+  // The law itself stops the claim: not a purchase from a dealer by a consumer (§ 1), past the five-year
+  // deadline (§ 27), or a defect the buyer knew of as it is, for a purchase certainly made before 2024
+  // (§ 16 third paragraph as it read then). Then there is no letter to offer.
+  stopp: "firma" | "privat" | "frist" | "kjent" | null;
   // The dealer has not been told, and too long has passed since the defect showed (§ 27, reasonable time).
+  // false when contact is not answered.
   reklamertForSent: boolean;
-  // The dealer has not been told, and the defect has certainly been known for over a year. Weakens the case.
+  // The dealer has not been told, and the defect has certainly been known for over a year. false when
+  // contact is not answered.
   venterOverEttAr: boolean;
   // The defect is one that wear can explain: not wrong mileage or history, nor earlier collision damage.
   slitasjeAktuelt: boolean;
   // Cheap car or high mileage, so the buyer could expect less of it. null = neither.
   lavForventning: "pris" | "km" | "begge" | null;
-  opplystForKjop: KlageInput["feilen"]["opplystForKjop"];
-  // The buyer knew about the defect when buying, for a purchase before 2024: the buyer cannot complain
-  // about what they knew of (§ 16 (3) as it read then).
-  opplystTakSvak: boolean;
-  // The same for a purchase from 2024: knowing is not enough to lose the claim, the buyer must have been
-  // told specifically and have accepted the deviation expressly and separately (§ 15 (2)); it is still a
-  // point against the case.
-  opplystEtter2024: boolean;
-  // The buyer says what the ad or the dealer said was wrong.
-  feilOpplysninger: boolean;
+  // Did the buyer know about the defect when buying (see `OPPLYST_VALG`). From 2024 knowing «as it is»
+  // does not stop the claim: the buyer must have been told specifically and have accepted the deviation
+  // expressly and separately (§ 15 (2)); the letter page warns about it.
+  opplyst: Opplyst;
+  // The buyer says what the ad or the dealer said was wrong. null = not answered (asked after purchase).
+  feilOpplysninger: boolean | null;
   // ... and has the ad, contract or messages to show what was said.
   feilOpplysningerDokumentert: boolean;
 };
@@ -129,6 +131,13 @@ export function kjopsalderFor(kjopsdato: string, idag: string): Kjopsalder {
   return idag > leggTilManeder(kjopsdato, 24) ? "2_5" : "under_2";
 }
 
+// Was the purchase certainly made before 1 January 2024? With the exact day that day decides; with only
+// «hvor lenge siden» the latest day the answer allows must be before it (so «2–5 år siden» is not, until 2029).
+const SENESTE_KJOP_MANEDER: Record<Kjopsalder, number> = { under_2: 0, "2_5": -24, over_5: -ABSOLUTT_FRIST_AR * 12 };
+export function kjoptFor2024(b: { kjopsdato?: string; kjopAlder?: Kjopsalder }, idag: string): boolean {
+  return (b.kjopsdato ?? leggTilManeder(idag, SENESTE_KJOP_MANEDER[b.kjopAlder ?? "under_2"])) < PRESUMSJON_TO_AR_FRA;
+}
+
 export const iDag = () => new Date().toISOString().slice(0, 10);
 
 // A real calendar day written ÅÅÅÅ-MM-DD (so not 31 February).
@@ -149,8 +158,8 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
   // «Innen 6 måneder» is inside the presumption either way; «6 måneder til 2 år» only for purchases
   // from 2024; «mer enn 2 år» never.
   const presumsjon = f.oppdaget === "innen_6_mnd" || (f.oppdaget === "6_mnd_til_2_ar" && presumsjonManeder === 24);
-  // Whether the first complaint came within five years is only asked when the purchase is over
-  // five years old and the dealer has been contacted; a missing answer means there was no need to ask.
+  // Whether the first complaint came within five years is only asked when the purchase is over five
+  // years old; a buyer who says the dealer was never told has not complained within them either.
   const femAarGatt = idag > leggTilManeder(kjopsdato, ABSOLUTT_FRIST_AR * 12);
   const fristUte = femAarGatt && (f.kontakt === "nei" || f.reklamertInnenFemAr === false);
   const senest = SENEST_OPPDAGET[f.oppdaget];
@@ -158,24 +167,22 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
   // The same from the two answers we have, the purchase date and how long after it the defect showed: the
   // latest it can have shown plus a year is already past. Not guessed for «mer enn 2 år», which has no latest.
   const venterOverEttAr = f.kontakt === "nei" && senest != null && idag > leggTilManeder(kjopsdato, senest + VENTET_FOR_LENGE_MANEDER);
-  const opplystUtenInnvending =
-    f.opplystForKjop === "ja" && f.feilOpplysning === "nei";
-  const feilgrupper = [...new Set(f.typer)]
+  const feilgrupper = [...new Set(f.typer ?? [])]
     .map((t) => KNAPP_TIL_FEILTYPE[t])
     .filter((g) => g.length > 0);
   const billig = b.kjopesumNok != null && b.kjopesumNok < LAV_KJOPESUM_NOK;
   const langtKjort = b.kmVedKjop != null && b.kmVedKjop > HOY_KM;
-
+  const kjent = f.opplystForKjop === "ja_som_opplyst" && kjoptFor2024(b, idag);
 
   return {
     feilgrupper,
     bilAlder: b.bilAr ? Math.max(0, Number(kjopsdato.slice(0, 4)) - b.bilAr) : null,
     kmVedKjop: b.kmVedKjop ?? null,
     kjopesumNok: b.kjopesumNok ?? null,
-    verkstedrapport: bevis.verkstedrapport,
-    bilder: bevis.bilder,
-    rapportSierForKjop: bevis.verkstedrapport ? bevis.rapportSierForKjop : null,
-    kontakt: f.kontakt,
+    verkstedrapport: bevis.verkstedrapport ?? null,
+    bilder: bevis.bilder ?? null,
+    rapportSierForKjop: bevis.verkstedrapport ? (bevis.rapportSierForKjop ?? null) : null,
+    kontakt: f.kontakt ?? null,
     oppdaget: f.oppdaget,
     reklamasjonsbotte: BOTTE[f.oppdaget],
     statistikkbotte: presumsjon ? "rask" : BOTTE[f.oppdaget],
@@ -190,15 +197,15 @@ export function beregnFaktorer(input: KlageInput, idag = iDag()): Faktorer {
           ? "privat"
           : fristUte
             ? "frist"
-            : null,
+            : kjent
+              ? "kjent"
+              : null,
     reklamertForSent,
     venterOverEttAr,
     slitasjeAktuelt: feilgrupper.length === 0 || feilgrupper.some((g) => g[0] !== "km_avvik" && g[0] !== "kollisjonsskade"),
     lavForventning: billig && langtKjort ? "begge" : billig ? "pris" : langtKjort ? "km" : null,
-    opplystForKjop: f.opplystForKjop,
-    opplystTakSvak: opplystUtenInnvending && presumsjonManeder === 6,
-    opplystEtter2024: opplystUtenInnvending && presumsjonManeder === 24,
-    feilOpplysninger: f.feilOpplysning !== "nei",
+    opplyst: f.opplystForKjop,
+    feilOpplysninger: f.feilOpplysning ? f.feilOpplysning !== "nei" : null,
     feilOpplysningerDokumentert: f.feilOpplysning === "ja_dokumentert",
   };
 }

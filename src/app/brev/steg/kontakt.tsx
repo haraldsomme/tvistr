@@ -35,9 +35,8 @@ const MATE_TEKST: Record<Reklamasjon["mate"], string> = {
 
 // Whether the dealer has been told, and if so when, how and what came of it. Decides the claim:
 // repair while the dealer has not had a try, price reduction or cancelling once it has refused or
-// failed (fkjl §§ 29 and 30, met in the letter in `brev.ts`). «Tatt opp med forhandleren» comes from
-// the assessment and is corrected here, since what has happened since can only be asked once that is
-// known. Takes the raw answers rather than the engine's checked input, so it also works when a
+// failed (fkjl §§ 29 and 30, met in the letter in `brev.ts`). «Tatt opp med forhandleren» is asked here
+// (older cases have it from the assessment), and what has happened since once that is known. Takes the raw answers rather than the engine's checked input, so it also works when a
 // deadline that has begun to matter since means there is no letter until this step is answered again.
 export function KontaktFelt({
   svar,
@@ -53,7 +52,8 @@ export function KontaktFelt({
 }: Felles & { svar: Innsending; idag: string; retting: Retting | undefined; reklamasjon: Reklamasjon | undefined; reparasjon?: Reparasjon; kilder?: Kilder; momenter?: Momenter }) {
   // Left out where the case cannot be assessed (brevside.tsx): the moments are then neither shown nor saved.
   const m = useMomenter(momenter ?? { aktuelle: [], lagret: undefined });
-  const [kontakt, setKontakt] = useState<Kontakt>(svar.kontakt || "nei");
+  // "" until answered: a case opened from the assessment has no answer yet.
+  const [kontakt, setKontakt] = useState<Kontakt | "">(svar.kontakt);
   const [valgtRetting, setValgtRetting] = useState<Retting | "">(retting ?? (kontakt === "nei" ? "ingen" : ""));
   const [dato, setDato] = useState(reklamasjon?.dato ?? "");
   const [mate, setMate] = useState<Reklamasjon["mate"] | "">(reklamasjon?.mate ?? "");
@@ -65,7 +65,7 @@ export function KontaktFelt({
 
   if (!aktiv) {
     const vistRetting = retting ?? (kontakt === "nei" ? "ingen" : undefined);
-    if (!vistRetting) return null;
+    if (!kontakt || !vistRetting) return null;
     return (
       <Sammendrag
         linjer={[
@@ -83,12 +83,12 @@ export function KontaktFelt({
   const forsokt = valgtRetting === "forsokt";
   const harSvar = valgtRetting === "avvist" || forsokt;
   const reparert = valgtRetting === "reparert_selv";
-  const grunner = reparasjonGrunnerFor(kontakt);
+  const grunner = kontakt ? reparasjonGrunnerFor(kontakt) : [];
   const min = kjopsdatoAv(svar, idag);
   const reklamasjonKlar = kontakt === "nei" || (dato >= min && dato <= idag && mate !== "" && (!forsokt || forsok !== ""));
   const reparasjonKlar = !reparert || (repDato >= min && repDato <= idag && grunn !== "" && grunner.includes(grunn));
-  const klar = valgtRetting !== "" && reklamasjonKlar && reparasjonKlar;
-  const godtatt = m.gjelder("forhandler_erkjente") && vistSporsmal("forhandler_erkjente", { kontakt });
+  const klar = kontakt !== "" && valgtRetting !== "" && reklamasjonKlar && reparasjonKlar;
+  const godtatt = kontakt !== "" && m.gjelder("forhandler_erkjente") && vistSporsmal("forhandler_erkjente", { kontakt });
   const annenArsak = m.gjelder("forhandler_annen_arsak") && vistSporsmal("forhandler_annen_arsak", { retting: valgtRetting });
   const send = () =>
     lagre({
@@ -118,7 +118,7 @@ export function KontaktFelt({
       {kontakt === "nei" && (
         <p className={HJELP}>Forhandleren har rett til å forsøke å rette feilen først. Reparerer du den andre steder før de har fått sjansen, kan du miste retten til å få kostnaden dekket.</p>
       )}
-      {kontakt !== "nei" && (
+      {kontakt === "ja" && (
         <>
           <Datofelt
             label="Når tok du opp feilen første gang?"
@@ -131,11 +131,13 @@ export function KontaktFelt({
           <Valgfelt label="Hvordan tok du kontakt?" verdi={mate} velg={setMate} valg={valgAv(REKLAMASJON_MATER, MATE_TEKST)} />
         </>
       )}
-      <Valgfelt label={kontakt === "nei" ? "Har du fått feilen reparert?" : "Hva har forhandleren gjort?"} verdi={valgtRetting} velg={setValgtRetting} valg={valgAv(rettingValgFor(kontakt), RETTING_TEKST)} />
-      {kontakt !== "nei" && forsokt && (
+      {kontakt && (
+        <Valgfelt label={kontakt === "nei" ? "Har du fått feilen reparert?" : "Hva har forhandleren gjort?"} verdi={valgtRetting} velg={setValgtRetting} valg={valgAv(rettingValgFor(kontakt), RETTING_TEKST)} />
+      )}
+      {kontakt === "ja" && forsokt && (
         <Nedtrekk label="Hvor mange ganger har forhandleren forsøkt å rette feilen?" verdi={forsok} velg={setForsok} valg={["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((n) => ({ verdi: n, tekst: n }))} />
       )}
-      {kontakt !== "nei" && harSvar && (
+      {kontakt === "ja" && harSvar && (
         <Datofelt
           label={forsokt ? "Når forsøkte forhandleren sist å rette feilen? (valgfritt)" : "Når avviste forhandleren å rette feilen? (valgfritt)"}
           hjelp="Med datoen er tidslinjen i brevet komplett."
@@ -145,7 +147,7 @@ export function KontaktFelt({
           settVerdi={setSvarDato}
         />
       )}
-      {kontakt !== "nei" && valgtRetting !== "" && valgtRetting !== "ingen" && (
+      {kontakt === "ja" && valgtRetting !== "" && valgtRetting !== "ingen" && (
         <Kildefelt
           label="Lim inn forhandlerens skriftlige svar (valgfritt)"
           hjelp="Har forhandleren svart på e-post, SMS eller brev, lim inn svaret her. Brevet kan da sitere det."

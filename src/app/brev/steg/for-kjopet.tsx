@@ -2,8 +2,9 @@
 
 import { useId, useState } from "react";
 import { medKilde, OPPLYSNING_KILDER, type Kilder, type Opplysning } from "@/lib/brev/utfylling";
-import { OPPLYST_TEKST } from "@/app/vurdering/tekster";
-import { OPPLYST_VALG, type Innsending } from "@/lib/vurdering/innsending";
+import { OPPLYST_TEKST, SPORSMAL } from "@/app/vurdering/tekster";
+import type { Innsending } from "@/lib/vurdering/innsending";
+import { OPPLYST_VALG } from "@/lib/vurdering/typer";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { HJELP, Kildefelt, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } from "../felt";
@@ -14,10 +15,10 @@ const [IMPORT_IKKE_OPPLYST, IMPORT_OPPLYST, IMPORT_NEI] = moment("bruktimport_ik
 
 const KILDE_TEKST: Record<Opplysning["kilde"], string> = { annonse: "Annonsen", kontrakt: "Kjøpekontrakten", melding: "Melding fra forhandleren", muntlig: "Muntlig før kjøpet" };
 
-// Two questions the assessment leaves for the letter page: did the buyer know about the defect before
-// buying (pre-filled from the assessment, asked again only after the wizard, to correct it; `visVisste`), and did the ad or the dealer say something
-// about the car that was not true. A «ja» to the second asks where and what, quoted in the letter as
-// written, so it is not reworded; whether that is documented follows from where it was said. Then the
+// What the buyer knew and was told before buying: did the buyer know about the defect (the three answers,
+// pre-filled from the assessment and corrected here), and did the ad or the dealer say something about the
+// car that was not true. A «ja» to the second asks where and what, quoted in the letter as written, so it
+// is not reworded; whether that is in writing follows from where it was said (`avledSvar`). Then the
 // moments of what was known before the purchase (momenter.ts), when they apply. Whether the car was
 // imported used comes from the registry when it tells (`bruktimportert`); only whether the ad or the
 // contract said so is asked then.
@@ -26,13 +27,12 @@ export function ForKjopetFelt({
   verdi,
   feilopplyst,
   kilder,
-  visVisste,
   bruktimportert,
   momenter,
   aktiv,
   lagre,
   avbryt,
-}: Felles & { svar: Innsending; verdi: Opplysning | undefined; feilopplyst: "ja" | "nei" | undefined; kilder: Kilder | undefined; visVisste: boolean; bruktimportert: boolean | undefined; momenter: Momenter }) {
+}: Felles & { svar: Innsending; verdi: Opplysning | undefined; feilopplyst: "ja" | "nei" | undefined; kilder: Kilder | undefined; bruktimportert: boolean | undefined; momenter: Momenter }) {
   const m = useMomenter(momenter);
   const lagretImport = momenter.lagret?.bruktimport_ikke_opplyst?.svar;
   const [importert, setImportert] = useState<"ja" | "nei" | "">(bruktimportert ? "ja" : lagretImport ? (lagretImport === IMPORT_NEI ? "nei" : "ja") : "");
@@ -52,7 +52,7 @@ export function ForKjopetFelt({
     );
   }
 
-  const klar = (!visVisste || visste !== "") && (opplyst === "nei" || (opplyst === "ja" && kilde !== "" && tekst.trim().length >= 5));
+  const klar = visste !== "" && (opplyst === "nei" || (opplyst === "ja" && kilde !== "" && tekst.trim().length >= 5));
   // The rule the letter rests on follows the saved answers; a «ja» given now shows its questions at once.
   const beskrivelse = m.gjelder("positiv_beskrivelse") || opplyst === "ja";
   const tjeneste = opplyst === "ja";
@@ -76,7 +76,7 @@ export function ForKjopetFelt({
 
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt}>
-      {visVisste && <Valgfelt label="Visste du om feilen før du kjøpte?" verdi={visste} velg={setVisste} valg={valgAv(OPPLYST_VALG, OPPLYST_TEKST)} />}
+      <Valgfelt label={SPORSMAL.opplyst} verdi={visste} velg={setVisste} valg={valgAv(OPPLYST_VALG, OPPLYST_TEKST)} />
       <Valgfelt
         label="Sa annonsen eller selgeren noe om bilen som ikke stemte?"
         verdi={opplyst}

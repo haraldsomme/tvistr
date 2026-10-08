@@ -37,12 +37,13 @@ export type Steg = { id: StegId; tittel: string; ferdig: boolean; innhold: (f: {
 
 export function lagSteg({ sakId, input, svar, utfylling, idag, idBase, forslagKjopsdato, lagre }: StegKontekst): Steg[] {
   const forhandler = utfylling.forhandler ?? null;
-  const retting = gyldigRetting(svar.kontakt || "nei", utfylling.retting);
+  const retting = gyldigRetting(svar.kontakt || undefined, utfylling.retting);
   const kjopetFerdig = gyldigKjopsdato(svar.kjopsdato, idag) && /^\d+$/.test(svar.kjopesum) && utfylling.forbehold !== undefined;
-  const kontakt = svar.kontakt || "nei";
+  // "" until the step is answered: a case opened from the assessment has no answer about contact.
+  const kontakt = svar.kontakt;
   const reparasjonFerdig = retting !== "reparert_selv" || utfylling.reparasjon !== undefined;
   const kontaktFerdig =
-    reparasjonFerdig && (kontakt === "nei" || (retting !== undefined && utfylling.reklamasjon !== undefined && (retting !== "forsokt" || utfylling.reklamasjon.forsok !== undefined)));
+    kontakt !== "" && reparasjonFerdig && (kontakt === "nei" || (retting !== undefined && utfylling.reklamasjon !== undefined && (retting !== "forsokt" || utfylling.reklamasjon.forsok !== undefined)));
   const kanVelgeKrav = harFatt(retting);
   const felles = (f: { aktiv: boolean; avbryt?: () => void }) => ({ ...f, lagre });
   // The moments the steps ask about this case (`steg` in momenter.ts), and the answers saved.
@@ -64,14 +65,15 @@ export function lagSteg({ sakId, input, svar, utfylling, idag, idBase, forslagKj
     {
       id: "feilen",
       tittel: "Feilen",
-      ferdig: utfylling.feilen !== undefined,
+      // The type is asked in the same step; an older case has it from the assessment.
+      ferdig: utfylling.feilen !== undefined && svar.feiltyper.length > 0,
       innhold: (f) => <FeilenFelt input={input} svar={svar} idag={idag} verdi={utfylling.feilen} kmVedFeil={utfylling.kmVedFeil} momenter={momenter} {...felles(f)} />,
     },
     {
       id: "for-kjopet",
       tittel: "Før kjøpet",
       ferdig: utfylling.feilopplyst !== undefined,
-      innhold: (f) => <ForKjopetFelt svar={svar} verdi={utfylling.opplysning} feilopplyst={utfylling.feilopplyst} kilder={utfylling.kilder} visVisste={utfylling.gjennomgatt === true} bruktimportert={utfylling.kjoretoy?.bruktimportert} momenter={momenter} {...felles(f)} />,
+      innhold: (f) => <ForKjopetFelt svar={svar} verdi={utfylling.opplysning} feilopplyst={utfylling.feilopplyst} kilder={utfylling.kilder} bruktimportert={utfylling.kjoretoy?.bruktimportert} momenter={momenter} {...felles(f)} />,
     },
     {
       id: "kontakt",
@@ -80,9 +82,9 @@ export function lagSteg({ sakId, input, svar, utfylling, idag, idBase, forslagKj
       innhold: (f) => <KontaktFelt svar={svar} idag={idag} retting={retting} reklamasjon={utfylling.reklamasjon} reparasjon={utfylling.reparasjon} kilder={utfylling.kilder} momenter={momenter} {...felles(f)} />,
     },
     {
-      // The answers come from the assessment. During the first pass of the wizard a report that points
-      // backward still waits for what it says, so a buyer who comes back is taken here; after it, the
-      // transcript is optional.
+      // Asked here (older cases have the answers from the assessment). During the first pass of the wizard
+      // a report that points backward still waits for what it says, so a buyer who comes back is taken
+      // here; after it, the transcript is optional.
       id: "rapport",
       tittel: "Tilstandsrapport",
       ferdig: rapportBesvart(svar) && (svar.rapportSierForKjop !== "ja" || utfylling.rapport !== undefined || utfylling.gjennomgatt === true),

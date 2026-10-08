@@ -248,7 +248,7 @@ export function BrevSide({
     </p>
   );
 
-  const retting = gyldigRetting(svar.kontakt || "nei", utfylling.retting);
+  const retting = gyldigRetting(svar.kontakt || undefined, utfylling.retting);
 
   // The answers no longer give a letter (typically: the five-year deadline has begun to matter since
   // they were saved): only the one step that decides it is shown, open, until it is corrected.
@@ -301,7 +301,7 @@ export function BrevSide({
   const kontekst = {
     forbehold: utfylling.forbehold,
     rapport: svar.verkstedrapport,
-    kontakt: svar.kontakt || "nei",
+    kontakt: svar.kontakt,
     retting: utfylling.retting,
     bruktimportert: utfylling.kjoretoy?.bruktimportert,
     opplystForKjop: svar.opplystForKjop,

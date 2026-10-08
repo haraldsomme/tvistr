@@ -15,13 +15,13 @@ import { vistSporsmal } from "@/lib/brev/momenter";
 
 const jaNei = (v: string): v is "ja" | "nei" => v === "ja" || v === "nei";
 
-// Both report answers are given (they come from the assessment, so a new case starts with them).
+// Both report answers are given (asked in this step; an older case has them from the assessment).
 export const rapportBesvart = (svar: Innsending) => jaNei(svar.verkstedrapport) && (svar.verkstedrapport !== "ja" || jaNei(svar.rapportSierForKjop));
 
 // Whether a workshop has examined the defect and what it found (in the buyer's words; often only told,
 // not written), whether there is a workshop or condition report, whether it says the defect was there before the
-// purchase, and, when it does, what it says. The answers come from the assessment and are corrected
-// here; a report that points backward in time is the strongest evidence a buyer has (`brev.ts`). Its text
+// purchase, and, when it does, what it says. The answers are given here (an older case has them from the
+// assessment); a report that points backward in time is the strongest evidence a buyer has (`brev.ts`). Its text
 // can be pasted in (`kilder.rapport`); the written letter quotes only from that. A transcript saved
 // before (`sitat`) is kept as it is.
 export function RapportFelt({

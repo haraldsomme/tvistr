@@ -228,7 +228,16 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string, valgt?:
   // and a correction are refused); from 2024 the dealer can only rely on it when the buyer was told
   // specifically and accepted it expressly and separately (§ 15 second paragraph). «Worse or other than I
   // was told» is what the letter builds on, and no warning.
-  if (f.opplyst === "ja_som_opplyst" && f.presumsjonManeder === 24) {
+  if (f.opplyst === "ja_som_opplyst" && f.presumsjonManeder !== 24 && !input.bilOgKjop.kjopsdato) {
+    // Only «hvor lenge siden» is known, and it does not settle which side of 1 January 2024 the purchase is on
+    // (an answer certainly before it is stopped, one certainly after it gets the warning below).
+    legg({
+      id: "kjent_uten_kjopsdato",
+      alvor: "hard",
+      steg: "kjopet",
+      tekst: "Du visste om feilen da du kjøpte bilen. Om du kan klage, avhenger av om kjøpet var før eller etter 1. januar 2024. Fyll inn den nøyaktige kjøpsdatoen under «Kjøpet».",
+    });
+  } else if (f.opplyst === "ja_som_opplyst" && f.presumsjonManeder === 24) {
     legg({
       id: "kjent_fra_2024",
       fast: true,

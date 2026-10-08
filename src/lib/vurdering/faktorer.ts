@@ -132,7 +132,8 @@ export function kjopsalderFor(kjopsdato: string, idag: string): Kjopsalder {
 }
 
 // Was the purchase certainly made before 1 January 2024? With the exact day that day decides; with only
-// «hvor lenge siden» the latest day the answer allows must be before it (so «2–5 år siden» is not, until 2029).
+// «hvor lenge siden» the latest day the answer allows must be before it. «Mer enn 5 år siden» is certainly
+// before 2024 until 2029; «2–5 år siden» has not been certain since 1 January 2026.
 const SENESTE_KJOP_MANEDER: Record<Kjopsalder, number> = { under_2: 0, "2_5": -24, over_5: -ABSOLUTT_FRIST_AR * 12 };
 export function kjoptFor2024(b: { kjopsdato?: string; kjopAlder?: Kjopsalder }, idag: string): boolean {
   return (b.kjopsdato ?? leggTilManeder(idag, SENESTE_KJOP_MANEDER[b.kjopAlder ?? "under_2"])) < PRESUMSJON_TO_AR_FRA;

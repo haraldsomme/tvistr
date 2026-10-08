@@ -31,6 +31,7 @@ export const ARGUMENT_IDER = [
   "tidspunkt",
   "rapport_bevis",
   "opplysning",
+  "kjent_avvik",
   "kjente_ikke",
   "momenter",
   "henvisning",
@@ -80,6 +81,7 @@ export const DEL_FOR_ARGUMENT: Record<ArgumentId, Del> = {
   formodning: "rettslig_grunnlag",
   rapport_bevis: "rettslig_grunnlag",
   opplysning: "rettslig_grunnlag",
+  kjent_avvik: "rettslig_grunnlag",
   forbehold: "rettslig_grunnlag",
   slitasje: "rettslig_grunnlag",
   mangel: "rettslig_grunnlag",
@@ -239,6 +241,18 @@ export function planlegg(m: Saksmodell): Brevplan {
     if (!u.opplysning) mangel("hva annonsen eller selgeren opplyste som ikke stemte", "for-kjopet");
     legg("opplysning", "Det dere opplyste om bilen før kjøpet, var uriktig. Bilen svarer dermed ikke til de opplysningene dere ga, jf. § 16.", { kilde: u.opplysning?.kilde ?? null, kanSiteres: Boolean(m.kilder.opplysning) });
   } else forby("opplysning", "Kjøperen har ikke sagt at dere ga uriktige opplysninger.");
+  // The buyer knew of the defect, but it is worse or other than told: the letter builds on the difference.
+  // From 2024 only a deviation the buyer was told of specifically and accepted expressly and separately
+  // counts against the buyer (§ 15 second paragraph).
+  if (f.opplyst === "ja_verre") {
+    legg(
+      "kjent_avvik",
+      `Jeg kjente til feilen da jeg kjøpte bilen, men feilen er mer omfattende enn, eller en annen enn, det dere opplyste. Angi hva som ble opplyst før kjøpet, slik det står i saken, og hvordan feilen avviker fra det; står det ikke i saken, skriv bare at feilen avviker fra det som ble opplyst. Avviket fra det som ble opplyst, er en mangel, jf. forbrukerkjøpsloven § 16${
+        f.presumsjonManeder === 24 ? ". Jeg ble ikke gjort særskilt oppmerksom på feilen slik den faktisk er, og godtok den ikke uttrykkelig og særskilt, jf. § 15 andre ledd" : ""
+      }. Skriv ikke at jeg ikke kjente til feilen.`,
+      { kilde: u.opplysning?.kilde ?? null, kanSiteres: Boolean(m.kilder.opplysning) },
+    );
+  } else forby("kjent_avvik", f.opplyst === "nei" ? "Kjøperen kjente ikke til feilen." : "Kjøperen kjente til feilen slik den er.");
 
   // What the dealer may object.
   const forbehold = u.forbehold && JURIDISK.forbehold(u.forbehold, f.presumsjonManeder, f.opplyst !== "nei");

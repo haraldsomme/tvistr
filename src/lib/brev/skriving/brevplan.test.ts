@@ -200,6 +200,27 @@ describe("planlegg", () => {
     expect(besvart).not.toContain("feilen");
   });
 
+  it("bygger på forskjellen når kjøperen kjente til feilen, men den er verre enn opplyst", () => {
+    const foring = (g: Parameters<typeof modell>[0]) => plan(g).argumenter.find((a) => a.id === "kjent_avvik")?.foring;
+    const ny = foring({ svar: svar({ opplystForKjop: "ja_verre" }), utfylling: { feilen } });
+    expect(ny).toContain("Avviket fra det som ble opplyst, er en mangel, jf. forbrukerkjøpsloven § 16");
+    expect(ny).toContain("§ 15 andre ledd");
+    // Before 2024 § 15 second paragraph did not exist in that form.
+    const gammel = foring({ svar: svar({ opplystForKjop: "ja_verre", kjopAlder: "2_5", kjopsdato: "2023-05-31" }), utfylling: { feilen: { ...feilen, dato: "2023-08-01" } } });
+    expect(gammel).toContain("§ 16");
+    expect(gammel).not.toContain("§ 15");
+    expect(foring({ utfylling: { feilen } })).toBeUndefined();
+    expect(forbudte({ utfylling: { feilen } })).toContain("kjent_avvik");
+    expect(ider({ svar: svar({ opplystForKjop: "ja_verre" }), utfylling: { feilen } })).not.toContain("kjente_ikke");
+  });
+
+  it("en feil kjøperen kjente slik den er: be om kjøpsdatoen når den mangler, ellers advar for kjøp fra 2024", () => {
+    const advarsler = (endring: Parameters<typeof svar>[0]) => plan({ svar: svar({ opplystForKjop: "ja_som_opplyst", ...endring }), utfylling: { feilen } }).advarsler.map((a) => a.id);
+    expect(advarsler({ kjopAlder: "2_5", kjopsdato: "" })).toContain("kjent_uten_kjopsdato");
+    expect(advarsler({})).toEqual(expect.arrayContaining(["kjent_fra_2024"]));
+    expect(advarsler({})).not.toContain("kjent_uten_kjopsdato");
+  });
+
   it("lar kilden til vedtaket stå som merke", () => {
     const p = plan();
     expect(p.henvisning).not.toBeNull();

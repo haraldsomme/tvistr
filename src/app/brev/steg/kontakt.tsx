@@ -36,8 +36,9 @@ const MATE_TEKST: Record<Reklamasjon["mate"], string> = {
 // Whether the dealer has been told, and if so when, how and what came of it. Decides the claim:
 // repair while the dealer has not had a try, price reduction or cancelling once it has refused or
 // failed (fkjl §§ 29 and 30, met in the letter in `brev.ts`). «Tatt opp med forhandleren» is asked here
-// (older cases have it from the assessment), and what has happened since once that is known. Takes the raw answers rather than the engine's checked input, so it also works when a
-// deadline that has begun to matter since means there is no letter until this step is answered again.
+// (older cases have it from the assessment), and what has happened since once that is known. Takes the
+// raw answers rather than the engine's checked input, so it also works when a deadline that has begun to
+// matter since means there is no letter until this step is answered again.
 export function KontaktFelt({
   svar,
   idag,
@@ -88,7 +89,7 @@ export function KontaktFelt({
   const reklamasjonKlar = kontakt === "nei" || (dato >= min && dato <= idag && mate !== "" && (!forsokt || forsok !== ""));
   const reparasjonKlar = !reparert || (repDato >= min && repDato <= idag && grunn !== "" && grunner.includes(grunn));
   const klar = kontakt !== "" && valgtRetting !== "" && reklamasjonKlar && reparasjonKlar;
-  const godtatt = kontakt !== "" && m.gjelder("forhandler_erkjente") && vistSporsmal("forhandler_erkjente", { kontakt });
+  const godtatt = m.gjelder("forhandler_erkjente") && vistSporsmal("forhandler_erkjente", { kontakt });
   const annenArsak = m.gjelder("forhandler_annen_arsak") && vistSporsmal("forhandler_annen_arsak", { retting: valgtRetting });
   const send = () =>
     lagre({

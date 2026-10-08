@@ -356,7 +356,7 @@ export function vistSporsmal(id: string, k: SporsmalKontekst): boolean {
     case "rapport_arsak":
       return k.rapport === "ja";
     case "forhandler_erkjente":
-      return k.kontakt !== "nei";
+      return k.kontakt === "ja";
     case "forhandler_annen_arsak":
       return k.retting === "avvist";
     case "bruktimport_ikke_opplyst":

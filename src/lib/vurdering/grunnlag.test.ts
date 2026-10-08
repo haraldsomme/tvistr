@@ -60,6 +60,50 @@ describe("grunnlag", () => {
     expect(grunnlag(i).some((g) => /ikke klaget/.test(g.tekst))).toBe(false);
   });
 
+  // Moved from vurder.test.ts when the levels went: the points now only feed the letter page's save dialog.
+  it("billig bil eller høy kjørelengde gir et punkt mot med § 15", () => {
+    for (const [pris, km, tekst] of [
+      [49999, 112000, /kostet under 50 000 kr\. Da kan du forvente mindre/],
+      [219000, 200001, /hadde gått over 200 000 km da du kjøpte den\. Da kan du forvente mindre/],
+      [35000, 240000, /kostet under 50 000 kr og hadde gått over 200 000 km/],
+    ] as const) {
+      const i = hent(1);
+      i.bilOgKjop.kjopesumNok = pris;
+      i.bilOgKjop.kmVedKjop = km;
+      expect(grunnlag(i).find((g) => tekst.test(g.tekst))).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 15" });
+    }
+  });
+
+  it("grensene er 50 000 kr og 200 000 km, og manglende tall gir ikke noe punkt", () => {
+    const forventning = (i: KlageInput) => grunnlag(i).some((g) => /Da kan du forvente mindre/.test(g.tekst));
+    const i = hent(1);
+    i.bilOgKjop.kjopesumNok = 50000;
+    i.bilOgKjop.kmVedKjop = 200000;
+    expect(forventning(i)).toBe(false);
+    i.bilOgKjop.kjopesumNok = 49999;
+    expect(forventning(i)).toBe(true);
+    i.bilOgKjop.kjopesumNok = 50000;
+    i.bilOgKjop.kmVedKjop = 200001;
+    expect(forventning(i)).toBe(true);
+    i.bilOgKjop.kjopesumNok = null;
+    i.bilOgKjop.kmVedKjop = undefined;
+    expect(forventning(i)).toBe(false);
+  });
+
+  it("ikke klaget og feilen har helt sikkert vært kjent i over ett år gir et punkt mot med § 27", () => {
+    // Defect inside six months of a purchase in January 2022: known since July 2022 at the latest.
+    const punkt = (i: KlageInput) => grunnlag(i).find((g) => /kjent til den i over ett år/.test(g.tekst));
+    const i = hent(1);
+    i.bilOgKjop.kjopsdato = "2022-01-31";
+    i.feilen.kontakt = "nei";
+    expect(punkt(i)).toMatchObject({ vekt: "mot", paragraf: "forbrukerkjøpsloven § 27" });
+    i.feilen.kontakt = "ja";
+    expect(punkt(i)).toBeUndefined();
+    // Not answered yet: nothing is assumed.
+    delete i.feilen.kontakt;
+    expect(punkt(i)).toBeUndefined();
+  });
+
   it("dokumenterte feilopplysninger får sitt eget punkt", () => {
     expect(paragrafer(hent(4))).toContain("forbrukerkjøpsloven § 16");
   });

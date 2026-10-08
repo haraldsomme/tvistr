@@ -1,8 +1,8 @@
-import { type Kjopsalder, type Kjopsform, type Kontakt, type Oppdaget } from "@/lib/vurdering/typer";
+import { type Kjopsalder, type Kjopsform, type Kontakt, type Oppdaget, type Opplyst } from "@/lib/vurdering/typer";
 import { FEILTYPER_KNAPPER } from "@/lib/vurdering/innsending";
 
-// The wording of the questions and the answers in the assessment. The letter page lets the buyer
-// correct the answers, and asks with the same words.
+// The wording of the questions and the answers in the assessment, and of the questions the letter page
+// asks after purchase. The letter page lets the buyer correct the answers, and asks with the same words.
 
 export const SPORSMAL = {
   kjopAlder: "Når kjøpte du bilen?",
@@ -11,8 +11,8 @@ export const SPORSMAL = {
   kjopesum: "Hva kostet bilen?",
   kmVedKjop: "Kilometerstand ved kjøpet",
   feiltype: "Hva gjelder feilen?",
-  oppdaget: "Hvor lenge etter kjøpet oppdaget du feilen?",
-  opplyst: "Visste du om feilen før du kjøpte?",
+  oppdaget: "Hvor lenge etter kjøpet viste feilen seg?",
+  opplyst: "Visste du om feilen da du kjøpte bilen?",
   feilopplysning: "Ble du feilaktig informert av selger eller annonse?",
   dokumentert: "Har du det skriftlig?",
   kontakt: "Har du tatt opp feilen med forhandleren?",
@@ -42,7 +42,11 @@ export const FEILTYPE_TEKST: Record<(typeof FEILTYPER_KNAPPER)[number], string> 
   skade: "Kollisjonsskade",
   annet: "Annet",
 };
-export const OPPLYST_TEKST = { ja: "Ja", nei: "Nei" } as const;
+export const OPPLYST_TEKST: Record<Opplyst, string> = {
+  nei: "Nei",
+  ja_verre: "Ja, men den er verre eller annerledes enn jeg fikk vite",
+  ja_som_opplyst: "Ja, og den er slik jeg fikk vite",
+};
 export const KONTAKT_TEKST: Record<Kontakt, string> = { nei: "Nei", ja: "Ja" };
 export const KJOPSFORM_TEKST: Record<Kjopsform, string> = { forhandler: "Bilforhandler", privatperson: "Privatperson", firma: "Kjøpt gjennom firma" };
 export const OPPDAGET_TEKST: Record<Oppdaget, string> = {

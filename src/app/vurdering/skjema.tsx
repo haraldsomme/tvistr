@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Toggle } from "@/components/ui/toggle";
 import { TID_TIL_VEDTAK } from "@/lib/vurdering/tid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,7 +9,6 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { lesKjoretoy } from "@/lib/brev/utfylling";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 import {
-  FEILTYPER_KNAPPER,
   forsteUgyldigeSteg,
   gyldigKjopsdato,
   JA_NEI,
@@ -18,9 +16,7 @@ import {
   medKjopsalder,
   medKjopsdato,
   oppdagetMulig,
-  OPPLYST_VALG,
   sporOmFemarsfrist,
-  sporOmOpplysning,
   stegFor,
   stegGyldig,
   tilParametre,
@@ -28,25 +24,10 @@ import {
   type Steg,
 } from "@/lib/vurdering/innsending";
 import { presumsjonManederFor } from "@/lib/vurdering/faktorer";
-import {
-  KJOPSALDER_VALG,
-  KJOPSFORM_VALG,
-  KONTAKT_VALG,
-  OPPDAGET_VALG,
-  type Niva,
-} from "@/lib/vurdering/typer";
+import { KJOPSALDER_VALG, KJOPSFORM_VALG, OPPDAGET_VALG, OPPLYST_VALG, type Niva } from "@/lib/vurdering/typer";
 import { valgAv, Valgfelt } from "@/app/brev/felt";
 import { Bilkort, Regnr } from "./regnr";
-import {
-  FEILTYPE_TEKST,
-  JA_NEI_TEKST,
-  KJOPSALDER_TEKST,
-  KJOPSFORM_TEKST,
-  KONTAKT_TEKST,
-  OPPDAGET_TEKST,
-  OPPLYST_TEKST,
-  SPORSMAL,
-} from "./tekster";
+import { JA_NEI_TEKST, KJOPSALDER_TEKST, KJOPSFORM_TEKST, OPPDAGET_TEKST, OPPLYST_TEKST, SPORSMAL } from "./tekster";
 
 type Punkt = {
   tekst: string;
@@ -57,21 +38,19 @@ type Punkt = {
 type Resultat = {
   niva: Niva;
   tittel: string;
+  // Stopped: why.
   begrunnelse: string;
-  // What strengthens the case, and what weakens it (or the one reason the law stops it).
-  styrker: Punkt[];
-  svakheter: Punkt[];
-  // The explanation is only sent for a weak case; otherwise it is part of the paid step.
-  tiltak: { tittel: string; tekst?: string }[];
-  // null when the five-year deadline has passed, so no comparison was made.
-  utvalg: { n: number; vunnet: number; spesifikk: boolean } | null;
+  // Stopped: the one point, with the rule it rests on. Empty otherwise.
+  grunnlag: Punkt[];
+  // Not stopped: what the buyer must know before buying the letter (who has the burden of proof).
+  varsler: string[];
+  // null when the law stops the claim, so no comparison was made.
+  utvalg: { n: number; vunnet: number } | null;
 };
 
 const STEG_TEKST: Record<Steg, { navn: string; tittel: string }> = {
   1: { navn: "Bilen", tittel: "Hvilken bil kjøpte du?" },
-  2: { navn: "Feilen", tittel: "Hva er galt med bilen?" },
-  3: { navn: "Forhandleren", tittel: "Hva har forhandleren sagt?" },
-  4: { navn: "Bevis", tittel: "Hvilke bevis har du?" },
+  2: { navn: "Feilen", tittel: "Når viste feilen seg?" },
 };
 // The button text: the name of the next step, or the assessment after the last one.
 const nesteTekst = (steger: readonly Steg[], steg: Steg) => {
@@ -80,7 +59,6 @@ const nesteTekst = (steger: readonly Steg[], steg: Steg) => {
 };
 
 const INNHOLD = "flex flex-col gap-5 px-6 pt-[22px] md:gap-9 md:px-0 md:pt-0";
-const LABEL = "font-ui text-[14px] font-semibold text-[#17263d] md:text-[15px]";
 
 // Completed steps are buttons back to that step; the ones ahead cannot be opened, so each step is
 // still validated before the next.
@@ -129,14 +107,12 @@ const VEKT_TEGN = {
   mot: { tegn: "−", farge: "oklch(0.42 0.12 25)", bakgrunn: "oklch(0.95 0.04 25)", tekst: "Taler mot saken" },
 } as const;
 
-// The comparison point shown right under the title: how many similar decisions that got medhold the case
-// was checked against. The letter chooses the decision it cites after purchase.
-function sammenligningTekst(utvalg: Resultat["utvalg"]): { ramme: string } | null {
+// The comparison point shown under the warning: how many dealer decisions in the same legal position on
+// timing that got medhold the case was checked against (the defect type is asked after purchase). The
+// letter chooses the decision it cites after purchase.
+function sammenligningTekst(utvalg: Resultat["utvalg"]): string | null {
   if (!utvalg) return null;
-  const gruppe = utvalg.spesifikk ? "lignende vedtak" : "vedtak om bruktbil kjøpt fra forhandler";
-  return {
-    ramme: `Vi har sjekket saken din opp mot ${utvalg.vunnet} ${gruppe} fra Forbrukerklageutvalget som fikk medhold. I brevet viser vi til den av dem som passer best, og går gjennom det utvalget la vekt på, punkt for punkt mot din sak, så forhandleren ser hvorfor din sak står minst like sterkt.`,
-  };
+  return `Vi har sjekket saken din opp mot ${utvalg.vunnet} vedtak om bruktbil kjøpt fra forhandler som fikk medhold. I brevet viser vi til den av dem som passer best, og går gjennom det utvalget la vekt på, punkt for punkt mot din sak, så forhandleren ser hvorfor din sak står minst like sterkt.`;
 }
 const KORT = "overflow-hidden rounded-lg border border-[#dcd8cf] bg-white";
 const RAD = "flex gap-3.5 border-b border-[#eceae4] px-6 py-[18px] last:border-b-0";
@@ -437,31 +413,24 @@ function Vurdering({
             <h1 className="m-0 font-brev text-[28px] font-semibold leading-[1.15] md:text-[44px] md:leading-[1.12] md:tracking-[-.01em] md:[text-wrap:balance]">
               {resultat.tittel}
             </h1>
-            {sammenligning && (
-              <div className={`flex flex-col items-start gap-2 px-6 py-[18px] ${KORT}`}>
-                <p className="m-0 max-w-[600px] text-[15px] leading-[1.6] text-[#5b6472] [text-wrap:pretty]">
-                  {sammenligning.ramme}
-                </p>
+            {/* Stopped: why, and what the buyer can do (change an answer, or ask Forbrukerrådet). */}
+            {resultat.niva === "utenfor" && (
+              <p className="m-0 max-w-[600px] text-[15px] leading-[1.6] text-[#3d4757] [text-wrap:pretty] md:text-[16px]">{resultat.begrunnelse}</p>
+            )}
+            {/* Not stopped: what the buyer must know before paying, then what the letter does. */}
+            {resultat.varsler.length > 0 && (
+              <div role="note" aria-label="Dette må du vite" className={`flex flex-col gap-3 px-6 py-[18px] ${KORT}`}>
+                {resultat.varsler.map((v) => (
+                  <p key={v} className="m-0 max-w-[600px] text-[16px] leading-[1.6] text-[#17263d] [text-wrap:pretty]">
+                    {v}
+                  </p>
+                ))}
               </div>
             )}
+            {sammenligning && <p className="m-0 max-w-[600px] text-[15px] leading-[1.6] text-[#5b6472] [text-wrap:pretty]">{sammenligning}</p>}
           </div>
-          {resultat.styrker.length > 0 && (
-            <PunktListe
-              id="styrker"
-              tittel="Dette styrker saken din"
-              punkter={resultat.styrker}
-            />
-          )}
-          {resultat.svakheter.length > 0 && (
-            <PunktListe
-              id="svakheter"
-              tittel={
-                resultat.niva === "utenfor"
-                  ? "Dette stopper saken din"
-                  : "Dette svekker saken din"
-              }
-              punkter={resultat.svakheter}
-            />
+          {resultat.niva === "utenfor" && resultat.grunnlag.length > 0 && (
+            <PunktListe id="stopper" tittel="Dette stopper saken din" punkter={resultat.grunnlag} />
           )}
           <p className="m-0 max-w-[600px] border-t border-[#dcd8cf] pt-4 text-[13px] leading-[1.55] text-[#5b6472]">
             Vurderingen bygger på svarene dine og på tidligere vedtak. Den er veiledende og ikke juridisk rådgivning, og utfallet i din sak kan bli et annet.
@@ -489,7 +458,6 @@ function Vurdering({
 // personal. It is kept in this tab (sessionStorage) so a reload does not lose it, and goes to the
 // server when the letter is opened.
 export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startSteg: number }) {
-  const id = useId();
   const router = useRouter();
   const forsteUgyldig = forsteUgyldigeSteg(startSvar);
   const visVurdering = forsteUgyldig === null && !startSteg;
@@ -529,15 +497,14 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
         body: JSON.stringify(bilAr ? { ...data, bilAr } : data),
       });
       const json = (await res.json()) as Partial<Resultat> & { feil?: string };
-      if (!res.ok || !json.niva || !json.tittel || !json.begrunnelse) throw new Error(json.feil ?? "Noe gikk galt.");
+      if (!res.ok || !json.niva || !json.tittel) throw new Error(json.feil ?? "Noe gikk galt.");
       if (avbrutt()) return null;
       setResultat({
         niva: json.niva,
         tittel: json.tittel,
-        begrunnelse: json.begrunnelse,
-        styrker: json.styrker ?? [],
-        svakheter: json.svakheter ?? [],
-        tiltak: json.tiltak ?? [],
+        begrunnelse: json.begrunnelse ?? "",
+        grunnlag: json.grunnlag ?? [],
+        varsler: json.varsler ?? [],
         utvalg: json.utvalg ?? null,
       });
       return null;
@@ -679,6 +646,10 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
                 {datoFraRegister && <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472]">Valgt ut fra Statens vegvesen: dagen bilen ble registrert på deg. Velg et annet alternativ hvis det ikke stemmer.</p>}
               </div>
               <Valgfelt label={SPORSMAL.kjopsform} valg={valgAv(KJOPSFORM_VALG, KJOPSFORM_TEKST)} verdi={d.kjopsform} velg={(v) => sett("kjopsform", v)} />
+              {/* Only for a purchase over five years old: a «nei» means the deadline in § 27 has passed. */}
+              {sporOmFemarsfrist(d) && (
+                <Valgfelt label={SPORSMAL.reklamert} valg={valgAv(JA_NEI, JA_NEI_TEKST)} verdi={d.reklamertInnenFemAr} velg={(v) => sett("reklamertInnenFemAr", v)} />
+              )}
             </div>
           </>
         )}
@@ -686,25 +657,6 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
         {steg === 2 && (
           <>
             <div className={INNHOLD}>
-              <div role="group" aria-labelledby={`${id}-feiltype`} className="flex flex-col gap-2.5 md:gap-3">
-                <span id={`${id}-feiltype`} className={LABEL}>
-                  {SPORSMAL.feiltype} <span className="hidden font-normal text-[#5b6472] md:inline">Velg én eller flere</span>
-                </span>
-                <div className="flex flex-wrap gap-2 md:gap-2.5">
-                  {FEILTYPER_KNAPPER.map((f) => (
-                    <Toggle
-                      key={f}
-                      variant="pille"
-                      size="pille"
-                      pressed={d.feiltyper.includes(f)}
-                      onPressedChange={(pa) => sett("feiltyper", pa ? [...d.feiltyper, f] : d.feiltyper.filter((x) => x !== f))}
-                      className="px-3.5 py-2.5 font-ui font-medium md:px-5 md:py-3 md:text-[15px]"
-                    >
-                      {FEILTYPE_TEKST[f]}
-                    </Toggle>
-                  ))}
-                </div>
-              </div>
               <div className="flex flex-col gap-3">
                 <Valgfelt
                   label={SPORSMAL.oppdaget}
@@ -719,34 +671,7 @@ export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startS
                   </p>
                 )}
               </div>
-            </div>
-          </>
-        )}
-
-        {steg === 3 && (
-          <>
-            <div className={INNHOLD}>
-              {sporOmOpplysning(d) && (
-                <Valgfelt label={SPORSMAL.opplyst} valg={valgAv(OPPLYST_VALG, OPPLYST_TEKST)} verdi={d.opplystForKjop} velg={(v) => sett("opplystForKjop", v)} />
-              )}
-              <Valgfelt label={SPORSMAL.kontakt} valg={valgAv(KONTAKT_VALG, KONTAKT_TEKST)} verdi={d.kontakt} velg={(v) => sett("kontakt", v)} />
-              {sporOmFemarsfrist(d) && (
-                <Valgfelt label={SPORSMAL.reklamert} valg={valgAv(JA_NEI, JA_NEI_TEKST)} verdi={d.reklamertInnenFemAr} velg={(v) => sett("reklamertInnenFemAr", v)} />
-              )}
-            </div>
-          </>
-        )}
-
-        {steg === 4 && (
-          <>
-            <div className={INNHOLD}>
-              <Valgfelt label={SPORSMAL.rapport} valg={valgAv(JA_NEI, JA_NEI_TEKST)} verdi={d.verkstedrapport} velg={(v) => sett("verkstedrapport", v)} />
-              {d.verkstedrapport === "ja" && (
-                <Valgfelt label={SPORSMAL.rapportSier} valg={valgAv(JA_NEI, JA_NEI_TEKST)} verdi={d.rapportSierForKjop} velg={(v) => sett("rapportSierForKjop", v)} />
-              )}
-              <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472]">
-                En rapport som peker bakover i tid er det sterkeste beviset ditt. Etter vurderingen kan du gjengi hva den sier i brevet.
-              </p>
+              <Valgfelt label={SPORSMAL.opplyst} valg={valgAv(OPPLYST_VALG, OPPLYST_TEKST)} verdi={d.opplystForKjop} velg={(v) => sett("opplystForKjop", v)} />
             </div>
           </>
         )}

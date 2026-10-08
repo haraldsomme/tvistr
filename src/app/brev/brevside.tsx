@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { Logo } from "@/app/logo";
-import { DownloadIcon, FileTextIcon, FolderOpenIcon, MessageSquareReplyIcon, PencilLineIcon, WrenchIcon, type LucideIcon } from "lucide-react";
+import { DownloadIcon, FileTextIcon, GaugeIcon, FolderOpenIcon, MessageSquareReplyIcon, PencilLineIcon, WrenchIcon, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog } from "@/components/ui/alert-dialog";
@@ -18,12 +18,15 @@ import { skrevetBrev } from "@/lib/brev/skriving/render";
 import { lagSaksmodell } from "@/lib/brev/skriving/saksmodell";
 import { motsvar } from "@/lib/brev/motsvar";
 import { sjekkBrev, type Advarsel } from "@/lib/brev/sjekk";
+import { momenterFor } from "@/lib/brev/momenter";
+import { scoreFor } from "@/lib/brev/score";
 import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { beregnFaktorer } from "@/lib/vurdering/faktorer";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import { gyldigRetting } from "@/lib/vurdering/typer";
 import { Brevark } from "./brevark";
 import { Saksmappe } from "./mappe/saksmappe";
+import { ScoreLinje, ScorePanel } from "./score";
 import { Motsvar } from "./motsvar";
 import { useSkriving, Venteskjerm } from "./skriving";
 
@@ -117,36 +120,6 @@ function IkkeSkrevet({ avklart, feil, skriv, gjennomgang }: { avklart: boolean; 
   );
 }
 
-// What to check before the letter is sent: what is still yellow, and the weaknesses that leave no yellow
-// field (`sjekkBrev`), the serious ones first, each with a way to the step that fixes it.
-function SjekkFoerSending({ plassholdere, advarsler, apne }: { plassholdere: boolean; advarsler: Advarsel[]; apne: (steg: string) => void }) {
-  if (!plassholdere && advarsler.length === 0) return null;
-  const hard = plassholdere || advarsler.some((a) => a.alvor === "hard");
-  return (
-    <section
-      aria-labelledby="sjekk-tittel"
-      className={`flex flex-col gap-2 rounded-lg border px-[18px] py-3.5 ${hard ? "border-[oklch(0.72_0.11_85)] bg-[oklch(0.96_0.07_85)]" : "border-[#dcd8cf] bg-white"}`}
-    >
-      <h2 id="sjekk-tittel" className="m-0 text-[15px] font-semibold text-[#17263d]">
-        Sjekk før du sender
-      </h2>
-      <ul className="m-0 flex list-disc flex-col gap-2 pl-5 text-[13px] leading-[1.5] text-[#3d4757]">
-        {plassholdere && <li className="font-semibold text-[#6b5618]">Brevet har felt som mangler (markert gult). Trykk på et gult felt for å fylle det ut.</li>}
-        {advarsler.map((a) => (
-          <li key={a.id} className={a.alvor === "hard" ? "font-semibold text-[#6b5618]" : undefined}>
-            {a.tekst}{" "}
-            {a.steg && (
-              <Button type="button" variant="link" onClick={() => apne(a.steg!)} className="h-auto p-0 align-baseline text-[13px]">
-                Rett dette
-              </Button>
-            )}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 // The page around the letter: the header, and a column for what the buyer fills in beside the letter.
 function Ramme({ children }: { children: ReactNode }) {
   return (
@@ -162,11 +135,11 @@ function Ramme({ children }: { children: ReactNode }) {
 // The letter and the fill-in list are tabs (the list only on a narrow screen, where it sits beside the
 // letter otherwise); the tools for after the letter is written, and its downloads, are in a menu at
 // the right.
-type Fane = "brev" | "fyll" | "motsvar" | "mappe";
-const FANER = ["brev", "fyll"] as const;
+type Fane = "brev" | "score" | "fyll" | "motsvar" | "mappe";
+const FANER = ["brev", "score", "fyll"] as const;
 const VERKTOY = ["motsvar", "mappe"] as const;
-const FANE_TEKST: Record<Fane, string> = { brev: "Brev", fyll: "Endre", motsvar: "Motsvar", mappe: "Saksmappe" };
-const FANE_IKON: Record<Fane, LucideIcon> = { brev: FileTextIcon, fyll: PencilLineIcon, motsvar: MessageSquareReplyIcon, mappe: FolderOpenIcon };
+const FANE_TEKST: Record<Fane, string> = { brev: "Brev", score: "Score", fyll: "Endre", motsvar: "Motsvar", mappe: "Saksmappe" };
+const FANE_IKON: Record<Fane, LucideIcon> = { brev: FileTextIcon, score: GaugeIcon, fyll: PencilLineIcon, motsvar: MessageSquareReplyIcon, mappe: FolderOpenIcon };
 const NEDLASTINGER = [
   { fil: "brev.pdf", tekst: "Last ned PDF", hjelp: "Last ned brevet i PDF-format" },
   { fil: "brev.docx", tekst: "Last ned Word", hjelp: "Last ned brevet i redigerbart Word-format" },
@@ -324,6 +297,11 @@ export function BrevSide({
     ...(utfylling.brev?.funn ?? []).map((f, n): Advarsel => ({ id: `funn-${n}`, tekst: `Merknad fra gjennomlesingen: ${f.hvorfor}`, steg: null, alvor: "myk" })),
   ];
   const harde = advarsler.filter((a) => a.alvor === "hard");
+  // The moments the steps ask in this case and the buyer has not answered.
+  const ubesvarte = lest.ok
+    ? momenterFor(lest.modell.faktorer).filter((mo) => mo.steg && !utfylling.momenter?.[mo.id]).map((mo) => ({ id: mo.id, steg: mo.steg ?? null }))
+    : [];
+  const score = scoreFor({ advarsler, gule: (plan?.mangler ?? []).map((g) => ({ tekst: g.tekst, steg: g.steg ?? null })), skrevet: !!brev, utdatert, ubesvarte });
   const maBekrefte = brev !== null && (plassholdere || harde.length > 0 || utdatert);
   const iVerktoy = fane === "motsvar" || fane === "mappe";
   const faneKlasse = (valgt: boolean) =>
@@ -352,7 +330,7 @@ export function BrevSide({
               knapp.focus();
             }}
             // On a wide screen the list is beside the letter, so «Brev» is the chosen tab there for both.
-            className={`${faneKlasse(fane === f)} ${f === "fyll" ? "lg:hidden" : fane === "fyll" ? "lg:border-[#17263d] lg:text-[#17263d]" : ""}`}
+            className={`${faneKlasse(fane === f)} ${f === "fyll" ? "lg:hidden" : f === "brev" && fane === "fyll" ? "lg:border-[#17263d] lg:text-[#17263d]" : ""}`}
           >
             <FaneIkon fane={f} />
             {FANE_TEKST[f]}
@@ -459,7 +437,7 @@ export function BrevSide({
               {skriving.feil}
             </p>
           )}
-          <SjekkFoerSending plassholdere={plassholdere} advarsler={advarsler} apne={apneSteg} />
+          <ScoreLinje score={score} vis={() => setFane("score")} />
           <Brevark brev={brev} apne={apneSteg} mangler={plan?.mangler} />
         </>
       )}
@@ -480,9 +458,9 @@ export function BrevSide({
         </div>
       ) : (
         <>
-          <div role="tabpanel" id={fane === "fyll" ? "panel-fyll" : "panel-brev"} aria-labelledby={fane === "fyll" ? "fane-fyll" : "fane-brev"} className="contents">
+          <div role="tabpanel" id={`panel-${fane}`} aria-labelledby={`fane-${fane}`} className="contents">
             {fyllKolonne}
-            {brevKolonne}
+            {fane === "score" ? <ScorePanel score={score} apne={apneSteg} /> : brevKolonne}
           </div>
         </>
       )}

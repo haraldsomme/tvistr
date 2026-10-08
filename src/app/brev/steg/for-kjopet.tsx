@@ -8,6 +8,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { HJELP, Kildefelt, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } from "../felt";
 import { moment, MomentFelt, useMomenter, type Momenter } from "./moment";
+import { vistSporsmal } from "@/lib/brev/momenter";
 
 const [IMPORT_IKKE_OPPLYST, IMPORT_OPPLYST, IMPORT_NEI] = moment("bruktimport_ikke_opplyst").alternativer;
 
@@ -55,7 +56,7 @@ export function ForKjopetFelt({
   // The rule the letter rests on follows the saved answers; a «ja» given now shows its questions at once.
   const beskrivelse = m.gjelder("positiv_beskrivelse") || opplyst === "ja";
   const tjeneste = opplyst === "ja";
-  const importSporres = m.gjelder("bruktimport_ikke_opplyst") && bruktimportert !== false;
+  const importSporres = m.gjelder("bruktimport_ikke_opplyst") && vistSporsmal("bruktimport_ikke_opplyst", { bruktimportert });
   const viste = [
     beskrivelse && "positiv_beskrivelse",
     tjeneste && "uriktig_service_arbeid_utstyr",

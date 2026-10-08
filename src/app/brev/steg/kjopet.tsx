@@ -8,6 +8,7 @@ import { FRA_AR, gyldigKjopsdato, medKjopsdato, type Innsending } from "@/lib/vu
 import { Datofelt } from "../datofelt";
 import { bareSiffer, type Felles, gruppert, HJELP, kroner, Skjema, Tekstfelt, valgAv, Valgfelt } from "../felt";
 import { MomentFelt, useMomenter, type Momenter } from "./moment";
+import { vistSporsmal } from "@/lib/brev/momenter";
 
 // What the letter needs about the purchase itself: the day, the price, the mileage, and whether the
 // contract made a disclaimer. The car itself came from the assessment and cannot change here.
@@ -53,7 +54,7 @@ export function KjopetFelt({
   const datoOk = gyldigKjopsdato(dato, idag);
   const sumOk = /^\d+$/.test(sum) && Number(sum) > 0;
   const klar = datoOk && sumOk && forbehold !== null;
-  const garanti = m.gjelder("garanti_uklar") && forbehold === "garanti";
+  const garanti = m.gjelder("garanti_uklar") && vistSporsmal("garanti_uklar", { forbehold: forbehold ?? "" });
   const send = () => lagre({ svar: medKjopsdato({ ...svar, kjopesum: sum, kmVedKjop: km }, dato, idag), forbehold: forbehold!, momenter: m.lagring("kjopet", garanti ? ["garanti_uklar"] : []) });
 
   return (

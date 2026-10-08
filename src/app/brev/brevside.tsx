@@ -18,7 +18,7 @@ import { skrevetBrev } from "@/lib/brev/skriving/render";
 import { lagSaksmodell } from "@/lib/brev/skriving/saksmodell";
 import { motsvar } from "@/lib/brev/motsvar";
 import { sjekkBrev, type Advarsel } from "@/lib/brev/sjekk";
-import { momenterFor } from "@/lib/brev/momenter";
+import { momenterFor, vistSporsmal } from "@/lib/brev/momenter";
 import { scoreFor } from "@/lib/brev/score";
 import type { Lagring, Utfylling } from "@/lib/brev/utfylling";
 import { beregnFaktorer } from "@/lib/vurdering/faktorer";
@@ -293,13 +293,23 @@ export function BrevSide({
   // The weaknesses of the case, what the check could not fix, and the review's remarks.
   const advarsler: Advarsel[] = [
     ...sjekkBrev(input, utfylling, idag, henvisning),
-    ...(utfylling.brev?.avvik ?? []).map((a, n): Advarsel => ({ id: `avvik-${n}`, tekst: `Brevet har en feil vi ikke klarte å rette: ${a.tekst}`, steg: null, alvor: "hard" })),
+    ...(utfylling.brev?.avvik ?? []).map((a, n): Advarsel => ({ id: `avvik-${n}`, tekst: `Brevet har en feil vi ikke klarte å rette: ${a.tekst}`, steg: null, alvor: "hard", handling: "skriv" })),
     ...(utfylling.brev?.funn ?? []).map((f, n): Advarsel => ({ id: `funn-${n}`, tekst: `Merknad fra gjennomlesingen: ${f.hvorfor}`, steg: null, alvor: "myk" })),
   ];
   const harde = advarsler.filter((a) => a.alvor === "hard");
   // The moments the steps ask in this case and the buyer has not answered.
+  const kontekst = {
+    forbehold: utfylling.forbehold,
+    rapport: svar.verkstedrapport,
+    kontakt: svar.kontakt || "nei",
+    retting: utfylling.retting,
+    bruktimportert: utfylling.kjoretoy?.bruktimportert,
+    opplystForKjop: svar.opplystForKjop,
+  };
   const ubesvarte = lest.ok
-    ? momenterFor(lest.modell.faktorer).filter((mo) => mo.steg && !utfylling.momenter?.[mo.id]).map((mo) => ({ id: mo.id, steg: mo.steg ?? null }))
+    ? momenterFor(lest.modell.faktorer)
+        .filter((mo) => mo.steg && vistSporsmal(mo.id, kontekst) && !utfylling.momenter?.[mo.id])
+        .map((mo) => ({ id: mo.id, steg: mo.steg ?? null, tekst: mo.sporsmal.length > 90 ? mo.navn : mo.sporsmal }))
     : [];
   const score = scoreFor({ advarsler, gule: (plan?.mangler ?? []).map((g) => ({ tekst: g.tekst, steg: g.steg ?? null })), skrevet: !!brev, utdatert, ubesvarte });
   const maBekrefte = brev !== null && (plassholdere || harde.length > 0 || utdatert);
@@ -322,12 +332,18 @@ export function BrevSide({
             onClick={() => setFane(f)}
             onKeyDown={(e) => {
               if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-              const annen = FANER[(FANER.indexOf(f) + 1) % FANER.length];
-              const knapp = document.getElementById(`fane-${annen}`);
-              // «Endre» is hidden on a wide screen, where the list is always beside the letter.
-              if (!knapp?.getClientRects().length) return;
-              setFane(annen);
-              knapp.focus();
+              // Next or previous tab, skipping those not visible («Endre» is hidden on a wide screen, where
+              // the list is always beside the letter), wrapping around.
+              const retning = e.key === "ArrowRight" ? 1 : FANER.length - 1;
+              for (let n = 1; n < FANER.length; n++) {
+                const annen = FANER[(FANER.indexOf(f) + retning * n) % FANER.length];
+                const knapp = document.getElementById(`fane-${annen}`);
+                if (!knapp?.getClientRects().length) continue;
+                e.preventDefault();
+                setFane(annen);
+                knapp.focus();
+                return;
+              }
             }}
             // On a wide screen the list is beside the letter, so «Brev» is the chosen tab there for both.
             className={`${faneKlasse(fane === f)} ${f === "fyll" ? "lg:hidden" : f === "brev" && fane === "fyll" ? "lg:border-[#17263d] lg:text-[#17263d]" : ""}`}

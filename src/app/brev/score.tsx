@@ -19,17 +19,28 @@ export function ScorePanel({ score, apne }: { score: Score; apne: (steg: string)
           <h3 className="m-0 text-[15px] font-semibold text-primary">Gjør dette</h3>
           <ul className="m-0 flex list-none flex-col gap-2.5 p-0 text-[14px] leading-[1.5] text-foreground">
             {score.trekk.map((t) => (
-              <li key={t.id} className="flex flex-wrap items-baseline gap-x-2">
-                <span className="font-semibold tabular-nums">−{t.poeng}</span>
-                <span>·</span>
-                <span>{t.tekst}</span>
-                {t.ma && <span className="rounded bg-secondary px-1.5 py-px text-[12px] font-semibold">Må</span>}
-                {t.steg && (
-                  <Button type="button" variant="link" onClick={() => apne(t.steg!)} className="h-auto p-0 align-baseline text-[13px]">
-                    Rett dette
-                  </Button>
-                )}
+              <li key={t.id} className="flex items-baseline gap-x-2">
+                <span className="w-8 shrink-0 font-semibold tabular-nums">−{t.poeng}</span>
+                <span className="flex-1">
+                  {t.tekst}
+                  {t.ma && <span className="ml-2 rounded bg-secondary px-1.5 py-px text-[12px] font-semibold">Må</span>}
+                  {t.steg && (
+                    <Button type="button" variant="link" onClick={() => apne(t.steg!)} className="ml-2 h-auto p-0 align-baseline text-[13px]">
+                      Rett dette
+                    </Button>
+                  )}
+                </span>
               </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {score.merknader.length > 0 && (
+        <div className="flex flex-col gap-2 rounded-lg border border-border bg-card px-[18px] py-4">
+          <h3 className="m-0 text-[15px] font-semibold text-primary">Merknader fra gjennomlesingen</h3>
+          <ul className="m-0 flex list-disc flex-col gap-2 pl-5 text-[13px] leading-[1.5] text-muted-foreground">
+            {score.merknader.map((f) => (
+              <li key={f.id}>{f.tekst.replace(/^Merknad fra gjennomlesingen: /, "")}</li>
             ))}
           </ul>
         </div>

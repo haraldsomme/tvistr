@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Datofelt } from "../datofelt";
 import { bareSiffer, gruppert, HJELP, Sammendrag, Skjema, Tekstfelt, type Felles } from "../felt";
 import { moment, MomentFelt, useMomenter, type Momenter } from "./moment";
+import { vistSporsmal } from "@/lib/brev/momenter";
 
 const [SKRIFTLIG_JA, SKRIFTLIG_NEI] = moment("tidlige_tegn").alternativer;
 
@@ -48,7 +49,7 @@ export function FeilenFelt({
   const kmFeil = visKm && km !== "" && svar.kmVedKjop !== "" && Number(km) < Number(svar.kmVedKjop) ? "Kilometerstanden kan ikke være lavere enn da du kjøpte bilen." : null;
   const klar = dato !== "" && egen.trim().length >= BESKRIVELSE_MIN && !kmFeil;
   // Why the buyer did not see the defect is no question for one who knew of it.
-  const skjult = m.gjelder("skjult_feil") && input.feilen.opplystForKjop !== "ja";
+  const skjult = m.gjelder("skjult_feil") && vistSporsmal("skjult_feil", { opplystForKjop: input.feilen.opplystForKjop ?? "" });
   const viste = ["bruksstans_sikkerhet", ...(skjult ? ["skjult_feil"] : []), "tidlige_tegn"].filter(m.gjelder);
   // The paragraphs the letter from the template uses until the written letter replaces it. A text left
   // as it was keeps what was saved with it (titles and approved paragraphs from the earlier interview).

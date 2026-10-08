@@ -3,7 +3,7 @@ import { NAAR } from "@/lib/vurdering/grunnlag";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import type { Kjoper } from "@/lib/vurdering/henvisninger";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
-import { besvarteMomenter, momenterFor } from "../momenter";
+import { besvarteMomenter, momenterFor, vistSporsmal } from "../momenter";
 import { avledSvar } from "../svar";
 import { AVKLARING_TEMAER, type Avklaring as LagretAvklaring, type Utfylling } from "../utfylling";
 
@@ -118,7 +118,16 @@ export function lagSaksmodell(g: Grunnlag, idag: string): { ok: true; modell: Sa
 // buyer has a favourable answer to (own words do not count), and what the buyer was told before buying.
 export function kjoperFor(m: Pick<Saksmodell, "faktorer" | "utfylling" | "avklaringer" | "input">): Kjoper {
   const u = m.utfylling;
-  const sporbare = new Set(momenterFor(m.faktorer).filter((mo) => mo.steg).map((mo) => mo.id));
+  // Only the questions the steps show: a hidden one is unknown, not missing.
+  const kontekst = {
+    forbehold: u.forbehold,
+    rapport: m.input.bevis.verkstedrapport ? "ja" : "nei",
+    kontakt: m.input.feilen.kontakt,
+    retting: u.retting,
+    bruktimportert: u.kjoretoy?.bruktimportert,
+    opplystForKjop: m.input.feilen.opplystForKjop ?? "",
+  };
+  const sporbare = new Set(momenterFor(m.faktorer).filter((mo) => mo.steg && vistSporsmal(mo.id, kontekst)).map((mo) => mo.id));
   const besvart = besvarteMomenter(u.momenter, { vedKjop: m.input.bilOgKjop.kmVedKjop, vedFeil: u.kmVedFeil }, m.avklaringer);
   const dekket = new Set(besvart.filter((b) => b.gunstig).map((b) => b.moment.id));
   // A report that says the defect was there before the purchase names a cause the committee can rely on.

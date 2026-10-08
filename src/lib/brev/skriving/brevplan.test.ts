@@ -238,7 +238,7 @@ describe("planlegg", () => {
 describe("henvisningen", () => {
   const foring = (m: Saksmodell) => planlegg(m).argumenter.find((a) => a.id === "henvisning")?.foring ?? "";
   // Bought 2023, the defect showed after more than two years: outside the presumption.
-  const utenfor = (momenter?: Utfylling["momenter"]) => modell({ svar: svar({ kjopsdato: "2023-03-01", oppdaget: "over_2_ar" }), utfylling: { feilen, ...(momenter && { momenter }) } });
+  const utenfor = (momenter?: Utfylling["momenter"]) => modell({ svar: svar({ kjopsdato: "2023-03-01", oppdaget: "over_2_ar", ...(momenter && { verkstedrapport: "ja", rapportSierForKjop: "ja" }) }), utfylling: { feilen, ...(momenter && { momenter }) } });
 
   it("sier rettsspørsmålet og at kjøpet var fra en næringsdrivende forhandler", () => {
     const t = foring(utenfor());

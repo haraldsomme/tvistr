@@ -338,6 +338,36 @@ export function momenterFor(f: Faktorer, katalog: readonly Moment[] = MOMENTER):
   );
 }
 
+// What decides whether a step shows a moment's question beyond the case asking it (`momenterFor`): the
+// answers the question hangs on. The steps pass what is on screen, the score and the letter plan what is saved.
+export type SporsmalKontekst = {
+  forbehold?: string;
+  rapport?: string;
+  kontakt?: string;
+  retting?: string;
+  bruktimportert?: boolean;
+  opplystForKjop?: string;
+};
+export function vistSporsmal(id: string, k: SporsmalKontekst): boolean {
+  switch (id) {
+    case "garanti_uklar":
+      return k.forbehold === "garanti";
+    case "rapport_upaaregnelig":
+    case "rapport_arsak":
+      return k.rapport === "ja";
+    case "forhandler_erkjente":
+      return k.kontakt !== "nei";
+    case "forhandler_annen_arsak":
+      return k.retting === "avvist";
+    case "bruktimport_ikke_opplyst":
+      return k.bruktimportert !== false;
+    case "skjult_feil":
+      return k.opplystForKjop !== "ja";
+    default:
+      return true;
+  }
+}
+
 export const moment = (id: string): Moment | undefined => MOMENTER.find((m) => m.id === id);
 
 // How far the buyer had driven when the defect showed, from the two odometer readings. Up to 5 000 km

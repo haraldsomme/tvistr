@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Datofelt } from "../datofelt";
 import { HJELP, Kildefelt, Sammendrag, Skjema, Tekstfelt, valgAv, Valgfelt, type Felles } from "../felt";
 import { MomentFelt, useMomenter, type Momenter } from "./moment";
+import { vistSporsmal } from "@/lib/brev/momenter";
 
 const jaNei = (v: string): v is "ja" | "nei" => v === "ja" || v === "nei";
 
@@ -62,8 +63,8 @@ export function RapportFelt({
   const tom = fra.trim() === "" && dato === "";
   const fylt = fra.trim().length >= 2 && dato !== "";
   const klar = jaNei(rapport) && (rapport !== "ja" || jaNei(rapportSier)) && (!pekerBakover || tom || fylt);
-  const vanlig = m.gjelder("rapport_upaaregnelig") && rapport === "ja";
-  const arsak = m.gjelder("rapport_arsak") && rapport === "ja";
+  const vanlig = m.gjelder("rapport_upaaregnelig") && vistSporsmal("rapport_upaaregnelig", { rapport });
+  const arsak = m.gjelder("rapport_arsak") && vistSporsmal("rapport_arsak", { rapport });
   const send = () =>
     lagre({
       verksted: undersokt === "" ? null : { undersokt, ...(undersokt === "ja" && funn.trim().length >= 2 && { funn: funn.trim() }) },

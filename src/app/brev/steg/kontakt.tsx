@@ -9,6 +9,7 @@ import { KONTAKT_VALG, rettingValgFor, type Kontakt, type Retting } from "@/lib/
 import { Datofelt } from "../datofelt";
 import { HJELP, Kildefelt, Nedtrekk, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } from "../felt";
 import { MomentFelt, useMomenter, type Momenter } from "./moment";
+import { vistSporsmal } from "@/lib/brev/momenter";
 
 export const RETTING_TEKST: Record<Retting, string> = {
   ingen: "Nei, feilen er ikke reparert",
@@ -87,8 +88,8 @@ export function KontaktFelt({
   const reklamasjonKlar = kontakt === "nei" || (dato >= min && dato <= idag && mate !== "" && (!forsokt || forsok !== ""));
   const reparasjonKlar = !reparert || (repDato >= min && repDato <= idag && grunn !== "" && grunner.includes(grunn));
   const klar = valgtRetting !== "" && reklamasjonKlar && reparasjonKlar;
-  const godtatt = m.gjelder("forhandler_erkjente") && kontakt !== "nei";
-  const annenArsak = m.gjelder("forhandler_annen_arsak") && valgtRetting === "avvist";
+  const godtatt = m.gjelder("forhandler_erkjente") && vistSporsmal("forhandler_erkjente", { kontakt });
+  const annenArsak = m.gjelder("forhandler_annen_arsak") && vistSporsmal("forhandler_annen_arsak", { retting: valgtRetting });
   const send = () =>
     lagre({
       ...(momenter && { momenter: m.lagring("kontakt", [...(godtatt ? ["forhandler_erkjente"] : []), ...(annenArsak ? ["forhandler_annen_arsak"] : [])]) }),

@@ -1,5 +1,5 @@
 import { brevhode, norskDato, plussDager, SVARFRIST_DAGER, utenSluttegn, type Brev, type Brevdel } from "../brev";
-import { kontonummerGruppert, type Utfylling } from "../utfylling";
+import { kontonummerGruppert, type LagretBrev, type Utfylling } from "../utfylling";
 import type { Innsending } from "@/lib/vurdering/innsending";
 import { delFor, DELER, OVERSKRIFT, planlegg, type Brevplan, type Del } from "./brevplan";
 import { lagSaksmodell, type Saksmodell } from "./saksmodell";
@@ -56,11 +56,27 @@ export function skrevetBrev(utkast: Utkast, plan: Brevplan, m: Saksmodell, brevd
   return { ...brevhode(m.utfylling, brevdato), deler: fyllInn(utkast, plan, m, brevdato) };
 }
 
+// In a letter written before the cited decision was stored with it: the decision its text describes is
+// not known, so the buyer writes the letter again to get it.
+export const HENVISNING_MANGLER = "[MANGLER: skriv brevet på nytt for å få med vedtaket]";
+
+// A stored letter as it is shown and sent: {{henvisning}} and the link are the decision the letter was
+// written with, not the one the case would get now. A letter from before that was stored gets a yellow
+// field in its place and no link; its text stays.
+export function lagretBrev(lagret: LagretBrev, plan: Brevplan, m: Saksmodell, brevdato: string): Brev {
+  if (lagret.henvisning !== undefined) return skrevetBrev(lagret.utkast, { ...plan, henvisning: lagret.henvisning }, m, brevdato);
+  const utkast: Utkast = {
+    ...lagret.utkast,
+    avsnitt: lagret.utkast.avsnitt.map((a) => ({ ...a, setninger: a.setninger.map((s) => ({ ...s, tekst: s.tekst.replaceAll("{{henvisning}}", HENVISNING_MANGLER) })) })),
+  };
+  return skrevetBrev(utkast, { ...plan, henvisning: null }, m, brevdato);
+}
+
 // The stored letter of a case as it is shown and sent, dated `idag`: null before it is written, or when
 // the answers no longer give a letter. The page and the files use this, so they show the same.
 export function brevFraSak(sak: { svar: Innsending; utfylling: Utfylling }, idag: string): Brev | null {
   if (!sak.utfylling.brev) return null;
   const lest = lagSaksmodell({ svar: sak.svar, utfylling: sak.utfylling }, idag);
   if (!lest.ok) return null;
-  return skrevetBrev(sak.utfylling.brev.utkast, planlegg(lest.modell), lest.modell, idag);
+  return lagretBrev(sak.utfylling.brev, planlegg(lest.modell), lest.modell, idag);
 }

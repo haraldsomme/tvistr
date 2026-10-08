@@ -11,10 +11,10 @@ import { BekreftKnapp, Dialoginnhold, useBekreftLagring } from "./bekreft";
 import { KontaktFelt } from "./steg/kontakt";
 import { lagSteg } from "./steg/liste";
 import { harPlassholder } from "@/lib/brev/brev";
-import { henvisningFor } from "@/lib/brev/skriving/henvisning";
+import { henvisningFor, henvisningIMappen } from "@/lib/brev/skriving/henvisning";
 import { planlegg } from "@/lib/brev/skriving/brevplan";
 import { grunnlagFor } from "@/lib/brev/skriving/grunnlag";
-import { skrevetBrev } from "@/lib/brev/skriving/render";
+import { lagretBrev } from "@/lib/brev/skriving/render";
 import { lagSaksmodell } from "@/lib/brev/skriving/saksmodell";
 import { motsvar } from "@/lib/brev/motsvar";
 import { sjekkBrev, type Advarsel } from "@/lib/brev/sjekk";
@@ -283,12 +283,14 @@ export function BrevSide({
   }
   const ferdigAntall = steg.filter((s) => s.ferdig).length;
 
-  // The letter as written, shown with today's date and the marks filled in from the case as it is now.
+  // The letter as written, shown with today's date and the marks filled in from the case as it is now;
+  // the cited decision is the one it was written with.
   const lest = lagSaksmodell({ svar, utfylling }, idag);
   const plan = lest.ok ? planlegg(lest.modell) : null;
-  const brev = utfylling.brev && lest.ok && plan ? skrevetBrev(utfylling.brev.utkast, plan, lest.modell, idag) : null;
+  const brev = utfylling.brev && lest.ok && plan ? lagretBrev(utfylling.brev, plan, lest.modell, idag) : null;
   const utdatert = !!utfylling.brev && lest.ok && plan !== null && grunnlagFor(lest.modell, plan) !== utfylling.brev.grunnlag;
   const henvisning = lest.ok ? henvisningFor(lest.modell) : null;
+  const mappeHenvisning = lest.ok ? henvisningIMappen(lest.modell, utfylling.brev, henvisning) : null;
   const plassholdere = brev !== null && harPlassholder(brev);
   // The weaknesses of the case, what the check could not fix, and the review's remarks.
   const advarsler: Advarsel[] = [
@@ -311,7 +313,9 @@ export function BrevSide({
         .filter((mo) => mo.steg && vistSporsmal(mo.id, kontekst) && !utfylling.momenter?.[mo.id])
         .map((mo) => ({ id: mo.id, steg: mo.steg ?? null, tekst: mo.sporsmal.length > 90 ? mo.navn : mo.sporsmal }))
     : [];
-  const score = scoreFor({ advarsler, gule: (plan?.mangler ?? []).map((g) => ({ tekst: g.tekst, steg: g.steg ?? null })), skrevet: !!brev, utdatert, ubesvarte });
+  // A letter written before the cited decision was stored with it has a yellow field only writing again fills.
+  const utenVedtak = !!utfylling.brev && utfylling.brev.henvisning === undefined;
+  const score = scoreFor({ advarsler, gule: (plan?.mangler ?? []).map((g) => ({ tekst: g.tekst, steg: g.steg ?? null })), skrevet: !!brev, utdatert: utdatert || utenVedtak, ubesvarte });
   const maBekrefte = brev !== null && (plassholdere || harde.length > 0 || utdatert);
   const iVerktoy = fane === "motsvar" || fane === "mappe";
   const faneKlasse = (valgt: boolean) =>
@@ -466,7 +470,7 @@ export function BrevSide({
       {faner}
       {fane === "mappe" ? (
         <div className="flex w-full justify-center lg:col-span-2">
-          <Saksmappe sakId={id} avhengighet={avhengighet} utfylling={utfylling} henvisning={henvisning} fakta={lest.ok ? lest.modell.faktorer : { bilAlder: null, kmVedKjop: null, kjopesumNok: null }} lagre={lagre} />
+          <Saksmappe sakId={id} avhengighet={avhengighet} utfylling={utfylling} henvisning={mappeHenvisning} fakta={lest.ok ? lest.modell.faktorer : { bilAlder: null, kmVedKjop: null, kjopesumNok: null, reklamasjonsbotte: null }} lagre={lagre} />
         </div>
       ) : fane === "motsvar" ? (
         <div className="flex w-full justify-center lg:col-span-2">

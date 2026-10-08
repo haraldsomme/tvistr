@@ -31,7 +31,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       try {
         const s = await skrivBrevFor(lest.modell, (fremdrift) => send({ fremdrift }));
         await tellSprakvask(sak, s.kall);
-        const utfylling = await lagreBrev(sak, { utkast: s.utkast, avvik: s.avvik, funn: s.funn, grunnlag: s.grunnlag, versjon: s.versjon, skrevet: s.skrevet });
+        const utfylling = await lagreBrev(sak, { utkast: s.utkast, avvik: s.avvik, funn: s.funn, grunnlag: s.grunnlag, versjon: s.versjon, skrevet: s.skrevet, henvisning: s.plan.henvisning });
         send({ ferdig: true, utfylling });
       } catch {
         // Nothing from the case goes in the log.

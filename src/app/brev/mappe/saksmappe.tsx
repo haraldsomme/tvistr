@@ -3,7 +3,7 @@
 import { useEffect, useState, type ComponentProps } from "react";
 import type { Endring, Utfylling } from "@/lib/brev/utfylling";
 import type { Mappe } from "@/lib/mappe/typer";
-import type { ValgtHenvisning } from "@/lib/vurdering/henvisninger";
+import type { MappeHenvisning } from "@/lib/brev/skriving/henvisning";
 import { AktorInnhold, AvgjordeInnhold, BelopInnhold, Kort, StyrkeInnhold, StyrkInnhold, VidereInnhold } from "./kort";
 
 type Tilstand = { type: "laster" } | { type: "feil"; melding: string } | { type: "ok"; mappe: Mappe };
@@ -21,8 +21,8 @@ export function Saksmappe({
   sakId: string;
   avhengighet: string;
   utfylling: Utfylling;
-  // The decision the letter cites, chosen the same way as in the letter.
-  henvisning: ValgtHenvisning | null;
+  // The decision the written letter cites, or the one it would cite (`henvisningIMappen`).
+  henvisning: MappeHenvisning | null;
   fakta: ComponentProps<typeof AvgjordeInnhold>["fakta"];
   lagre: (e: Endring) => Promise<boolean>;
 }) {

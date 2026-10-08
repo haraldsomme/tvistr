@@ -3,6 +3,7 @@ import { orgnrFra } from "@/lib/brreg";
 import { erDato } from "@/lib/vurdering/faktorer";
 import type { Innsending } from "@/lib/vurdering/innsending";
 import { moment } from "./momenter";
+import type { Kildehenvisning } from "./skriving/brevplan";
 import type { Avvik, Funn, Utkast } from "./skriving/typer";
 import {
   RETTING_VALG,
@@ -58,9 +59,11 @@ export type Utfylling = {
   sprakvask?: number;
 };
 
-// The written letter as stored: the draft with its marks, what the check and the review left, and what
-// it was written from (`grunnlagFor`), so the page can tell when the case has changed since.
-export type LagretBrev = { utkast: Utkast; avvik: Avvik[]; funn: Funn[]; grunnlag: string; versjon: string; skrevet: string };
+// The written letter as stored: the draft with its marks, what the check and the review left, what
+// it was written from (`grunnlagFor`), so the page can tell when the case has changed since, and the
+// decision it cites, so {{henvisning}} keeps the decision its text describes. A letter written before the
+// decision was stored has no `henvisning` (`lagretBrev` in skriving/render.ts).
+export type LagretBrev = { utkast: Utkast; avvik: Avvik[]; funn: Funn[]; grunnlag: string; versjon: string; skrevet: string; henvisning?: Kildehenvisning | null };
 
 // What the page can save: everything but the server's own counter and the vehicle, which is chosen
 // in the assessment and is part of the case from the day it is opened.

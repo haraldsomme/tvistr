@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { brevhode, norskDato } from "../brev";
+import { brevhode, harPlassholder, norskDato } from "../brev";
 import { planlegg, type ArgumentId } from "./brevplan";
-import { brevTekst, fyllInn, skrevetBrev } from "./render";
+import { brevTekst, fyllInn, HENVISNING_MANGLER, lagretBrev, skrevetBrev } from "./render";
 import type { Utkast } from "./typer";
 import { avsender, feilen, modell, svar } from "./testdata";
 
@@ -45,6 +45,22 @@ describe("fyllInn", () => {
       ],
     });
     expect(b.stedDato).toBe("Oslo, 20. oktober 2026");
+  });
+
+  it("et lagret brev viser til vedtaket det ble skrevet med, ikke det saken gir nå", () => {
+    const lagret = { ref: "FKU-2020-1234", organ: "Forbrukerklageutvalget" as const, dato: "2020-05-04", kildeUrl: "https://example.org/vedtak.pdf" };
+    const b = lagretBrev({ utkast: utkast("Se {{henvisning}}."), avvik: [], funn: [], grunnlag: "", versjon: "", skrevet: "", henvisning: lagret }, p, m, "2026-10-20");
+    expect(lagret.ref).not.toBe(p.henvisning!.ref);
+    expect(b.deler).toEqual([
+      { overskrift: null, avsnitt: ["Se FKU-2020-1234 av 4. mai 2020."] },
+      { overskrift: "Vedlegg", avsnitt: ["Vedtaket FKU-2020-1234 er tilgjengelig på https://example.org/vedtak.pdf."] },
+    ]);
+  });
+
+  it("et brev skrevet før vedtaket ble lagret, får et gult felt og ingen lenke", () => {
+    const b = lagretBrev({ utkast: utkast("Se {{henvisning}}."), avvik: [], funn: [], grunnlag: "", versjon: "", skrevet: "" }, p, m, "2026-10-20");
+    expect(b.deler).toEqual([{ overskrift: null, avsnitt: [`Se ${HENVISNING_MANGLER}.`] }]);
+    expect(harPlassholder(b)).toBe(true);
   });
 
   it("deler avsnittene under overskrifter etter argumentene de dekker, og aldri bakover", () => {

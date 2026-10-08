@@ -1273,31 +1273,38 @@ function sammenlign(fakt: Faktum, h: Henvisning, f: Faktorer, k: Kjoper): number
   }
 }
 
+// One decision set against the buyer's case: the shared questions, the moments it was won on that the
+// buyer has, lacks or was not asked, and the facts where the buyer stands stronger or weaker.
+export function vurderHenvisning(h: Henvisning, f: Faktorer, k: Kjoper): ValgtHenvisning {
+  const hoved = hovedsporsmal(f);
+  const levering = trengerLevering(f);
+  const grupper = grupperFor(f);
+  const dekket = h.vekt.filter((id) => k.sporbare.has(id) && k.dekket.has(id));
+  const mangler = h.vekt.filter((id) => k.sporbare.has(id) && !k.dekket.has(id));
+  const ukjent = h.vekt.filter((id) => !k.sporbare.has(id));
+  const sterkere: Faktum[] = [], likt: Faktum[] = [], svakere: Faktum[] = [];
+  for (const fakt of FAKTA) {
+    const s = sammenlign(fakt, h, f, k);
+    if (s === null) continue;
+    (s > 0 ? sterkere : s < 0 ? svakere : likt).push(fakt);
+  }
+  const sporsmal = [hoved, ...(levering ? (["levering"] as const) : [])].filter((s) => h.sporsmal.includes(s));
+  return { henvisning: h, sammeSporsmal: h.sporsmal.includes(hoved), sporsmal, dekket, mangler, ukjent, sterkere, likt, svakere, annenFeil: grupper.length > 0 && !grupper.includes(h.gruppe) };
+}
+
 export function velgHenvisning(f: Faktorer, k: Kjoper, bibliotek: readonly Henvisning[] = HENVISNINGER): ValgtHenvisning | null {
   // A claim the law stops gets no letter, and a won decision would mislead.
   if (f.stopp) return null;
   const hoved = hovedsporsmal(f);
   const levering = trengerLevering(f);
-  const grupper = grupperFor(f);
   const kandidater = bibliotek.filter((h) => forenlig(h, f));
   // Outside the presumption the letter must show the defect was there at delivery: a decision on that
-  // question too goes first, then one on the main question alone, then any compatible one.
+  // question too goes first, then one on the main question alone, then any compatible one. So every
+  // decision in the pool shares the main question exactly when some compatible one does.
   const samme = kandidater.filter((h) => h.sporsmal.includes(hoved));
   const medLevering = levering ? samme.filter((h) => h.sporsmal.includes("levering")) : [];
   const pool = medLevering.length ? medLevering : samme.length ? samme : kandidater;
-  const vurdert = pool.map((h) => {
-    const dekket = h.vekt.filter((id) => k.sporbare.has(id) && k.dekket.has(id));
-    const mangler = h.vekt.filter((id) => k.sporbare.has(id) && !k.dekket.has(id));
-    const ukjent = h.vekt.filter((id) => !k.sporbare.has(id));
-    const sterkere: Faktum[] = [], likt: Faktum[] = [], svakere: Faktum[] = [];
-    for (const fakt of FAKTA) {
-      const s = sammenlign(fakt, h, f, k);
-      if (s === null) continue;
-      (s > 0 ? sterkere : s < 0 ? svakere : likt).push(fakt);
-    }
-    const sporsmal = [hoved, ...(levering ? (["levering"] as const) : [])].filter((s) => h.sporsmal.includes(s));
-    return { henvisning: h, sammeSporsmal: samme.length > 0, sporsmal, dekket, mangler, ukjent, sterkere, likt, svakere, annenFeil: grupper.length > 0 && !grupper.includes(h.gruppe) };
-  });
+  const vurdert = pool.map((h) => vurderHenvisning(h, f, k));
   const aldersforskjell = (h: Henvisning) => (f.bilAlder === null ? 0 : Math.abs(h.alder - f.bilAlder));
   vurdert.sort(
     (a, b) =>

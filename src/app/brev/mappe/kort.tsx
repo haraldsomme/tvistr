@@ -15,8 +15,9 @@ import type { Sjekkpunkt } from "@/lib/mappe/kort/styrk";
 import type { VidereKort } from "@/lib/mappe/kort/videre";
 import { erForFa, type Andel, type ForFa } from "@/lib/mappe/typer";
 import { moment } from "@/lib/brev/momenter";
-import type { Faktorer } from "@/lib/vurdering/faktorer";
-import type { Faktum, ValgtHenvisning } from "@/lib/vurdering/henvisninger";
+import type { MappeHenvisning } from "@/lib/brev/skriving/henvisning";
+import type { Faktorer, Reklamasjonsbotte } from "@/lib/vurdering/faktorer";
+import type { Faktum } from "@/lib/vurdering/henvisninger";
 
 // The cards of the saksmappe. Every share is shown with the number of decisions behind it; a sample
 // below its threshold is shown as «for få saker», never as a number.
@@ -152,22 +153,27 @@ export function BelopInnhold({ k }: { k: BelopKort }) {
 
 const UTFALL: Record<string, string> = { medhold: "Medhold", delvis_medhold: "Delvis medhold", ikke_medhold: "Tapt sak" };
 
-type Fakta = Pick<Faktorer, "bilAlder" | "kmVedKjop" | "kjopesumNok">;
+type Fakta = Pick<Faktorer, "bilAlder" | "kmVedKjop" | "kjopesumNok"> & { reklamasjonsbotte: Reklamasjonsbotte | null };
+const BOTTE_TEKST: Record<Reklamasjonsbotte, string> = { rask: "innen 6 måneder", middels: "6 måneder til 2 år", sen: "mer enn 2 år" };
 
-// The decision the letter cites, set against the buyer's case. Chosen for the buyer, not by them.
-function Henvisningsblokk({ v, f }: { v: ValgtHenvisning; f: Fakta }) {
+// The decision the letter cites, set against the buyer's case. Chosen for the buyer, not by them. When the
+// letter was written with another decision than the case gives now, or without one, it says so.
+function Henvisningsblokk({ m, f }: { m: MappeHenvisning; f: Fakta }) {
+  const v = m.valgt;
   const h = v.henvisning;
   const rader: [Faktum, string, string, string | null][] = [
     ["alder", "Bilens alder ved kjøpet", `${h.alder} år`, f.bilAlder !== null ? `${f.bilAlder} år` : null],
     ["km", "Kilometerstand", h.km !== null ? `${h.km.toLocaleString("nb-NO")} km` : "–", f.kmVedKjop !== null ? `${f.kmVedKjop.toLocaleString("nb-NO")} km` : null],
     ["pris", "Kjøpesum", kroner(h.pris), f.kjopesumNok !== null ? kroner(f.kjopesumNok) : null],
-    ["tid", "Feilen viste seg", h.tid, null],
+    ["tid", "Feilen viste seg", h.tid, f.reklamasjonsbotte ? BOTTE_TEKST[f.reklamasjonsbotte] : null],
   ];
   const sammenlign = (x: Faktum) => (v.sterkere.includes(x) ? "Sterkere" : v.svakere.includes(x) ? "Svakere" : v.likt.includes(x) ? "Likt" : "");
   const navn = (id: string) => moment(id)?.navn ?? id;
   return (
     <div className="flex flex-col gap-2 rounded-md border bg-muted p-3.5">
-      <strong className="text-[13px] uppercase tracking-[.04em] text-muted-foreground">Brevet ditt viser til</strong>
+      <strong className="text-[13px] uppercase tracking-[.04em] text-muted-foreground">{m.status === "ikke_i_brevet" ? "Brevet ditt vil vise til" : "Brevet ditt viser til"}</strong>
+      {m.status === "annet" && <p className="m-0 font-semibold">Med opplysningene slik de er nå, ville brevet vist til et annet vedtak. Skriv brevet på nytt for å oppdatere.</p>}
+      {m.status === "ikke_i_brevet" && <p className="m-0 font-semibold">Brevet ditt viser ikke til dette vedtaket ennå. Skriv brevet på nytt for å få det med.</p>}
       <strong>
         {h.organ}, {h.ref} · {norskDato(h.dato)}
       </strong>
@@ -213,10 +219,10 @@ function Henvisningsblokk({ v, f }: { v: ValgtHenvisning; f: Fakta }) {
   );
 }
 
-export function AvgjordeInnhold({ k, henvisning, fakta }: { k: AvgjordeKort; henvisning: ValgtHenvisning | null; fakta: Fakta }) {
+export function AvgjordeInnhold({ k, henvisning, fakta }: { k: AvgjordeKort; henvisning: MappeHenvisning | null; fakta: Fakta }) {
   return (
     <>
-      {henvisning && <Henvisningsblokk v={henvisning} f={fakta} />}
+      {henvisning && <Henvisningsblokk m={henvisning} f={fakta} />}
       {k.temaer.length > 0 && (
         <div className="flex flex-col gap-1.5">
           <strong className="text-[13px] uppercase tracking-[.04em] text-[#5b6472]">Hva som kom opp i vunne og tapte saker</strong>

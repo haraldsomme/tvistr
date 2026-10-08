@@ -10,6 +10,7 @@ Avklaringsrunden spør kjøperen om forhold utvalget har lagt vekt på i forhand
 4. **Klassifisering** (`npm run moment-les -- --trinn klassifiser`): hvert vedtak lest av Sonnet 5.5 og Opus 5.5 hver for seg mot katalogen. Et moment teller bare når begge sier at det er til stede, med et sitat som står ordrett i teksten; uenighet (5,6 % av 4 577 vurderinger) teller som uklart. En tredje lesing ved uenighet (`--tredje`) ble droppet: den trengtes i nesten hvert vedtak og ville doblet kostnaden. 15,23 USD.
 5. **Skiller**: et moment skiller vunne fra tapte saker når det er til stede i minst 8 vedtak, og andelen vunne med momentet er minst 15 prosentpoeng høyere (for «for») eller lavere (for «mot») enn uten. Bare slike momenter spørres om (`momenterFor`).
 6. **Kontroll**: `npm run sjekk-momenter` (id, utfall, saksnummer og sitat mot databasen, og tellingene mot belegget) og en uavhengig agent som leste belegget for de skillende momentene.
+7. **Alltid spurt** (`ALLTID_SPURT` i `momenter.ts`): `bruksstans_sikkerhet`, `rapport_arsak` og `forhandler_annen_arsak` spørres selv om de ikke skiller vunne fra tapte saker. De to siste spørres fordi henvisningen i brevet velges og sammenlignes på dem (utvalget la vekt på dem i vedtakene som ble lest for sen feil): `rapport_arsak` i steget «Tilstandsrapport» når kjøperen har en rapport, `forhandler_annen_arsak` i «Kontakt med forhandleren» når forhandleren har avvist kravet.
 
 ## Katalogen
 

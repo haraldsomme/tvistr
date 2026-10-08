@@ -14,7 +14,7 @@ import type { StyrkeKort } from "@/lib/mappe/kort/styrke";
 import type { Sjekkpunkt } from "@/lib/mappe/kort/styrk";
 import type { VidereKort } from "@/lib/mappe/kort/videre";
 import { erForFa, type Andel, type ForFa } from "@/lib/mappe/typer";
-import { moment } from "@/lib/brev/momenter";
+import { fordelNavn, moment } from "@/lib/brev/momenter";
 import type { MappeHenvisning } from "@/lib/brev/skriving/henvisning";
 import type { Faktorer, Reklamasjonsbotte } from "@/lib/vurdering/faktorer";
 import type { Faktum } from "@/lib/vurdering/henvisninger";
@@ -168,7 +168,10 @@ function Henvisningsblokk({ m, f }: { m: MappeHenvisning; f: Fakta }) {
     ["tid", "Feilen viste seg", h.tid, f.reklamasjonsbotte ? BOTTE_TEKST[f.reklamasjonsbotte] : null],
   ];
   const sammenlign = (x: Faktum) => (v.sterkere.includes(x) ? "Sterkere" : v.svakere.includes(x) ? "Svakere" : v.likt.includes(x) ? "Likt" : "");
-  const navn = (id: string) => moment(id)?.navn ?? id;
+  const navn = (id: string) => {
+    const mo = moment(id);
+    return mo ? fordelNavn(mo) : id;
+  };
   return (
     <div className="flex flex-col gap-2 rounded-md border bg-muted p-3.5">
       <strong className="text-[13px] uppercase tracking-[.04em] text-muted-foreground">{m.status === "ikke_i_brevet" ? "Brevet ditt vil vise til" : "Brevet ditt viser til"}</strong>

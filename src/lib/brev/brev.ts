@@ -1,7 +1,7 @@
 import type { Faktorer } from "@/lib/vurdering/faktorer";
 import { grupperFor, type Faktum, type Gruppe, type Henvisning, type Opplyst, type Sporsmal, type ValgtHenvisning } from "@/lib/vurdering/henvisninger";
 import { gyldigRetting, type KlageInput, type Retting } from "@/lib/vurdering/typer";
-import { moment } from "./momenter";
+import { fordelNavn, moment } from "./momenter";
 import type { Forbehold, Reparasjon, Utfylling, Utgift, Vedlegg } from "./utfylling";
 
 // The complaint letter as data, and what the written letter (src/lib/brev/skriving/) shares with the
@@ -102,7 +102,7 @@ const SVAKERE: Record<Faktum, (f: Faktorer) => string> = {
   alder: () => "Min bil var eldre enn bilen i vedtaket.",
   km: () => "Min bil hadde gått lenger enn bilen i vedtaket.",
   pris: () => "Min bil kostet mindre enn bilen i vedtaket.",
-  opplyst: (f) => (f.opplyst !== "nei" ? "I min sak var feilen opplyst før kjøpet." : "I min sak ble bilen solgt «som den er»."),
+  opplyst: (f) => (f.opplyst === "ja_verre" ? "I min sak var feilen delvis kjent før kjøpet." : f.opplyst !== "nei" ? "I min sak var feilen opplyst før kjøpet." : "I min sak ble bilen solgt «som den er»."),
   tid: () => "Feilen viste seg senere etter kjøpet i min sak enn i vedtaket.",
 };
 
@@ -158,7 +158,7 @@ export const JURIDISK = {
     const sammenligning = v.sterkere.length ? ` Sammenlignet med vedtaket: ${v.sterkere.map((x) => STERKERE[x](h)).join(", ")}.` : "";
     // Only when nothing was disclosed in either case: «heller ikke» would be untrue of a disclosed defect.
     const likt = v.likt.includes("opplyst") && h.opplyst === "ingenting" ? " Feilen var heller ikke opplyst før kjøpet." : "";
-    const dekket = v.dekket.map((id) => moment(id)?.navn.toLowerCase()).filter(Boolean);
+    const dekket = v.dekket.map((id) => moment(id)).filter((mo) => mo !== undefined).map((mo) => fordelNavn(mo).toLowerCase());
     // Only with something to point to: a decision won on no listed moment proves nothing «at least as strong».
     const del3 =
       v.mangler.length === 0 && v.ukjent.length === 0 && dekket.length > 0

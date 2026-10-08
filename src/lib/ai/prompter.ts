@@ -78,7 +78,7 @@ Hint per type feil:
 - Girkasse og clutch: hvilke gir, rykk, sluring eller lyd.
 - Bremser: lyd, trekking, varsellampe, merknad ved EU-kontroll.`;
 
-export const BREVSKRIV_VERSJON = "brevskriv-v12";
+export const BREVSKRIV_VERSJON = "brevskriv-v13";
 
 // Two finished letters from the golden cases, edited after review. They show form, tone and order; the
 // author is told never to take facts from them.

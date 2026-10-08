@@ -4,7 +4,7 @@ import { grupperFor } from "@/lib/vurdering/henvisninger";
 import { VERKSTED_RAD } from "@/lib/vurdering/tiltak";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
 import { harFatt, kreverPenger, kroner, norskDato, REKLAMASJON_ALLTID_I_TIDE_MANEDER, vedleggBrevetByggerPa, vedleggFor, VEDLEGG_NAVN } from "./brev";
-import { moment } from "./momenter";
+import { besvarteMomenter, fordelNavn, moment } from "./momenter";
 import type { Utfylling } from "./utfylling";
 
 // What can make the letter weak without leaving a yellow field: a complaint that came late, a repair
@@ -150,16 +150,23 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string, valgt?:
   if (f.slitasjeAktuelt && grupperFor(f).some((g) => slitedel.includes(g)) && !upaaregnelig)
     legg({ id: "slitasje_uten_vurdering", alvor: "myk", steg: "rapport", handling: "verksted", tekst: "Forhandleren vil trolig si at dette er normal slitasje. Be verkstedet skrive om feilen er mer enn det som er vanlig for en bil med denne alderen og kilometerstanden." });
 
-  // What the decision the letter cites was won on, and the other cases like this one, that the buyer lacks.
+  // What the decision the letter cites was won on that the buyer lacks. An answer the buyer gave (not in
+  // own words) that is not favourable is a fact nothing changes, unless it is something to obtain: a
+  // workshop's assessment, or a document from before the sale or from when the defect first showed.
+  const besvart = new Map(besvarteMomenter(u.momenter, { vedKjop: input.bilOgKjop.kmVedKjop, vedFeil: u.kmVedFeil }, u.avklaringer ?? []).map((b) => [b.moment.id, b]));
+  const kanInnhentes = (id: string) => id.startsWith("rapport_") || id === "tidlige_tegn" || id === "dokument_for_salg";
   for (const id of valgt?.mangler ?? []) {
     const mo = moment(id);
     if (!mo?.steg) continue;
+    const b = besvart.get(id);
+    const fast = b !== undefined && !b.egen && !b.gunstig && !kanInnhentes(id);
     legg({
       id: `moment_mangler_${id}`,
+      ...(fast && { fast: true as const }),
       alvor: "myk",
       steg: mo.steg,
       handling: id.startsWith("rapport_") ? "verksted" : `moment:${id}`,
-      tekst: `Vedtaket brevet viser til, og de andre som ligner din sak, ble vunnet blant annet fordi: ${mo.navn.toLowerCase()}. Det har du ikke ennå.${id.startsWith("rapport_") ? ` ${VERKSTED_RAD}` : ""}`,
+      tekst: `Vedtaket brevet viser til, ble vunnet blant annet fordi: ${fordelNavn(mo).toLowerCase()}. Det har du ikke${fast ? "" : " ennå"}.${id.startsWith("rapport_") ? ` ${VERKSTED_RAD}` : ""}`,
     });
   }
 

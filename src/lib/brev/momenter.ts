@@ -13,6 +13,9 @@ export type Moment = {
   tema: string;
   // Whether the moment's presence helps («for») or hurts («mot») the buyer.
   retning: "for" | "mot";
+  // For a «mot» moment: its favourable side, which is what a buyer or a decision has when it is covered
+  // (`navn` names the unfavourable one).
+  fordel?: string;
   // Empty: every case.
   gjelder: { grupper?: Gruppe[]; botter?: Reklamasjonsbotte[]; grunnlag?: Regelgrunnlag[] };
   // The step that asks it (src/app/brev/steg/liste.tsx); none: not asked.
@@ -86,6 +89,7 @@ export const MOMENTER: readonly Moment[] = [
     navn: "Tilleggsfeil uten dokumentasjon",
     tema: "bevis",
     retning: "mot",
+    fordel: "Alle feilene kravet gjelder, er dokumentert",
     gjelder: {},
     sporsmal: "Er alle feilene du klager på, beskrevet av et verksted eller dokumentert på annen måte?",
     alternativer: ["Jeg klager bare på én feil", "Ja, alle feilene er dokumentert", "Bare noen av feilene er dokumentert", "Ingen av feilene er dokumentert ennå"],
@@ -98,6 +102,7 @@ export const MOMENTER: readonly Moment[] = [
     navn: "Feilen gjelder en slitedel",
     tema: "forventning",
     retning: "mot",
+    fordel: "Delen er ikke en slitedel",
     gjelder: { grupper: ["motor", "elektrisk", "understell", "bremser", "girkasse", "klimaanlegg", "batteri"] },
     sporsmal: "Hva slags del er det som har sviktet?",
     alternativer: ["En del som normalt skal vare like lenge som bilen", "En del med anbefalt byttetid, som ikke var nådd", "En del med anbefalt byttetid, som var nådd eller passert", "En del som slites og byttes jevnlig"],
@@ -188,6 +193,7 @@ export const MOMENTER: readonly Moment[] = [
     navn: "Opplysningen ble rettet før kjøpet",
     tema: "opplysning",
     retning: "mot",
+    fordel: "Opplysningen ble ikke rettet før kjøpet",
     gjelder: { grunnlag: ["opplysning"] },
     sporsmal: "Rettet forhandleren opplysningen før du skrev under på kjøpet?",
     alternativer: ["Nei, den ble ikke rettet", "Det sto bare et generelt forbehold om feil i annonsen", "Ja, det sto riktig i kontrakten eller i en melding før kjøpet"],
@@ -213,6 +219,7 @@ export const MOMENTER: readonly Moment[] = [
     navn: "Bilen er kjørt langt før feilen viste seg",
     tema: "bruk",
     retning: "mot",
+    fordel: "Bilen var kjørt kort før feilen viste seg",
     gjelder: { botter: ["middels", "sen"] },
     steg: "feilen",
     sporsmal: "Hva sto kilometertelleren på da feilen viste seg?",
@@ -226,6 +233,7 @@ export const MOMENTER: readonly Moment[] = [
     navn: "Bruken etter kjøpet kan forklare feilen",
     tema: "bruk",
     retning: "mot",
+    fordel: "Feilen skyldes ikke bruken etter kjøpet",
     gjelder: {},
     sporsmal: "Har noe ved bruken av bilen etter kjøpet kunnet påvirke feilen?",
     alternativer: ["Nei, vanlig bruk, og service er fulgt eller ikke forfalt ennå", "Service eller oljeskift er ikke gjort når det skulle", "Jeg har kjørt med tilhenger eller tung last", "Jeg kjørte videre etter at en varsellampe tente", "Uhell, ytre skade eller egne inngrep"],
@@ -251,6 +259,7 @@ export const MOMENTER: readonly Moment[] = [
     navn: "Kjøperen avslo et tilbud om retting",
     tema: "kontakt",
     retning: "mot",
+    fordel: "Kjøperen avslo ikke et tilbud om retting uten kostnad",
     gjelder: {},
     sporsmal: "Har forhandleren tilbudt å rette feilen?",
     alternativer: ["Nei", "Ja, men bare hvis jeg betalte en del eller godtok andre vilkår", "Ja, gratis, og jeg takket ja", "Ja, gratis, men jeg takket nei eller fikk det gjort et annet sted"],
@@ -263,6 +272,7 @@ export const MOMENTER: readonly Moment[] = [
     navn: "Kravet tar med kostnader som ikke gjelder feilen",
     tema: "krav",
     retning: "mot",
+    fordel: "Kravet gjelder bare feilen",
     gjelder: {},
     sporsmal: "Gjelder fakturaen eller pristilbudet bare feilen du klager på?",
     alternativer: ["Ja, bare reparasjon av feilen", "Nei, den tar også med service, dekk, EU-kontroll eller annet arbeid", "Jeg har ingen faktura eller pristilbud ennå"],
@@ -369,6 +379,8 @@ export function vistSporsmal(id: string, k: SporsmalKontekst): boolean {
 }
 
 export const moment = (id: string): Moment | undefined => MOMENTER.find((m) => m.id === id);
+// A moment as something a buyer or a decision has: a «mot» moment by its favourable side.
+export const fordelNavn = (mo: Moment) => mo.fordel ?? mo.navn;
 
 // How far the buyer had driven when the defect showed, from the two odometer readings. Up to 5 000 km
 // counts for the buyer, as the two lowest groups of `km_etter_kjop` did.

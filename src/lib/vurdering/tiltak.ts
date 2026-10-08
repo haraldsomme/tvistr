@@ -17,8 +17,7 @@ export function foreslaTiltak(f: Faktorer): Tiltak[] {
   if (f.verkstedrapport === false) {
     tiltak.push({
       tittel: "Få en verksted- eller tilstandsrapport",
-      tekst:
-        VERKSTED_RAD,
+      tekst: VERKSTED_RAD,
     });
   } else if (f.rapportSierForKjop === false) {
     tiltak.push({

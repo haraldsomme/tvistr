@@ -108,6 +108,12 @@ export function leggTilManeder(dato: string, maneder: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+// Whole months from one day to another.
+export const maneder = (fra: string, til: string) => {
+  const [a, b] = [new Date(`${fra}T00:00:00Z`), new Date(`${til}T00:00:00Z`)];
+  return (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + b.getUTCMonth() - a.getUTCMonth() - (b.getUTCDate() < a.getUTCDate() ? 1 : 0);
+};
+
 // The purchase date the rules work with: the exact day when it is known, otherwise a day in the
 // middle of the answer given. The middle of «2–5 år» is before 2024 for now, so the six-month
 // presumption applies to it, which is the careful assumption; it follows the calendar from 2029.

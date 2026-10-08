@@ -1,4 +1,4 @@
-import { beregnFaktorer, leggTilManeder, PRESUMSJON_TO_AR_FRA, RIMELIG_TID_MANEDER } from "@/lib/vurdering/faktorer";
+import { beregnFaktorer, leggTilManeder, maneder, PRESUMSJON_TO_AR_FRA, RIMELIG_TID_MANEDER } from "@/lib/vurdering/faktorer";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
 import { harFatt, kreverPenger, kroner, norskDato, REKLAMASJON_ALLTID_I_TIDE_MANEDER, vedleggBrevetByggerPa, vedleggFor, VEDLEGG_NAVN } from "./brev";
 import type { Utfylling } from "./utfylling";
@@ -15,10 +15,6 @@ import type { Utfylling } from "./utfylling";
 
 export type Advarsel = { id: string; tekst: string; steg: string | null; alvor: "hard" | "myk" };
 
-const maneder = (fra: string, til: string) => {
-  const [a, b] = [new Date(`${fra}T00:00:00Z`), new Date(`${til}T00:00:00Z`)];
-  return (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + b.getUTCMonth() - a.getUTCMonth() - (b.getUTCDate() < a.getUTCDate() ? 1 : 0);
-};
 const dager = (fra: string, til: string) => Math.round((Date.parse(`${til}T00:00:00Z`) - Date.parse(`${fra}T00:00:00Z`)) / 86_400_000);
 
 // The dealer needs some days to answer and repair; a repair elsewhere sooner than this after the

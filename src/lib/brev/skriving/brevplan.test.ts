@@ -3,7 +3,9 @@ import { momenterFor, type Moment } from "../momenter";
 import { rettelseTilLagring } from "./avklaring";
 import { DEL_FOR_ARGUMENT, DELER, planlegg, type ArgumentId } from "./brevplan";
 import { forfatterBruker } from "@/lib/ai/prompter";
-import { sakForModell } from "./saksmodell";
+import type { Utfylling } from "../utfylling";
+import { henvisningFor } from "./henvisning";
+import { kjoperFor, sakForModell, type Saksmodell } from "./saksmodell";
 import { avsender, feilen, modell, svar } from "./testdata";
 
 describe("saksmodell", () => {
@@ -230,6 +232,36 @@ describe("planlegg", () => {
   it("tar tekstreglene ut av advarslene", () => {
     const p = plan({ utfylling: { feilen: { ...feilen, egen: "Feil", avsnitt: ["Feil."] } } });
     expect(p.advarsler.map((a) => a.id)).not.toContain("feil_kort");
+  });
+});
+
+describe("henvisningen", () => {
+  const foring = (m: Saksmodell) => planlegg(m).argumenter.find((a) => a.id === "henvisning")?.foring ?? "";
+  // Bought 2023, the defect showed after more than two years: outside the presumption.
+  const utenfor = (momenter?: Utfylling["momenter"]) => modell({ svar: svar({ kjopsdato: "2023-03-01", oppdaget: "over_2_ar" }), utfylling: { feilen, ...(momenter && { momenter }) } });
+
+  it("sier rettsspørsmålet og at kjøpet var fra en næringsdrivende forhandler", () => {
+    const t = foring(utenfor());
+    expect(t).toMatch(/tok Forbrukerklageutvalget stilling til/);
+    expect(t).toMatch(/næringsdrivende forhandler/);
+  });
+
+  it("«minst like sterkt» bare når kjøperen har alle momentene vedtaket ble vunnet på", () => {
+    for (const m of [utenfor(), utenfor({ rapport_upaaregnelig: { svar: "Ja, at det er en konstruksjons- eller produksjonsfeil ved modellen" }, rapport_arsak: { svar: "Den angir en konkret årsak etter å ha undersøkt bilen" } })]) {
+      const v = henvisningFor(m)!;
+      expect(foring(m).includes("minst like sterkt")).toBe(v.mangler.length === 0 && v.ukjent.length === 0);
+    }
+  });
+
+  it("et moment besvart med egne ord teller ikke som dekket", () => {
+    expect(kjoperFor(utenfor({ rapport_upaaregnelig: { egen: "Verkstedet sa at det var rart" } })).dekket.has("rapport_upaaregnelig")).toBe(false);
+  });
+
+  it("gjengir det utvalget la vekt på, uten merke og modell", () => {
+    const m = utenfor();
+    const v = henvisningFor(m)!;
+    expect(foring(m)).toContain(v.henvisning.begrunnelse);
+    expect(foring(m)).not.toMatch(/Volkswagen|Toyota|Mercedes|BMW|Volvo|Audi|Nissan|Ford|Mitsubishi|Tesla|Peugeot|Subaru/);
   });
 });
 

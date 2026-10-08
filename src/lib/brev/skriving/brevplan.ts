@@ -1,6 +1,5 @@
-import { leggTilManeder } from "@/lib/vurdering/faktorer";
+import { leggTilManeder, maneder } from "@/lib/vurdering/faktorer";
 import { NAAR } from "@/lib/vurdering/grunnlag";
-import { HENVISNINGER, velgHenvisning } from "@/lib/vurdering/henvisninger";
 import {
   harFatt,
   JURIDISK,
@@ -16,6 +15,7 @@ import {
 } from "../brev";
 import { besvarteMomenter } from "../momenter";
 import { sjekkBrev, type Advarsel } from "../sjekk";
+import { henvisningFor } from "./henvisning";
 import { rensTekst, type Saksmodell } from "./saksmodell";
 
 // The rules of the letter worked out in code before anything is written: what it must argue, in order,
@@ -235,15 +235,26 @@ export function planlegg(m: Saksmodell): Brevplan {
   // The conclusion, after what it rests on.
   legg("mangel", `Bilen har etter dette ${flere ? "mangler" : "en mangel"} etter forbrukerkjøpsloven § 16${f.slitasjeAktuelt ? ", jf. § 15" : ""}.`);
 
-  // The decision the letter cites, chosen as the assessment chose it; its source is a mark.
+  // The decision the letter cites (spec 2026-10-08); its source is a mark, the numbers of both cases are data.
   // Never a decision from after the letter's own date.
-  const valgt = velgHenvisning(f, HENVISNINGER.filter((h) => h.dato <= idag));
+  const valgt = henvisningFor(m);
   let henvisning: Kildehenvisning | null = null;
   if (valgt) {
     const h = valgt.henvisning;
     henvisning = { ref: h.ref, organ: h.organ, dato: h.dato, kildeUrl: h.kildeUrl };
     merker.push("henvisning");
-    legg("henvisning", JURIDISK.henvisning(valgt, f).replace(`${h.ref} av ${norskDato(h.dato)}`, "{{henvisning}}"), { likheter: valgt.likheter });
+    // From the exact purchase date only: an estimated one would make the months up.
+    const mnd = input.bilOgKjop.kjopsdato && u.feilen?.dato ? maneder(input.bilOgKjop.kjopsdato, u.feilen.dato) : null;
+    const kjoperTid = mnd === null ? null : mnd < 1 ? "mindre enn en måned etter kjøpet" : `${mnd} ${mnd === 1 ? "måned" : "måneder"} etter kjøpet`;
+    legg("henvisning", JURIDISK.henvisning(valgt, f, kjoperTid).replace(`${h.ref} av ${norskDato(h.dato)}`, "{{henvisning}}"), {
+      vedtak: { alder: h.alder, km: h.km, pris: h.pris },
+      kjoper: { alder: f.bilAlder, km: f.kmVedKjop, pris: f.kjopesumNok },
+      dekket: valgt.dekket,
+      mangler: valgt.mangler,
+      ukjent: valgt.ukjent,
+      sterkere: valgt.sterkere,
+      svakere: valgt.svakere,
+    });
   }
 
   // Deadlines. The two years run from delivery to the first complaint, or to this letter.

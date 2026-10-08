@@ -1,6 +1,7 @@
-import { beregnFaktorer, type Faktorer } from "@/lib/vurdering/faktorer";
-import { HENVISNINGER, velgHenvisning, type ValgtHenvisning } from "@/lib/vurdering/henvisninger";
+import type { Faktorer } from "@/lib/vurdering/faktorer";
+import { grupperFor, type Faktum, type Gruppe, type Opplyst, type Sporsmal, type ValgtHenvisning } from "@/lib/vurdering/henvisninger";
 import { gyldigRetting, type KlageInput, type Retting } from "@/lib/vurdering/typer";
+import { moment } from "./momenter";
 import type { Forbehold, Reparasjon, Utfylling, Utgift, Vedlegg } from "./utfylling";
 
 // The complaint letter as data, and what the written letter (src/lib/brev/skriving/) shares with the
@@ -65,6 +66,38 @@ function forbeholdAvsnitt(forbehold: Forbehold, presumsjonManeder: 6 | 24, visst
   return null;
 }
 
+// What the committee took a position on, as the letter states it; keyed by the questions shared with the
+// buyer, main question first (`ValgtHenvisning.sporsmal`).
+const SPORSMAL_TEKST: Record<string, string> = {
+  forventning: "om bilen var i dårligere stand enn kjøperen hadde grunn til å forvente ut fra alder, kilometerstand og pris, eller om feilen var normal slitasje",
+  opplysning: "om forhandleren hadde gitt uriktige eller mangelfulle opplysninger om bilen",
+  "forventning+levering": "om en feil som viser seg lenge etter kjøpet, likevel skyldes forhold som var der ved leveringen, slik at bilen ikke svarer til det kjøperen hadde grunn til å forvente",
+  "opplysning+levering": "om forhandleren hadde gitt uriktige eller mangelfulle opplysninger om bilen, og om feilen var der ved leveringen",
+};
+const KORT_SPORSMAL: Record<Sporsmal, string> = { forventning: "hva kjøperen kunne forvente av bilen", opplysning: "hva forhandleren opplyste om bilen", levering: "om feilen var der ved leveringen" };
+export const GRUPPE_NAVN: Record<Gruppe, string> = {
+  motor: "motoren",
+  elektrisk: "det elektriske anlegget",
+  understell: "understellet",
+  km_service: "kilometerstand og servicehistorikk",
+  rust: "rust",
+  bremser: "bremsene",
+  girkasse: "girkassen",
+  fukt: "fukt og lekkasje",
+  klimaanlegg: "klimaanlegget",
+  skade: "en tidligere skade",
+  batteri: "batteriet",
+};
+const OPPLYST_VEDTAK: Record<Opplyst, string> = { ingenting: "Forhandleren hadde ikke opplyst om feilen.", som_den_er: "Bilen var solgt «som den er».", feilen_opplyst: "Forhandleren hadde opplyst om forholdet før kjøpet." };
+const STERKERE: Record<Faktum, string> = { alder: "en nyere bil", km: "kortere kjørelengde", pris: "en dyrere bil", opplyst: "mindre opplyst om feilen før kjøpet", tid: "feilen viste seg tidligere etter kjøpet" };
+const SVAKERE: Record<Faktum, string> = {
+  alder: "Min bil var eldre enn bilen i vedtaket.",
+  km: "Min bil hadde gått lenger enn bilen i vedtaket.",
+  pris: "Min bil kostet mindre enn bilen i vedtaket.",
+  opplyst: "I min sak var mer opplyst før kjøpet enn i vedtaket.",
+  tid: "Feilen viste seg senere etter kjøpet i min sak enn i vedtaket.",
+};
+
 export const JURIDISK = {
   hevingSubsidiart: (utbedringNok?: number) =>
     utbedringNok ? `Dersom dere ikke godtar heving, krever jeg subsidiært prisavslag på ${kroner(utbedringNok)}, jf. § 31.` : "Dersom dere ikke godtar heving, krever jeg subsidiært et forholdsmessig prisavslag, jf. § 31.",
@@ -93,29 +126,43 @@ export const JURIDISK = {
     `${km !== undefined ? `Bilen hadde gått ${kroner(km).replace(/ kr$/, "")} km da jeg kjøpte den. ` : ""}${nevnerSlitasje ? "Slitasjen" : "Feilen"} går ut over det som kan ventes ut fra bilens alder, kilometerstand og pris, og er ikke ${nevnerSlitasje ? "normal" : "normal slitasje"}, jf. § 15.`,
   // Bilen is meant to last much longer than two years, so the deadline is five years (§ 27 second paragraph).
   femArsfrist: "Bilen er ment å vare vesentlig lenger enn to år, og fristen for å reklamere er derfor fem år, jf. § 27 andre ledd.",
-  // Law first, then the decision: case reference and date in the text, one sentence on the likeness and
-  // one on the outcome; the link goes on its own line at the end of the letter (`render.ts`). No amounts,
-  // no names, and no appeal: the decision speaks for itself.
-  // A case under the old rules cited for a purchase from 2024 says so: the change has not made the rules
-  // less favourable to the buyer, and the presumption was six months then.
-  // Only where the change matters: a buyer whose defect showed after six months, under the new rules.
-  henvisning: ({ henvisning: h, likheter }: ValgtHenvisning, f?: Pick<Faktorer, "presumsjonManeder" | "oppdaget" | "presumsjon">) => {
+  // Law first, then the decision, as a lawyer would cite it (spec 2026-10-08): the same legal question and a
+  // consumer buying from a dealer; the facts of the decision, what the committee relied on and the outcome;
+  // the buyer's case where it holds, from the stronger case to the weaker; and briefly what differs against
+  // the buyer. No make, model or amounts awarded; the link goes on its own line at the end of the letter
+  // (`render.ts`). «Minst like sterkt» only when the buyer has a favourable answer to every moment the
+  // decision was won on. A case under the old rules cited for a purchase from 2024 says the change has not
+  // made the rules less favourable to the buyer, where the change matters.
+  henvisning: (v: ValgtHenvisning, f: Faktorer, kjoperTid: string | null) => {
+    const h = v.henvisning;
     const kilde = `${h.ref} av ${norskDato(h.dato)}`;
+    const sporsmal = SPORSMAL_TEKST[v.sporsmal.join("+")];
+    const del1 =
+      v.sammeSporsmal && sporsmal
+        ? `I vedtak ${kilde} tok ${h.organ} stilling til det samme spørsmålet som denne saken gjelder, i et kjøp der en forbruker kjøpte bil av en næringsdrivende forhandler: ${sporsmal}.`
+        : `I vedtak ${kilde} tok ${h.organ} stilling til om en bil som en forbruker hadde kjøpt av en næringsdrivende forhandler, hadde en mangel.`;
+    const km = (n: number) => kroner(n).replace(/ kr$/, "");
+    const pris = [...v.sterkere, ...v.svakere].includes("pris") ? `, for ${kroner(h.pris)}` : "";
+    const del2 = `Bilen var ${h.alder} år gammel${h.km !== null ? ` og hadde gått ${km(h.km)} km` : ""} da den ble kjøpt${pris}. ${OPPLYST_VEDTAK[h.opplyst]} ${medPunktum(`${h.feil.charAt(0).toUpperCase()}${h.feil.slice(1)} viste seg ${h.tid}`)} ${medPunktum(h.begrunnelse)} Kjøperen fikk ${utenPunktum(h.utfall)}.`;
+    const bil = [f.bilAlder !== null && `var ${f.bilAlder} år gammel`, f.kmVedKjop !== null && `hadde gått ${km(f.kmVedKjop)} km`, f.kjopesumNok !== null && `kostet ${kroner(f.kjopesumNok)}`].filter(Boolean);
+    const fakta = [bil.length > 0 && `bilen ${bil.join(", ")}`, kjoperTid && `feilen viste seg ${kjoperTid}`].filter(Boolean).join(", ");
+    const minSak = fakta ? ` Min sak: ${fakta}.` : "";
+    const sammenligning = v.sterkere.length ? ` Sammenlignet med vedtaket: ${v.sterkere.map((x) => STERKERE[x]).join(", ")}.` : "";
+    // Only when nothing was disclosed in either case: «heller ikke» would be untrue of a disclosed defect.
+    const likt = v.likt.includes("opplyst") && h.opplyst === "ingenting" ? " Feilen var heller ikke opplyst før kjøpet." : "";
+    const dekket = v.dekket.map((id) => moment(id)?.navn.toLowerCase()).filter(Boolean);
+    const del3 =
+      v.mangler.length === 0 && v.ukjent.length === 0
+        ? `De samme momentene trekker minst like sterkt i min sak.${dekket.length ? ` Vis kort til det i saken som svarer til: ${dekket.join(", ")}.` : ""}${minSak}${sammenligning}${likt}`
+        : `${minSak}${sammenligning}${likt} Skriv ikke at momentene trekker like sterkt.`.trim();
     const lov =
-      f?.presumsjonManeder === 24 && f.oppdaget !== "innen_6_mnd" && h.lov === "før_2024"
+      f.presumsjonManeder === 24 && f.oppdaget !== "innen_6_mnd" && h.lov === "før_2024"
         ? ` Vedtaket gjelder et kjøp før lovendringen 1. januar 2024${h.presumsjon ? ", da formodningsperioden i § 18 var seks måneder; den er nå to år" : ""}. Reglene vedtaket bygger på, er ikke endret til kjøperens ugunst.`
         : "";
-    // When the letter rests on the rule the committee applied, the rule is stated: the paragraph before
-    // states the presumption, the report or the information, so «the same» points back to it; it does
-    // not state what the buyer could expect, so that rule is named here.
-    if (h.regel && likheter.includes("regel")) {
-      const innledning = h.grunnlag === "forventning" ? "har vurdert hva en kjøper kan forvente av en eldre bil" : "har lagt det samme til grunn";
-      return `${h.organ} ${innledning} i vedtak ${kilde}. ${medPunktum(h.regel)}${lov}`;
-    }
-    // What the cited case and the buyer's have in common, when the data says so.
-    const felles = f?.presumsjon && h.presumsjon ? " Feilen viste seg der, som i min sak, innenfor formodningsperioden i § 18 andre ledd." : "";
-    // The facts of the cited case are stated, not called similar: the reader judges the likeness.
-    return `I vedtak ${kilde} behandlet ${h.organ} en sak der ${h.likhet.charAt(0).toLowerCase()}${utenPunktum(h.likhet.slice(1))}. ${medPunktum(h.konklusjon)}${felles}${lov}`;
+    const grupper = grupperFor(f);
+    const annen = v.annenFeil && grupper[0] ? ` Vedtaket gjaldt ${GRUPPE_NAVN[h.gruppe]} og ikke ${GRUPPE_NAVN[grupper[0]]}, men spørsmålet er det samme: ${KORT_SPORSMAL[v.sporsmal.at(-1) ?? "forventning"]}.` : "";
+    const del4 = `${v.svakere.map((x) => ` ${SVAKERE[x]}`).join("")}${annen}${lov}`.trim();
+    return [del1, del2, del3, del4 && `Kort, uten motargument: ${del4}`].filter(Boolean).join("\n\n");
   },
 } as const;
 
@@ -175,16 +222,6 @@ export function vedleggFor(input: KlageInput, u: Utfylling): Vedlegg[] {
   const forslag = new Set(vedleggBrevetByggerPa(input, u));
   if (input.bevis.bilder) forslag.add("bilder");
   return VEDLEGG_REKKEFOLGE.filter((v) => forslag.has(v));
-}
-
-// The answers do not hold the vehicle; its first registration comes from the registry lookup.
-const medBilAr = (input: KlageInput, u: Utfylling): KlageInput =>
-  u.kjoretoy?.ar ? { ...input, bilOgKjop: { ...input.bilOgKjop, bilAr: u.kjoretoy.ar } } : input;
-
-// The decision the letter cites: the same choice as the assessment's, from the same facts, and never
-// one from after the letter's date (as in `planlegg`).
-export function henvisningFor(input: KlageInput, idag: string, u: Utfylling): ValgtHenvisning | null {
-  return velgHenvisning(beregnFaktorer(medBilAr(input, u), idag), HENVISNINGER.filter((h) => h.dato <= idag));
 }
 
 // The parts of the letter around its paragraphs: sender, recipient, place and date, subject and

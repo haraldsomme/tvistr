@@ -1,8 +1,9 @@
 import { beregnFaktorer, kjopsdatoFor, type Faktorer } from "@/lib/vurdering/faktorer";
 import { NAAR } from "@/lib/vurdering/grunnlag";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
+import type { Kjoper } from "@/lib/vurdering/henvisninger";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
-import { besvarteMomenter } from "../momenter";
+import { besvarteMomenter, momenterFor } from "../momenter";
 import { avledSvar } from "../svar";
 import { AVKLARING_TEMAER, type Avklaring as LagretAvklaring, type Utfylling } from "../utfylling";
 
@@ -111,6 +112,22 @@ export function lagSaksmodell(g: Grunnlag, idag: string): { ok: true; modell: Sa
       kjente,
     },
   };
+}
+
+// What the cited decision is compared with besides the answers: the moments asked in this case, those the
+// buyer has a favourable answer to (own words do not count), and what the buyer was told before buying.
+export function kjoperFor(m: Pick<Saksmodell, "faktorer" | "utfylling" | "avklaringer" | "input">): Kjoper {
+  const u = m.utfylling;
+  const sporbare = new Set(momenterFor(m.faktorer).filter((mo) => mo.steg).map((mo) => mo.id));
+  const besvart = besvarteMomenter(u.momenter, { vedKjop: m.input.bilOgKjop.kmVedKjop, vedFeil: u.kmVedFeil }, m.avklaringer);
+  const dekket = new Set(besvart.filter((b) => b.gunstig).map((b) => b.moment.id));
+  // A report that says the defect was there before the purchase names a cause the committee can rely on.
+  if (u.rapport && m.input.bevis.rapportSierForKjop === true) {
+    sporbare.add("rapport_arsak");
+    dekket.add("rapport_arsak");
+  }
+  const opplyst = m.input.feilen.opplystForKjop === "ja" ? "feilen_opplyst" : u.forbehold === "som_den_er" ? "som_den_er" : "ingenting";
+  return { sporbare, dekket, opplyst };
 }
 
 // The first complaint with its dates named for what they are: the dealer's answer, or the last attempt.

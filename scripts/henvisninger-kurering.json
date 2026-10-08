@@ -1,0 +1,800 @@
+{
+  "poster": {
+    "10": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [
+        "uriktig_service_arbeid_utstyr",
+        "rettet_for_kjop"
+      ],
+      "begrunnelse": "Utvalget la vekt på at annonsens opplysning om at servicehistorikken var fulgt, ga uttrykk for at serviceintervallene var overholdt, mens servicene i serviceheftet ikke fulgte intervallene. Et generelt forbehold om feil i annonsen var ikke tilstrekkelig til å rette opplysningen. Kjøperen hadde etter annonsen ingen oppfordring til å undersøke serviceheftet nærmere.",
+      "opplyst": "ingenting",
+      "tid": "om lag 14 måneder etter kjøpet",
+      "feil": "servicehistorikken var ikke fulgt slik annonsen opplyste",
+      "utfall": "prisavslag fastsatt skjønnsmessig"
+    },
+    "224": {
+      "sporsmal": [
+        "opplysning",
+        "levering"
+      ],
+      "vekt": [
+        "positiv_beskrivelse",
+        "rapport_arsak",
+        "rettet_for_kjop"
+      ],
+      "begrunnelse": "Utvalget la vekt på at annonsen, som var en del av avtalegrunnlaget, opplyste at bilen var fri for rust, mens en verkstedrapport sannsynliggjorde at bilen ved levering hadde store rustskader og en feil utbedret kollisjonsskade som førte til vannlekkasje. Forhandleren hadde verken rettet opplysningen før kjøpet eller sannsynliggjort at den ikke hadde virket inn.",
+      "opplyst": "som_den_er",
+      "tid": "om lag fire måneder etter kjøpet",
+      "feil": "omfattende rust i hjulhus og gulv og en feil utbedret kollisjonsskade som ga vannlekkasje",
+      "utfall": "heving av kjøpet og erstatning for sakkyndig undersøkelse"
+    },
+    "265": {
+      "sporsmal": [
+        "forventning"
+      ],
+      "vekt": [
+        "positiv_beskrivelse"
+      ],
+      "begrunnelse": "Utvalget la vekt på at bilen ble markedsført som «nybil» og «100 % strøken», var to år gammel, hadde gått under 60 000 km og hadde en høy kjøpesum, slik at det var upåregnelig at bremsene måtte skiftes under en måned etter kjøpet.",
+      "opplyst": "som_den_er",
+      "tid": "under en måned etter kjøpet",
+      "feil": "kast og rust i alle bremseskivene",
+      "utfall": "erstatning for utbedringskostnadene med halvparten trukket fra for standardheving"
+    },
+    "357": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [],
+      "begrunnelse": "Utvalget la vekt på at det var sannsynliggjort at kilometertelleren var manipulert, at bilens reelle kilometerstand var høyst uklar og utgjorde et salgslyte, og at kilometerstanden er en sentral opplysning ved bruktbilkjøp der avviket måtte anses betydelig.",
+      "opplyst": "som_den_er",
+      "tid": "innen fem måneder etter kjøpet",
+      "feil": "tilbakestilt kilometerteller med et betydelig avvik",
+      "utfall": "prisavslag fastsatt skjønnsmessig etter en helhetsvurdering"
+    },
+    "438": {
+      "sporsmal": [
+        "forventning"
+      ],
+      "vekt": [
+        "positiv_beskrivelse",
+        "rust_baerende",
+        "bruksstans_sikkerhet"
+      ],
+      "begrunnelse": "Utvalget la vekt på at bilen var EU-godkjent uten feil to dager etter kjøpet, slik at kjøperen hadde en berettiget forventning om at den ikke hadde umiddelbare reparasjonsbehov, og at kontrollen to måneder senere påviste alvorlig rust på bremserør, bærearmer og bakaksel og avskiltet bilen som trafikkfarlig.",
+      "opplyst": "som_den_er",
+      "tid": "om lag to måneder etter kjøpet, ved kontroll hos Statens vegvesen",
+      "feil": "alvorlig rust på bremserør, bærearmer og bakaksel",
+      "utfall": "heving av kjøpet og erstatning for bortkastede utgifter"
+    },
+    "465": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_upaaregnelig",
+        "rapport_arsak",
+        "forhandler_annen_arsak"
+      ],
+      "begrunnelse": "Utvalget la avgjørende vekt på at et merkeverksted hadde funnet at feilen var at festet til en innsprøytningsdyse hadde gitt etter, at feilen ikke var kjent for verkstedet, og at verkstedet ut fra bilens historikk anså den som en monteringsfeil fra fabrikken. Forhandlerens generelle forklaringer på hvorfor dyser svikter, var ikke relevante, og det var ikke grunnlag for at feilen skyldtes bruk og slitasje.",
+      "opplyst": "ingenting",
+      "tid": "om lag to og et halvt år etter kjøpet",
+      "feil": "motorhavari etter at en innsprøytningsdyse løsnet fra festet",
+      "utfall": "erstatning for reparasjonen med skjønnsmessig fradrag for standardheving"
+    },
+    "551": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "rapport_upaaregnelig",
+        "forhandler_annen_arsak"
+      ],
+      "begrunnelse": "Utvalget la vekt på at grundige og godt begrunnede sakkyndige uttalelser viste at lagrene i fordelerkassen var montert for trangt, slik at feilen var en fabrikasjonsfeil som forelå ved leveringen og ikke påregnelig slitasje, og at forhandleren ikke hadde lagt frem noen sakkyndig uttalelse om bilen som trakk i en annen retning.",
+      "opplyst": "ingenting",
+      "tid": "våren 2016, drøyt to år etter kjøpet",
+      "feil": "skadde lagre i fordelerkassen fordi lagrene var montert for trangt",
+      "utfall": "erstatning for reparasjonen uten fradrag for standardheving, og for utgifter til feilsøking og reise"
+    },
+    "606": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_upaaregnelig"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en sakkyndig hadde uttalt at skadene ikke skyldtes ytre påvirkning og var unormale sett i forhold til alder og kjørelengde. Selv om uttalelsen var kort og det var gått nær tre år, fant utvalget det mer sannsynlig at rusten skyldtes en svakhet som forelå ved leveringen, enn forhold på kjøperens side.",
+      "opplyst": "ingenting",
+      "tid": "nær tre år etter kjøpet",
+      "feil": "rust i panser, tak, dører og bakskjerm",
+      "utfall": "prisavslag satt lik utbedringskostnadene"
+    },
+    "805": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "positiv_beskrivelse",
+        "rapport_arsak",
+        "km_etter_kjop",
+        "bruksstans_sikkerhet"
+      ],
+      "begrunnelse": "Utvalget la vekt på at girkassefeilen etter uttalelsene mest sannsynlig skyldtes kjøring med for lite olje over tid, og at den oppsto under to måneder etter overtakelsen og etter kort kjøring, slik at den kunne føres tilbake til kjøpet. Avgjørende vekt fikk annonsens rosende omtale av bilen som servicefulgt og godt vedlikeholdt, og feilen gjorde bilen ukjørbar.",
+      "opplyst": "som_den_er",
+      "tid": "i underkant av to måneder etter kjøpet, etter om lag 1 000 km",
+      "feil": "feil i girkassen etter kjøring med for lite olje over tid",
+      "utfall": "heving av kjøpet og erstatning for transport av bilen"
+    },
+    "911": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "tidlige_tegn",
+        "egen_bruk",
+        "positiv_beskrivelse",
+        "bruksstans_sikkerhet"
+      ],
+      "begrunnelse": "Utvalget la vekt på at verkstedets uttalelser om at lekkasjen kom fra frontruten trakk klart i retning av at årsaken forelå ved leveringen, at kjøperen beviselig hadde reklamert på feil ved lysene noen uker etter overtakelsen, og at ingenting tydet på forhold på kjøperens side. I lys av at bilen var annonsert som velholdt, var den i dårligere stand enn kjøperen hadde grunn til å forvente. Hevingen ble begrunnet med at bilen ikke var kjørbar og at utbedringen var kostbar.",
+      "opplyst": "ingenting",
+      "tid": "om lag ni måneder etter kjøpet, med feil ved lysene noen uker etter overtakelsen",
+      "feil": "vannlekkasje fra frontruten med følgefeil på det elektriske anlegget",
+      "utfall": "heving av kjøpet med skjønnsmessig fradrag for bruken, og erstatning for utgiftene til verkstedundersøkelse"
+    },
+    "967": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rust_baerende",
+        "bruksstans_sikkerhet",
+        "positiv_beskrivelse"
+      ],
+      "begrunnelse": "Utvalget la vekt på at EU-kontrollen sannsynliggjorde at bilen allerede ved kjøpet hadde alvorlige rustskader i understellet som gjorde den trafikkfarlig, og at annonsen ga kjøperen grunn til å tro at reparasjonsbehovet gjaldt startvanskene og at bilen ellers var i normal stand. Det lå da ikke innenfor det påregnelige, selv for et reparasjonsobjekt, at bilen ikke kunne godkjennes uten uforholdsmessige kostnader.",
+      "opplyst": "som_den_er",
+      "tid": "om lag åtte måneder etter kjøpet, ved EU-kontroll",
+      "feil": "alvorlig korrosjon i understell og bærende deler og korroderte bremserør",
+      "utfall": "heving av kjøpet med skjønnsmessig fradrag for bruken"
+    },
+    "1355": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "avslo_tilbud"
+      ],
+      "begrunnelse": "Utvalget la vekt på at verkstedet hadde funnet at motorstoppet skyldtes vanninntrenging i el-boksen som følge av at bilen var chipet, og at skadens omfang tilsa at den ikke kunne ha oppstått etter kjøpet. Forhandleren hadde avvist ansvar og verken tilbudt eller utført retting.",
+      "opplyst": "ingenting",
+      "tid": "i overkant av åtte måneder etter kjøpet",
+      "feil": "vanninntrenging i el-boksen som skadet ledningsnettet og motorstyreenheten",
+      "utfall": "erstatning og prisavslag satt lik de dokumenterte reparasjonskostnadene"
+    },
+    "1525": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "egen_bruk"
+      ],
+      "begrunnelse": "Utvalget la vekt på at verkstedet hadde funnet en intern elektrisk feil i styreenheten for ryggekameraet som ikke skyldtes manglende programvareoppdatering, og at feilens karakter tilsa at den verken var en brukerfeil eller skyldtes ytre forhold.",
+      "opplyst": "ingenting",
+      "tid": "over fire år etter kjøpet",
+      "feil": "intern elektrisk feil i styreenheten for ryggekameraet",
+      "utfall": "prisavslag satt lik kostnaden ved å sette inn en brukt styreenhet, og erstatning for undersøkelsen"
+    },
+    "1566": {
+      "sporsmal": [
+        "opplysning",
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "dokument_for_salg",
+        "slitedel",
+        "egen_bruk"
+      ],
+      "begrunnelse": "Utvalget la vekt på at feilene etter formodningsregelen forelå ved leveringen, at feilen ved klimaanlegget og oljelekkasjen var bemerket i en tilstandsrapport fra før kjøpet uten at kjøperen ble opplyst om dem, og at vannpumpen sviktet lenge før anbefalt bytteintervall uten holdepunkter for forhold på kjøperens side.",
+      "opplyst": "som_den_er",
+      "tid": "om lag sju uker etter kjøpet (klimaanlegget); vannpumpen kort tid etter overtakelsen",
+      "feil": "defekt kompressor i klimaanlegget, lekkende vannpumpe og sprukket bunnpanne med oljelekkasje",
+      "utfall": "erstatning for utbedringene og for utgiftene til sakkyndige uttalelser"
+    },
+    "1579": {
+      "sporsmal": [
+        "levering"
+      ],
+      "vekt": [
+        "forhandler_erkjente",
+        "rust_baerende"
+      ],
+      "begrunnelse": "Utvalget la vekt på at verkstedenes uttalelser, at rustskader oppstår over tid og at feilen ble konstatert kort tid etter overtakelsen, viste at skadene forelå ved leveringen, og at forhandleren hadde erkjent mangelen ved å gjennomføre et utbedringsforsøk for egen regning uten forbehold. Heving ble begrunnet med at skadene i bærende struktur var så alvorlige at reparasjon ville koste mer enn bilen var verdt.",
+      "opplyst": "ingenting",
+      "tid": "om lag tre måneder etter kjøpet",
+      "feil": "omfattende rust i bakre hjulbuer, hjulhus og dempertårn",
+      "utfall": "heving av kjøpet"
+    },
+    "1600": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "slitedel",
+        "rapport_arsak"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en sakkyndig rapport viste at boltene til drivakselen hadde løsnet og falt ut over tid, og at drivakselen ikke er en typisk slitedel som det er påregnelig å måtte bytte ved denne kilometerstanden. Feilen viste seg innen seks måneder, og unntakene fra formodningsregelen var ikke anvendelige.",
+      "opplyst": "ingenting",
+      "tid": "om lag tre måneder etter kjøpet",
+      "feil": "drivakselen løsnet og slo hull i girkassen",
+      "utfall": "heving av kjøpet"
+    },
+    "1689": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_upaaregnelig"
+      ],
+      "begrunnelse": "Utvalget la vekt på uttalelser fra to verksteder om at rusten var til stede ved kjøpet og var upåregnelig sett hen til bilens alder og kilometerstand.",
+      "opplyst": "ingenting",
+      "tid": "om lag fire måneder etter kjøpet",
+      "feil": "rust på bremsecalipere, bremserør og nedre kant av dørene",
+      "utfall": "erstatning for reparasjonen av bremsene og prisavslag satt lik utbedringskostnadene for dørene"
+    },
+    "1758": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "positiv_beskrivelse",
+        "egen_bruk"
+      ],
+      "begrunnelse": "Utvalget la vekt på at feilen etter formodningsregelen forelå ved leveringen, fordi forhandleren ikke hadde sannsynliggjort at den oppsto senere, og på at annonsen beskrev bilen som pen og velholdt med nylig service og ny registerreim, slik at kjøperen tross alder og kjørelengde ikke hadde grunn til å vente et registerreimhavari. Forhandlerens påstand om at kjøperen hadde oversett et varsellys, var ikke sannsynliggjort.",
+      "opplyst": "ingenting",
+      "tid": "om lag halvannen måned etter kjøpet",
+      "feil": "registerreimhavari med motorskade",
+      "utfall": "heving av kjøpet og erstatning for undersøkelse og bilberging"
+    },
+    "1776": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "rapport_upaaregnelig"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en sakkyndig uttalelse konkluderte med at ulyden skyldtes skade på hovedlagrene i girkassen, at slik ulyd ikke var vanlig for en bil med denne kjørelengden og fulgt service, og at feilen måtte ha vært til stede ved kjøpet.",
+      "opplyst": "som_den_er",
+      "tid": "knapt sju måneder etter kjøpet, etter om lag 3 400 km",
+      "feil": "skade på hovedlagrene i girkassen og oljelekkasje fra motoren",
+      "utfall": "prisavslag fastsatt skjønnsmessig ut fra bilens alder og kjøpesum, og erstatning for utgiftene til sakkyndig uttalelse"
+    },
+    "1869": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_upaaregnelig",
+        "rapport_arsak"
+      ],
+      "begrunnelse": "Utvalget la vekt på at verkstedet hadde uttalt at feilen var en elektrisk feil i sensoren som ikke skyldtes slitasje, og at den ikke var påregnelig for en bil med denne alderen og kjørelengden. Feilen ble derfor ansett som en fabrikasjonsfeil.",
+      "opplyst": "ingenting",
+      "tid": "om lag fem måneder etter kjøpet",
+      "feil": "intern elektrisk feil i en sensor til klimaanlegget",
+      "utfall": "prisavslag satt lik utbedringskostnadene etter pristilbud"
+    },
+    "1905": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "positiv_beskrivelse",
+        "slitedel",
+        "rapport_upaaregnelig"
+      ],
+      "begrunnelse": "Utvalget la vekt på at forhandleren før kjøpet opplyste at bilen var velholdt og hadde god servicehistorikk, og at kjøperen hadde dokumentert at mekatronikken ikke er en slitedel og at feilen mest sannsynlig var en iboende svakhet. Feilen viste seg innen seks måneder, og forhandleren hadde ikke sannsynliggjort at den ikke forelå ved leveringen.",
+      "opplyst": "som_den_er",
+      "tid": "to måneder etter kjøpet",
+      "feil": "feil på girkassens mekatronikk",
+      "utfall": "erstatning for reparasjonen med skjønnsmessig fradrag for standardheving"
+    },
+    "1916": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "tidligere_skade_ikke_opplyst",
+        "forhandler_annen_arsak"
+      ],
+      "begrunnelse": "Utvalget la vekt på at feilen etter formodningsregelen forelå ved leveringen, og på at verkstedet dokumenterte sammenhengen mellom en feilmontert uoriginal frontrute, vannlekkasjen og feilen i det elektriske anlegget. Når ikke annet var opplyst, kunne kjøperen forvente at tidligere reparasjoner var utført forsvarlig, og forhandleren hadde ikke sannsynliggjort at feilen ville vist seg tidligere.",
+      "opplyst": "ingenting",
+      "tid": "om lag fem måneder etter kjøpet",
+      "feil": "vannlekkasje ved feilmontert frontrute som ga feil på det elektriske anlegget",
+      "utfall": "erstatning for reparasjonen av det elektriske anlegget"
+    },
+    "1941": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [
+        "uriktig_service_arbeid_utstyr"
+      ],
+      "begrunnelse": "Utvalget la vekt på at opplysningen om servicehistorikk i annonsen måtte forstås slik at serviceintervallene var overholdt, mens servicene ikke var utført etter fabrikkens intervaller.",
+      "opplyst": "ingenting",
+      "tid": "om lag to år og fem måneder etter kjøpet",
+      "feil": "servicehistorikken fulgte ikke fabrikkens intervaller",
+      "utfall": "prisavslag fastsatt skjønnsmessig"
+    },
+    "1967": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [
+        "tidligere_skade_ikke_opplyst"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en kjøper av en seks år gammel bil til en relativt høy pris må kunne regne med å få opplysninger om skadehistorikk som går ut over normal bruksslitasje, at forhandleren ikke hadde dokumentert at skaden var bagatellmessig, og at kjøperen hadde dokumentert at skadehistorikken fikk potensielle kjøpere til å trekke seg.",
+      "opplyst": "ingenting",
+      "tid": "om lag 17 måneder etter kjøpet, ved en NAF-test før videresalg",
+      "feil": "tidligere skade og delvis omlakkering som ikke var opplyst",
+      "utfall": "prisavslag fastsatt skjønnsmessig"
+    },
+    "1992": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [
+        "uriktig_service_arbeid_utstyr"
+      ],
+      "begrunnelse": "Utvalget la vekt på at annonsen opplyste om komplett servicehefte, slik at kjøperen hadde grunn til å regne med at produsentens serviceprogram var fulgt, mens serviceheftet viste at det ikke var anmerket service på flere år og forhandleren ikke dokumenterte annet. Opplysninger om servicehistorikk er sentrale ved kjøp av bruktbil og må antas å ha virket inn på kjøpet.",
+      "opplyst": "ingenting",
+      "tid": "drøyt halvannet år etter kjøpet",
+      "feil": "uriktig opplysning i annonsen om komplett servicehefte",
+      "utfall": "prisavslag fastsatt skjønnsmessig i mangel av dokumentasjon på verditapet"
+    },
+    "2102": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "tidligere_skade_ikke_opplyst",
+        "rust_baerende"
+      ],
+      "begrunnelse": "Utvalget la vekt på omfanget av rusten, at skum i bærende deler var overmalt, og at bilens historikk ble bekreftet av en tidligere eier, slik at skummet og rusten var der ved overtakelsen. Omfanget gikk betydelig ut over det kjøperen hadde grunn til å forvente, også for en gammel og langt kjørt bil som ikke var solgt «som den er».",
+      "opplyst": "ingenting",
+      "tid": "om lag 17 måneder etter kjøpet",
+      "feil": "for stor korrosjon i rammebjelke og innerskjermer, reparert med overmalt skum",
+      "utfall": "heving av kjøpet"
+    },
+    "2184": {
+      "sporsmal": [
+        "forventning"
+      ],
+      "vekt": [
+        "bruksstans_sikkerhet",
+        "positiv_beskrivelse"
+      ],
+      "begrunnelse": "Utvalget la vekt på at bremsene var helt nedslitt med umiddelbart behov for utskifting, slik at bilen ikke var i kjørbar stand, og at bilen var beskrevet som velholdt. Selv om bremser i utgangspunktet er slitedeler, lå dette utenfor det kjøperen kunne forvente, også etter et «as is»-forbehold på en gammel bil med høy kjørelengde.",
+      "opplyst": "som_den_er",
+      "tid": "en uke etter kjøpet",
+      "feil": "helt nedslitte bremser foran",
+      "utfall": "erstatning for utskifting av bremseskiver og bremseklosser"
+    },
+    "2235": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak"
+      ],
+      "begrunnelse": "Utvalget la vekt på at verkstedet hadde konkludert med at turboskaden var en følge av en tidligere reparasjon, og fant derfor at feilen skyldtes annet enn slitasje og bilens alder. En slik skade var ikke påregnelig ved kjøpet, selv om bilen var gammel, langt kjørt og solgt «som den er».",
+      "opplyst": "som_den_er",
+      "tid": "om lag åtte måneder etter kjøpet",
+      "feil": "skadet turbo etter en tidligere reparasjon",
+      "utfall": "erstatning redusert til det utbedringen ville kostet forhandleren, med fradrag for standardheving"
+    },
+    "2298": {
+      "sporsmal": [
+        "forventning"
+      ],
+      "vekt": [
+        "positiv_beskrivelse"
+      ],
+      "begrunnelse": "Utvalget la vekt på at annonsen sa at bilen nylig var EU-godkjent og hadde fått nye bremser, noe som ga kjøperen en berettiget forventning om at bremsene var godkjent for bilen. At kjøperen visste at bremsene var hentet fra en annen modell, endret ikke dette.",
+      "opplyst": "som_den_er",
+      "tid": "om lag sju måneder etter kjøpet",
+      "feil": "uoriginale bremser som ikke var godkjent for bilen",
+      "utfall": "erstatning for utbedringskostnadene"
+    },
+    "2316": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_upaaregnelig",
+        "slitedel",
+        "bruksstans_sikkerhet"
+      ],
+      "begrunnelse": "Utvalget la vekt på sakkyndige uttalelser om at det var unormal slitasje på deler som ved normal bruk og vedlikehold har vesentlig lengre levetid, og at feilen derfor mest sannsynlig hadde begynt før kjøpet. Girkassen og clutchen er nødvendige for at bilen skal fungere.",
+      "opplyst": "som_den_er",
+      "tid": "om lag 14 måneder etter kjøpet",
+      "feil": "unormal slitasje i girkassen og ulyd fra clutchen",
+      "utfall": "heving av kjøpet og erstatning for undersøkelse og sakkyndig vurdering"
+    },
+    "2355": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "egen_bruk"
+      ],
+      "begrunnelse": "Utvalget la vekt på at to verksteder hadde påvist en lekkasje fra taket, at det ikke var å forvente en feil av en slik karakter på en relativt ny bil med lav kilometerstand, og at det ikke var holdepunkter for at feilen kunne knyttes til kjøperens bruk.",
+      "opplyst": "ingenting",
+      "tid": "vinteren 2019/2020, om lag 21 måneder etter kjøpet",
+      "feil": "vannlekkasje fra fugemassen i taket med fukt og rust i bagasjerommet",
+      "utfall": "prisavslag satt lik utbedringskostnadene, og erstatning for utgiftene til feilsøking"
+    },
+    "2475": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [
+        "uriktig_service_arbeid_utstyr"
+      ],
+      "begrunnelse": "Utvalget la vekt på at annonsen opplyste om nylig bytte av registerreim og vannpumpe, at en sakkyndig ikke fant holdepunkter for at byttet var gjort, og at forhandleren ikke hadde lagt frem dokumentasjon på arbeidet. Opplysningen var derfor uriktig og hadde innvirket på kjøpet.",
+      "opplyst": "som_den_er",
+      "tid": "knapt en måned etter kjøpet, ved NAF-test",
+      "feil": "uriktige opplysninger om bytte av registerreim og vannpumpe",
+      "utfall": "prisavslag fastsatt skjønnsmessig ut fra bilens alder og kilometerstand, og erstatning for utgiftene til NAF-test"
+    },
+    "2486": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [
+        "tidligere_skade_ikke_opplyst"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en kjøper av en nyere bil til en relativt høy pris må kunne regne med å få opplysninger om skadehistorikk som går ut over normal bruksslitasje, at forhandleren burde kjent til skaden, og at forhandleren ikke hadde sannsynliggjort at skaden var bagatellmessig eller ikke hadde innvirket på kjøpet.",
+      "opplyst": "ingenting",
+      "tid": "om lag to år og tre måneder etter kjøpet, ved en NAF-test før garantien løp ut",
+      "feil": "tidligere skade og delvis omlakkering som ikke var opplyst",
+      "utfall": "prisavslag fastsatt skjønnsmessig i mangel av dokumentasjon på verditapet"
+    },
+    "2510": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_upaaregnelig",
+        "slitedel",
+        "forhandler_annen_arsak"
+      ],
+      "begrunnelse": "Utvalget la vekt på at kjøperen av en to år gammel bil med lav kjørelengde hadde grunn til å forvente at den var i rimelig god stand, at verkstedet mente delene burde vare mer enn fem år, slik at feilen ikke knyttet seg til en slitedel, og at det ikke var holdepunkter for forhandlerens påstand om ytre påvirkning.",
+      "opplyst": "ingenting",
+      "tid": "drøyt to år etter kjøpet, ved årlig service",
+      "feil": "defekte trykksensorer og lekkasje fra ekspansjonsventil og pakninger i klimaanlegget",
+      "utfall": "erstatning for reparasjon, nødvendig feilsøking og fremtidig reparasjon etter tilbud, uten utgifter til vanlig service"
+    },
+    "2612": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "rust_baerende",
+        "bruksstans_sikkerhet"
+      ],
+      "begrunnelse": "Utvalget la vekt på at sakkyndige uttalte at rusten hadde oppstått over tid og ikke kunne ha kommet etter kjøpet, og at skadene, med gjennomrustede hull og komponenter som var rustet løs, var så omfattende at de ga en trafikksikkerhetsrisiko og nesten kostet bilens verdi å utbedre. Det gikk ut over det kjøperen måtte regne med, selv om alder og kjørelengde tilsa noe rust og forhandleren hadde opplyst om rustskader.",
+      "opplyst": "feilen_opplyst",
+      "tid": "om lag halvannet år etter kjøpet, ved EU-kontroll",
+      "feil": "omfattende rust i ramme, tverrbjelke og bremserør med gjennomrustede hull",
+      "utfall": "heving av kjøpet"
+    },
+    "2694": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "rust_baerende"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en verkstedrapport uttalte at de store rustskadene i bærende deler hadde kommet over tid og var der da kjøperen kjøpte bilen, slik at rusten kunne knyttes til leveringen. Selv om noe rust må påregnes på en så gammel bil, gikk skader av dette omfanget ut over det kjøperen hadde grunn til å forvente når forhandleren bare hadde opplyst om kosmetiske feil og dårlige bremser.",
+      "opplyst": "ingenting",
+      "tid": "nesten åtte måneder etter kjøpet, ved periodisk kontroll",
+      "feil": "store rustskader i bærende deler av for- og bakstilling",
+      "utfall": "heving av kjøpet"
+    },
+    "2837": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "km_etter_kjop",
+        "positiv_beskrivelse"
+      ],
+      "begrunnelse": "Utvalget la vekt på at feilene ble påvist etter relativt kort kjørelengde, slik at de sannsynligvis forelå ved kjøpet, og at annonsen beskrev bilen som godt vedlikeholdt og nevnte utstyret som sviktet. Kjøperen kunne derfor forvente at bilen ikke hadde et umiddelbart utbedringsbehov av denne størrelsen, selv om den var solgt «som forevist».",
+      "opplyst": "som_den_er",
+      "tid": "i overkant av sju måneder etter kjøpet",
+      "feil": "feil på parkeringsvarmer og varsellys",
+      "utfall": "prisavslag fastsatt skjønnsmessig"
+    },
+    "3040": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [
+        "uriktig_service_arbeid_utstyr",
+        "verditap_dokumentert"
+      ],
+      "begrunnelse": "Utvalget la vekt på at annonsen opplyste om full servicehistorikk, mens et testsenter fant at service etter bilens intervaller ikke var fulgt. Prisavslaget ble satt etter en uttalelse fra en forhandler om hvor mye den manglende servicehistorikken trakk ned innbytteverdien.",
+      "opplyst": "som_den_er",
+      "tid": "om lag 17 måneder etter kjøpet",
+      "feil": "ufullstendig servicehistorikk",
+      "utfall": "prisavslag satt lik verditapet en forhandler anslo ved innbytte"
+    },
+    "3053": {
+      "sporsmal": [
+        "opplysning",
+        "levering"
+      ],
+      "vekt": [
+        "tidligere_skade_ikke_opplyst",
+        "rapport_arsak",
+        "dokument_for_salg"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en sakkyndig hadde funnet at ledninger til en sensor var kuttet og loddet sammen igjen før kjøperens eiertid, og at kvitteringer for tidligere arbeid viste at problemene hadde gått igjen. Dette var forhold forhandleren som profesjonell part burde kjenne til og opplyse om.",
+      "opplyst": "som_den_er",
+      "tid": "rett under tre måneder etter kjøpet",
+      "feil": "feil i det elektriske anlegget etter tidligere reparasjoner som ikke var faglig utført",
+      "utfall": "heving av kjøpet og erstatning for reparasjon og sakkyndig uttalelse"
+    },
+    "3065": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "positiv_beskrivelse",
+        "rapport_upaaregnelig",
+        "slitedel",
+        "avslo_tilbud"
+      ],
+      "begrunnelse": "Utvalget la vekt på at salgsannonsen og verkstedkontrollen før kjøpet ga en berettiget forventning om at bilen var i god stand, og at en sakkyndig hadde uttalt at registerkjedet skal vare bilens levetid og at feilen er kjent for modellen. Forhandleren hadde ikke lagt frem noe som viste at feilen ikke forelå ved kjøpet, og hadde bare tilbudt å dekke en del av reparasjonen.",
+      "opplyst": "ingenting",
+      "tid": "om lag to måneder etter kjøpet",
+      "feil": "slakk i registerkjedet",
+      "utfall": "prisavslag satt lik reparasjonskostnaden, begrenset til egenandelen kjøperen betalte etter forsikringsoppgjøret"
+    },
+    "3067": {
+      "sporsmal": [
+        "opplysning",
+        "levering"
+      ],
+      "vekt": [
+        "bruksstans_sikkerhet"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en test fire måneder etter kjøpet viste en rekke feil og at bilen var trafikkfarlig, og at forhandleren burde ha undersøkt bilen før salget og opplyst kjøperen om tilstanden. Feilene viste seg innen seks måneder, og forhandleren hadde ikke sannsynliggjort at de oppsto senere.",
+      "opplyst": "som_den_er",
+      "tid": "innen fire måneder etter kjøpet",
+      "feil": "slitte bremser, virkningsløs parkeringsbrems, korrosjon i bærearmene og flere andre feil",
+      "utfall": "heving av kjøpet"
+    },
+    "3081": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [
+        "uriktig_service_arbeid_utstyr"
+      ],
+      "begrunnelse": "Utvalget la vekt på at annonsen sa at serviceprogrammet var fulgt etter fabrikkens retningslinjer, noe som ga inntrykk av komplett servicehistorikk, mens servicehistorikken ikke var komplett. Forhandleren hadde ikke dokumentert at de manglende servicene var unødvendige.",
+      "opplyst": "ingenting",
+      "tid": "om lag fem uker etter kjøpet",
+      "feil": "ufullstendig servicehistorikk",
+      "utfall": "prisavslag fastsatt skjønnsmessig"
+    },
+    "3086": {
+      "sporsmal": [
+        "forventning"
+      ],
+      "vekt": [
+        "rapport_upaaregnelig",
+        "slitedel",
+        "avslo_tilbud"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en sakkyndig hadde uttalt at elmotoren og girkassen forventes å ha vesentlig lengre levetid enn bilens alder og kjørelengde, slik at det ikke var påregnelig å måtte skifte dem. Forhandlerens tilbud om å dele reparasjonskostnaden oppfylte ikke lovens krav til avhjelp.",
+      "opplyst": "ingenting",
+      "tid": "om lag ni måneder etter kjøpet",
+      "feil": "ulyd fra lagrene i elmotoren og innvendig feil i reduksjonskassen",
+      "utfall": "heving av kjøpet"
+    },
+    "3105": {
+      "sporsmal": [
+        "forventning"
+      ],
+      "vekt": [
+        "bruksstans_sikkerhet"
+      ],
+      "begrunnelse": "Utvalget la vekt på at sikkerhetsfunksjoner som automatisk nødbrems er en forutsetning for at bilen trygt kan brukes, og at feilen ved disse sammen med lavere kapasitet i høyvoltsbatteriet samlet sett gjorde bilen dårligere enn kjøperen hadde grunn til å forvente, også etter et «som den er»-forbehold.",
+      "opplyst": "som_den_er",
+      "tid": "vel 14 måneder etter kjøpet",
+      "feil": "svikt i høyvoltsbatteriet og sikkerhetsfunksjoner som slo seg av under kjøring",
+      "utfall": "prisavslag fastsatt skjønnsmessig, og erstatning for egenandeler og sakkyndig erklæring"
+    },
+    "3125": {
+      "sporsmal": [
+        "opplysning",
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "uriktig_service_arbeid_utstyr",
+        "rettet_for_kjop",
+        "positiv_beskrivelse"
+      ],
+      "begrunnelse": "Utvalget la vekt på at skaden etter formodningsregelen og en skadetakst om at den oppsto før kjøpet forelå ved leveringen, og at en tidligere kollisjonsskade ikke er slitasje som må påregnes ut fra alder og kilometerstand. For utstyret og dekkene la utvalget vekt på at annonsen listet opp utstyret og lovet «gode dekk», og at et generelt forbehold om feil i annonsen ikke rettet opplysningene på en tydelig måte.",
+      "opplyst": "som_den_er",
+      "tid": "om lag seks uker etter kjøpet",
+      "feil": "tidligere kollisjonsskade foran, manglende annonsert utstyr og slitte vinterdekk",
+      "utfall": "prisavslag satt lik utbedringskostnadene for skaden og det manglende utstyret, skjønnsmessig prisavslag for utstyr som ikke kan ettermonteres, og erstatning for dekk med fradrag for standardheving"
+    },
+    "3127": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [],
+      "begrunnelse": "Utvalget la vekt på at verkstedene hadde dokumentert at bilen var tungstartet og periodisk ikke startet, og at kjøperen klaget på startproblemene tre dager etter kjøpet. Bilen var dermed i dårligere stand enn kjøperen hadde grunn til å forvente, selv om den var solgt «som den er».",
+      "opplyst": "som_den_er",
+      "tid": "tre dager etter kjøpet",
+      "feil": "startproblemer",
+      "utfall": "erstatning for kostnadene til undersøkelse og reparasjon av startproblemene"
+    },
+    "3129": {
+      "sporsmal": [
+        "opplysning",
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "uriktig_service_arbeid_utstyr",
+        "rettet_for_kjop",
+        "bruksstans_sikkerhet"
+      ],
+      "begrunnelse": "Utvalget la vekt på at bilen manglet en funksjon som var særskilt fremhevet i annonsen, uten at opplysningen var rettet før kjøpet, og på at vann i frontlyktene, som etter formodningsregelen forelå ved leveringen, gikk ut over det en kjøper av en fire år gammel bil kunne forvente og gjorde at bilen ikke kunne brukes lovlig.",
+      "opplyst": "ingenting",
+      "tid": "noen dager etter overtakelsen (annonsert utstyr manglet); om lag fire måneder etter kjøpet ved periodisk kjøretøykontroll (vann i frontlyktene)",
+      "feil": "vann og is i frontlyktene, manglende hev- og senkfunksjon som var annonsert, og skadde vinterfelger",
+      "utfall": "heving av kjøpet"
+    },
+    "3141": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [
+        "uriktig_service_arbeid_utstyr"
+      ],
+      "begrunnelse": "Utvalget la vekt på at annonsen sa at registerreimen var skiftet og at det nylig var tatt stor service, mens en test viste at registerreimen var like gammel som bilen og dokumentasjon på den store servicen manglet. Forhandleren var nærmest til å legge frem dokumentasjon på arbeidet.",
+      "opplyst": "ingenting",
+      "tid": "om lag fire måneder etter kjøpet",
+      "feil": "registerreimen var ikke skiftet, og dokumentasjon på stor service manglet",
+      "utfall": "prisavslag fastsatt skjønnsmessig og erstatning for skifte av registerreimen, uten deler kjøperen ikke hadde krav på"
+    },
+    "3143": {
+      "sporsmal": [
+        "opplysning"
+      ],
+      "vekt": [
+        "tidligere_skade_ikke_opplyst",
+        "uriktig_service_arbeid_utstyr"
+      ],
+      "begrunnelse": "Utvalget la vekt på at forhandleren hadde unnlatt å opplyse om at bilen tidligere hadde hatt omfattende skader, og at dokumenter i bilens dokumentmappe ikke var nok til at kjøperen hadde fått denne informasjonen. Utvalget la også vekt på at annonsen uriktig hadde opplyst at service var fulgt opp og at bestemt utstyr fulgte med.",
+      "opplyst": "som_den_er",
+      "tid": "knapt fire uker etter kjøpet",
+      "feil": "tidligere omfattende skader som ikke var opplyst, manglende annonsert utstyr og service som ikke var fulgt",
+      "utfall": "heving av kjøpet på grunn av manglene samlet, og erstatning for utgiftene til NAF-test"
+    },
+    "3165": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "positiv_beskrivelse"
+      ],
+      "begrunnelse": "Utvalget la vekt på at feilene etter formodningsregelen forelå ved leveringen, og at kjøperen, selv med et alminnelig «som den er»-forbehold på en gammel bil med høy kjørelengde, i det minste kunne forvente at utstyret som var oppført i annonsen, fungerte ved overtakelsen. Øvrige feil var normal slitasje eller opplyst før kjøpet.",
+      "opplyst": "som_den_er",
+      "tid": "under én måned etter kjøpet",
+      "feil": "klimaanlegg, hengerfeste, xenonlys og ryggekamera som var oppført i annonsen, virket ikke",
+      "utfall": "prisavslag fastsatt skjønnsmessig ut fra et rimeligere tilbud med brukte deler, og erstatning for utgiftene til NAF-test"
+    },
+    "3170": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "rapport_upaaregnelig",
+        "slitedel"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en sakkyndig hadde funnet en sprekk i tannstangen med materialtretthet eller produksjonsfeil som sannsynlig årsak, og at delen er ment å vare vesentlig lengre. Feilen skyldtes derfor ikke normal slitasje eller forhold etter leveringen.",
+      "opplyst": "ingenting",
+      "tid": "om lag 22 måneder etter kjøpet",
+      "feil": "sprekk i tannstangen i styringen",
+      "utfall": "erstatning for utbedringskostnadene og utgiftene til sakkyndige uttalelser"
+    },
+    "3294": {
+      "sporsmal": [
+        "opplysning",
+        "levering"
+      ],
+      "vekt": [
+        "skjult_feil"
+      ],
+      "begrunnelse": "Utvalget la vekt på at rusten ble oppdaget så kort tid etter leveringen at den sannsynligvis var der ved kjøpet, og at den ikke var lett å oppdage ved en rask undersøkelse. Forhandleren burde som profesjonell part kjenne til rustskadene og opplyse om dem.",
+      "opplyst": "som_den_er",
+      "tid": "dagen etter kjøpet",
+      "feil": "rust rundt skiltlysene på bakluken",
+      "utfall": "prisavslag fastsatt skjønnsmessig"
+    },
+    "3387": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "skjult_feil"
+      ],
+      "begrunnelse": "Utvalget la vekt på at en sakkyndig etter undersøkelse med lupe fant at rustboblene i hovedsak kom fra innsiden, fra en urenhet i platen eller slipp i sinkbelegget, og at et verksted opplyste at slik feil ikke kan oppdages før lakken begynner å boble. Rusten skyldtes derfor mest sannsynlig en latent feil som forelå ved leveringen.",
+      "opplyst": "ingenting",
+      "tid": "i overkant av sju måneder etter kjøpet",
+      "feil": "rustbobler på bakluken fra innsiden av platen",
+      "utfall": "prisavslag satt lik kostnaden ved ny bakluke"
+    },
+    "3470": {
+      "sporsmal": [
+        "forventning",
+        "levering"
+      ],
+      "vekt": [
+        "rapport_arsak",
+        "rapport_upaaregnelig"
+      ],
+      "begrunnelse": "Utvalget la vekt på at det var dokumentert at limet på den originale frontruten hadde løsnet, og at en sakkyndig uttalte at dette var en fabrikasjonsfeil fordi limet ikke skal løsne. På bakgrunn av den vurderingen fant utvalget at feilen forelå ved leveringen, selv om den viste seg drøye to år etter kjøpet.",
+      "opplyst": "ingenting",
+      "tid": "drøye to år etter kjøpet",
+      "feil": "løsnet lim på den originale frontruten som ga vannlekkasje",
+      "utfall": "erstatning for ny frontrute og skjønnsmessig erstatning for rens av taket"
+    }
+  }
+}

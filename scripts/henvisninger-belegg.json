@@ -4,14 +4,26 @@
     "tid": "Klageren kjøpte 08.12.2022 … han 04.02.2023 fikk driftsstans på bilen … oppdaget en ulyd på motoren som kunne være registerkjedet",
     "bil": "Klageren kjøpte 08.12.2022 en bil av merket BMW 316i, årsmodell 2015 … kilometerstanden på kjøpstidspunktet var 136 400",
     "utfall": "Delvis medhold i krav om prisavslag … Prisavslaget settes etter dette til 12 000 kroner.",
-    "krav": "Utvalget finner etter dette at feilen med registerkjedet utgjør en mangel … klageren har krav på prisavslag for disse forholdene"
+    "krav": "Utvalget finner etter dette at feilen med registerkjedet utgjør en mangel … klageren har krav på prisavslag for disse forholdene",
+    "sporsmal": "Utvalget finner etter dette at feilen med registerkjedet utgjør en mangel, jf. fkjl. § 15 første ledd, jf. fkjl. § 16 første ledd bokstav a. … Innklagde har på sin side ikke forelagt utvalget opplysninger eller dokumentasjon på at feilen ikke forelå ved kjøpet av bilen.",
+    "vekt:positiv_beskrivelse": "Klageren har lagt frem salgsannonse og verkstedskontroll før kjøp, som ga en berettiget forventning om at bilen var i god stand.",
+    "vekt:rapport_upaaregnelig": "Det er også lagt frem sakkyndig uttalelse som dokumentasjon på at et registerkjede er forventet å holde ut bilens levetid, og at dette er en kjent feil med bilmodellen.",
+    "vekt:slitedel": "et registerkjede er forventet å holde ut bilens levetid",
+    "vekt:avslo_tilbud": "Av videre dialog går det frem at innklagde kun tilbød å dekke deler av reparasjonskostnadene. … Det er dermed ikke tilbudt retting uten opphold.",
+    "opplyst": "bilen ble solgt med garanti på 12 mnd/200 000 kilometer",
+    "utfallsform": "Skaden er imidlertid dekket av klagerens forsikring … I en slik situasjon kan ikke klageren kreve prisavslag for et beløp ut over egenandelen"
   },
   "465": {
     "feil": "innsprøytningsdysen på sylinder nr. 4 hadde sprengt ut fra feste med den følge at kobber-ring til dysen var delt i to",
     "tid": "Selv om feilen først viste seg ca. to og ett halvt år etter kjøpet",
     "bil": "Den 16.8.2013 kjøpte klageren en 2011-modell Audi Q7 3.0 TDI … Bilens kilometerstand på kjøpstidspunktet var 50 000",
     "utfall": "Klage på motorhavari. Krav om erstatning. Delvis medhold. … Utvalget fastsetter på denne bakgrunn erstatningen skjønnsmessig til kr 40 000,-.",
-    "krav": "Etter det ovennevnte må feilen anses å ha vært tilstede på kjøpstidspunktet … Erstatning kan kreves for tap lidt som følge av mangel ved tingen"
+    "krav": "Etter det ovennevnte må feilen anses å ha vært tilstede på kjøpstidspunktet … Erstatning kan kreves for tap lidt som følge av mangel ved tingen",
+    "sporsmal": "anser utvalget det som mest sannsynlig at feilen med festet til innsprøytningsdysen kan føres tilbake til en feil eller svakhet som forelå ved overleveringen … utgjør forholdet en mangel etter fkjl. § 16 første ledd bokstav a, jf. § 15 annet ledd bokstav b",
+    "vekt:rapport_upaaregnelig": "Utvalget har lagt avgjørende vekt på uttalelsen fra Møller Bil Forus om at feilen ikke er en kjent feil for dem, og at de på bakgrunn av bilens historikk anser dette som en monteringsfeil fra fabrikkens side.",
+    "vekt:rapport_arsak": "legger utvalget til grunn at årsaken til motorhavariet i april 2016 skyldtes at innsprøytningsdysen på sylinder nr. 4 hadde sprengt ut fra feste",
+    "vekt:forhandler_annen_arsak": "Innklagde har anført en rekke årsaker til hvorfor en dieseldyse generelt må byttes, men utvalget kan ikke se at disse er relevante i foreliggende sak. … Utvalget finner heller ikke at det er grunnlag for innklagdes påstand om at feilen skyldes bruk og slitasje.",
+    "utfallsform": "Det må imidlertid gjøres et skjønnsmessig fradrag for den standardheving det medfører å montere en ny dieseldyse i den påklagde bilen."
   },
   "1355": {
     "feil": "store eir-skader på ledningsnettet som følge av vanninntrenging i el-boksen",
@@ -19,21 +31,36 @@
     "bil": "Klageren kjøpte 24.1.2013 en brukt Audi A6 3.0 TDI Q, 2005-modell … Bilen hadde på kjøpstidspunktet gått 118 642 km.",
     "utfall": "KRAV OM PRISAVSLAG OG ERSTATNING. MEDHOLD. … plikter å betale kr 62 562,-",
     "krav": "Innklagde tilpliktes følgelig å betale erstatning likt dette beløpet. … Innklagde plikter således å betale kr 13 051,- i prisavslag til klageren.",
-    "organ": "Forbrukertvistutvalget fatter slikt"
+    "organ": "Forbrukertvistutvalget fatter slikt",
+    "sporsmal": "På grunn av skadens omfang, finner utvalget det sannsynlig at feilen ikke kan ha oppstått i tiden etter kjøpet, og at det derfor er sannsynliggjort at feilen forelå på kjøpstidspunktet. Klageren hadde ikke grunn til å forvente reparasjonskostnader",
+    "vekt:rapport_arsak": "Utvalget legger til grunn som sannsynliggjort at dette skyldtes vanninntrenging i el-boksen i vannfangerrommet, som følge av at bilen var chipet. Det vises til fremlagte verkstedsordrer samt skriftlig uttalelse",
+    "vekt:avslo_tilbud": "Slik utvalget ser det er innklagde avskåret fra å benytte sin utbedringsrett, idet utbedring hverken er tilbudt eller utført i medhold av loven.",
+    "opplyst": "Bilen ble solgt med 6 mnd./6 000 km garanti",
+    "utfallsform": "Innklagde tilpliktes følgelig å betale erstatning likt dette beløpet. … Klageren har dokumentert prisen på skifte av motorstyresentral og motorstyreenhet med faktura"
   },
   "10": {
     "feil": "«Service historikk fulgt» … Opplysningene om bilens servicehistorikk er etter dette uriktige.",
     "tid": "Klageren kjøpte den 03.04.2019 … Klageren opplyser at han oppdaget problemer med bilen 10.06.2020, og at han reklamerte til innklagde samme dag.",
     "bil": "en bruktbil av merket Ford Focus 2011-modell … bilens kilometerstand var på kjøpstidspunktet 138 940",
     "utfall": "Delvis medhold i krav om prisavslag. … Utvalget mener det passende skal settes til kr 10 000 ,-.",
-    "krav": "de uriktige opplysningene utgjør en mangel etter fkjl. § 16 første ledd bokstav c … Det skal etter dette fastsettes prisavslag"
+    "krav": "de uriktige opplysningene utgjør en mangel etter fkjl. § 16 første ledd bokstav c … Det skal etter dette fastsettes prisavslag",
+    "sporsmal": "Feilopplysningene må dermed både antas å ha virket inn på kjøpet, slik at de uriktige opplysningene utgjør en mangel etter fkjl. § 16 første ledd bokstav c",
+    "vekt:uriktig_service_arbeid_utstyr": "Etter utvalgets oppfatning gir opplysningen uttrykk for at bilens serviceintervall var overholdt, og dermed at bilen har komplett servicehistorikk. … Opplysningene om bilens servicehistorikk er etter dette uriktige.",
+    "vekt:rettet_for_kjop": "Innklagde har videre vist til at det ble tatt forbehold om feil i annonseteksten. Et generelt forbehold om feil i annonsen er ikke tilstrekkelig.",
+    "opplyst": "Det fremgår av denne at bilen ble kjøpt med bruktbilgaranti «50/50, 3 mnd, 3000 km».",
+    "utfallsform": "I mangel av konkrete holdepunkter på det verditapet mangelfull servicehistorikk representerer, må prisavslag fastsettes skjønnsmesig."
   },
   "3387": {
     "feil": "utvalget funnet det mest sannsynlig at rustproblemet på bakluken skyldes en latent feil som forelå på leveringstidspunktet",
     "tid": "Klageren har gjort gjeldende at han i overkant av syv måneder etter overtakelsen oppdaget flere rustbobler på bilens bakluke.",
     "bil": "Klageren kjøpte 27.2.2018 en 2012-modell Mazda CX-5 2.2DESport … Bilen hadde ved kjøpet gått 62 600 km.",
     "utfall": "Delvis medhold. … Utvalget finner at et prisavslaget tilsvarende reparasjonskostnaden er passende.",
-    "krav": "Forholdet utgjør dermed en mangel. … Klageren tilkjennes imidlertid et passende prisavslag"
+    "krav": "Forholdet utgjør dermed en mangel. … Klageren tilkjennes imidlertid et passende prisavslag",
+    "sporsmal": "På bakgrunn av dette har utvalget funnet det mest sannsynlig at rustproblemet på bakluken skyldes en latent feil som forelå på leveringstidspunktet. Etter utvalgets syn hadde klageren ikke grunn til å forvente slike rustproblemer så kort tid etter kjøpet.",
+    "vekt:rapport_arsak": "konklusjonen var at hovedtyngden av boblene kom fra innsiden, enten fra en urenhet i platen eller slipp i sinkbelegget",
+    "vekt:skjult_feil": "noe som ikke kan oppdages før det begynner å «boble» i lakken",
+    "opplyst": "Det følger av kjøpekontrakten at bilen er solgt med «BB Garanti 6 mnd/6000 KM",
+    "utfallsform": "Utvalget finner at et prisavslaget tilsvarende reparasjonskostnaden er passende."
   },
   "1905": {
     "feil": "Utvalget legger til grunn at det er dokumentert at det foreligger feil ved girkassens mekatronikk",
@@ -43,28 +70,52 @@
     "krav": "det derfor foreligger en mangel ved bilens girkasse etter fkjl. § 17 første ledd bokstav a",
     "forbehold": "Av kjøpekontrakten fremgår det at bilen ble solgt «som den er».",
     "forhandler": "Kjøp av bruktbil fra forhandler.",
-    "alder": "Klageren har kjøpt en seks år gammel bruktbil med en kilometerstand på 145 000"
+    "alder": "Klageren har kjøpt en seks år gammel bruktbil med en kilometerstand på 145 000",
+    "sporsmal": "Utvalget mener derfor at feilen formodes å ha eksistert ved risikoens overgang. … Utvalget mener derfor at bilen er i dårligere stand enn klageren hadde rimelig grunn til å forvente",
+    "vekt:positiv_beskrivelse": "Utvalget legger imidlertid til grunn at innklagde før kjøpet opplyste at bilen var velholdt og med god servicehistorikk.",
+    "vekt:slitedel": "Klageren har fremlagt dokumentasjon på at mekatronikk ikke er en slitedel",
+    "vekt:rapport_upaaregnelig": "denne feilen mest sannsynlig har vært en iboende svakhet, selv om den ikke ble oppdaget ved tidligere skanning",
+    "opplyst": "Av kjøpekontrakten fremgår det at bilen ble solgt «som den er».",
+    "utfallsform": "Ved utmålingen finner utvalget likevel at det må gjøres et visst fradrag for standardheving som oppnås ved utbedringen."
   },
   "551": {
     "feil": "girkassen på klagerens bil ble ødelagt våren 2016 … årsaken til feilen var at lagrene i fordelerkassen var montert for trangt",
     "tid": "Klageren kjøpte den 13.12.2013 … På grunn av ulyder som oppstod våren 2016",
     "bil": "en 2010-modell Mercedes-Benz GLK Offroad CDI 4Matic … en kilometerstand på 74 064",
     "utfall": "Klage på feil ved girkasse. … Delvis medhold. … Klageren har etter dette krav på erstatning stor kr 39 829,-.",
-    "krav": "Erstatning for utgifter til reparasjon på kr 38 750,- tilkjennes således uavkortet."
+    "krav": "Erstatning for utgifter til reparasjon på kr 38 750,- tilkjennes således uavkortet.",
+    "sporsmal": "Spørsmålet er om årsaken til feilene forelå ved risikoens overgang i desember 2013. … Den påklagde bilen innehar ikke den kvalitet som klageren hadde grunn til å forvente, og det foreligger således en mangel",
+    "vekt:rapport_arsak": "RATS AS har uttalt at årsaken til feilen var at lagrene i fordelerkassen var montert for trangt, og at feilen således var en fabrikasjonsfeil.",
+    "vekt:rapport_upaaregnelig": "Utvalget legger etter dette til grunn at feilene ved girkassen skyldes en feil ved tilvirkningen av den aktuelle bilen, og at de således forelå ved leveringen. Dette kan etter utvalgets syn ikke anses som påregnelig slitasje.",
+    "vekt:forhandler_annen_arsak": "Da innklagde ikke har lagt frem en sakkyndig uttalelse om den konkrete bilen som trekker i en annen retning, finner utvalget å legge vekt på de sakkyndige uttalelsene fra RATS AS som klageren har lagt frem.",
+    "utfallsform": "Utvalget kan ikke se at reparasjonen har medført en standardheving ved bilen, men snarere stilt bilen i kontraktsmessig stand. Erstatning for utgifter til reparasjon på kr 38 750,- tilkjennes således uavkortet."
   },
   "911": {
     "feil": "Klage på vannlekkasje fra frontrute med påfølgende feil på elektrisk anlegg.",
     "tid": "Den 29.1.2015 kjøpte klageren … Den 27.10.2015, ved en kjørelengde på 262 438 kilometer, reklamerte klageren igjen til innklagde.",
     "bil": "Den 29.1.2015 kjøpte klageren en Volvo XC70 2004-modell … kilometerstanden 247 300",
     "utfall": "Krav om heving og erstatning. Delvis medhold. … Hevingsvilkåret er derfor oppfylt",
-    "krav": "Det foreligger således en mangel. … Hevingsvilkåret er derfor oppfylt"
+    "krav": "Det foreligger således en mangel. … Hevingsvilkåret er derfor oppfylt",
+    "sporsmal": "Uavhengig av når fukten i bilen ble oppdaget, mener utvalget klageren har godtgjort at årsaken til vannlekkasjen og de påfølgende funksjonsproblemene var til stede ved risikoens overgang. … må den i lys av beskrivelsen i salgsannonsen anses dårligere enn hva klageren hadde grunn til å forvente. Det foreligger således en mangel.",
+    "vekt:rapport_arsak": "Uttalelsene fra Biltunet Voss AS trekker klart i denne retningen",
+    "vekt:tidlige_tegn": "utvalget bemerker også at klageren beviselig reklamerte på feil med rygge – og tåkelys kun noen uker etter overtakelsen.",
+    "vekt:egen_bruk": "Det er ingen holdepunkter for at det er foretatt arbeider tilknyttet frontruten i klagerens eierperiode eller at hun skal ha utsatt bilen for påvirkninger som har medført denne typen lekkasje.",
+    "vekt:positiv_beskrivelse": "Selv om det ikke kan legges til grunn at innklagde bevisst tilbakeholdt opplysninger om bilens tilstand, må den i lys av beskrivelsen i salgsannonsen anses dårligere enn hva klageren hadde grunn til å forvente.",
+    "vekt:bruksstans_sikkerhet": "Bilen er per i dag ikke kjørbar, og utbedringskostnadene er betydelig sammenlignet med markedsverdien. Hevingsvilkåret er derfor oppfylt",
+    "utfallsform": "Hevingsvilkåret er derfor oppfylt … Fradraget settes i dette tilfellet skjønnsmessig til kr 20 000,-. … Utgiftene til verkstedundersøkelser, kr 1 166,-, er erstatningsberettiget."
   },
   "2510": {
     "feil": "det ble oppdaget feil på sensorene for klimaanlegget den 06.11.2019 … klimaanlegget hadde lekkasjer i ventil og pakninger",
     "tid": "Den 05.10.2017 kjøpte klageren … oppdaget feil på sensorene for klimaanlegget den 06.11.2019",
     "bil": "Den 05.10.2017 kjøpte klageren en Volkswagen E-golf 2015-modell … kilometerstanden var 9 990 ved overleveringen",
     "utfall": "Klage på klimaanlegg. Krav om erstatning, og subsidiært om prisavslag. Medhold. … klageren tilkjennes etter dette erstatning på kr 21 165,-.",
-    "krav": "Etter dette har utvalget kommet frem til at det foreligger kjøpsrettslige mangler"
+    "krav": "Etter dette har utvalget kommet frem til at det foreligger kjøpsrettslige mangler",
+    "sporsmal": "Dette innebærer at hvis det ikke fremstår som mer sannsynlig at årsaken til det påberopte forholdet var til stede på leveringstidspunktet enn senere, vil ikke klagen kunne føre fram. … Klageren hadde derfor grunn til å forvente at bilen var i rimelig god stand.",
+    "vekt:rapport_upaaregnelig": "Etter utvalgets syn er de defekte sensorene og lekkasjen på ventilen og pakningene til klimaanlegget, ikke påregnelig slitasje i foreliggende tilfelle.",
+    "vekt:slitedel": "I forbindelse med lekkasjen på ventilen og pakningene, viser utvalget til uttalelsen av 27.05.2020 fra SPZ Bilverksted AS, og finner det sannsynliggjort at feilen ikke knyttes til en slitasjedel.",
+    "vekt:forhandler_annen_arsak": "Utvalget finner heller ikke holdepunkter for at feilen kan skyldes ytre påvirkninger, slik innklagde anfører.",
+    "opplyst": "Det er ikke fremlagt kjøpekontrakt, men klageren har fremlagt garanti",
+    "utfallsform": "Utvalget finner at klageren har dokumentert et økonomisk tap på kr 21 949,63,- for reparasjon, nødvendig feilsøking i forbindelse med mangelen og fremtidig reparasjon. … det ikke tilkjennes erstatning for utgifter i forbindelse med AC service"
   },
   "3127": {
     "feil": "Klageren reklamerer angående problemer med å få start på bilen tre dager etter kjøpet",
@@ -72,7 +123,10 @@
     "bil": "Klageren kjøpte 23.06.2023 en brukt Toyota Avensis 2011-modell … kjøpet gjelder en 12 år gammel bil med en kilometerstand på 126 269",
     "utfall": "Prinsipalt krav om prisavslag og erstatning. Subsidiært krav om heving og erstatning. Delvis medhold.",
     "krav": "Utvalget finner at kostnadene er påført som følge av mangelen med å få start på bilen. Utvalget tilkjenner etter dette erstatning med 14 287 kroner",
-    "mangel": "Utvalget finner etter dette at bilen er i dårligere stand enn klageren med rimelighet hadde grunn til å forvente"
+    "mangel": "Utvalget finner etter dette at bilen er i dårligere stand enn klageren med rimelighet hadde grunn til å forvente",
+    "sporsmal": "Klageren reklamerer angående problemer med å få start på bilen tre dager etter kjøpet, og at det er snakk om et forbrukerkjøp. Utvalget finner etter dette at bilen er i dårligere stand enn klageren med rimelighet hadde grunn til å forvente",
+    "opplyst": "bilen selges som den er, kun med 6 mnd garanti fra autoconcept",
+    "utfallsform": "Utvalget finner at kostnadene er påført som følge av mangelen med å få start på bilen. … Utvalget tilkjenner etter dette ikke prisavslag."
   },
   "1869": {
     "feil": "forholdet skyldes en elektrisk feil i sensoren som ikke har oppstått som følge av slitasje",
@@ -80,7 +134,11 @@
     "bil": "Klageren kjøpte den 23.09.2021 en Volkswagen Golf 2017-modell … Det fremgår av kjøpekontrakten at bilens kilometerstand var 35 500",
     "utfall": "Prinsipalt krav om prisavslag. Medhold.",
     "krav": "Utvalget finner derfor at klageren har krav på et prisavslag på 11 149 kroner.",
-    "mangel": "Det foreligger følgelig en mangel"
+    "mangel": "Det foreligger følgelig en mangel",
+    "sporsmal": "legger utvalget til grunn som sannsynliggjort at den påberopte feilen skyldes en fabrikasjonsfeil. … Etter utvalgets syn svarer bilen da ikke til det som forbrukeren har grunn til å forvente når det gjelder holdbarhet og andre egenskaper.",
+    "vekt:rapport_upaaregnelig": "feilen ikke er påregnelig på en bil med denne alder og kjørelengde",
+    "vekt:rapport_arsak": "Det er blant annet opplyst at forholdet skyldes en elektrisk feil i sensoren som ikke har oppstått som følge av slitasje",
+    "utfallsform": "Fremlagt pristilbud representerer kostnadene for å utbedre mangelen. Utvalget finner derfor at klageren har krav på et prisavslag"
   },
   "1525": {
     "feil": "feilen med ryggekameraet antas å skylde en intern elektrisk feil inni styringsenheten for kameraet (AVN/Radio)",
@@ -88,14 +146,21 @@
     "bil": "Klageren kjøpte 02.02.2019 en brukt Kia Niro Hybrid Active 2018-modell … I denne er det opplyst at kilometerstanden er 12 000",
     "utfall": "Prinsipalt krav om prisavslag og erstatning. Subsidiært krav om utbedring og erstatning. Medhold.",
     "krav": "Med dette som utgangspunkt fastsettes prisavslaget etter fkjl. § 31 første ledd til kr 45.000",
-    "mangel": "Utvalget finner at bilen er mangelfull, jf. fkjl. § 15."
+    "mangel": "Utvalget finner at bilen er mangelfull, jf. fkjl. § 15.",
+    "sporsmal": "Utvalget finner at bilen er mangelfull, jf. fkjl. § 15. … Slik utvalget ser det tilsier feilens karakter at det heller ikke er brukerfeil eller feil som skyldes eksterne forhold.",
+    "vekt:egen_bruk": "tilsier feilens karakter at det heller ikke er brukerfeil eller feil som skyldes eksterne forhold",
+    "utfallsform": "Slik utvalget vurderer det kan imidlertid feilen fullgodt utbedres ved å installere en brukt elektronisk enhet … Med dette som utgangspunkt fastsettes prisavslaget etter fkjl. § 31 første ledd … tilkjenner erstatning med"
   },
   "3081": {
     "feil": "I salgsannonsen stod det «Bilens serviceprogram er fulgt. … Ettersom servicehistorikken ikke var komplett, anses forholdet som en mangel.",
     "tid": "Klageren kjøpte 31.07.2023 … Det er lagt frem testrapport fra NAF Senter Skien datert 08.09.2023",
     "bil": "Klageren kjøpte 31.07.2023 en bil av merket Volvo V60 … bilen var kjørt 35 000 kilometer på kjøpstidspunktet … Bilen var ny i 2018",
     "utfall": "Krav om prisavslag. Erstatnings- og rentekrav. Delvis medhold.",
-    "krav": "Utvalget finner at et prisavslag på 7000 kroner er passende."
+    "krav": "Utvalget finner at et prisavslag på 7000 kroner er passende.",
+    "sporsmal": "Utvalget er av den oppfatning at forholdet utgjør en kjøpsrettslig mangel, jf. fkjl. § 16 første ledd bokstav c.",
+    "vekt:uriktig_service_arbeid_utstyr": "I salgsannonsen stod det «Bilens serviceprogram er fulgt. Det er tatt servicer på bilen i henhold til fabrikkens retningslinjer». … Ettersom servicehistorikken ikke var komplett, anses forholdet som en mangel.",
+    "opplyst": "Kontrakten er lagt frem og det går frem av denne at bilen var kjørt 35 000 kilometer på kjøpstidspunktet.",
+    "utfallsform": "I mangel av ytterligere dokumentasjon på verditapet som mangelfull servicehistorikk representerer, finner utvalget at prisavslaget må fastsettes skjønnsmessig."
   },
   "1941": {
     "feil": "Ettersom servicehistorikken ikke var gjort i henhold til fabrikkens serviceintervaller, anses forholdet som en mangel.",
@@ -103,7 +168,11 @@
     "bil": "Klageren kjøpte den 24.02.2018 en brukt Volkswagen E-golf 2016-modell av innklagde for 214 900 kroner. Bilen var gått 66 850 km",
     "utfall": "Krav om prisavslag og erstatning. Delvis medhold.",
     "krav": "Prisavslaget settes passende til 5 000 kroner.",
-    "annonse": "Klageren har fremlagt salgsannonsen hvor det står at bilen selges med «Vedlikehold Servicehistorikk»"
+    "annonse": "Klageren har fremlagt salgsannonsen hvor det står at bilen selges med «Vedlikehold Servicehistorikk»",
+    "sporsmal": "Angående opplysninger om servicehistorikk, finner utvalget at forholdet utgjør en mangel.",
+    "vekt:uriktig_service_arbeid_utstyr": "legger til grunn at «Servicehistorikk» må forstås som at bilens serviceintervaller er overholdt. Ettersom servicehistorikken ikke var gjort i henhold til fabrikkens serviceintervaller, anses forholdet som en mangel.",
+    "opplyst": "Bilen er ikke solgt med et «som den er»-forbehold.",
+    "utfallsform": "I mangel på dokumentasjon av verditapet som feilaktig opplysninger om servicehistorikk utgjør, finner utvalget at prisavslaget må fastsettes skjønnsmessig."
   },
   "2102": {
     "feil": "«For stor korrosjon i rammebjelke, venstre foran» og «For stor korrosjon i bærende element, begge innerskjermer foran»",
@@ -111,7 +180,12 @@
     "bil": "Klageren kjøpte den 09.01.2019 en Mitsubishi Pajero, 2002-modell … bilen hadde gått 233 000 kilometer på kjøpstidspunktet",
     "utfall": "Krav om heving og erstatning, subsidiært prisavslag og erstatning. Delvis medhold.",
     "krav": "Forholdene er ikke uvesentlige, og det er dermed grunnlag for å heve kjøpet, jf. fkjl. § 32.",
-    "mangel": "fremstår det overveiende sannsynlig både at skummet og rusten var til stede på bilen ved overtagelsen"
+    "mangel": "fremstår det overveiende sannsynlig både at skummet og rusten var til stede på bilen ved overtagelsen",
+    "sporsmal": "fremstår det overveiende sannsynlig både at skummet og rusten var til stede på bilen ved overtagelsen … går omfanget som her oppdaget betydelig ut over hva klageren har grunn til å forvente",
+    "vekt:tidligere_skade_ikke_opplyst": "Utvalget viser både til omfanget av problemer, det forhold at skum var overmalt, bilens historikk som bekreftes av tidligere eier av bilen mv.",
+    "opplyst": "Bilen ble ikke solgt med et «som den er»-forbehold.",
+    "utfallsform": "Forholdene er ikke uvesentlige, og det er dermed grunnlag for å heve kjøpet, jf. fkjl. § 32.",
+    "vekt:rust_baerende": "For stor korrosjon i rammebjelke, venstre foran … For stor korrosjon i bærende element, begge innerskjermer foran … Utvalget viser både til omfanget av problemer"
   },
   "1600": {
     "feil": "den 17.04.2023 løsnet drivakslingen og slo hull i girkassen, samt at drivknuten ble ødelagt",
@@ -119,7 +193,12 @@
     "bil": "Klageren kjøpte en Volkswagen Golf 2010-modell av innklagde for 79 000 kroner den 18.01.2023. Kilometerstanden var 97 000 på kjøpstidspunktet.",
     "utfall": "Atter subsidiært krav om utbedring og erstatning. Delvis medhold.",
     "krav": "Skifte av girkasse og drivaksel vil normalt utgjør en stor del av kjøpesummen, og vesentlighetskravet for å kunne kreve heving anses derfor oppfylt.",
-    "mangel": "Utvalget finner ikke at unntakene i formodningsregelen er anvendelige i denne saken, og legger til grunn at feilene eksisterte ved risikoens overgang."
+    "mangel": "Utvalget finner ikke at unntakene i formodningsregelen er anvendelige i denne saken, og legger til grunn at feilene eksisterte ved risikoens overgang.",
+    "sporsmal": "Utvalget finner ikke at unntakene i formodningsregelen er anvendelige i denne saken, og legger til grunn at feilene eksisterte ved risikoens overgang. … Feilene går ut over hva klageren måtte regne med ved kjøp av en bil som denne",
+    "vekt:slitedel": "Utvalget legger til grunn at drivaksel ikke er en typisk slitedel som det er påregnelig å måtte bytte ved denne kilometerstanden.",
+    "vekt:rapport_arsak": "Ifølge den sakkyndige rapporten har boltene løsnet og falt ut over tid.",
+    "opplyst": "Kilometerstanden var 97 000 på kjøpstidspunktet.",
+    "utfallsform": "Skifte av girkasse og drivaksel vil normalt utgjør en stor del av kjøpesummen, og vesentlighetskravet for å kunne kreve heving anses derfor oppfylt."
   },
   "3129": {
     "feil": "svakt og feil lysbilde på grunn av vann og is på innsiden av begge hovedlykter foran",
@@ -128,7 +207,13 @@
     "utfall": "Krav om heving og erstatning. Medhold.",
     "krav": "mangelen knyttet til frontlyktene har medført at bilen ikke er har vært lovlig å benytte uten utbedring",
     "heving": "utvalget er kommet til at allerede påviste mangler utgjør en ikke «uvesentlig mangel» som innebærer at hevingsvilkåret er oppfylt",
-    "mangel": "Når det gjelder feilen med frontlyktene, finner utvalget at forholdet utgjør en mangel."
+    "mangel": "Når det gjelder feilen med frontlyktene, finner utvalget at forholdet utgjør en mangel.",
+    "sporsmal": "Bilen samsvarer således ikke med selgers markedsføring. … Innklagde har ikke bevist at de aktuelle feilene har oppstått senere av årsaker som ikke har sammenheng med tilstanden på leveringstidspunktet … En kjøper av en fire år gammel bruktbil må kunne forvente at hovedlyktene er tette og fungerer som de skal",
+    "vekt:uriktig_service_arbeid_utstyr": "Innklagde har opplyst om at bilen har hev/senk-funksjon og har valgt å fremheve funksjonen som et særskilt attraktivt og salgsfremmende element.",
+    "vekt:rettet_for_kjop": "Den uriktige opplysningen ble ikke rettet før kjøpet. At innklagde har tatt et generelt forbehold om feil i annonsen kan ikke tillegges avgjørende betydning.",
+    "vekt:bruksstans_sikkerhet": "Videre at mangelen knyttet til frontlyktene har medført at bilen ikke er har vært lovlig å benytte uten utbedring, og at klageren derfor har måttet la bilen stå.",
+    "opplyst": "I avtalen inkluderes en utleveringssjekk. Bilen besiktiges og prøvekjøres ved henting.",
+    "utfallsform": "utvalget er kommet til at allerede påviste mangler utgjør en ikke «uvesentlig mangel» som innebærer at hevingsvilkåret er oppfylt i henhold til fkjl. § 32."
   },
   "3470": {
     "feil": "Det er dokumentert at limet som fester frontruta på klagerens bil har løsnet og forårsaket lekkasje drøye to år etter kjøpet",
@@ -136,7 +221,11 @@
     "bil": "Klageren kjøpte 19.04.2016 en 2012-modell Audi A1 … Bilen hadde gått 57 000 kilometer på kjøpstidspunktet.",
     "utfall": "Klage på lekk frontrute. Krav om erstatning og renter. Delvis medhold.",
     "krav": "Klageren tilkjennes etter dette totalt kr 8 548,- i erstatning.",
-    "mangel": "Frontruta var original, og NAF uttaler at dette er en fabrikasjonsfeil, da limet ikke skal løsne."
+    "mangel": "Frontruta var original, og NAF uttaler at dette er en fabrikasjonsfeil, da limet ikke skal løsne.",
+    "sporsmal": "På bakgrunn av NAFs vurdering finner utvalget at feilen forelå ved leveringen, og bilen ikke svarer til det klageren hadde grunn til å forvente.",
+    "vekt:rapport_arsak": "Det er dokumentert at limet som fester frontruta på klagerens bil har løsnet og forårsaket lekkasje drøye to år etter kjøpet",
+    "vekt:rapport_upaaregnelig": "Frontruta var original, og NAF uttaler at dette er en fabrikasjonsfeil, da limet ikke skal løsne.",
+    "utfallsform": "Hun har dokumentert utlegg til ny frontrute. … i mangel av dokumentert betaling må erstatningsbeløpet settes noe ned, skjønnsmessig til kr 2 000,-."
   },
   "3125": {
     "feil": "Indikasjon på tidligere skade. Venstre side foran da nedre tverrbjelke til motorfeste er bøyd … som de opplyser er skadetakst for kollisjonsskade",
@@ -144,7 +233,14 @@
     "bil": "Klagerne kjøpte 10.10.2023 en bil av merket Toyota Auris … Bilens årsmodell var 2016, og den var gått 171 000 kilometer på kjøpstidspunktet",
     "utfall": "Krav om prisavslag og erstatning. Delvis medhold i begge krav.",
     "krav": "Klagerne har dokumentert kostnaden ved å utbedre skaden, og prisavslaget settes derfor til 21 976 kroner.",
-    "mangel": "Utvalget legger etter dette til grunn at forholdet utgjør en mangel, jf. fkjl. § 17 første ledd bokstav a."
+    "mangel": "Utvalget legger etter dette til grunn at forholdet utgjør en mangel, jf. fkjl. § 17 første ledd bokstav a.",
+    "sporsmal": "Utvalget finner etter dette at selgeren ikke har vist at feil i opplysningene er rettet på en tydelig måte før salget, og det manglende utstyret utgjør en mangel … Utvalget vurderer det derfor som sannsynliggjort at forholdet må ha oppstått før levering. … Det er dermed ikke snakk om slitasje eller andre forhold ved bilen som kan anses påregnelig sett hen til bilens alder og kilometerstand.",
+    "vekt:rapport_arsak": "Klagerne har vist til skadetakst hvor det er slått fast at «Dette er en skade som har oppstått før kunde kjøpte bilen». Utvalget vurderer det derfor som sannsynliggjort at forholdet må ha oppstått før levering.",
+    "vekt:uriktig_service_arbeid_utstyr": "Under punktet «Utstyr» er det listet opp utstyr som skulle følge med bilen, blant annet … Innklagde har ikke lagt frem dokumentasjon som viser at det ble tydeliggjort overfor klagerne hvilket utstyr som manglet, da kjøpsavtalen ble inngått.",
+    "vekt:rettet_for_kjop": "Et generelt forbehold om at det kan være feil i Finn-annonsen, slik det står i utleveringsskjemaet, er ikke tilstrekkelig for å legge til grunn at feilen er rettet på en tydelig måte.",
+    "vekt:positiv_beskrivelse": "Utvalget finner at dette ikke kan anses å være «gode dekk», slik som annonsert.",
+    "opplyst": "Det går frem av kontrakten at bilen ble solgt med 6 mnd / 300 000 km bruktbilgaranti og «som den står».",
+    "utfallsform": "Klagerne har dokumentert kostnaden ved å utbedre skaden, og prisavslaget settes derfor til 21 976 kroner. … Det må derfor foretas en avkortning som følge av den standardhevingen klagerne oppnår ved oppgradering fra brukte til nye dekk."
   },
   "2486": {
     "feil": "Det fremgår av NAF Garantiutløpstest den 17.09.2019 at bilen var tidligere skadet og delvis omlakkert.",
@@ -152,7 +248,10 @@
     "bil": "Klageren kjøpte den 19.06.2017 en Volvo XC60 D4 Summum, 2015 – modell … hadde bilen på dette tidspunktet gått 49 600 kilometer",
     "utfall": "Klage på tilbakeholdte opplysninger om tidligere skade og omlakkering. Krav om prisavslag. Medhold.",
     "krav": "må prisavslaget derfor fastsettes skjønnsmessig og finner at dette passende kan settes til kr 25 000,– i tråd med klagerens krav",
-    "mangel": "Det foreligger således en mangel etter fkjl. § 16 første ledd, bokstav b."
+    "mangel": "Det foreligger således en mangel etter fkjl. § 16 første ledd, bokstav b.",
+    "sporsmal": "Spørsmålet for utvalget er således om opplysninger om den tidligere skaden er opplysninger klageren «hadde grunn til å regne med å få» og som «kan antas å ha virket inn på kjøpet.».",
+    "vekt:tidligere_skade_ikke_opplyst": "Det er uomtvistet at bilen har vært utsatt for en skade, og slik saken er opplyst finner utvalget det heller ikke tvilsomt at innklagde burde kjenne til denne. … I dette tilfellet kjøpte klageren en bil som var to år gammel til en relativt høy pris. Klageren måtte kunne regne med å få opplysninger om forhold som går utover normal og påregnelig bruksslitasje.",
+    "utfallsform": "I mangel av dokumentasjon, må prisavslaget derfor fastsettes skjønnsmessig"
   },
   "3086": {
     "feil": "FUNNET ULYD/DEFEKT EL MOTOR … NY EL MOTOR OG GIRKASSE MÅ SKIFTES",
@@ -161,7 +260,13 @@
     "bil": "Klageren kjøpte 22.08.2022 en brukt Renault Twizy 2017-modell … I denne er bilens kilometerstand oppgitt til å være 2079.",
     "utfall": "Subsidiært krav om prisavslag og erstatning. Medhold. … plikter å betale 63 000 – sekstitretusen – kroner",
     "krav": "Utvalget finner at vilkårene for heving etter fkjl. § 32 er oppfylt",
-    "mangel": "Utvalget finner etter dette at bilen er mangelfull etter fkjl. § 15 første ledd."
+    "mangel": "Utvalget finner etter dette at bilen er mangelfull etter fkjl. § 15 første ledd.",
+    "sporsmal": "Ifølge uttalelsen fra NAF er dette komponenter i bilen som forventes å ha en vesentlig lengre levetid … Utvalget finner etter dette at bilen er mangelfull etter fkjl. § 15 første ledd.",
+    "vekt:rapport_upaaregnelig": "det er som følge av dette ikke påregnelig å skifte disse komponentene sett hen til bilens alder og kilometerstand",
+    "vekt:slitedel": "komponenter i bilen som forventes å ha en vesentlig lengre levetid enn 7 år og 7 000 kjørte kilometer",
+    "vekt:avslo_tilbud": "innklagde har tilbudt klageren en form for avhjelp ved at partene skulle dele reparasjonskostnaden 50/50 … Utvalget finner imidlertid ikke at dette tilbudet tilfredsstiller lovens krav til avhjelp etter fkjl. § 30.",
+    "opplyst": "Det står også i kjøpekontrakten at bilen ble solgt med 3 måneder/ 3 000 kilometers garanti.",
+    "utfallsform": "Utvalget finner at vilkårene for heving etter fkjl. § 32 er oppfylt og viser til at reparasjonskostnaden nærmer seg nesten hele bilens kjøpesum."
   },
   "3053": {
     "feil": "Utvalget finner at feil med det elektriske systemet, er et forhold som innklagde som profesjonell bilforhandler, burde kjenne til",
@@ -169,7 +274,13 @@
     "bil": "Klageren kjøpte den 15.11.2022 en bruktbil av innklagde av merket Nissan X-trail. … Årsmodellen til bilen er en 2006-modell.",
     "km": "Videre fremgår det av kjøpekontrakten at bilen hadde kjørt 205 000 kilometer på kjøpstidspunktet.",
     "utfall": "Delvis medhold. … plikter å betale kroner kr 81 729 … plikter å betale kroner 10 876 – titusenåttehundresyttiseks – kroner",
-    "krav": "Utvalget vurderer saken slik at vilkåret for å heve er oppfylt, fkjl. § 32."
+    "krav": "Utvalget vurderer saken slik at vilkåret for å heve er oppfylt, fkjl. § 32.",
+    "sporsmal": "Utvalget forstår uttalelsen slik at det før klagerens eiertid har vært utført arbeid på bilen. … Utvalget finner at feil med auto-radar-sensor er et forhold som innklagde som profesjonell bilforhandler, burde kjenne til, jf. fkjl. § 16 første ledd bokstav b.",
+    "vekt:tidligere_skade_ikke_opplyst": "Tukling med bilens elektriske system, spesielt ledningene, tyder på at tidligere reparasjoner ikke har blitt utført profesjonelt … Utvalget forstår uttalelsen slik at det før klagerens eiertid har vært utført arbeid på bilen.",
+    "vekt:rapport_arsak": "Den sakkyndige konstaterer at noen av ledningene til sensorene var kuttet og loddet på igjen, noe som forårsaket uventede avvik i systemet.",
+    "vekt:dokument_for_salg": "Har kontrollert kvitteringer på tidligere utført arbeide på bil som kunde har tatt med. Ser at turbotrykksproblemer har vært en gjenganger … Utvalget finner på denne bakgrunn at feil med turbotrykk er et forhold som innklagde som profesjonell bilforhandler, burde kjenne til",
+    "opplyst": "Det fremgår av kjøpekontrakten at bilen er solgt «som den er».",
+    "utfallsform": "Utvalget vurderer saken slik at vilkåret for å heve er oppfylt, fkjl. § 32. … Utgifter klageren har pådratt seg til reparasjoner og sakkyndig uttalelse i tilknytning til de nevnte"
   },
   "3067": {
     "feil": "deriblant feil knyttet til bremsebelegg, bremseskiver og parkeringsbrems, i tillegg til feil med vindusheis, klimaanlegg, hjullager og bærearmer.",
@@ -178,7 +289,11 @@
     "bil": "Klageren kjøpte den 02.06.2023 en Nissan Qashqai 2009 - modell … og kilometerstand på 178 800 for 59 729 kroner.",
     "utfall": "Klageren har etter dette fått medhold i sitt krav.",
     "krav": "Heving av kjøpet krever at mangelen ikke er uvesentlig, jf. fkjl. § 32, og utvalget finner at vilkårene for heving er oppfylt.",
-    "mangel": "Utvalget mener på denne bakgrunn at innklagde har brutt sin opplysningsplikt og at det således foreligger en kjøpsrettslig mangel."
+    "mangel": "Utvalget mener på denne bakgrunn at innklagde har brutt sin opplysningsplikt og at det således foreligger en kjøpsrettslig mangel.",
+    "sporsmal": "Innklagde har ikke fremlagt dokumentasjon som sannsynliggjør at skadene har oppstått etter overtakelse. … Utvalget mener på denne bakgrunn at innklagde har brutt sin opplysningsplikt og at det således foreligger en kjøpsrettslig mangel.",
+    "vekt:bruksstans_sikkerhet": "Det vises til at det er NAF-testen viser at det foreligger mange feil med bilen, og at den dessuten er trafikkfarlig.",
+    "opplyst": "Videre fremgår det av kjøpekontrakten at bilen «selges som forevist»",
+    "utfallsform": "Heving av kjøpet krever at mangelen ikke er uvesentlig, jf. fkjl. § 32, og utvalget finner at vilkårene for heving er oppfylt."
   },
   "3141": {
     "feil": "Alle serviser er tatt og regreim skiftet på 117000km og nylig tatt stor servise",
@@ -187,7 +302,11 @@
     "bil": "den 05.07.2023 kjøpte en bruktbil av typen Volkswagen Tiguan 2013-modell … bilens kilometerstand var 126 000",
     "utfall": "Krav om prisavslag og erstatning. Delvis medhold. … 22 315 – tjuetotusentrehundreogfemten – kroner",
     "krav": "finner utvalget at prisavslaget passende kan settes til 8 000 kroner … Klageren tilkjennes etter dette erstatning på 10 000 kroner for mangelen knyttet til registerreim.",
-    "mangel": "Manglende oversendelse av dokumentasjon på service er følgelig ikke i samsvar med de krav … legger utvalget til grunn at registerreim ikke er blitt skiftet på bilen"
+    "mangel": "Manglende oversendelse av dokumentasjon på service er følgelig ikke i samsvar med de krav … legger utvalget til grunn at registerreim ikke er blitt skiftet på bilen",
+    "sporsmal": "I henhold til salgsannonsen ble registerreim skiftet da bilens kilometerstand var på 117 000 kilometer. … Bilen er dermed ikke i samsvar med de krav som følger av avtalen, og forholdet utgjør en mangel etter fkjl. § 16 første ledd, jf. § 15 første ledd.",
+    "vekt:uriktig_service_arbeid_utstyr": "legger utvalget til grunn at registerreim ikke er blitt skiftet på bilen … Utvalget legger etter dette til grunn at det ikke er fremlagt dokumentasjon på «storservice» slik bilen ble annonsert med",
+    "opplyst": "«50/50 garanti motor/girkasse, 3 mnd, 3000 km»",
+    "utfallsform": "Prisavslaget må derfor fastsettes skjønnsmessig. … Klageren har imidlertid ikke krav på en helt ny registerreim med vannpumpe og dynamoreim i henhold til avtalen."
   },
   "3294": {
     "feil": "oppdaget han «rust rundt skiltlysene, høyre skiltlys er det begynt å vokse ut i lakken og venstre side er det bobler.»",
@@ -195,7 +314,11 @@
     "reklamasjon": "Klageren fremsatte skriftlig reklamasjon overfor innklagde 20.9.2018",
     "bil": "Klageren kjøpte 15.9.2018 en 2015-modell Skoda Superb, med registreringsnummer … og kilometerstand på 136 500",
     "utfall": "Prinsipalt krav om prisavslag, subsidiært utbedring. Delvis medhold. … Utvalget har skjønnsmessig fastsatt prisavslaget til kr 10 000,-.",
-    "krav": "Forholdet utgjør dermed en mangel, jf. fkjl. § 16 første ledd bokstav b."
+    "krav": "Forholdet utgjør dermed en mangel, jf. fkjl. § 16 første ledd bokstav b.",
+    "sporsmal": "Sett hen til den korte tiden fra leveringen til rusten ble oppdaget, er det sannsynlig at rustskadene forelå på leveringstidspunkt. … Forholdet utgjør dermed en mangel, jf. fkjl. § 16 første ledd bokstav b.",
+    "vekt:skjult_feil": "Selv om klageren etter det opplyste undersøkte bilen før kjøpet, er utvalget av den oppfatning at rust rundt skiltlysene ikke er lett å oppdage ved en rask undersøkelse før overlevering.",
+    "opplyst": "Det følger av kjøpekontrakten at bilen er solgt «som den er»",
+    "utfallsform": "Prisen for skifte av bakluka er ikke dokumentert. Prisavslaget må derfor fastsettes skjønnsmessig."
   },
   "606": {
     "feil": "hvor det ble funnet rust på panser, venstre bakskjerm, taket ved 4 takreilfester",
@@ -203,7 +326,11 @@
     "reklamasjon": "Klageren reklamerte per epost den 10.2.2016 med krav om kostnadsfri utbedring.",
     "bil": "inngikk den 23.1.2013 kontrakt med innklagde om kjøp av en 2010-modell Volkswagen Passat stasjonsvogn … og en kilometerstand på 42 855",
     "utfall": "Delvis medhold. … Dette utgjør kr 82 650,- til sammen, som klageren tilkjennes i prisavslag.",
-    "krav": "Bilen er således mangelfull, jf. fkjl. § 16 første ledd, bokstav a), § 15 andre ledd, bokstav b)."
+    "krav": "Bilen er således mangelfull, jf. fkjl. § 16 første ledd, bokstav a), § 15 andre ledd, bokstav b).",
+    "sporsmal": "finner utvalget det mer sannsynlig at rustskadene skyldes en iboende svakhet ved bilen som forelå ved risikoens overgang, enn at det er forhold på klagerens side som er årsaken … finner utvalget at bilen ikke svarer til det klageren hadde grunn til å forvente",
+    "vekt:rapport_upaaregnelig": "kan ikke skadene sies å skyldes ytre påvirkning, og er å betrakte som unormale sett i forhold til alder og kjørelengde … samt det forhold at rusten av sakkyndig anses «unormal» i forhold til alder og kjørelengde",
+    "opplyst": "I salgsannonsen gikk det frem at bilen «fremstår som meget flott og velholdt»",
+    "utfallsform": "Utvalget finner det naturlig at prisavslaget fastsettes i tråd med utbedringskostnadene."
   },
   "2316": {
     "feil": "mye spon i giroljen som betydde unormal slitasje på lager/drev innvendig i girkassen, og ulyd fra clutch ved betjening/giring",
@@ -211,7 +338,13 @@
     "bil": "Klager kjøpte 08.05.2019 en brukt Fiat Scudo 2012-modell … samt at kilometerstanden var 94 000",
     "utfall": "Krav om heving, erstatning, prisavslag og renter. Medhold. … plikter å betale kr 82 950,-",
     "krav": "Utvalget finner at mangelen ikke er uvesentlig, jf. fkjl. § 32",
-    "mangel": "finner det sannsynliggjort at det foreligger en kjøpsrettslig mangel ved bilen i form av spon i giroljen og ulyd fra clutch"
+    "mangel": "finner det sannsynliggjort at det foreligger en kjøpsrettslig mangel ved bilen i form av spon i giroljen og ulyd fra clutch",
+    "sporsmal": "finner det sannsynliggjort at det foreligger en kjøpsrettslig mangel ved bilen i form av spon i giroljen og ulyd fra clutch og at bilen var i dårligere stand enn kjøperen hadde rimelig grunn til å forvente … som det derfor var mest sannsynlig at hadde begynt allerede før kjøpet",
+    "vekt:rapport_upaaregnelig": "Utvalget viser til at det fremgår av dokumentasjonen at det var snakk om unormal slitasje på deler som ved normalt vedlikehold og bruk hadde vesentlig lengre levetid",
+    "vekt:slitedel": "deler som ved normalt vedlikehold og bruk hadde vesentlig lengre levetid",
+    "vekt:bruksstans_sikkerhet": "girkasse og clutch er komponenter som er nødvendige for at bilen skal fungere",
+    "opplyst": "Utvalget legger etter dette til grunn at opplysningen i kontrakten må forstås som at bilen ble solgt «som den er» eller med lignende forbehold",
+    "utfallsform": "Utvalget finner at mangelen ikke er uvesentlig, jf. fkjl. § 32 … Utvalget tilkjenner etter dette erstatning"
   },
   "1916": {
     "feil": "Feilsøkt vannlekkasje, funnet at limfuge bommer på karosseri. … feil med det elektriske anlegget på grunn av vannlekkasje var utenfor det en forbruker med rimelighet kan forvente",
@@ -219,7 +352,12 @@
     "reklamasjon": "Klageren reklamerte på feilene i e-post av 06.10.2021",
     "bil": "Klageren kjøpte den 12.04.2021 en Ford Transit Custom 2013-modell … Kilometerstanden på bilen var 118 000",
     "utfall": "Klage på vannlekkasje og feil på det elektriske anlegget. Krav om erstatning. Delvis medhold.",
-    "krav": "Klageren har fremlagt faktura på utbedringer av det elektriske anlegget som følge av mangelen av 13.10.2021, og tilkjennes følgelig erstatning på 17 364 kroner."
+    "krav": "Klageren har fremlagt faktura på utbedringer av det elektriske anlegget som følge av mangelen av 13.10.2021, og tilkjennes følgelig erstatning på 17 364 kroner.",
+    "sporsmal": "I den foreliggende sak, finner utvalget at feilen må antas å foreligge ved leveringstidspunktet, jf. fkjl. § 18 andre ledd. … I foreliggende sak, finner imidlertid utvalget det sannsynliggjort at feil med det elektriske anlegget på grunn av vannlekkasje var utenfor det en forbruker med rimelighet kan forvente.",
+    "vekt:rapport_arsak": "Da klageren har fremlagt dokumentasjon som sannsynliggjør årsakssammenheng med feilmontering av uoriginal frontrute, vannlekkasje og elektrisk feil, er dette utenfor hva klageren kan forvente.",
+    "vekt:tidligere_skade_ikke_opplyst": "Når det ikke er opplyst noe annet, må det kunne forventes at tidligere reparasjoner er utført på en tilfredsstillende måte.",
+    "vekt:forhandler_annen_arsak": "Selv om innklagde har påberopt at en slik feil ville vist seg mye tidligere, har ikke innklagde sannsynliggjort sin anførsel.",
+    "utfallsform": "Klageren har fremlagt faktura på utbedringer av det elektriske anlegget som følge av mangelen av 13.10.2021, og tilkjennes følgelig erstatning på 17 364 kroner."
   },
   "1566": {
     "feil": "Klageren oppdaget 13.05.2023 etter en lengre kjøretur at AC-kompressor ikke virket.",
@@ -227,7 +365,13 @@
     "bil": "Klageren kjøpte 23.03.2023 en Volkswagen Caddy Maxi 2017-modell … bilen ble solgt med en kilometerstand på 109 600",
     "utfall": "Rentekrav. Delvis medhold. … Dette utgjør til sammen 34 336 kroner, og klageren tilkjennes dette beløpet i erstatning.",
     "krav": "Klageren har dokumentert kostnader på … 14 210 kroner for skifte av AC-kompressor",
-    "mangel": "Når det gjelder feil med klimaanlegg og hull i bunnpanne med oljelekkasje, så finner utvalget det sannsynliggjort at dette er feil som allerede forelå før kjøp"
+    "mangel": "Når det gjelder feil med klimaanlegg og hull i bunnpanne med oljelekkasje, så finner utvalget det sannsynliggjort at dette er feil som allerede forelå før kjøp",
+    "sporsmal": "Utvalget finner ikke at unntakene i formodningsregelen er anvendelige i denne saken, og legger til grunn at feilene eksisterte ved risikoens overgang. … registerreim hele 99 500 km tidligere enn intervall, finner utvalget at feilen utgjør en mangel. … Disse feil burde klageren fått opplysninger om, og feilene utgjør dermed en mangel, jf. fkjl. § 16 første ledd bokstav b.",
+    "vekt:dokument_for_salg": "Når det gjelder feil med klimaanlegg og hull i bunnpanne med oljelekkasje, så finner utvalget det sannsynliggjort at dette er feil som allerede forelå før kjøp og som var bemerket på tilstandsrapporten.",
+    "vekt:slitedel": "Anbefalt bytteintervall, og således normal levetid, på registerreim og vannpumpe er opplyst å være 210 000 km. I dette tilfellet hadde bilen kjørt 110 500 km",
+    "vekt:egen_bruk": "det er ingen konkrete holdepunkter for at lekkasjen fra vannpumpen oppstod som følge av forhold på klagerens side.",
+    "opplyst": "bilen selges «som den er».",
+    "utfallsform": "manglene kan avhjelpes ved å tilkjenne klageren erstatning for de utbedringer som er foretatt."
   },
   "3143": {
     "feil": "Utvalget finner at bilen er mangelfull idet innklagde har forsømt å opplyse om at bilen tidligere har hatt omfattende skader",
@@ -236,7 +380,12 @@
     "bil": "Klageren kjøpte 11.10.2023 en brukt Nissan Leaf 2015-modell … Bilens kilometerstand er i kjøpekontrakten oppgitt å være 68 800.",
     "utfall": "Prinsipalt krav om heving og erstatning. Subsidiært krav om prisavslag og erstatning. Medhold. … Utvalget finner at vilkårene for heving er oppfylt etter fkjl. § 32.",
     "krav": "tilkjenner erstatning med 2 710 kroner i henhold til fremlagt kvittering. … plikter å betale 81 000 – åttientusen – kroner",
-    "heving": "Utvalget finner at vilkårene for heving er oppfylt etter fkjl. § 32. Utvalget viser til manglene samlet sett, og at manglene ikke vil tilstrekkelig avhjelpes med et prisavslag."
+    "heving": "Utvalget finner at vilkårene for heving er oppfylt etter fkjl. § 32. Utvalget viser til manglene samlet sett, og at manglene ikke vil tilstrekkelig avhjelpes med et prisavslag.",
+    "sporsmal": "Utvalget finner at bilen er mangelfull idet innklagde har forsømt å opplyse om at bilen tidligere har hatt omfattende skader, jf. fkjl. § 16 første ledd bokstav b … Utvalget finner også at bilen er mangelfull etter fkjl. § 16 første ledd bokstav c.",
+    "vekt:tidligere_skade_ikke_opplyst": "opplysninger om tidligere omfattende skader er en opplysning kjøperen må regne med å få. At opplysningene om skadene lå i dokumentmappa i bilen er ikke tilstrekkelig til at klageren kan anses å ha fått informasjon om dette.",
+    "vekt:uriktig_service_arbeid_utstyr": "Utvalget viser til at det i salgsannonsen er opplyst «fulgt opp service» og at DAB-radio, adaptiv cruisecontrol, parkeringssensor foran og bak, fjernlysassistent og elektriske speil medfulgte bilen.",
+    "opplyst": "I denne er det under punktet «Tilstandsrapport» krysset av «ja» på spørsmålet om bilen er solgt «som den er».",
+    "utfallsform": "Utvalget finner at vilkårene for heving er oppfylt etter fkjl. § 32. Utvalget viser til manglene samlet sett, og at manglene ikke vil tilstrekkelig avhjelpes med et prisavslag."
   },
   "3105": {
     "feil": "Batteriet sluttet å fungere og det nye batteriet det ble byttet til, var trolig brukt, har dårligere rekkevidde",
@@ -246,98 +395,161 @@
     "selger": "Bilen ble kjøpt på auksjon … Bilen er solgt i innklagde 2 sitt navn, og innklagde 2 er derfor selger av bilen",
     "utfall": "Klageren fikk medhold i krav om prisavslag og delvis medhold i krav om erstatning. … plikter å betale 70 540",
     "krav": "Utvalget finner at prisavslaget skjønnsmessig settes til 50 000 kroner. … tilkjenner etter dette 20 540 kroner.",
-    "mangel": "feilen med batteriet og sikkerhetsfunksjonene i bilen samlet sett gjør at bilen er i dårligere stand enn forbrukeren med rimelighet hadde grunn til å forvente"
+    "mangel": "feilen med batteriet og sikkerhetsfunksjonene i bilen samlet sett gjør at bilen er i dårligere stand enn forbrukeren med rimelighet hadde grunn til å forvente",
+    "sporsmal": "Utvalget finner etter dette at feilen med batteriet og sikkerhetsfunksjonene i bilen samlet sett gjør at bilen er i dårligere stand enn forbrukeren med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers",
+    "vekt:bruksstans_sikkerhet": "Utvalget legger til grunn at sikkerhetsfunksjoner som eksempelvis nødbremser, er en vesentlig del av funksjonen til en bil, og er en forutsetning for at bilen trygt skal kunne brukes.",
+    "opplyst": "I kjøpekontrakten er det opplyst at bilen er solgt «som den er».",
+    "utfallsform": "Utvalget finner at prisavslaget skjønnsmessig settes til 50 000 kroner. … Utvalget finner at disse utgiftene ble påført som følge av manglene med bilen og tilkjenner etter dette 20 540 kroner."
   },
   "2235": {
     "feil": "Utvalget finner imidlertid at det er sannsynliggjort at feil ved motorens turbo skyldes annet enn slitasje og bilens alder.",
     "tid": "Klageren har lagt frem kontrakt datert 22.01.2020 … kort tid etter reparasjonene den 13.08.2020, var det behov for reparasjon av motorens turbo. Det er lagt frem kvittering fra verkstedet datert 29.09.2020",
     "bil": "en Volvo v50 årsmodell 2006 … Klageren kjøpte en 14 år gammel bil som hadde gått 136 000 km",
     "utfall": "verkstedet har konkludert med at skaden er en følge av tidligere reparasjon … Feilen med turboen utgjør dermed en kjøpsrettslig mangel.",
-    "krav": "Klageren har krav på erstatning for sitt økonomiske tap som følge av mangelen … reduseres erstatningsbeløpet til kr 10 000,–"
+    "krav": "Klageren har krav på erstatning for sitt økonomiske tap som følge av mangelen … reduseres erstatningsbeløpet til kr 10 000,–",
+    "sporsmal": "Utvalget finner imidlertid at det er sannsynliggjort at feil ved motorens turbo skyldes annet enn slitasje og bilens alder. … Utvalget finner at dette forholdet ikke kan anses som påregnelig ved kjøpet av bilen.",
+    "vekt:rapport_arsak": "Det vises til at det går frem av kvitteringen at feilen skyldes «skade», og at verkstedet har konkludert med at skaden er en følge av tidligere reparasjon.",
+    "opplyst": "Av kontrakten følger det at bilen er solgt «som den er».",
+    "utfallsform": "utvalget finner at det må gjøres et fradrag for standardheving ved at motoren har fått tilført nye deler … som tilsvarer de kostnadene innklagde ville hatt til utbedring"
   },
   "2837": {
     "feil": "«gult blinkende varslingslys virker ikke på venstre og høyre side» … «tilleggsvarmer/parkeringsvarmer virker ikke»",
     "tid": "Utvalget bemerker at feilene ble påvist i overkant av syv måneder og 2 000 kjørte kilometer etter kjøpet.",
     "bil": "Klageren kjøpte den 1.8.2018 en Mercedes Sprinter 2011-modell … Klageren kjøpte en syv år gammel bil, med kilometerstand rundt 136 000",
     "utfall": "bilen er i dårligere stand enn klageren med rimelighet kunne forvente, og at det foreligger en mangel etter fkjl. § 17.",
-    "krav": "Klageren tilkjennes dermed et passende prisavslag etter fkjl. § 31. … finner at det passende kan settes til kr 25 000,-."
+    "krav": "Klageren tilkjennes dermed et passende prisavslag etter fkjl. § 31. … finner at det passende kan settes til kr 25 000,-.",
+    "sporsmal": "På bakgrunn av et relativt lavt antall kjørte kilometer, anser utvalget det som sannsynlig at feilene forelå på kjøpstidspunktet. … Utvalget er etter dette kommet til bilen er i dårligere stand enn klageren med rimelighet kunne forvente",
+    "vekt:km_etter_kjop": "Utvalget bemerker at feilene ble påvist i overkant av syv måneder og 2 000 kjørte kilometer etter kjøpet. På bakgrunn av et relativt lavt antall kjørte kilometer",
+    "vekt:positiv_beskrivelse": "Ved at bilen også ble annonsert som godt vedlikeholdt, finner utvalget at klageren likevel kunne forvente at bilen ikke ville ha et umiddelbart utbedrings- og vedlikeholdsbehov av den aktuelle størrelsesordenen. … det i annonsen opplyses spesifikt om at bilen har webasto og varsellys, som skaper en berettiget forventning",
+    "opplyst": "Utvalget bemerker at bilen i henhold til kjøpekontrakten er solgt med forbeholdet «som forevist».",
+    "utfallsform": "Utvalget fastsetter derfor prisavslaget skjønnsmessig"
   },
   "3170": {
     "feil": "Rapporten viser til at det ble avdekket en sprekk i tannstangen, og at sannsynlig årsak er materialtretthet/produksjonsfeil.",
     "tid": "Klageren kjøpte 18.12.2021 … i september/oktober 2023 begynte å kjenne på et «ubehag» ved styring av bilen. … feilen oppstod 22 måneder etter kjøpet",
     "bil": "Klageren kjøpte 18.12.2021 en Tesla Model S 2017-modell … bilen ble solgt med en kilometerstand på 61 200 km.",
     "utfall": "finner utvalget det sannsynliggjort at feilen med tannstangen utgjør en mangel ved bilen etter fkjl. § 16 første ledd bokstav a",
-    "krav": "Kravene er erstatningsberettiget, og klageren tilkjennes etter dette 50 363 kroner i erstatning."
+    "krav": "Kravene er erstatningsberettiget, og klageren tilkjennes etter dette 50 363 kroner i erstatning.",
+    "sporsmal": "finner utvalget det sannsynliggjort at feilen med tannstangen utgjør en mangel ved bilen etter fkjl. § 16 første ledd bokstav a … Videre finner utvalget det sannsynliggjort at feilen kan føres tilbake til forhold på leveringstidspunktet",
+    "vekt:rapport_arsak": "Rapporten viser til at det ble avdekket en sprekk i tannstangen, og at sannsynlig årsak er materialtretthet/produksjonsfeil.",
+    "vekt:rapport_upaaregnelig": "Videre fremgår det at en slik del normalt ikke må byttes grunnet sprekkdannelse, ettersom den er ment å vare vesentlig lengre enn det som er tilfellet i denne saken.",
+    "vekt:slitedel": "ettersom den er ment å vare vesentlig lengre enn det som er tilfellet i denne saken … ettersom feilen ikke skyldes normal slitasje",
+    "opplyst": "Kjøpekontrakt er fremlagt, hvor det fremgår at bilen ble solgt med en kilometerstand på 61 200 km.",
+    "utfallsform": "Klageren kan etter dette kreve erstatning for kostnader som han har hatt som følge av mangelen … Kravene er erstatningsberettiget"
   },
   "3040": {
     "feil": "salgsannonsen der det står at bilen har full servicehistorikk. … Viking Kontroll der det står at bilen … mangler service i henhold til serviceintervall.",
     "tid": "Klageren kjøpte 25.10.2022 … I mars 2024 oppsto det en girkassefeil på bilen. Da oppdaget klageren at ikke alle servicer var fulgt i serviceheftet likevel.",
     "bil": "Klageren kjøpte 25.10.2022 en brukt VW Golf 2017-modell … I denne står det at bilens kilometerstand er 88 000.",
     "utfall": "Prinsipalt krav om prisavslag og erstatning. Delvis medhold. … Utvalget finner etter dette at bilen er mangelfull etter fkjl. § 17, jf. § 16 første ledd bokstav b.",
-    "krav": "Utvalget finner etter dette at prisavslaget settes til 50 000 kroner."
+    "krav": "Utvalget finner etter dette at prisavslaget settes til 50 000 kroner.",
+    "sporsmal": "Klageren har fremlagt salgsannonsen der det står at bilen har full servicehistorikk. … Utvalget finner etter dette at bilen er mangelfull etter fkjl. § 17, jf. § 16 første ledd bokstav b.",
+    "vekt:uriktig_service_arbeid_utstyr": "Klageren har fremlagt salgsannonsen der det står at bilen har full servicehistorikk. … mangler service i henhold til serviceintervall",
+    "vekt:verditap_dokumentert": "og at det foreligger en sakkyndig uttalelse som priser manglende servicehistorikk … mener utvalget at dette må legges til grunn som riktig prisavslag for denne bilen",
+    "opplyst": "Det er også krysset av «ja» på spørsmålet om bilen er solgt «som den er».",
+    "utfallsform": "mener utvalget at dette må legges til grunn som riktig prisavslag for denne bilen"
   },
   "1689": {
     "feil": "oppdaget fastrustede bremsecalipere og bremserør med farlig rust, og rust på nedre kant av alle fire dører på bilen",
     "tid": "Klageren forklarer at han omtrent fire måneder etter kjøpet oppdaget fastrustede bremsecalipere",
     "bil": "Klageren kjøpte 10.01.2022 en brukt Toyota Land Cruiser 2014-modell … Bilens kilometerstand er i kjøpekontrakten opplyst å være 179 800. … lys av en alder på 7,5 år ved kjøpstidspunktet.",
     "utfall": "Utvalget finner at bremsecalipere og bremserør med rust, og rust på nedre kant av alle fire bildører utgjør mangler etter fkjl. § 15.",
-    "krav": "tilkjenner erstatning med 12 538,40 kroner. … Utvalget tilkjenner etter dette prisavslag med 52 512 kroner inkl. mva."
+    "krav": "tilkjenner erstatning med 12 538,40 kroner. … Utvalget tilkjenner etter dette prisavslag med 52 512 kroner inkl. mva.",
+    "sporsmal": "Utvalget finner at bremsecalipere og bremserør med rust, og rust på nedre kant av alle fire bildører utgjør mangler etter fkjl. § 15.",
+    "vekt:rapport_upaaregnelig": "Utvalget viser til uttalelse fra Toyota Sørvest AS og Bil-Tec AS der det fremgår at rusten på bilen var til stede på kjøpstidspunktet og er upåregnelig sett hen til bilens alder og kilometerstand.",
+    "opplyst": "Utvalget finner ikke at bilen er solgt med et «som den er»-forbehold.",
+    "utfallsform": "Utvalget finner det sannsynliggjort at disse utgiftene ble påført som følge av mangelen med rusten … Prisavslagskravet knytter seg til fremtidige utbedringskostnader for rust på fire bildører"
   },
   "2298": {
     "feil": "det ved ny EU-kontroll i november 2019 ble avdekket at bilens bremser, dekk og felger ikke var godkjent og tilpasset bilen … Uoriginale bremsecalipere foran og bak med hjemmelaget brakett for innfesting.",
     "tid": "Klageren kjøpte bilen den 01.04.2019. I november 2019 oppdaget han at bremsene ikke var godkjent ved EU-kontroll, og reklamerte til innklagde den 20.11.2019.",
     "bil": "Klageren kjøpte den 01.04.2019 en Porsche 911 Folger 1982-modell … Bilen hadde kjørt 143 000 kilometer på kjøpstidspunktet.",
     "utfall": "Utvalget er derfor av den oppfatning at bremsene ikke var i samsvar med det klageren hadde grunn til å forvente. Forholdet utgjør en kjøpsrettslig mangel",
-    "krav": "Kostnadene på kr 23 000,- for utbedring av bilens bremser anses dokumentert … Klageren tilkjennes således kr 23 000,- i erstatning."
+    "krav": "Kostnadene på kr 23 000,- for utbedring av bilens bremser anses dokumentert … Klageren tilkjennes således kr 23 000,- i erstatning.",
+    "sporsmal": "gav klageren en berettiget forventning om at bremsene var godkjent til bruk på bilen. Utvalget er derfor av den oppfatning at bremsene ikke var i samsvar med det klageren hadde grunn til å forvente. Forholdet utgjør en kjøpsrettslig mangel etter fkjl. § 17 første ledd bokstav a.",
+    "vekt:positiv_beskrivelse": "Utvalget bemerker at ordlyden i salgsannonsen, herunder formuleringen: «Nylig Eu Godkjent til 2020! … gav klageren en berettiget forventning om at bremsene var godkjent til bruk på bilen",
+    "opplyst": "«bilen er prøvekjørt og selges som den står uten garanti og fri for heftelser»",
+    "utfallsform": "En forbruker kan kreve erstatning for tap han eller hun lider som følge av at tingen har en mangel … for utbedring av bilens bremser anses dokumentert"
   },
   "1776": {
     "feil": "I den sakkyndige uttalelsen konkluderes det med at årsaken til ulyden på drivlinje var skade på hovedlagrene innvendig i girkasse.",
     "tid": "Klageren kjøpte den 13.11.2020 … Ifølge klageren ble det bekreftet av verksted den 11.06.2021 at girkassen var defekt og måtte overhales.",
     "bil": "en Opel Astra Sports Tourer, 2011-modell … Kjøpet gjelder en 9 år gammel bil som hadde gått 125 000 kilometer.",
     "utfall": "bilen var i dårligere stand enn det kjøperen hadde rimelig grunn til å forvente … Det foreligger derfor en mangel, jf. fkjl. § 17.",
-    "krav": "I lys av bilens alder og kjøpesum settes prisavslaget skjønnsmessig til 15 000 kroner. … klageren tilkjennes derfor erstatning på 1 980 kroner."
+    "krav": "I lys av bilens alder og kjøpesum settes prisavslaget skjønnsmessig til 15 000 kroner. … klageren tilkjennes derfor erstatning på 1 980 kroner.",
+    "sporsmal": "Spørsmålet videre blir om bilen var i dårligere stand enn klageren med rimelighet kunne forvente på bakgrunn av forbeholdet, kjøpesummen og forholdene ellers. … Det fremkommer også av den sakkyndige uttalelsen at lyden må ha vært til stede på kjøpstidspunktet",
+    "vekt:rapport_arsak": "I den sakkyndige uttalelsen konkluderes det med at årsaken til ulyden på drivlinje var skade på hovedlagrene innvendig i girkasse.",
+    "vekt:rapport_upaaregnelig": "Denne form for ulyd kan ikke anses å være en «normal» arbeidslyd, eller en lyd som anses vanlig på en bil som kun har kjørt 125000 km, med en servicehistorikk fulgt.",
+    "opplyst": "«Bilen selges i den stand den står ved overtakelse.",
+    "utfallsform": "I lys av bilens alder og kjøpesum settes prisavslaget skjønnsmessig til 15 000 kroner. … Utvalget finner at utgifter til sakkyndig uttalelse er utgifter som klageren har hatt som følge av kontraktsbruddet"
   },
   "2355": {
     "feil": "Basert på de to uttalelsene, legger utvalget til grunn at det er en lekkasje fra biltaket på venstre side.",
     "tid": "Klageren kjøpte 26.03.2018 … Klageren fremholdt at hun først reagerte vinteren 2019/2020 på mye dugg, og sendte en reklamasjon på lekkasje den 04.01.2020.",
     "bil": "Klageren kjøpte 26.03.2018 en 2014-modell Nissan Leaf … her fremgår at kilometerstanden var 34 250.",
     "utfall": "Utvalget finner derfor at bilen, på bakgrunn av det ovennevnte, ikke svarer til hva forbrukeren kan forvente, og det foreligger en mangel",
-    "krav": "beløpet kan passende settes til kr 26 188,– i tråd med tilbudet. … renter av det samlede beløp som tilkjennes, kr 29 631,–."
+    "krav": "beløpet kan passende settes til kr 26 188,– i tråd med tilbudet. … renter av det samlede beløp som tilkjennes, kr 29 631,–.",
+    "sporsmal": "Klageren kjøpte en relativt ny bil med lav kilometerstand, og det var ikke å forvente at det forelå feil av en slik karakter. Det er heller ingen holdepunkter for at feilen kan knyttes til klagerens bruk.",
+    "vekt:rapport_arsak": "I tilbudet fra Ålgårds Auto AS konkluderes det med funn av lekkasje i fugemasse på venstre side av takplate. Basert på de to uttalelsene, legger utvalget til grunn at det er en lekkasje fra biltaket på venstre side.",
+    "vekt:egen_bruk": "Det er heller ingen holdepunkter for at feilen kan knyttes til klagerens bruk.",
+    "opplyst": "Kjøpekontrakten er fremlagt, og her fremgår at kilometerstanden var 34 250. Det følger videre av kontrakten at bilen ble solgt med en 12-måneders garanti fra AutoConcept.",
+    "utfallsform": "Utvalget finner at prisavslaget må fastsettes med utgangspunkt i utgiftene klageren vil ha til utbedring, og beløpet kan passende settes til kr 26 188,– i tråd med tilbudet."
   },
   "3165": {
     "feil": "Det fremgår av salgsannonsen at bilen ble solgt med en rekke utstyr som det ble påvist feil med, herunder klimaanlegg, hengerfeste, xenonlys og ryggekamera.",
     "tid": "Ut ifra fremlagt NAF-test legger utvalget til grunn at feilene ble oppdaget under én måned etter overtakelsen.",
     "bil": "Klageren kjøpte 23.09.2023 en Volkswagen Touareg 2011-modell … solgt med en kilometerstand på 205 287 km.",
     "utfall": "kunne klageren i det minste forvente at dette utstyret fungerte ved overtakelsen. Det foreligger følgelig en mangel, jf. fkjl. § 17 første ledd bokstav a.",
-    "krav": "finner utvalget å sette et skjønnsmessig prisavslag til 20 000 kroner. … utlegg til NAF-test på 2 710 kroner, hvilket er erstatningsberettiget."
+    "krav": "finner utvalget å sette et skjønnsmessig prisavslag til 20 000 kroner. … utlegg til NAF-test på 2 710 kroner, hvilket er erstatningsberettiget.",
+    "sporsmal": "Utvalget legger derfor til grunn at feilene på bilen var til stede på leveringstidspunktet. … Spørsmålet blir da om bilen er i dårligere stand enn det klageren med rimelighet kunne forvente.",
+    "opplyst": "Utvalget finner på denne bakgrunn at vilkåret må anses som et alminnelig og generelt «som den er» forbehold.",
+    "utfallsform": "Klageren kan ikke forvente nye komponenter på en 12-13 år gammel bil. Ut ifra ovennevnte vurdering, finner utvalget å sette et skjønnsmessig prisavslag til 20 000 kroner. … Klageren har dokumentert utlegg til NAF-test på 2 710 kroner, hvilket er erstatningsberettiget.",
+    "vekt:positiv_beskrivelse": "Det fremgår av salgsannonsen at bilen ble solgt med en rekke utstyr som det ble påvist feil med, herunder klimaanlegg, hengerfeste, xenonlys og ryggekamera. Ettersom dette utstyret fremgikk av annonsen, kunne klageren i det minste forvente at dette utstyret fungerte ved overtakelsen."
   },
   "1967": {
     "feil": "det dokumentert at bilen er delvis omlakkert. … klageren hadde grunn til å regne med å få opplysningen om den tidligere skaden",
     "tid": "Klageren kjøpte den 14.08.2020 … i en NAF-test, foretatt den 03.01.2022, oppdaget at bilen hadde blitt omlakkert",
     "bil": "en bil av type Volvo XC60 2014-modell … kjørt 80 573 kilometer på kjøpstidspunktet. … en bil som var 6 år gammel",
     "utfall": "Det foreligger således en mangel etter fkjl. § 16 første ledd, bokstav b.",
-    "krav": "Utvalget setter prisavslaget skjønnsmessig til 25 000 kroner."
+    "krav": "Utvalget setter prisavslaget skjønnsmessig til 25 000 kroner.",
+    "sporsmal": "Spørsmålet for utvalget er således om opplysninger om den tidligere skaden er opplysninger klageren «hadde grunn til å regne med å få» og som «kan antas å ha virket inn på kjøpet.",
+    "vekt:tidligere_skade_ikke_opplyst": "I dette tilfellet kjøpte klageren en bil som var 6 år gammel, til en relativt høy pris. Klageren måtte kunne regne med å få opplysninger om forhold som går utover normal og påregnelig bruksslitasje.",
+    "utfallsform": "Utvalget setter prisavslaget skjønnsmessig til 25 000 kroner."
   },
   "1758": {
     "regel": "Utvalget finner heller ikke at innklagde har … sannsynliggjort at problemene har oppstått senere, av årsaker som ikke har sammenheng med tilstanden på leveringstidspunktet. Utvalget legger etter dette til grunn at problemene skyldes forhold som kan føres tilbake til leveringstidspunktet.",
     "bil": "Klageren kjøpte den 09.09.2022 en 2008-modell Volkswagen Tiguan … Bilen hadde gått 201 000 kilometer på kjøpstidspunktet.",
     "utfall": "Klage på lekkasje og motorhavari. Krav om heving. Medhold. … Mangelen er således ikke uvesentlig, og det er grunnlag for heving av kjøpet.",
     "tid": "Klageren kjøpte den 09.09.2022 … Klageren skrev følgende i e-post til innklagde 26.10.2022: «Da har bilen stoppet midt på e18.",
-    "feil": "Registerreim havari som har fått motor til å butte mellom stempler og ventiler"
+    "feil": "Registerreim havari som har fått motor til å butte mellom stempler og ventiler",
+    "sporsmal": "sannsynliggjort at problemene har oppstått senere, av årsaker som ikke har sammenheng med tilstanden på leveringstidspunktet. Utvalget legger etter dette til grunn at problemene skyldes forhold som kan føres tilbake til leveringstidspunktet. … På bakgrunn av det ovennevnte finner utvalget at klagerens bil er beheftet med feil som er utover hva klageren kunne forvente når det gjelder holdbarhet og andre egenskaper.",
+    "vekt:positiv_beskrivelse": "I salgsannonsen ble det imidlertid opplyst at bilen var pen og velholdt, med nylig gjennomført service og skifte av registerreim. Utvalget finner at beskrivelsen av bilen kunne gi klageren en berettiget forventing om at bilen, til tross for dens alder og kjørelengde, faktisk var i god stand",
+    "vekt:egen_bruk": "At skaden har oppstått grunnet forhold på klagerens side, herunder at klageren skal ha oversett et varsellys er etter utvalgets syn ikke tilstrekkelig sannsynliggjort.",
+    "opplyst": "Utvalget bemerker at bilen ble solgt uten forbehold.",
+    "utfallsform": "Mangelen er således ikke uvesentlig, og det er grunnlag for heving av kjøpet. … Klageren tilkjennes erstatning for dokumenterte utgiftene pålydende totalt kroner 1 710,–."
   },
   "2694": {
     "regel": "Utvalget vektlegger videre uttalelser i rapporten fra … om at «skaden har kommet noe over tid» og at «dette var der når … kjøpte bilen den 21.8.2018», og finner det sannsynliggjort at rusten kan knyttes til leveringen 31.10.2018",
     "bil": "Klageren kjøpte den 31.10.2018 en Mitsubishi Outlander 2007-modell … ved kjøp av en elleve år gammel bil med kilometerstand 186 000",
     "utfall": "Klage på rust. Krav om heving. … Medhold. … Etter utvalgets syn kan ikke de påklagde rustskadene anses som en «uvesentlig» mangel.",
     "tid": "Klageren kjøpte den 31.10.2018 … Dette ble oppdaget etter at bilen ikke ble godkjent ved periodisk kontroll 20.6.2019.",
-    "feil": "RUSTEN ER I BÆREN KONSTUKSJOER l FOR OG BAKSTILLING STORE RUSTSKADER"
+    "feil": "RUSTEN ER I BÆREN KONSTUKSJOER l FOR OG BAKSTILLING STORE RUSTSKADER",
+    "sporsmal": "finner det sannsynliggjort at rusten kan knyttes til leveringen 31.10.2018. Spørsmålet er dermed om forholdet utgjør en mangel ved bilen. … finner utvalget at rustskadene overstiger det klageren hadde grunn til å forvente ved kjøp av bilen.",
+    "vekt:rapport_arsak": "Utvalget vektlegger videre uttalelser i rapporten fra Moen Autosenter AS om at «skaden har kommet noe over tid» og at «dette var der når [klageren] kjøpte bilen den 21.8.2018»",
+    "vekt:rust_baerende": "I dette tilfellet er det imidlertid snakk om store rustskader tilsvarende reparasjonskostnader av kr 40 000,-.",
+    "opplyst": "Det er ikke holdepunkter for at bilen er solgt «som den er» eller med lignende forbehold.",
+    "utfallsform": "Etter utvalgets syn kan ikke de påklagde rustskadene anses som en «uvesentlig» mangel."
   },
   "1992": {
     "regel": "serviceheftet ikke var «komplett» på kjøpstidspunktet, og at opplysningene om «komplett servicehefte» i annonsen var uriktige … slik at det utgjør en mangel",
     "bil": "Klageren kjøpte den 02.01.2020 en 2010-modell Ford S-max … Bilens kilometerstand på kjøpstidspunktet var 106 500.",
     "utfall": "Delvis medhold. … Utvalget finner at prisavslaget passende settes til kr 7 000,–.",
     "tid": "Klageren kjøpte den 02.01.2020 … Klageren reklamerte deretter den 17.07.2021",
-    "feil": "Det følger av salgsannonsen at bilen ble solgt med «komplett service-hefte». … Fremlagt servicehefte viser at det ikke er anmerket utført service i perioden fra 2013 til 2019."
+    "feil": "Det følger av salgsannonsen at bilen ble solgt med «komplett service-hefte». … Fremlagt servicehefte viser at det ikke er anmerket utført service i perioden fra 2013 til 2019.",
+    "sporsmal": "Det legges etter dette til grunn at serviceheftet ikke var «komplett» på kjøpstidspunktet, og at opplysningene om «komplett servicehefte» i annonsen var uriktige.",
+    "vekt:uriktig_service_arbeid_utstyr": "Det følger av salgsannonsen at bilen ble solgt med «komplett service-hefte». Etter utvalgets oppfatning har en kjøper da grunn til å regne med at bilen har fulgt produsentens anbefalte serviceprogram. … Opplysninger om servicehistorikk er sentrale ved kjøp av bruktbil, og det må derfor antas at de har virket inn på kjøpet",
+    "opplyst": "Bilen ble ifølge kontrakten solgt med en «Xtra Garanti Bronse, 6 mnd, 200000 km» fra Autoconcept.",
+    "utfallsform": "Det er ikke fremlagt dokumentasjon på hvilken verdireduksjon mangelen medfører, og prisavslaget utmåles skjønnsmessig."
   },
   "2612": {
     "regel": "Utvalget mener det er påregnelig med rustskader av et visst omfang på en 16 år gammel bil … Det er imidlertid ikke påregnelig at skadene viser seg å være så omfattende",
@@ -345,14 +557,24 @@
     "utfall": "Prinsipalt krav om heving, subsidiært krav om prisavslag. Medhold. … slik at vilkåret for å heve kjøpet er oppfylt",
     "tid": "Klageren kjøpte den 24. august 2017 … Det er uomtvistet at klageren reklamerte den 20. februar 2019.",
     "feil": "det er gjennomrustede hull flere steder på karosseriet, at rammefesteren foran er rustet løs, at tverrbjelke nesten er rustet av",
-    "opplysning": "Det er uomtvistet at klageren fikk opplysninger om at bilen hadde rustskader ved kjøpet"
+    "opplysning": "Det er uomtvistet at klageren fikk opplysninger om at bilen hadde rustskader ved kjøpet",
+    "sporsmal": "Uttalelsene sannsynliggjør videre at rustskadene har oppstått over tid og kan føres tilbake til leveringstidspunktet. … fordi rustskadene uansett etter utvalgets syn går utover det som klageren hadde grunn til å forvente.",
+    "vekt:rapport_arsak": "[PERSON] uttaler blant annet at det er «veldig usannsynlig» at rustangrepet har oppstått etter kjøpet i 2017 og [PERSON] legger samme oppfatning til grunn når han uttaler at rustskadene ikke har «kunnet kommet på kjøretøy i perioden fra 17.08.2017-20.02.2019».",
+    "vekt:rust_baerende": "Det fremgår blant annet at det er gjennomrustede hull flere steder på karosseriet, at rammefesteren foran er rustet løs, at tverrbjelke nesten er rustet av og at det er rust på nesten alle bremserør.",
+    "vekt:bruksstans_sikkerhet": "Det er imidlertid ikke påregnelig at skadene viser seg å være så omfattende at de etter utvalgets forståelse innebærer en trafikksikkerhetsrisiko ved kjøring",
+    "opplyst": "Det er uomtvistet at klageren fikk opplysninger om at bilen hadde rustskader ved kjøpet, noe som også fremgår av kjøpekontrakten.",
+    "utfallsform": "Mangelen ved bilen er etter utvalgets syn ikke uvesentlig, slik at vilkåret for å heve kjøpet er oppfylt, jf. fkjl. § 32."
   },
   "265": {
     "feil": "det i juli 2017 ble målt kast i bremseskiver og nav på alle fire hjul, samt at det ble avdekket rust på alle bremseskivene over tillatt grense",
     "tid": "det var upåregnelig at bremsene måtte skiftes under én måned etter kjøpet",
     "bil": "Den 1.6.2017 kjøpte klageren en BMW 3-serie 2016-modell",
     "utfall": "Autospektrum AS plikter å betale kr 11 763,50",
-    "krav": "Bilen er således mangelfull, jf. fkjl. § 17, og klageren har krav på erstatning, jf. fkjl. § 33"
+    "krav": "Bilen er således mangelfull, jf. fkjl. § 17, og klageren har krav på erstatning, jf. fkjl. § 33",
+    "sporsmal": "legges det til grunn at det var upåregnelig at bremsene måtte skiftes under én måned etter kjøpet. Bilen er således mangelfull, jf. fkjl. § 17",
+    "vekt:positiv_beskrivelse": "Sett hen til at bilen ble markedsført som ”nybil” og ”100% strøken”",
+    "opplyst": "Av kjøpekontrakten fremgår det at bilen selges «slik som forevist/slik den står, prøvekjørt og besiktiget».",
+    "utfallsform": "utvalget mener at det må gjøres et fradrag for den standardheving nye bremser innebærer på en bil som var gått nesten 60 000 km. Fradraget settes skjønnsmessig til halve beløpet"
   },
   "967": {
     "feil": "det var kraftig korrosjon i bærende elementer som påvirket stivheten begge sider bakre",
@@ -361,7 +583,13 @@
     "utfall": "Krav om heving og erstatning. Delvis medhold. … Utbedring av bilen er åpenbart ikke regningssvarende, og hevingsvilkåret er oppfylt.",
     "krav": "På bakgrunn av EU-kontrollen datert 10.8.2015 finner utvalget det sannsynliggjort at bilen allerede på kjøpstidspunktet hadde alvorlige rustskader som gjorde den trafikkfarlig.",
     "grunnlag": "Etter utvalgets syn lå det derimot ikke innenfor det påregnelige at bilen som følge av alvorlig korrosjon i understellet, ikke skulle kunne EU-godkjennes uten uforholdsmessige rettingskostnader.",
-    "organ": "Forbrukertvistutvalget fatter slikt"
+    "organ": "Forbrukertvistutvalget fatter slikt",
+    "sporsmal": "På bakgrunn av EU-kontrollen datert 10.8.2015 finner utvalget det sannsynliggjort at bilen allerede på kjøpstidspunktet hadde alvorlige rustskader som gjorde den trafikkfarlig. … Etter utvalgets syn lå det derimot ikke innenfor det påregnelige at bilen som følge av alvorlig korrosjon i understellet, ikke skulle kunne EU-godkjennes uten uforholdsmessige rettingskostnader.",
+    "vekt:rust_baerende": "Etter utvalgets syn lå det derimot ikke innenfor det påregnelige at bilen som følge av alvorlig korrosjon i understellet, ikke skulle kunne EU-godkjennes uten uforholdsmessige rettingskostnader.",
+    "vekt:bruksstans_sikkerhet": "finner utvalget det sannsynliggjort at bilen allerede på kjøpstidspunktet hadde alvorlige rustskader som gjorde den trafikkfarlig.",
+    "vekt:positiv_beskrivelse": "Selv om bilen ble solgt som et reparasjonsobjekt, ga salgsannonsen klageren grunn til å tro at reparasjonsbehovet i første rekke knyttet seg til startvanskene og ellers var i normal stand.",
+    "opplyst": "Bilen ble solgt uten garanti og tilstandsrapport, samt som et reparasjonsobjekt.",
+    "utfallsform": "Utbedring av bilen er åpenbart ikke regningssvarende, og hevingsvilkåret er oppfylt. … Fradraget settes i dette tilfellet skjønnsmessig til kr 5 000,-."
   },
   "1579": {
     "feil": "Ved undersøkelsen ble klageren gjort kjent med at bilen hadde betydelige mengder rust i bakre hjulbuer",
@@ -369,7 +597,11 @@
     "bil": "Klageren kjøpte den 06.08.2022 en Subaru Forester 2004-modell … bilen hadde ved leveringen gått 114 000 kilometer",
     "utfall": "Klage på rust i bakre hjulbuer. Krav om heving. Medhold. … Utvalget finner at hevingsterskelen er oppfylt i denne saken",
     "krav": "legger utvalget til grunn at rustskadene var til stede på leveringstidspunktet. Innklagde har heller ikke sannsynliggjort noe annet, jf. § 18 andre ledd.",
-    "erkjent": "Innklagde anses etter dette å ha erkjent at rustskadene utgjorde en mangel"
+    "erkjent": "Innklagde anses etter dette å ha erkjent at rustskadene utgjorde en mangel",
+    "sporsmal": "På bakgrunn av verksteduttalelsene i saken, det forhold at rustskader oppstår over tid, samt den korte perioden som gikk mellom overtakelsen av bilen og konstateringen av feilene, legger utvalget til grunn at rustskadene var til stede på leveringstidspunktet. … Innklagde anses etter dette å ha erkjent at rustskadene utgjorde en mangel.",
+    "vekt:forhandler_erkjente": "Utvalget viser til at innklagde, uten å ta forbehold om at utbedringsforsøket ble gjennomført på goodwill eller på annen måte tilkjennegi at de var uenige med klagerens anførsel om at forholdet utgjorde en mangel, gjennomførte et utbedringsforsøk for egen regning og risiko.",
+    "vekt:rust_baerende": "viser særlig til tilstandsrapporten 11.04.2024 hvor verkstedet bekrefter at dette er en skade av så stor alvorlighetsgrad i struktur at reparasjon av disse skadene vil ha en langt større kostnad enn bilens verdi",
+    "utfallsform": "Utvalget finner at hevingsterskelen er oppfylt i denne saken"
   },
   "2184": {
     "feil": "Grunnen skal ha vært at bremseklossene var helt utslitt fremme på bilen.",
@@ -377,7 +609,12 @@
     "bil": "Klageren kjøpte den 23.05.2020 en Toyota Rav4 2002-modell … bilen var gått 180 000 km ved leveringstidspunktet",
     "utfall": "Krav om erstatning. Delvis medhold. … Utgifter som klageren hadde som følge av feil med bremsene utgjør kr 6 333,-",
     "krav": "Bilen er dermed likevel i dårligere stand enn klager med rimelighet hadde grunn til å forvente, og det foreligger følgelig en mangel basert på forholdet.",
-    "grunnlag": "Selv om bremsedeler, som påpekt, i utgangspunktet er å anse som slitedeler, ligger helt nedslitte bremser, som gjør at bilen ikke er i kjørbar stand, etter utvalgets syn, utenfor hva klageren kunne forvente."
+    "grunnlag": "Selv om bremsedeler, som påpekt, i utgangspunktet er å anse som slitedeler, ligger helt nedslitte bremser, som gjør at bilen ikke er i kjørbar stand, etter utvalgets syn, utenfor hva klageren kunne forvente.",
+    "sporsmal": "Spørsmålet blir således om bilen var i dårligere stand enn klageren med rimelighet hadde grunn til å forvente, jf. fkjl. § 17 første ledd bokstav a.",
+    "vekt:bruksstans_sikkerhet": "Selv om bremsedeler, som påpekt, i utgangspunktet er å anse som slitedeler, ligger helt nedslitte bremser, som gjør at bilen ikke er i kjørbar stand, etter utvalgets syn, utenfor hva klageren kunne forvente.",
+    "vekt:positiv_beskrivelse": "Bilen er også beskrevet som «velholdt». Bilen er dermed likevel i dårligere stand enn klager med rimelighet hadde grunn til å forvente",
+    "opplyst": "Ifølge kjøpekontrakten ble bilen solgt «as is» uten garanti",
+    "utfallsform": "Utgifter som klageren hadde som følge av feil med bremsene utgjør kr 6 333,-, jf. faktura av 08.07.2020 fra Sullis Bilverksted AS. Utvalget finner at utgiftene må anses som kostnader påført som følge av mangelen, og klager skal ha dekket disse."
   },
   "438": {
     "feil": "Utvalget viser til at det ble påpekt alvorlig rust på bremserør … bærearm/oppheng, og bakaksel. … Videre vektlegges det at bilen er ansett trafikkfarlig og avskiltet.",
@@ -385,7 +622,13 @@
     "bil": "Klageren kjøpte 20.7.2016 en 1994-modell Jeep Grand Cherokee LTD … Bilen hadde gått 260 841 km.",
     "utfall": "Krav om heving og erstatning. Delvis medhold. … Mangelen er ikke uvesentlig, og vilkåret for å heve kjøpet er således oppfylt … Klageren tilkjennes på denne bakgrunn erstatning på totalt kr 8 500,-.",
     "krav": "Utvalget finner således at bilen er mangelfull, da den er i dårligere stand enn klageren hadde grunn til å forvente, jf. fkjl. § 17 første ledd a).",
-    "grunnlag": "Det er imidlertid på det rene at bilen ble EU-godkjent to dager etter kjøpet uten feil … Klageren hadde således en berettiget forventning om at bilen ikke skulle ha umiddelbare reparasjonsbehov, og ellers var i grei teknisk stand."
+    "grunnlag": "Det er imidlertid på det rene at bilen ble EU-godkjent to dager etter kjøpet uten feil … Klageren hadde således en berettiget forventning om at bilen ikke skulle ha umiddelbare reparasjonsbehov, og ellers var i grei teknisk stand.",
+    "sporsmal": "Utvalget finner således at bilen er mangelfull, da den er i dårligere stand enn klageren hadde grunn til å forvente, jf. fkjl. § 17 første ledd a).",
+    "vekt:positiv_beskrivelse": "Det er imidlertid på det rene at bilen ble EU-godkjent to dager etter kjøpet uten feil, jf. fremlagt kontrollseddel. Klageren hadde således en berettiget forventning om at bilen ikke skulle ha umiddelbare reparasjonsbehov, og ellers var i grei teknisk stand.",
+    "vekt:rust_baerende": "Utvalget viser til at det ble påpekt alvorlig rust på bremserør, … bærearm/oppheng, og bakaksel.",
+    "vekt:bruksstans_sikkerhet": "Videre vektlegges det at bilen er ansett trafikkfarlig og avskiltet.",
+    "opplyst": "Bilen ble solgt «som forevist».",
+    "utfallsform": "Mangelen er ikke uvesentlig, og vilkåret for å heve kjøpet er således oppfylt … må anses som en kostnad som får karakter av å være bortkastede idet klageren ikke har kunnet bruke bilen fra 7.8.2016."
   },
   "805": {
     "feil": "Utvalget legger til grunn at det er en feil ved girkassen som medfører at bilen ikke kan kjøres.",
@@ -394,7 +637,14 @@
     "utfall": "Krav om heving og erstatning, subsidiært prisavslag, atter subsidiært utbedring. Medhold. … Mangelen er ikke uvesentlig, og vilkåret for å heve kjøpet er oppfylt",
     "krav": "Selv om klageren kjøpte en eldre bruktbil til en lav kjøpesum, mener utvalget at han ikke hadde grunn til å forvente en alvorlig feil ved girkassen så kort tid etter kjøpet.",
     "grunnlag": "all den tid man mener at bilen må anses å være i dårligere stand enn klageren med rimelighet kunne forvente, jf. fkjl. § 17 første ledd bokstav a.",
-    "organ": "Forbrukertvistutvalget fatter slikt"
+    "organ": "Forbrukertvistutvalget fatter slikt",
+    "sporsmal": "Sett hen til at feilen oppstod i underkant av to måneder etter klageren overtok bilen, og etter kun å ha kjørt ca. 1 000 km, må det anses som sannsynlig at forholdet kan føres tilbake til kjøpstidspunktet. … all den tid man mener at bilen må anses å være i dårligere stand enn klageren med rimelighet kunne forvente, jf. fkjl. § 17 første ledd bokstav a.",
+    "vekt:positiv_beskrivelse": "I vurderingen har utvalget lagt avgjørende vekt på den rosende omtalen selgeren gav av bilen i salgsannonsen, og særlig opplysningene om at alle servicer var fulgt og at bilen var godt vedlikeholdt.",
+    "vekt:rapport_arsak": "På bakgrunn av uttalelsene fra [PERSON] og Nygårds Bilservice, legger utvalget til grunn som mest sannsynlig at feilen skyldes kjøring med for lite olje over tid.",
+    "vekt:km_etter_kjop": "etter kun å ha kjørt ca. 1 000 km, må det anses som sannsynlig at forholdet kan føres tilbake til kjøpstidspunktet.",
+    "vekt:bruksstans_sikkerhet": "Feilen medfører at bilen ikke er kjørbar, og reparasjonskostnadene vil sannsynligvis bli betydelige.",
+    "opplyst": "Ifølge kjøpekontrakten ble bilen solgt «som den er», besiktiget og prøvekjørt av kjøper.",
+    "utfallsform": "Mangelen er ikke uvesentlig, og vilkåret for å heve kjøpet er oppfylt … Klagerens utgifter til frakt av bilen … på henger etter mangelen oppstod, anses som et slikt erstatningsberettiget tap."
   },
   "224": {
     "feil": "Det som er avdekt nå er store rustskader i hjulhus høyre bak og rusthull i gulv foran på v.side.",
@@ -402,14 +652,23 @@
     "bil": "Klageren kjøpte 16.7.2017 en 1989 –modell BMW 325i … Bilen hadde gått 166 000 km på kjøpstidspunktet.",
     "utfall": "Krav om heving. Medhold. … Det er således grunnlag for heving av kjøpet, jf. fkjl. § 32.",
     "krav": "finner utvalget det sannsynliggjort at bilen ved levering hadde store rustskader … Forholdet utgjør en mangel etter fkjl. § 16 første ledd bokstav c",
-    "grunnlag": "I salgsannonsen, som må anses som en del av partenes avtalegrunnlag, oppgis at bilen er fri for rust. … innklagde har gitt uriktige opplysninger om bilen forut for kjøpet."
+    "grunnlag": "I salgsannonsen, som må anses som en del av partenes avtalegrunnlag, oppgis at bilen er fri for rust. … innklagde har gitt uriktige opplysninger om bilen forut for kjøpet.",
+    "sporsmal": "På bakgrunn av rapporten fra Melhus Bil Orkanger AS finner utvalget det sannsynliggjort at bilen ved levering hadde store rustskader … Etter utvalgets mening samsvarer ikke dette med opplysningen i salgsannonsen, slik at innklagde har gitt uriktige opplysninger om bilen forut for kjøpet.",
+    "vekt:positiv_beskrivelse": "I salgsannonsen, som må anses som en del av partenes avtalegrunnlag, oppgis at bilen er fri for rust.",
+    "vekt:rapport_arsak": "På bakgrunn av rapporten fra Melhus Bil Orkanger AS finner utvalget det sannsynliggjort at bilen ved levering hadde store rustskader og at en gammel kollisjonsskade som på grunn av feil utbedring er årsaken til at det lekker vann inn i bilen.",
+    "vekt:rettet_for_kjop": "Innklagde har verken rettet opplysningene i tide, eller sannsynliggjort at de ikke har virket inn på avtalen.",
+    "opplyst": "Det gis ingen garanti eller garanti for kjørte km.",
+    "utfallsform": "Det er således grunnlag for heving av kjøpet, jf. fkjl. § 32. … Utgifter på kr 1 008,- til sakkyndig undersøkelse er påført klageren som følge av mangelen, og tilkjennes i sin helhet."
   },
   "357": {
     "feil": "Utvalget finner det sannsynliggjort at bilens kilometerteller er manipulert",
     "tid": "Klage på motorfeil og kilometeravvik. … Klageren kjøpte 24.10.2016 … Saken ble ved klage av 7.3.2017 brakt inn for Forbrukerrådet",
     "bil": "Klageren kjøpte 24.10.2016 en 1992-modell BMW 318is … Oppgitt kilometerstand var på 201 500 km.",
     "utfall": "Delvs medhold. … Etter en helhetsvurdering setter utvalget prisavslaget til kr 25 000,-.",
-    "krav": "Utvalget finner at forholdet utgjør en mangel. … Videre vektlegges det at avviket minst er på over 60 000 km, noe som må anses betydelig."
+    "krav": "Utvalget finner at forholdet utgjør en mangel. … Videre vektlegges det at avviket minst er på over 60 000 km, noe som må anses betydelig.",
+    "sporsmal": "Utvalget finner det sannsynliggjort at bilens kilometerteller er manipulert … Ved bruktbilkjøp er bilens kilometerstand en sentral opplysning som ofte får betydning for kjøpesummen.",
+    "opplyst": "Bilen ble solgt «som den er». Oppgitt kilometerstand var på 201 500 km.",
+    "utfallsform": "Prisavslaget må fastsettes skjønnsmessig. … Etter en helhetsvurdering setter utvalget prisavslaget til kr 25 000,-."
   },
   "2475": {
     "feil": "Det er påpekt i NAF-rapporten datert 24.05.2019 at det ikke foreligger dokumentasjon på bytte av registerreim og vannpumpe.",
@@ -417,6 +676,10 @@
     "bil": "Klageren kjøpte den 27.04.2019 en Volkswagen Caravelle 1988-modell for kr 47 000,-. … bilen hadde ifølge kjøpekontrakten gått 306 000 km",
     "utfall": "Krav om prisavslag og erstatning. Delvis medhold. … Utvalget finner at prisavslaget på fastsettes skjønnsmessig til kr 7 000,-",
     "krav": "Utvalget finner dermed at innklagde ga uriktige opplysninger om registerreim- og vannpumpebytte. Utvalget finner at opplysningene har innvirket på kjøpet og det foreligger en mangel",
-    "grunnlag": "Av påkost i 2018 nevnes: … Ny registerreim … Ny vannpumpe"
+    "grunnlag": "Av påkost i 2018 nevnes: … Ny registerreim … Ny vannpumpe",
+    "sporsmal": "Utvalget finner dermed at innklagde ga uriktige opplysninger om registerreim- og vannpumpebytte. Utvalget finner at opplysningene har innvirket på kjøpet og det foreligger en mangel",
+    "vekt:uriktig_service_arbeid_utstyr": "Det er påpekt i NAF-rapporten datert 24.05.2019 at det ikke foreligger dokumentasjon på bytte av registerreim og vannpumpe. Innklagde har heller ikke fremlagt dokumentasjon på at arbeidet er utført. Når sakkyndige ikke finner holdepunkter for at registerreim og vannpumpen er byttet, legger utvalget til grunn at det ikke er byttet.",
+    "opplyst": "Videre fremgår det av kjøpekontrakten at bilen «selges som den står uten noen garanti grunnet høy km og alder».",
+    "utfallsform": "Utvalget finner at prisavslaget på fastsettes skjønnsmessig til kr 7 000,- grunnet bilens alder og kilometerstand. … Det er fremlagt bankutskrift for NAF-test av 24.05.2019 på kr 1 450,-. Utvalget finner undersøkelser nødvendige for å dokumentere kravet og finner dette erstatningsberettiget."
   }
 }

@@ -78,13 +78,13 @@ Hint per type feil:
 - Girkasse og clutch: hvilke gir, rykk, sluring eller lyd.
 - Bremser: lyd, trekking, varsellampe, merknad ved EU-kontroll.`;
 
-export const BREVSKRIV_VERSJON = "brevskriv-v10";
+export const BREVSKRIV_VERSJON = "brevskriv-v11";
 
 // Two finished letters from the golden cases, edited after review. They show form, tone and order; the
 // author is told never to take facts from them.
 const BREV_EKSEMPLER = `Eksempler på ferdige brev fra andre saker. De viser form, register, rekkefølge og inndeling. Overskriftene står her for å vise delene; systemet setter dem, så du skriver dem aldri. Bruk aldri fakta, datoer, beløp, bilmerker eller vedtak fra eksemplene.
 
-<eksempel sak="Klimaanlegget gir ikke kald luft; forhandleren avviste på telefon; prisavslag. Kjøperens egen tekst var sint, brevet er nøkternt.">
+<eksempel sak="Klimaanlegget gir ikke kald luft; forhandleren avviste på telefon; prisavslag. Kjøperens egen tekst var sint, brevet er nøkternt. Føringen for vedtaket sa at momentene trekker minst like sterkt.">
 Jeg viser til kjøpet av en Testmerke Kombi, første gang registrert i 2015, som jeg kjøpte av dere 10. juni 2026 for 99 000 kr.
 
 Faktum
@@ -99,7 +99,9 @@ Feilen viste seg innen to år etter levering og antas derfor å ha eksistert ved
 
 Bilen hadde gått 180 000 km da jeg kjøpte den. Feilen går ut over det som kan ventes ut fra bilens alder, kilometerstand og pris, og er ikke normal slitasje, jf. § 15. Bilen har etter dette en mangel etter § 16, jf. § 15.
 
-I vedtak {{henvisning}} behandlet Forbrukerklageutvalget en sak der en bil som var 12 år gammel, ble kjøpt hos en forhandler og fikk påvist feil på klimaanlegget under én måned etter kjøpet. Utvalget kom til at feilen var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag. Feilen viste seg der, som i min sak, innenfor formodningsperioden i § 18 andre ledd.
+I vedtak {{henvisning}} tok Forbrukerklageutvalget stilling til det samme spørsmålet som denne saken gjelder, i et kjøp der en forbruker kjøpte bil av en næringsdrivende forhandler: om bilen var i dårligere stand enn kjøperen hadde grunn til å forvente ut fra alder, kilometerstand og pris, eller om feilen var normal slitasje. Bilen var 12 år gammel og hadde gått 210 000 km da den ble kjøpt. Forhandleren hadde ikke opplyst om feilen. Klimaanlegget sluttet å gi kald luft fem uker etter kjøpet. Utvalget la vekt på at feilen viste seg kort tid etter leveringen, og at en slik feil ikke er normal slitasje på en bil med den alderen og kilometerstanden. Kjøperen fikk prisavslag.
+
+De samme momentene trekker minst like sterkt i min sak. Feilen viste seg 15 dager etter kjøpet: tidligere enn i vedtaket, på en nyere bil med kortere kjørelengde.
 
 Reklamasjonen kom innen to måneder etter at jeg oppdaget feilen, jf. § 27 første ledd. Med dette brevet bekrefter jeg reklamasjonen skriftlig.
 
@@ -116,7 +118,7 @@ Vedlegg
 Vedlagt følger kjøpekontrakt og kostnadsoverslag.
 </eksempel>
 
-<eksempel sak="Lekkasje mer enn to år etter levering; kjøpt for over fem år siden, reklamert innen fem år; forhandleren har ikke rettet; ingen formodning.">
+<eksempel sak="Lekkasje mer enn to år etter levering; kjøpt for over fem år siden, reklamert innen fem år; forhandleren har ikke rettet; ingen formodning. Vedtaket ble vunnet på en takstrapport kjøperen ikke har, og gjaldt en annen feil; føringen sa ikke at momentene trekker like sterkt.">
 Jeg viser til at jeg kjøpte en Testmerke Kombi, første gang registrert i 2017, av dere 1. mars 2021 for 159 000 kr.
 
 Faktum
@@ -129,7 +131,9 @@ Rettslig grunnlag
 
 Bilen hadde gått 130 000 km da jeg kjøpte den. Feilen går ut over det som kan ventes ut fra bilens alder, kilometerstand og pris, og er ikke normal slitasje, jf. forbrukerkjøpsloven § 15. Bilen har etter dette en mangel etter § 16, jf. § 15.
 
-I vedtak {{henvisning}} behandlet Forbrukerklageutvalget en sak der en fire år gammel bil kjøpt hos forhandler fikk vannlekkasje ved frontruta drøye to år etter kjøpet. Utvalget kom til at lekkasjen var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.
+I vedtak {{henvisning}} tok Forbrukerklageutvalget stilling til det samme spørsmålet som denne saken gjelder, i et kjøp der en forbruker kjøpte bil av en næringsdrivende forhandler: om en feil som viser seg lenge etter kjøpet, likevel skyldes forhold som var der ved leveringen, slik at bilen ikke svarer til det kjøperen hadde grunn til å forvente. Bilen var 4 år gammel og hadde gått 90 000 km da den ble kjøpt. Forhandleren hadde ikke opplyst om feilen. Rust i dørene viste seg drøye to år etter kjøpet. Utvalget la vekt på at en takstmann hadde funnet at rusten skyldtes en mangelfull reparasjon utført før salget. Kjøperen fikk prisavslag satt lik utbedringskostnadene.
+
+Min bil var like gammel da jeg kjøpte den. Den hadde gått lenger enn bilen i vedtaket, og feilen viste seg senere etter kjøpet. Vedtaket gjaldt rust og ikke en lekkasje, men spørsmålet er det samme: om feilen var der ved leveringen.
 
 Bilen er ment å vare vesentlig lenger enn to år, og fristen for å reklamere er derfor fem år, jf. § 27 andre ledd. Reklamasjonen kom innen to måneder etter at jeg oppdaget feilen og innen fem år etter overtakelsen. Fristen er overholdt selv om det nå er gått mer enn fem år siden overtakelsen. Med dette brevet bekrefter jeg reklamasjonen skriftlig.
 
@@ -153,7 +157,7 @@ Du får:
 - <kilder>: tekster forbrukeren har limt inn (rapport, annonse eller kontrakt, forhandlerens svar). Bare disse kan siteres.
 - <plan>: argumentene brevet skal ha, i rekkefølge og gruppert etter brevets deler, hvert med id, føring og data. Føringen sier hva argumentet skal få frem, også den juridiske ordlyden.
 - <forbudt>: argumenter brevet ikke skal ha, med grunnen.
-- <svakheter>: forhold i saken brevet ikke skal nevne, men heller ikke påstå det motsatte av.
+- <svakheter>: forhold i saken brevet ikke skal nevne, men heller ikke påstå det motsatte av. Unntaket er forskjellene føringen for vedtaket nevner (se «Avsnittet om vedtaket»).
 - <mangler>: opplysninger som mangler.
 - <merker>: merker systemet fyller inn.
 
@@ -170,7 +174,7 @@ Sitater:
 - Uten kildetekst gjengis det forbrukeren har fortalt, med egne ord og uten anførselstegn («Selgeren sa at …»). Si aldri at en rapport eller annonse sier noe den ikke sier i <kilder> eller i forbrukerens gjengivelse.
 
 Merker og plassholdere:
-- {{henvisning}} er vedtakets saksnummer og dato («I vedtak {{henvisning}} behandlet …»), slik planen setter det. {{dato:svarfrist}} er datoen for svarfristen. {{kontonummer}} og {{epost}} er forbrukerens kontonummer og e-post. Bruk bare merkene i <merker>.
+- {{henvisning}} er vedtakets saksnummer og dato («I vedtak {{henvisning}} tok Forbrukerklageutvalget stilling til …»), slik planen setter det. {{dato:svarfrist}} er datoen for svarfristen. {{kontonummer}} og {{epost}} er forbrukerens kontonummer og e-post. Bruk bare merkene i <merker>.
 - For hver opplysning i <mangler>: skriv [MANGLER: <tekst>] nøyaktig slik den står, der opplysningen hører hjemme. Ingen andre hakeparenteser.
 - Datoer skrives «12. mars 2026», beløp «250 000 kr». Bruk aldri relative tidsuttrykk som «i dag» eller «hvis det sendes i dag».
 
@@ -179,7 +183,15 @@ Form:
 - Brevet har delene Innledning, Faktum, Rettslig grunnlag, Krav, Svarfrist og videre saksgang og Vedlegg, i den rekkefølgen, slik <plan> grupperer argumentene. Systemet setter overskriftene ut fra argumentene i hvert avsnitt; skriv dem aldri selv. Et avsnitt dekker bare argumenter fra én del, og en ny del begynner alltid med et nytt avsnitt. Faktum forteller hva som har skjedd, uten paragrafer; vurderingen av det står under Rettslig grunnlag.
 - 8–12 avsnitt, til sammen under 600 ord. Hver setning er et eget element med id-ene til argumentene den dekker (tom liste for en ren overgang).
 - Ingen navn på personer. Skriv «verkstedet», «selgeren» og lignende.
-- Ingen karakteristikker av forhandleren, ingen følelser og ingen trusler utover å bringe saken inn for Forbrukertilsynet, slik planen sier. Avsnittet om vedtaket står for seg selv.
+- Ingen karakteristikker av forhandleren, ingen følelser og ingen trusler utover å bringe saken inn for Forbrukertilsynet, slik planen sier.
+
+Avsnittet om vedtaket:
+- Avsnittet om vedtaket følger føringen: rettsspørsmålet og partene, vedtakets fakta, det utvalget la vekt på og utfallet, kjøperens sak der den står minst like sterkt, og kort det som skiller. Sammenligningen der («trekker minst like sterkt», «på en nyere bil med kortere kjørelengde») er ikke gradsord eller egen vurdering; den står fordi føringen har den. Skriv ikke at momentene trekker like sterkt når føringen ikke sier det.
+- Setningen «De samme momentene trekker minst like sterkt i min sak.» står bare når føringen har den, ordrett. Uten den i føringen skriver du verken den eller noe som betyr det samme; da står kjøperens fakta som konstatering.
+- Føringen har korte instrukser og stikkord til deg: «Vis kort til det i saken som svarer til: …», «Min sak: …», «Sammenlignet med vedtaket: …», «Kort, uten motargument: …» og «Skriv ikke at momentene trekker like sterkt.». De sier hva du skal skrive, og står aldri selv i brevet.
+- «Vis kort til …»: vis til det i saken som svarer til momentene, med sitat fra <kilder> når det finnes. Står det eller kjøperens tall alt tidligere i brevet, holder en kort henvisning, og sammenligningen står uten tallene på nytt.
+- Forskjellene etter «Kort, uten motargument:» står i brevet, kort og som konstatering, uten forklaring eller motargument. Andre svakheter nevnes fortsatt ikke.
+- Ingen bilmerker, modeller eller navn fra vedtaket, og utfallet står uten beløp.
 
 Register:
 - Brevet overtaler ikke. Det konstaterer fakta, angir regelen og trekker konklusjonen, i den rekkefølgen. Hver setning er et faktum, en regel eller konklusjonen av de to; bland dem ikke i samme setning. Konklusjonen om at bilen har en mangel står der planen setter den, etter det den bygger på.
@@ -203,9 +215,9 @@ export const RUBRIKK = [
   { id: "juss", tekst: "Det juridiske stemmer med <argumenter> og <rammer>: riktig formodningsperiode, riktig krav, ingen krav eller paragrafer utenfor <argumenter>, og ingen argumenter i feil sammenheng." },
   { id: "tidslinje", tekst: "Datoene i brevet stemmer med <sak>, og rekkefølgen av hendelsene er riktig. En tidsavstand som «to dager etter» eller «mindre enn to måneder etter» er ikke en ny dato." },
   { id: "gjentakelse", tekst: "Samme opplysning eller poeng står ikke mer enn én gang, for eksempel samme symptom i to avsnitt eller samme vurdering av rapporten to ganger." },
-  { id: "svakheter", tekst: "Brevet påstår ikke noe saken viser at ikke stemmer, for eksempel at reklamasjonen kom i tide når den kom sent, eller at forhandleren avviste når forhandleren ikke ble spurt. Brevet skal ikke forklare eller nevne svakheter; at de ikke nevnes, er ikke en feil." },
+  { id: "svakheter", tekst: "Brevet påstår ikke noe saken viser at ikke stemmer, for eksempel at reklamasjonen kom i tide når den kom sent, eller at forhandleren avviste når forhandleren ikke ble spurt. Brevet skal ikke forklare eller nevne svakheter; at de ikke nevnes, er ikke en feil. Unntak: forskjellene mellom vedtaket og forbrukerens sak som står i henvisningsavsnittet, skal stå, kort og uten motargument." },
   { id: "presisjon", tekst: "Ingen skjemarester: intervaller («1 000–5 000 km»), svaralternativer med «eller» som står som et uferdig valg, eller en setning som sier mer enn <sak> og <kilder> gir grunnlag for (for eksempel en konklusjon lagt i verkstedets munn)." },
-  { id: "tone", tekst: "Nøkternt og konstaterende, som et brev fra en jurist: ingen gradsord, appell, følelser, karakteristikker eller trusler; fakta, regel og konklusjon står hver for seg." },
+  { id: "tone", tekst: "Nøkternt og konstaterende, som et brev fra en jurist: ingen gradsord, appell, følelser, karakteristikker eller trusler; fakta, regel og konklusjon står hver for seg. Sammenligningen med vedtaket i henvisningsavsnittet er ikke appell eller gradsord." },
   { id: "lesbarhet", tekst: "En forhandler forstår ved første lesning hva som har skjedd, hva som kreves og innen når." },
 ] as const;
 // The points that send the letter back to the author; the rest are shown as remarks only.

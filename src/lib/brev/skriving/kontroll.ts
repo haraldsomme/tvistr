@@ -75,6 +75,10 @@ export function kontroller(utkast: Utkast, plan: Brevplan, m: Saksmodell): Avvik
       if (forbudt.has(id)) legg("forbudt", `Argumentet «${id}» skal ikke være med: ${forbudt.get(id)}`, s.tekst);
       else if (!planlagt.has(id)) legg("ukjent_argument", `Argumentet «${id}» er ikke i planen.`, s.tekst);
     }
+  // «Like sterkt» only where the plan's føring for the decision says it: the comparison is the plan's, not
+  // the author's.
+  if (!plan.argumenter.some((a) => a.id === "henvisning" && a.foring.includes("minst like sterkt")))
+    for (const s of setninger) if (/like sterkt/i.test(s.tekst)) legg("henvisning", "Brevet sier at momentene trekker like sterkt, men planen sier det ikke.", s.tekst);
 
   // Marks and quotes.
   const sitater = new Map(utkast.sitater.map((s) => [s.id, s]));

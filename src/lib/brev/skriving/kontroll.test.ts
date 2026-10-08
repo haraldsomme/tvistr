@@ -70,6 +70,15 @@ describe("kontroller", () => {
     expect(regler(med(godt(p), s, { ...s }), p, m)).toContain("gjentakelse");
   });
 
+  it("godtar «like sterkt» bare når føringen for vedtaket har det", () => {
+    expect(p.argumenter.some((a) => a.id === "henvisning")).toBe(true);
+    const medForing = (foring: string): Brevplan => ({ ...p, argumenter: p.argumenter.map((a) => (a.id === "henvisning" ? { ...a, foring } : a)) });
+    const s = { tekst: "De samme momentene trekker minst like sterkt i min sak.", argumenter: [] };
+    expect(kontroller(med(godt(p), s), medForing("De samme momentene trekker minst like sterkt i min sak."), m)).toEqual([]);
+    expect(regler(med(godt(p), s), medForing("Min sak: bilen var 2 år gammel. Skriv ikke at momentene trekker like sterkt."), m)).toContain("henvisning");
+    expect(regler(med(godt(p), { tekst: "Momentene trekker like sterkt her.", argumenter: [] }), medForing("Min sak."), m)).toContain("henvisning");
+  });
+
   it("hakeparenteser: bare plassholderne i planen, og alle må stå", () => {
     expect(regler(med(godt(p), { tekst: "Kjøpt for [kjøpesum].", argumenter: [] }), p, m)).toContain("hakeparentes");
     const mm = modell({ svar: svar({ kjopesum: "" }), utfylling: { feilen } });

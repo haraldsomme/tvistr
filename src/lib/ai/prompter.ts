@@ -101,7 +101,7 @@ Bilen hadde gått 180 000 km da jeg kjøpte den. Feilen går ut over det som kan
 
 I vedtak {{henvisning}} tok Forbrukerklageutvalget stilling til det samme spørsmålet som denne saken gjelder, i et kjøp der en forbruker kjøpte bil av en næringsdrivende forhandler: om bilen var i dårligere stand enn kjøperen hadde grunn til å forvente ut fra alder, kilometerstand og pris, eller om feilen var normal slitasje. Bilen var 12 år gammel og hadde gått 210 000 km da den ble kjøpt. Forhandleren hadde ikke opplyst om feilen. Klimaanlegget sluttet å gi kald luft fem uker etter kjøpet. Utvalget la vekt på at feilen viste seg kort tid etter leveringen, og at en slik feil ikke er normal slitasje på en bil med den alderen og kilometerstanden. Kjøperen fikk prisavslag.
 
-De samme momentene trekker minst like sterkt i min sak. Feilen viste seg 15 dager etter kjøpet: tidligere enn i vedtaket, på en nyere bil med kortere kjørelengde.
+De samme momentene trekker minst like sterkt i min sak. Feilen viste seg 15 dager etter kjøpet: tidligere enn i vedtaket, på en nyere bil med kortere kjørelengde. Feilen var heller ikke opplyst før kjøpet.
 
 Reklamasjonen kom innen to måneder etter at jeg oppdaget feilen, jf. § 27 første ledd. Med dette brevet bekrefter jeg reklamasjonen skriftlig.
 
@@ -133,7 +133,7 @@ Bilen hadde gått 130 000 km da jeg kjøpte den. Feilen går ut over det som kan
 
 I vedtak {{henvisning}} tok Forbrukerklageutvalget stilling til det samme spørsmålet som denne saken gjelder, i et kjøp der en forbruker kjøpte bil av en næringsdrivende forhandler: om en feil som viser seg lenge etter kjøpet, likevel skyldes forhold som var der ved leveringen, slik at bilen ikke svarer til det kjøperen hadde grunn til å forvente. Bilen var 4 år gammel og hadde gått 90 000 km da den ble kjøpt. Forhandleren hadde ikke opplyst om feilen. Rust i dørene viste seg drøye to år etter kjøpet. Utvalget la vekt på at en takstmann hadde funnet at rusten skyldtes en mangelfull reparasjon utført før salget. Kjøperen fikk prisavslag satt lik utbedringskostnadene.
 
-Min bil var like gammel da jeg kjøpte den. Den hadde gått lenger enn bilen i vedtaket, og feilen viste seg senere etter kjøpet. Vedtaket gjaldt rust og ikke en lekkasje, men spørsmålet er det samme: om feilen var der ved leveringen.
+Min bil var 4 år gammel da jeg kjøpte den, og feilen var heller ikke opplyst før kjøpet. Min bil hadde gått lenger enn bilen i vedtaket, og feilen viste seg senere etter kjøpet. Vedtaket gjaldt rust og ikke en lekkasje, men spørsmålet er det samme: om feilen var der ved leveringen.
 
 Bilen er ment å vare vesentlig lenger enn to år, og fristen for å reklamere er derfor fem år, jf. § 27 andre ledd. Reklamasjonen kom innen to måneder etter at jeg oppdaget feilen og innen fem år etter overtakelsen. Fristen er overholdt selv om det nå er gått mer enn fem år siden overtakelsen. Med dette brevet bekrefter jeg reklamasjonen skriftlig.
 
@@ -214,7 +214,7 @@ export const RUBRIKK = [
   { id: "sitater", tekst: "Det brevet sier at en rapport, annonse eller melding sier, står faktisk i <kilder> eller i forbrukerens gjengivelse i <sak>. Gjelder særlig hva en rapport sier om når feilen oppsto." },
   { id: "juss", tekst: "Det juridiske stemmer med <argumenter> og <rammer>: riktig formodningsperiode, riktig krav, ingen krav eller paragrafer utenfor <argumenter>, og ingen argumenter i feil sammenheng." },
   { id: "tidslinje", tekst: "Datoene i brevet stemmer med <sak>, og rekkefølgen av hendelsene er riktig. En tidsavstand som «to dager etter» eller «mindre enn to måneder etter» er ikke en ny dato." },
-  { id: "gjentakelse", tekst: "Samme opplysning eller poeng står ikke mer enn én gang, for eksempel samme symptom i to avsnitt eller samme vurdering av rapporten to ganger." },
+  { id: "gjentakelse", tekst: "Samme opplysning eller poeng står ikke mer enn én gang, for eksempel samme symptom i to avsnitt eller samme vurdering av rapporten to ganger. Unntak: i sammenligningen med vedtaket er en kort henvisning tilbake til et faktum som står tidligere i brevet (for eksempel «feilen var heller ikke opplyst før kjøpet»), ikke gjentakelse." },
   { id: "svakheter", tekst: "Brevet påstår ikke noe saken viser at ikke stemmer, for eksempel at reklamasjonen kom i tide når den kom sent, eller at forhandleren avviste når forhandleren ikke ble spurt. Brevet skal ikke forklare eller nevne svakheter; at de ikke nevnes, er ikke en feil. Unntak: forskjellene mellom vedtaket og forbrukerens sak som står i henvisningsavsnittet, skal stå, kort og uten motargument." },
   { id: "presisjon", tekst: "Ingen skjemarester: intervaller («1 000–5 000 km»), svaralternativer med «eller» som står som et uferdig valg, eller en setning som sier mer enn <sak> og <kilder> gir grunnlag for (for eksempel en konklusjon lagt i verkstedets munn)." },
   { id: "tone", tekst: "Nøkternt og konstaterende, som et brev fra en jurist: ingen gradsord, appell, følelser, karakteristikker eller trusler; fakta, regel og konklusjon står hver for seg. Sammenligningen med vedtaket i henvisningsavsnittet er ikke appell eller gradsord." },
@@ -234,9 +234,12 @@ Du får:
 
 Dette er godkjent innhold og skal ikke vurderes som påstander om saken:
 - Setninger som gjengir <argumenter>: juridiske regler, krav, rente, frister, slitasje, forbehold og vedleggslisten.
-- Avsnittet om vedtaket fra Forbrukerklageutvalget, med saksnummer og dato, og linjen til slutt med lenken til vedtaket. Systemet har valgt og satt inn vedtaket.
+- I avsnittene om vedtaket fra Forbrukerklageutvalget de to første delene: rettsspørsmålet og partene, og vedtakets fakta, det utvalget la vekt på og utfallet, med saksnummer og dato. Systemet har valgt og satt inn vedtaket.
+- Linjen til slutt med lenken til vedtaket.
 - Svarfristen, kontonummeret og e-posten. Systemet har regnet ut og satt inn dem ut fra brevets dato.
 - Overskriftene Faktum, Rettslig grunnlag, Krav, Svarfrist og videre saksgang og Vedlegg. Systemet har satt dem.
+
+Sammenligningen med forbrukerens sak i avsnittene om vedtaket (det som er likt eller sterkere i forbrukerens sak, og forskjellene som står kort) vurderes: den skal stemme med <sak> og med føringen for vedtaket i <argumenter>. Setningen om at momentene trekker minst like sterkt, eller noe som betyr det samme, står bare når føringen har den.
 
 Vurder hvert punkt i rubrikken, ett svar per punkt:
 ${RUBRIKK.map((p) => `- ${p.id}: ${p.tekst}`).join("\n")}

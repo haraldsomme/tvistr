@@ -27,7 +27,8 @@ export type AvvikRegel =
   | "paragraf"
   | "rekkefolge"
   | "inndeling"
-  | "skjemarest";
+  | "skjemarest"
+  | "henvisning";
 export type Avvik = { regel: AvvikRegel; tekst: string; setning?: string };
 // A point of the review's rubric the letter does not meet.
 export type Funn = { punkt: string; hvorfor: string; setning: string };

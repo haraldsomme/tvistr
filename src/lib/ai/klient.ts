@@ -2,9 +2,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { sjekkSkjema } from "./skjemasjekk";
 
 export const MODELL = "claude-sonnet-5-5";
-// Writes the whole complaint letter; the rest of the app uses MODELL.
-export const MODELL_FORFATTER = "claude-opus-5-5";
-export type Modell = typeof MODELL | typeof MODELL_FORFATTER;
+// Writes the whole complaint letter; the rest of the app uses MODELL. MODELL_FORFATTER in the environment
+// lets brev-eval try the cheaper model.
+export const MODELL_FORFATTER: "claude-opus-5-5" | "claude-sonnet-5-5" = process.env.MODELL_FORFATTER === "claude-sonnet-5-5" ? "claude-sonnet-5-5" : "claude-opus-5-5";
+export type Modell = "claude-sonnet-5-5" | "claude-opus-5-5";
 
 // USD per million tokens.
 const PRISER: Record<Modell, { inn: number; ut: number; cacheSkriv: number; cacheLes: number }> = {

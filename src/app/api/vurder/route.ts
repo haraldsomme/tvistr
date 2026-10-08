@@ -47,7 +47,6 @@ export async function POST(request: Request) {
         ref: v.eksempel.henvisning.ref,
         organ: v.eksempel.henvisning.organ,
         kildeUrl: v.eksempel.henvisning.kildeUrl,
-        treff: v.eksempel.treff,
       },
       tiltak: v.tiltak.map((t) => (v.niva === "svak" ? t : { tittel: t.tittel })),
       utvalg: v.statistikk && { n: v.statistikk.n, vunnet: v.statistikk.vunnet, spesifikk: v.statistikk.spesifikk },

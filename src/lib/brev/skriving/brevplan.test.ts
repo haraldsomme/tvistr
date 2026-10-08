@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { momenterFor, type Moment } from "../momenter";
 import { rettelseTilLagring } from "./avklaring";
-import { planlegg, type ArgumentId } from "./brevplan";
+import { DEL_FOR_ARGUMENT, DELER, planlegg, type ArgumentId } from "./brevplan";
 import { forfatterBruker } from "@/lib/ai/prompter";
 import { sakForModell } from "./saksmodell";
 import { avsender, feilen, modell, svar } from "./testdata";
@@ -136,6 +136,23 @@ describe("planlegg", () => {
     expect(antall(a, "rente")).toBe(1);
   });
 
+  it("setter argumentene i delenes rekkefølge, og historikken uten paragrafer", () => {
+    const saker: Parameters<typeof modell>[] = [
+      [],
+      [{ svar: svar({ kjopAlder: "2_5", kjopsdato: "2023-05-31", oppdaget: "over_2_ar" }), utfylling: { feilen: { ...feilen, dato: "2026-08-01" } } }],
+      [{ svar: svar({ kontakt: "ja" }), utfylling: { feilen, retting: "avvist", reklamasjon: { dato: "2026-04-05", mate: "epost" }, krav: { type: "prisavslag", utbedringNok: 20000, utgifter: [] } } }],
+      [{ svar: svar({ kontakt: "ja" }), utfylling: { feilen, retting: "ikke_rettet", reklamasjon: { dato: "2026-04-05", mate: "epost" }, krav: { type: "heving", utgifter: [] } } }],
+    ];
+    for (const a of saker) {
+      const p = plan(...a);
+      const deler = p.argumenter.map((x) => DELER.indexOf(DEL_FOR_ARGUMENT[x.id]));
+      expect(deler).toEqual([...deler].sort((x, y) => x - y));
+      expect(p.argumenter.find((x) => x.id === "historikk")?.foring ?? "").not.toContain("§");
+    }
+    const p = plan(...saker[2]);
+    expect(p.argumenter.find((x) => x.id === "reklamasjon")?.foring).toContain("innen to måneder etter at jeg oppdaget feilen, jf. § 27 første ledd");
+  });
+
   it("tar med kontonummeret bare når brevet krever penger", () => {
     expect(forbudte({ utfylling: { feilen, avsender } })).toContain("kontonummer");
     const p = plan({ svar: svar({ kontakt: "ja" }), utfylling: { feilen, avsender, retting: "avvist", reklamasjon: { dato: "2026-04-05", mate: "epost" }, krav: { type: "prisavslag", utgifter: [] } } });
@@ -204,7 +221,7 @@ describe("planlegg", () => {
     const avklaring = (svar: string) => ({ runde: 1, moment: "km_etter_kjop", tema: "feilen" as const, sporsmal: "Hvor langt hadde du kjørt?", svar });
     const gunstig = plan({ utfylling: { feilen, avklaringer: [avklaring("Under 1 000 km")] } });
     const m = gunstig.argumenter.find((a) => a.id === "momenter");
-    expect(m?.foring).toContain("lite sannsynlig at feilen har oppstått etter overtakelsen");
+    expect(m?.foring).toContain("siden overtakelsen");
     const ugunstig = plan({ utfylling: { feilen, avklaringer: [avklaring("Over 15 000 km")] } });
     expect(ugunstig.argumenter.map((a) => a.id)).not.toContain("momenter");
     expect(ugunstig.advarsler.map((a) => a.id)).toContain("moment-km_etter_kjop");

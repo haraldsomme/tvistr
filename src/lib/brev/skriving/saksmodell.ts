@@ -2,6 +2,7 @@ import { beregnFaktorer, kjopsdatoFor, type Faktorer } from "@/lib/vurdering/fak
 import { NAAR } from "@/lib/vurdering/grunnlag";
 import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
+import { besvarteMomenter } from "../momenter";
 import { avledSvar } from "../svar";
 import { AVKLARING_TEMAER, type Avklaring as LagretAvklaring, type Utfylling } from "../utfylling";
 
@@ -146,7 +147,11 @@ export function sakForModell(m: Saksmodell): Record<string, unknown> {
       kjoperensBeskrivelse: u.feilen ? rens(u.feilen.egen) : null,
       godkjentTekst: u.feilen ? u.feilen.avsnitt.map(rens) : [],
       svarPaSporsmal: (u.feilen?.fakta ?? []).map((x) => ({ feil: x.feil, sporsmal: x.sporsmal, svar: rens(x.svar) })),
+      kmVedFeil: u.kmVedFeil ?? null,
+      verksted: u.verksted ? { undersokt: u.verksted.undersokt, funn: u.verksted.funn ? rens(u.verksted.funn) : null } : null,
     },
+    // What the steps asked about the forhold Forbrukerklageutvalget has weighed, and the answers.
+    forhold: besvarteMomenter(u.momenter, { vedKjop: input.bilOgKjop.kmVedKjop, vedFeil: u.kmVedFeil }, []).map((b) => ({ forhold: b.moment.navn, sporsmal: b.moment.sporsmal, svar: rens(b.svar) })),
     forKjopet: {
       kjenteTilFeilen: input.feilen.opplystForKjop,
       uriktigOpplysning: u.opplysning ? { kilde: u.opplysning.kilde, kjoperensGjengivelse: rens(u.opplysning.tekst) } : null,

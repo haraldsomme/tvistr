@@ -1,0 +1,38 @@
+{
+  "flere-feil": {
+    "kjoringer": 1,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 2,
+    "tekstfeil": 0,
+    "jurist": 4
+  },
+  "muntlig-opplysning": {
+    "kjoringer": 1,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 0,
+    "tekstfeil": 0,
+    "jurist": 4
+  },
+  "sint-tekst": {
+    "kjoringer": 1,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 0,
+    "tekstfeil": 0,
+    "jurist": 4
+  },
+  "to-feil-garanti": {
+    "kjoringer": 1,
+    "feil": 0,
+    "planfeil": 0,
+    "avvik": 0,
+    "funn": 2,
+    "tekstfeil": 0,
+    "jurist": 3.5
+  }
+}

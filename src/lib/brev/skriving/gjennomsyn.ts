@@ -2,7 +2,7 @@ import { kallVerktoy, type Forbruk } from "@/lib/ai/klient";
 import { BREV_GJENNOMSYN_SYSTEM, gjennomsynBruker, RUBRIKK } from "@/lib/ai/prompter";
 import { norskDato } from "../brev";
 import type { Brevplan } from "./brevplan";
-import { fyllInn } from "./render";
+import { brevTekst, fyllInn } from "./render";
 import { sakForModell, type Saksmodell } from "./saksmodell";
 import type { Funn, Utkast } from "./typer";
 
@@ -43,7 +43,7 @@ function formodningFor(plan: Brevplan): string {
 
 export async function gjennomse(m: Saksmodell, plan: Brevplan, utkast: Utkast): Promise<{ funn: Funn[]; forbruk: Forbruk }> {
   const utenAvsender: Saksmodell = { ...m, utfylling: { ...m.utfylling, avsender: undefined } };
-  const brev = fyllInn(utkast, plan, utenAvsender, m.idag).join("\n\n");
+  const brev = brevTekst(fyllInn(utkast, plan, utenAvsender, m.idag));
   const svar = await kallVerktoy<{ punkter: { punkt: string; oppfylt: boolean; hvorfor: string; setning: string }[] }>({
     system: BREV_GJENNOMSYN_SYSTEM,
     verktoy: VURDER_BREV,

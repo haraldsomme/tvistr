@@ -1,20 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { planlegg, type Brevplan } from "./brevplan";
+import { DEL_FOR_ARGUMENT, planlegg, type Brevplan } from "./brevplan";
 import { kontroller } from "./kontroll";
 import type { Setning, Utkast } from "./typer";
 import { avsender, feilen, modell, svar } from "./testdata";
 
-// One sentence per argument, with the marks the plan requires, and every placeholder: a letter that
-// passes every rule.
+// One sentence per argument, with the marks the plan requires, one paragraph per part of the letter,
+// and every placeholder: a letter that passes every rule.
 function godt(plan: Brevplan): Utkast {
   const tekst = (id: string) =>
     id === "henvisning" ? "henvisning {{henvisning}}." : id === "svarfrist" ? "svarfrist {{dato:svarfrist}}." : id === "kontonummer" ? "kontonummer {{kontonummer}}." : `${id}.`;
-  return {
-    sitater: [],
-    avsnitt: [{ setninger: [...plan.argumenter.map((a) => ({ tekst: tekst(a.id), argumenter: [a.id] })), ...plan.mangler.map((x) => ({ tekst: `[MANGLER: ${x.tekst}]`, argumenter: [] }))] }],
-  };
+  const avsnitt: Utkast["avsnitt"] = [];
+  let del: string | null = null;
+  for (const a of plan.argumenter) {
+    if (DEL_FOR_ARGUMENT[a.id] !== del) avsnitt.push({ setninger: [] });
+    del = DEL_FOR_ARGUMENT[a.id];
+    avsnitt.at(-1)!.setninger.push({ tekst: tekst(a.id), argumenter: [a.id] });
+  }
+  if (plan.mangler.length) avsnitt.push({ setninger: plan.mangler.map((x) => ({ tekst: `[MANGLER: ${x.tekst}]`, argumenter: [] })) });
+  return { sitater: [], avsnitt };
 }
 const med = (u: Utkast, ...ekstra: Setning[]): Utkast => ({ ...u, avsnitt: [...u.avsnitt, { setninger: ekstra }] });
+// The same change to the sentences of every paragraph.
+const endre = (u: Utkast, f: (s: Setning[]) => Setning[]): Utkast => ({ ...u, avsnitt: u.avsnitt.map((a) => ({ setninger: f(a.setninger) })) });
 const regler = (u: Utkast, p: Brevplan, m: ReturnType<typeof modell>) => kontroller(u, p, m).map((a) => a.regel);
 
 describe("kontroller", () => {
@@ -26,8 +33,7 @@ describe("kontroller", () => {
   });
 
   it("finner et argument som mangler, et forbudt og et ukjent", () => {
-    const u = godt(p);
-    u.avsnitt[0].setninger = u.avsnitt[0].setninger.filter((s) => !s.argumenter.includes("formodning"));
+    const u = endre(godt(p), (ss) => ss.filter((s) => !s.argumenter.includes("formodning")));
     expect(regler(u, p, m)).toContain("dekning");
     expect(regler(med(godt(p), { tekst: "Jeg hever kjøpet.", argumenter: ["krav_heving"] }), p, m)).toContain("forbudt");
     expect(regler(med(godt(p), { tekst: "Mangelen er vesentlig.", argumenter: ["vesentlig"] }), p, m)).toContain("ukjent_argument");
@@ -69,8 +75,7 @@ describe("kontroller", () => {
     const mm = modell({ svar: svar({ kjopesum: "" }), utfylling: { feilen } });
     const pm = planlegg(mm);
     expect(kontroller(godt(pm), pm, mm)).toEqual([]);
-    const uten = godt(pm);
-    uten.avsnitt[0].setninger = uten.avsnitt[0].setninger.filter((s) => !s.tekst.startsWith("[MANGLER"));
+    const uten = endre(godt(pm), (ss) => ss.filter((s) => !s.tekst.startsWith("[MANGLER")));
     expect(regler(uten, pm, mm)).toContain("hakeparentes");
   });
 
@@ -82,8 +87,7 @@ describe("kontroller", () => {
 
   it("finner merker brevet ikke kan bruke, og merker som mangler", () => {
     expect(regler(med(godt(p), { tekst: "Se {{fakturanummer}}.", argumenter: [] }), p, m)).toContain("merke");
-    const u = godt(p);
-    u.avsnitt[0].setninger = u.avsnitt[0].setninger.map((s) => ({ ...s, tekst: s.tekst.replace("{{dato:svarfrist}}", "snart") }));
+    const u = endre(godt(p), (ss) => ss.map((s) => ({ ...s, tekst: s.tekst.replace("{{dato:svarfrist}}", "snart") })));
     expect(regler(u, p, m)).toContain("merke");
   });
 
@@ -111,9 +115,18 @@ describe("kontroller", () => {
   });
 
   it("finner argumenter i feil rekkefølge", () => {
-    const u = godt(p);
-    u.avsnitt[0].setninger = [...u.avsnitt[0].setninger].reverse();
+    const u = endre(godt(p), (ss) => [...ss].reverse());
     expect(regler(u, p, m)).toContain("rekkefolge");
+    expect(regler(u, p, m)).not.toContain("inndeling");
+  });
+
+  it("finner avsnitt som blander delene, deler i feil rekkefølge og overskrifter i teksten", () => {
+    const u = godt(p);
+    const blandet: Utkast = { ...u, avsnitt: [{ setninger: u.avsnitt.slice(0, 2).flatMap((a) => a.setninger) }, ...u.avsnitt.slice(2)] };
+    expect(regler(blandet, p, m)).toContain("inndeling");
+    const byttet: Utkast = { ...u, avsnitt: [u.avsnitt[0], u.avsnitt[2], u.avsnitt[1], ...u.avsnitt.slice(3)] };
+    expect(kontroller(byttet, p, m).filter((a) => a.regel === "inndeling").map((a) => a.tekst)).toEqual(["Et avsnitt under Faktum står etter Rettslig grunnlag."]);
+    expect(regler(med(u, { tekst: "Rettslig grunnlag", argumenter: [] }), p, m)).toContain("inndeling");
   });
 
   it("finner brev som er for lange", () => {

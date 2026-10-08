@@ -14,6 +14,8 @@ export type Kjoretoy = {
   // The year the vehicle was first registered, anywhere. The registry has no model-year field; this
   // is the closest, and can be a year off the model year.
   ar: number | null;
+  // Registered abroad before it was registered in Norway. Left out when the registry does not tell.
+  bruktimportert?: boolean;
 };
 
 // `eierFra` is the day the vehicle was registered on its current owner, which is usually the buyer
@@ -55,7 +57,12 @@ export function lesKjoretoy(json: unknown): Kjoretoy | null {
   if (!merke || !modell || !regnr) return null;
   const dato = k?.godkjenning?.forstegangsGodkjenning?.forstegangRegistrertDato ?? k?.forstegangsregistrering?.registrertForstegangNorgeDato;
   const ar = Number(dato?.slice(0, 4));
-  return { regnr, merke: penMerke(merke), modell, ar: ar > 1900 ? ar : null };
+  // ponytail: three months between the two dates counts as imported used; a new car is registered here
+  // within days. Check against the registry's import field if it ever turns up in the API.
+  const forst = k?.godkjenning?.forstegangsGodkjenning?.forstegangRegistrertDato;
+  const norge = k?.forstegangsregistrering?.registrertForstegangNorgeDato;
+  const dager = forst && norge ? (Date.parse(norge) - Date.parse(forst)) / 86_400_000 : NaN;
+  return { regnr, merke: penMerke(merke), modell, ar: ar > 1900 ? ar : null, ...(!Number.isNaN(dager) && { bruktimportert: dager > 90 }) };
 }
 
 // The registry writes the day with a time and an offset («2024-06-04T10:23:02.673+02:00»). The day

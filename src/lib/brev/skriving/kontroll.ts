@@ -1,5 +1,5 @@
 import { MANEDER, RENTE_FORFALL_DAGER, SVARFRIST_DAGER } from "../brev";
-import type { Brevplan } from "./brevplan";
+import { DEL_FOR_ARGUMENT, DELER, OVERSKRIFT, type ArgumentId, type Brevplan, type Del } from "./brevplan";
 import { kjentMonster, sakForModell, type Saksmodell } from "./saksmodell";
 import type { Avvik, AvvikRegel, Utkast } from "./typer";
 
@@ -9,6 +9,8 @@ import type { Avvik, AvvikRegel, Utkast } from "./typer";
 // plan's; no relative time; not too long; nothing that identifies the buyer.
 
 export const MAKS_ORD = 650;
+// A range of km or kr («1 000–5 000 km») is an answer option from the form, not a fact.
+const INTERVALL = /\d\s*[–-]\s*\d[\d\u00a0 ]*\s*(?:km|kr)\b/;
 const MERKE = /\{\{([^{}]+)\}\}/g;
 // Words in quotation marks that are a fixed legal expression, not a quote.
 const FASTE_UTTRYKK = ["«som den er»"];
@@ -109,6 +111,23 @@ export function kontroller(utkast: Utkast, plan: Brevplan, m: Saksmodell): Avvik
       lengst = Math.max(lengst, i);
     }
 
+  // Parts: each paragraph covers arguments from one part of the letter, and the parts come in order, so
+  // the headings `render.ts` sets fall between paragraphs.
+  const navn = (d: Del) => OVERSKRIFT[d] ?? "Innledningen";
+  const overskrifter = new Set(Object.values(OVERSKRIFT).filter(Boolean).map((o) => o!.toLowerCase()));
+  for (const s of setninger)
+    if (!s.argumenter.length && overskrifter.has(s.tekst.trim().replace(/[.:]$/, "").toLowerCase())) legg("inndeling", "Overskriftene settes av systemet og skal ikke stå i teksten.", s.tekst);
+  let forrige = -1;
+  for (const a of utkast.avsnitt) {
+    const deler = [...new Set(a.setninger.flatMap((s) => s.argumenter).map((id) => DEL_FOR_ARGUMENT[id as ArgumentId]).filter(Boolean))];
+    if (deler.length > 1 && !avvik.some((x) => x.regel === "inndeling" && x.tekst.startsWith("Avsnittet blander")))
+      legg("inndeling", `Avsnittet blander ${deler.map(navn).join(" og ")}; hver del har egne avsnitt.`, a.setninger[0]?.tekst);
+    const i = deler.length ? Math.min(...deler.map((d) => DELER.indexOf(d))) : forrige;
+    if (i < forrige && !avvik.some((x) => x.regel === "inndeling" && x.tekst.startsWith("Et avsnitt")))
+      legg("inndeling", `Et avsnitt under ${navn(DELER[i])} står etter ${navn(DELER[forrige])}.`, a.setninger[0]?.tekst);
+    forrige = Math.max(forrige, i);
+  }
+
   // Paragraphs and acts: only those the plan cites.
   const foringer = plan.argumenter.map((a) => a.foring).join(" ");
   const paragrafer = new Set([...foringer.matchAll(PARAGRAF)].flatMap((x) => tallI(x[0])));
@@ -130,6 +149,7 @@ export function kontroller(utkast: Utkast, plan: Brevplan, m: Saksmodell): Avvik
     for (const [ref] of t.matchAll(PARAGRAF)) for (const n of tallI(ref)) if (!paragrafer.has(n)) legg("paragraf", `§ ${n} står ikke i planen.`, s.tekst);
     for (const [, lov] of t.matchAll(LOV)) if (!lover.has(lov.toLowerCase())) legg("paragraf", `${lov} står ikke i planen.`, s.tekst);
     if (RELATIV_TID.test(t)) legg("relativ_tid", "Relativt tidsuttrykk; bruk en dato.", s.tekst);
+    if (INTERVALL.test(t)) legg("skjemarest", "Et intervall fra skjemaet; skriv en øvre grense («under 5 000 km»).", s.tekst);
     for (const d of datoerI(t)) if (!datoer.has(d)) legg("dato", `Datoen ${d} finnes ikke i saken.`, s.tekst);
     const rest = utenDatoer(t).replace(PARAGRAF, " ").replace(/\[[^\]]*\]/g, " ");
     for (const n of tallI(rest)) if (!tall.has(n)) legg("tall", `Tallet ${n} finnes ikke i saken.`, s.tekst);

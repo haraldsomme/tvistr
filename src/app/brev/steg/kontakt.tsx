@@ -8,6 +8,7 @@ import { kjopsdatoAv, type Innsending } from "@/lib/vurdering/innsending";
 import { KONTAKT_VALG, rettingValgFor, type Kontakt, type Retting } from "@/lib/vurdering/typer";
 import { Datofelt } from "../datofelt";
 import { HJELP, Kildefelt, Nedtrekk, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } from "../felt";
+import { MomentFelt, useMomenter, type Momenter } from "./moment";
 
 export const RETTING_TEKST: Record<Retting, string> = {
   ingen: "Nei, feilen er ikke reparert",
@@ -44,10 +45,13 @@ export function KontaktFelt({
   reklamasjon,
   reparasjon,
   kilder,
+  momenter,
   aktiv,
   lagre,
   avbryt,
-}: Felles & { svar: Innsending; idag: string; retting: Retting | undefined; reklamasjon: Reklamasjon | undefined; reparasjon?: Reparasjon; kilder?: Kilder }) {
+}: Felles & { svar: Innsending; idag: string; retting: Retting | undefined; reklamasjon: Reklamasjon | undefined; reparasjon?: Reparasjon; kilder?: Kilder; momenter?: Momenter }) {
+  // Left out where the case cannot be assessed (brevside.tsx): the moments are then neither shown nor saved.
+  const m = useMomenter(momenter ?? { aktuelle: [], lagret: undefined });
   const [kontakt, setKontakt] = useState<Kontakt>(svar.kontakt || "nei");
   const [valgtRetting, setValgtRetting] = useState<Retting | "">(retting ?? (kontakt === "nei" ? "ingen" : ""));
   const [dato, setDato] = useState(reklamasjon?.dato ?? "");
@@ -83,8 +87,10 @@ export function KontaktFelt({
   const reklamasjonKlar = kontakt === "nei" || (dato >= min && dato <= idag && mate !== "" && (!forsokt || forsok !== ""));
   const reparasjonKlar = !reparert || (repDato >= min && repDato <= idag && grunn !== "" && grunner.includes(grunn));
   const klar = valgtRetting !== "" && reklamasjonKlar && reparasjonKlar;
+  const godtatt = m.gjelder("forhandler_erkjente") && kontakt !== "nei";
   const send = () =>
     lagre({
+      ...(momenter && { momenter: m.lagring("kontakt", godtatt ? ["forhandler_erkjente"] : []) }),
       svar: { ...svar, kontakt },
       retting: valgtRetting as Retting,
       reklamasjon:
@@ -145,6 +151,7 @@ export function KontaktFelt({
           sett={setSvarTekst}
         />
       )}
+      {godtatt && <MomentFelt id="forhandler_erkjente" svar={m.svar} sett={m.sett} />}
       {reparert && (
         <>
           <Datofelt label="Når ble feilen reparert?" hjelp="Datoen på fakturaen fra verkstedet." min={min || undefined} max={idag} verdi={repDato} settVerdi={setRepDato} />

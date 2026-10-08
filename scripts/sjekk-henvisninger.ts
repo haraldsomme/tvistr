@@ -12,7 +12,7 @@ import { sitatFinnes } from "../src/lib/validering";
 import { HENVISNINGER, REGELGRUNNLAG, type Henvisning, type Organ } from "../src/lib/vurdering/henvisninger";
 
 const kjerne = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
-const BELEGG_KREVES: Record<Henvisning["type"], string[]> = { lignende: ["feil", "tid", "bil", "utfall"], regel: ["regel", "bil", "utfall"] };
+const beleggKreves = (h: Henvisning) => ["feil", "tid", "bil", "utfall", ...(h.regel ? ["regel"] : [])];
 
 // The committee cites its own decisions as FKU-2019-759 for case 19/759; the newer case numbers already have that form.
 function refFor(saksnummer: string, organ: Organ): string {
@@ -27,7 +27,7 @@ async function main() {
   const ider = HENVISNINGER.map((h) => h.vedtakId);
   for (const id of new Set(ider)) if (ider.filter((x) => x === id).length > 1) feil.push(`#${id} står flere ganger`);
   for (const g of REGELGRUNNLAG)
-    if (!HENVISNINGER.some((h) => h.type === "regel" && h.grunnlag === g && h.lov === "før_2024")) feil.push(`grunnlaget ${g} mangler en regel-post etter gammel lov`);
+    if (!HENVISNINGER.some((h) => h.regel && h.grunnlag === g && h.lov === "før_2024")) feil.push(`grunnlaget ${g} mangler en post med regel etter gammel lov`);
 
   const rader = ider.length
     ? ((
@@ -62,10 +62,12 @@ async function main() {
     if (r.alder_ved_kjop !== null && Math.abs(Number(r.alder_ved_kjop) - h.alder) > 1) ut(`alder ${h.alder}, databasen har ${r.alder_ved_kjop}`);
     if (h.km !== null && !kjerne(tekst).includes(String(h.km))) ut(`km ${h.km} står ikke i vedtaket`);
 
-    const presumsjon = h.type === "regel" ? h.grunnlag === "formodning" : h.botte === "rask" || (h.lov === "etter_2024" && h.botte === "middels");
+    const presumsjon = h.botte === "rask" || (h.lov === "etter_2024" && h.botte === "middels");
     if (h.presumsjon !== presumsjon) ut(`presumsjon ${h.presumsjon}, ventet ${presumsjon}`);
+    if (h.regel && !h.grunnlag) ut("regel uten grunnlag");
+    if (h.grunnlag === "formodning" && !h.presumsjon) ut("grunnlag formodning uten presumsjon");
 
-    const setninger = h.type === "lignende" ? [h.setning, h.likhet, h.konklusjon] : [h.setning, h.regel];
+    const setninger = [h.setning, h.likhet, h.konklusjon, ...(h.regel ? [h.regel] : [])];
     for (const s of setninger) {
       if (/[[\]]/.test(s)) ut(`hakeparentes i «${s}»`);
       if (r.selger_navn && kjerne(String(r.selger_navn)).length >= 3 && kjerne(s).includes(kjerne(String(r.selger_navn)))) ut(`forhandlerens navn i «${s}»`);
@@ -79,7 +81,7 @@ async function main() {
     const b = belegg[String(h.vedtakId)];
     if (!b) ut("mangler belegg");
     else {
-      for (const k of BELEGG_KREVES[h.type]) if (!b[k]) ut(`mangler belegg for «${k}»`);
+      for (const k of beleggKreves(h)) if (!b[k]) ut(`mangler belegg for «${k}»`);
       for (const [k, sitat] of Object.entries(b)) if (!sitatFinnes(sitat, tekst)) ut(`belegget for «${k}» står ikke ordrett i vedtaket: «${sitat}»`);
     }
   }

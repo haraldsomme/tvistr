@@ -2,11 +2,20 @@
 
 Brevet og vurderingen viser til samme vedtak, valgt av `velgHenvisning` i `src/lib/vurdering/henvisninger.ts` fra listen `HENVISNINGER`. Denne filen sier hvordan vedtakene ble valgt og kontrollert, og hva som ble forkastet.
 
-## Stigen
+## Valget (fra oktober 2026)
 
-1. **Lignende sak:** samme feilgruppe og samme tidsrom fra kjøp til feilen viste seg, og en bil som ikke er mer enn fire år nyere enn kjøperens.
-2. **Nærmeste lignende sak:** samme feilgruppe i nabotidsrommet (innen 6 måneder ↔ 6 måneder til 2 år ↔ mer enn 2 år).
-3. **Samme regel:** en sak der utvalget la til grunn den regelen brevet bygger på: formodningsregelen, en rapport som viser at feilen var der ved levering, uriktige opplysninger, eller at bilen var dårligere enn kjøperen kunne forvente. Dette trinnet finnes alltid, så alle saker som loven ikke stopper, får en henvisning.
+Alle vedtakene i listen er kandidater for alle kjøpere. `velgHenvisning` regner ut en avstand til kjøperens sak, målt i år bilalder (`VEKT`), og velger den nærmeste:
+
+- **Bilens alder** teller mest: hvert år den siterte bilen er nyere enn kjøperens, teller 1,5; hvert år eldre teller 1. En nyere bil med samme problem inviterer til «normal slitasje», en eldre er det sterkeste sammenligningsgrunnlaget.
+- **Tidsrommet** fra kjøp til feilen viste seg (innen 6 måneder, 6 måneder til 2 år, mer enn 2 år): 3 per steg.
+- **Kilometerstanden** ved kjøpet: 1 per 50 000 km, høyst 3.
+- **Samme regel**: 2 når brevet bygger på en verkstedrapport eller en uriktig opplysning og vedtaket ikke er lest for den regelen (`grunnlag`).
+- **Feiltypen**: 2 når vedtaket gjelder en annen feilgruppe enn kjøperens.
+- **Loven**: 2 når vedtaket er etter en annen lov enn kjøperens (ny lov fra 1.1.2024).
+
+Ved lik avstand vinner den nærmeste alderen, så den eldste bilen, så det nyeste vedtaket. Tidligere gikk valget i en stige med samme feilgruppe først og en regel-sak sist; det ga for eksempel en 16 år gammel bil med rust til en kjøper med en 2 år gammel bil og bremsefeil.
+
+Vedtak som er lest for regelen utvalget brukte, har `grunnlag` og en `regel`-setning; brevet bruker den når kjøperens brev bygger på samme regel. Hvert grunnlag har minst én slik sak.
 
 **Aldri vunnet på en fordel kjøperen mangler.** Endringene i forbrukerkjøpsloven fra 1. januar 2024 gjelder bare avtaler inngått etter den datoen (LOV-2023-06-16-60), og alle styrket kjøperen: formodningsregelen gikk fra 6 måneder til 2 år, og «som den er» virker ikke lenger (§ 15 andre ledd). En sak vunnet etter gammel lov holder derfor også etter ny lov, unntatt når kjøperen vant fordi formodningsregelen gjaldt og brukeren ikke har den. Derfor: ingen sak vunnet på formodningsregelen for en kjøper uten den, og ingen sak etter ny lov for kjøp før 2024. Basen har ennå ingen brukbare vedtak om kjøp etter 1.1.2024 (#3023 brukte toårsregelen, men forhandleren svarte ikke), så alle postene er etter gammel lov.
 
@@ -21,7 +30,71 @@ Brevet og vurderingen viser til samme vedtak, valgt av `velgHenvisning` i `src/l
 
 Brevet oppgir ikke beløp; setningen til kjøperen i vurderingen gjør det, uten renter og saksbehandlingsgebyr.
 
-## Regel-saker
+## Eldre biler (oktober 2026)
+
+Etter at valget ble lagt om til å vekte bilens alder først, manglet det saker om biler på 18–30 år. En agent leste alle vunne forhandlersaker med biler på 17–32 år (personbil og varebil, ikke merket for kontroll, kjøp før 2024) etter de samme kriteriene som over, og en uavhengig agent kontrollerte hver påstand mot vedtaksteksten (#1579 og #224 ble rettet).
+
+**17 år, 6 måneder til 2 år** (`rust`, grunnlag `forventning`)
+
+> En Peugeot Boxer som var 17 år gammel og hadde gått 287 000 km, ble kjøpt hos forhandler som reparasjonsobjekt på grunn av startproblemer, og om lag åtte måneder etter kjøpet ble den underkjent ved EU-kontroll på grunn av alvorlig korrosjon i understellet. None
+
+- **Sak:** #967 · FTU-2015-1829 · 2016-03-31 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2016002708&dokid=217840&versjon=2&variant=P&)
+- **Til kjøperen:** I 2016 fikk kjøperen av en Peugeot Boxer delvis medhold etter å ha klaget på rust om lag åtte måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 12 000 kr etter fradrag for bruken av bilen.
+
+**18 år, innen 6 måneder** (`rust`)
+
+> En Subaru Forester som var 18 år gammel og hadde gått 114 000 km, ble kjøpt hos forhandler nylig EU-godkjent, og om lag tre måneder etter kjøpet ble det påvist betydelige mengder rust i de bakre hjulbuene. None
+
+- **Sak:** #1579 · FKU-2024-81 · 2024-09-18 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024047333&dokid=1217790&versjon=1&variant=A&)
+- **Til kjøperen:** I 2024 fikk kjøperen av en Subaru Forester medhold etter å ha klaget på rust om lag tre måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 57 000 kr.
+
+**18 år, innen 6 måneder** (`bremser`, grunnlag `forventning`)
+
+> En Toyota Rav4 som var 18 år gammel og hadde gått 180 000 km, ble kjøpt hos forhandler «as is» etter å ha blitt annonsert som velholdt, og en uke etter kjøpet viste det seg at bremseklossene foran var helt nedslitt. None
+
+- **Sak:** #2184 · FKU-2021-12654 · 2022-11-30 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022099685&dokid=796852&versjon=2&variant=A&)
+- **Til kjøperen:** I 2022 fikk kjøperen av en Toyota Rav4 delvis medhold etter å ha klaget på bremsefeil en uke etter kjøpet. Utvalget tilkjente 6 333 kr.
+
+**22 år, innen 6 måneder** (`rust`, grunnlag `forventning`)
+
+> En Jeep Grand Cherokee som var 22 år gammel og hadde gått 260 841 km, ble kjøpt hos forhandler og EU-godkjent uten feil, og to måneder etter kjøpet ble den avskiltet som trafikkfarlig etter funn av alvorlig rust på bremserør, bærearmer og bakaksel. None
+
+- **Sak:** #438 · FKU-2017-217 · 2017-09-21 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017006830&dokid=297713&versjon=1&variant=A&)
+- **Til kjøperen:** I 2017 fikk kjøperen av en Jeep Grand Cherokee delvis medhold etter å ha klaget på rust i understellet om lag to måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 49 000 kr, og tilkjente i tillegg 8 500 kr i erstatning.
+
+**24 år, innen 6 måneder** (`km_service`)
+
+> En BMW 318is som var 24 år gammel og hadde gått 201 500 km ifølge kilometertelleren, ble kjøpt hos forhandler «som den er», og innen fem måneder etter kjøpet viste det seg at telleren var tilbakestilt med minst 60 000 km. None
+
+- **Sak:** #357 · FKU-2017-805 · 2017-11-30 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017019947&dokid=326900&versjon=1&variant=A&)
+- **Til kjøperen:** I 2017 fikk kjøperen av en BMW 318is delvis medhold etter å ha klaget på tilbakestilt kilometerteller innen fem måneder etter kjøpet. Utvalget tilkjente 25 000 kr.
+
+**26 år, innen 6 måneder** (`girkasse`, grunnlag `forventning`)
+
+> En Toyota Corolla som var 26 år gammel og hadde gått 140 000 km, ble kjøpt hos forhandler «som den er» etter å ha blitt annonsert som servicefulgt og velholdt, og i underkant av to måneder etter kjøpet fikk den en feil på girkassen som gjorde at den ikke kunne kjøres. None
+
+- **Sak:** #805 · FTU-2016-736 · 2016-09-30 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2016020203&dokid=247228&versjon=1&variant=A&)
+- **Til kjøperen:** I 2016 fikk kjøperen av en Toyota Corolla medhold etter å ha klaget på feil på girkassen i underkant av to måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 26 000 kr, og tilkjente i tillegg 3 000 kr i erstatning.
+
+**28 år, innen 6 måneder** (`rust`, grunnlag `opplysning`)
+
+> En BMW 325i som var 28 år gammel og hadde gått 166 000 km, ble kjøpt hos forhandler med opplysning i annonsen om at bilen var fri for rust, og om lag fire måneder etter kjøpet oppdaget kjøperen omfattende rust; et verksted fant deretter også en feil utbedret kollisjonsskade. None
+
+- **Sak:** #224 · FKU-2018-809 · 2018-12-05 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2018019439&dokid=382372&versjon=1&variant=A&)
+- **Til kjøperen:** I 2018 fikk kjøperen av en BMW 325i medhold etter å ha klaget på rust om lag fire måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 215 000 kr, og tilkjente i tillegg 1 008 kr i erstatning.
+
+**31 år, innen 6 måneder** (`km_service`, grunnlag `opplysning`)
+
+> En Volkswagen Caravelle som var 31 år gammel og hadde gått 306 000 km, ble kjøpt hos forhandler med opplysning i annonsen om ny registerreim og vannpumpe, og knapt en måned etter kjøpet fant en NAF-test ingen dokumentasjon på at byttet var gjort. None
+
+- **Sak:** #2475 · FKU-2021-4002 · 2022-04-27 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022028900&dokid=642081&versjon=1&variant=A&)
+- **Til kjøperen:** I 2022 fikk kjøperen av en Volkswagen Caravelle delvis medhold etter å ha klaget på uriktige opplysninger om bytte av registerreim og vannpumpe knapt en måned etter kjøpet. Utvalget kom til at opplysningene var uriktige og satte prisavslaget til 7 000 kr.
+
+**Forkastet:** #1728 og #3268 («i tvil»/«under tvil»), #1304 («under tvil»), #3332 (forhandleren svarte ikke, «under noe tvil»), #1283 og #2208 (forhandleren svarte ikke), #687 (depositum, ikke mangel), #900 (manglende papirer på ombygging), #1765 (tidspunkt ukjent, usikkert om selger var forhandler), #838 (uklart om feilen viste seg før eller etter seks måneder), #2663 (feil fra to tidsrom avgjort samlet), #745 og #512 (gyldige, men overlapper #224 og #1579).
+
+**Hull:** basen har ingen vunnet forhandlersak med en bil over 17 år der feilen viste seg mer enn seks måneder etter kjøpet (#2099, 20 år, er merket for kontroll og har ukjent tidspunkt). En kjøper uten formodningsregelen med en bil over 20 år får derfor #967 (17 år) eller #2298 (37 år). Testen «biblioteket» krever dekning innen 4 år bare opp til 20 år for disse kjøperne.
+
+## Saker lest for regelen (`grunnlag` og `regel`)
 
 ### Formodningsregelen (§ 18) (`regel/formodning`)
 
@@ -55,7 +128,7 @@ Brevet oppgir ikke beløp; setningen til kjøperen i vurderingen gjør det, uten
 - **Til kjøperen:** I 2021 fikk kjøperen av en Nissan Patrol medhold etter å ha klaget på omfattende rustskader om lag halvannet år etter kjøpet. Utvalget kom til at kjøpet kunne heves.
 - **Bil:** 16 år, 191 397 km · lov: før_2024
 
-## Lignende saker
+## Andre saker, etter feilgruppe
 
 ### Motor
 
@@ -240,7 +313,16 @@ Uten lignende sak: sen · eldre. Der brukes nabotidsrommet eller regel-saken.
 - **Sak:** #2298 · FKU-2021-4001 · 2022-09-28 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022059346&dokid=705701&versjon=1&variant=A&)
 - **Til kjøperen:** I 2022 fikk kjøperen av en Porsche 911 medhold etter å ha klaget på bremsefeil sju til åtte måneder etter kjøpet. Utvalget tilkjente 23 000 kr.
 
-Uten lignende sak: rask · yngre, rask · eldre, middels · yngre, sen · yngre, sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+**innen 6 måneder, nesten 2 år gammel bil** (`bremser/rask`)
+
+> En BMW 3-serie som var nesten to år gammel og hadde gått 56 633 km, ble kjøpt hos forhandler og fikk kast og rust i alle bremseskivene under en måned etter kjøpet. Utvalget kom til at det var upåregnelig at bremsene måtte skiftes så kort tid etter kjøpet, at bilen var mangelfull, og kjøperen fikk erstatning.
+
+- **Sak:** #265 · FKU-2018-219 · 2018-06-20 · [vedtaket](https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2018009312&dokid=361108&versjon=1&variant=A&)
+- **Til kjøperen:** I 2018 fikk kjøperen av en BMW 3-serie delvis medhold etter å ha klaget på bremsefeil under en måned etter kjøpet. Utvalget tilkjente 11 763 kr.
+
+Uten lignende sak: rask · eldre, middels · yngre, sen · yngre, sen · eldre. Der brukes nabotidsrommet eller regel-saken.
+
+**Bremser, oktober 2026:** databasen har ingen bremsesak vunnet etter mer enn seks måneder som holder kriteriene. De som ble lest og forkastet: #2454 (Toyota Rav4, «under noe tvil»), #1086 (Mercedes, «under noe tvil», uriktig opplysning om klossene), #677 (Audi A8, bare bakbremsene, 14 km etter kjøpet), #2316, #3105, #3174 og #1203 (bremsene var slitasje eller sidepunkt; vunnet på clutch/girkasse, batteri, rust). En kjøper med bremsefeil etter mer enn seks måneder får derfor regel-saken.
 
 ### Girkasse og clutch
 

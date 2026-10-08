@@ -48,8 +48,6 @@ import {
   SPORSMAL,
 } from "./tekster";
 
-// How close the cited decision is to the buyer's case; see velgHenvisning.
-type Treff = "lignende" | "tilnaermet" | "regel";
 type Punkt = {
   tekst: string;
   vekt: "for" | "mot" | "noytral";
@@ -67,7 +65,7 @@ type Resultat = {
   tiltak: { tittel: string; tekst?: string }[];
   // null when the five-year deadline has passed, so no comparison was made.
   utvalg: { n: number; vunnet: number; spesifikk: boolean } | null;
-  eksempel: { setning: string; ref: string; organ: string; kildeUrl: string; treff: Treff } | null;
+  eksempel: { setning: string; ref: string; organ: string; kildeUrl: string } | null;
 };
 
 const STEG_TEKST: Record<Steg, { navn: string; tittel: string }> = {
@@ -131,11 +129,6 @@ const VEKT_TEGN = {
   for: { tegn: "+", farge: "oklch(0.42 0.1 160)", bakgrunn: "oklch(0.95 0.04 160)", tekst: "Taler for saken" },
   mot: { tegn: "−", farge: "oklch(0.42 0.12 25)", bakgrunn: "oklch(0.95 0.04 25)", tekst: "Taler mot saken" },
 } as const;
-const TREFF_TEKST: Record<Treff, string> = {
-  lignende: "Her er en lignende sak:",
-  tilnaermet: "Her er den nærmeste lignende saken:",
-  regel: "Her er en sak der utvalget la samme regel til grunn:",
-};
 
 // The comparison point shown right under the title: how many similar decisions that got medhold the case
 // was checked against, then the one example decision (always one the buyer won), if any.
@@ -147,7 +140,7 @@ function sammenligningTekst(
   const gruppe = utvalg.spesifikk ? "lignende vedtak" : "vedtak om bruktbil kjøpt fra forhandler";
   const grunnsetning = `Vi har sjekket saken din opp mot ${utvalg.vunnet} ${gruppe} fra Forbrukerklageutvalget som fikk medhold.`;
   return eksempel
-    ? { ramme: `${grunnsetning} ${TREFF_TEKST[eksempel.treff]}`, setning: eksempel.setning }
+    ? { ramme: `${grunnsetning} Her er en lignende sak:`, setning: eksempel.setning }
     : { ramme: grunnsetning, setning: null };
 }
 const KORT = "overflow-hidden rounded-lg border border-[#dcd8cf] bg-white";

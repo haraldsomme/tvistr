@@ -67,7 +67,8 @@
     "reklamasjon": {
       "dato": "2026-04-05",
       "mate": "epost"
-    }
+    },
+    "kmVedFeil": 99600
   },
   "forventet": {
     "argumenter": [
@@ -89,13 +90,6 @@
       "tema": "kontakt",
       "sporsmal": "Har du tatt opp ryggekameraet med forhandleren, og når?",
       "svar": "Nei, ikke ennå"
-    },
-    {
-      "runde": 1,
-      "moment": "km_etter_kjop",
-      "tema": "feilen",
-      "sporsmal": "Omtrent hvor langt hadde du kjørt bilen etter kjøpet da den første feilen viste seg?",
-      "svar": "Under 1 000 km"
     }
   ]
 }

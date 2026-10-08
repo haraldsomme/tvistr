@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { FEILTYPER_KNAPPER, kjopsalderAv, oppdagetMulig, sporOmFemarsfrist, tilKlageInput, type Innsending } from "./innsending";
 import type { Statistikk } from "./statistikk";
-import { FEILOPPLYSNING_VALG, KJOPSFORM_VALG, KONTAKT_VALG, OPPDAGET_VALG, type FeilKnapp } from "./typer";
+import { FEILOPPLYSNING_VALG, KJOPSFORM_VALG, KONTAKT_VALG, OPPDAGET_VALG } from "./typer";
 import { vurder } from "./vurder";
 import { POST } from "@/app/api/vurder/route";
 
@@ -135,22 +135,6 @@ const TITTEL: Record<"god" | "svak" | "utenfor", RegExp> = {
   utenfor: /^(Forbrukerkjøpsloven gjelder ikke for dette kjøpet\.|Forbrukerkjøpsloven gjelder ikke når du kjøper av en privatperson\.|Fristen for å reklamere er trolig ute\.)$/,
 };
 
-// How each defect button shows up in an example sentence. «Annet» has no group of its own.
-const FRASE: Partial<Record<FeilKnapp, string>> = {
-  motor: "motorfeil",
-  girkasse: "girkassen",
-  elektrisk: "elektrisk feil",
-  understell: "understellet",
-  bremser: "bremsefeil",
-  rust: "rust",
-  fukt: "fukt eller lekkasje",
-  klimaanlegg: "klimaanlegget",
-  km_service: "service",
-  // The decisions speak of an earlier damage, not always of a collision.
-  skade: "skade",
-  batteri: "elbilbatteriet",
-};
-
 const MAL = /^I 20\d\d fikk kjøper(en|ne) av en .+ (delvis )?medhold etter å ha klaget på .+ (etter|som) kjøpet\. Utvalget (tilkjente [\d ]+ kr|kom til at .+)\.$/;
 
 describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
@@ -178,12 +162,11 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
 
   it("gir forventet vurdering og et eksempelvedtak i alle fire statistikkscenarier", async () => {
     const avvik: string[] = [];
-    const teller = { god: 0, svak: 0, utenfor: 0, lignende: 0, tilnaermet: 0, regel: 0 };
+    const teller = { god: 0, svak: 0, utenfor: 0, sammeFeil: 0 };
 
     for (const [n, i] of innsendinger.entries()) {
       const parsed = tilKlageInput(i, IDAG);
       if (!parsed.ok) continue;
-      const grupper = [...new Set(i.feiltyper)].filter((f) => FRASE[f]);
 
       for (const s of SCENARIER) {
         const v = await vurder(parsed.input, { hentStatistikk: async () => s.stat, idag: IDAG });
@@ -220,12 +203,10 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
           continue;
         }
         const h = e.henvisning;
-        if (s === SCENARIER[0]) teller[e.treff]++;
+        if (s === SCENARIER[0] && e.likheter.includes("feil")) teller.sammeFeil++;
         if (!MAL.test(h.setning)) avvik.push(`${merke}: setning følger ikke malen: ${h.setning}`);
         if (!h.kildeUrl.startsWith("https://") || !h.ref) avvik.push(`${merke}: henvisningen mangler kilde`);
         if (/ ikke medhold /.test(h.setning)) avvik.push(`${merke}: henvisningen skal være en sak kjøperen vant: ${h.setning}`);
-        if (grupper.length === 0 && e.treff !== "regel") avvik.push(`${merke}: uten egen feilgruppe skal henvisningen være en regel-sak, fikk ${e.treff}`);
-        if (e.treff !== "regel" && !grupper.some((g) => h.setning.includes(FRASE[g]!))) avvik.push(`${merke}: henvisningen handler ikke om en av de valgte feilene (${grupper.join(", ")}): ${h.setning}`);
       }
     }
 
@@ -234,8 +215,8 @@ describe(`${ANTALL} tilfeldige skjemaregistreringer`, () => {
     expect(avvik).toHaveLength(0);
     expect(teller.god).toBeGreaterThan(50);
     expect(teller.svak).toBeGreaterThan(50);
-    expect(teller.lignende).toBeGreaterThan(300);
-    expect(teller.regel).toBeGreaterThan(0);
+    // The defect type is the last thing the selection weighs, but most cases still get one with the same defect.
+    expect(teller.sammeFeil).toBeGreaterThan(300);
   });
 
   it("API-ruten gir samme resultat og lekker ikke statistikk", async () => {

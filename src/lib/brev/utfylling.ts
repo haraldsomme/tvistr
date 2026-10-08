@@ -2,6 +2,7 @@ import { normaliserRegnr, type Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 import { orgnrFra } from "@/lib/brreg";
 import { erDato } from "@/lib/vurdering/faktorer";
 import type { Innsending } from "@/lib/vurdering/innsending";
+import { moment } from "./momenter";
 import type { Avvik, Funn, Utkast } from "./skriving/typer";
 import {
   RETTING_VALG,
@@ -40,6 +41,12 @@ export type Utfylling = {
   gjennomgatt?: true;
   // Texts the buyer pasted in: the only thing the written letter may quote.
   kilder?: Kilder;
+  // The answers to the moments the steps ask (`MOMENTER` in momenter.ts), by moment.
+  momenter?: Momentsvar;
+  // The odometer when the defect showed; with the one at the purchase, how far the buyer had driven.
+  kmVedFeil?: number;
+  // Whether a workshop has examined the defect, and what it found, in the buyer's words.
+  verksted?: Verksted;
   // What the clarifying round asked and the buyer answered.
   avklaringer?: Avklaring[];
   // The clarifying round is done; the letter can be written.
@@ -105,6 +112,12 @@ export type Rapport = { fra: string; dato: string; sitat?: string };
 export const KILDE_NOKLER = ["rapport", "opplysning", "svar"] as const;
 export type Kilder = Partial<Record<(typeof KILDE_NOKLER)[number], string>>;
 export const KILDE_MAKS = 8000;
+
+// One answer to a moment: one of its alternatives word for word, or the buyer's own words.
+export type Momentsvar = Partial<Record<string, { svar?: string; egen?: string }>>;
+export const MOMENT_EGEN_MAKS = 300;
+export type Verksted = { undersokt: "ja" | "nei"; funn?: string };
+export const VERKSTED_FUNN_MAKS = 1000;
 
 // What the clarifying round asked and the buyer answered (null = skipped), by round.
 export const AVKLARING_TEMAER = ["kjopet", "feilen", "for_kjopet", "kontakt", "rapport", "krav"] as const;
@@ -206,7 +219,8 @@ export function lesKjoretoy(v: unknown): Kjoretoy | null {
   const modell = tekst(v.modell, 60);
   const ar = v.ar === null ? null : typeof v.ar === "number" && Number.isInteger(v.ar) && v.ar > 1900 && v.ar < 2100 ? v.ar : undefined;
   if (!regnr || !normaliserRegnr(regnr) || !merke || !modell || ar === undefined) return null;
-  return { regnr, merke, modell, ar };
+  if (v.bruktimportert !== undefined && typeof v.bruktimportert !== "boolean") return null;
+  return { regnr, merke, modell, ar, ...(typeof v.bruktimportert === "boolean" && { bruktimportert: v.bruktimportert }) };
 }
 
 function lesAdresse(v: unknown): Adresse | null {
@@ -428,6 +442,29 @@ function lesAvklaringer(v: unknown): Avklaring[] | null {
   return ut;
 }
 
+// Each answer one of the moment's own alternatives, so the letter plan can tell a favourable one, or
+// the buyer's own words. An answer that no longer fits the catalogue (its wording changed) is dropped,
+// so it does not block the save of another step.
+function lesMomenter(v: unknown): Momentsvar | null {
+  if (!erObjekt(v)) return null;
+  const ut: Momentsvar = {};
+  for (const [id, s] of Object.entries(v)) {
+    const m = moment(id);
+    if (!m || !erObjekt(s)) continue;
+    const egen = s.egen === undefined ? null : tekst(s.egen, MOMENT_EGEN_MAKS, 2);
+    if (egen) ut[id] = { egen };
+    else if (blant(m.alternativer, s.svar)) ut[id] = { svar: s.svar };
+  }
+  return ut;
+}
+
+function lesVerksted(v: unknown): Verksted | null {
+  if (!erObjekt(v) || (v.undersokt !== "ja" && v.undersokt !== "nei")) return null;
+  if (v.funn === undefined || v.undersokt === "nei") return { undersokt: v.undersokt };
+  const funn = tekst(v.funn, VERKSTED_FUNN_MAKS, 2);
+  return funn ? { undersokt: "ja", funn } : null;
+}
+
 const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } = {
   forhandler: lesForhandler,
   feilen: lesFeilen,
@@ -445,6 +482,9 @@ const LESERE: { [K in Felt]: (v: unknown, k: Kontekst) => Utfylling[K] | null } 
   sendt: lesSendt,
   gjennomgatt: lesGjennomgatt,
   kilder: lesKilder,
+  momenter: lesMomenter,
+  kmVedFeil: (v) => (heltall(v, 0, 2_000_000) ? v : null),
+  verksted: lesVerksted,
   avklaringer: lesAvklaringer,
   avklart: lesGjennomgatt,
 };

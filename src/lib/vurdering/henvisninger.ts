@@ -3,9 +3,8 @@ import type { Feiltype } from "./typer";
 
 // The decision the letter cites and the assessment shows, from a library of decisions that are
 // read and checked against the decision text (docs/henvisninger.md, scripts/sjekk-henvisninger.ts).
-// Two kinds: a similar case (same defect group, timing and car age), and a case where the committee
-// applied the same rule the letter rests on. The second kind always exists, so every claim the law
-// does not stop gets one.
+// The most similar case the buyer can rely on: first the car's age, then the time from purchase to
+// defect, the mileage and the rule, and last the kind of defect. Every claim the law does not stop gets one.
 
 export const GRUPPER = ["motor", "elektrisk", "understell", "km_service", "rust", "bremser", "girkasse", "fukt", "klimaanlegg", "skade", "batteri"] as const;
 export type Gruppe = (typeof GRUPPER)[number];
@@ -18,7 +17,7 @@ export type Regelgrunnlag = (typeof REGELGRUNNLAG)[number];
 
 export type Organ = "Forbrukerklageutvalget" | "Forbrukertvistutvalget";
 
-type Felles = {
+export type Henvisning = {
   vedtakId: number;
   // As the committee cites its own decisions: FKU-2023-13923 for case 23/13923.
   ref: string;
@@ -26,6 +25,9 @@ type Felles = {
   // The day of the decision (ÅÅÅÅ-MM-DD), as in «Porsgrunn, den …».
   dato: string;
   kildeUrl: string;
+  gruppe: Gruppe;
+  // When the defect showed in the cited case, by the decision text.
+  botte: Reklamasjonsbotte;
   // The cited car's age at purchase in whole years, and its mileage, as the decision gives them.
   alder: number;
   km: number | null;
@@ -35,40 +37,25 @@ type Felles = {
   presumsjon: boolean;
   // For the buyer, on the assessment page.
   setning: string;
-};
-export type LignendePost = Felles & {
-  type: "lignende";
-  gruppe: Gruppe;
-  // When the defect showed in the cited case, by the decision text.
-  botte: Reklamasjonsbotte;
   // One sentence each, for the dealer: the facts of the case, and what the committee concluded.
   likhet: string;
   konklusjon: string;
+  // Only where the decision was read for the rule it applied: the rule, and one sentence on it that the
+  // letter uses when it rests on the same rule.
+  grunnlag?: Regelgrunnlag;
+  regel?: string;
 };
-export type RegelPost = Felles & {
-  type: "regel";
-  grunnlag: Regelgrunnlag;
-  // One sentence for the dealer: the case and the rule the committee applied.
-  regel: string;
-};
-export type Henvisning = LignendePost | RegelPost;
 
-// lignende: same group and timing. tilnaermet: same group, the neighbouring timing. regel: same rule.
-export type Treff = "lignende" | "tilnaermet" | "regel";
-export type ValgtHenvisning = { henvisning: Henvisning; treff: Treff };
-
-// A cited car may be at most this much newer than the buyer's: an older car with the same defect is
-// a stronger comparison, a much newer one invites «normal wear».
-export const MAKS_NYERE_AR = 4;
-// ... and at most this much older: a much older car shows the rule but is no similar case, so the
-// rule-based case is used instead.
-export const MAKS_ELDRE_AR = 10;
+// What the cited case has in common with the buyer's: the car's age within two years, the same time
+// from purchase to defect, the same rule, the same kind of defect.
+export type Likhet = "alder" | "tidsrom" | "regel" | "feil";
+export const LIK_ALDER_AR = 2;
+export type ValgtHenvisning = { henvisning: Henvisning; likheter: Likhet[] };
 
 // Filled from the curation in docs/henvisninger.md; checked by `npm run sjekk-henvisninger`.
 export const HENVISNINGER: readonly Henvisning[] = [
   // Lignende saker: motor
   {
-    type: "lignende",
     vedtakId: 3065,
     ref: "FKU-2026-66298",
     organ: "Forbrukerklageutvalget",
@@ -85,7 +72,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilen med registerkjedet var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 3127,
     ref: "FKU-2025-61654",
     organ: "Forbrukerklageutvalget",
@@ -102,7 +88,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at startproblemene var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.",
   },
   {
-    type: "lignende",
     vedtakId: 3086,
     ref: "FKU-2026-104368",
     organ: "Forbrukerklageutvalget",
@@ -119,7 +104,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilen på elmotoren og girkassen var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.",
   },
   {
-    type: "lignende",
     vedtakId: 2235,
     ref: "FKU-2021-8891",
     organ: "Forbrukerklageutvalget",
@@ -136,7 +120,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at turboskaden, som verkstedet knyttet til en tidligere reparasjon, var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.",
   },
   {
-    type: "lignende",
     vedtakId: 465,
     ref: "FKU-2017-56",
     organ: "Forbrukerklageutvalget",
@@ -154,7 +137,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
   },
   // Lignende saker: elektrisk
   {
-    type: "lignende",
     vedtakId: 1869,
     ref: "FKU-2022-10322",
     organ: "Forbrukerklageutvalget",
@@ -171,7 +153,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilen i sensoren var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 3053,
     ref: "FKU-2026-137555",
     organ: "Forbrukerklageutvalget",
@@ -188,7 +169,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilene i det elektriske anlegget var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.",
   },
   {
-    type: "lignende",
     vedtakId: 2837,
     ref: "FKU-2021-2759",
     organ: "Forbrukerklageutvalget",
@@ -205,7 +185,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilene var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 1355,
     ref: "FTU-2014-164",
     organ: "Forbrukertvistutvalget",
@@ -222,7 +201,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at skadene på ledningsnettet og motorstyreenheten var en mangel forhandleren var ansvarlig for, og kjøperen fikk dekket reparasjonene.",
   },
   {
-    type: "lignende",
     vedtakId: 1525,
     ref: "FKU-2024-3868",
     organ: "Forbrukerklageutvalget",
@@ -240,7 +218,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
   },
   // Lignende saker: understell
   {
-    type: "lignende",
     vedtakId: 3067,
     ref: "FKU-2026-77134",
     organ: "Forbrukerklageutvalget",
@@ -257,7 +234,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilene var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.",
   },
   {
-    type: "lignende",
     vedtakId: 3170,
     ref: "FKU-2025-140833",
     organ: "Forbrukerklageutvalget",
@@ -275,7 +251,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
   },
   // Lignende saker: km_service
   {
-    type: "lignende",
     vedtakId: 3081,
     ref: "FKU-2026-73613",
     organ: "Forbrukerklageutvalget",
@@ -292,7 +267,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at den uriktige opplysningen om service var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 3141,
     ref: "FKU-2025-115321",
     organ: "Forbrukerklageutvalget",
@@ -309,7 +283,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at registerreimen som ikke var skiftet og den manglende dokumentasjonen på service var mangler forhandleren var ansvarlig for, og kjøperen fikk prisavslag og erstatning.",
   },
   {
-    type: "lignende",
     vedtakId: 3040,
     ref: "FKU-2026-28973",
     organ: "Forbrukerklageutvalget",
@@ -326,7 +299,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at den manglende servicehistorikken var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 10,
     ref: "FKU-2021-9897",
     organ: "Forbrukerklageutvalget",
@@ -343,7 +315,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at de uriktige opplysningene om servicehistorikken var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 1941,
     ref: "FKU-2021-16984",
     organ: "Forbrukerklageutvalget",
@@ -361,7 +332,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
   },
   // Lignende saker: rust
   {
-    type: "lignende",
     vedtakId: 3294,
     ref: "FKU-2019-748",
     organ: "Forbrukerklageutvalget",
@@ -378,7 +348,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at rusten var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 1689,
     ref: "FKU-2023-10066",
     organ: "Forbrukerklageutvalget",
@@ -395,7 +364,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at rusten var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning og prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 3387,
     ref: "FKU-2019-432",
     organ: "Forbrukerklageutvalget",
@@ -412,7 +380,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at rusten på bakluken var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 2102,
     ref: "FKU-2021-17769",
     organ: "Forbrukerklageutvalget",
@@ -429,7 +396,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at rusten var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.",
   },
   {
-    type: "lignende",
     vedtakId: 606,
     ref: "FKU-2016-1844",
     organ: "Forbrukerklageutvalget",
@@ -447,7 +413,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
   },
   // Lignende saker: bremser
   {
-    type: "lignende",
     vedtakId: 2298,
     ref: "FKU-2021-4001",
     organ: "Forbrukerklageutvalget",
@@ -463,9 +428,24 @@ export const HENVISNINGER: readonly Henvisning[] = [
     likhet: "En Porsche 911 som var 37 år gammel og hadde gått 143 000 km, ble kjøpt hos forhandler og fikk de uoriginale bremsene underkjent ved EU-kontroll sju til åtte måneder etter kjøpet.",
     konklusjon: "Utvalget kom til at de ikke-godkjente bremsene var en mangel forhandleren var ansvarlig for, og kjøperen fikk dekket reparasjonen.",
   },
+  {
+    vedtakId: 265,
+    ref: "FKU-2018-219",
+    organ: "Forbrukerklageutvalget",
+    dato: "2018-06-20",
+    kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2018009312&dokid=361108&versjon=1&variant=A&",
+    gruppe: "bremser",
+    botte: "rask",
+    alder: 1,
+    km: 56633,
+    lov: "før_2024",
+    presumsjon: true,
+    setning: "I 2018 fikk kjøperen av en BMW 3-serie delvis medhold etter å ha klaget på bremsefeil under en måned etter kjøpet. Utvalget tilkjente 11 763 kr.",
+    likhet: "En BMW 3-serie som var nesten to år gammel og hadde gått 56 633 km, ble kjøpt hos forhandler og fikk kast og rust i alle bremseskivene under en måned etter kjøpet.",
+    konklusjon: "Utvalget kom til at det var upåregnelig at bremsene måtte skiftes så kort tid etter kjøpet, at bilen var mangelfull, og kjøperen fikk erstatning.",
+  },
   // Lignende saker: girkasse
   {
-    type: "lignende",
     vedtakId: 1905,
     ref: "FKU-2022-4730",
     organ: "Forbrukerklageutvalget",
@@ -482,7 +462,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilen på girkassens mekatronikk var en mangel forhandleren var ansvarlig for, og kjøperen fikk erstatning.",
   },
   {
-    type: "lignende",
     vedtakId: 1600,
     ref: "FKU-2023-16164",
     organ: "Forbrukerklageutvalget",
@@ -499,7 +478,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at skadene på drivakselen og girkassen var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.",
   },
   {
-    type: "lignende",
     vedtakId: 2316,
     ref: "FKU-2021-6457",
     organ: "Forbrukerklageutvalget",
@@ -516,7 +494,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilen på girkassen og clutchen var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.",
   },
   {
-    type: "lignende",
     vedtakId: 1776,
     ref: "FKU-2022-906",
     organ: "Forbrukerklageutvalget",
@@ -533,7 +510,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at girkassefeilen, sammen med en oljelekkasje, var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 551,
     ref: "FKU-2016-2138",
     organ: "Forbrukerklageutvalget",
@@ -551,7 +527,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
   },
   // Lignende saker: fukt
   {
-    type: "lignende",
     vedtakId: 3129,
     ref: "FKU-2025-136079",
     organ: "Forbrukerklageutvalget",
@@ -568,7 +543,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilen med frontlyktene var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet, blant annet på grunn av denne mangelen.",
   },
   {
-    type: "lignende",
     vedtakId: 1916,
     ref: "FKU-2022-4734",
     organ: "Forbrukerklageutvalget",
@@ -585,7 +559,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at vannlekkasjen og feilen på det elektriske anlegget var en mangel forhandleren var ansvarlig for, og kjøperen fikk dekket reparasjonen.",
   },
   {
-    type: "lignende",
     vedtakId: 2355,
     ref: "FKU-2021-5035",
     organ: "Forbrukerklageutvalget",
@@ -602,7 +575,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at lekkasjen var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag og erstatning.",
   },
   {
-    type: "lignende",
     vedtakId: 911,
     ref: "FTU-2016-176",
     organ: "Forbrukertvistutvalget",
@@ -619,7 +591,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at vannlekkasjen og følgefeilene var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet.",
   },
   {
-    type: "lignende",
     vedtakId: 3470,
     ref: "FKU-2019-116",
     organ: "Forbrukerklageutvalget",
@@ -637,7 +608,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
   },
   // Lignende saker: klimaanlegg
   {
-    type: "lignende",
     vedtakId: 1566,
     ref: "FKU-2024-1215",
     organ: "Forbrukerklageutvalget",
@@ -654,7 +624,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilen på klimaanlegget var en mangel forhandleren var ansvarlig for, og kjøperen fikk dekket reparasjonen.",
   },
   {
-    type: "lignende",
     vedtakId: 3165,
     ref: "FKU-2025-141296",
     organ: "Forbrukerklageutvalget",
@@ -671,7 +640,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at feilene på klimaanlegget og annet utstyr oppført i annonsen var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag og erstatning.",
   },
   {
-    type: "lignende",
     vedtakId: 2510,
     ref: "FKU-2021-4356",
     organ: "Forbrukerklageutvalget",
@@ -689,7 +657,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
   },
   // Lignende saker: skade
   {
-    type: "lignende",
     vedtakId: 3125,
     ref: "FKU-2025-55355",
     organ: "Forbrukerklageutvalget",
@@ -706,7 +673,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at skaden var en mangel forhandleren var ansvarlig for, og kjøperne fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 3143,
     ref: "FKU-2025-116737",
     organ: "Forbrukerklageutvalget",
@@ -723,7 +689,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at de tidligere skadene, som kjøperen ikke var blitt opplyst om, var en mangel forhandleren var ansvarlig for, og kjøperen fikk heving av kjøpet på grunn av manglene samlet.",
   },
   {
-    type: "lignende",
     vedtakId: 1967,
     ref: "FKU-2022-6291",
     organ: "Forbrukerklageutvalget",
@@ -740,7 +705,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
     konklusjon: "Utvalget kom til at det var en mangel at forhandleren ikke hadde opplyst om den tidligere skaden, og kjøperen fikk prisavslag.",
   },
   {
-    type: "lignende",
     vedtakId: 2486,
     ref: "FKU-2021-5368",
     organ: "Forbrukerklageutvalget",
@@ -758,7 +722,6 @@ export const HENVISNINGER: readonly Henvisning[] = [
   },
   // Lignende saker: batteri
   {
-    type: "lignende",
     vedtakId: 3105,
     ref: "FKU-2026-117158",
     organ: "Forbrukerklageutvalget",
@@ -774,73 +737,218 @@ export const HENVISNINGER: readonly Henvisning[] = [
     likhet: "En Tesla Model S som var sju år gammel og hadde gått 109 765 km, ble kjøpt fra en næringsdrivende på auksjon og fikk feil på høyvoltsbatteriet vel 14 måneder etter kjøpet.",
     konklusjon: "Utvalget kom til at feilene med batteriet og sikkerhetsfunksjonene samlet sett var en mangel selgeren var ansvarlig for, og kjøperen fikk prisavslag og erstatning.",
   },
-  // Regel-saker: one per rule the letter can rest on, with an old car and the old law, so they fit every buyer with that rule.
+  // Eldre biler (17 år og mer), kuratert oktober 2026.
   {
-    type: "regel",
+    vedtakId: 967,
+    ref: "FTU-2015-1829",
+    organ: "Forbrukertvistutvalget",
+    dato: "2016-03-31",
+    kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2016002708&dokid=217840&versjon=2&variant=P&",
+    gruppe: "rust",
+    botte: "middels",
+    grunnlag: "forventning",
+    alder: 17,
+    km: 287000,
+    lov: "før_2024",
+    presumsjon: false,
+    setning: "I 2016 fikk kjøperen av en Peugeot Boxer delvis medhold etter å ha klaget på rust om lag åtte måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 12 000 kr etter fradrag for bruken av bilen.",
+    likhet: "En Peugeot Boxer som var 17 år gammel og hadde gått 287 000 km, ble kjøpt hos forhandler som reparasjonsobjekt på grunn av startproblemer, og om lag åtte måneder etter kjøpet ble den underkjent ved EU-kontroll på grunn av alvorlig korrosjon i understellet.",
+    konklusjon: "Utvalget kom til at de alvorlige rustskadene gikk ut over det kjøperen kunne regne med, også for et reparasjonsobjekt, og kjøperen fikk heving av kjøpet.",
+  },
+  {
+    vedtakId: 1579,
+    ref: "FKU-2024-81",
+    organ: "Forbrukerklageutvalget",
+    dato: "2024-09-18",
+    kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024047333&dokid=1217790&versjon=1&variant=A&",
+    gruppe: "rust",
+    botte: "rask",
+    alder: 18,
+    km: 114000,
+    lov: "før_2024",
+    presumsjon: true,
+    setning: "I 2024 fikk kjøperen av en Subaru Forester medhold etter å ha klaget på rust om lag tre måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 57 000 kr.",
+    likhet: "En Subaru Forester som var 18 år gammel og hadde gått 114 000 km, ble kjøpt hos forhandler nylig EU-godkjent, og om lag tre måneder etter kjøpet ble det påvist betydelige mengder rust i de bakre hjulbuene.",
+    konklusjon: "Utvalget kom til at rustskadene var der ved leveringen, og at forhandleren hadde erkjent at de var en mangel ved å gjennomføre et utbedringsforsøk uten forbehold, og kjøperen fikk heving av kjøpet.",
+  },
+  {
+    vedtakId: 2184,
+    ref: "FKU-2021-12654",
+    organ: "Forbrukerklageutvalget",
+    dato: "2022-11-30",
+    kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022099685&dokid=796852&versjon=2&variant=A&",
+    gruppe: "bremser",
+    botte: "rask",
+    grunnlag: "forventning",
+    alder: 18,
+    km: 180000,
+    lov: "før_2024",
+    presumsjon: true,
+    setning: "I 2022 fikk kjøperen av en Toyota Rav4 delvis medhold etter å ha klaget på bremsefeil en uke etter kjøpet. Utvalget tilkjente 6 333 kr.",
+    likhet: "En Toyota Rav4 som var 18 år gammel og hadde gått 180 000 km, ble kjøpt hos forhandler «as is» etter å ha blitt annonsert som velholdt, og en uke etter kjøpet viste det seg at bremseklossene foran var helt nedslitt.",
+    konklusjon: "Utvalget kom til at helt nedslitte bremser gikk ut over det kjøperen kunne forvente, også for en så gammel bil, og kjøperen fikk erstatning.",
+  },
+  {
+    vedtakId: 438,
+    ref: "FKU-2017-217",
+    organ: "Forbrukerklageutvalget",
+    dato: "2017-09-21",
+    kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017006830&dokid=297713&versjon=1&variant=A&",
+    gruppe: "rust",
+    botte: "rask",
+    grunnlag: "forventning",
+    alder: 22,
+    km: 260841,
+    lov: "før_2024",
+    presumsjon: true,
+    setning: "I 2017 fikk kjøperen av en Jeep Grand Cherokee delvis medhold etter å ha klaget på rust i understellet om lag to måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 49 000 kr, og tilkjente i tillegg 8 500 kr i erstatning.",
+    likhet: "En Jeep Grand Cherokee som var 22 år gammel og hadde gått 260 841 km, ble kjøpt hos forhandler og EU-godkjent uten feil, og to måneder etter kjøpet ble den avskiltet som trafikkfarlig etter funn av alvorlig rust på bremserør, bærearmer og bakaksel.",
+    konklusjon: "Utvalget kom til at bilen var i dårligere stand enn kjøperen kunne forvente etter EU-kontrollen ved kjøpet, og kjøperen fikk heving av kjøpet og erstatning.",
+  },
+  {
+    vedtakId: 357,
+    ref: "FKU-2017-805",
+    organ: "Forbrukerklageutvalget",
+    dato: "2017-11-30",
+    kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2017019947&dokid=326900&versjon=1&variant=A&",
+    gruppe: "km_service",
+    botte: "rask",
+    alder: 24,
+    km: 201500,
+    lov: "før_2024",
+    presumsjon: true,
+    setning: "I 2017 fikk kjøperen av en BMW 318is delvis medhold etter å ha klaget på tilbakestilt kilometerteller innen fem måneder etter kjøpet. Utvalget tilkjente 25 000 kr.",
+    likhet: "En BMW 318is som var 24 år gammel og hadde gått 201 500 km ifølge kilometertelleren, ble kjøpt hos forhandler «som den er», og innen fem måneder etter kjøpet viste det seg at telleren var tilbakestilt med minst 60 000 km.",
+    konklusjon: "Utvalget kom til at den manipulerte kilometertelleren var en mangel forhandleren var ansvarlig for, og kjøperen fikk prisavslag.",
+  },
+  {
+    vedtakId: 805,
+    ref: "FTU-2016-736",
+    organ: "Forbrukertvistutvalget",
+    dato: "2016-09-30",
+    kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2016020203&dokid=247228&versjon=1&variant=A&",
+    gruppe: "girkasse",
+    botte: "rask",
+    grunnlag: "forventning",
+    alder: 26,
+    km: 140000,
+    lov: "før_2024",
+    presumsjon: true,
+    setning: "I 2016 fikk kjøperen av en Toyota Corolla medhold etter å ha klaget på feil på girkassen i underkant av to måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 26 000 kr, og tilkjente i tillegg 3 000 kr i erstatning.",
+    likhet: "En Toyota Corolla som var 26 år gammel og hadde gått 140 000 km, ble kjøpt hos forhandler «som den er» etter å ha blitt annonsert som servicefulgt og velholdt, og i underkant av to måneder etter kjøpet fikk den en feil på girkassen som gjorde at den ikke kunne kjøres.",
+    konklusjon: "Utvalget kom til at kjøperen ikke hadde grunn til å forvente en alvorlig feil ved girkassen så kort tid etter kjøpet, og kjøperen fikk heving av kjøpet og erstatning.",
+  },
+  {
+    vedtakId: 224,
+    ref: "FKU-2018-809",
+    organ: "Forbrukerklageutvalget",
+    dato: "2018-12-05",
+    kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/hist/wfdocument.ashx?journalpostid=2018019439&dokid=382372&versjon=1&variant=A&",
+    gruppe: "rust",
+    botte: "rask",
+    grunnlag: "opplysning",
+    alder: 28,
+    km: 166000,
+    lov: "før_2024",
+    presumsjon: true,
+    setning: "I 2018 fikk kjøperen av en BMW 325i medhold etter å ha klaget på rust om lag fire måneder etter kjøpet. Utvalget kom til at kjøperen kunne heve kjøpet og få tilbake 215 000 kr, og tilkjente i tillegg 1 008 kr i erstatning.",
+    likhet: "En BMW 325i som var 28 år gammel og hadde gått 166 000 km, ble kjøpt hos forhandler med opplysning i annonsen om at bilen var fri for rust, og om lag fire måneder etter kjøpet oppdaget kjøperen omfattende rust; et verksted fant deretter også en feil utbedret kollisjonsskade.",
+    konklusjon: "Utvalget kom til at bilen ikke svarte til opplysningen i annonsen om at den var fri for rust, og kjøperen fikk heving av kjøpet.",
+  },
+  {
+    vedtakId: 2475,
+    ref: "FKU-2021-4002",
+    organ: "Forbrukerklageutvalget",
+    dato: "2022-04-27",
+    kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022028900&dokid=642081&versjon=1&variant=A&",
+    gruppe: "km_service",
+    botte: "rask",
+    grunnlag: "opplysning",
+    alder: 31,
+    km: 306000,
+    lov: "før_2024",
+    presumsjon: true,
+    setning: "I 2022 fikk kjøperen av en Volkswagen Caravelle delvis medhold etter å ha klaget på uriktige opplysninger om bytte av registerreim og vannpumpe knapt en måned etter kjøpet. Utvalget kom til at opplysningene var uriktige og satte prisavslaget til 7 000 kr.",
+    likhet: "En Volkswagen Caravelle som var 31 år gammel og hadde gått 306 000 km, ble kjøpt hos forhandler med opplysning i annonsen om ny registerreim og vannpumpe, og knapt en måned etter kjøpet fant en NAF-test ingen dokumentasjon på at byttet var gjort.",
+    konklusjon: "Utvalget kom til at de uriktige opplysningene om bytte av registerreim og vannpumpe var en mangel, og kjøperen fikk prisavslag.",
+  },
+  // Saker der utvalget la en bestemt regel til grunn (formodning, rapport, opplysning, forventning);
+  // brevet gjengir regelen når kjøperens brev bygger på den samme.
+  {
     vedtakId: 1758,
     ref: "FKU-2023-4974",
     organ: "Forbrukerklageutvalget",
     dato: "2023-10-04",
     kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023069233&dokid=993879&versjon=1&variant=A&",
+    gruppe: "motor",
+    botte: "rask",
     grunnlag: "formodning",
     alder: 14,
     km: 201000,
     lov: "før_2024",
     presumsjon: true,
     setning: "I 2023 fikk kjøperen av en Volkswagen Tiguan medhold etter å ha klaget på motorhavari om lag halvannen måned etter kjøpet. Utvalget kom til at kjøpet kunne heves.",
+    likhet: "En Volkswagen Tiguan som var 14 år gammel og hadde gått 201 000 km, ble kjøpt hos forhandler og fikk motorhavari om lag halvannen måned etter kjøpet.",
+    konklusjon: "Utvalget kom til at motorhavariet skyldtes forhold som var der ved leveringen, fordi forhandleren ikke hadde sannsynliggjort noe annet, og kjøperen fikk heving av kjøpet.",
     regel: "I en sak om en 14 år gammel Volkswagen Tiguan kjøpt hos forhandler kom utvalget til at et motorhavari som viste seg om lag halvannen måned etter kjøpet, skyldtes forhold som måtte anses å ha vært der ved leveringen, fordi forhandleren ikke hadde sannsynliggjort noe annet.",
   },
   {
-    type: "regel",
     vedtakId: 2694,
     ref: "FKU-2021-4419",
     organ: "Forbrukerklageutvalget",
     dato: "2021-10-13",
     kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021075274&dokid=489776&versjon=1&variant=A&",
+    gruppe: "rust",
+    botte: "middels",
     grunnlag: "rapport",
     alder: 11,
     km: 186000,
     lov: "før_2024",
     presumsjon: false,
     setning: "I 2021 fikk kjøperen av en Mitsubishi Outlander medhold etter å ha klaget på rust nesten åtte måneder etter kjøpet. Utvalget kom til at kjøpet kunne heves.",
+    likhet: "En Mitsubishi Outlander som var 11 år gammel og hadde gått 186 000 km, ble kjøpt hos forhandler, og nesten åtte måneder etter kjøpet ble det påvist store rustskader i bærende deler av understellet.",
+    konklusjon: "Utvalget kom til at rusten ut fra en verkstedrapport kunne knyttes til leveringen, og kjøperen fikk heving av kjøpet.",
     regel: "I en sak om en 11 år gammel Mitsubishi Outlander kjøpt hos forhandler la utvalget vekt på en verkstedrapport om at store rustskader i bærende deler av understellet hadde kommet over tid og var der da kjøperen kjøpte bilen, og fant det sannsynliggjort at rusten kunne knyttes til leveringen, selv om den ble oppdaget først nesten åtte måneder etter kjøpet.",
   },
   {
-    type: "regel",
     vedtakId: 1992,
     ref: "FKU-2022-2868",
     organ: "Forbrukerklageutvalget",
     dato: "2023-03-22",
     kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023006127&dokid=845007&versjon=1&variant=A&",
+    gruppe: "km_service",
+    botte: "middels",
     grunnlag: "opplysning",
     alder: 10,
     km: 106500,
     lov: "før_2024",
     presumsjon: false,
     setning: "I 2023 fikk kjøperen av en Ford S-max delvis medhold etter å ha klaget på uriktige opplysninger om servicehistorikken drøyt halvannet år etter kjøpet. Utvalget tilkjente 7 000 kr.",
+    likhet: "En Ford S-max som var 10 år gammel og hadde gått 106 500 km, ble kjøpt hos forhandler med opplysning i annonsen om komplett servicehefte, og drøyt halvannet år etter kjøpet viste det seg at det ikke var anmerket service på flere år.",
+    konklusjon: "Utvalget kom til at den uriktige opplysningen i annonsen var en mangel, og kjøperen fikk prisavslag.",
     regel: "I en sak om en 10 år gammel Ford S-max kjøpt hos forhandler kom utvalget til at bilen hadde en mangel fordi den ikke svarte til opplysningen i annonsen om at serviceheftet var komplett.",
   },
   {
-    type: "regel",
     vedtakId: 2612,
     ref: "FKU-2021-4203",
     organ: "Forbrukerklageutvalget",
     dato: "2021-12-01",
     kildeUrl: "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021095135&dokid=537047&versjon=1&variant=A&",
+    gruppe: "rust",
+    botte: "middels",
     grunnlag: "forventning",
     alder: 16,
     km: 191397,
     lov: "før_2024",
     presumsjon: false,
     setning: "I 2021 fikk kjøperen av en Nissan Patrol medhold etter å ha klaget på omfattende rustskader om lag halvannet år etter kjøpet. Utvalget kom til at kjøpet kunne heves.",
+    likhet: "En Nissan Patrol som var 16 år gammel og hadde gått 191 397 km, ble kjøpt hos forhandler med opplysning om rustskader, og om lag halvannet år etter kjøpet viste rusten seg å være så omfattende at bilen ikke ble godkjent ved EU-kontroll.",
+    konklusjon: "Utvalget kom til at rustskadene gikk ut over det kjøperen måtte regne med ut fra alder og kilometerstand, og kjøperen fikk heving av kjøpet.",
     regel: "I en sak om en 16 år gammel Nissan Patrol med 191 397 km kjøpt hos forhandler kom utvalget til at omfattende rustskader var mer enn kjøperen måtte regne med ut fra alder og kilometerstand, selv om forhandleren hadde opplyst at bilen hadde rustskader.",
   },
 ];
 
 const GRUPPE_FOR = Object.fromEntries(GRUPPER.map((g) => [KNAPP_TIL_FEILTYPE[g][0], g])) as Partial<Record<Feiltype, Gruppe>>;
-
-// Only the neighbouring timing: a defect after two weeks is not compared with one after four years.
-const NABO: Record<Reklamasjonsbotte, Reklamasjonsbotte[]> = { rask: ["middels"], middels: ["rask", "sen"], sen: ["middels"] };
 
 export function regelgrunnlag(f: Faktorer): Regelgrunnlag {
   if (f.presumsjon) return "formodning";
@@ -851,34 +959,50 @@ export function regelgrunnlag(f: Faktorer): Regelgrunnlag {
 
 // Never a decision won on something the buyer does not have: the presumption, or the 2024 rules.
 const forenlig = (h: Henvisning, f: Faktorer) => (!h.presumsjon || f.presumsjon) && (h.lov === "før_2024" || f.presumsjonManeder === 24);
-const alderOk = (h: Henvisning, f: Faktorer) => f.bilAlder === null || (h.alder >= f.bilAlder - MAKS_NYERE_AR && h.alder <= f.bilAlder + MAKS_ELDRE_AR);
 
-// Same law as the buyer first, then the nearest age (the older car on a tie, and when the buyer's
-// age is unknown), then the newest decision.
-function best<T extends Henvisning>(kandidater: T[], f: Faktorer): T | undefined {
-  const lov = f.presumsjonManeder === 24 ? "etter_2024" : "før_2024";
-  const avstand = (h: Henvisning) => (f.bilAlder === null ? 0 : Math.abs(h.alder - f.bilAlder));
-  return [...kandidater].sort(
-    (a, b) => Number(b.lov === lov) - Number(a.lov === lov) || avstand(a) - avstand(b) || b.alder - a.alder || b.dato.localeCompare(a.dato),
-  )[0];
+// How far a decision is from the buyer's case, counted in years of car age. The car's age counts most,
+// and a newer car more than an older one: a newer car with the same trouble invites «normal wear»,
+// an older one is the stronger comparison. Then the time from purchase to defect, the mileage, the
+// rule the letter rests on when it is a report or wrong information, and last the kind of defect.
+export const VEKT = { nyereAr: 1.5, eldreAr: 1, tidsromSteg: 3, kmPer50000: 1, kmMaks: 3, regel: 2, feil: 2, lov: 2 } as const;
+const TIDSROM: Record<Reklamasjonsbotte, number> = { rask: 0, middels: 1, sen: 2 };
+
+function vurderLikhet(h: Henvisning, f: Faktorer, grupper: Gruppe[], grunnlag: Regelgrunnlag) {
+  const likheter: Likhet[] = [];
+  let avstand = 0;
+  if (f.bilAlder !== null) {
+    const d = h.alder - f.bilAlder;
+    avstand += d < 0 ? -d * VEKT.nyereAr : d * VEKT.eldreAr;
+    if (Math.abs(d) <= LIK_ALDER_AR) likheter.push("alder");
+  }
+  avstand += Math.abs(TIDSROM[h.botte] - TIDSROM[f.reklamasjonsbotte]) * VEKT.tidsromSteg;
+  if (h.botte === f.reklamasjonsbotte) likheter.push("tidsrom");
+  if (f.kmVedKjop !== null && h.km !== null) avstand += Math.min(VEKT.kmMaks, (Math.abs(h.km - f.kmVedKjop) / 50_000) * VEKT.kmPer50000);
+  if (h.grunnlag === grunnlag) likheter.push("regel");
+  else if (grunnlag === "rapport" || grunnlag === "opplysning") avstand += VEKT.regel;
+  if (h.gruppe && grupper.includes(h.gruppe)) likheter.push("feil");
+  else avstand += VEKT.feil;
+  if ((h.lov === "etter_2024") !== (f.presumsjonManeder === 24)) avstand += VEKT.lov;
+  return { avstand, likheter };
 }
 
+// The decision most like the buyer's case among those the buyer can rely on. There is always one when the
+// library holds a decision under the old law without the presumption, which fits every buyer.
 export function velgHenvisning(f: Faktorer, bibliotek: readonly Henvisning[] = HENVISNINGER): ValgtHenvisning | null {
   // A claim the law stops gets no letter, and a won decision would mislead.
   if (f.stopp) return null;
   const grupper = GRUPPER.filter((g) => f.feilgrupper.some((fg) => GRUPPE_FOR[fg[0]] === g));
-  const lignende = bibliotek.filter((h): h is LignendePost => h.type === "lignende" && forenlig(h, f) && alderOk(h, f));
-  const trinn: [Treff, Reklamasjonsbotte[]][] = [
-    ["lignende", [f.reklamasjonsbotte]],
-    ["tilnaermet", NABO[f.reklamasjonsbotte]],
-  ];
-  for (const [treff, botter] of trinn) {
-    for (const g of grupper) {
-      const h = best(lignende.filter((x) => x.gruppe === g && botter.includes(x.botte)), f);
-      if (h) return { henvisning: h, treff };
-    }
-  }
   const grunnlag = regelgrunnlag(f);
-  const h = best(bibliotek.filter((x): x is RegelPost => x.type === "regel" && x.grunnlag === grunnlag && forenlig(x, f)), f);
-  return h ? { henvisning: h, treff: "regel" } : null;
+  const vurdert = bibliotek.filter((h) => forenlig(h, f)).map((h) => ({ henvisning: h, ...vurderLikhet(h, f, grupper, grunnlag) }));
+  // On a tie the nearest age, then the older car (also when the buyer's age is unknown), then the newest decision.
+  const aldersforskjell = (h: Henvisning) => (f.bilAlder === null ? 0 : Math.abs(h.alder - f.bilAlder));
+  vurdert.sort(
+    (a, b) =>
+      a.avstand - b.avstand ||
+      aldersforskjell(a.henvisning) - aldersforskjell(b.henvisning) ||
+      b.henvisning.alder - a.henvisning.alder ||
+      b.henvisning.dato.localeCompare(a.henvisning.dato),
+  );
+  const valgt = vurdert[0];
+  return valgt ? { henvisning: valgt.henvisning, likheter: valgt.likheter } : null;
 }

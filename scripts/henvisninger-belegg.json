@@ -346,5 +346,77 @@
     "tid": "Klageren kjøpte den 24. august 2017 … Det er uomtvistet at klageren reklamerte den 20. februar 2019.",
     "feil": "det er gjennomrustede hull flere steder på karosseriet, at rammefesteren foran er rustet løs, at tverrbjelke nesten er rustet av",
     "opplysning": "Det er uomtvistet at klageren fikk opplysninger om at bilen hadde rustskader ved kjøpet"
+  },
+  "265": {
+    "feil": "det i juli 2017 ble målt kast i bremseskiver og nav på alle fire hjul, samt at det ble avdekket rust på alle bremseskivene over tillatt grense",
+    "tid": "det var upåregnelig at bremsene måtte skiftes under én måned etter kjøpet",
+    "bil": "Den 1.6.2017 kjøpte klageren en BMW 3-serie 2016-modell",
+    "utfall": "Autospektrum AS plikter å betale kr 11 763,50",
+    "krav": "Bilen er således mangelfull, jf. fkjl. § 17, og klageren har krav på erstatning, jf. fkjl. § 33"
+  },
+  "967": {
+    "feil": "det var kraftig korrosjon i bærende elementer som påvirket stivheten begge sider bakre",
+    "tid": "Den 10.12.2014 kjøpte klageren … Den 10.8.2015, ved en kjørelengde 292 550 kilometer, foretok … EU-kontroll av bilen og avdekket flere feil som medførte at den ikke ble godkjent.",
+    "bil": "Den 10.12.2014 kjøpte klageren enn Peugeot Boxer 2,4 D 1997-modell … kilometerstanden var 287 000. Bilen ble solgt uten garanti og tilstandsrapport, samt som et reparasjonsobjekt.",
+    "utfall": "Krav om heving og erstatning. Delvis medhold. … Utbedring av bilen er åpenbart ikke regningssvarende, og hevingsvilkåret er oppfylt.",
+    "krav": "På bakgrunn av EU-kontrollen datert 10.8.2015 finner utvalget det sannsynliggjort at bilen allerede på kjøpstidspunktet hadde alvorlige rustskader som gjorde den trafikkfarlig.",
+    "grunnlag": "Etter utvalgets syn lå det derimot ikke innenfor det påregnelige at bilen som følge av alvorlig korrosjon i understellet, ikke skulle kunne EU-godkjennes uten uforholdsmessige rettingskostnader.",
+    "organ": "Forbrukertvistutvalget fatter slikt"
+  },
+  "1579": {
+    "feil": "Ved undersøkelsen ble klageren gjort kjent med at bilen hadde betydelige mengder rust i bakre hjulbuer",
+    "tid": "Klageren kjøpte den 06.08.2022 … bilen var inne for feilsøking av forstilling hos verkstedet Tempe Bil den 07.11.2022",
+    "bil": "Klageren kjøpte den 06.08.2022 en Subaru Forester 2004-modell … bilen hadde ved leveringen gått 114 000 kilometer",
+    "utfall": "Klage på rust i bakre hjulbuer. Krav om heving. Medhold. … Utvalget finner at hevingsterskelen er oppfylt i denne saken",
+    "krav": "legger utvalget til grunn at rustskadene var til stede på leveringstidspunktet. Innklagde har heller ikke sannsynliggjort noe annet, jf. § 18 andre ledd.",
+    "erkjent": "Innklagde anses etter dette å ha erkjent at rustskadene utgjorde en mangel"
+  },
+  "2184": {
+    "feil": "Grunnen skal ha vært at bremseklossene var helt utslitt fremme på bilen.",
+    "tid": "Ifølge klageren hørte de piping i hjulene og fikk opp varsellampe for motoren en uke etter levering.",
+    "bil": "Klageren kjøpte den 23.05.2020 en Toyota Rav4 2002-modell … bilen var gått 180 000 km ved leveringstidspunktet",
+    "utfall": "Krav om erstatning. Delvis medhold. … Utgifter som klageren hadde som følge av feil med bremsene utgjør kr 6 333,-",
+    "krav": "Bilen er dermed likevel i dårligere stand enn klager med rimelighet hadde grunn til å forvente, og det foreligger følgelig en mangel basert på forholdet.",
+    "grunnlag": "Selv om bremsedeler, som påpekt, i utgangspunktet er å anse som slitedeler, ligger helt nedslitte bremser, som gjør at bilen ikke er i kjørbar stand, etter utvalgets syn, utenfor hva klageren kunne forvente."
+  },
+  "438": {
+    "feil": "Utvalget viser til at det ble påpekt alvorlig rust på bremserør … bærearm/oppheng, og bakaksel. … Videre vektlegges det at bilen er ansett trafikkfarlig og avskiltet.",
+    "tid": "Klageren har fremlagt kontrollseddel fra Statens Vegvesen, utført to måneder etter kjøpet.",
+    "bil": "Klageren kjøpte 20.7.2016 en 1994-modell Jeep Grand Cherokee LTD … Bilen hadde gått 260 841 km.",
+    "utfall": "Krav om heving og erstatning. Delvis medhold. … Mangelen er ikke uvesentlig, og vilkåret for å heve kjøpet er således oppfylt … Klageren tilkjennes på denne bakgrunn erstatning på totalt kr 8 500,-.",
+    "krav": "Utvalget finner således at bilen er mangelfull, da den er i dårligere stand enn klageren hadde grunn til å forvente, jf. fkjl. § 17 første ledd a).",
+    "grunnlag": "Det er imidlertid på det rene at bilen ble EU-godkjent to dager etter kjøpet uten feil … Klageren hadde således en berettiget forventning om at bilen ikke skulle ha umiddelbare reparasjonsbehov, og ellers var i grei teknisk stand."
+  },
+  "805": {
+    "feil": "Utvalget legger til grunn at det er en feil ved girkassen som medfører at bilen ikke kan kjøres.",
+    "tid": "Sett hen til at feilen oppstod i underkant av to måneder etter klageren overtok bilen, og etter kun å ha kjørt ca. 1 000 km",
+    "bil": "Den 1.9.2015 kjøpte klageren en 1989-modell Toyota Corolla … Bilens kjørelengde var 140 000 km",
+    "utfall": "Krav om heving og erstatning, subsidiært prisavslag, atter subsidiært utbedring. Medhold. … Mangelen er ikke uvesentlig, og vilkåret for å heve kjøpet er oppfylt",
+    "krav": "Selv om klageren kjøpte en eldre bruktbil til en lav kjøpesum, mener utvalget at han ikke hadde grunn til å forvente en alvorlig feil ved girkassen så kort tid etter kjøpet.",
+    "grunnlag": "all den tid man mener at bilen må anses å være i dårligere stand enn klageren med rimelighet kunne forvente, jf. fkjl. § 17 første ledd bokstav a.",
+    "organ": "Forbrukertvistutvalget fatter slikt"
+  },
+  "224": {
+    "feil": "Det som er avdekt nå er store rustskader i hjulhus høyre bak og rusthull i gulv foran på v.side.",
+    "tid": "Klageren kjøpte 16.7.2017 … Klageren oppdaget i november 2017 omfattende rust på bilen.",
+    "bil": "Klageren kjøpte 16.7.2017 en 1989 –modell BMW 325i … Bilen hadde gått 166 000 km på kjøpstidspunktet.",
+    "utfall": "Krav om heving. Medhold. … Det er således grunnlag for heving av kjøpet, jf. fkjl. § 32.",
+    "krav": "finner utvalget det sannsynliggjort at bilen ved levering hadde store rustskader … Forholdet utgjør en mangel etter fkjl. § 16 første ledd bokstav c",
+    "grunnlag": "I salgsannonsen, som må anses som en del av partenes avtalegrunnlag, oppgis at bilen er fri for rust. … innklagde har gitt uriktige opplysninger om bilen forut for kjøpet."
+  },
+  "357": {
+    "feil": "Utvalget finner det sannsynliggjort at bilens kilometerteller er manipulert",
+    "tid": "Klage på motorfeil og kilometeravvik. … Klageren kjøpte 24.10.2016 … Saken ble ved klage av 7.3.2017 brakt inn for Forbrukerrådet",
+    "bil": "Klageren kjøpte 24.10.2016 en 1992-modell BMW 318is … Oppgitt kilometerstand var på 201 500 km.",
+    "utfall": "Delvs medhold. … Etter en helhetsvurdering setter utvalget prisavslaget til kr 25 000,-.",
+    "krav": "Utvalget finner at forholdet utgjør en mangel. … Videre vektlegges det at avviket minst er på over 60 000 km, noe som må anses betydelig."
+  },
+  "2475": {
+    "feil": "Det er påpekt i NAF-rapporten datert 24.05.2019 at det ikke foreligger dokumentasjon på bytte av registerreim og vannpumpe.",
+    "tid": "Klageren kjøpte den 27.04.2019 … Klageren har fremlagt test utført av NAF 24.05.2019",
+    "bil": "Klageren kjøpte den 27.04.2019 en Volkswagen Caravelle 1988-modell for kr 47 000,-. … bilen hadde ifølge kjøpekontrakten gått 306 000 km",
+    "utfall": "Krav om prisavslag og erstatning. Delvis medhold. … Utvalget finner at prisavslaget på fastsettes skjønnsmessig til kr 7 000,-",
+    "krav": "Utvalget finner dermed at innklagde ga uriktige opplysninger om registerreim- og vannpumpebytte. Utvalget finner at opplysningene har innvirket på kjøpet og det foreligger en mangel",
+    "grunnlag": "Av påkost i 2018 nevnes: … Ny registerreim … Ny vannpumpe"
   }
 }

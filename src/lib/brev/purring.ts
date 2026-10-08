@@ -14,10 +14,15 @@ export function byggPurring(_input: KlageInput, idag = iDag(), u: Utfylling = {}
   return {
     ...grunn,
     emne: grunn.emne.replace(/^Reklamasjon på mangel/, "Purring – reklamasjon på mangel"),
-    avsnitt: [
-      `Jeg viser til mitt reklamasjonsbrev av ${sendt} om ovennevnte bil. Fristen for å svare var ${frist}, og jeg har ikke mottatt svar som løser saken.`,
-      `Jeg opprettholder kravet i brevet og gir dere en ny frist på ${PURRING_DAGER} dager, det vil si innen ${norskDato(leggTilDager(idag, PURRING_DAGER))}.`,
-      "Får jeg ikke svar innen den fristen, vil jeg uten ytterligere varsel klage saken inn til Forbrukertilsynet for mekling og eventuelt behandling i Forbrukerklageutvalget.",
+    deler: [
+      {
+        overskrift: null,
+        avsnitt: [
+          `Jeg viser til mitt reklamasjonsbrev av ${sendt} om ovennevnte bil. Fristen for å svare var ${frist}, og jeg har ikke mottatt svar som løser saken.`,
+          `Jeg opprettholder kravet i brevet og gir dere en ny frist på ${PURRING_DAGER} dager, det vil si innen ${norskDato(leggTilDager(idag, PURRING_DAGER))}.`,
+          "Får jeg ikke svar innen den fristen, vil jeg uten ytterligere varsel klage saken inn til Forbrukertilsynet for mekling og eventuelt behandling i Forbrukerklageutvalget.",
+        ],
+      },
     ],
   };
 }

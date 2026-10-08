@@ -14,7 +14,7 @@ import type { StyrkeKort } from "@/lib/mappe/kort/styrke";
 import type { Sjekkpunkt } from "@/lib/mappe/kort/styrk";
 import type { VidereKort } from "@/lib/mappe/kort/videre";
 import { erForFa, type Andel, type ForFa } from "@/lib/mappe/typer";
-import type { Treff, ValgtHenvisning } from "@/lib/vurdering/henvisninger";
+import type { Likhet, ValgtHenvisning } from "@/lib/vurdering/henvisninger";
 
 // The cards of the saksmappe. Every share is shown with the number of decisions behind it; a sample
 // below its threshold is shown as «for få saker», never as a number.
@@ -145,12 +145,20 @@ export function BelopInnhold({ k }: { k: BelopKort }) {
 
 const UTFALL: Record<string, string> = { medhold: "Medhold", delvis_medhold: "Delvis medhold", ikke_medhold: "Tapt sak" };
 
-// Only what always holds: the car's age is stated, not compared, since the buyer's may be unknown.
-const HVORFOR: Record<Treff, string> = {
-  lignende: "Valgt fordi saken gjaldt samme type feil, feilen viste seg omtrent like lenge etter kjøpet, og kjøperen vant mot forhandleren.",
-  tilnaermet: "Valgt fordi saken gjaldt samme type feil, og kjøperen vant mot forhandleren. Feilen viste seg på et annet tidspunkt enn i din sak.",
-  regel: "Valgt fordi utvalget brukte den samme regelen som brevet ditt bygger på, og kjøperen vant mot forhandleren.",
+// What the cited case has in common with the buyer's, as the selection found it (velgHenvisning).
+const LIKHET_TEKST: Record<Likhet, string> = {
+  alder: "bilen var omtrent like gammel som din",
+  tidsrom: "feilen viste seg omtrent like lenge etter kjøpet",
+  regel: "utvalget brukte den samme regelen som brevet ditt bygger på",
+  feil: "saken gjaldt samme type feil",
 };
+const ogListe = (d: string[]) => (d.length < 2 ? d.join("") : `${d.slice(0, -1).join(", ")} og ${d[d.length - 1]}`);
+function hvorfor(likheter: Likhet[]): string {
+  const deler = likheter.map((l) => LIKHET_TEKST[l]);
+  return deler.length
+    ? `Valgt fordi ${ogListe(deler)}, og kjøperen vant mot forhandleren.`
+    : "Valgt som den saken kjøperen vant mot forhandleren, som ligner mest på din.";
+}
 
 // The decision the letter cites, as it stands in the letter. Chosen for the buyer, not by them.
 function Henvisningsblokk({ v }: { v: ValgtHenvisning }) {
@@ -161,9 +169,9 @@ function Henvisningsblokk({ v }: { v: ValgtHenvisning }) {
       <strong>
         {h.organ}, {h.ref} · {norskDato(h.dato)}
       </strong>
-      <p className="m-0">{h.type === "regel" ? h.regel : `${h.likhet} ${h.konklusjon}`}</p>
+      <p className="m-0">{h.regel && v.likheter.includes("regel") ? h.regel : `${h.likhet} ${h.konklusjon}`}</p>
       <p className={SMA}>
-        {HVORFOR[v.treff]} Bilen i saken var {h.alder} år gammel da den ble kjøpt.
+        {hvorfor(v.likheter)} Bilen i saken var {h.alder} år gammel da den ble kjøpt.
       </p>
       <a href={h.kildeUrl} target="_blank" rel="noreferrer" className="self-start text-[14px] font-semibold text-[#1f3a5f] underline underline-offset-2">
         Les vedtaket

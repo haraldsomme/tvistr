@@ -7,7 +7,8 @@ export { harPlassholder } from "./brev";
 // The letter as a file. Both formats are built from the same blocks as the page shows. Placeholders
 // in square brackets stay in the file; the page warns about them (`harPlassholder`).
 
-type Blokk = { linjer: string[]; fet?: boolean };
+// A heading (`overskrift`) gets space before it and is kept with the paragraph after it.
+type Blokk = { linjer: string[]; fet?: boolean; overskrift?: boolean };
 
 function blokker(b: Brev): Blokk[] {
   return [
@@ -15,7 +16,7 @@ function blokker(b: Brev): Blokk[] {
     { linjer: b.mottaker },
     { linjer: [b.stedDato] },
     { linjer: [b.emne], fet: true },
-    ...b.avsnitt.map((a) => ({ linjer: [a] })),
+    ...b.deler.flatMap((d) => [...(d.overskrift ? [{ linjer: [d.overskrift], fet: true, overskrift: true }] : []), ...d.avsnitt.map((a) => ({ linjer: [a] }))]),
     { linjer: [b.hilsen, b.underskrift] },
   ];
 }
@@ -36,7 +37,8 @@ export async function tilDocx(b: Brev): Promise<Uint8Array> {
   const children = blokker(b).map(
     (bl) =>
       new Paragraph({
-        spacing: { after: 240 },
+        spacing: bl.overskrift ? { before: 240, after: 120 } : { after: 240 },
+        keepNext: bl.overskrift,
         children: bl.linjer.flatMap((l, n) => kjoringer(l, bl.fet, n > 0)),
       }),
   );
@@ -106,7 +108,8 @@ export async function tilPdf(b: Brev): Promise<Uint8Array> {
       side = pdf.addPage([BREDDE_SIDE, HOYDE_SIDE]);
       y = HOYDE_SIDE - MARG;
     }
-    side.drawText(linje, { x: MARG, y, size: STR, font, color: rgb(0.09, 0.15, 0.24) });
+    // The trailing space keeps a space between lines when the text is copied or extracted.
+    side.drawText(`${linje} `, { x: MARG, y, size: STR, font, color: rgb(0.09, 0.15, 0.24) });
     // Every word on the line that is a piece of a link in the paragraph gets a link to the whole address.
     let x = MARG;
     for (const ord of linje.split(" ")) {
@@ -119,11 +122,19 @@ export async function tilPdf(b: Brev): Promise<Uint8Array> {
   };
   for (const bl of blokker(b)) {
     const font = bl.fet ? fet : normal;
+    // A heading never stands alone at the foot of a page.
+    if (bl.overskrift) {
+      y -= HOYDE * 0.4;
+      if (y < MARG + 3 * HOYDE) {
+        side = pdf.addPage([BREDDE_SIDE, HOYDE_SIDE]);
+        y = HOYDE_SIDE - MARG;
+      }
+    }
     for (const l of bl.linjer) {
       const urler = l.match(/https:\/\/[^\s)]+/g) ?? [];
       for (const del of brytLinjer(l, font, STR, bredde)) skriv(del, font, urler);
     }
-    y -= HOYDE * 0.6;
+    y -= bl.overskrift ? HOYDE * 0.2 : HOYDE * 0.6;
   }
   return pdf.save();
 }

@@ -7,6 +7,7 @@ import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 import { FRA_AR, gyldigKjopsdato, medKjopsdato, type Innsending } from "@/lib/vurdering/innsending";
 import { Datofelt } from "../datofelt";
 import { bareSiffer, type Felles, gruppert, HJELP, kroner, Skjema, Tekstfelt, valgAv, Valgfelt } from "../felt";
+import { MomentFelt, useMomenter, type Momenter } from "./moment";
 
 // What the letter needs about the purchase itself: the day, the price, the mileage, and whether the
 // contract made a disclaimer. The car itself came from the assessment and cannot change here.
@@ -27,7 +28,9 @@ export function KjopetFelt({
   lagre,
   avbryt,
   forslagKjopsdato,
-}: Felles & { kjoretoy: Kjoretoy; svar: Innsending; idag: string; verdi: Forbehold | undefined; forslagKjopsdato?: string | null }) {
+  momenter,
+}: Felles & { kjoretoy: Kjoretoy; svar: Innsending; idag: string; verdi: Forbehold | undefined; forslagKjopsdato?: string | null; momenter: Momenter }) {
+  const m = useMomenter(momenter);
   // Without a purchase date in the case, the registry's day for the current owner is the suggestion.
   const [dato, setDato] = useState(svar.kjopsdato || forslagKjopsdato || "");
   const [sum, setSum] = useState(svar.kjopesum);
@@ -50,7 +53,8 @@ export function KjopetFelt({
   const datoOk = gyldigKjopsdato(dato, idag);
   const sumOk = /^\d+$/.test(sum) && Number(sum) > 0;
   const klar = datoOk && sumOk && forbehold !== null;
-  const send = () => lagre({ svar: medKjopsdato({ ...svar, kjopesum: sum, kmVedKjop: km }, dato, idag), forbehold: forbehold! });
+  const garanti = m.gjelder("garanti_uklar") && forbehold === "garanti";
+  const send = () => lagre({ svar: medKjopsdato({ ...svar, kjopesum: sum, kmVedKjop: km }, dato, idag), forbehold: forbehold!, momenter: m.lagring("kjopet", garanti ? ["garanti_uklar"] : []) });
 
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt}>
@@ -66,6 +70,7 @@ export function KjopetFelt({
       <Tekstfelt label="Hva kostet bilen?" inputMode="numeric" autoComplete="off" placeholder="Kroner" value={gruppert(sum)} onChange={(e) => setSum(bareSiffer(e.target.value))} />
       <Tekstfelt label="Kilometerstand ved kjøpet (valgfritt)" inputMode="numeric" autoComplete="off" placeholder="Kilometer" value={gruppert(km)} onChange={(e) => setKm(bareSiffer(e.target.value))} />
       <Valgfelt label="Sto det «solgt som den er» eller noe om garanti i kontrakten eller annonsen?" verdi={forbehold} velg={setForbehold} valg={valgAv(FORBEHOLD_VALG, FORBEHOLD_TEKST)} />
+      {garanti && <MomentFelt id="garanti_uklar" svar={m.svar} sett={m.sett} />}
     </Skjema>
   );
 }

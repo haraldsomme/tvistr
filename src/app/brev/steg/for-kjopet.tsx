@@ -7,23 +7,34 @@ import { OPPLYST_VALG, type Innsending } from "@/lib/vurdering/innsending";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { HJELP, Kildefelt, Sammendrag, Skjema, valgAv, Valgfelt, type Felles } from "../felt";
+import { moment, MomentFelt, useMomenter, type Momenter } from "./moment";
+
+const [IMPORT_IKKE_OPPLYST, IMPORT_OPPLYST, IMPORT_NEI] = moment("bruktimport_ikke_opplyst").alternativer;
 
 const KILDE_TEKST: Record<Opplysning["kilde"], string> = { annonse: "Annonsen", kontrakt: "Kjøpekontrakten", melding: "Melding fra forhandleren", muntlig: "Muntlig før kjøpet" };
 
 // Two questions the assessment leaves for the letter page: did the buyer know about the defect before
 // buying (pre-filled from the assessment, asked again only after the wizard, to correct it; `visVisste`), and did the ad or the dealer say something
 // about the car that was not true. A «ja» to the second asks where and what, quoted in the letter as
-// written, so it is not reworded; whether that is documented follows from where it was said.
+// written, so it is not reworded; whether that is documented follows from where it was said. Then the
+// moments of what was known before the purchase (momenter.ts), when they apply. Whether the car was
+// imported used comes from the registry when it tells (`bruktimportert`); only whether the ad or the
+// contract said so is asked then.
 export function ForKjopetFelt({
   svar,
   verdi,
   feilopplyst,
   kilder,
   visVisste,
+  bruktimportert,
+  momenter,
   aktiv,
   lagre,
   avbryt,
-}: Felles & { svar: Innsending; verdi: Opplysning | undefined; feilopplyst: "ja" | "nei" | undefined; kilder: Kilder | undefined; visVisste: boolean }) {
+}: Felles & { svar: Innsending; verdi: Opplysning | undefined; feilopplyst: "ja" | "nei" | undefined; kilder: Kilder | undefined; visVisste: boolean; bruktimportert: boolean | undefined; momenter: Momenter }) {
+  const m = useMomenter(momenter);
+  const lagretImport = momenter.lagret?.bruktimport_ikke_opplyst?.svar;
+  const [importert, setImportert] = useState<"ja" | "nei" | "">(bruktimportert ? "ja" : lagretImport ? (lagretImport === IMPORT_NEI ? "nei" : "ja") : "");
   const id = useId();
   const [visste, setVisste] = useState(svar.opplystForKjop);
   const [opplyst, setOpplyst] = useState<"ja" | "nei" | "">(feilopplyst ?? "");
@@ -41,8 +52,20 @@ export function ForKjopetFelt({
   }
 
   const klar = (!visVisste || visste !== "") && (opplyst === "nei" || (opplyst === "ja" && kilde !== "" && tekst.trim().length >= 5));
+  // The rule the letter rests on follows the saved answers; a «ja» given now shows its questions at once.
+  const beskrivelse = m.gjelder("positiv_beskrivelse") || opplyst === "ja";
+  const tjeneste = opplyst === "ja";
+  const importSporres = m.gjelder("bruktimport_ikke_opplyst") && bruktimportert !== false;
+  const viste = [
+    beskrivelse && "positiv_beskrivelse",
+    tjeneste && "uriktig_service_arbeid_utstyr",
+    m.gjelder("tidligere_skade_ikke_opplyst") && "tidligere_skade_ikke_opplyst",
+    importSporres && "bruktimport_ikke_opplyst",
+    m.gjelder("dokument_for_salg") && "dokument_for_salg",
+  ].filter((x): x is string => Boolean(x));
   const send = () =>
     lagre({
+      momenter: m.lagring("for-kjopet", viste),
       svar: { ...svar, opplystForKjop: visste },
       feilopplyst: opplyst || undefined,
       opplysning: opplyst === "ja" ? { kilde: kilde as Opplysning["kilde"], tekst } : null,
@@ -80,8 +103,39 @@ export function ForKjopetFelt({
               sett={setKildetekst}
             />
           )}
+          <MomentFelt id="uriktig_service_arbeid_utstyr" svar={m.svar} sett={m.sett} />
         </>
       )}
+      {beskrivelse && <MomentFelt id="positiv_beskrivelse" svar={m.svar} sett={m.sett} />}
+      {m.gjelder("tidligere_skade_ikke_opplyst") && <MomentFelt id="tidligere_skade_ikke_opplyst" svar={m.svar} sett={m.sett} />}
+      {importSporres && bruktimportert === undefined && (
+        <Valgfelt
+          label="Var bilen bruktimportert?"
+          verdi={importert}
+          velg={(v) => {
+            setImportert(v);
+            m.sett("bruktimport_ikke_opplyst", v === "nei" ? { svar: IMPORT_NEI } : null);
+          }}
+          valg={[
+            { verdi: "ja", tekst: "Ja" },
+            { verdi: "nei", tekst: "Nei" },
+          ]}
+        />
+      )}
+      {importSporres && importert === "ja" && (
+        <MomentFelt
+          id="bruktimport_ikke_opplyst"
+          label="Sto det i annonsen eller kontrakten at bilen var bruktimportert?"
+          hjelp={bruktimportert ? "Ifølge Statens vegvesen ble bilen registrert i utlandet før den kom til Norge." : undefined}
+          svar={m.svar}
+          sett={m.sett}
+          valg={[
+            { verdi: IMPORT_OPPLYST, tekst: "Ja" },
+            { verdi: IMPORT_IKKE_OPPLYST, tekst: "Nei" },
+          ]}
+        />
+      )}
+      {m.gjelder("dokument_for_salg") && <MomentFelt id="dokument_for_salg" svar={m.svar} sett={m.sett} />}
     </Skjema>
   );
 }

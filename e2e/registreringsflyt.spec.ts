@@ -128,8 +128,8 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await page.getByLabel("Beskriv feilen med dine egne ord").fill("Motorlampen lyser, og bilen mister kraft i motbakker.");
   await veiviser.neste();
 
+  // «Visste du om feilen» was answered in the assessment; the step asks it again only after the wizard.
   await expect(veiviser.tittel("Før kjøpet")).toBeVisible();
-  await velg("Visste du om feilen før du kjøpte?", "Nei");
   await velg("Sa annonsen eller selgeren noe om bilen som ikke stemte?", "Nei");
   await veiviser.neste();
 
@@ -148,9 +148,6 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await expect(svakere).toContainText("rapport");
   await svakere.getByRole("button", { name: "Lagre likevel" }).click();
 
-  await expect(veiviser.tittel("Vedlegg")).toBeVisible();
-  await page.getByRole("button", { name: "Bekreft vedlegg" }).click();
-
   // The dealer has not had the chance to repair yet, so the claim is repair: nothing to choose.
   await expect(veiviser.tittel("Kravet")).toBeVisible();
   await veiviser.neste();
@@ -161,6 +158,9 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await page.getByLabel("Postnummer").fill("0184");
   await page.getByLabel("Sted").fill("Oslo");
   await veiviser.neste();
+
+  await expect(veiviser.tittel("Vedlegg")).toBeVisible();
+  await page.getByRole("button", { name: "Bekreft vedlegg" }).click();
 
   // The clarifying round (the model is mocked): one question, then nothing more to ask.
   await expect(veiviser.tittel("Gjennomgang")).toBeVisible();

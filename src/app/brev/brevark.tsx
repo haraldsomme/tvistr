@@ -87,13 +87,20 @@ export function Brevark({ brev, apne, mangler = [] }: { brev: Brev; apne?: (steg
           {brev.emne}
         </Tekst>
       </h1>
-      {brev.avsnitt.map((a, n) => (
-        <p key={n} className="m-0 font-brev text-[15px] leading-[1.8]">
-          <Tekst apne={apne} mangler={mangler}>
-            {a}
-          </Tekst>
-        </p>
-      ))}
+      {brev.deler.map((d, i) => [
+        d.overskrift && (
+          <h2 key={`o${i}`} className="m-0 pt-2 font-brev text-[15px] font-semibold leading-[1.5]">
+            {d.overskrift}
+          </h2>
+        ),
+        ...d.avsnitt.map((a, n) => (
+          <p key={`${i}-${n}`} className="m-0 font-brev text-[15px] leading-[1.8]">
+            <Tekst apne={apne} mangler={mangler}>
+              {a}
+            </Tekst>
+          </p>
+        )),
+      ])}
       <p className="m-0 font-brev text-[15px] leading-[1.8]">
         {brev.hilsen}
         <br />

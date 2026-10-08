@@ -1,0 +1,132 @@
+{
+  "id": "to-feil-garanti",
+  "tittel": "Fukt og bremser; muntlig opplysning om bremsene; garanti; avvist; prisavslag med utgift",
+  "feller": [
+    "Svaret «1 000–5 000 km» skal ikke stå som et intervall i brevet",
+    "Et avklaringssvar med «eller» skal ikke limes inn som et uferdig valg",
+    "Ingen overtalelse: «ta hensyn til», «bare», «lite sannsynlig»",
+    "Lenken til vedtaket står ikke i forfatterens avsnitt",
+    "Kjøperens følelser («føles utrygt», «veldig fuktig») gjengis som observasjoner"
+  ],
+  "idag": "2026-10-07",
+  "svar": {
+    "kjopsform": "forhandler",
+    "kjopAlder": "under_2",
+    "kjopsdato": "2024-06-04",
+    "kjopesum": "520000",
+    "kmVedKjop": "22000",
+    "feiltyper": [
+      "fukt",
+      "bremser"
+    ],
+    "oppdaget": "6_mnd_til_2_ar",
+    "opplystForKjop": "nei",
+    "feilOpplysning": "ja_udokumentert",
+    "kontakt": "ja",
+    "reklamertInnenFemAr": "",
+    "verkstedrapport": "nei",
+    "rapportSierForKjop": "",
+    "bilder": "nei"
+  },
+  "utfylling": {
+    "kjoretoy": {
+      "regnr": "XX 10016",
+      "merke": "Testmerke",
+      "modell": "Elektra",
+      "ar": 2022
+    },
+    "forhandler": {
+      "type": "brreg",
+      "orgnr": "900000016",
+      "navn": "Testbil AS"
+    },
+    "forbehold": "garanti",
+    "avsender": {
+      "navn": "Test Testesen",
+      "adresse": "Testveien 1",
+      "postnummer": "0184",
+      "poststed": "Oslo",
+      "epost": "test@example.com",
+      "kontonummer": "12345678903"
+    },
+    "feilen": {
+      "dato": "2026-05-01",
+      "egen": "Det er veldig fuktig i bilen hver dag, særlig etter perioder med regnvær. Det er fuktig under gulvmattene foran og bak, det kommer fukt fra taket, og det blir dugg på vinduene. I tillegg lager bremsene skrapelyd og har dårlig effekt hver gang jeg bremser, og det føles utrygt å kjøre bilen. Et verksted har sett på begge feilene og fant en lekkasje i taket.",
+      "feil": [
+        "Fukt i kupeen",
+        "Bremsene"
+      ],
+      "avsnitt": [
+        "Det er veldig fuktig i bilen hver dag, særlig etter perioder med regnvær. Det er fuktig under gulvmattene foran og bak, det kommer fukt fra taket, og det blir dugg på vinduene. I tillegg lager bremsene skrapelyd og har dårlig effekt hver gang jeg bremser, og det føles utrygt å kjøre bilen. Et verksted har sett på begge feilene og fant en lekkasje i taket."
+      ]
+    },
+    "feilopplyst": "ja",
+    "opplysning": {
+      "kilde": "muntlig",
+      "tekst": "Selgeren sa under prøvekjøringen at bremsene nylig var byttet."
+    },
+    "retting": "avvist",
+    "reklamasjon": {
+      "dato": "2026-07-30",
+      "mate": "telefon",
+      "svarDato": "2026-08-30"
+    },
+    "krav": {
+      "type": "prisavslag",
+      "utbedringNok": 50000,
+      "utgifter": [
+        {
+          "type": "annet",
+          "belopNok": 2000,
+          "beskrivelse": "nye gulvmatter"
+        }
+      ]
+    },
+    "kmVedFeil": 24800,
+    "momenter": {
+      "skjult_feil": {
+        "svar": "Den er skjult og ble funnet ved undersøkelse på verksted"
+      }
+    }
+  },
+  "avklaringer": [
+    {
+      "runde": 1,
+      "tema": "feilen",
+      "sporsmal": "Hva fant verkstedet om bremsene?",
+      "svar": "Bremseklossene eller bremseskivene var slitt eller skiftet ut"
+    },
+    {
+      "runde": 1,
+      "tema": "feilen",
+      "sporsmal": "Når viste bremsefeilen seg første gang?",
+      "svar": "Rundt 20. mai 2026"
+    }
+  ],
+  "forventet": {
+    "argumenter": [
+      "formodning",
+      "opplysning",
+      "forbehold",
+      "momenter",
+      "historikk",
+      "krav_prisavslag",
+      "erstatning",
+      "kontonummer"
+    ],
+    "ikkeTekst": [
+      "\\d\\s?–\\s?\\d[\\d  ]*\\s?km",
+      "eller bremseskivene",
+      "slitt eller skiftet",
+      "\\bbare\\b",
+      "ta hensyn til",
+      "lite sannsynlig",
+      "føles utrygt",
+      "veldig",
+      "[Pp]ristilbud eller takst"
+    ],
+    "tekst": [
+      "§ 18 a"
+    ]
+  }
+}

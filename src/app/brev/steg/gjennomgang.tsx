@@ -6,6 +6,8 @@ import { FELT_TEKST, rettelseTilLagring, type Avklaringsrunde, type Rettelse } f
 import type { Avklaring, Utfylling } from "@/lib/brev/utfylling";
 import type { Innsending } from "@/lib/vurdering/innsending";
 import { Button } from "@/components/ui/button";
+import { Datofelt } from "../datofelt";
+import { EGEN, EGEN_VALG } from "./moment";
 import { Spinner } from "@/components/ui/spinner";
 import { Flervalgsfelt, HJELP, Sammendrag, Skjema, Tekstfelt, Valgfelt, VeiviserKontekst, VEIVISER_KNAPPER, type Felles } from "../felt";
 
@@ -29,9 +31,10 @@ async function hentRunde(sakId: string): Promise<Avklaringsrunde | string> {
   }
 }
 
-const svarTekst = (s: Svar | undefined) => [s?.valg.join("; "), s?.utdyping.trim()].filter(Boolean).join(". ") || null;
+const svarTekst = (s: Svar | undefined) => [s?.valg.filter((v) => v !== EGEN).join("; "), s?.valg.includes(EGEN) || !s?.valg.length ? s?.utdyping.trim() : ""].filter(Boolean).join(". ") || null;
+const alternativer = (a: string[]) => [...a.map((x) => ({ verdi: x, tekst: x })), EGEN_VALG];
 
-export function GjennomgangFelt({ sakId, svar, utfylling, aktiv, lagre }: Felles & { sakId: string; svar: Innsending; utfylling: Utfylling }) {
+export function GjennomgangFelt({ sakId, svar, utfylling, idag, aktiv, lagre }: Felles & { sakId: string; svar: Innsending; utfylling: Utfylling; idag: string }) {
   const veiviser = useContext(VeiviserKontekst);
   const [runde, setRunde] = useState<Avklaringsrunde | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
@@ -104,7 +107,7 @@ export function GjennomgangFelt({ sakId, svar, utfylling, aktiv, lagre }: Felles
   }
   // The answers of this round, unanswered ones as null so they are not asked again; then the next round.
   async function send() {
-    const nye: Avklaring[] = runde!.sporsmal.map((s) => ({ runde: runde!.runde, ...(s.moment && { moment: s.moment }), tema: s.tema, sporsmal: s.tekst.slice(0, 300), svar: svarTekst(svarene[s.id])?.slice(0, 500) ?? null }));
+    const nye: Avklaring[] = runde!.sporsmal.map((s) => ({ runde: runde!.runde, tema: s.tema, sporsmal: s.tekst.slice(0, 300), svar: svarTekst(svarene[s.id])?.slice(0, 500) ?? null }));
     if (nye.length && !(await lagre({ avklaringer: [...(utfylling.avklaringer ?? []), ...nye] }))) return false;
     hent();
     return false;
@@ -137,16 +140,22 @@ export function GjennomgangFelt({ sakId, svar, utfylling, aktiv, lagre }: Felles
       ))}
       {runde.sporsmal.map((s) => (
         <div key={s.id} className="flex flex-col gap-2">
-          {s.alternativer.length === 0 ? null : s.flervalg ? (
-            <Flervalgsfelt label={s.tekst} verdi={svarene[s.id]?.valg ?? []} velg={(v) => sett(s.id, { valg: v })} valg={s.alternativer.map((a) => ({ verdi: a, tekst: a }))} />
+          {s.dato ? (
+            // ÅÅÅÅ-MM-DD, as every other date in the case, so the letter's date check knows it.
+            <Datofelt label={s.tekst} max={idag} verdi={svarene[s.id]?.utdyping ?? ""} settVerdi={(d) => sett(s.id, { utdyping: d })} />
+          ) : s.alternativer.length === 0 ? null : s.flervalg ? (
+            <Flervalgsfelt label={s.tekst} hjelp="Velg alt som stemmer, eller beskriv det selv." verdi={svarene[s.id]?.valg ?? []} velg={(v) => sett(s.id, { valg: v })} valg={alternativer(s.alternativer)} />
           ) : (
-            <Valgfelt label={s.tekst} verdi={svarene[s.id]?.valg[0] ?? ""} velg={(v) => sett(s.id, { valg: [v] })} valg={s.alternativer.map((a) => ({ verdi: a, tekst: a }))} />
+            <Valgfelt label={s.tekst} hjelp="Velg det som passer best, eller beskriv det selv." verdi={svarene[s.id]?.valg[0] ?? ""} velg={(v) => sett(s.id, { valg: [v] })} valg={alternativer(s.alternativer)} />
           )}
-          <Tekstfelt
-            label={s.alternativer.length ? "Utdyp (valgfritt)" : s.tekst}
-            value={svarene[s.id]?.utdyping ?? ""}
-            onChange={(e) => sett(s.id, { utdyping: e.target.value.slice(0, 300) })}
-          />
+          {!s.dato && (s.alternativer.length === 0 || svarene[s.id]?.valg.includes(EGEN)) && (
+            <Tekstfelt
+              label={s.alternativer.length ? "Egen beskrivelse" : s.tekst}
+              autoFocus={s.alternativer.length > 0}
+              value={svarene[s.id]?.utdyping ?? ""}
+              onChange={(e) => sett(s.id, { utdyping: e.target.value.slice(0, 300) })}
+            />
+          )}
         </div>
       ))}
     </Skjema>

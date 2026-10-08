@@ -9,7 +9,7 @@ import type { Tema } from "./saksmodell";
 export const RETTBARE_FELT = ["kjopsdato", "kjopesum", "kmVedKjop", "feilen.dato", "reklamasjon.dato", "reklamasjon.svarDato", "reparasjon.dato", "krav.utbedringNok"] as const;
 export type RettbartFelt = (typeof RETTBARE_FELT)[number];
 export type Rettelse = { felt: RettbartFelt; verdi: string; begrunnelse: string };
-export type Sporsmal = { id: string; moment?: string; tema: Tema; tekst: string; alternativer: string[]; flervalg: boolean };
+export type Sporsmal = { id: string; tema: Tema; tekst: string; alternativer: string[]; flervalg: boolean; dato: boolean };
 export type Avklaringsrunde = { status: "sporsmal" | "klar"; runde: number; sporsmal: Sporsmal[]; rettelser: Rettelse[] };
 
 const heltall = (v: string) => /^\d{1,9}$/.test(v);

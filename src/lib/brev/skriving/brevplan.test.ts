@@ -247,10 +247,14 @@ describe("henvisningen", () => {
   });
 
   it("«minst like sterkt» bare når kjøperen har alle momentene vedtaket ble vunnet på", () => {
-    for (const m of [utenfor(), utenfor({ rapport_upaaregnelig: { svar: "Ja, at det er en konstruksjons- eller produksjonsfeil ved modellen" }, rapport_arsak: { svar: "Den angir en konkret årsak etter å ha undersøkt bilen" } })]) {
+    // Without the report moments the chosen decision rests on a moment this buyer is not asked; with them, on one they have.
+    const saker = [utenfor(), utenfor({ rapport_upaaregnelig: { svar: "Ja, at det er en konstruksjons- eller produksjonsfeil ved modellen" }, rapport_arsak: { svar: "Den angir en konkret årsak etter å ha undersøkt bilen" } })];
+    for (const m of saker) {
       const v = henvisningFor(m)!;
-      expect(foring(m).includes("minst like sterkt")).toBe(v.mangler.length === 0 && v.ukjent.length === 0);
+      expect(foring(m).includes("minst like sterkt")).toBe(v.mangler.length === 0 && v.ukjent.length === 0 && v.dekket.length > 0);
     }
+    // Both branches are exercised.
+    expect(saker.map((m) => foring(m).includes("minst like sterkt"))).toEqual([false, true]);
   });
 
   it("et moment besvart med egne ord teller ikke som dekket", () => {

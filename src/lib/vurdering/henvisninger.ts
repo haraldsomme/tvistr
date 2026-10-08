@@ -1280,8 +1280,11 @@ export function velgHenvisning(f: Faktorer, k: Kjoper, bibliotek: readonly Henvi
   const levering = trengerLevering(f);
   const grupper = grupperFor(f);
   const kandidater = bibliotek.filter((h) => forenlig(h, f));
+  // Outside the presumption the letter must show the defect was there at delivery: a decision on that
+  // question too goes first, then one on the main question alone, then any compatible one.
   const samme = kandidater.filter((h) => h.sporsmal.includes(hoved));
-  const pool = samme.length ? samme : kandidater;
+  const medLevering = levering ? samme.filter((h) => h.sporsmal.includes("levering")) : [];
+  const pool = medLevering.length ? medLevering : samme.length ? samme : kandidater;
   const vurdert = pool.map((h) => {
     const dekket = h.vekt.filter((id) => k.sporbare.has(id) && k.dekket.has(id));
     const mangler = h.vekt.filter((id) => k.sporbare.has(id) && !k.dekket.has(id));

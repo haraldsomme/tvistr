@@ -1,5 +1,5 @@
 import type { Faktorer } from "@/lib/vurdering/faktorer";
-import { grupperFor, type Faktum, type Gruppe, type Opplyst, type Sporsmal, type ValgtHenvisning } from "@/lib/vurdering/henvisninger";
+import { grupperFor, type Faktum, type Gruppe, type Henvisning, type Opplyst, type Sporsmal, type ValgtHenvisning } from "@/lib/vurdering/henvisninger";
 import { gyldigRetting, type KlageInput, type Retting } from "@/lib/vurdering/typer";
 import { moment } from "./momenter";
 import type { Forbehold, Reparasjon, Utfylling, Utgift, Vedlegg } from "./utfylling";
@@ -89,13 +89,21 @@ export const GRUPPE_NAVN: Record<Gruppe, string> = {
   batteri: "batteriet",
 };
 const OPPLYST_VEDTAK: Record<Opplyst, string> = { ingenting: "Forhandleren hadde ikke opplyst om feilen.", som_den_er: "Bilen var solgt «som den er».", feilen_opplyst: "Forhandleren hadde opplyst om forholdet før kjøpet." };
-const STERKERE: Record<Faktum, string> = { alder: "en nyere bil", km: "kortere kjørelengde", pris: "en dyrere bil", opplyst: "mindre opplyst om feilen før kjøpet", tid: "feilen viste seg tidligere etter kjøpet" };
-const SVAKERE: Record<Faktum, string> = {
-  alder: "Min bil var eldre enn bilen i vedtaket.",
-  km: "Min bil hadde gått lenger enn bilen i vedtaket.",
-  pris: "Min bil kostet mindre enn bilen i vedtaket.",
-  opplyst: "I min sak var mer opplyst før kjøpet enn i vedtaket.",
-  tid: "Feilen viste seg senere etter kjøpet i min sak enn i vedtaket.",
+// What was disclosed is stated as the fact it is, by what the other case had: the buyer is stronger when
+// the decision's car was sold «som den er» or the defect disclosed, weaker when the buyer's was.
+const STERKERE: Record<Faktum, (h: Henvisning) => string> = {
+  alder: () => "en nyere bil",
+  km: () => "kortere kjørelengde",
+  pris: () => "en dyrere bil",
+  opplyst: (h) => (h.opplyst === "feilen_opplyst" ? "feilen var ikke opplyst før kjøpet" : "bilen ble ikke solgt «som den er»"),
+  tid: () => "feilen viste seg tidligere etter kjøpet",
+};
+const SVAKERE: Record<Faktum, (f: Faktorer) => string> = {
+  alder: () => "Min bil var eldre enn bilen i vedtaket.",
+  km: () => "Min bil hadde gått lenger enn bilen i vedtaket.",
+  pris: () => "Min bil kostet mindre enn bilen i vedtaket.",
+  opplyst: (f) => (f.opplystForKjop === "ja" ? "I min sak var feilen opplyst før kjøpet." : "I min sak ble bilen solgt «som den er»."),
+  tid: () => "Feilen viste seg senere etter kjøpet i min sak enn i vedtaket.",
 };
 
 export const JURIDISK = {
@@ -147,21 +155,27 @@ export const JURIDISK = {
     const bil = [f.bilAlder !== null && `var ${f.bilAlder} år gammel`, f.kmVedKjop !== null && `hadde gått ${km(f.kmVedKjop)} km`, f.kjopesumNok !== null && `kostet ${kroner(f.kjopesumNok)}`].filter(Boolean);
     const fakta = [bil.length > 0 && `bilen ${bil.join(", ")}`, kjoperTid && `feilen viste seg ${kjoperTid}`].filter(Boolean).join(", ");
     const minSak = fakta ? ` Min sak: ${fakta}.` : "";
-    const sammenligning = v.sterkere.length ? ` Sammenlignet med vedtaket: ${v.sterkere.map((x) => STERKERE[x]).join(", ")}.` : "";
+    const sammenligning = v.sterkere.length ? ` Sammenlignet med vedtaket: ${v.sterkere.map((x) => STERKERE[x](h)).join(", ")}.` : "";
     // Only when nothing was disclosed in either case: «heller ikke» would be untrue of a disclosed defect.
     const likt = v.likt.includes("opplyst") && h.opplyst === "ingenting" ? " Feilen var heller ikke opplyst før kjøpet." : "";
     const dekket = v.dekket.map((id) => moment(id)?.navn.toLowerCase()).filter(Boolean);
+    // Only with something to point to: a decision won on no listed moment proves nothing «at least as strong».
     const del3 =
-      v.mangler.length === 0 && v.ukjent.length === 0
-        ? `De samme momentene trekker minst like sterkt i min sak.${dekket.length ? ` Vis kort til det i saken som svarer til: ${dekket.join(", ")}.` : ""}${minSak}${sammenligning}${likt}`
+      v.mangler.length === 0 && v.ukjent.length === 0 && dekket.length > 0
+        ? `De samme momentene trekker minst like sterkt i min sak. Vis kort til det i saken som svarer til: ${dekket.join(", ")}.${minSak}${sammenligning}${likt}`
         : `${minSak}${sammenligning}${likt} Skriv ikke at momentene trekker like sterkt.`.trim();
     const lov =
       f.presumsjonManeder === 24 && f.oppdaget !== "innen_6_mnd" && h.lov === "før_2024"
         ? ` Vedtaket gjelder et kjøp før lovendringen 1. januar 2024${h.presumsjon ? ", da formodningsperioden i § 18 var seks måneder; den er nå to år" : ""}. Reglene vedtaket bygger på, er ikke endret til kjøperens ugunst.`
         : "";
     const grupper = grupperFor(f);
-    const annen = v.annenFeil && grupper[0] ? ` Vedtaket gjaldt ${GRUPPE_NAVN[h.gruppe]} og ikke ${GRUPPE_NAVN[grupper[0]]}, men spørsmålet er det samme: ${KORT_SPORSMAL[v.sporsmal.at(-1) ?? "forventning"]}.` : "";
-    const del4 = `${v.svakere.map((x) => ` ${SVAKERE[x]}`).join("")}${annen}${lov}`.trim();
+    // «The same question» only when the decision shares one with the buyer (not the fallback).
+    const sisteSporsmal = v.sporsmal.at(-1);
+    const annen =
+      v.annenFeil && grupper[0]
+        ? ` Vedtaket gjaldt ${GRUPPE_NAVN[h.gruppe]} og ikke ${GRUPPE_NAVN[grupper[0]]}${sisteSporsmal ? `, men spørsmålet er det samme: ${KORT_SPORSMAL[sisteSporsmal]}` : ""}.`
+        : "";
+    const del4 = `${v.svakere.map((x) => ` ${SVAKERE[x](f)}`).join("")}${annen}${lov}`.trim();
     return [del1, del2, del3, del4 && `Kort, uten motargument: ${del4}`].filter(Boolean).join("\n\n");
   },
 } as const;

@@ -33,6 +33,16 @@ describe("velgHenvisning", () => {
     expect(v?.sammeSporsmal).toBe(true);
   });
 
+  it("utenfor formodningen går et vedtak om leveringen foran et som står sterkere på fakta", () => {
+    // The buyer: 2 years, 22 000 km, 520 000 kr, defect after the six-month presumption.
+    const bareForventning = post({ vedtakId: 60, sporsmal: ["forventning"], alder: 16, km: 191397, pris: 80000, opplyst: "feilen_opplyst" });
+    const medLevering = post({ vedtakId: 61, sporsmal: ["forventning", "levering"], alder: 2, km: 22000, pris: 520000 });
+    const v = velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01", bilAr: 2021, km: 22000, pris: 520000 }, [bareForventning, medLevering]);
+    expect(v?.henvisning.vedtakId).toBe(61);
+    expect(v?.sporsmal).toEqual(["forventning", "levering"]);
+    expect(v?.sammeSporsmal).toBe(true);
+  });
+
   it("uten vedtak med kjøperens spørsmål brukes reserven, og den sier det", () => {
     const v = velg({ oppdaget: "6_mnd_til_2_ar", kjopsdato: "2023-03-01" }, [post({ sporsmal: ["opplysning"] })]);
     expect(v?.sammeSporsmal).toBe(false);

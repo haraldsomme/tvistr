@@ -2,7 +2,11 @@
 // (https://autosys-kjoretoy-api.atlas.vegvesen.no). The key (VEGVESEN_API_KEY) stays on the server.
 // The registration number is the user's own and is only passed on, never stored.
 
-import { erDato } from "@/lib/vurdering/faktorer";
+function erDato(v: unknown): v is string {
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+}
 
 const URL_OPPSLAG = "https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata";
 

@@ -1,4 +1,7 @@
-import type { Adresse, Forhandler } from "@/lib/vurdering/typer";
+export type Adresse = { linjer: string[]; postnummer: string; poststed: string };
+export type Forhandler =
+  | { type: "brreg"; orgnr: string; navn: string; adresse?: Adresse }
+  | { type: "fritekst"; navn: string; adresse?: Adresse };
 
 // Lookup of dealers in Brreg's open Enhetsregister, by name or organisation number. ENK (sole
 // proprietorships) is left out on purpose: their names are usually personal names, which we do not
@@ -6,7 +9,15 @@ import type { Adresse, Forhandler } from "@/lib/vurdering/typer";
 const BRREG = "https://data.brreg.no/enhetsregisteret/api/enheter";
 const FORMER = "AS,ASA,ANS,DA,NUF";
 
-export type Forslag = { orgnr: string; navn: string; kommune: string | null; bransje: string | null; status: "konkurs" | "avvikling" | null; adresse: Adresse | null };
+export type Forslag = {
+  orgnr: string;
+  navn: string;
+  kommune: string | null;
+  bransje: string | null;
+  status: "konkurs" | "avvikling" | null;
+  adresse: Adresse | null; // where mail goes
+  forretningsadresse: string | null; // one line, as the form stores it (docs/skjema.md)
+};
 
 type BrregAdresse = { adresse?: string[]; postnummer?: string; poststed?: string; kommune?: string };
 
@@ -36,6 +47,11 @@ function adresseFra(e: BrregEnhet): Adresse | null {
   return null;
 }
 
+function enLinje(a: BrregAdresse | undefined): string | null {
+  const linjer = (a?.adresse ?? []).map((l) => l.trim()).filter(Boolean);
+  return a?.postnummer && a.poststed ? [...linjer, `${a.postnummer} ${tittel(a.poststed)}`].join(", ") : null;
+}
+
 const tilForslag = (e: BrregEnhet): Forslag => ({
   orgnr: e.organisasjonsnummer,
   navn: e.navn,
@@ -43,6 +59,7 @@ const tilForslag = (e: BrregEnhet): Forslag => ({
   bransje: e.naeringskode1?.beskrivelse ?? null,
   status: e.konkurs ? "konkurs" : e.underAvvikling ? "avvikling" : null,
   adresse: adresseFra(e),
+  forretningsadresse: enLinje(e.forretningsadresse),
 });
 
 // A suggestion as the dealer of the letter.

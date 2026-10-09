@@ -1,0 +1,1287 @@
+{
+  "S01": {
+    "stopp": null,
+    "sak": {
+      "lov": "etter_2024",
+      "formodningsfrist_dager": 730,
+      "alder_ved_kjop": 7,
+      "prisband": "100-250k",
+      "aldersband": "4-8",
+      "kmband": "60-120k",
+      "km_siden_kjop": 14000,
+      "mnd_siden_kjop": 28,
+      "km_per_mnd": 500,
+      "svakhet_sak": null,
+      "selger_motbevis": false,
+      "forlik": false,
+      "onsket_losning": "prisavslag",
+      "heving_tillatt_i_praksis": false
+    },
+    "feil": [
+      {
+        "feil_id": "F1",
+        "kategori_skjema": "bremser",
+        "kategori_pass2": "bremser",
+        "dager_til_feil": 245,
+        "innen_frist": true,
+        "slitedel": true,
+        "spor_primar": "B",
+        "a_variant": null,
+        "spor_sekundar": null,
+        "spor_alle": [
+          "B"
+        ],
+        "ingen_spor_arsak": null,
+        "kan_bilen_brukes": "ja_begrenset",
+        "alvor": true,
+        "km_svakhet_i_avsnitt": false,
+        "kandidat": null,
+        "kandidat_spor": null,
+        "kriterier": [],
+        "antall_sterkere": 0,
+        "svakhet_adressert": null,
+        "godkjent": false,
+        "sitat": null,
+        "argumenter": [],
+        "avsnitt": null,
+        "forkastede": [
+          {
+            "saksnummer": "22/1667 f1",
+            "grunn": "svakere på tid_til_feil, reklamasjonstid"
+          },
+          {
+            "saksnummer": "21/4018 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/3944 f1",
+            "grunn": "svakere på tid_til_feil, reklamasjonstid"
+          }
+        ],
+        "styrke": "svak",
+        "motstridende": null,
+        "naermeste": {
+          "saksnummer": "21/4018",
+          "vedtaksdato": "2022-05-18",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022034016&dokid=653560&versjon=1&variant=A&",
+          "kategori": "bremser",
+          "spor": "B",
+          "sanksjon": "prisavslag_og_erstatning",
+          "tilkjent_totalt_nok": 21442,
+          "mangler": [
+            "tid_til_feil"
+          ]
+        },
+        "forlik": false,
+        "reklamasjon_over_to_mnd": false
+      }
+    ],
+    "valgt_til_brev": [],
+    "lovendring": null,
+    "ingen_treff": [
+      {
+        "feil_id": "F1",
+        "siste_stopp": "alle 3 kandidater forkastet"
+      }
+    ]
+  },
+  "S02": {
+    "stopp": null,
+    "sak": {
+      "lov": "etter_2024",
+      "formodningsfrist_dager": 730,
+      "alder_ved_kjop": 11,
+      "prisband": "100-250k",
+      "aldersband": "8-12",
+      "kmband": ">180k",
+      "km_siden_kjop": 1100,
+      "mnd_siden_kjop": 31,
+      "km_per_mnd": 35,
+      "svakhet_sak": null,
+      "selger_motbevis": true,
+      "forlik": false,
+      "onsket_losning": "prisavslag",
+      "heving_tillatt_i_praksis": false
+    },
+    "feil": [
+      {
+        "feil_id": "F1",
+        "kategori_skjema": "girkasse",
+        "kategori_pass2": "girkasse",
+        "dager_til_feil": 10,
+        "innen_frist": true,
+        "slitedel": true,
+        "spor_primar": "B",
+        "a_variant": null,
+        "spor_sekundar": null,
+        "spor_alle": [
+          "B"
+        ],
+        "ingen_spor_arsak": null,
+        "kan_bilen_brukes": "ja_begrenset",
+        "alvor": true,
+        "km_svakhet_i_avsnitt": false,
+        "kandidat": {
+          "vedtak_id": 2175,
+          "saksnummer": "21/13427",
+          "vedtaksdato": "2022-12-07",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022102543&dokid=802826&versjon=1&variant=A&",
+          "feil_id": "f1",
+          "kategori": "girkasse",
+          "spor_vunnet": [
+            "B"
+          ],
+          "a_variant": "uttalelse",
+          "lovversjon": "før_2024",
+          "sanksjon": "erstatning",
+          "tilkjent_totalt_nok": 31629,
+          "opplysning": null,
+          "forbehold": true,
+          "dager_etter_levering": 31,
+          "selger_bevis_finnes": true
+        },
+        "kandidat_spor": "B",
+        "kriterier": [
+          {
+            "navn": "tid_til_feil",
+            "bruker": 10,
+            "vedtak": 31,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "selger_motbevis",
+            "bruker": true,
+            "vedtak": true,
+            "utfall": "lik"
+          },
+          {
+            "navn": "rapport_levering",
+            "bruker": false,
+            "vedtak": false,
+            "utfall": "lik"
+          },
+          {
+            "navn": "arsak",
+            "bruker": false,
+            "vedtak": false,
+            "utfall": "lik"
+          },
+          {
+            "navn": "ikke_slitedel",
+            "bruker": false,
+            "vedtak": false,
+            "utfall": "lik"
+          },
+          {
+            "navn": "reklamasjonstid",
+            "bruker": 1,
+            "vedtak": 11,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "kategori",
+            "bruker": "girkasse",
+            "vedtak": "girkasse",
+            "utfall": "sterkere"
+          }
+        ],
+        "antall_sterkere": 3,
+        "svakhet_adressert": null,
+        "godkjent": true,
+        "sitat": {
+          "tema": "formodning",
+          "tekst": "Feilen viste seg rundt 4-5 uker etter kjøpet, og formodningsregelen i kjl. § 18 annet ledd kommer i utgangspunktet til anvendelse"
+        },
+        "argumenter": [
+          "Feilen viste seg 10 dager etter leveringen, mot 31 dager i vedtaket.",
+          "Jeg reklamerte 1 dag etter at feilen ble oppdaget.",
+          "Vedtaket gjaldt samme type feil som i min sak."
+        ],
+        "avsnitt": "Forbrukerklageutvalget har i vedtak 21/13427 av 7. desember 2022 lagt til grunn at en feil som viste seg 31 dager etter leveringen, forelå ved leveringen, og at selgers dokumentasjon ikke var tilstrekkelig til å motbevise dette. Saken gjaldt feil på girkassen på en 10 år gammel bil. Utvalget uttalte: «Feilen viste seg rundt 4-5 uker etter kjøpet, og formodningsregelen i kjl. § 18 annet ledd kommer i utgangspunktet til anvendelse». Kjøperen fikk erstattet 26 687 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Feilen viste seg 10 dager etter leveringen, mot 31 dager i vedtaket. Jeg reklamerte 1 dag etter at feilen ble oppdaget. Vedtaket gjaldt samme type feil som i min sak.",
+        "forkastede": [
+          {
+            "saksnummer": "FKU-2026-73578 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "23/7076 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "22/4730 f1",
+            "grunn": "svakere på ikke_slitedel"
+          },
+          {
+            "saksnummer": "21/10056 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "21/4689 f1",
+            "grunn": "svakere på ikke_slitedel"
+          },
+          {
+            "saksnummer": "21/6249 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          }
+        ],
+        "styrke": "middels",
+        "motstridende": {
+          "saksnummer": "FKU-2026-56288",
+          "vedtaksdato": "2026-02-18",
+          "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-56288.pdf",
+          "grunn": "paregnelig_slitasje",
+          "skilte": [
+            "I FKU-2026-56288 la utvalget til grunn at feilen var vanlig slitasje for bilens alder og kjørelengde.",
+            "Bilen i FKU-2026-56288 hadde gått 255 000 km, mot 126 400 km i 21/13427."
+          ]
+        },
+        "naermeste": null,
+        "forlik": false,
+        "reklamasjon_over_to_mnd": false
+      }
+    ],
+    "valgt_til_brev": [
+      "F1"
+    ],
+    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
+    "ingen_treff": []
+  },
+  "S03": {
+    "stopp": null,
+    "sak": {
+      "lov": "før_2024",
+      "formodningsfrist_dager": 183,
+      "alder_ved_kjop": 16,
+      "prisband": "<100k",
+      "aldersband": ">12",
+      "kmband": "120-180k",
+      "km_siden_kjop": 6000,
+      "mnd_siden_kjop": 44,
+      "km_per_mnd": 136,
+      "svakhet_sak": null,
+      "selger_motbevis": false,
+      "forlik": false,
+      "onsket_losning": "heving",
+      "heving_tillatt_i_praksis": true
+    },
+    "feil": [
+      {
+        "feil_id": "F1",
+        "kategori_skjema": "rust",
+        "kategori_pass2": "rust",
+        "dager_til_feil": 243,
+        "innen_frist": false,
+        "slitedel": false,
+        "spor_primar": null,
+        "a_variant": null,
+        "spor_sekundar": null,
+        "spor_alle": [],
+        "ingen_spor_arsak": "utenfor_frist",
+        "kan_bilen_brukes": "nei",
+        "alvor": true,
+        "km_svakhet_i_avsnitt": false,
+        "kandidat": null,
+        "kandidat_spor": null,
+        "kriterier": [],
+        "antall_sterkere": 0,
+        "svakhet_adressert": null,
+        "godkjent": false,
+        "sitat": null,
+        "argumenter": [],
+        "avsnitt": null,
+        "forkastede": [],
+        "styrke": "svak",
+        "motstridende": null,
+        "naermeste": {
+          "saksnummer": "21/4203",
+          "vedtaksdato": "2021-12-01",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021095135&dokid=537047&versjon=1&variant=A&",
+          "kategori": "rust",
+          "spor": "C",
+          "sanksjon": "heving",
+          "tilkjent_totalt_nok": 80000,
+          "mangler": [
+            "utover_paregnelig",
+            "pris"
+          ]
+        },
+        "forlik": false,
+        "reklamasjon_over_to_mnd": false
+      }
+    ],
+    "valgt_til_brev": [],
+    "lovendring": null,
+    "ingen_treff": [
+      {
+        "feil_id": "F1",
+        "siste_stopp": "ingen_spor: utenfor_frist"
+      }
+    ]
+  },
+  "S04": {
+    "stopp": null,
+    "sak": {
+      "lov": "etter_2024",
+      "formodningsfrist_dager": 730,
+      "alder_ved_kjop": 2,
+      "prisband": "450k+",
+      "aldersband": "<4",
+      "kmband": "<60k",
+      "km_siden_kjop": 9500,
+      "mnd_siden_kjop": 28,
+      "km_per_mnd": 339,
+      "svakhet_sak": null,
+      "selger_motbevis": false,
+      "forlik": false,
+      "onsket_losning": "prisavslag",
+      "heving_tillatt_i_praksis": false
+    },
+    "feil": [
+      {
+        "feil_id": "F1",
+        "kategori_skjema": "rust",
+        "kategori_pass2": "rust",
+        "dager_til_feil": 585,
+        "innen_frist": true,
+        "slitedel": false,
+        "spor_primar": "C",
+        "a_variant": null,
+        "spor_sekundar": "B",
+        "spor_alle": [
+          "C",
+          "B"
+        ],
+        "ingen_spor_arsak": null,
+        "kan_bilen_brukes": "ja",
+        "alvor": false,
+        "km_svakhet_i_avsnitt": false,
+        "kandidat": {
+          "vedtak_id": 3160,
+          "saksnummer": "FKU-2025-134183",
+          "vedtaksdato": "2025-06-23",
+          "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-134183.pdf",
+          "feil_id": "f2",
+          "kategori": "rust",
+          "spor_vunnet": [
+            "C"
+          ],
+          "a_variant": "taushet",
+          "lovversjon": "før_2024",
+          "sanksjon": "prisavslag",
+          "tilkjent_totalt_nok": 13648,
+          "opplysning": null,
+          "forbehold": true,
+          "dager_etter_levering": 30,
+          "selger_bevis_finnes": false
+        },
+        "kandidat_spor": "C",
+        "kriterier": [
+          {
+            "navn": "utover_paregnelig",
+            "bruker": true,
+            "vedtak": true,
+            "utfall": "lik"
+          },
+          {
+            "navn": "ved_levering",
+            "bruker": true,
+            "vedtak": false,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "alvor",
+            "bruker": false,
+            "vedtak": false,
+            "utfall": "lik"
+          },
+          {
+            "navn": "alder",
+            "bruker": 2,
+            "vedtak": 13,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "km",
+            "bruker": 22000,
+            "vedtak": 160919,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "pris",
+            "bruker": 520000,
+            "vedtak": 150000,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "kostnad_pris",
+            "bruker": 0.12307692307692308,
+            "vedtak": 0.09098666666666666,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "tid_til_feil",
+            "bruker": 585,
+            "vedtak": 30,
+            "utfall": "svakere"
+          },
+          {
+            "navn": "kategori",
+            "bruker": "rust",
+            "vedtak": "rust",
+            "utfall": "sterkere"
+          }
+        ],
+        "antall_sterkere": 6,
+        "svakhet_adressert": "tid_til_feil",
+        "godkjent": true,
+        "sitat": {
+          "tema": "mangel",
+          "tekst": "Utvalget anser da at selv om bilen er av eldre årsmodell, er rustskadene av et slikt omfang at det overstiger hva klageren med rimelighet kunne forvente, også tatt i betraktning bilens kjøpesum, se fkjl. § 17 første ledd bokstav a"
+        },
+        "argumenter": [
+          "Bilen var 2 år med 22 000 km og kostet 520 000 kr, mot 13 år, 160 919 km og 150 000 kr i vedtaket.",
+          "Utbedringen koster 12 % av kjøpesummen, mot 9 % i vedtaket.",
+          "Vedtaket gjaldt samme type feil som i min sak.",
+          "Feilen viste seg senere enn i vedtaket, men verkstedet har konkludert med at den forelå ved leveringen."
+        ],
+        "avsnitt": "Forbrukerklageutvalget har i vedtak FKU-2025-134183 av 23. juni 2025 lagt til grunn at en feil som var dokumentert å gå ut over det påregnelige for bilens alder og kjørelengde, var en mangel. Saken gjaldt en 13 år gammel bil med 160 919 km, kjøpt for 150 000 kr. Den sakkyndige konkluderte med at feilen gikk ut over det påregnelige. Utvalget uttalte: «Utvalget anser da at selv om bilen er av eldre årsmodell, er rustskadene av et slikt omfang at det overstiger hva klageren med rimelighet kunne forvente, også tatt i betraktning bilens kjøpesum, se fkjl. § 17 første ledd bokstav a». Kjøperen fikk prisavslag på 13 648 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Bilen var 2 år med 22 000 km og kostet 520 000 kr, mot 13 år, 160 919 km og 150 000 kr i vedtaket. Utbedringen koster 12 % av kjøpesummen, mot 9 % i vedtaket. Vedtaket gjaldt samme type feil som i min sak. Feilen viste seg senere enn i vedtaket, men verkstedet har konkludert med at den forelå ved leveringen.",
+        "forkastede": [
+          {
+            "saksnummer": "23/10066 f3",
+            "grunn": "svakere på pris, tid_til_feil"
+          }
+        ],
+        "styrke": "sterk",
+        "motstridende": null,
+        "naermeste": null,
+        "forlik": false,
+        "reklamasjon_over_to_mnd": false
+      }
+    ],
+    "valgt_til_brev": [
+      "F1"
+    ],
+    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
+    "ingen_treff": []
+  },
+  "S05": {
+    "stopp": null,
+    "sak": {
+      "lov": "etter_2024",
+      "formodningsfrist_dager": 730,
+      "alder_ved_kjop": 9,
+      "prisband": "100-250k",
+      "aldersband": "8-12",
+      "kmband": "60-120k",
+      "km_siden_kjop": 3000,
+      "mnd_siden_kjop": 18,
+      "km_per_mnd": 167,
+      "svakhet_sak": null,
+      "selger_motbevis": false,
+      "forlik": false,
+      "onsket_losning": "prisavslag",
+      "heving_tillatt_i_praksis": false
+    },
+    "feil": [
+      {
+        "feil_id": "F1",
+        "kategori_skjema": "utstyr_mangler",
+        "kategori_pass2": "utstyr_mangler",
+        "dager_til_feil": 2,
+        "innen_frist": true,
+        "slitedel": false,
+        "spor_primar": "A",
+        "a_variant": "uttalelse",
+        "spor_sekundar": "B",
+        "spor_alle": [
+          "A",
+          "B"
+        ],
+        "ingen_spor_arsak": null,
+        "kan_bilen_brukes": "ja",
+        "alvor": false,
+        "km_svakhet_i_avsnitt": false,
+        "kandidat": {
+          "vedtak_id": 3047,
+          "saksnummer": "FKU-2026-11954",
+          "vedtaksdato": "2026-04-20",
+          "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-11954.pdf",
+          "feil_id": "f1",
+          "kategori": "utstyr_mangler",
+          "spor_vunnet": [
+            "A"
+          ],
+          "a_variant": "uttalelse",
+          "lovversjon": "før_2024",
+          "sanksjon": "prisavslag_og_erstatning",
+          "tilkjent_totalt_nok": 21314,
+          "opplysning": {
+            "form": "annonse",
+            "rekkevidde": "spesifikk",
+            "ordlyd": "hengerfeste avtagbart/svingbart",
+            "svar_pa_direkte_sporsmal": false
+          },
+          "forbehold": true,
+          "dager_etter_levering": 180,
+          "selger_bevis_finnes": false
+        },
+        "kandidat_spor": "A",
+        "kriterier": [
+          {
+            "navn": "form",
+            "bruker": "annonse",
+            "vedtak": "annonse",
+            "utfall": "lik"
+          },
+          {
+            "navn": "konkrethet",
+            "bruker": "spesifikk",
+            "vedtak": "spesifikk",
+            "utfall": "lik"
+          },
+          {
+            "navn": "direkte_sporsmal",
+            "bruker": false,
+            "vedtak": false,
+            "utfall": "lik"
+          },
+          {
+            "navn": "forbehold",
+            "bruker": false,
+            "vedtak": true,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "kategori",
+            "bruker": "utstyr_mangler",
+            "vedtak": "utstyr_mangler",
+            "utfall": "sterkere"
+          }
+        ],
+        "antall_sterkere": 2,
+        "svakhet_adressert": null,
+        "godkjent": true,
+        "sitat": {
+          "tema": "opplysning",
+          "tekst": "Utenom innklagdes egne forklaring, foreligger det ikke holdepunkter for at klageren ble gjort kjent med at bilen manglet hengerfeste ved kjøpet"
+        },
+        "argumenter": [
+          "Salget i vedtaket hadde et forbehold om bilens stand; min bil ble solgt uten forbehold.",
+          "Vedtaket gjaldt samme type opplysning som i min sak."
+        ],
+        "avsnitt": "Forbrukerklageutvalget har i vedtak FKU-2026-11954 av 20. april 2026 lagt til grunn at selger hadde gitt en uriktig opplysning om bilens utstyr. Annonsen oppga «hengerfeste avtagbart/svingbart». Utvalget uttalte: «Utenom innklagdes egne forklaring, foreligger det ikke holdepunkter for at klageren ble gjort kjent med at bilen manglet hengerfeste ved kjøpet». Kjøperen fikk prisavslag og erstatning på til sammen 21 314 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Salget i vedtaket hadde et forbehold om bilens stand; min bil ble solgt uten forbehold. Vedtaket gjaldt samme type opplysning som i min sak.",
+        "forkastede": [],
+        "styrke": "middels",
+        "motstridende": {
+          "saksnummer": "21/17448",
+          "vedtaksdato": "2023-05-24",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023033571&dokid=908872&versjon=1&variant=A&",
+          "grunn": "kjent_eller_opplyst",
+          "skilte": [
+            "I 21/17448 var feilen kjent for kjøperen eller opplyst av selger.",
+            "Bilen i 21/17448 hadde gått 16 363 km, mot 101 500 km i FKU-2026-11954.",
+            "Bilen i 21/17448 var 1 år, mot 7 år i FKU-2026-11954.",
+            "Feilen i 21/17448 viste seg etter 1 dager, mot 180 dager i FKU-2026-11954."
+          ]
+        },
+        "naermeste": null,
+        "forlik": false,
+        "reklamasjon_over_to_mnd": false
+      }
+    ],
+    "valgt_til_brev": [
+      "F1"
+    ],
+    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
+    "ingen_treff": []
+  },
+  "S06": {
+    "stopp": null,
+    "sak": {
+      "lov": "etter_2024",
+      "formodningsfrist_dager": 730,
+      "alder_ved_kjop": 6,
+      "prisband": "250-450k",
+      "aldersband": "4-8",
+      "kmband": "60-120k",
+      "km_siden_kjop": 5000,
+      "mnd_siden_kjop": 17,
+      "km_per_mnd": 294,
+      "svakhet_sak": null,
+      "selger_motbevis": true,
+      "forlik": false,
+      "onsket_losning": "retting",
+      "heving_tillatt_i_praksis": false
+    },
+    "feil": [
+      {
+        "feil_id": "F1",
+        "kategori_skjema": "elektrisk",
+        "kategori_pass2": "elektrisk",
+        "dager_til_feil": 66,
+        "innen_frist": true,
+        "slitedel": false,
+        "spor_primar": "B",
+        "a_variant": null,
+        "spor_sekundar": null,
+        "spor_alle": [
+          "B"
+        ],
+        "ingen_spor_arsak": null,
+        "kan_bilen_brukes": "ja",
+        "alvor": false,
+        "km_svakhet_i_avsnitt": false,
+        "kandidat": {
+          "vedtak_id": 2113,
+          "saksnummer": "21/13339",
+          "vedtaksdato": "2023-01-18",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022101396&dokid=800299&versjon=3&variant=A&",
+          "feil_id": "f1",
+          "kategori": "elektrisk",
+          "spor_vunnet": [
+            "B"
+          ],
+          "a_variant": "uttalelse",
+          "lovversjon": "før_2024",
+          "sanksjon": "erstatning",
+          "tilkjent_totalt_nok": 3825,
+          "opplysning": null,
+          "forbehold": true,
+          "dager_etter_levering": 324,
+          "selger_bevis_finnes": true
+        },
+        "kandidat_spor": "B",
+        "kriterier": [
+          {
+            "navn": "tid_til_feil",
+            "bruker": 66,
+            "vedtak": 324,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "selger_motbevis",
+            "bruker": true,
+            "vedtak": true,
+            "utfall": "lik"
+          },
+          {
+            "navn": "rapport_levering",
+            "bruker": false,
+            "vedtak": false,
+            "utfall": "lik"
+          },
+          {
+            "navn": "arsak",
+            "bruker": true,
+            "vedtak": false,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "ikke_slitedel",
+            "bruker": true,
+            "vedtak": true,
+            "utfall": "lik"
+          },
+          {
+            "navn": "reklamasjonstid",
+            "bruker": 3,
+            "vedtak": 8,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "kategori",
+            "bruker": "elektrisk",
+            "vedtak": "elektrisk",
+            "utfall": "sterkere"
+          }
+        ],
+        "antall_sterkere": 4,
+        "svakhet_adressert": null,
+        "godkjent": true,
+        "sitat": null,
+        "argumenter": [
+          "Feilen viste seg 66 dager etter leveringen, mot 324 dager i vedtaket.",
+          "Verkstedet har i tillegg forklart hvorfor delen sviktet.",
+          "Jeg reklamerte 3 dager etter at feilen ble oppdaget.",
+          "Vedtaket gjaldt samme type feil som i min sak."
+        ],
+        "avsnitt": "Forbrukerklageutvalget har i vedtak 21/13339 av 18. januar 2023 lagt til grunn at en feil som viste seg 324 dager etter leveringen, forelå ved leveringen, og at selgers dokumentasjon ikke var tilstrekkelig til å motbevise dette. Saken gjaldt en elektrisk feil på en 3 år gammel bil. Kjøperen fikk erstattet 3 825 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Feilen viste seg 66 dager etter leveringen, mot 324 dager i vedtaket. Verkstedet har i tillegg forklart hvorfor delen sviktet. Jeg reklamerte 3 dager etter at feilen ble oppdaget. Vedtaket gjaldt samme type feil som i min sak.",
+        "forkastede": [
+          {
+            "saksnummer": "FKU-2026-57255 f3",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "FKU-2026-110357 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "FKU-2025-141296 f4",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "FKU-2025-141296 f6",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "FKU-2025-141814 f2",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "24/4038 f3",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "23/17444 f8",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "23/400 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "22/2710 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "22/3436 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "22/6582 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "22/4099 f4",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/17278 f2",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/17278 f3",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/14188 f6",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "21/6269 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "21/3722 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "21/4611 f2",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "21/4706 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "21/3708 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/5304 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "21/5099 f2",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "21/4550 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "21/4846 f2",
+            "grunn": "svakere på rapport_levering"
+          },
+          {
+            "saksnummer": "21/4494 f1",
+            "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
+          },
+          {
+            "saksnummer": "21/4602 f2",
+            "grunn": "svakere på tid_til_feil"
+          }
+        ],
+        "styrke": "middels",
+        "motstridende": {
+          "saksnummer": "23/16163",
+          "vedtaksdato": "2024-05-22",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024033090&dokid=1192395&versjon=1&variant=A&",
+          "grunn": "ikke_sannsynliggjort_ved_levering",
+          "skilte": [
+            "I 23/16163 mente utvalget at det ikke var sannsynliggjort at feilen var der ved leveringen.",
+            "Bilen i 23/16163 hadde gått 178 000 km, mot 11 200 km i 21/13339.",
+            "Bilen i 23/16163 var 8 år, mot 3 år i 21/13339.",
+            "Feilen i 23/16163 viste seg etter 0 dager, mot 324 dager i 21/13339."
+          ]
+        },
+        "naermeste": null,
+        "forlik": false,
+        "reklamasjon_over_to_mnd": false
+      }
+    ],
+    "valgt_til_brev": [
+      "F1"
+    ],
+    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
+    "ingen_treff": []
+  },
+  "S07": {
+    "stopp": "privat_selger",
+    "sak": {
+      "lov": "etter_2024",
+      "formodningsfrist_dager": 730,
+      "alder_ved_kjop": 10,
+      "prisband": "250-450k",
+      "aldersband": "8-12",
+      "kmband": "60-120k",
+      "km_siden_kjop": 1084,
+      "mnd_siden_kjop": 13,
+      "km_per_mnd": 83,
+      "svakhet_sak": null,
+      "selger_motbevis": true,
+      "forlik": false,
+      "onsket_losning": "prisavslag",
+      "heving_tillatt_i_praksis": false
+    },
+    "feil": [],
+    "valgt_til_brev": [],
+    "lovendring": null,
+    "ingen_treff": []
+  },
+  "S08": {
+    "stopp": null,
+    "sak": {
+      "lov": "etter_2024",
+      "formodningsfrist_dager": 730,
+      "alder_ved_kjop": 11,
+      "prisband": "100-250k",
+      "aldersband": "8-12",
+      "kmband": "120-180k",
+      "km_siden_kjop": 1200,
+      "mnd_siden_kjop": 14,
+      "km_per_mnd": 86,
+      "svakhet_sak": null,
+      "selger_motbevis": false,
+      "forlik": false,
+      "onsket_losning": "prisavslag",
+      "heving_tillatt_i_praksis": false
+    },
+    "feil": [
+      {
+        "feil_id": "F1",
+        "kategori_skjema": "kollisjonsskade",
+        "kategori_pass2": "kollisjonsskade",
+        "dager_til_feil": 10,
+        "innen_frist": true,
+        "slitedel": false,
+        "spor_primar": "A",
+        "a_variant": "taushet",
+        "spor_sekundar": "B",
+        "spor_alle": [
+          "A",
+          "B"
+        ],
+        "ingen_spor_arsak": null,
+        "kan_bilen_brukes": "ja",
+        "alvor": false,
+        "km_svakhet_i_avsnitt": false,
+        "kandidat": {
+          "vedtak_id": 1646,
+          "saksnummer": "23/13659",
+          "vedtaksdato": "2024-04-30",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024025941&dokid=1179503&versjon=1&variant=A&",
+          "feil_id": "f1",
+          "kategori": "kollisjonsskade",
+          "spor_vunnet": [
+            "A",
+            "B"
+          ],
+          "a_variant": "begge",
+          "lovversjon": "før_2024",
+          "sanksjon": "prisavslag",
+          "tilkjent_totalt_nok": 50000,
+          "opplysning": {
+            "form": null,
+            "rekkevidde": null,
+            "ordlyd": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          "forbehold": true,
+          "dager_etter_levering": 0,
+          "selger_bevis_finnes": false
+        },
+        "kandidat_spor": "A",
+        "kriterier": [
+          {
+            "navn": "dokumentert_fortielse",
+            "bruker": true,
+            "vedtak": true,
+            "utfall": "lik"
+          },
+          {
+            "navn": "forbehold",
+            "bruker": false,
+            "vedtak": true,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "kategori",
+            "bruker": "kollisjonsskade",
+            "vedtak": "kollisjonsskade",
+            "utfall": "sterkere"
+          }
+        ],
+        "antall_sterkere": 2,
+        "svakhet_adressert": null,
+        "godkjent": true,
+        "sitat": {
+          "tema": "mangel",
+          "tekst": "Innklagdes forsømmelse av opplysningsplikten utgjør dermed en kjøpsrettslig mangel, jf. fkjl. § 16 første ledd bokstav b"
+        },
+        "argumenter": [
+          "Bilen i vedtaket var solgt «som den er»; min bil ble solgt uten forbehold.",
+          "Vedtaket gjaldt samme type opplysning som i min sak."
+        ],
+        "avsnitt": "Forbrukerklageutvalget har i vedtak 23/13659 av 30. april 2024 lagt til grunn at selger hadde unnlatt å opplyse om skadehistorikken, og at dette var en mangel. Forholdet var dokumentert i saken. Utvalget uttalte: «Innklagdes forsømmelse av opplysningsplikten utgjør dermed en kjøpsrettslig mangel, jf. fkjl. § 16 første ledd bokstav b». Kjøperen fikk prisavslag på 50 000 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Bilen i vedtaket var solgt «som den er»; min bil ble solgt uten forbehold. Vedtaket gjaldt samme type opplysning som i min sak.",
+        "forkastede": [],
+        "styrke": "middels",
+        "motstridende": {
+          "saksnummer": "21/3925",
+          "vedtaksdato": "2022-01-26",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021108977&dokid=566000&versjon=1&variant=A&",
+          "grunn": "paregnelig_slitasje",
+          "skilte": [
+            "I 21/3925 la utvalget til grunn at feilen var vanlig slitasje for bilens alder og kjørelengde.",
+            "Feilen i 21/3925 viste seg etter 120 dager, mot 0 dager i 23/13659."
+          ]
+        },
+        "naermeste": null,
+        "forlik": false,
+        "reklamasjon_over_to_mnd": false
+      }
+    ],
+    "valgt_til_brev": [
+      "F1"
+    ],
+    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
+    "ingen_treff": []
+  },
+  "S09": {
+    "stopp": null,
+    "sak": {
+      "lov": "etter_2024",
+      "formodningsfrist_dager": 730,
+      "alder_ved_kjop": 6,
+      "prisband": "100-250k",
+      "aldersband": "4-8",
+      "kmband": "60-120k",
+      "km_siden_kjop": 25000,
+      "mnd_siden_kjop": 30,
+      "km_per_mnd": 833,
+      "svakhet_sak": "km",
+      "selger_motbevis": false,
+      "forlik": false,
+      "onsket_losning": "prisavslag",
+      "heving_tillatt_i_praksis": false
+    },
+    "feil": [
+      {
+        "feil_id": "F1",
+        "kategori_skjema": "elektrisk",
+        "kategori_pass2": "elektrisk",
+        "dager_til_feil": 588,
+        "innen_frist": true,
+        "slitedel": false,
+        "spor_primar": "A",
+        "a_variant": "uttalelse",
+        "spor_sekundar": "B",
+        "spor_alle": [
+          "A",
+          "B"
+        ],
+        "ingen_spor_arsak": null,
+        "kan_bilen_brukes": "ja",
+        "alvor": false,
+        "km_svakhet_i_avsnitt": false,
+        "kandidat": {
+          "vedtak_id": 1534,
+          "saksnummer": "24/490",
+          "vedtaksdato": "2024-12-04",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024066692&dokid=1252964&versjon=1&variant=A&",
+          "feil_id": "f3",
+          "kategori": "elektrisk",
+          "spor_vunnet": [
+            "A"
+          ],
+          "a_variant": "begge",
+          "lovversjon": "før_2024",
+          "sanksjon": "erstatning",
+          "tilkjent_totalt_nok": 39643,
+          "opplysning": {
+            "form": "annonse",
+            "rekkevidde": "generell",
+            "ordlyd": "veldig fin og velholdt",
+            "svar_pa_direkte_sporsmal": false
+          },
+          "forbehold": true,
+          "dager_etter_levering": 61,
+          "selger_bevis_finnes": true
+        },
+        "kandidat_spor": "A",
+        "kriterier": [
+          {
+            "navn": "form",
+            "bruker": "annonse",
+            "vedtak": "annonse",
+            "utfall": "lik"
+          },
+          {
+            "navn": "konkrethet",
+            "bruker": "spesifikk",
+            "vedtak": "generell",
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "direkte_sporsmal",
+            "bruker": false,
+            "vedtak": false,
+            "utfall": "lik"
+          },
+          {
+            "navn": "forbehold",
+            "bruker": true,
+            "vedtak": true,
+            "utfall": "lik"
+          },
+          {
+            "navn": "kategori",
+            "bruker": "elektrisk",
+            "vedtak": "elektrisk",
+            "utfall": "sterkere"
+          }
+        ],
+        "antall_sterkere": 2,
+        "svakhet_adressert": null,
+        "godkjent": true,
+        "sitat": {
+          "tema": "mangel",
+          "tekst": "Innklagde har derfor brutt sin opplysningsplikt og feil med dieselvarmeren utgjør følgelig en mangel"
+        },
+        "argumenter": [
+          "Opplysningen i min sak gjelder et konkret forhold uttrykkelig, mens opplysningen i vedtaket var generell.",
+          "Vedtaket gjaldt samme type opplysning som i min sak."
+        ],
+        "avsnitt": "Forbrukerklageutvalget har i vedtak 24/490 av 4. desember 2024 lagt til grunn at selger hadde gitt en uriktig opplysning om det elektriske utstyret. Opplysningen sto i annonsen og lød: «veldig fin og velholdt». Utvalget uttalte: «Innklagde har derfor brutt sin opplysningsplikt og feil med dieselvarmeren utgjør følgelig en mangel». Kjøperen fikk erstattet til sammen 39 643 kr for manglene i saken. Min sak står minst like sterkt på de momentene utvalget bygde på. Opplysningen i min sak gjelder et konkret forhold uttrykkelig, mens opplysningen i vedtaket var generell. Vedtaket gjaldt samme type opplysning som i min sak.",
+        "forkastede": [
+          {
+            "saksnummer": "23/1127 f1",
+            "grunn": "svakere på direkte_sporsmal"
+          },
+          {
+            "saksnummer": "22/1667 f4",
+            "grunn": "svakere på forbehold"
+          },
+          {
+            "saksnummer": "22/4917 f2",
+            "grunn": "ingen opplysning i vedtaket knyttet til feilen"
+          },
+          {
+            "saksnummer": "21/4781 f1",
+            "grunn": "svakere på form"
+          },
+          {
+            "saksnummer": "21/4550 f1",
+            "grunn": "svakere på forbehold"
+          },
+          {
+            "saksnummer": "21/4846 f2",
+            "grunn": "svakere på form"
+          }
+        ],
+        "styrke": "middels",
+        "motstridende": {
+          "saksnummer": "21/12861",
+          "vedtaksdato": "2022-11-30",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022097077&dokid=791753&versjon=2&variant=A&",
+          "grunn": "paregnelig_slitasje",
+          "skilte": [
+            "I 21/12861 la utvalget til grunn at feilen var vanlig slitasje for bilens alder og kjørelengde.",
+            "Feilen i 21/12861 viste seg etter 21 dager, mot 61 dager i 24/490."
+          ]
+        },
+        "naermeste": null,
+        "forlik": false,
+        "reklamasjon_over_to_mnd": false
+      }
+    ],
+    "valgt_til_brev": [
+      "F1"
+    ],
+    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
+    "ingen_treff": []
+  },
+  "S10": {
+    "stopp": null,
+    "sak": {
+      "lov": "etter_2024",
+      "formodningsfrist_dager": 730,
+      "alder_ved_kjop": 11,
+      "prisband": "<100k",
+      "aldersband": "8-12",
+      "kmband": "60-120k",
+      "km_siden_kjop": 1177,
+      "mnd_siden_kjop": 13,
+      "km_per_mnd": 91,
+      "svakhet_sak": null,
+      "selger_motbevis": false,
+      "forlik": false,
+      "onsket_losning": "heving",
+      "heving_tillatt_i_praksis": true
+    },
+    "feil": [
+      {
+        "feil_id": "F1",
+        "kategori_skjema": "motor",
+        "kategori_pass2": "motor",
+        "dager_til_feil": 21,
+        "innen_frist": true,
+        "slitedel": false,
+        "spor_primar": "A",
+        "a_variant": "uttalelse",
+        "spor_sekundar": "C",
+        "spor_alle": [
+          "A",
+          "C",
+          "B"
+        ],
+        "ingen_spor_arsak": null,
+        "kan_bilen_brukes": "nei",
+        "alvor": true,
+        "km_svakhet_i_avsnitt": false,
+        "kandidat": {
+          "vedtak_id": 1918,
+          "saksnummer": "21/12379",
+          "vedtaksdato": "2023-04-26",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023024089&dokid=886743&versjon=1&variant=A&",
+          "feil_id": "f3",
+          "kategori": "motor",
+          "spor_vunnet": [
+            "A"
+          ],
+          "a_variant": "uttalelse",
+          "lovversjon": "før_2024",
+          "sanksjon": "heving",
+          "tilkjent_totalt_nok": 45959,
+          "opplysning": {
+            "form": "melding",
+            "rekkevidde": "spesifikk",
+            "ordlyd": "Da må den glødelampa bort først",
+            "svar_pa_direkte_sporsmal": false
+          },
+          "forbehold": true,
+          "dager_etter_levering": 90,
+          "selger_bevis_finnes": false
+        },
+        "kandidat_spor": "A",
+        "kriterier": [
+          {
+            "navn": "form",
+            "bruker": "kontrakt",
+            "vedtak": "melding",
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "konkrethet",
+            "bruker": "spesifikk",
+            "vedtak": "spesifikk",
+            "utfall": "lik"
+          },
+          {
+            "navn": "direkte_sporsmal",
+            "bruker": false,
+            "vedtak": false,
+            "utfall": "lik"
+          },
+          {
+            "navn": "forbehold",
+            "bruker": true,
+            "vedtak": true,
+            "utfall": "lik"
+          },
+          {
+            "navn": "kategori",
+            "bruker": "motor",
+            "vedtak": "motor",
+            "utfall": "sterkere"
+          }
+        ],
+        "antall_sterkere": 2,
+        "svakhet_adressert": null,
+        "godkjent": true,
+        "sitat": {
+          "tema": "opplysning",
+          "tekst": "Da det ble gitt opplysninger om utbedring av denne delen før kjøpet, har klageren en berettiget forventning at deler knyttet til glødelampen var i orden"
+        },
+        "argumenter": [
+          "I vedtaket sto opplysningen i en skriftlig melding fra selger; i min sak står den i kontrakten.",
+          "Vedtaket gjaldt samme type opplysning som i min sak."
+        ],
+        "avsnitt": "Forbrukerklageutvalget har i vedtak 21/12379 av 26. april 2023 lagt til grunn at selger hadde gitt en uriktig opplysning om motoren. Opplysningen sto i en skriftlig melding fra selger og lød: «Da må den glødelampa bort først». Utvalget uttalte: «Da det ble gitt opplysninger om utbedring av denne delen før kjøpet, har klageren en berettiget forventning at deler knyttet til glødelampen var i orden». Kjøpet ble hevet. Min sak står minst like sterkt på de momentene utvalget bygde på. I vedtaket sto opplysningen i en skriftlig melding fra selger; i min sak står den i kontrakten. Vedtaket gjaldt samme type opplysning som i min sak.",
+        "forkastede": [
+          {
+            "saksnummer": "24/571 f2",
+            "grunn": "svakere på forbehold"
+          },
+          {
+            "saksnummer": "23/11163 f1",
+            "grunn": "svakere på direkte_sporsmal"
+          },
+          {
+            "saksnummer": "23/3474 f1",
+            "grunn": "svakere på forbehold"
+          },
+          {
+            "saksnummer": "21/11647 f1",
+            "grunn": "svakere på forbehold"
+          },
+          {
+            "saksnummer": "21/4559 f1",
+            "grunn": "svakere på forbehold"
+          }
+        ],
+        "styrke": "middels",
+        "motstridende": {
+          "saksnummer": "FKU-2026-20340",
+          "vedtaksdato": "2026-06-22",
+          "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-20340.pdf",
+          "grunn": "kjent_eller_opplyst",
+          "skilte": [
+            "I FKU-2026-20340 var feilen kjent for kjøperen eller opplyst av selger.",
+            "Bilen i FKU-2026-20340 hadde gått 234 706 km, mot 128 367 km i 21/12379.",
+            "Bilen i FKU-2026-20340 var 10 år, mot 12 år i 21/12379.",
+            "Feilen i FKU-2026-20340 viste seg etter 0 dager, mot 90 dager i 21/12379."
+          ]
+        },
+        "naermeste": null,
+        "forlik": false,
+        "reklamasjon_over_to_mnd": false
+      }
+    ],
+    "valgt_til_brev": [
+      "F1"
+    ],
+    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
+    "ingen_treff": []
+  }
+}

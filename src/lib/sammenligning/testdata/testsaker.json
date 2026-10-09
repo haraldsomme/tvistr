@@ -1,0 +1,1121 @@
+{
+  "_meta": {
+    "versjon": "1.0",
+    "dato": "2026-10-09",
+    "merknad": "Ti fiktive testsaker for sammenligningsmotoren. Alle navn og firma er oppdiktet. 'input' følger reklamasjon_skjema_qa.json. 'forventet' angir fasit for avledninger og spor, og regler kandidaten må oppfylle; konkrete saksnumre er ikke fasit fordi korpuset ikke er kjent. Referanser til vedtak (f.eks. 56288) peker på de 26 vedtakene som er lest i designfasen og viser hvilken type vedtak som skal/ikke skal treffe. Input konvertert til skjema v1.0 (docs/skjema.md): pass 2-kategorier, svar_pa_direkte_sporsmal, _meta, fritekst som fullføring av setningsstubben."
+  },
+  "saker": [
+    {
+      "id": "S01",
+      "navn": "Bremser, muntlig løfte, rapport uten påregnelighet",
+      "tester": [
+        "T4"
+      ],
+      "input": {
+        "_meta": {
+          "skjema_versjon": "1.1",
+          "registrert": "2026-10-09T12:00:00+02:00"
+        },
+        "del1_kjopet": {
+          "selgertype": "forhandler",
+          "kjopsdato": "2024-06-01",
+          "pris_kr": 189000,
+          "km_ved_kjop": 98000,
+          "aarsmodell": 2017,
+          "merke_modell_valgfritt": "Volkswagen Passat"
+        },
+        "del2_selger": {
+          "firmanavn_oppgitt": "Bilhuset Lillestrøm",
+          "bronnoysund_treff": {
+            "foretaksnavn": "Bilhuset Lillestrøm AS",
+            "organisasjonsnummer": "999 000 201",
+            "forretningsadresse": "Testveien 1, 2000 Lillestrøm"
+          },
+          "treff_bekreftet": true,
+          "som_den_er_i_kontrakt": "nei"
+        },
+        "del3_feil": [
+          {
+            "id": "F1",
+            "kategori": "bremser",
+            "en_setning": "bremseskivene er under minimumsmål og bremsene skurrer",
+            "dato_oppdaget": "2025-02-01",
+            "kan_bilen_brukes": "ja_begrenset",
+            "selger_sa_noe": "ja_muntlig",
+            "hvor_sto_det": [],
+            "avskrift_selger": null,
+            "svar_pa_direkte_sporsmal": false,
+            "verksted_sett_pa": "ja_skriftlig",
+            "verksted_navn_dato": "Mekonomen Lillestrøm, 05.02.2025",
+            "rapport_sier": {
+              "hva": "ja",
+              "hvorfor": "ja",
+              "var_der_ved_overtakelse": "star_ikke",
+              "mer_enn_normal_slitasje": "star_ikke",
+              "kostnad": "ja"
+            },
+            "kostnad_kr": 9800,
+            "avskrift_verksted": "bremseskiver foran og bak under minimumsmål. Belegg nedslitt. Anbefaler bytte"
+          }
+        ],
+        "km_na": 112000,
+        "del6_kontakt_med_selger": {
+          "tatt_opp_med_selger": "ja_skriftlig",
+          "dato_forste_gang": "2025-02-06",
+          "selgers_svar": "avvist",
+          "avtale_inngatt": "nei",
+          "avtale_beskrivelse": null,
+          "avtale_gjelder_feil": [],
+          "selger_la_frem_dokumentasjon": "nei",
+          "selger_dokumentasjon_kort": null
+        },
+        "del7_onske_og_kontakt": {
+          "onsket_losning": "prisavslag",
+          "kjoper": {
+            "navn": "Per Testesen",
+            "adresse": "Prøvegata 2, 2000 Lillestrøm",
+            "epost": "per@example.no"
+          }
+        },
+        "bekreftelser": {
+          "opplysningene_er_riktige": true,
+          "lest_at_brevet_ikke_er_juridisk_radgivning": true
+        }
+      },
+      "forventet": {
+        "sak": {
+          "lov": "etter_2024",
+          "formodningsfrist_dager": 730,
+          "alder_ved_kjop": 7,
+          "km_siden_kjop": 14000,
+          "svakhet_sak": null
+        },
+        "feil": [
+          {
+            "feil_id": "F1",
+            "kategori_pass2": "bremser",
+            "dager_til_feil": 245,
+            "innen_frist": true,
+            "slitedel": true,
+            "spor_primar": "B",
+            "spor_sekundar": null,
+            "ingen_spor_arsak": null,
+            "kandidat": null,
+            "godkjent": false,
+            "avsnitt": null,
+            "styrke": "svak"
+          }
+        ],
+        "valgt_til_brev": [],
+        "merknad": "Muntlig løfte gir ikke A. Bremser er slitedel, men får spor B innen fristen (regel 2026-10-09, jf. 77134); B-vedtakene på bremser er likevel sterkere på tid til feil, og rapporten knytter ikke feilen til leveringen. Ingen vedtak: styrke svak, nærmeste vinnende vedtak og rapportbestilling. Brevet skrives uten praksisavsnitt."
+      }
+    },
+    {
+      "id": "S02",
+      "navn": "Girkasse etter 10 dager, eldre bil, rapport uten årsak",
+      "tester": [
+        "T5"
+      ],
+      "input": {
+        "_meta": {
+          "skjema_versjon": "1.1",
+          "registrert": "2026-10-09T12:00:00+02:00"
+        },
+        "del1_kjopet": {
+          "selgertype": "forhandler",
+          "kjopsdato": "2024-03-10",
+          "pris_kr": 100937,
+          "km_ved_kjop": 255000,
+          "aarsmodell": 2013,
+          "merke_modell_valgfritt": "Audi A6"
+        },
+        "del2_selger": {
+          "firmanavn_oppgitt": "Autosalg Nord",
+          "bronnoysund_treff": {
+            "foretaksnavn": "Autosalg Nord AS",
+            "organisasjonsnummer": "999 000 202",
+            "forretningsadresse": "Testveien 2, 9008 Tromsø"
+          },
+          "treff_bekreftet": true,
+          "som_den_er_i_kontrakt": "ja"
+        },
+        "del3_feil": [
+          {
+            "id": "F1",
+            "kategori": "girkasse",
+            "en_setning": "girkassen gir feilmelding og rykker ved giring",
+            "dato_oppdaget": "2024-03-20",
+            "kan_bilen_brukes": "ja_begrenset",
+            "selger_sa_noe": "nei",
+            "hvor_sto_det": [],
+            "avskrift_selger": null,
+            "svar_pa_direkte_sporsmal": false,
+            "verksted_sett_pa": "ja_skriftlig",
+            "verksted_navn_dato": "Møller Bil Tromsø, 25.03.2024",
+            "rapport_sier": {
+              "hva": "ja",
+              "hvorfor": "star_ikke",
+              "var_der_ved_overtakelse": "star_ikke",
+              "mer_enn_normal_slitasje": "star_ikke",
+              "kostnad": "nei"
+            },
+            "kostnad_kr": null,
+            "avskrift_verksted": "feilkoder lagret på girkasse. Rykking bekreftet ved prøvekjøring. Pris ikke beregnet"
+          }
+        ],
+        "km_na": 256100,
+        "del6_kontakt_med_selger": {
+          "tatt_opp_med_selger": "ja_skriftlig",
+          "dato_forste_gang": "2024-03-21",
+          "selgers_svar": "avvist",
+          "avtale_inngatt": "nei",
+          "avtale_beskrivelse": null,
+          "avtale_gjelder_feil": [],
+          "selger_la_frem_dokumentasjon": "ja",
+          "selger_dokumentasjon_kort": "Faktura fra 2021 for overhaling av girkassen"
+        },
+        "del7_onske_og_kontakt": {
+          "onsket_losning": "prisavslag",
+          "kjoper": {
+            "navn": "Kari Testdatter",
+            "adresse": "Prøvegata 3, 9008 Tromsø",
+            "epost": "kari@example.no"
+          }
+        },
+        "bekreftelser": {
+          "opplysningene_er_riktige": true,
+          "lest_at_brevet_ikke_er_juridisk_radgivning": true
+        }
+      },
+      "forventet": {
+        "sak": {
+          "lov": "etter_2024",
+          "alder_ved_kjop": 11,
+          "km_siden_kjop": 1100,
+          "svakhet_sak": null,
+          "selger_motbevis": true
+        },
+        "feil": [
+          {
+            "feil_id": "F1",
+            "kategori_pass2": "girkasse",
+            "dager_til_feil": 10,
+            "innen_frist": true,
+            "slitedel": true,
+            "spor_primar": "B",
+            "spor_sekundar": null,
+            "ingen_spor_arsak": null,
+            "kandidat": "21/13427",
+            "godkjent": true,
+            "styrke": "middels"
+          }
+        ],
+        "valgt_til_brev": [],
+        "merknad": "Endret 2026-10-09: slitedel stopper ikke lenger B. Girkasse på 11 år/255 000 km sammenlignes bare med B-vedtak på girkasse som også var slitedel; 21/13427 (girkasse, 10 år, 31 dager, selger la frem dokumentasjon som ikke var nok) består «sterkere enn». Tidligere fasit (56288, svak) gjaldt før regelen. Bør leses av jurist. Styrke: middels, fordi 56288 (girkasse, 11 år/255 000 km, formidling) tapte på påregnelig slitasje med samme profil; brukeren ser begge."
+      }
+    },
+    {
+      "id": "S03",
+      "navn": "Rust etter 8 måneder, gammel lov, rapport sier bare «ikke på to måneder»",
+      "tester": [
+        "T6"
+      ],
+      "input": {
+        "_meta": {
+          "skjema_versjon": "1.1",
+          "registrert": "2026-10-09T12:00:00+02:00"
+        },
+        "del1_kjopet": {
+          "selgertype": "forhandler",
+          "kjopsdato": "2023-01-26",
+          "pris_kr": 49000,
+          "km_ved_kjop": 178000,
+          "aarsmodell": 2007,
+          "merke_modell_valgfritt": "Volkswagen Golf"
+        },
+        "del2_selger": {
+          "firmanavn_oppgitt": "TA Bilsenter",
+          "bronnoysund_treff": {
+            "foretaksnavn": "TA Bilsenter AS",
+            "organisasjonsnummer": "999 000 203",
+            "forretningsadresse": "Testveien 3, 4306 Sandnes"
+          },
+          "treff_bekreftet": true,
+          "som_den_er_i_kontrakt": "ja"
+        },
+        "del3_feil": [
+          {
+            "id": "F1",
+            "kategori": "rust",
+            "en_setning": "omfattende rust i bærende kanaler, bilen ble ikke godkjent på EU-kontroll",
+            "dato_oppdaget": "2023-09-26",
+            "kan_bilen_brukes": "nei",
+            "selger_sa_noe": "nei",
+            "hvor_sto_det": [],
+            "avskrift_selger": null,
+            "svar_pa_direkte_sporsmal": false,
+            "verksted_sett_pa": "ja_skriftlig",
+            "verksted_navn_dato": "Bilsenteret Ålgård, 26.09.2023",
+            "rapport_sier": {
+              "hva": "ja",
+              "hvorfor": "ja",
+              "var_der_ved_overtakelse": "ja",
+              "mer_enn_normal_slitasje": "star_ikke",
+              "kostnad": "nei"
+            },
+            "kostnad_kr": null,
+            "avskrift_verksted": "mye rust i bærende elementer. Ikke anbefalt reparert. Rustskadene er så store at det ikke er mulig å ruste så mye på et par måneder"
+          }
+        ],
+        "km_na": 184000,
+        "del6_kontakt_med_selger": {
+          "tatt_opp_med_selger": "ja_skriftlig",
+          "dato_forste_gang": "2023-10-02",
+          "selgers_svar": "avvist",
+          "avtale_inngatt": "nei",
+          "avtale_beskrivelse": null,
+          "avtale_gjelder_feil": [],
+          "selger_la_frem_dokumentasjon": "nei",
+          "selger_dokumentasjon_kort": null
+        },
+        "del7_onske_og_kontakt": {
+          "onsket_losning": "angre_kjopet",
+          "kjoper": {
+            "navn": "Thomas Testby",
+            "adresse": "Prøvegata 4, 4330 Ålgård",
+            "epost": "thomas@example.no"
+          }
+        },
+        "bekreftelser": {
+          "opplysningene_er_riktige": true,
+          "lest_at_brevet_ikke_er_juridisk_radgivning": true
+        }
+      },
+      "forventet": {
+        "sak": {
+          "lov": "før_2024",
+          "formodningsfrist_dager": 183,
+          "alder_ved_kjop": 16,
+          "km_siden_kjop": 6000,
+          "svakhet_sak": null,
+          "heving_tillatt": true
+        },
+        "feil": [
+          {
+            "feil_id": "F1",
+            "kategori_pass2": "rust",
+            "dager_til_feil": 243,
+            "innen_frist": false,
+            "slitedel": false,
+            "spor_primar": null,
+            "spor_sekundar": null,
+            "ingen_spor_arsak": [
+              "utenfor_frist"
+            ],
+            "kandidat": null,
+            "godkjent": false,
+            "styrke": "svak"
+          }
+        ],
+        "valgt_til_brev": [],
+        "merknad": "Kopi av 59997 (tapte). Rapporten sier ved levering men ikke utover påregnelig, så C er ikke oppfylt. Utenfor 6-månedersfristen, så ingen B. 58214 skal IKKE treffe, selv om saken ligner, fordi brukeren mangler påregnelighetsvurderingen som vant der. Rapportbestillingen skal be om nøyaktig det."
+      }
+    },
+    {
+      "id": "S04",
+      "navn": "Rust på ung, dyr bil etter 19 måneder, full rapport",
+      "tester": [
+        "T7"
+      ],
+      "input": {
+        "_meta": {
+          "skjema_versjon": "1.1",
+          "registrert": "2026-10-09T12:00:00+02:00"
+        },
+        "del1_kjopet": {
+          "selgertype": "forhandler",
+          "kjopsdato": "2024-06-04",
+          "pris_kr": 520000,
+          "km_ved_kjop": 22000,
+          "aarsmodell": 2022,
+          "merke_modell_valgfritt": "BMW iX3"
+        },
+        "del2_selger": {
+          "firmanavn_oppgitt": "Premium Auto Oslo",
+          "bronnoysund_treff": {
+            "foretaksnavn": "Premium Auto Oslo AS",
+            "organisasjonsnummer": "999 000 204",
+            "forretningsadresse": "Testveien 4, 0150 Oslo"
+          },
+          "treff_bekreftet": true,
+          "som_den_er_i_kontrakt": "nei"
+        },
+        "del3_feil": [
+          {
+            "id": "F1",
+            "kategori": "rust",
+            "en_setning": "gjennomrustet hull i bakre hjulbue og rust i terskel under lakken",
+            "dato_oppdaget": "2026-01-10",
+            "kan_bilen_brukes": "ja",
+            "selger_sa_noe": "nei",
+            "hvor_sto_det": [],
+            "avskrift_selger": null,
+            "svar_pa_direkte_sporsmal": false,
+            "verksted_sett_pa": "ja_skriftlig",
+            "verksted_navn_dato": "NAF Oslo, 20.01.2026",
+            "rapport_sier": {
+              "hva": "ja",
+              "hvorfor": "ja",
+              "var_der_ved_overtakelse": "ja",
+              "mer_enn_normal_slitasje": "ja",
+              "kostnad": "ja"
+            },
+            "kostnad_kr": 64000,
+            "avskrift_verksted": "rust fra innsiden av hjulbue og terskel, skjult under lakk og tetningsmasse. Omfanget er langt over det som er normalt for en fire år gammel bil med 30 000 km. Rusten har utviklet seg over flere år og var til stede ved salget"
+          }
+        ],
+        "km_na": 31500,
+        "del6_kontakt_med_selger": {
+          "tatt_opp_med_selger": "ja_skriftlig",
+          "dato_forste_gang": "2026-01-22",
+          "selgers_svar": "avvist",
+          "avtale_inngatt": "nei",
+          "avtale_beskrivelse": null,
+          "avtale_gjelder_feil": [],
+          "selger_la_frem_dokumentasjon": "nei",
+          "selger_dokumentasjon_kort": null
+        },
+        "del7_onske_og_kontakt": {
+          "onsket_losning": "prisavslag",
+          "kjoper": {
+            "navn": "Harald Testsen",
+            "adresse": "Prøvegata 5, 0150 Oslo",
+            "epost": "harald@example.no"
+          }
+        },
+        "bekreftelser": {
+          "opplysningene_er_riktige": true,
+          "lest_at_brevet_ikke_er_juridisk_radgivning": true
+        }
+      },
+      "forventet": {
+        "sak": {
+          "lov": "etter_2024",
+          "formodningsfrist_dager": 730,
+          "alder_ved_kjop": 2,
+          "km_siden_kjop": 9500,
+          "svakhet_sak": null,
+          "prisband": "450k+",
+          "aldersband": "<4",
+          "kmband": "<60k"
+        },
+        "feil": [
+          {
+            "feil_id": "F1",
+            "kategori_pass2": "rust",
+            "dager_til_feil": 585,
+            "innen_frist": true,
+            "slitedel": false,
+            "spor_primar": "C",
+            "spor_sekundar": "B",
+            "kandidat_krav": [
+              "spor_vunnet inneholder C (bevisgrunnlag = dokumentert_utover_paregnelig)",
+              "sanksjon <> heving (bruker ønsker prisavslag)",
+              "kategori rust foretrekkes"
+            ],
+            "kriterier_forventet": {
+              "utover_paregnelig": "lik",
+              "ved_levering": "lik",
+              "alder": "sterkere",
+              "km": "sterkere",
+              "pris": "sterkere",
+              "kostnad_pris": "utelat (12 % mot typisk 50–90 % i rustsakene)",
+              "tid_til_feil": "svakere mot 58214-typen (178 d) → adresserbar fordi rapport_levering = ja; lik/sterkere mot 21/4203-typen (545 d) bare hvis bruker ≤"
+            },
+            "svakhet_adressert": "tid_til_feil eller null, avhengig av kandidat",
+            "godkjent": true,
+            "argumenter_skal_inneholde": [
+              "Bilen var 2 år med 22 000 km og kostet 520 000 kr, mot",
+              "Verkstedet har, som den sakkyndige i vedtaket, konkludert med at feilen går ut over det som er påregnelig"
+            ]
+          }
+        ],
+        "valgt_til_brev": [
+          "F1"
+        ],
+        "merknad": "Hovedtest for spor C og a fortiori-argumentet. 21/4203 er heving og forkastes av F9; 58214 (prisavslag) er den naturlige kandidaten med tid som adressert svakhet. Fra 2026-10-10 er formidling med på vinnersiden; da velges FKU-2025-134183 (rust, C, formidling, 13 år/150 000 kr), som oppfyller kandidat_krav og har samme adresserte svakhet (tid)."
+      }
+    },
+    {
+      "id": "S05",
+      "navn": "Ryggekamera annonsert, finnes ikke – A mot vedtak med kontrakt",
+      "tester": [
+        "T8"
+      ],
+      "input": {
+        "_meta": {
+          "skjema_versjon": "1.1",
+          "registrert": "2026-10-09T12:00:00+02:00"
+        },
+        "del1_kjopet": {
+          "selgertype": "forhandler",
+          "kjopsdato": "2025-04-12",
+          "pris_kr": 214000,
+          "km_ved_kjop": 118000,
+          "aarsmodell": 2016,
+          "merke_modell_valgfritt": "BMW 520d"
+        },
+        "del2_selger": {
+          "firmanavn_oppgitt": "Vestfold Bilsalg",
+          "bronnoysund_treff": {
+            "foretaksnavn": "Vestfold Bilsalg AS",
+            "organisasjonsnummer": "999 000 205",
+            "forretningsadresse": "Testveien 5, 3100 Tønsberg"
+          },
+          "treff_bekreftet": true,
+          "som_den_er_i_kontrakt": "nei"
+        },
+        "del3_feil": [
+          {
+            "id": "F1",
+            "kategori": "utstyr_mangler",
+            "en_setning": "ryggekameraet som sto i annonsen finnes ikke på bilen",
+            "dato_oppdaget": "2025-04-14",
+            "kan_bilen_brukes": "ja",
+            "selger_sa_noe": "ja_skriftlig",
+            "hvor_sto_det": [
+              "annonse"
+            ],
+            "avskrift_selger": "«Ryggekamera, parkeringssensorer foran og bak, navigasjon»",
+            "svar_pa_direkte_sporsmal": false,
+            "verksted_sett_pa": "ja_skriftlig",
+            "verksted_navn_dato": "Bavaria Tønsberg, 20.04.2025",
+            "rapport_sier": {
+              "hva": "ja",
+              "hvorfor": "ja",
+              "var_der_ved_overtakelse": "ja",
+              "mer_enn_normal_slitasje": "star_ikke",
+              "kostnad": "ja"
+            },
+            "kostnad_kr": 8900,
+            "avskrift_verksted": "bilen er ikke utstyrt med ryggekamera fra fabrikk. Ettermontering 8 900 kr"
+          }
+        ],
+        "km_na": 121000,
+        "del6_kontakt_med_selger": {
+          "tatt_opp_med_selger": "ja_skriftlig",
+          "dato_forste_gang": "2025-04-15",
+          "selgers_svar": "avvist",
+          "avtale_inngatt": "nei",
+          "avtale_beskrivelse": null,
+          "avtale_gjelder_feil": [],
+          "selger_la_frem_dokumentasjon": "nei",
+          "selger_dokumentasjon_kort": null
+        },
+        "del7_onske_og_kontakt": {
+          "onsket_losning": "prisavslag",
+          "kjoper": {
+            "navn": "Anne Testvik",
+            "adresse": "Prøvegata 6, 3100 Tønsberg",
+            "epost": "anne@example.no"
+          }
+        },
+        "bekreftelser": {
+          "opplysningene_er_riktige": true,
+          "lest_at_brevet_ikke_er_juridisk_radgivning": true
+        }
+      },
+      "forventet": {
+        "sak": {
+          "lov": "etter_2024",
+          "alder_ved_kjop": 9,
+          "km_siden_kjop": 3000,
+          "svakhet_sak": null
+        },
+        "feil": [
+          {
+            "feil_id": "F1",
+            "kategori_pass2": "utstyr_mangler",
+            "dager_til_feil": 2,
+            "innen_frist": true,
+            "slitedel": false,
+            "spor_primar": "A",
+            "a_variant": "uttalelse",
+            "spor_sekundar": "B",
+            "kandidat_krav": [
+              "spor_vunnet inneholder A, a_variant uttalelse",
+              "kategori utstyr_mangler foretrekkes (93206-, 131483-, 141296-typen)",
+              "hvis beste kandidat har opplysning i kontrakt: godkjent med svakhet_adressert = form",
+              "hvis beste kandidat har opplysning i annonse: form = lik, ingen svakhet"
+            ],
+            "kriterier_forventet": {
+              "konkrethet": "lik (begge spesifikke)",
+              "direkte_sporsmal": "lik",
+              "forbehold": "sterkere hvis vedtaket hadde forbehold, ellers lik",
+              "kategori": "sterkere ved treff"
+            },
+            "godkjent": true,
+            "argumenter_skal_inneholde_ved_svakhet_form": [
+              "Opplysningen sto i annonsen og ikke i kontrakten, men et generelt annonseforbehold fritar ikke selger"
+            ]
+          }
+        ],
+        "valgt_til_brev": [
+          "F1"
+        ],
+        "merknad": "Tester at svakheten form er adresserbar. Tester også at B ikke overstyrer A i prioriteringen selv om feilen kom etter 2 dager."
+      }
+    },
+    {
+      "id": "S06",
+      "navn": "Elektrisk feil etter 2 måneder, selger har motrapport",
+      "tester": [
+        "T9"
+      ],
+      "input": {
+        "_meta": {
+          "skjema_versjon": "1.1",
+          "registrert": "2026-10-09T12:00:00+02:00"
+        },
+        "del1_kjopet": {
+          "selgertype": "forhandler",
+          "kjopsdato": "2025-05-20",
+          "pris_kr": 265000,
+          "km_ved_kjop": 71000,
+          "aarsmodell": 2019,
+          "merke_modell_valgfritt": "Volvo XC40"
+        },
+        "del2_selger": {
+          "firmanavn_oppgitt": "Bilia Testsenter",
+          "bronnoysund_treff": {
+            "foretaksnavn": "Bilia Testsenter AS",
+            "organisasjonsnummer": "999 000 206",
+            "forretningsadresse": "Testveien 6, 5003 Bergen"
+          },
+          "treff_bekreftet": true,
+          "som_den_er_i_kontrakt": "nei"
+        },
+        "del3_feil": [
+          {
+            "id": "F1",
+            "kategori": "elektrisk",
+            "en_setning": "infotainmentskjermen går i svart og starter på nytt flere ganger per tur",
+            "dato_oppdaget": "2025-07-25",
+            "kan_bilen_brukes": "ja",
+            "selger_sa_noe": "nei",
+            "hvor_sto_det": [],
+            "avskrift_selger": null,
+            "svar_pa_direkte_sporsmal": false,
+            "verksted_sett_pa": "ja_skriftlig",
+            "verksted_navn_dato": "Uavhengig verksted Bergen, 01.08.2025",
+            "rapport_sier": {
+              "hva": "ja",
+              "hvorfor": "ja",
+              "var_der_ved_overtakelse": "star_ikke",
+              "mer_enn_normal_slitasje": "star_ikke",
+              "kostnad": "ja"
+            },
+            "kostnad_kr": 21500,
+            "avskrift_verksted": "hovedenhet infotainment defekt, intern feil. Må byttes"
+          }
+        ],
+        "km_na": 76000,
+        "del6_kontakt_med_selger": {
+          "tatt_opp_med_selger": "ja_skriftlig",
+          "dato_forste_gang": "2025-07-28",
+          "selgers_svar": "avvist",
+          "avtale_inngatt": "nei",
+          "avtale_beskrivelse": null,
+          "avtale_gjelder_feil": [],
+          "selger_la_frem_dokumentasjon": "ja",
+          "selger_dokumentasjon_kort": "Rapport fra eget verksted om at feilen skyldes vanninntrenging etter kjøpet"
+        },
+        "del7_onske_og_kontakt": {
+          "onsket_losning": "reparasjon",
+          "kjoper": {
+            "navn": "Lars Testland",
+            "adresse": "Prøvegata 7, 5003 Bergen",
+            "epost": "lars@example.no"
+          }
+        },
+        "bekreftelser": {
+          "opplysningene_er_riktige": true,
+          "lest_at_brevet_ikke_er_juridisk_radgivning": true
+        }
+      },
+      "forventet": {
+        "sak": {
+          "lov": "etter_2024",
+          "alder_ved_kjop": 6,
+          "km_siden_kjop": 5000,
+          "svakhet_sak": null,
+          "selger_motbevis": true
+        },
+        "feil": [
+          {
+            "feil_id": "F1",
+            "kategori_pass2": "elektrisk",
+            "dager_til_feil": 66,
+            "innen_frist": true,
+            "slitedel": false,
+            "spor_primar": "B",
+            "spor_sekundar": null,
+            "kandidat_krav": [
+              "spor_vunnet inneholder B",
+              "KRAV: kandidat må ha selger_bevis_finnes = true, ellers forkastes den (krav-kriterium selger_motbevis svakere)",
+              "sanksjon <> heving"
+            ],
+            "forventet_utfall": "Sannsynligvis ingen_treff, siden B-seire med selgers motbevis er sjeldne. Hvis en finnes, godkjent uten svakhet.",
+            "forkastede_skal_inneholde_grunn": "selger_motbevis: bruker ja, vedtak nei"
+          }
+        ],
+        "merknad": "Tester krav-kriteriet som alltid forkaster. Det er riktig at brevet her ikke får praksisavsnitt; i stedet må brevet adressere selgers rapport direkte (brevmotoren, ikke denne modulen)."
+      }
+    },
+    {
+      "id": "S07",
+      "navn": "Privatkjøp",
+      "tester": [
+        "T10"
+      ],
+      "input": {
+        "_meta": {
+          "skjema_versjon": "1.1",
+          "registrert": "2026-10-09T12:00:00+02:00"
+        },
+        "del1_kjopet": {
+          "selgertype": "privat",
+          "kjopsdato": "2025-08-28",
+          "pris_kr": 295000,
+          "km_ved_kjop": 97916,
+          "aarsmodell": 2015,
+          "merke_modell_valgfritt": "Volkswagen Amarok"
+        },
+        "del2_selger": {
+          "firmanavn_oppgitt": null,
+          "bronnoysund_treff": null,
+          "treff_bekreftet": false,
+          "som_den_er_i_kontrakt": "ja"
+        },
+        "del3_feil": [
+          {
+            "id": "F1",
+            "kategori": "rust",
+            "en_setning": "rust på ramme selv om selger skrev «ingen rust»",
+            "dato_oppdaget": "2025-09-20",
+            "kan_bilen_brukes": "ja",
+            "selger_sa_noe": "ja_skriftlig",
+            "hvor_sto_det": [
+              "sms_epost_chat"
+            ],
+            "avskrift_selger": "«bilen er bare kjørt her i Finnmark, og her er det ikke salt på veiene, så bilen har ingen rust»",
+            "svar_pa_direkte_sporsmal": false,
+            "verksted_sett_pa": "ja_skriftlig",
+            "verksted_navn_dato": "Vaidas Bil, 25.09.2025",
+            "rapport_sier": {
+              "hva": "ja",
+              "hvorfor": "ja",
+              "var_der_ved_overtakelse": "star_ikke",
+              "mer_enn_normal_slitasje": "nei",
+              "kostnad": "ja"
+            },
+            "kostnad_kr": 20625,
+            "avskrift_verksted": "rust litt der og der på ramme, sandblåst og grunnet. Ikke alvorlig rust"
+          }
+        ],
+        "km_na": 99000,
+        "del6_kontakt_med_selger": {
+          "tatt_opp_med_selger": "ja_skriftlig",
+          "dato_forste_gang": "2025-10-17",
+          "selgers_svar": "avvist",
+          "avtale_inngatt": "nei",
+          "avtale_beskrivelse": null,
+          "avtale_gjelder_feil": [],
+          "selger_la_frem_dokumentasjon": "ja",
+          "selger_dokumentasjon_kort": "E-post fra verksted om service uten rustanmerkning"
+        },
+        "del7_onske_og_kontakt": {
+          "onsket_losning": "prisavslag",
+          "kjoper": {
+            "navn": "Louis Testvik",
+            "adresse": "Prøvegata 8, 6393 Tomrefjord",
+            "epost": "louis@example.no"
+          }
+        },
+        "bekreftelser": {
+          "opplysningene_er_riktige": true,
+          "lest_at_brevet_ikke_er_juridisk_radgivning": true
+        }
+      },
+      "forventet": {
+        "stopp": true,
+        "stopp_arsak": "selgertype_privat",
+        "feil": [],
+        "valgt_til_brev": [],
+        "merknad": "Motoren skal returnere stopp før avledning og matching. Kjøpsloven (63972-typen) er utenfor v1. Hadde den kjørt, ville F3 uansett forkastet alle privatvedtak."
+      }
+    },
+    {
+      "id": "S08",
+      "navn": "Fortiet kollisjonsskade, bruker vil ha prisavslag",
+      "tester": [
+        "T11",
+        "A-taushet"
+      ],
+      "input": {
+        "_meta": {
+          "skjema_versjon": "1.1",
+          "registrert": "2026-10-09T12:00:00+02:00"
+        },
+        "del1_kjopet": {
+          "selgertype": "forhandler",
+          "kjopsdato": "2025-08-15",
+          "pris_kr": 140000,
+          "km_ved_kjop": 153000,
+          "aarsmodell": 2014,
+          "merke_modell_valgfritt": "Mazda CX-5"
+        },
+        "del2_selger": {
+          "firmanavn_oppgitt": "Rogaland Bilomsetning",
+          "bronnoysund_treff": {
+            "foretaksnavn": "Rogaland Bilomsetning AS",
+            "organisasjonsnummer": "999 000 208",
+            "forretningsadresse": "Testveien 8, 4319 Sandnes"
+          },
+          "treff_bekreftet": true,
+          "som_den_er_i_kontrakt": "nei"
+        },
+        "del3_feil": [
+          {
+            "id": "F1",
+            "kategori": "kollisjonsskade",
+            "en_setning": "bilen har vært kollisjonsskadet og reparert tre uker før jeg kjøpte den, uten at selger sa noe",
+            "dato_oppdaget": "2025-08-25",
+            "kan_bilen_brukes": "ja",
+            "selger_sa_noe": "nei",
+            "hvor_sto_det": [],
+            "avskrift_selger": null,
+            "svar_pa_direkte_sporsmal": false,
+            "verksted_sett_pa": "ja_skriftlig",
+            "verksted_navn_dato": "Skadesenter Sandnes, 28.08.2025",
+            "rapport_sier": {
+              "hva": "ja",
+              "hvorfor": "ja",
+              "var_der_ved_overtakelse": "ja",
+              "mer_enn_normal_slitasje": "star_ikke",
+              "kostnad": "nei"
+            },
+            "kostnad_kr": null,
+            "avskrift_verksted": "faktura datert 25.07.2025 i selgers navn for utskifting av panser, frontfanger og høyre frontskjerm etter kollisjon"
+          }
+        ],
+        "km_na": 154200,
+        "del6_kontakt_med_selger": {
+          "tatt_opp_med_selger": "ja_skriftlig",
+          "dato_forste_gang": "2025-09-01",
+          "selgers_svar": "avvist",
+          "avtale_inngatt": "nei",
+          "avtale_beskrivelse": null,
+          "avtale_gjelder_feil": [],
+          "selger_la_frem_dokumentasjon": "nei",
+          "selger_dokumentasjon_kort": null
+        },
+        "del7_onske_og_kontakt": {
+          "onsket_losning": "prisavslag",
+          "kjoper": {
+            "navn": "Espen Testmoen",
+            "adresse": "Prøvegata 9, 4045 Hafrsfjord",
+            "epost": "espen@example.no"
+          }
+        },
+        "bekreftelser": {
+          "opplysningene_er_riktige": true,
+          "lest_at_brevet_ikke_er_juridisk_radgivning": true
+        }
+      },
+      "forventet": {
+        "sak": {
+          "lov": "etter_2024",
+          "alder_ved_kjop": 11,
+          "km_siden_kjop": 1200,
+          "svakhet_sak": null,
+          "heving_tillatt": false
+        },
+        "feil": [
+          {
+            "feil_id": "F1",
+            "kategori_pass2": "kollisjonsskade",
+            "dager_til_feil": 10,
+            "innen_frist": true,
+            "slitedel": false,
+            "spor_primar": "A",
+            "a_variant": "taushet",
+            "spor_sekundar": "B",
+            "kandidat_krav": [
+              "spor_vunnet inneholder A med a_variant taushet",
+              "sanksjon <> heving: 116737-typen (heving) FORKASTES av F9; 58554-typen (prisavslag 10 000) er riktig kandidat",
+              "kategori kollisjonsskade foretrekkes"
+            ],
+            "kriterier_forventet": {
+              "dokumentert_fortielse": "lik (begge har dokumentasjon av skaden)",
+              "forbehold": "lik eller sterkere",
+              "kategori": "sterkere"
+            },
+            "godkjent": true,
+            "avsnitt_skal_starte_med": "Forbrukerklageutvalget har i vedtak",
+            "avsnitt_skal_inneholde": "lagt til grunn at selger hadde unnlatt å opplyse om"
+          }
+        ],
+        "valgt_til_brev": [
+          "F1"
+        ],
+        "merknad": "Tester A-taushet og F9. Et hevingsvedtak er bedre match på kategori, men skal ikke brukes når brukeren vil ha prisavslag."
+      }
+    },
+    {
+      "id": "S09",
+      "navn": "Varmepumpe annonsert, mye kjørt siden kjøp",
+      "tester": [
+        "T14",
+        "svakhet_sak"
+      ],
+      "input": {
+        "_meta": {
+          "skjema_versjon": "1.1",
+          "registrert": "2026-10-09T12:00:00+02:00"
+        },
+        "del1_kjopet": {
+          "selgertype": "forhandler",
+          "kjopsdato": "2024-04-01",
+          "pris_kr": 175000,
+          "km_ved_kjop": 82100,
+          "aarsmodell": 2018,
+          "merke_modell_valgfritt": "Opel Vivaro"
+        },
+        "del2_selger": {
+          "firmanavn_oppgitt": "Auto Garanti Testsenter",
+          "bronnoysund_treff": {
+            "foretaksnavn": "Auto Garanti Testsenter AS",
+            "organisasjonsnummer": "999 000 209",
+            "forretningsadresse": "Testveien 9, 3040 Drammen"
+          },
+          "treff_bekreftet": true,
+          "som_den_er_i_kontrakt": "ja"
+        },
+        "del3_feil": [
+          {
+            "id": "F1",
+            "kategori": "elektrisk",
+            "en_setning": "dieselvarmeren (Webasto) som sto i annonsen virker ikke",
+            "dato_oppdaget": "2025-11-10",
+            "kan_bilen_brukes": "ja",
+            "selger_sa_noe": "ja_skriftlig",
+            "hvor_sto_det": [
+              "annonse"
+            ],
+            "avskrift_selger": "«LAV KM, WEBASTO, LANG, MYE UTSTYR ++»",
+            "svar_pa_direkte_sporsmal": false,
+            "verksted_sett_pa": "ja_skriftlig",
+            "verksted_navn_dato": "Varmesenteret Drammen, 15.11.2025",
+            "rapport_sier": {
+              "hva": "ja",
+              "hvorfor": "ja",
+              "var_der_ved_overtakelse": "star_ikke",
+              "mer_enn_normal_slitasje": "star_ikke",
+              "kostnad": "ja"
+            },
+            "kostnad_kr": 14200,
+            "avskrift_verksted": "varmeren er en Eberspächer, ikke Webasto. Brennkammer defekt. Bytte 14 200 kr"
+          }
+        ],
+        "km_na": 107100,
+        "del6_kontakt_med_selger": {
+          "tatt_opp_med_selger": "ja_skriftlig",
+          "dato_forste_gang": "2025-11-12",
+          "selgers_svar": "avvist",
+          "avtale_inngatt": "nei",
+          "avtale_beskrivelse": null,
+          "avtale_gjelder_feil": [],
+          "selger_la_frem_dokumentasjon": "nei",
+          "selger_dokumentasjon_kort": null
+        },
+        "del7_onske_og_kontakt": {
+          "onsket_losning": "prisavslag",
+          "kjoper": {
+            "navn": "Ray Testmoe",
+            "adresse": "Prøvegata 10, 1592 Våler",
+            "epost": "ray@example.no"
+          }
+        },
+        "bekreftelser": {
+          "opplysningene_er_riktige": true,
+          "lest_at_brevet_ikke_er_juridisk_radgivning": true
+        }
+      },
+      "forventet": {
+        "sak": {
+          "lov": "etter_2024",
+          "formodningsfrist_dager": 730,
+          "alder_ved_kjop": 6,
+          "km_siden_kjop": 25000,
+          "mnd_siden_kjop": 30,
+          "svakhet_sak": "km"
+        },
+        "feil": [
+          {
+            "feil_id": "F1",
+            "kategori_pass2": "elektrisk",
+            "dager_til_feil": 588,
+            "innen_frist": true,
+            "slitedel": false,
+            "spor_primar": "A",
+            "a_variant": "uttalelse",
+            "spor_sekundar": "B",
+            "kandidat_krav": [
+              "spor_vunnet inneholder A uttalelse",
+              "sanksjon <> heving"
+            ],
+            "kriterier_forventet": {
+              "konkrethet": "lik eller sterkere (WEBASTO er spesifikk)",
+              "forbehold": "lik eller svakere (bruker har som_den_er)"
+            },
+            "godkjent": "true hvis forbehold ikke blir eneste svakhet uten at andre er sterkere; forbehold er ikke adresserbar, så kandidat med forbehold = nei forkastes",
+            "argumenter_skal_inneholde": [
+              "Jeg har kjørt 25 000 km siden kjøpet. Verkstedet har likevel knyttet feilen til leveringstidspunktet."
+            ]
+          }
+        ],
+        "merknad": "Tester km-svakheten på saksnivå (25 000 km > 20 000) og at den alltid adresseres uavhengig av kandidat. Tester også at brukerens eget som_den_er-forbehold kan gi svakere på forbehold-kriteriet og dermed forkaste kandidater uten forbehold. Merk: km-svakhetssetningen forutsetter rapport_levering; her er den star_ikke, så setningen skal i stedet være den nøytrale varianten «Jeg har kjørt 25 000 km siden kjøpet.» uten andre ledd – legg til denne varianten i frasetabellen."
+      }
+    },
+    {
+      "id": "S10",
+      "navn": "Motorhavari etter 3 uker, trafikkfarlig, bruker vil heve",
+      "tester": [
+        "heving_tillatt",
+        "alvor",
+        "C+B"
+      ],
+      "input": {
+        "_meta": {
+          "skjema_versjon": "1.1",
+          "registrert": "2026-10-09T12:00:00+02:00"
+        },
+        "del1_kjopet": {
+          "selgertype": "forhandler",
+          "kjopsdato": "2025-09-01",
+          "pris_kr": 84500,
+          "km_ved_kjop": 96423,
+          "aarsmodell": 2014,
+          "merke_modell_valgfritt": "Peugeot 308"
+        },
+        "del2_selger": {
+          "firmanavn_oppgitt": "Flyttom Bil",
+          "bronnoysund_treff": {
+            "foretaksnavn": "Flyttom Bil AS",
+            "organisasjonsnummer": "999 000 210",
+            "forretningsadresse": "Testveien 10, 4033 Stavanger"
+          },
+          "treff_bekreftet": true,
+          "som_den_er_i_kontrakt": "ja"
+        },
+        "del3_feil": [
+          {
+            "id": "F1",
+            "kategori": "motor",
+            "en_setning": "motoren bruker over en liter olje per tusen kilometer og mister effekt",
+            "dato_oppdaget": "2025-09-22",
+            "kan_bilen_brukes": "nei",
+            "selger_sa_noe": "ja_skriftlig",
+            "hvor_sto_det": [
+              "kontrakt"
+            ],
+            "avskrift_selger": "«Kjøretøyets oljeforbruk er litt høyere enn vanlig.»",
+            "svar_pa_direkte_sporsmal": false,
+            "verksted_sett_pa": "ja_skriftlig",
+            "verksted_navn_dato": "Peugeot Stavanger, 30.09.2025",
+            "rapport_sier": {
+              "hva": "ja",
+              "hvorfor": "ja",
+              "var_der_ved_overtakelse": "ja",
+              "mer_enn_normal_slitasje": "ja",
+              "kostnad": "ja"
+            },
+            "kostnad_kr": 78000,
+            "avskrift_verksted": "forbruk målt til 1,1 liter per 1000 km. Fabrikken godtar inntil 0,2. Skyldes slitte stempelringer, krever motorbytte. Tilstanden har utviklet seg over lang tid og var til stede ved salget. Bilen bør ikke kjøres"
+          }
+        ],
+        "km_na": 97600,
+        "del6_kontakt_med_selger": {
+          "tatt_opp_med_selger": "ja_skriftlig",
+          "dato_forste_gang": "2025-09-23",
+          "selgers_svar": "avvist",
+          "avtale_inngatt": "nei",
+          "avtale_beskrivelse": null,
+          "avtale_gjelder_feil": [],
+          "selger_la_frem_dokumentasjon": "nei",
+          "selger_dokumentasjon_kort": null
+        },
+        "del7_onske_og_kontakt": {
+          "onsket_losning": "angre_kjopet",
+          "kjoper": {
+            "navn": "Eskil Testaas",
+            "adresse": "Prøvegata 11, 3159 Melsomvik",
+            "epost": "eskil@example.no"
+          }
+        },
+        "bekreftelser": {
+          "opplysningene_er_riktige": true,
+          "lest_at_brevet_ikke_er_juridisk_radgivning": true
+        }
+      },
+      "forventet": {
+        "sak": {
+          "lov": "etter_2024",
+          "alder_ved_kjop": 11,
+          "km_siden_kjop": 1177,
+          "svakhet_sak": null,
+          "heving_tillatt": true
+        },
+        "feil": [
+          {
+            "feil_id": "F1",
+            "kategori_pass2": "motor",
+            "dager_til_feil": 21,
+            "innen_frist": true,
+            "slitedel": false,
+            "slitedel_merknad": "motor med alder 11 ≥ 8, men km_ved_kjop 96 423 < 120 000 → ikke slitedel",
+            "spor_primar": "A",
+            "a_variant": "uttalelse",
+            "spor_sekundar": "C",
+            "spor_alle": [
+              "A",
+              "C",
+              "B"
+            ],
+            "kandidat_krav": [
+              "spor_vunnet inneholder A uttalelse (52074-typen: kontrakt «litt høyere enn vanlig», heving)",
+              "heving tillatt – hevingsvedtak foretrekkes i rangering punkt 5",
+              "kategori motor foretrekkes"
+            ],
+            "kriterier_forventet": {
+              "form": "lik (kontrakt mot kontrakt)",
+              "konkrethet": "lik",
+              "forbehold": "lik (begge som_den_er)",
+              "kategori": "sterkere"
+            },
+            "godkjent": true,
+            "avsnitt_skal_inneholde": [
+              "Kjøpet ble hevet."
+            ],
+            "styrke": "middels"
+          }
+        ],
+        "valgt_til_brev": [
+          "F1"
+        ],
+        "merknad": "Speiler 52074. Tester at heving_tillatt åpner for hevingsvedtak og at rangeringen foretrekker dem når brukeren vil heve. Alvor (ikke kjørbar) påvirker ikke A-kriteriene, men skal ligge i output for brevmotorens vesentlighetsblokk."
+      }
+    }
+  ]
+}

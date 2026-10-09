@@ -94,6 +94,11 @@ export function rensValgfri(tekst: string | null | undefined, id: Identifikatore
   return tekst == null ? null : rens(tekst, id, opts);
 }
 
+// True if the text holds a structured identifier (e-mail, national id, VIN, reg. no., phone).
+export function harStrukturertePersonopplysninger(tekst: string): boolean {
+  return MONSTRE.some(([re]) => new RegExp(re.source, re.flags.replace("g", "")).test(tekst));
+}
+
 // Identifiers from the list that still occur after redaction (should be empty).
 export function gjenstaende(tekst: string, id: Identifikatorer): string[] {
   const alle = [...id.klager, ...id.personer, ...id.adresser, ...id.andre].filter((v) => v?.trim().length >= 2);

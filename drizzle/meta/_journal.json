@@ -43,6 +43,41 @@
       "when": 1790963862417,
       "tag": "0005_brevsak",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791533815245,
+      "tag": "0006_pass2",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791533826328,
+      "tag": "0007_pass2_view",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791567335982,
+      "tag": "0008_pass2_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791567657262,
+      "tag": "0009_pass2_a_variant",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791575779673,
+      "tag": "0010_pass2_sanksjon",
+      "breakpoints": true
     }
   ]
 }

@@ -7,13 +7,15 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  pgView,
+  primaryKey,
   serial,
   text,
   timestamp,
   unique,
 } from "drizzle-orm/pg-core";
-import type { Utfylling } from "../lib/brev/utfylling";
-import type { Innsending } from "../lib/vurdering/innsending";
+import { sql } from "drizzle-orm";
+import type { VerifisertBegrunnelse, VerifisertBevis, VerifisertFeil, VerifisertOpplysning } from "../lib/analyse/verifiser";
 
 export const kildeArkivEnum = pgEnum("kilde_arkiv", ["hist", "prod", "wp"]);
 export const dokumentStatusEnum = pgEnum("dokument_status", [
@@ -187,23 +189,130 @@ export const kildesak = pgTable(
   (t) => [unique("kildesak_arkiv_id_uq").on(t.kildeArkiv, t.eksternId), index("kildesak_status_idx").on(t.status)],
 );
 
-// A user's letter case: the answers from the assessment form and what has been filled in on the
-// letter page. Unlike the decision tables this holds personal data (name, address, registration
-// number), so it is left out of the backups (scripts/backup-format.ts) and rows are deleted when
-// they expire. The id is random and is the only access control: whoever has the link sees the case.
-export const brevsak = pgTable(
-  "brevsak",
+// Pass 2 (docs/pass2-design.md § 5): one row per decision with the agents' facts and the derived
+// filter columns. Re-running pass 2 replaces the row; the raw answers stay in data/pass2/ut/.
+export const vedtakAnalyse = pgTable(
+  "vedtak_analyse",
   {
-    id: text("id").primaryKey(),
-    svar: jsonb("svar").$type<Innsending>().notNull(),
-    utfylling: jsonb("utfylling").$type<Utfylling>().notNull(),
-    opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
-    endret: timestamp("endret", { withTimezone: true }).notNull().defaultNow(),
-    utloper: timestamp("utloper", { withTimezone: true }).notNull(),
+    vedtakId: integer("vedtak_id")
+      .primaryKey()
+      .references(() => vedtak.id, { onDelete: "cascade" }),
+    instruksVersjon: text("instruks_versjon").notNull(),
+    aiModell: text("ai_modell").notNull(),
+    analysertTidspunkt: timestamp("analysert_tidspunkt", { withTimezone: true }).notNull().defaultNow(),
+    // Quotes are verified against this exact text; a re-redaction changes the hash.
+    fulltekstSha256: text("fulltekst_sha256").notNull(),
+    raasvarSha256: text("raasvar_sha256").notNull(),
+    ikkeMangelssak: boolean("ikke_mangelssak").notNull(),
+    ikkeMangelssakGrunn: text("ikke_mangelssak_grunn"),
+    lovversjon: lovversjonEnum("lovversjon").notNull(),
+    spor: text("spor").array().notNull(),
+    sporVunnet: text("spor_vunnet").array().notNull(),
+    formodningAnvendt: boolean("formodning_anvendt").notNull(),
+    dagerTilFeil: integer("dager_til_feil"),
+    forsteHenvendelseDato: date("forste_henvendelse_dato"),
+    forsteHenvendelseForm: text("forste_henvendelse_form"),
+    grunnlag: text("grunnlag").array().notNull(),
+    opplysningSkriftligForKlager: boolean("opplysning_skriftlig_for_klager").notNull(),
+    selgerBevisFinnes: boolean("selger_bevis_finnes").notNull(),
+    // What the buyer got (src/lib/analyse/avled.ts avledSanksjon): rescission from the conclusion,
+    // otherwise from the amounts. Null without medhold.
+    sanksjon: text("sanksjon"),
+    bevisUtoverParegnelig: boolean("bevis_utover_paregnelig").notNull(),
+    paragraferMedLedd: text("paragrafer_med_ledd").array().notNull(),
+    feil: jsonb("feil").$type<VerifisertFeil[]>().notNull(),
+    opplysninger: jsonb("opplysninger").$type<VerifisertOpplysning[]>().notNull(),
+    bevis: jsonb("bevis").$type<VerifisertBevis[]>().notNull(),
+    begrunnelseSitater: jsonb("begrunnelse_sitater").$type<VerifisertBegrunnelse[]>().notNull(),
+    usikkerhet: text("usikkerhet"),
+    kontrollArsaker: text("kontroll_arsaker").array().notNull().default(sql`'{}'::text[]`),
+    qaStatus: qaStatusEnum("qa_status").notNull().default("ukontrollert"),
+    qaKommentar: text("qa_kommentar"),
+    qaTidspunkt: timestamp("qa_tidspunkt", { withTimezone: true }),
   },
-  (t) => [index("brevsak_utloper_idx").on(t.utloper)],
+  (t) => [
+    index("vedtak_analyse_spor_idx").using("gin", t.spor),
+    index("vedtak_analyse_grunnlag_idx").using("gin", t.grunnlag),
+    index("vedtak_analyse_lovversjon_idx").on(t.lovversjon),
+    index("vedtak_analyse_ikke_mangelssak_idx").on(t.ikkeMangelssak),
+  ],
 );
+
+// One row per claimed defect; this is what the letter engine matches against (via vedtak_feil_sok).
+export const vedtakFeil = pgTable(
+  "vedtak_feil",
+  {
+    vedtakId: integer("vedtak_id")
+      .notNull()
+      .references(() => vedtakAnalyse.vedtakId, { onDelete: "cascade" }),
+    feilId: text("feil_id").notNull(),
+    kategori: text("kategori").notNull(),
+    komponenter: text("komponenter").array().notNull(),
+    vurdering: text("vurdering").notNull(),
+    samletUtfall: text("samlet_utfall"),
+    grunn: text("grunn"),
+    grunnlag: text("grunnlag"),
+    bevisgrunnlag: text("bevisgrunnlag"),
+    spor: text("spor").array().notNull(),
+    sporVunnet: text("spor_vunnet").array().notNull(),
+    aVariant: text("a_variant"),
+    alvor: text("alvor").array().notNull(),
+    dagerEtterLevering: integer("dager_etter_levering"),
+    visteSegPresisjon: text("viste_seg_presisjon").notNull(),
+    visteSegKilde: text("viste_seg_kilde"),
+    innenFormodningsfrist: boolean("innen_formodningsfrist"),
+    formodning: text("formodning").notNull(),
+    belopTilkjentNok: integer("belop_tilkjent_nok"),
+    harSkriftligOpplysning: boolean("har_skriftlig_opplysning").notNull(),
+    harSakkyndigBevis: boolean("har_sakkyndig_bevis").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.vedtakId, t.feilId] }),
+    index("vedtak_feil_kategori_idx").on(t.kategori),
+    index("vedtak_feil_vurdering_idx").on(t.vurdering),
+    index("vedtak_feil_spor_idx").using("gin", t.spor),
+    index("vedtak_feil_spor_vunnet_idx").using("gin", t.sporVunnet),
+  ],
+);
+
+// Created in drizzle/0007_pass2_view.sql. Joins the decision fields in instead of copying them,
+// so they cannot drift from `vedtak`.
+export const vedtakFeilSok = pgView("vedtak_feil_sok", {
+  vedtakId: integer("vedtak_id").notNull(),
+  feilId: text("feil_id").notNull(),
+  kategori: text("kategori").notNull(),
+  komponenter: text("komponenter").array().notNull(),
+  vurdering: text("vurdering").notNull(),
+  samletUtfall: text("samlet_utfall"),
+  grunn: text("grunn"),
+  grunnlag: text("grunnlag"),
+  bevisgrunnlag: text("bevisgrunnlag"),
+  spor: text("spor").array().notNull(),
+  sporVunnet: text("spor_vunnet").array().notNull(),
+  aVariant: text("a_variant"),
+  alvor: text("alvor").array().notNull(),
+  dagerEtterLevering: integer("dager_etter_levering"),
+  visteSegPresisjon: text("viste_seg_presisjon").notNull(),
+  visteSegKilde: text("viste_seg_kilde"),
+  innenFormodningsfrist: boolean("innen_formodningsfrist"),
+  formodning: text("formodning").notNull(),
+  belopTilkjentNok: integer("belop_tilkjent_nok"),
+  harSkriftligOpplysning: boolean("har_skriftlig_opplysning").notNull(),
+  harSakkyndigBevis: boolean("har_sakkyndig_bevis").notNull(),
+  saksnummer: text("saksnummer"),
+  vedtaksdato: date("vedtaksdato"),
+  kildeUrl: text("kilde_url").notNull(),
+  selgerType: selgerTypeEnum("selger_type"),
+  alderVedKjop: integer("alder_ved_kjop"),
+  kmVedKjop: integer("km_ved_kjop"),
+  kjopesumNok: integer("kjopesum_nok"),
+  utfall: utfallEnum("utfall"),
+  lovversjon: lovversjonEnum("lovversjon").notNull(),
+  ikkeMangelssak: boolean("ikke_mangelssak").notNull(),
+}).existing();
 
 export type Kildedokument = typeof kildedokument.$inferSelect;
 export type Vedtak = typeof vedtak.$inferSelect;
 export type NyttVedtak = typeof vedtak.$inferInsert;
+export type NyVedtakAnalyse = typeof vedtakAnalyse.$inferInsert;
+export type NyVedtakFeil = typeof vedtakFeil.$inferInsert;

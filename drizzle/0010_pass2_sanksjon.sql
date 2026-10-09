@@ -1,0 +1,1 @@
+ALTER TABLE "vedtak_analyse" ADD COLUMN "sanksjon" text;

@@ -1,0 +1,356 @@
+{
+  "stopp": null,
+  "sak": {
+    "lov": "etter_2024",
+    "formodningsfrist_dager": 730,
+    "alder_ved_kjop": 4,
+    "prisband": "450k+",
+    "aldersband": "4-8",
+    "kmband": "<60k",
+    "km_siden_kjop": 11700,
+    "mnd_siden_kjop": 19,
+    "km_per_mnd": 616,
+    "svakhet_sak": null,
+    "selger_motbevis": false,
+    "forlik": false,
+    "onsket_losning": "retting",
+    "heving_tillatt_i_praksis": false
+  },
+  "feil": [
+    {
+      "feil_id": "F1",
+      "kategori_skjema": "klimaanlegg",
+      "kategori_pass2": "klimaanlegg",
+      "dager_til_feil": 251,
+      "innen_frist": true,
+      "slitedel": false,
+      "spor_primar": "A",
+      "a_variant": "uttalelse",
+      "spor_sekundar": "C",
+      "spor_alle": [
+        "A",
+        "C",
+        "B"
+      ],
+      "ingen_spor_arsak": null,
+      "kan_bilen_brukes": "ja_begrenset",
+      "alvor": true,
+      "km_svakhet_i_avsnitt": false,
+      "kandidat": {
+        "vedtak_id": 1966,
+        "saksnummer": "22/2952",
+        "vedtaksdato": "2023-03-29",
+        "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023015158&dokid=865669&versjon=1&variant=A&",
+        "feil_id": "f1",
+        "kategori": "klimaanlegg",
+        "spor_vunnet": [
+          "A",
+          "B"
+        ],
+        "a_variant": "uttalelse",
+        "lovversjon": "før_2024",
+        "sanksjon": "prisavslag_og_erstatning",
+        "tilkjent_totalt_nok": 12490,
+        "opplysning": {
+          "form": "annonse",
+          "rekkevidde": "spesifikk",
+          "ordlyd": "klimaanlegg",
+          "svar_pa_direkte_sporsmal": false
+        },
+        "forbehold": true,
+        "dager_etter_levering": 37,
+        "selger_bevis_finnes": true
+      },
+      "kandidat_spor": "A",
+      "kriterier": [
+        {
+          "navn": "form",
+          "bruker": "annonse",
+          "vedtak": "annonse",
+          "utfall": "lik"
+        },
+        {
+          "navn": "konkrethet",
+          "bruker": "spesifikk",
+          "vedtak": "spesifikk",
+          "utfall": "lik"
+        },
+        {
+          "navn": "direkte_sporsmal",
+          "bruker": true,
+          "vedtak": false,
+          "utfall": "sterkere"
+        },
+        {
+          "navn": "forbehold",
+          "bruker": false,
+          "vedtak": true,
+          "utfall": "sterkere"
+        },
+        {
+          "navn": "kategori",
+          "bruker": "klimaanlegg",
+          "vedtak": "klimaanlegg",
+          "utfall": "sterkere"
+        }
+      ],
+      "antall_sterkere": 3,
+      "svakhet_adressert": null,
+      "godkjent": true,
+      "sitat": {
+        "tema": "opplysning",
+        "tekst": "Utvalget finner det sannsynliggjort at innklagde har gitt uriktige opplysninger om airconditionanlegget på bilen"
+      },
+      "argumenter": [
+        "I vedtaket sto opplysningen i annonsen; i min sak står den både i annonsen og i en skriftlig melding fra selger.",
+        "Opplysningen ble gitt som svar på mitt direkte spørsmål.",
+        "Bilen i vedtaket var solgt «som den er»; min bil ble solgt uten forbehold.",
+        "Vedtaket gjaldt samme type opplysning som i min sak."
+      ],
+      "avsnitt": "Forbrukerklageutvalget har i vedtak 22/2952 av 29. mars 2023 lagt til grunn at selger hadde gitt en uriktig opplysning om klimaanlegget. Annonsen oppga «klimaanlegg». Utvalget uttalte: «Utvalget finner det sannsynliggjort at innklagde har gitt uriktige opplysninger om airconditionanlegget på bilen». Kjøperen fikk prisavslag og erstatning på til sammen 12 490 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. I vedtaket sto opplysningen i annonsen; i min sak står den både i annonsen og i en skriftlig melding fra selger. Opplysningen ble gitt som svar på mitt direkte spørsmål. Bilen i vedtaket var solgt «som den er»; min bil ble solgt uten forbehold. Vedtaket gjaldt samme type opplysning som i min sak.",
+      "forkastede": [
+        {
+          "saksnummer": "22/8615 f5",
+          "grunn": "ingen opplysning i vedtaket knyttet til feilen"
+        }
+      ],
+      "styrke": "sterk",
+      "motstridende": null,
+      "naermeste": null,
+      "forlik": false,
+      "reklamasjon_over_to_mnd": null
+    },
+    {
+      "feil_id": "F2",
+      "kategori_skjema": "dekk_felger",
+      "kategori_pass2": "dekk_felger",
+      "dager_til_feil": 228,
+      "innen_frist": true,
+      "slitedel": true,
+      "spor_primar": "A",
+      "a_variant": "uttalelse",
+      "spor_sekundar": "B",
+      "spor_alle": [
+        "A",
+        "B"
+      ],
+      "ingen_spor_arsak": null,
+      "kan_bilen_brukes": "ja",
+      "alvor": false,
+      "km_svakhet_i_avsnitt": false,
+      "kandidat": {
+        "vedtak_id": 3125,
+        "saksnummer": "FKU-2025-55355",
+        "vedtaksdato": "2025-10-01",
+        "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-55355.pdf",
+        "feil_id": "f5",
+        "kategori": "dekk_felger",
+        "spor_vunnet": [
+          "A"
+        ],
+        "a_variant": "uttalelse",
+        "lovversjon": "før_2024",
+        "sanksjon": "prisavslag_og_erstatning",
+        "tilkjent_totalt_nok": 38652,
+        "opplysning": {
+          "form": "annonse",
+          "rekkevidde": "spesifikk",
+          "ordlyd": "Gode dekk",
+          "svar_pa_direkte_sporsmal": false
+        },
+        "forbehold": true,
+        "dager_etter_levering": 0,
+        "selger_bevis_finnes": true
+      },
+      "kandidat_spor": "A",
+      "kriterier": [
+        {
+          "navn": "form",
+          "bruker": "annonse",
+          "vedtak": "annonse",
+          "utfall": "lik"
+        },
+        {
+          "navn": "konkrethet",
+          "bruker": "spesifikk",
+          "vedtak": "spesifikk",
+          "utfall": "lik"
+        },
+        {
+          "navn": "direkte_sporsmal",
+          "bruker": false,
+          "vedtak": false,
+          "utfall": "lik"
+        },
+        {
+          "navn": "forbehold",
+          "bruker": false,
+          "vedtak": true,
+          "utfall": "sterkere"
+        },
+        {
+          "navn": "kategori",
+          "bruker": "dekk_felger",
+          "vedtak": "dekk_felger",
+          "utfall": "sterkere"
+        }
+      ],
+      "antall_sterkere": 2,
+      "svakhet_adressert": null,
+      "godkjent": true,
+      "sitat": {
+        "tema": "mangel",
+        "tekst": "Det er utvalgets vurdering at «gode dekk» viser til dekk av bra kvalitet, som vil holde noen sesonger etter kjøp"
+      },
+      "argumenter": [
+        "Bilen i vedtaket var solgt «som den står»; min bil ble solgt uten forbehold.",
+        "Vedtaket gjaldt samme type opplysning som i min sak."
+      ],
+      "avsnitt": "Forbrukerklageutvalget har i vedtak FKU-2025-55355 av 1. oktober 2025 lagt til grunn at selger hadde gitt en uriktig opplysning om dekkene. Annonsen oppga «Gode dekk». Utvalget uttalte: «Det er utvalgets vurdering at 'gode dekk' viser til dekk av bra kvalitet, som vil holde noen sesonger etter kjøp». Kjøperen fikk tilkjent 3 000 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Bilen i vedtaket var solgt «som den står»; min bil ble solgt uten forbehold. Vedtaket gjaldt samme type opplysning som i min sak.",
+      "forkastede": [
+        {
+          "saksnummer": "FKU-2026-50646 f1",
+          "grunn": "ingen opplysning i vedtaket knyttet til feilen"
+        },
+        {
+          "saksnummer": "23/14028 f1",
+          "grunn": "ingen opplysning i vedtaket knyttet til feilen"
+        },
+        {
+          "saksnummer": "22/8615 f4",
+          "grunn": "ingen opplysning i vedtaket knyttet til feilen"
+        },
+        {
+          "saksnummer": "21/8961 f2",
+          "grunn": "ingen opplysning i vedtaket knyttet til feilen"
+        }
+      ],
+      "styrke": "middels",
+      "motstridende": {
+        "saksnummer": "23/9774",
+        "vedtaksdato": "2023-11-08",
+        "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023095704&dokid=1056679&versjon=4&variant=P&",
+        "grunn": "annet",
+        "skilte": [
+          "Bilen i 23/9774 var 11 år, mot 7 år i FKU-2025-55355."
+        ]
+      },
+      "naermeste": null,
+      "forlik": false,
+      "reklamasjon_over_to_mnd": false
+    },
+    {
+      "feil_id": "F3",
+      "kategori_skjema": "servicehistorikk",
+      "kategori_pass2": "servicehistorikk",
+      "dager_til_feil": 265,
+      "innen_frist": true,
+      "slitedel": false,
+      "spor_primar": "A",
+      "a_variant": "uttalelse",
+      "spor_sekundar": "B",
+      "spor_alle": [
+        "A",
+        "B"
+      ],
+      "ingen_spor_arsak": null,
+      "kan_bilen_brukes": "ja",
+      "alvor": false,
+      "km_svakhet_i_avsnitt": false,
+      "kandidat": {
+        "vedtak_id": 1585,
+        "saksnummer": "23/15972",
+        "vedtaksdato": "2024-08-28",
+        "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024042324&dokid=1208841&versjon=1&variant=A&",
+        "feil_id": "f1",
+        "kategori": "servicehistorikk",
+        "spor_vunnet": [
+          "A"
+        ],
+        "a_variant": "uttalelse",
+        "lovversjon": "før_2024",
+        "sanksjon": "prisavslag_og_erstatning",
+        "tilkjent_totalt_nok": 26875,
+        "opplysning": {
+          "form": "annonse",
+          "rekkevidde": "spesifikk",
+          "ordlyd": "Bilens serviceprogram er fulgt. Det er tatt servicer på bilen i henhold til fabrikkens retningslinjer.",
+          "svar_pa_direkte_sporsmal": false
+        },
+        "forbehold": true,
+        "dager_etter_levering": 18,
+        "selger_bevis_finnes": true
+      },
+      "kandidat_spor": "A",
+      "kriterier": [
+        {
+          "navn": "form",
+          "bruker": "annonse",
+          "vedtak": "annonse",
+          "utfall": "lik"
+        },
+        {
+          "navn": "konkrethet",
+          "bruker": "spesifikk",
+          "vedtak": "spesifikk",
+          "utfall": "lik"
+        },
+        {
+          "navn": "direkte_sporsmal",
+          "bruker": false,
+          "vedtak": false,
+          "utfall": "lik"
+        },
+        {
+          "navn": "forbehold",
+          "bruker": false,
+          "vedtak": true,
+          "utfall": "sterkere"
+        },
+        {
+          "navn": "kategori",
+          "bruker": "servicehistorikk",
+          "vedtak": "servicehistorikk",
+          "utfall": "sterkere"
+        }
+      ],
+      "antall_sterkere": 2,
+      "svakhet_adressert": null,
+      "godkjent": true,
+      "sitat": {
+        "tema": "opplysning",
+        "tekst": "Utvalget bemerker at opplysninger om servicehistorikk er sentrale ved kjøp av bruktbil, og det må antas at de har virket inn på kjøpet"
+      },
+      "argumenter": [
+        "Bilen i vedtaket var solgt «som den står»; min bil ble solgt uten forbehold.",
+        "Vedtaket gjaldt samme type opplysning som i min sak."
+      ],
+      "avsnitt": "Forbrukerklageutvalget har i vedtak 23/15972 av 28. august 2024 lagt til grunn at selger hadde gitt en uriktig opplysning om servicehistorikken. Opplysningen sto i annonsen og lød: «Bilens serviceprogram er fulgt. Det er tatt servicer på bilen i henhold til fabrikkens retningslinjer». Utvalget uttalte: «Utvalget bemerker at opplysninger om servicehistorikk er sentrale ved kjøp av bruktbil, og det må antas at de har virket inn på kjøpet». Kjøperen fikk tilkjent 10 000 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Bilen i vedtaket var solgt «som den står»; min bil ble solgt uten forbehold. Vedtaket gjaldt samme type opplysning som i min sak.",
+      "forkastede": [
+        {
+          "saksnummer": "21/3303 f2",
+          "grunn": "ingen opplysning i vedtaket knyttet til feilen"
+        }
+      ],
+      "styrke": "middels",
+      "motstridende": {
+        "saksnummer": "22/9693",
+        "vedtaksdato": "2023-05-03",
+        "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023029190&dokid=898548&versjon=1&variant=A&",
+        "grunn": "annet",
+        "skilte": [
+          "Bilen i 22/9693 var 4 år, mot 7 år i 23/15972."
+        ]
+      },
+      "naermeste": null,
+      "forlik": false,
+      "reklamasjon_over_to_mnd": null
+    }
+  ],
+  "valgt_til_brev": [
+    "F1",
+    "F2"
+  ],
+  "lovendring": "Begge vedtakene gjelder kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtakene bygger på, er endret til kjøperens ugunst.",
+  "ingen_treff": []
+}

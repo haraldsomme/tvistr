@@ -1,695 +1,671 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { TID_TIL_VEDTAK } from "@/lib/vurdering/tid";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Logo } from "@/app/logo";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { lesKjoretoy } from "@/lib/brev/utfylling";
-import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
-import {
-  forsteUgyldigeSteg,
-  gyldigKjopsdato,
-  JA_NEI,
-  kjopsdatoAv,
-  medKjopsalder,
-  medKjopsdato,
-  oppdagetMulig,
-  sporOmFemarsfrist,
-  stegFor,
-  stegGyldig,
-  tilParametre,
-  type Innsending,
-  type Steg,
-} from "@/lib/vurdering/innsending";
-import { presumsjonManederFor } from "@/lib/vurdering/faktorer";
-import { KJOPSALDER_VALG, KJOPSFORM_VALG, OPPDAGET_VALG, OPPLYST_VALG, type Niva } from "@/lib/vurdering/typer";
-import { valgAv, Valgfelt } from "@/app/brev/felt";
-import { Bilkort, Regnr } from "./regnr";
-import { JA_NEI_TEKST, KJOPSALDER_TEKST, KJOPSFORM_TEKST, OPPDAGET_TEKST, OPPLYST_TEKST, SPORSMAL } from "./tekster";
+import { useState, useTransition } from "react";
+import type { Resultat } from "@/lib/sammenligning";
+import type { FeilResultat } from "@/lib/sammenligning/typer";
+import { HVOR_STO_DET, KATEGORIER, MAKS_FEIL, RAPPORT_TOM, SKJEMA_VERSJON, validerSkjema, type Skjema, type SkjemaFeil } from "@/lib/skjema/skjema";
+import { vurder, type Svar } from "./actions";
 
-type Punkt = {
-  tekst: string;
-  vekt: "for" | "mot" | "noytral";
-  paragraf?: string;
-  lenke?: string;
-};
-type Resultat = {
-  niva: Niva;
-  tittel: string;
-  // Stopped: why.
-  begrunnelse: string;
-  // Stopped: the one point, with the rule it rests on. Empty otherwise.
-  grunnlag: Punkt[];
-  // Not stopped: what the buyer must know before buying the letter (who has the burden of proof).
-  varsler: string[];
-  // null when the law stops the claim, so no comparison was made.
-  utvalg: { n: number; vunnet: number } | null;
-};
+type Eksempel = { id: string; navn: string; skjema: Skjema };
+type Valgliste<T extends string> = readonly (readonly [T, string])[];
+type Kontakt = Skjema["del6_kontakt_med_selger"];
 
-const STEG_TEKST: Record<Steg, { navn: string; tittel: string }> = {
-  1: { navn: "Bilen", tittel: "Hvilken bil kjøpte du?" },
-  2: { navn: "Feilen", tittel: "Når viste feilen seg?" },
-};
-// The button text: the name of the next step, or the assessment after the last one.
-const nesteTekst = (steger: readonly Steg[], steg: Steg) => {
-  const neste = steger[steger.indexOf(steg) + 1];
-  return neste ? `Neste: ${STEG_TEKST[neste].navn} →` : "Se vurderingen →";
-};
-
-const INNHOLD = "flex flex-col gap-5 px-6 pt-[22px] md:gap-9 md:px-0 md:pt-0";
-
-// Completed steps are buttons back to that step; the ones ahead cannot be opened, so each step is
-// still validated before the next.
-function StegTopp({ steger, steg, tilbake, gaTil }: { steger: readonly Steg[]; steg: Steg; tilbake: ReactNode; gaTil: (n: Steg) => void }) {
-  return (
-    <div className="flex flex-col gap-3.5 px-6 pt-[52px] md:gap-3.5 md:px-0 md:pt-0">
-      <div className="font-ui text-[14px] text-[#5b6472]">{tilbake}</div>
-      <ol className="m-0 flex list-none gap-1.5 p-0 md:gap-2">
-        {steger.map((n, indeks) => {
-          const navn = `${indeks + 1} ${STEG_TEKST[n].navn}`;
-          return (
-            <li
-              key={n}
-              aria-current={n === steg ? "step" : undefined}
-              className={`flex flex-1 flex-col gap-2 font-ui text-[13px] ${
-                n === steg ? "font-semibold text-[#17263d]" : n < steg ? "text-[#17263d]" : "text-[#5b6472]"
-              }`}
-            >
-              <div className={`h-[3px] rounded-sm ${n <= steg ? "bg-[#17263d]" : "bg-[#dcd8cf]"}`} />
-              {n < steg ? (
-                <button type="button" onClick={() => gaTil(n)} className="self-start text-left">
-                  {navn}
-                </button>
-              ) : (
-                <span>{navn}</span>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
-
-function Tittel({ tittel }: { tittel: string }) {
-  return (
-    <div className="px-6 pt-[26px] md:px-0 md:pt-0">
-      <h2 className="m-0 font-brev text-[27px] font-semibold leading-[1.15] md:text-[40px] md:leading-[1.12] md:tracking-[-.01em]">{tittel}</h2>
-    </div>
-  );
-}
-
-// Points for the case get a green plus, points against it a red minus.
-const VEKT_TEGN = {
-  for: { tegn: "+", farge: "oklch(0.42 0.1 160)", bakgrunn: "oklch(0.95 0.04 160)", tekst: "Taler for saken" },
-  mot: { tegn: "−", farge: "oklch(0.42 0.12 25)", bakgrunn: "oklch(0.95 0.04 25)", tekst: "Taler mot saken" },
-} as const;
-
-// The comparison point shown under the warning: how many dealer decisions in the same legal position on
-// timing that got medhold the case was checked against (the defect type is asked after purchase). The
-// letter chooses the decision it cites after purchase.
-function sammenligningTekst(utvalg: Resultat["utvalg"]): string | null {
-  if (!utvalg) return null;
-  return `Vi har sjekket saken din opp mot ${utvalg.vunnet} vedtak om bruktbil kjøpt fra forhandler som fikk medhold. I brevet viser vi til den saken som passer best, og går gjennom det utvalget la vekt på, punkt for punkt mot din sak.`;
-}
-const KORT = "overflow-hidden rounded-lg border border-[#dcd8cf] bg-white";
-const RAD = "flex gap-3.5 border-b border-[#eceae4] px-6 py-[18px] last:border-b-0";
-const SEKSJON_TITTEL = "m-0 font-brev text-[24px] font-semibold leading-[1.3]";
-
-// Indeterminate on purpose: we cannot know how long the assessment takes.
-function Venter() {
-  return (
-    <div className="flex min-h-screen flex-col bg-[#f6f4ef] font-ui text-[#17263d]">
-      <div className="border-b border-[#dcd8cf] px-6 pb-[18px] pt-[52px] md:px-16 md:py-[22px]">
-        <Logo liten />
-      </div>
-      <div role="status" className="mx-auto flex w-full max-w-[560px] flex-col gap-7 px-6 pt-14 md:px-0 md:pt-28">
-        <div className="flex flex-col gap-3.5">
-          <div className="text-[13px] font-medium text-[#1f3a5f]">Et øyeblikk</div>
-          <h1 className="m-0 font-brev text-[30px] font-semibold leading-[1.15] md:text-[40px] md:tracking-[-.01em] md:[text-wrap:balance]">
-            Vi sjekker saken din opp mot lignende saker
-          </h1>
-          <p className="m-0 text-[15px] leading-[1.6] text-[#3d4757] md:text-[16px]">
-            Dette tar bare noen sekunder.<span className="hidden md:inline"> Ikke lukk siden.</span>
-          </p>
-        </div>
-        <div aria-label="Vurderer saken" role="progressbar" className="h-1 overflow-hidden rounded-sm bg-[#e6e2d8]">
-          <div className="h-full w-[30%] rounded-sm bg-[#17263d] motion-safe:animate-[rull_1.5s_ease-in-out_infinite]" />
-        </div>
-      </div>
-      <div className="mt-auto p-6 text-center text-[13px] leading-[1.5] text-[#5b6472] md:hidden">Ikke lukk siden</div>
-    </div>
-  );
-}
-
-const PRIS_NOK = 249;
-const KJORETOY_NOKKEL = "tvistr-kjoretoy";
-
-// The vehicle chosen in step 1, kept in this tab. null when there is none or storage is blocked.
-function lagretKjoretoy(): Kjoretoy | null {
-  try {
-    const lagret = sessionStorage.getItem(KJORETOY_NOKKEL);
-    return lagret ? lesKjoretoy(JSON.parse(lagret)) : null;
-  } catch {
-    return null;
-  }
-}
-
-function Vipps({ tekst, onClick, disabled, tabIndex }: { tekst: string; onClick: () => void; disabled: boolean; tabIndex?: number }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      tabIndex={tabIndex}
-      className="flex items-center justify-center gap-2 rounded-full bg-[#ff5b24] p-4 font-ui text-[16px] font-semibold text-white shadow-[0_1px_0_rgba(0,0,0,.12)] md:text-[17px]"
-    >
-      <span>{tekst}</span>
-      <span className="font-vipps text-[21px] font-bold leading-none tracking-[-.04em] md:text-[22px]">vipps</span>
-    </button>
-  );
-}
-
-
-// Payment is not built yet: both buttons open the letter. Payment goes in front of it later.
-const BREV_MED_LIGNENDE = "Vi finner en lignende sak som fikk medhold, og viser punkt for punkt hvordan din sak står mot den";
-const NESTE_PUNKTER = [
-  "Mangler du noe utvalget la vekt på, for eksempel en vurdering fra verksted, sier vi fra før du sender",
-  "Frist for svar, og hva du gjør om forhandleren avviser",
-  "Saksmappe med verktøy for håndtering av saken videre",
-  "Brev i PDF og Word-fil til nedlasting",
+const JA_NEI: Valgliste<"ja" | "nei"> = [
+  ["ja", "Ja"],
+  ["nei", "Nei"],
+];
+const RAPPORTSVAR: Valgliste<"ja" | "nei" | "star_ikke"> = [...JA_NEI, ["star_ikke", "Står ikke"]];
+// Spec 16a–16d (docs/skjema.md).
+const RAPPORT_SPORSMAL = [
+  ["hva", "Står det hvilken del som er feil?"],
+  ["hvorfor", "Står det hvorfor den sviktet (årsak)?"],
+  ["var_der_ved_overtakelse", "Står det at feilen sannsynligvis var der da du overtok bilen?"],
+  ["mer_enn_normal_slitasje", "Står det at feilen er mer enn normal slitasje for alder og kjørelengde?"],
+  ["kostnad", "Står det hva reparasjonen koster?"],
+] as const;
+const SELGERS_SVAR: Valgliste<NonNullable<Kontakt["selgers_svar"]>> = [
+  ["ikke_svart", "Ikke svart"],
+  ["avvist", "Avvist"],
+  ["tilbudt_reparasjon", "Tilbudt reparasjon"],
+  ["tilbudt_delvis", "Tilbudt noe, men ikke alt"],
+  ["enige_om_noe", "Vi ble enige om noe"],
 ];
 
-// `apneBrev` opens the letter and returns an error message if that failed.
-function Neste({
-  apneBrev,
-  kjoretoy,
-  velgBil,
-}: {
-  apneBrev: () => Promise<string | null>;
-  // undefined until the tab has been read, null when there is no car (a shared link, or storage that is empty).
-  kjoretoy: Kjoretoy | null | undefined;
-  velgBil: () => void;
-}) {
-  const id = useId();
-  const punkter = [BREV_MED_LIGNENDE, ...NESTE_PUNKTER];
-  const [apner, setApner] = useState(false);
-  const [feil, setFeil] = useState<string | null>(null);
-  async function apne() {
-    setApner(true);
-    setFeil(null);
-    const f = await apneBrev();
-    // On success the page is on its way to the letter; keep the buttons disabled meanwhile.
-    if (f) {
-      setFeil(f);
-      setApner(false);
-    }
-  }
-
-  // On a phone the card comes after the whole assessment, so a bar with the Vipps button stays at the
-  // bottom of the screen until the card's own button reaches it. Never both at once.
-  const kortKnapp = useRef<HTMLDivElement>(null);
-  const linje = useRef<HTMLDivElement>(null);
-  const [kortUnder, setKortUnder] = useState(false);
-  useEffect(() => {
-    const el = kortKnapp.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(([e]) => setKortUnder(!e.isIntersecting && e.boundingClientRect.top > 0), {
-      rootMargin: `0px 0px -${linje.current?.offsetHeight ?? 0}px 0px`,
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-  const visLinje = kortUnder && !!kjoretoy;
-
-  return (
-    <>
-      <aside aria-labelledby={`${id}-tittel`} className="flex flex-col gap-3 bg-[#17263d] px-6 pb-6 pt-5 text-[#f6f4ef] md:sticky md:top-6 md:gap-5 md:self-start md:rounded-lg md:p-9">
-        <div className="font-ui text-[12px] font-medium uppercase tracking-[.04em] text-[#8a9bb5] md:text-[13px]">Neste steg</div>
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 id={`${id}-tittel`} className="m-0 font-brev text-[17px] font-semibold leading-[1.3] md:text-[28px] md:leading-[1.2]">
-            Få reklamasjonsbrevet
-          </h2>
-          <span className="font-brev text-[20px] font-semibold md:hidden">{PRIS_NOK} kr</span>
-        </div>
-        <ul className="m-0 flex list-none flex-col gap-2 border-b border-[rgba(246,244,239,.18)] p-0 pb-3.5 text-[13px] leading-[1.5] text-[#c9d2df] md:gap-2.5 md:pb-3.5 md:text-[14px]">
-          {punkter.map((p) => (
-            <li key={p} className="flex items-baseline gap-2.5">
-              <span aria-hidden className="text-[#8a9bb5]">
-                ✓
-              </span>
-              <span>{p}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="hidden items-baseline justify-between md:flex">
-          <span className="font-ui text-[16px] font-semibold">Totalt</span>
-          <span className="font-brev text-[28px] font-semibold">{PRIS_NOK} kr</span>
-        </div>
-        {/* The buyer sees which car the letter is for before paying, and cannot change it here. A shared
-            link or an emptied tab has the answers but not the car: it is chosen in the first step. */}
-        {kjoretoy && <Bilkort kjoretoy={kjoretoy} />}
-        {kjoretoy === null && (
-          <div role="group" aria-label="Bilen mangler" className="flex flex-col items-start gap-2.5 rounded-[6px] border border-[rgba(246,244,239,.35)] p-4 text-[14px] leading-[1.5]">
-            <span>Brevet skrives for én bil. Legg inn registreringsnummeret først.</span>
-            <Button type="button" variant="secondary" onClick={velgBil}>
-              Legg inn registreringsnummer
-            </Button>
-          </div>
-        )}
-        <div ref={kortKnapp} className="flex flex-col">
-          <Vipps tekst="Betal med" onClick={apne} disabled={apner || !kjoretoy} />
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={apne}
-          disabled={apner || !kjoretoy}
-          className="h-auto border-[rgba(246,244,239,.45)] bg-transparent p-3.5 font-ui text-[15px] text-[#f6f4ef] hover:bg-white/10 hover:text-[#f6f4ef] disabled:text-[#f6f4ef] disabled:opacity-50 md:p-[15px]"
-        >
-          Betal med kort
-        </Button>
-        {feil && (
-          <p role="alert" className="m-0 font-ui text-[13px] leading-[1.5] text-[#ffb4a6]">
-            {feil}
-          </p>
-        )}
-        <p className="m-0 text-center font-ui text-[12px] text-[#aab6c7] md:text-left md:text-[13px] md:leading-[1.55]">
-          Engangsbeløp, ingen abonnement.<span className="hidden md:inline"> {TID_TIL_VEDTAK}</span>
-        </p>
-      </aside>
-      {/* Hidden rather than removed while the card is in view, so it can slide; `inert` keeps it out of
-          reach for keyboard and screen reader then. */}
-      <div
-        ref={linje}
-        inert={!visLinje}
-        aria-hidden={!visLinje}
-        className={`fixed inset-x-0 bottom-0 z-10 flex flex-col gap-2.5 border-t border-[#dcd8cf] bg-[#f6f4ef] px-6 pb-[max(16px,env(safe-area-inset-bottom))] pt-3 motion-safe:transition-[translate,box-shadow] motion-safe:duration-200 md:hidden ${visLinje ? "translate-y-0 shadow-[0_-4px_16px_rgba(23,38,61,.08)]" : "translate-y-full"}`}
-      >
-        <p className="m-0 text-center font-ui text-[15px] text-[#17263d]">
-          Få hele brevet for kun <span className="font-semibold">{PRIS_NOK} kr</span>
-        </p>
-        <Vipps tekst="Betal med" onClick={apne} disabled={apner || !kjoretoy} tabIndex={visLinje ? undefined : -1} />
-        {feil && <p className="m-0 text-center font-ui text-[13px] leading-[1.5] text-[#a23b2a]">{feil}</p>}
-      </div>
-    </>
-  );
-}
-
-function Vekt({ vekt }: { vekt: "for" | "mot" }) {
-  const v = VEKT_TEGN[vekt];
-  return (
-    <span
-      role="img"
-      aria-label={v.tekst}
-      className="mt-[3px] flex h-[18px] w-[18px] flex-none items-center justify-center rounded-full text-[14px] font-bold leading-none"
-      style={{ background: v.bakgrunn, color: v.farge }}
-    >
-      {v.tegn}
-    </span>
-  );
-}
-
-// A list of points under a heading: a green plus for what strengthens the case, a red minus for what
-// weakens it, with the rule it rests on.
-function PunktListe({
+const nyFeil = (id: string): SkjemaFeil => ({
   id,
-  tittel,
-  punkter,
-}: {
-  id: string;
-  tittel: string;
-  punkter: Punkt[];
-}) {
+  kategori: "motor",
+  en_setning: "",
+  dato_oppdaget: "",
+  kan_bilen_brukes: "ja",
+  selger_sa_noe: "nei",
+  hvor_sto_det: [],
+  avskrift_selger: null,
+  svar_pa_direkte_sporsmal: false,
+  verksted_sett_pa: "nei",
+  verksted_navn_dato: null,
+  rapport_sier: RAPPORT_TOM,
+  kostnad_kr: null,
+  avskrift_verksted: null,
+});
+
+// The engine does not read the buyer or the confirmations, so the test form fills them in.
+const TOMT: Skjema = {
+  _meta: { skjema_versjon: SKJEMA_VERSJON, registrert: "" },
+  del1_kjopet: { selgertype: "forhandler", kjopsdato: "", pris_kr: 0, km_ved_kjop: 0, aarsmodell: 0, merke_modell_valgfritt: null },
+  del2_selger: { firmanavn_oppgitt: "Testbil AS", bronnoysund_treff: null, treff_bekreftet: false, som_den_er_i_kontrakt: "vet_ikke" },
+  del3_feil: [nyFeil("F1")],
+  km_na: 0,
+  del6_kontakt_med_selger: {
+    tatt_opp_med_selger: "nei",
+    dato_forste_gang: null,
+    selgers_svar: null,
+    avtale_inngatt: "nei",
+    avtale_beskrivelse: null,
+    avtale_gjelder_feil: [],
+    selger_la_frem_dokumentasjon: "nei",
+    selger_dokumentasjon_kort: null,
+  },
+  del7_onske_og_kontakt: { onsket_losning: "reparasjon", kjoper: { navn: "Test Testesen", adresse: "Prøvegata 1, 0150 Oslo", epost: "test@example.no" } },
+  bekreftelser: { opplysningene_er_riktige: true, lest_at_brevet_ikke_er_juridisk_radgivning: true },
+};
+
+// Hidden answers are kept while the user toggles; the engine gets what the form would send (spec § 3–4).
+function tilMotor(s: Skjema, registrert: string): Skjema {
+  const k = s.del6_kontakt_med_selger;
+  const tattOpp = k.tatt_opp_med_selger !== "nei";
+  const svar = tattOpp ? k.selgers_svar : null;
+  const avtale = svar === "tilbudt_delvis" || svar === "enige_om_noe" ? k.avtale_inngatt : "nei";
+  const dok = svar === "avvist" ? k.selger_la_frem_dokumentasjon : "nei";
+  return {
+    ...s,
+    _meta: { skjema_versjon: SKJEMA_VERSJON, registrert },
+    del3_feil: s.del3_feil.map((f, i) => {
+      const skriftlig = f.selger_sa_noe === "ja_skriftlig";
+      const hvor = skriftlig ? f.hvor_sto_det : [];
+      const rapport = f.verksted_sett_pa === "ja_skriftlig";
+      const r = rapport ? f.rapport_sier : RAPPORT_TOM;
+      return {
+        ...f,
+        id: `F${i + 1}`,
+        hvor_sto_det: hvor,
+        avskrift_selger: skriftlig ? f.avskrift_selger : null,
+        svar_pa_direkte_sporsmal: hvor.includes("sms_epost_chat") && f.svar_pa_direkte_sporsmal,
+        verksted_navn_dato: rapport ? f.verksted_navn_dato : null,
+        rapport_sier: r,
+        kostnad_kr: r.kostnad === "ja" ? f.kostnad_kr : null,
+        avskrift_verksted: rapport ? f.avskrift_verksted : null,
+      };
+    }),
+    del6_kontakt_med_selger: {
+      tatt_opp_med_selger: k.tatt_opp_med_selger,
+      dato_forste_gang: tattOpp ? k.dato_forste_gang : null,
+      selgers_svar: svar,
+      avtale_inngatt: avtale,
+      avtale_beskrivelse: avtale === "ja" ? k.avtale_beskrivelse : null,
+      avtale_gjelder_feil: avtale === "ja" ? k.avtale_gjelder_feil.filter((id) => Number(id.slice(1)) <= s.del3_feil.length) : [],
+      selger_la_frem_dokumentasjon: dok,
+      selger_dokumentasjon_kort: dok === "ja" ? k.selger_dokumentasjon_kort : null,
+    },
+  };
+}
+
+const ETIKETT = "text-[13px] font-medium text-[#3d4757]";
+const INPUT = "rounded border border-[#dcd8cf] bg-white px-3 py-2 text-[15px] text-[#17263d] outline-none focus:border-[#1f3a5f]";
+const KORT = "flex flex-col gap-4 rounded border border-[#dcd8cf] bg-white/60 p-5";
+const MERKNAD = "m-0 rounded bg-[#ecebe7] px-3 py-2 text-[13px] text-[#3d4757]";
+const kr = (n: number | null | undefined) => (n == null ? "–" : `${n.toLocaleString("nb-NO")} kr`);
+
+function Felt({ navn, children }: { navn: string; children: React.ReactNode }) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-3.5">
-      <h2 id={id} className={SEKSJON_TITTEL}>
-        {tittel}
-      </h2>
-      <ul className={`m-0 list-none p-0 ${KORT}`}>
-        {punkter.map((g) => (
-          <li key={g.tekst} className={RAD}>
-            <Vekt vekt={g.vekt === "for" ? "for" : "mot"} />
-            <div className="flex flex-col items-start gap-2">
-              <span className="text-[15px] leading-[1.6]">{g.tekst}</span>
-              {g.paragraf &&
-                (g.lenke ? (
-                  <a
-                    href={g.lenke}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]"
-                  >
-                    {g.paragraf}
-                  </a>
-                ) : (
-                  <span className="rounded bg-[#eef1f6] px-2 py-1 font-kode text-[12px] font-medium text-[#1f3a5f]">
-                    {g.paragraf}
-                  </span>
-                ))}
-            </div>
-          </li>
+    <label className="flex flex-col gap-1.5">
+      <span className={ETIKETT}>{navn}</span>
+      {children}
+    </label>
+  );
+}
+
+function Valg<T extends string>({ navn, verdi, valg, onChange }: { navn: string; verdi: T | null | undefined; valg: Valgliste<T>; onChange: (v: T) => void }) {
+  return (
+    <div role="group" aria-label={navn} className="flex flex-col gap-1.5">
+      <span className={ETIKETT}>{navn}</span>
+      <div className="flex flex-wrap gap-1.5">
+        {valg.map(([v, tekst]) => (
+          <button
+            key={v}
+            type="button"
+            aria-pressed={verdi === v}
+            onClick={() => onChange(v)}
+            className="rounded border border-[#dcd8cf] bg-white px-3 py-1.5 text-[14px] aria-pressed:border-[#1f3a5f] aria-pressed:bg-[#1f3a5f] aria-pressed:text-white"
+          >
+            {tekst}
+          </button>
         ))}
-      </ul>
-    </section>
-  );
-}
-
-// Where the law stops the claim there is no letter to sell. The buyer can change the answers, and is
-// pointed to the Consumer Council for advice.
-function Utenfor({ endre }: { endre: () => void }) {
-  return (
-    <aside className="flex flex-col gap-3 rounded-lg border border-[#dcd8cf] bg-white px-6 py-5 md:sticky md:top-6 md:gap-4 md:self-start md:p-9">
-      <h2 className="m-0 font-brev text-[20px] font-semibold leading-[1.3] md:text-[24px]">
-        Brevet passer ikke for denne saken
-      </h2>
-      <p className="m-0 text-[14px] leading-[1.6] text-[#3d4757] md:text-[15px]">
-        Har du svart feil, kan du endre svarene. Ellers kan Forbrukerrådet gi
-        gratis veiledning om hva du kan gjøre.
-      </p>
-      <Button type="button" onClick={endre} className="h-auto p-3.5 font-ui text-[15px]">
-        Endre svar
-      </Button>
-      <a
-        href="https://www.forbrukerradet.no"
-        target="_blank"
-        rel="noreferrer"
-        className="text-center text-[14px] font-medium text-[#1f3a5f] underline"
-      >
-        Forbrukerrådet
-      </a>
-    </aside>
-  );
-}
-
-function Vurdering({
-  resultat,
-  endre,
-  apneBrev,
-  kjoretoy,
-}: {
-  resultat: Resultat;
-  endre: () => void;
-  apneBrev: () => Promise<string | null>;
-  kjoretoy: Kjoretoy | null | undefined;
-}) {
-  const sammenligning = sammenligningTekst(resultat.utvalg);
-  return (
-    <div className="flex min-h-screen flex-col bg-[#f6f4ef] font-ui text-[#17263d]">
-      <div className="hidden items-center justify-between border-b border-[#dcd8cf] px-16 py-[22px] md:flex">
-        <Logo />
-        <Button type="button" variant="ghost" onClick={endre} className="font-normal">
-          ← Endre svar
-        </Button>
       </div>
-      <div className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col md:grid md:flex-none md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:items-start md:gap-16 md:px-16 md:pb-20 md:pt-14">
-        <div className="flex flex-col gap-6 px-6 pb-6 pt-[52px] md:gap-9 md:p-0">
-          <Button type="button" variant="ghost" onClick={endre} className="-ml-2.5 self-start font-normal md:hidden">
-            ← Endre svar
-          </Button>
-          <div className="flex flex-col gap-3.5 md:gap-4">
-            <h1 className="m-0 font-brev text-[28px] font-semibold leading-[1.15] md:text-[44px] md:leading-[1.12] md:tracking-[-.01em] md:[text-wrap:balance]">
-              {resultat.tittel}
-            </h1>
-            {/* Stopped: why, and what the buyer can do (change an answer, or ask Forbrukerrådet). */}
-            {resultat.niva === "utenfor" && (
-              <p className="m-0 max-w-[600px] text-[15px] leading-[1.6] text-[#3d4757] [text-wrap:pretty] md:text-[16px]">{resultat.begrunnelse}</p>
-            )}
-            {/* Not stopped: what the buyer must know before paying, then what the letter does. */}
-            {resultat.varsler.length > 0 && (
-              <div role="note" aria-label="Dette må du vite" className={`flex flex-col gap-3 px-6 py-[18px] ${KORT}`}>
-                {resultat.varsler.map((v) => (
-                  <p key={v} className="m-0 max-w-[600px] text-[16px] leading-[1.6] text-[#17263d] [text-wrap:pretty]">
-                    {v}
-                  </p>
-                ))}
-              </div>
-            )}
-            {sammenligning && <p className="m-0 max-w-[600px] text-[15px] leading-[1.6] text-[#5b6472] [text-wrap:pretty]">{sammenligning}</p>}
+    </div>
+  );
+}
+
+function Tall({ navn, verdi, onChange, paakrevd }: { navn: string; verdi: number | null; onChange: (v: number | null) => void; paakrevd?: boolean }) {
+  return (
+    <Felt navn={navn}>
+      <input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        required={paakrevd}
+        className={INPUT}
+        value={verdi ? verdi : ""}
+        onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+      />
+    </Felt>
+  );
+}
+
+function Dato({ navn, verdi, onChange, paakrevd }: { navn: string; verdi: string | null; onChange: (v: string) => void; paakrevd?: boolean }) {
+  return (
+    <Felt navn={navn}>
+      <input type="date" required={paakrevd} className={INPUT} value={verdi ?? ""} onChange={(e) => onChange(e.target.value)} />
+    </Felt>
+  );
+}
+
+function Tekst({ navn, verdi, onChange, rader = 2, paakrevd }: { navn: string; verdi: string | null; onChange: (v: string | null) => void; rader?: number; paakrevd?: boolean }) {
+  return (
+    <Felt navn={navn}>
+      <textarea required={paakrevd} rows={rader} className={INPUT} value={verdi ?? ""} onChange={(e) => onChange(e.target.value || null)} />
+    </Felt>
+  );
+}
+
+function Feilskjema({ f, nr, endre, fjern }: { f: SkjemaFeil; nr: number; endre: (p: Partial<SkjemaFeil>) => void; fjern?: () => void }) {
+  return (
+    <div className={KORT}>
+      <div className="flex items-center justify-between">
+        <h3 className="m-0 text-[16px] font-semibold">Feil F{nr}</h3>
+        {fjern && (
+          <button type="button" onClick={fjern} className="text-[13px] text-[#8a3b2e] underline">
+            Fjern
+          </button>
+        )}
+      </div>
+      <Felt navn="Hva slags feil er det?">
+        <select className={INPUT} value={f.kategori} onChange={(e) => endre({ kategori: e.target.value as SkjemaFeil["kategori"] })}>
+          {KATEGORIER.map((k) => (
+            <option key={k.nokkel} value={k.nokkel}>
+              {k.navn}
+            </option>
+          ))}
+        </select>
+      </Felt>
+      <Tekst navn="Feilen er at …" verdi={f.en_setning} onChange={(v) => endre({ en_setning: v ?? "" })} paakrevd />
+      <Dato navn="Når oppdaget du feilen?" verdi={f.dato_oppdaget} onChange={(v) => endre({ dato_oppdaget: v })} paakrevd />
+      <Valg
+        navn="Kan bilen brukes?"
+        verdi={f.kan_bilen_brukes}
+        valg={[
+          ["ja", "Ja"],
+          ["ja_begrenset", "Ja, men begrenset"],
+          ["nei", "Nei"],
+        ]}
+        onChange={(v) => endre({ kan_bilen_brukes: v })}
+      />
+
+      <Valg
+        navn="Sa eller skrev selger noe om dette før kjøpet?"
+        verdi={f.selger_sa_noe}
+        valg={[
+          ["nei", "Nei"],
+          ["ja_skriftlig", "Ja, skriftlig"],
+          ["ja_muntlig", "Ja, muntlig"],
+        ]}
+        onChange={(v) => endre({ selger_sa_noe: v })}
+      />
+      {f.selger_sa_noe === "ja_muntlig" && (
+        <p className={MERKNAD}>Muntlige løfter er vanskelige å bevise og teller sjelden alene. Vi tar det med i beskrivelsen, men bygger ikke kravet på det.</p>
+      )}
+      {f.selger_sa_noe === "ja_skriftlig" && (
+        <div className="flex flex-col gap-4 border-l-2 border-[#dcd8cf] pl-4">
+          <div role="group" aria-label="Hvor sto det?" className="flex flex-col gap-1.5">
+            <span className={ETIKETT}>Hvor sto det?</span>
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+              {HVOR_STO_DET.map((h) => (
+                <label key={h.nokkel} className="flex items-center gap-2 text-[14px]">
+                  <input
+                    type="checkbox"
+                    checked={f.hvor_sto_det.includes(h.nokkel)}
+                    onChange={(e) => endre({ hvor_sto_det: e.target.checked ? [...f.hvor_sto_det, h.nokkel] : f.hvor_sto_det.filter((x) => x !== h.nokkel) })}
+                  />
+                  {h.navn}
+                </label>
+              ))}
+            </div>
           </div>
-          {resultat.niva === "utenfor" && resultat.grunnlag.length > 0 && (
-            <PunktListe id="stopper" tittel="Dette stopper saken din" punkter={resultat.grunnlag} />
-          )}
-          <p className="m-0 max-w-[600px] border-t border-[#dcd8cf] pt-4 text-[13px] leading-[1.55] text-[#5b6472]">
-            Vurderingen bygger på svarene dine og på tidligere vedtak. Den er veiledende og ikke juridisk rådgivning, og utfallet i din sak kan bli et annet.
-          </p>
-        </div>
-        <div className="mt-auto md:mt-0">
-          {resultat.niva === "utenfor" ? (
-            <Utenfor endre={endre} />
-          ) : (
-            <Neste
-              apneBrev={apneBrev}
-              kjoretoy={kjoretoy}
-              velgBil={endre}
+          <Tekst navn="Skriv av det som sto, så nøyaktig du kan" verdi={f.avskrift_selger} onChange={(v) => endre({ avskrift_selger: v })} rader={3} />
+          {f.hvor_sto_det.includes("sms_epost_chat") && (
+            <Valg
+              navn="Var dette svar på et spørsmål du stilte selger?"
+              verdi={f.svar_pa_direkte_sporsmal ? "ja" : "nei"}
+              valg={JA_NEI}
+              onChange={(v) => endre({ svar_pa_direkte_sporsmal: v === "ja" })}
             />
           )}
         </div>
-      </div>
+      )}
+
+      <Valg
+        navn="Har et verksted sett på feilen?"
+        verdi={f.verksted_sett_pa}
+        valg={[
+          ["nei", "Nei"],
+          ["ja_skriftlig", "Ja, skriftlig"],
+          ["ja_muntlig", "Ja, muntlig"],
+        ]}
+        onChange={(v) => endre({ verksted_sett_pa: v })}
+      />
+      {f.verksted_sett_pa === "ja_skriftlig" && (
+        <div className="flex flex-col gap-4 border-l-2 border-[#dcd8cf] pl-4">
+          <Felt navn="Hvilket verksted, og når?">
+            <input className={INPUT} value={f.verksted_navn_dato ?? ""} onChange={(e) => endre({ verksted_navn_dato: e.target.value || null })} />
+          </Felt>
+          {RAPPORT_SPORSMAL.map(([k, t]) => (
+            <Valg key={k} navn={t} verdi={f.rapport_sier[k]} valg={RAPPORTSVAR} onChange={(v) => endre({ rapport_sier: { ...f.rapport_sier, [k]: v } })} />
+          ))}
+          {f.rapport_sier.kostnad === "ja" && <Tall navn="Hvor mye? (kr)" verdi={f.kostnad_kr} onChange={(v) => endre({ kostnad_kr: v })} />}
+          <Tekst navn="Verkstedet skriver at …" verdi={f.avskrift_verksted} onChange={(v) => endre({ avskrift_verksted: v })} rader={3} />
+        </div>
+      )}
     </div>
   );
 }
 
-// The answers and the step live in the URL (`?kjopsdato=2024-03-12&…&steg=2`), so a link opens the form where
-// it was. A complete set of answers without `steg` is a link to the assessment itself.
-// The vehicle is not part of the answers and never goes in the address: a registration number is
-// personal. It is kept in this tab (sessionStorage) so a reload does not lose it, and goes to the
-// server when the letter is opened.
-export function Skjema({ startSvar, startSteg }: { startSvar: Innsending; startSteg: number }) {
-  const router = useRouter();
-  const forsteUgyldig = forsteUgyldigeSteg(startSvar);
-  const visVurdering = forsteUgyldig === null && !startSteg;
-  const [steg, setSteg] = useState<Steg>(() => {
-    const onsket = stegFor(startSvar).find((s) => s === startSteg) ?? 1;
-    return forsteUgyldig === null ? onsket : (Math.min(onsket, forsteUgyldig) as Steg);
-  });
-  const [d, setD] = useState<Innsending>(startSvar);
-  const [sender, setSender] = useState(visVurdering);
-  const [feil, setFeil] = useState<string | null>(null);
-  const [resultat, setResultat] = useState<Resultat | null>(null);
-  // undefined until this tab's storage has been read.
-  const [kjoretoy, setKjoretoy] = useState<Kjoretoy | null | undefined>(undefined);
-  // The purchase date was suggested from the registry and has not been touched since.
-  const [datoFraRegister, setDatoFraRegister] = useState(false);
+const UTFALL_FARGE: Record<string, string> = {
+  sterkere: "bg-[#e3efe5] text-[#1f5a2e]",
+  lik: "bg-[#ecebe7] text-[#3d4757]",
+  svakere: "bg-[#f6e7d3] text-[#7a4a12]",
+  utelat: "text-[#8b919a]",
+};
+const vis = (x: unknown) => (x == null ? "–" : typeof x === "object" ? JSON.stringify(x) : String(x));
 
-  const sett = <K extends keyof Innsending>(k: K, v: Innsending[K]) => setD((x) => ({ ...x, [k]: v }));
+function Merke({ children, mork }: { children: React.ReactNode; mork?: boolean }) {
+  return <span className={`rounded px-2 py-0.5 text-[12px] font-medium ${mork ? "bg-[#1f3a5f] text-white" : "bg-[#ecebe7] text-[#3d4757]"}`}>{children}</span>;
+}
 
-  const velgKjopsalder = (alder: (typeof KJOPSALDER_VALG)[number] | "") => {
-    setDatoFraRegister(false);
-    setD((x) => medKjopsalder(x, alder));
+function Feilresultat({ f, tilBrev, stopp }: { f: FeilResultat; tilBrev: boolean; stopp: string | undefined }) {
+  const k = f.kandidat;
+  return (
+    <article className={KORT}>
+      <header className="flex flex-wrap items-center gap-2">
+        <h3 className="m-0 mr-1 text-[16px] font-semibold">
+          {f.feil_id} · {f.kategori_pass2}
+        </h3>
+        {tilBrev && <Merke mork>Valgt til brev</Merke>}
+        {f.spor_alle.map((s) => (
+          <Merke key={s}>
+            Spor {s}
+            {s === "A" && f.a_variant ? ` (${f.a_variant})` : ""}
+            {s === f.spor_primar ? " · primær" : s === f.spor_sekundar ? " · sekundær" : ""}
+          </Merke>
+        ))}
+      </header>
+      <p className="m-0 text-[13px] text-[#5b6472]">
+        {f.dager_til_feil} dager til feil ({f.innen_frist ? "innen" : "utenfor"} formodningsfristen) · {f.slitedel ? "slitedel" : "ikke slitedel"} · kan brukes: {f.kan_bilen_brukes}
+        {f.ingen_spor_arsak && ` · ingen spor: ${f.ingen_spor_arsak}`}
+        {` · styrke: ${f.styrke}`}
+        {f.forlik && " · forlik (ikke i brevet)"}
+        {f.reklamasjon_over_to_mnd && " · reklamert etter to måneder"}
+      </p>
+
+      {f.avsnitt ? (
+        <p className="m-0 font-brev text-[16px] leading-[1.65] text-[#17263d]">{f.avsnitt}</p>
+      ) : (
+        <p className="m-0 rounded bg-[#f6e7d3] px-3 py-2 text-[14px] text-[#7a4a12]">Ingen avsnitt: {stopp ?? "ingen godkjent kandidat"}</p>
+      )}
+      {f.motstridende && (
+        <p className="m-0 text-[13px] text-[#3d4757]">
+          Tapt med lignende fakta:{" "}
+          <a href={f.motstridende.kilde_url} target="_blank" rel="noreferrer" className="text-[#1f3a5f] underline">
+            {f.motstridende.saksnummer}
+          </a>{" "}
+          ({f.motstridende.grunn ?? "–"}). {f.motstridende.skilte.join(" ")}
+        </p>
+      )}
+      {f.naermeste && (
+        <p className="m-0 text-[13px] text-[#3d4757]">
+          Nærmeste vinnende:{" "}
+          <a href={f.naermeste.kilde_url} target="_blank" rel="noreferrer" className="text-[#1f3a5f] underline">
+            {f.naermeste.saksnummer}
+          </a>{" "}
+          ({f.naermeste.vedtaksdato}) · {f.naermeste.kategori} · spor {f.naermeste.spor} · mangler: {f.naermeste.mangler.join(", ")}
+        </p>
+      )}
+
+      {k && (
+        <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-[13px]">
+          <dt className="text-[#5b6472]">Vedtak</dt>
+          <dd className="m-0">
+            <a href={k.kilde_url} target="_blank" rel="noreferrer" className="text-[#1f3a5f] underline">
+              {k.saksnummer}
+            </a>{" "}
+            ({k.vedtaksdato}) · feil {k.feil_id} · {k.kategori}
+          </dd>
+          <dt className="text-[#5b6472]">Hentet på</dt>
+          <dd className="m-0">
+            spor {f.kandidat_spor} · vunnet på {k.spor_vunnet.join(", ")} · {k.lovversjon}
+          </dd>
+          <dt className="text-[#5b6472]">Resultat</dt>
+          <dd className="m-0">
+            {k.sanksjon ?? "–"} · tilkjent {kr(k.tilkjent_totalt_nok)}
+          </dd>
+          <dt className="text-[#5b6472]">Sterkere</dt>
+          <dd className="m-0">
+            {f.antall_sterkere} · svakhet adressert: {f.svakhet_adressert ?? "ingen"} · km-svakhet i avsnitt: {f.km_svakhet_i_avsnitt ? "ja" : "nei"}
+          </dd>
+        </dl>
+      )}
+
+      {f.kriterier.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-[13px] font-medium text-[#1f3a5f]">Kriterier ({f.kriterier.length})</summary>
+          <table className="mt-2 w-full text-left text-[13px]">
+            <thead className="text-[#5b6472]">
+              <tr>
+                <th className="py-1 pr-3 font-medium">Kriterium</th>
+                <th className="py-1 pr-3 font-medium">Bruker</th>
+                <th className="py-1 pr-3 font-medium">Vedtak</th>
+                <th className="py-1 font-medium">Utfall</th>
+              </tr>
+            </thead>
+            <tbody>
+              {f.kriterier.map((c) => (
+                <tr key={c.navn} className="border-t border-[#ecebe7] align-top">
+                  <td className="py-1 pr-3">{c.navn}</td>
+                  <td className="py-1 pr-3 break-all">{vis(c.bruker)}</td>
+                  <td className="py-1 pr-3 break-all">{vis(c.vedtak)}</td>
+                  <td className="py-1">
+                    <span className={`rounded px-1.5 py-0.5 ${UTFALL_FARGE[c.utfall]}`}>{c.utfall}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      )}
+
+      {f.forkastede.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-[13px] font-medium text-[#1f3a5f]">Forkastede kandidater ({f.forkastede.length})</summary>
+          <ul className="mt-2 flex flex-col gap-1 pl-4 text-[13px]">
+            {f.forkastede.map((x, i) => (
+              <li key={i}>
+                <span className="font-medium">{x.saksnummer}</span>: {x.grunn}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </article>
+  );
+}
+
+function Resultatvisning({ r }: { r: Resultat }) {
+  if (r.stopp) return <p className="m-0 rounded bg-[#f6e7d3] px-4 py-3 text-[15px] text-[#7a4a12]">Motoren stoppet før matching: privat selger.</p>;
+  const stopp = new Map(r.ingen_treff.map((x) => [x.feil_id, x.siste_stopp]));
+  return (
+    <div className="flex flex-col gap-4">
+      <dl className="m-0 grid grid-cols-2 gap-x-4 gap-y-1 rounded border border-[#dcd8cf] bg-white/60 p-4 text-[13px] sm:grid-cols-4">
+        {Object.entries(r.sak).map(([k, v]) => (
+          <div key={k} className="flex flex-col">
+            <dt className="text-[#5b6472]">{k}</dt>
+            <dd className="m-0 font-medium">{vis(v)}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="m-0 text-[14px] text-[#3d4757]">Valgt til brev: {r.valgt_til_brev.length ? r.valgt_til_brev.join(", ") : "ingen"}</p>
+      {r.feil.map((f) => (
+        <Feilresultat key={f.feil_id} f={f} tilBrev={r.valgt_til_brev.includes(f.feil_id)} stopp={stopp.get(f.feil_id)} />
+      ))}
+      {r.lovendring && (
+        <div className={KORT}>
+          <span className={ETIKETT}>Lovendring (etter siste praksisavsnitt)</span>
+          <p className="m-0 font-brev text-[16px] leading-[1.65]">{r.lovendring}</p>
+        </div>
+      )}
+      <details>
+        <summary className="cursor-pointer text-[13px] font-medium text-[#1f3a5f]">Hele resultatet som JSON</summary>
+        <pre className="mt-2 max-h-[480px] overflow-auto rounded bg-[#17263d] p-3 font-mono text-[12px] text-[#e8e5de]">{JSON.stringify(r, null, 2)}</pre>
+      </details>
+    </div>
+  );
+}
+
+export function Vurderingsskjema({ eksempler }: { eksempler: Eksempel[] }) {
+  const [s, setS] = useState<Skjema>(TOMT);
+  const [idag, setIdag] = useState(() => new Date().toISOString().slice(0, 10));
+  const [svar, setSvar] = useState<Svar | null>(null);
+  const [venter, start] = useTransition();
+
+  type Del = "del1_kjopet" | "del2_selger" | "del6_kontakt_med_selger" | "del7_onske_og_kontakt";
+  const del =
+    <K extends Del>(k: K) =>
+    (p: Partial<Skjema[K]>) =>
+      setS((x) => ({ ...x, [k]: { ...x[k], ...p } }));
+  const k1 = del("del1_kjopet");
+  const k6 = del("del6_kontakt_med_selger");
+  const kontakt = s.del6_kontakt_med_selger;
+  const privat = s.del1_kjopet.selgertype === "privat";
+
+  const endreFeil = (i: number) => (p: Partial<SkjemaFeil>) => setS((x) => ({ ...x, del3_feil: x.del3_feil.map((f, j) => (j === i ? { ...f, ...p } : f)) }));
+  const lastEksempel = (id: string) => {
+    const e = eksempler.find((x) => x.id === id);
+    setS(e ? structuredClone(e.skjema) : TOMT);
+    setSvar(null);
   };
-
-  // Every step up to the evidence one, unless the law stops the claim first.
-  const steger = stegFor(d);
-  const sisteSteg = steger[steger.length - 1];
-
-  // Returns an error message, or null when the result was set. `avbrutt` says the caller no longer
-  // wants the answer (the effect was cleaned up), so a late answer cannot bring the result back.
-  // `bilAr` is passed explicitly where the vehicle state is not set yet (the fetch when the page opens).
-  async function hent(data: Innsending, avbrutt: () => boolean = () => false, bilAr = kjoretoy?.ar): Promise<string | null> {
-    try {
-      const res = await fetch("/api/vurder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Only the year, not the registration number: it picks a decision with a car of similar age.
-        body: JSON.stringify(bilAr ? { ...data, bilAr } : data),
-      });
-      const json = (await res.json()) as Partial<Resultat> & { feil?: string };
-      if (!res.ok || !json.niva || !json.tittel) throw new Error(json.feil ?? "Noe gikk galt.");
-      if (avbrutt()) return null;
-      setResultat({
-        niva: json.niva,
-        tittel: json.tittel,
-        begrunnelse: json.begrunnelse ?? "",
-        grunnlag: json.grunnlag ?? [],
-        varsler: json.varsler ?? [],
-        utvalg: json.utvalg ?? null,
-      });
-      return null;
-    } catch (e) {
-      return e instanceof Error ? e.message : "Noe gikk galt.";
-    }
-  }
-
-  // Keeps the address in step with the answers without adding history entries.
-  function oppdaterUrl(data: Innsending, s: Steg | null) {
-    const p = tilParametre(data);
-    if (s) p.set("steg", String(s));
-    window.history.replaceState(null, "", `?${p}`);
-  }
-
-  // The day the registry has the vehicle on its current owner is a good guess at the day of the
-  // purchase, so it picks the answer to «Når kjøpte du bilen?» and keeps the day for the letter. An
-  // answer the buyer has chosen is never replaced, and a suggestion goes away with the vehicle it
-  // came from.
-  function velgKjoretoy(k: Kjoretoy | null, eierFra?: string | null) {
-    if (k && eierFra && !d.kjopAlder && gyldigKjopsdato(eierFra)) {
-      setD((x) => medKjopsdato(x, eierFra));
-      setDatoFraRegister(true);
-    } else if (!k && datoFraRegister) {
-      velgKjopsalder("");
-    }
-    setKjoretoy(k);
-    // Storage can be blocked or empty; the vehicle is then fetched again.
-    try {
-      if (k) sessionStorage.setItem(KJORETOY_NOKKEL, JSON.stringify(k));
-      else sessionStorage.removeItem(KJORETOY_NOKKEL);
-    } catch {
-      /* the vehicle stays in this page's state */
-    }
-  }
-
-  useEffect(() => {
-    const k = lagretKjoretoy();
-    // sessionStorage does not exist on the server, so this cannot be read while rendering without
-    // the first render differing from the server's.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setKjoretoy(k);
-  }, []);
-
-  useEffect(() => {
-    if (!visVurdering) return;
-    // React runs this effect twice in development; only the answer to the last call counts.
-    let avbrutt = false;
-    // The vehicle state is not set yet in this first effect; read it from the tab, so the assessment
-    // picks the decision with the car's age, as the letter will.
-    void hent(startSvar, () => avbrutt, lagretKjoretoy()?.ar ?? undefined).then((f) => {
-      if (avbrutt) return;
-      setFeil(f);
-      if (f) setSteg(1);
-      setSender(false);
-    });
-    return () => {
-      avbrutt = true;
-    };
-    // Only the link that opened the page is fetched.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!resultat && !sender) oppdaterUrl(d, steg);
-  }, [d, steg, resultat, sender]);
-
-  // The vehicle is part of the first step: nothing else in the assessment is about another car.
-  const kanGaVidere = stegGyldig(d, steg) && (steg !== 1 || !!kjoretoy);
-
-  async function neste() {
-    if (!kanGaVidere) return;
-    setFeil(null);
-    if (steg < sisteSteg) return setSteg(steger[steger.indexOf(steg) + 1]);
-    setSender(true);
-    const f = await hent(d);
-    setFeil(f);
-    if (!f) oppdaterUrl(d, null);
-    setSender(false);
-  }
-
-  async function apneBrev(): Promise<string | null> {
-    if (!kjoretoy) return "Hent bilen med registreringsnummeret først.";
-    try {
-      const res = await fetch("/api/sak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...d, kjoretoy }),
-      });
-      const json = (await res.json()) as { id?: string; feil?: string };
-      if (!res.ok || !json.id) return json.feil ?? "Noe gikk galt. Prøv igjen.";
-      router.push(`/brev/${json.id}/veiviser`);
-      return null;
-    } catch {
-      return "Noe gikk galt. Prøv igjen.";
-    }
-  }
-
-  if (sender) return <Venter />;
-
-  if (resultat) {
-    return <Vurdering resultat={resultat} endre={() => { setSteg(1); setResultat(null); }} apneBrev={apneBrev} kjoretoy={kjoretoy} />;
-  }
-
-  const tilbake =
-    steg === 1 ? (
-      <Link href="/">← Tilbake</Link>
-    ) : (
-      <button type="button" onClick={() => setSteg((steg - 1) as Steg)}>
-        ← Tilbake
-      </button>
-    );
+  // Render must be deterministic (hydration); the real timestamp is set on submit.
+  const sendes = tilMotor(s, `${idag}T00:00:00.000Z`);
+  const valideringsfeil = validerSkjema(sendes, idag);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f6f4ef]">
-      <div className="hidden items-center justify-between border-b border-[#dcd8cf] px-16 py-[22px] md:flex">
-        <Link href="/">
-          <Logo />
-        </Link>
-        <span className="text-[14px] text-[#5b6472]">Gratis vurdering · ingen konto</span>
-      </div>
-      <form
-        className="mx-auto flex w-full max-w-[430px] flex-1 flex-col font-ui text-[#17263d] md:max-w-[720px] md:flex-none md:gap-9 md:pb-[72px] md:pt-14"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void neste();
-        }}
-        noValidate
-      >
-        <StegTopp steger={steger} steg={steg} tilbake={tilbake} gaTil={setSteg} />
-        <Tittel tittel={STEG_TEKST[steg].tittel} />
-
-        {steg === 1 && (
-          <>
-            <div className={INNHOLD}>
-              <Regnr kjoretoy={kjoretoy ?? null} funnet={velgKjoretoy} />
-              <div className="flex flex-col gap-2">
-                <Valgfelt label={SPORSMAL.kjopAlder} valg={valgAv(KJOPSALDER_VALG, KJOPSALDER_TEKST)} verdi={d.kjopAlder} velg={velgKjopsalder} />
-                {datoFraRegister && <p className="m-0 text-[13px] leading-[1.5] text-[#5b6472]">Valgt ut fra Statens vegvesen: dagen bilen ble registrert på deg. Velg et annet alternativ hvis det ikke stemmer.</p>}
-              </div>
-              <Valgfelt label={SPORSMAL.kjopsform} valg={valgAv(KJOPSFORM_VALG, KJOPSFORM_TEKST)} verdi={d.kjopsform} velg={(v) => sett("kjopsform", v)} />
-              {/* Only for a purchase over five years old: a «nei» means the deadline in § 27 has passed. */}
-              {sporOmFemarsfrist(d) && (
-                <Valgfelt label={SPORSMAL.reklamert} valg={valgAv(JA_NEI, JA_NEI_TEKST)} verdi={d.reklamertInnenFemAr} velg={(v) => sett("reklamertInnenFemAr", v)} />
-              )}
+    <div className="min-h-screen bg-[#f6f4ef] font-ui text-[#17263d]">
+      <div className="mx-auto grid max-w-[1400px] gap-8 px-4 py-8 lg:grid-cols-2 lg:px-8">
+        <form
+          className="flex flex-col gap-6"
+          onSubmit={(e) => {
+            e.preventDefault();
+            start(async () => setSvar(await vurder(tilMotor(s, new Date().toISOString()), idag)));
+          }}
+        >
+          <header className="flex flex-col gap-3">
+            <h1 className="m-0 font-brev text-[30px] font-semibold">Vurdering</h1>
+            <p className="m-0 text-[14px] text-[#5b6472]">
+              Testskjema for sammenligningsmotoren (skjema v{SKJEMA_VERSJON}, docs/skjema.md). Gir ett praksisavsnitt per feil fra vedtakene i databasen.
+            </p>
+            <div className="flex flex-wrap items-end gap-3">
+              <Felt navn="Last eksempel">
+                <select className={INPUT} defaultValue="" onChange={(e) => lastEksempel(e.target.value)}>
+                  <option value="">Tomt skjema</option>
+                  {eksempler.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.navn}
+                    </option>
+                  ))}
+                </select>
+              </Felt>
+              <Dato navn="Dagens dato (for motoren)" verdi={idag} onChange={setIdag} />
             </div>
-          </>
-        )}
+          </header>
 
-        {steg === 2 && (
-          <>
-            <div className={INNHOLD}>
-              <div className="flex flex-col gap-3">
-                <Valgfelt
-                  label={SPORSMAL.oppdaget}
-                  valg={OPPDAGET_VALG.map((v) => ({ verdi: v, tekst: OPPDAGET_TEKST[v], deaktivert: !oppdagetMulig(d, v) }))}
-                  verdi={d.oppdaget}
-                  velg={(v) => sett("oppdaget", v)}
+          <section className={KORT}>
+            <h2 className="m-0 text-[18px] font-semibold">Kjøpet</h2>
+            <Valg
+              navn="Kjøpte du bilen av et firma (forhandler) eller en privatperson?"
+              verdi={s.del1_kjopet.selgertype}
+              valg={[
+                ["forhandler", "Forhandler"],
+                ["privat", "Privatperson"],
+              ]}
+              onChange={(v) => k1({ selgertype: v })}
+            />
+            {privat && <p className={MERKNAD}>Kjøpsloven gjelder, og tjenesten dekker foreløpig bare kjøp fra forhandler. Motoren stopper her.</p>}
+            <div className="grid grid-cols-2 gap-4">
+              <Dato navn="Når kjøpte du bilen?" verdi={s.del1_kjopet.kjopsdato} onChange={(v) => k1({ kjopsdato: v })} paakrevd />
+              <Tall navn="Hva betalte du? (kr)" verdi={s.del1_kjopet.pris_kr} onChange={(v) => k1({ pris_kr: v ?? 0 })} paakrevd />
+              <Tall navn="Kilometerstand ved kjøp" verdi={s.del1_kjopet.km_ved_kjop} onChange={(v) => k1({ km_ved_kjop: v ?? 0 })} paakrevd />
+              <Tall navn="Årsmodell" verdi={s.del1_kjopet.aarsmodell} onChange={(v) => k1({ aarsmodell: v ?? 0 })} paakrevd />
+            </div>
+            <Felt navn="Merke og modell (valgfritt)">
+              <input className={INPUT} value={s.del1_kjopet.merke_modell_valgfritt ?? ""} onChange={(e) => k1({ merke_modell_valgfritt: e.target.value || null })} />
+            </Felt>
+          </section>
+
+          {!privat && (
+            <>
+              <section className={KORT}>
+                <h2 className="m-0 text-[18px] font-semibold">Selger</h2>
+                <Felt navn="Hva heter firmaet du kjøpte av?">
+                  <input className={INPUT} value={s.del2_selger.firmanavn_oppgitt ?? ""} onChange={(e) => del("del2_selger")({ firmanavn_oppgitt: e.target.value || null })} />
+                </Felt>
+                <Valg
+                  navn="Sto det «som den er», «som forevist» eller lignende i kontrakten?"
+                  verdi={s.del2_selger.som_den_er_i_kontrakt}
+                  valg={[...JA_NEI, ["vet_ikke", "Vet ikke"]]}
+                  onChange={(v) => del("del2_selger")({ som_den_er_i_kontrakt: v })}
                 />
-                {/* The period turns on 1 January, so the year alone decides it. */}
-                {d.kjopAlder && (
-                  <p className="m-0 hidden text-[13px] leading-[1.5] text-[#5b6472] md:block">
-                    {presumsjonManederFor(kjopsdatoAv(d)) === 24 ? "Innen 2 år" : "Innen 6 måneder"} antas feilen å ha vært der ved levering. Da står du sterkere.
-                  </p>
-                )}
-              </div>
-              <Valgfelt label={SPORSMAL.opplyst} valg={valgAv(OPPLYST_VALG, OPPLYST_TEKST)} verdi={d.opplystForKjop} velg={(v) => sett("opplystForKjop", v)} />
-            </div>
-          </>
-        )}
+              </section>
 
-        <div className="sticky bottom-0 z-10 mt-auto flex flex-col gap-3 border-t border-[#dcd8cf] bg-[#f6f4ef] px-6 pb-[max(16px,env(safe-area-inset-bottom))] pt-4 md:static md:mt-0 md:flex-row md:items-center md:justify-between md:gap-6 md:border-t md:border-[#dcd8cf] md:p-0 md:pt-6">
-          <p className="m-0 hidden text-[13px] text-[#5b6472] md:block">Svarene lagres ikke før du går videre</p>
-          <div className="flex flex-col gap-3 md:items-end">
-            {feil && (
-              <p role="alert" className="m-0 text-center font-ui text-[14px] text-[oklch(0.42_0.12_25)]">
-                {feil}
-              </p>
-            )}
-            <Button type="submit" size="lg" className="h-auto w-full p-[18px] font-ui disabled:opacity-40 md:w-auto md:min-w-[240px] md:px-8 md:py-[17px]" disabled={!kanGaVidere || sender}>
-              {sender ? "Vurderer saken …" : nesteTekst(steger, steg)}
-            </Button>
-          </div>
-        </div>
-      </form>
+              <section className="flex flex-col gap-4">
+                <h2 className="m-0 text-[18px] font-semibold">Feil</h2>
+                {s.del3_feil.map((f, i) => (
+                  <Feilskjema
+                    key={i}
+                    f={f}
+                    nr={i + 1}
+                    endre={endreFeil(i)}
+                    fjern={s.del3_feil.length > 1 ? () => setS((x) => ({ ...x, del3_feil: x.del3_feil.filter((_, j) => j !== i) })) : undefined}
+                  />
+                ))}
+                {s.del3_feil.length < MAKS_FEIL && (
+                  <button
+                    type="button"
+                    onClick={() => setS((x) => ({ ...x, del3_feil: [...x.del3_feil, nyFeil(`F${x.del3_feil.length + 1}`)] }))}
+                    className="self-start rounded border border-[#1f3a5f] px-4 py-2 text-[14px] font-medium text-[#1f3a5f]"
+                  >
+                    Legg til feil
+                  </button>
+                )}
+              </section>
+
+              <section className={KORT}>
+                <h2 className="m-0 text-[18px] font-semibold">Kontakt med selger</h2>
+                <Tall navn="Hva er kilometerstanden nå?" verdi={s.km_na} onChange={(v) => setS((x) => ({ ...x, km_na: v ?? 0 }))} paakrevd />
+                <Valg
+                  navn="Har du tatt dette opp med selger?"
+                  verdi={kontakt.tatt_opp_med_selger}
+                  valg={[
+                    ["nei", "Nei"],
+                    ["ja_muntlig", "Ja, muntlig"],
+                    ["ja_skriftlig", "Ja, skriftlig"],
+                  ]}
+                  onChange={(v) => k6({ tatt_opp_med_selger: v })}
+                />
+                {kontakt.tatt_opp_med_selger !== "nei" && (
+                  <div className="flex flex-col gap-4 border-l-2 border-[#dcd8cf] pl-4">
+                    <Dato navn="Når tok du det opp første gang?" verdi={kontakt.dato_forste_gang} onChange={(v) => k6({ dato_forste_gang: v || null })} paakrevd />
+                    <Valg navn="Hva svarte selger?" verdi={kontakt.selgers_svar} valg={SELGERS_SVAR} onChange={(v) => k6({ selgers_svar: v })} />
+                    {(kontakt.selgers_svar === "tilbudt_delvis" || kontakt.selgers_svar === "enige_om_noe") && (
+                      <>
+                        <Valg navn="Har dere inngått en avtale eller et forlik?" verdi={kontakt.avtale_inngatt} valg={JA_NEI} onChange={(v) => k6({ avtale_inngatt: v })} />
+                        {kontakt.avtale_inngatt === "ja" && (
+                          <>
+                            <Tekst navn="Avtalen går ut på at …" verdi={kontakt.avtale_beskrivelse} onChange={(v) => k6({ avtale_beskrivelse: v })} />
+                            <div role="group" aria-label="Hvilke av feilene gjelder avtalen?" className="flex flex-col gap-1.5">
+                              <span className={ETIKETT}>Hvilke av feilene gjelder avtalen?</span>
+                              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                                {s.del3_feil.map((_, i) => {
+                                  const id = `F${i + 1}`;
+                                  const valgt = kontakt.avtale_gjelder_feil.includes(id);
+                                  return (
+                                    <label key={id} className="flex items-center gap-2 text-[14px]">
+                                      <input
+                                        type="checkbox"
+                                        checked={valgt}
+                                        onChange={() => k6({ avtale_gjelder_feil: valgt ? kontakt.avtale_gjelder_feil.filter((x) => x !== id) : [...kontakt.avtale_gjelder_feil, id].sort() })}
+                                      />
+                                      {id}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                    {kontakt.selgers_svar === "avvist" && (
+                      <>
+                        <Valg
+                          navn="La selger frem dokumentasjon (rapport, verkstedhistorikk)?"
+                          verdi={kontakt.selger_la_frem_dokumentasjon}
+                          valg={JA_NEI}
+                          onChange={(v) => k6({ selger_la_frem_dokumentasjon: v })}
+                        />
+                        {kontakt.selger_la_frem_dokumentasjon === "ja" && (
+                          <Tekst navn="Hva slags?" verdi={kontakt.selger_dokumentasjon_kort} onChange={(v) => k6({ selger_dokumentasjon_kort: v })} />
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </section>
+
+              <section className={KORT}>
+                <h2 className="m-0 text-[18px] font-semibold">Ønske</h2>
+                <Valg
+                  navn="Hva ønsker du?"
+                  verdi={s.del7_onske_og_kontakt.onsket_losning}
+                  valg={[
+                    ["reparasjon", "Reparasjon"],
+                    ["prisavslag", "Prisavslag"],
+                    ["angre_kjopet", "Angre kjøpet"],
+                  ]}
+                  onChange={(v) => del("del7_onske_og_kontakt")({ onsket_losning: v })}
+                />
+                {s.del7_onske_og_kontakt.onsket_losning === "angre_kjopet" && (
+                  <p className={MERKNAD}>Å gå fra kjøpet krever at feilen er vesentlig. Brevet vil kreve det, men også ta forbehold om prisavslag.</p>
+                )}
+              </section>
+            </>
+          )}
+
+          {valideringsfeil.length > 0 && (
+            <div className="rounded border border-[#e8c9a0] bg-[#fbf3e8] px-4 py-3 text-[13px] text-[#7a4a12]">
+              <p className="m-0 font-medium">Skjemaet består ikke valideringen (motoren kjøres likevel):</p>
+              <ul className="m-0 mt-1 pl-4">
+                {valideringsfeil.map((v, i) => (
+                  <li key={i}>
+                    {v.felt}: {v.melding}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <button type="submit" disabled={venter} className="sticky bottom-4 rounded bg-[#1f3a5f] px-5 py-3 text-[16px] font-semibold text-white shadow-lg disabled:opacity-60">
+            {venter ? "Vurderer …" : "Kjør vurdering"}
+          </button>
+
+          <details>
+            <summary className="cursor-pointer text-[13px] font-medium text-[#1f3a5f]">Skjemaet som sendes, som JSON</summary>
+            <pre className="mt-2 max-h-[480px] overflow-auto rounded bg-[#17263d] p-3 font-mono text-[12px] text-[#e8e5de]">{JSON.stringify(sendes, null, 2)}</pre>
+          </details>
+        </form>
+
+        <section aria-live="polite" className="flex flex-col gap-4 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-auto lg:py-2">
+          <h2 className="m-0 font-brev text-[24px] font-semibold">Avsnitt per feil</h2>
+          {!svar && <p className="m-0 text-[14px] text-[#5b6472]">Fyll ut skjemaet og trykk «Kjør vurdering».</p>}
+          {svar && !svar.ok && <p className="m-0 rounded bg-[#f6dcd7] px-4 py-3 text-[14px] text-[#8a3b2e]">Feil fra motoren: {svar.feil}</p>}
+          {svar?.ok && <Resultatvisning r={svar.resultat} />}
+        </section>
+      </div>
     </div>
   );
 }

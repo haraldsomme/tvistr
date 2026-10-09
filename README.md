@@ -28,8 +28,6 @@ npm run personvern               # ny, uavhengig personvernkontroll av lagret te
 npm run revisjon                 # automatisk revisjon av uttrukne felt, tilfeldig utvalg (API, ikke menneskelig QA)
 ```
 
-Etter nye vedtak: `npm run henvisning-kandidater` og kurateringen i `docs/henvisninger.md` for listene som har fått nye kandidater (vedtak om kjøp fra 2024 foretrekkes), deretter `npm run sjekk-henvisninger`.
-
 Nyttige valg:
 
 - `hent -- --arkiv hist|prod|wp|alle --grense N` – begrens arkiv og antall nye nedlastinger. `--uten-liste` hopper over gjennomgang av listesider, `--bare-liste` registrerer saker uten å laste ned.
@@ -61,14 +59,6 @@ npm run db:restore -- backup/<fil>.json.gz --overskriv   # tømmer tabellene fø
 
 Maks én forespørsel annethvert sekund (hele prosessen), stadig lengre pauser ved feil/429/5xx, og stopp ved innlogging eller captcha. robots.txt følges, med ett dokumentert unntak: `innsyn.onacos.no` forbyr alt, men prosjekteier har valgt å hente derfra (se `src/lib/crawler/http.ts`). Kjør aldri to `hent` samtidig.
 
-## Brukernes saker
-
-Reklamasjonsbrevene brukerne jobber med ligger i tabellen `brevsak` og inneholder personopplysninger. Tabellen er ikke med i sikkerhetskopiene. Saker slettes 30 dager etter siste endring:
-
-```
-npm run rydd                     # slett utløpte saker (bør kjøres daglig)
-```
-
 ## Personvern
 
 - Rå PDF-er ligger bare i `data/raw/` (i `.gitignore`), aldri i git eller databasen.
@@ -86,6 +76,7 @@ npm run rydd                     # slett utløpte saker (bør kjøres daglig)
 | `src/lib/personvern/rens.ts` | Rensing av personopplysninger |
 | `src/lib/validering.ts` | Kontroller etter tolking (beløp, datoer, sitater) → `trenger_kontroll` |
 | `src/lib/normalisering.ts` | Merke, firmanavn, org.nr. og paragrafer på fast form |
-| `scripts/` | `hent`, `klassifiser`, `tolk`, `rapport`, `migrer`, `henvisning-kandidater`, `sjekk-henvisninger` |
+| `src/lib/brreg.ts`, `src/lib/kjoretoy/vegvesen.ts`, `src/app/api/{firma,kjoretoy}` | Oppslag mot Brreg og Statens vegvesen |
+| `scripts/` | `hent`, `klassifiser`, `tolk`, `rapport`, `revurder`, `personvernkontroll`, `revisjon`, `rett-paragrafer`, `migrer`, `backup`, `restore` |
 
-Tester: `npm test` (vurderingsmotor og brev). Typesjekk: `npm run typecheck`. Ende-til-ende: `npm run test:e2e` (én flyt, forsiden til ferdig brev). Se «Tester» i `CLAUDE.md`.
+Typesjekk: `npm run typecheck`.

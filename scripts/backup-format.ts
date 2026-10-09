@@ -1,8 +1,8 @@
-import { kildedokument, kildesak, vedtak } from "../src/db/schema";
+import { kildedokument, kildesak, vedtak, vedtakAnalyse, vedtakFeil } from "../src/db/schema";
 
 // Order matters for restore: referenced tables first. `brevsak` is left out on purpose: it holds
 // users' personal data, which must not end up in backup files.
-export const TABELLER = { kildedokument, kildesak, vedtak } as const;
+export const TABELLER = { kildedokument, kildesak, vedtak, vedtakAnalyse, vedtakFeil } as const;
 
 export type Sikkerhetskopi = {
   format: 1;

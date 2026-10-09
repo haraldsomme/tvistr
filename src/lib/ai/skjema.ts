@@ -197,7 +197,7 @@ export const TOLKNING_SKJEMA = objekt({
   prinsipalt_krav: enumNull(KRAVTYPER, "Klagerens hovedkrav (det prinsipale), ikke de subsidiære."),
   mangelsgrunnlag: enumListe(
     MANGELSGRUNNLAG,
-    "Grunnlaget klageren bygger mangelen på: avvik_fra_avtale (ikke som avtalt, fkjl § 15 / kjl § 17); feil_opplysninger (selger ga uriktige opplysninger, fkjl § 16 b / kjl § 18); tilbakeholdt_opplysning (selger unnlot å opplyse om noe kjent, fkjl § 16 a / kjl § 19 b); vesentlig_darligere_stand (solgt «som den er», men i vesentlig dårligere stand, fkjl § 16 c / kjl § 19 c); offentligrettslige_krav (EU-kontroll, registrering o.l.).",
+    "Grunnlaget klageren bygger mangelen på. Velg etter innholdet, ikke etter paragrafbokstaven alene; utvalget bruker bokstavene i § 17 og § 19 ulikt. avvik_fra_avtale (ikke som avtalt eller som kjøperen kunne forvente, fkjl § 15 / § 16 første ledd a, kjl § 17); feil_opplysninger (tingen svarer ikke til opplysninger selger ga, fkjl § 16 første ledd c, kjl § 18, ved «som den er» kjl § 19 første ledd a); tilbakeholdt_opplysning (selger unnlot å opplyse om noe selger kjente eller burde kjenne til, fkjl § 16 første ledd b, ved «som den er» kjl § 19 første ledd b); vesentlig_darligere_stand (solgt «som den er» eller med lignende forbehold, men i dårligere stand enn kjøperen hadde grunn til å forvente, fkjl § 17 slik den lød før 2024, kjl § 19 første ledd c); offentligrettslige_krav (EU-kontroll, registrering o.l.).",
   ),
   tvistetema: enumListe(
     TVISTETEMA,

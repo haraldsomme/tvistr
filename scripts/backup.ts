@@ -1,4 +1,4 @@
-// Exports kildesak, kildedokument and vedtak to backup/tvistr-<timestamp>.json.gz and verifies
+// Exports kildesak, kildedokument, vedtak and the pass 2 tables to backup/tvistr-<timestamp>.json.gz and verifies
 // the file against the database. The data is redacted, but keep the file private anyway.
 //
 //   npm run db:backup
@@ -6,21 +6,28 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { gunzipSync, gzipSync } from "node:zlib";
-import { asc, gt, sql } from "drizzle-orm";
+import { asc, sql } from "drizzle-orm";
+import { getTableConfig } from "drizzle-orm/pg-core";
 import { db } from "../src/db";
 import { TABELLER, type Sikkerhetskopi } from "./backup-format";
 
 const BIT = 500;
 
+// Pages in primary-key order; the pass 2 tables are keyed on vedtak_id (and feil_id), not id.
+function nokkelkolonner(tabell: (typeof TABELLER)[keyof typeof TABELLER]) {
+  const config = getTableConfig(tabell);
+  const enkle = config.columns.filter((k) => k.primary);
+  return enkle.length ? enkle : config.primaryKeys[0].columns;
+}
+
 async function hentAlle(navn: keyof typeof TABELLER) {
   const tabell = TABELLER[navn];
+  const orden = nokkelkolonner(tabell).map((k) => asc(k));
   const rader: Record<string, unknown>[] = [];
-  let sisteId = 0;
-  for (;;) {
-    const bit = await db.select().from(tabell).where(gt(tabell.id, sisteId)).orderBy(asc(tabell.id)).limit(BIT);
+  for (let fra = 0; ; fra += BIT) {
+    const bit = await db.select().from(tabell).orderBy(...orden).limit(BIT).offset(fra);
     if (!bit.length) break;
     rader.push(...bit);
-    sisteId = bit[bit.length - 1].id;
   }
   return rader;
 }

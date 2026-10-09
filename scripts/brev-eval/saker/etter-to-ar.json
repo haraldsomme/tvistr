@@ -3,7 +3,8 @@
   "tittel": "Elektrisk feil over tre år etter kjøp, rapport som tidfester feilen",
   "feller": [
     "Formodningsregelen gjelder ikke; rapporten bærer bevisbyrden",
-    "Femårsfristen må begrunnes"
+    "Femårsfristen må begrunnes",
+    "Kjørt 31 000 km før feilen: ugunstig svar som ikke skal pyntes på"
   ],
   "idag": "2026-10-06",
   "svar": {
@@ -29,7 +30,8 @@
       "regnr": "XX 10003",
       "merke": "Testmerke",
       "modell": "Kombi",
-      "ar": 2012
+      "ar": 2012,
+      "bruktimportert": false
     },
     "forhandler": {
       "type": "brreg",
@@ -46,26 +48,58 @@
     "feilen": {
       "dato": "2026-08-20",
       "egen": "Ryggekameraet og skjermen slår seg av under kjøring.",
-      "feil": [
-        "Det elektriske"
-      ],
+      "feil": [],
       "avsnitt": [
         "Ryggekameraet og skjermen slår seg av under kjøring."
       ]
     },
+    "kmVedFeil": 191000,
+    "feilopplyst": "nei",
+    "retting": "ingen",
+    "verksted": {
+      "undersokt": "ja",
+      "funn": "Korrosjon i kontakten bak høyre baklykt. Kontakten og kabelsettet må byttes."
+    },
     "rapport": {
       "fra": "Testverksted AS",
-      "dato": "2026-08-28",
-      "sitat": "Korrosjon i kontakten"
-    }
+      "dato": "2026-08-28"
+    },
+    "momenter": {
+      "bruksstans_sikkerhet": {
+        "svar": "Bilen kan brukes, men feilen er til hinder"
+      },
+      "skjult_feil": {
+        "svar": "Den hadde ikke vist seg ennå"
+      },
+      "tidlige_tegn": {
+        "svar": "Nei, det ble ikke skrevet ned"
+      },
+      "tidligere_skade_ikke_opplyst": {
+        "svar": "Nei"
+      },
+      "dokument_for_salg": {
+        "svar": "Nei, jeg har ikke sett noen slike"
+      },
+      "rapport_arsak": {
+        "svar": "Den angir en konkret årsak etter å ha undersøkt bilen"
+      },
+      "rapport_upaaregnelig": {
+        "svar": "Nei, den sier ikke noe om det"
+      }
+    },
+    "vedlegg": [
+      "kjopekontrakt",
+      "verkstedrapport"
+    ]
   },
   "kilder": {
     "rapport": "Korrosjon i kontakt bak høyre lykt. Skaden har utviklet seg over flere år og var trolig til stede ved salget i 2023."
   },
   "forventet": {
     "argumenter": [
-      "tidspunkt",
+      "leveringstidspunkt",
       "rapport_bevis",
+      "momenter",
       "femarsfrist",
       "reklamasjon",
       "krav_retting"
@@ -74,7 +108,8 @@
       "formodning"
     ],
     "ikkeTekst": [
-      "§ 18 andre ledd"
+      "antas derfor å ha eksistert",
+      "med mindre dere beviser"
     ]
   }
 }

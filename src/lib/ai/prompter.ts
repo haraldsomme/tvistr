@@ -78,7 +78,7 @@ Hint per type feil:
 - Girkasse og clutch: hvilke gir, rykk, sluring eller lyd.
 - Bremser: lyd, trekking, varsellampe, merknad ved EU-kontroll.`;
 
-export const BREVSKRIV_VERSJON = "brevskriv-v13";
+export const BREVSKRIV_VERSJON = "brevskriv-v14";
 
 // Two finished letters from the golden cases, edited after review. They show form, tone and order; the
 // author is told never to take facts from them.
@@ -95,11 +95,11 @@ Jeg tok opp feilen med dere på telefon 1. juli 2026. Dere avviste samme dag å 
 
 Rettslig grunnlag
 
-Feilen viste seg innen to år etter levering og antas derfor å ha eksistert ved leveringen, med mindre dere beviser noe annet, jf. forbrukerkjøpsloven § 18 andre ledd.
+Bilen hadde gått 180 000 km da jeg kjøpte den. Feilen går ut over det som kan ventes ut fra bilens alder, kilometerstand og pris, og er ikke normal slitasje, jf. forbrukerkjøpsloven § 15.
 
-Bilen hadde gått 180 000 km da jeg kjøpte den. Feilen går ut over det som kan ventes ut fra bilens alder, kilometerstand og pris, og er ikke normal slitasje, jf. § 15. Bilen har etter dette en mangel etter § 16, jf. § 15.
+Feilen viste seg innen to år etter levering og antas derfor å ha eksistert ved leveringen, med mindre dere beviser noe annet, jf. § 18 andre ledd. Bilen har etter dette en mangel etter § 16, jf. § 15.
 
-I vedtak {{henvisning}} tok Forbrukerklageutvalget stilling til det samme spørsmålet som denne saken gjelder, i et kjøp der en forbruker kjøpte bil av en næringsdrivende forhandler: om bilen var i dårligere stand enn kjøperen hadde grunn til å forvente ut fra alder, kilometerstand og pris, eller om feilen var normal slitasje. Bilen var 12 år gammel og hadde gått 210 000 km da den ble kjøpt. Forhandleren hadde ikke opplyst om feilen. Klimaanlegget sluttet å gi kald luft fem uker etter kjøpet. Utvalget la vekt på at feilen viste seg kort tid etter leveringen, og at en slik feil ikke er normal slitasje på en bil med den alderen og kilometerstanden. Kjøperen fikk prisavslag.
+I vedtak {{henvisning}} tok Forbrukerklageutvalget stilling til det samme spørsmålet som denne saken gjelder: om bilen var i dårligere stand enn kjøperen hadde grunn til å forvente ut fra alder, kilometerstand og pris, eller om feilen var normal slitasje. Saken gjaldt en forbruker som kjøpte bil av en næringsdrivende forhandler. Bilen var 12 år gammel og hadde gått 210 000 km da den ble kjøpt. Forhandleren hadde ikke opplyst om feilen. Klimaanlegget sluttet å gi kald luft fem uker etter kjøpet. Utvalget la vekt på at feilen viste seg kort tid etter leveringen, og at en slik feil ikke er normal slitasje på en bil med den alderen og kilometerstanden. Kjøperen fikk prisavslag.
 
 De samme momentene trekker minst like sterkt i min sak. Feilen viste seg 15 dager etter kjøpet: tidligere enn i vedtaket, på en nyere bil med kortere kjørelengde. Feilen var heller ikke opplyst før kjøpet.
 
@@ -111,7 +111,7 @@ Da dere har avvist å rette mangelen, krever jeg prisavslag på 12 000 kr, som t
 
 Svarfrist og videre saksgang
 
-Jeg ber om skriftlig svar innen 14 dager fra dette brevets dato, det vil si innen {{dato:svarfrist}}. Får jeg ikke svar innen fristen, eller avviser dere kravet, vil jeg bringe saken inn for Forbrukertilsynet for mekling og eventuelt behandling i Forbrukerklageutvalget.
+Jeg ber om skriftlig svar innen 14 dager fra dette brevets dato, det vil si innen {{dato:svarfrist}}. Dersom svar ikke foreligger innen fristen, eller kravet avvises, vil jeg bringe saken inn for Forbrukertilsynet for mekling og eventuelt behandling i Forbrukerklageutvalget.
 
 Vedlegg
 
@@ -123,15 +123,17 @@ Jeg viser til at jeg kjøpte en Testmerke Kombi, første gang registrert i 2017,
 
 Faktum
 
-Bilen har en lekkasje: ved kraftig regn renner det vann inn fra soltaket. Feilen viste seg første gang 20. november 2025, mer enn to år etter at bilen ble levert. Jeg kjente ikke til feilen da jeg kjøpte bilen, og dere opplyste ikke om den.
+Bilen har en lekkasje: ved kraftig regn renner det vann inn fra soltaket. Feilen viste seg første gang 20. november 2025. Jeg kjente ikke til feilen da jeg kjøpte bilen, og dere opplyste ikke om den.
 
 Jeg tok opp feilen med dere i brev 1. desember 2025. Feilen er ikke rettet.
 
 Rettslig grunnlag
 
-Bilen hadde gått 130 000 km da jeg kjøpte den. Feilen går ut over det som kan ventes ut fra bilens alder, kilometerstand og pris, og er ikke normal slitasje, jf. forbrukerkjøpsloven § 15. Bilen har etter dette en mangel etter § 16, jf. § 15.
+Bilen hadde gått 130 000 km da jeg kjøpte den. Feilen går ut over det som kan ventes ut fra bilens alder, kilometerstand og pris, og er ikke normal slitasje, jf. forbrukerkjøpsloven § 15.
 
-I vedtak {{henvisning}} tok Forbrukerklageutvalget stilling til det samme spørsmålet som denne saken gjelder, i et kjøp der en forbruker kjøpte bil av en næringsdrivende forhandler: om en feil som viser seg lenge etter kjøpet, likevel skyldes forhold som var der ved leveringen, slik at bilen ikke svarer til det kjøperen hadde grunn til å forvente. Bilen var 4 år gammel og hadde gått 90 000 km da den ble kjøpt. Forhandleren hadde ikke opplyst om feilen. Rust i dørene viste seg drøye to år etter kjøpet. Utvalget la vekt på at en takstmann hadde funnet at rusten skyldtes en mangelfull reparasjon utført før salget. Kjøperen fikk prisavslag satt lik utbedringskostnadene.
+Om bilen har en mangel, avgjøres ut fra tilstanden da den ble levert, også når mangelen først viser seg senere, jf. § 18 første ledd. Formodningsregelen i § 18 andre ledd gjelder ikke, fordi feilen viste seg mer enn to år etter levering. Det må derfor sannsynliggjøres at feilen forelå ved leveringen. Bilen har etter dette en mangel etter § 16, jf. § 15.
+
+I vedtak {{henvisning}} tok Forbrukerklageutvalget stilling til det samme spørsmålet som denne saken gjelder: om en feil som viser seg lenge etter kjøpet, likevel skyldes forhold som var der ved leveringen, slik at bilen ikke svarer til det kjøperen hadde grunn til å forvente. Saken gjaldt en forbruker som kjøpte bil av en næringsdrivende forhandler. Bilen var 4 år gammel og hadde gått 90 000 km da den ble kjøpt. Forhandleren hadde ikke opplyst om feilen. Rust i dørene viste seg drøye to år etter kjøpet. Utvalget la vekt på at en takstmann hadde funnet at rusten skyldtes en mangelfull reparasjon utført før salget. Kjøperen fikk prisavslag satt lik utbedringskostnadene.
 
 Min bil var 4 år gammel da jeg kjøpte den, og feilen var heller ikke opplyst før kjøpet. Min bil hadde gått lenger enn bilen i vedtaket, og feilen viste seg senere etter kjøpet. Vedtaket gjaldt rust og ikke en lekkasje, men spørsmålet er det samme: om feilen var der ved leveringen.
 
@@ -139,11 +141,11 @@ Bilen er ment å vare vesentlig lenger enn to år, og fristen for å reklamere e
 
 Krav
 
-Jeg krever at dere retter mangelen innen rimelig tid, uten kostnad og uten vesentlig ulempe for meg, jf. § 29 og § 30. Skjer retting ikke innen rimelig tid, tar jeg forbehold om å kreve prisavslag eller heving av kjøpet etter § 31 og § 32, og erstatning for mitt økonomiske tap etter § 33.
+Jeg krever at dere retter mangelen innen rimelig tid, uten kostnad og uten vesentlig ulempe for meg, jf. §§ 29 og 30. Skjer retting ikke innen rimelig tid, tar jeg forbehold om å kreve prisavslag eller heving av kjøpet etter §§ 31 og 32, og erstatning for mitt økonomiske tap etter § 33.
 
 Svarfrist og videre saksgang
 
-Jeg ber om skriftlig svar innen 14 dager fra dette brevets dato, det vil si innen {{dato:svarfrist}}. Får jeg ikke svar innen fristen, eller avviser dere kravet, vil jeg bringe saken inn for Forbrukertilsynet for mekling og eventuelt behandling i Forbrukerklageutvalget.
+Jeg ber om skriftlig svar innen 14 dager fra dette brevets dato, det vil si innen {{dato:svarfrist}}. Dersom svar ikke foreligger innen fristen, eller kravet avvises, vil jeg bringe saken inn for Forbrukertilsynet for mekling og eventuelt behandling i Forbrukerklageutvalget.
 
 Vedlegg
 
@@ -188,8 +190,8 @@ Form:
 Avsnittet om vedtaket:
 - Avsnittet om vedtaket følger føringen: rettsspørsmålet og partene, vedtakets fakta, det utvalget la vekt på og utfallet, kjøperens sak der den står minst like sterkt, og kort det som skiller. Sammenligningen der («trekker minst like sterkt», «på en nyere bil med kortere kjørelengde») er ikke gradsord eller egen vurdering; den står fordi føringen har den. Skriv ikke at momentene trekker like sterkt når føringen ikke sier det.
 - Setningen «De samme momentene trekker minst like sterkt i min sak.» står bare når føringen har den, ordrett. Uten den i føringen skriver du verken den eller noe som betyr det samme; da står kjøperens fakta som konstatering.
-- Føringen har korte instrukser og stikkord til deg: «Vis kort til det i saken som svarer til: …», «Min sak: …», «Sammenlignet med vedtaket: …», «Kort, uten motargument: …» og «Skriv ikke at momentene trekker like sterkt.». De sier hva du skal skrive, og står aldri selv i brevet.
-- «Vis kort til …»: vis til det i saken som svarer til momentene, med sitat fra <kilder> når det finnes. Står det eller kjøperens tall alt tidligere i brevet, holder en kort henvisning, og sammenligningen står uten tallene på nytt.
+- Føringen har korte instrukser og stikkord til deg: «Gjenta i én setning det konkrete i saken som svarer til: …», «Min sak: …», «Sammenlignet med vedtaket: …», «Kort, uten motargument: …» og «Skriv ikke at momentene trekker like sterkt.». De sier hva du skal skrive, og står aldri selv i brevet.
+- «Gjenta i én setning …»: si det konkrete i saken som svarer til momentene (for eksempel hva verkstedet fant), med sitat fra <kilder> når det finnes. Vis aldri bare til at det står tidligere («gjengitt ovenfor», «som nevnt»); en setning som ikke sier noe selv, står ikke. Kjøperens tall som alt står i brevet, gjentas ikke i sammenligningen.
 - Forskjellene etter «Kort, uten motargument:» står i brevet, kort og som konstatering, uten forklaring eller motargument. Andre svakheter nevnes fortsatt ikke.
 - Ingen bilmerker, modeller eller navn fra vedtaket, og utfallet står uten beløp.
 

@@ -164,7 +164,7 @@ export function KontaktFelt({
           <Valgfelt label="Hvorfor ble feilen ikke rettet av forhandleren?" verdi={grunn} velg={setGrunn} valg={valgAv(grunner, GRUNN_TEKST)} />
           {grunn === "ingen" && (
             <p className={HJELP}>
-              Forhandleren har rett til å forsøke å rette feilen først (§ 29 og § 30). Fikk forhandleren ikke sjansen, kan de kreve at beløpet settes ned til det de selv ville brukt, eller avvise kravet. Brevet sier det som det er.
+              Forhandleren har rett til å forsøke å rette feilen først (§§ 29 og 30). Fikk forhandleren ikke sjansen, kan de kreve at beløpet settes ned til det de selv ville brukt, eller avvise kravet. Brevet sier det som det er.
             </p>
           )}
         </>

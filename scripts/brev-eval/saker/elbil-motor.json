@@ -2,7 +2,8 @@
   "id": "elbil-motor",
   "tittel": "Elbil med feil i drivlinjen; kjøperen valgte «motor»",
   "feller": [
-    "Brevet skal ikke finne på symptomer fra forbrenningsmotor"
+    "Brevet skal ikke finne på symptomer fra forbrenningsmotor",
+    "Et ugunstig momentsvar (feilen er til hinder, ikke farlig) skal ikke bli til «utrygg»"
   ],
   "idag": "2026-10-06",
   "svar": {
@@ -29,7 +30,8 @@
       "regnr": "XX 10005",
       "merke": "Testmerke",
       "modell": "Kombi",
-      "ar": 2021
+      "ar": 2021,
+      "bruktimportert": false
     },
     "forhandler": {
       "type": "brreg",
@@ -46,22 +48,45 @@
     "feilen": {
       "dato": "2026-04-28",
       "egen": "Bilen er en elbil. Den mister effekt i motbakker og viser feilmelding om drivsystemet. Rekkevidden har falt fra 380 til 240 km på en lading.",
-      "feil": [
-        "Drivsystemet"
-      ],
+      "feil": [],
       "avsnitt": [
         "Bilen er en elbil. Den mister effekt i motbakker og viser feilmelding om drivsystemet. Rekkevidden har falt fra 380 til 240 km på en lading."
       ]
     },
+    "verksted": {
+      "undersokt": "nei"
+    },
+    "feilopplyst": "nei",
     "retting": "venter",
     "reklamasjon": {
       "dato": "2026-05-03",
       "mate": "telefon"
-    }
+    },
+    "momenter": {
+      "bruksstans_sikkerhet": {
+        "svar": "Bilen kan brukes, men feilen er til hinder"
+      },
+      "skjult_feil": {
+        "svar": "Den hadde ikke vist seg ennå"
+      },
+      "tidligere_skade_ikke_opplyst": {
+        "svar": "Nei"
+      },
+      "dokument_for_salg": {
+        "svar": "Nei, jeg har ikke sett noen slike"
+      },
+      "forhandler_erkjente": {
+        "svar": "Nei"
+      }
+    },
+    "vedlegg": [
+      "kjopekontrakt"
+    ]
   },
   "forventet": {
     "argumenter": [
       "formodning",
+      "momenter",
       "historikk",
       "reklamasjon",
       "krav_retting"
@@ -72,7 +97,8 @@
       "turbo",
       "registerreim",
       "kamreim",
-      "motorlampe"
+      "motorlampe",
+      "utrygg"
     ]
   }
 }

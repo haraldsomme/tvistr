@@ -4,7 +4,8 @@
   "feller": [
     "Datoen den første feilen viste seg står én gang",
     "Ryggekameraet er ikke tatt opp med forhandleren: brevet er reklamasjonen for den feilen (avklaringsrunden)",
-    "Gunstig svar på momentet km_etter_kjop skal bli et argument"
+    "Datoen for den andre feilen kommer fra avklaringsrunden som ÅÅÅÅ-MM-DD og skal skrives som norsk dato",
+    "Gunstig svar på skjult_feil skal bli et faktum, ikke argumentasjon"
   ],
   "idag": "2026-10-06",
   "svar": {
@@ -31,7 +32,8 @@
       "regnr": "XX 10012",
       "merke": "Testmerke",
       "modell": "Kombi",
-      "ar": 2018
+      "ar": 2018,
+      "bruktimportert": false
     },
     "forhandler": {
       "type": "brreg",
@@ -48,27 +50,41 @@
     "feilen": {
       "dato": "2026-03-28",
       "egen": "Motoren hakker på tomgang. I tillegg virker ikke ryggekameraet.",
-      "feil": [
-        "Motoren",
-        "Ryggekameraet"
-      ],
+      "feil": [],
       "avsnitt": [
         "Motoren hakker på tomgang. I tillegg virker ikke ryggekameraet."
-      ],
-      "fakta": [
-        {
-          "feil": "Ryggekameraet",
-          "sporsmal": "Når viste det seg?",
-          "svar": "Rundt 15. april"
-        }
       ]
     },
+    "verksted": {
+      "undersokt": "nei"
+    },
+    "feilopplyst": "nei",
     "retting": "venter",
     "reklamasjon": {
       "dato": "2026-04-05",
       "mate": "epost"
     },
-    "kmVedFeil": 99600
+    "momenter": {
+      "bruksstans_sikkerhet": {
+        "svar": "Bilen kan brukes, men feilen er til hinder"
+      },
+      "skjult_feil": {
+        "svar": "Den hadde ikke vist seg ennå"
+      },
+      "tidligere_skade_ikke_opplyst": {
+        "svar": "Nei"
+      },
+      "dokument_for_salg": {
+        "svar": "Nei, jeg har ikke sett noen slike"
+      },
+      "forhandler_erkjente": {
+        "svar": "Nei"
+      }
+    },
+    "vedlegg": [
+      "kjopekontrakt",
+      "meldinger"
+    ]
   },
   "forventet": {
     "argumenter": [
@@ -78,7 +94,8 @@
       "momenter"
     ],
     "ikkeTekst": [
-      "viste seg første gang[\\s\\S]*viste seg første gang"
+      "viste seg første gang[\\s\\S]*viste seg første gang",
+      "2026-04-15"
     ],
     "tekst": [
       "[Rr]yggekamera"
@@ -87,8 +104,14 @@
   "avklaringer": [
     {
       "runde": 1,
+      "tema": "feilen",
+      "sporsmal": "Når viste feilen på ryggekameraet seg første gang?",
+      "svar": "2026-04-15"
+    },
+    {
+      "runde": 1,
       "tema": "kontakt",
-      "sporsmal": "Har du tatt opp ryggekameraet med forhandleren, og når?",
+      "sporsmal": "Har du tatt opp ryggekameraet med forhandleren?",
       "svar": "Nei, ikke ennå"
     }
   ]

@@ -15,6 +15,20 @@ import { vistSporsmal } from "@/lib/brev/momenter";
 
 const jaNei = (v: string): v is "ja" | "nei" => v === "ja" || v === "nei";
 
+// One question for both whether a workshop has examined the defect (`verksted.undersokt`) and whether
+// there is a written report (`svar.verkstedrapport`): a report means it was examined.
+const UNDERSOKELSE = ["nei", "muntlig", "skriftlig"] as const;
+type Undersokelse = (typeof UNDERSOKELSE)[number];
+const UNDERSOKELSE_TEKST: Record<Undersokelse, string> = {
+  nei: "Nei",
+  muntlig: "Ja, men jeg har ikke noe skriftlig",
+  skriftlig: "Ja, og jeg har en skriftlig rapport",
+};
+
+// The answer from what is saved. An older case with only «no report» from the assessment is left unanswered.
+const undersokelseAv = (svar: Innsending, verksted: Verksted | undefined): Undersokelse | "" =>
+  svar.verkstedrapport === "ja" ? "skriftlig" : verksted?.undersokt === "ja" ? "muntlig" : verksted?.undersokt === "nei" ? "nei" : "";
+
 // Both report answers are given (asked in this step; an older case has them from the assessment).
 export const rapportBesvart = (svar: Innsending) => jaNei(svar.verkstedrapport) && (svar.verkstedrapport !== "ja" || jaNei(svar.rapportSierForKjop));
 
@@ -35,10 +49,9 @@ export function RapportFelt({
   lagre,
   avbryt,
 }: Felles & { svar: Innsending; verdi: Rapport | undefined; kilder: Kilder | undefined; verksted: Verksted | undefined; idag: string; momenter: Momenter }) {
-  const [undersokt, setUndersokt] = useState<"ja" | "nei" | "">(verksted?.undersokt ?? "");
+  const [undersokelse, setUndersokelse] = useState(undersokelseAv(svar, verksted));
   const [funn, setFunn] = useState(verksted?.funn ?? "");
   const m = useMomenter(momenter);
-  const [rapport, setRapport] = useState(svar.verkstedrapport);
   const [rapportSier, setRapportSier] = useState(svar.rapportSierForKjop);
   const [fra, setFra] = useState(verdi?.fra ?? "");
   const [dato, setDato] = useState(verdi?.dato ?? "");
@@ -46,7 +59,7 @@ export function RapportFelt({
 
   if (!aktiv) {
     if (!rapportBesvart(svar)) return null;
-    if (svar.verkstedrapport !== "ja") return <Sammendrag linjer={["Ingen verksted- eller tilstandsrapport"]} />;
+    if (svar.verkstedrapport !== "ja") return <Sammendrag linjer={[verksted?.undersokt === "ja" ? "Et verksted har undersøkt feilen, men det er ikke noe skriftlig" : "Ingen verksted- eller tilstandsrapport"]} />;
     if (svar.rapportSierForKjop !== "ja") return <Sammendrag linjer={["Rapporten sier ikke om feilen var der før kjøpet"]} />;
     return (
       <Sammendrag
@@ -59,15 +72,17 @@ export function RapportFelt({
     );
   }
 
+  const rapport = undersokelse === "" ? "" : undersokelse === "skriftlig" ? "ja" : "nei";
+  const undersokt = undersokelse !== "" && undersokelse !== "nei";
   const pekerBakover = rapport === "ja" && rapportSier === "ja";
   const tom = fra.trim() === "" && dato === "";
   const fylt = fra.trim().length >= 2 && dato !== "";
-  const klar = jaNei(rapport) && (rapport !== "ja" || jaNei(rapportSier)) && (!pekerBakover || tom || fylt);
+  const klar = undersokelse !== "" && (rapport !== "ja" || jaNei(rapportSier)) && (!pekerBakover || tom || fylt);
   const vanlig = m.gjelder("rapport_upaaregnelig") && vistSporsmal("rapport_upaaregnelig", { rapport });
   const arsak = m.gjelder("rapport_arsak") && vistSporsmal("rapport_arsak", { rapport });
   const send = () =>
     lagre({
-      verksted: undersokt === "" ? null : { undersokt, ...(undersokt === "ja" && funn.trim().length >= 2 && { funn: funn.trim() }) },
+      verksted: undersokelse === "" ? null : undersokt ? { undersokt: "ja", ...(funn.trim().length >= 2 && { funn: funn.trim() }) } : { undersokt: "nei" },
       momenter: m.lagring("rapport", [...(vanlig ? ["rapport_upaaregnelig"] : []), ...(arsak ? ["rapport_arsak"] : [])]),
       svar: { ...svar, verkstedrapport: rapport, rapportSierForKjop: rapport === "ja" ? rapportSier : "" },
       rapport: pekerBakover && fylt ? { fra, dato, ...(verdi?.sitat && { sitat: verdi.sitat }) } : null,
@@ -76,8 +91,8 @@ export function RapportFelt({
 
   return (
     <Skjema klar={klar} send={send} avbryt={avbryt}>
-      <Valgfelt label="Har et verksted undersøkt feilen?" verdi={undersokt} velg={setUndersokt} valg={valgAv(JA_NEI, JA_NEI_TEKST)} />
-      {undersokt === "ja" && (
+      <Valgfelt label="Har et verksted undersøkt feilen?" verdi={undersokelse} velg={setUndersokelse} valg={valgAv(UNDERSOKELSE, UNDERSOKELSE_TEKST)} />
+      {undersokt && (
         <Field className="gap-1.5">
           <FieldLabel htmlFor="verksted-funn">Hva fant verkstedet? (valgfritt)</FieldLabel>
           <Textarea id="verksted-funn" aria-describedby="verksted-funn-hjelp" value={funn} onChange={(e) => setFunn(e.target.value.slice(0, VERKSTED_FUNN_MAKS))} className="min-h-[76px]" />
@@ -86,7 +101,6 @@ export function RapportFelt({
           </FieldDescription>
         </Field>
       )}
-      <Valgfelt label="Har du en verksted- eller tilstandsrapport?" verdi={rapport} velg={setRapport} valg={valgAv(JA_NEI, JA_NEI_TEKST)} />
       {rapport === "nei" && <p className={HJELP}>{VERKSTED_RAD}</p>}
       {rapport === "ja" && <Valgfelt label="Sier rapporten at feilen sannsynligvis var til stede før kjøpet?" verdi={rapportSier} velg={setRapportSier} valg={valgAv(JA_NEI, JA_NEI_TEKST)} />}
       {pekerBakover && (

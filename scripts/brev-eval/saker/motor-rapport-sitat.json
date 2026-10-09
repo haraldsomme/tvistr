@@ -2,9 +2,10 @@
   "id": "motor-rapport-sitat",
   "tittel": "Motor tre uker etter kjøp, rapport limt inn, prisavslag etter avslag",
   "feller": [
-    "Rapportens tekst skal siteres ordrett, ikke kjøperens gjengivelse",
+    "Rapportens tekst skal siteres ordrett, ikke kjøperens gjengivelse i «Hva fant verkstedet?»",
     "Kundens navn og regnr. i rapporten skal aldri nå modellen eller brevet",
-    "Kontonummeret én gang"
+    "Kontonummeret én gang",
+    "Forhandlerens påstand om slitasje uten undersøkelse står som faktum, ikke som argument"
   ],
   "idag": "2026-10-06",
   "svar": {
@@ -30,7 +31,8 @@
       "regnr": "XX 10002",
       "merke": "Testmerke",
       "modell": "Sedan",
-      "ar": 2016
+      "ar": 2016,
+      "bruktimportert": false
     },
     "forhandler": {
       "type": "brreg",
@@ -39,14 +41,17 @@
     },
     "feilen": {
       "dato": "2026-03-05",
-      "egen": "Motoren mister trekkraft og motorlampen lyser. Verkstedet fant at registerreimen har hoppet over tenner.",
-      "feil": [
-        "Motoren"
-      ],
+      "egen": "Motoren mister trekkraft, og motorlampen lyser. Bilen står nå på verksted og kan ikke kjøres.",
+      "feil": [],
       "avsnitt": [
-        "Motoren mister trekkraft, og motorlampen lyser. Verkstedet fant at registerreimen har hoppet over tenner."
+        "Motoren mister trekkraft, og motorlampen lyser. Bilen står nå på verksted og kan ikke kjøres."
       ]
     },
+    "verksted": {
+      "undersokt": "ja",
+      "funn": "Registerreimen har hoppet over to tenner og er sterkt slitt."
+    },
+    "feilopplyst": "nei",
     "forbehold": "ingen",
     "retting": "avvist",
     "reklamasjon": {
@@ -56,8 +61,33 @@
     },
     "rapport": {
       "fra": "Testverksted AS",
-      "dato": "2026-03-15",
-      "sitat": "Verkstedet sier at reimen var slitt og at det må ha vært sånn lenge"
+      "dato": "2026-03-15"
+    },
+    "momenter": {
+      "bruksstans_sikkerhet": {
+        "svar": "Bilen kan ikke brukes"
+      },
+      "skjult_feil": {
+        "svar": "Den hadde ikke vist seg ennå"
+      },
+      "tidligere_skade_ikke_opplyst": {
+        "svar": "Nei"
+      },
+      "dokument_for_salg": {
+        "svar": "Nei, jeg har ikke sett noen slike"
+      },
+      "forhandler_erkjente": {
+        "svar": "Nei"
+      },
+      "forhandler_annen_arsak": {
+        "svar": "Ja, at det er min bruk, slitasje eller ytre skade, uten å vise til noen undersøkelse"
+      },
+      "rapport_arsak": {
+        "svar": "Den angir en konkret årsak etter å ha undersøkt bilen"
+      },
+      "rapport_upaaregnelig": {
+        "svar": "Ja, at delen normalt skal vare mye lenger"
+      }
     },
     "krav": {
       "type": "prisavslag",
@@ -75,7 +105,13 @@
       "postnummer": "0184",
       "poststed": "Oslo",
       "kontonummer": "12345678903"
-    }
+    },
+    "vedlegg": [
+      "kjopekontrakt",
+      "verkstedrapport",
+      "tilbud",
+      "meldinger"
+    ]
   },
   "kilder": {
     "rapport": "Arbeidsordre 4471. Kunde: Test Testesen, XX 10002. Registerreimen er sterkt slitt og har hoppet over to tenner. Slitasjen har utviklet seg over lang tid og var etter vår vurdering til stede da bilen ble levert til kunden 14.02.2026. Anbefaler bytte av reim, strammer og vannpumpe."
@@ -84,6 +120,7 @@
     "argumenter": [
       "formodning",
       "rapport_bevis",
+      "momenter",
       "historikk",
       "krav_prisavslag",
       "rente",

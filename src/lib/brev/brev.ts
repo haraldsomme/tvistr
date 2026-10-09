@@ -62,7 +62,7 @@ function forbeholdAvsnitt(forbehold: Forbehold, presumsjonManeder: 6 | 24, visst
     return presumsjonManeder === 6
       ? "Selv om bilen ble solgt «som den er», har den en mangel når den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente ut fra forbeholdet, kjøpesummen og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a slik den lød da vi inngikk avtalen."
       : `Et alminnelig forbehold om at bilen selges «som den er», har ingen virkning overfor meg som forbruker, jf. § 15 andre ledd og § 3.${visste ? "" : " Jeg godtok ikke feilen uttrykkelig og særskilt ved kjøpet."}`;
-  if (forbehold === "garanti") return "Kjøpet ble gjort med garanti fra dere. Garantien kommer i tillegg til rettighetene mine etter forbrukerkjøpsloven og innskrenker dem ikke, jf. § 18 a, jf. § 3.";
+  if (forbehold === "garanti") return "Ved kjøpet ga dere garanti. Garantien kommer i tillegg til mine rettigheter etter forbrukerkjøpsloven og innskrenker dem ikke, jf. § 18 a, jf. § 3.";
   return null;
 }
 
@@ -147,8 +147,8 @@ export const JURIDISK = {
     const sporsmal = SPORSMAL_TEKST[v.sporsmal.join("+")];
     const del1 =
       v.sammeSporsmal && sporsmal
-        ? `I vedtak ${kilde} tok ${h.organ} stilling til det samme spørsmålet som denne saken gjelder, i et kjøp der en forbruker kjøpte bil av en næringsdrivende forhandler: ${sporsmal}.`
-        : `I vedtak ${kilde} tok ${h.organ} stilling til om en bil som en forbruker hadde kjøpt av en næringsdrivende forhandler, hadde en mangel.`;
+        ? `I vedtak ${kilde} tok ${h.organ} stilling til det samme spørsmålet som denne saken gjelder: ${sporsmal}. Saken gjaldt en forbruker som kjøpte bil av en næringsdrivende forhandler.`
+        : `I vedtak ${kilde} tok ${h.organ} stilling til om en bil hadde en mangel. Saken gjaldt en forbruker som kjøpte bil av en næringsdrivende forhandler.`;
     const km = (n: number) => kroner(n).replace(/ kr$/, "");
     const pris = [...v.sterkere, ...v.svakere].includes("pris") ? `, for ${kroner(h.pris)}` : "";
     const del2 = `Bilen var ${h.alder} år gammel${h.km !== null ? ` og hadde gått ${km(h.km)} km` : ""} da den ble kjøpt${pris}. ${OPPLYST_VEDTAK[h.opplyst]} ${medPunktum(`${h.feil.charAt(0).toUpperCase()}${h.feil.slice(1)} viste seg ${h.tid}`)} ${medPunktum(h.begrunnelse)} Kjøperen fikk ${utenPunktum(h.utfall)}.`;
@@ -162,7 +162,7 @@ export const JURIDISK = {
     // Only with something to point to: a decision won on no listed moment proves nothing «at least as strong».
     const del3 =
       v.mangler.length === 0 && v.ukjent.length === 0 && dekket.length > 0
-        ? `De samme momentene trekker minst like sterkt i min sak. Vis kort til det i saken som svarer til: ${dekket.join(", ")}.${minSak}${sammenligning}${likt}`
+        ? `De samme momentene trekker minst like sterkt i min sak. Gjenta i én setning det konkrete i saken som svarer til: ${dekket.join(", ")}; vis ikke til at det står ovenfor.${minSak}${sammenligning}${likt}`
         : `${minSak}${sammenligning}${likt} Skriv ikke at momentene trekker like sterkt.`.trim();
     const lov =
       f.presumsjonManeder === 24 && f.oppdaget !== "innen_6_mnd" && h.lov === "før_2024"
@@ -179,6 +179,10 @@ export const JURIDISK = {
     return [del1, del2, del3, del4 && `Kort, uten motargument: ${del4}`].filter(Boolean).join("\n\n");
   },
 } as const;
+
+// A firm's name as the buyer typed it, with the form of organisation at its end in capitals («Hompen bil
+// as» → «Hompen bil AS»). The rest is left alone: whether it is «Bil» or «bil» is not ours to know.
+export const foretaksform = (navn: string) => navn.replace(/\s(asa|as|ans|da|enk|sa)\.?$/i, (_, f: string) => ` ${f.toUpperCase()}`);
 
 // Does the letter still have something to fill in? Placeholders are written in square brackets.
 export const harPlassholder = (b: Brev) => [...b.avsender, ...b.mottaker, b.stedDato, b.emne, ...b.deler.flatMap((d) => d.avsnitt), b.underskrift].some((t) => /\[[^\]]+\]/.test(t));
@@ -258,7 +262,7 @@ export function brevhode(u: Utfylling, idag: string): Omit<Brev, "deler"> {
     : [];
   return {
     avsender: avsender ? avsenderLinjer : ["[Ditt navn]", "[Din adresse]", "[Postnummer og sted]"],
-    mottaker: [forhandler?.navn.trim() || "[Forhandlerens navn]", ...(orgnrLinje ? [orgnrLinje] : []), ...(adresse ? adresseLinjer : ["[Forhandlerens adresse]", "[Postnummer og sted]"])],
+    mottaker: [(forhandler?.navn.trim() && foretaksform(forhandler.navn.trim())) || "[Forhandlerens navn]", ...(orgnrLinje ? [orgnrLinje] : []), ...(adresse ? adresseLinjer : ["[Forhandlerens adresse]", "[Postnummer og sted]"])],
     stedDato: `${avsender?.poststed ?? "[Sted]"}, ${norskDato(idag)}`,
     emne: kjoretoy ? `Reklamasjon på mangel – ${bil}, reg.nr. ${kjoretoy.regnr}` : "Reklamasjon på mangel – [merke og modell], reg.nr. [reg.nr.]",
     hilsen: "Med vennlig hilsen",

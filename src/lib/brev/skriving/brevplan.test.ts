@@ -111,7 +111,7 @@ describe("planlegg", () => {
   it("forbyr formodningsregelen og tar med femårsfristen når feilen viste seg etter to år", () => {
     const g = { svar: svar({ kjopAlder: "2_5", kjopsdato: "2023-05-31", oppdaget: "over_2_ar" }), utfylling: { feilen: { ...feilen, dato: "2026-08-01" } } };
     expect(forbudte(g)).toContain("formodning");
-    expect(ider(g)).toEqual(expect.arrayContaining(["tidspunkt", "femarsfrist"]));
+    expect(ider(g)).toEqual(expect.arrayContaining(["leveringstidspunkt", "femarsfrist"]));
   });
 
   it("krever retting og forbyr heving og prisavslag før forhandleren har fått prøve", () => {
@@ -234,8 +234,8 @@ describe("planlegg", () => {
     const g = { svar: svar({ verkstedrapport: "ja", rapportSierForKjop: "ja" }), utfylling: { feilen, rapport: { fra: "Testverksted AS", dato: "2026-04-10", sitat: "Tetningslisten er sprukket" } } };
     const uten = plan(g).argumenter.find((a) => a.id === "rapport_bevis")?.foring ?? "";
     const med = plan({ ...g, kilder: { rapport: "Tetningslisten er sprukket og må byttes." } }).argumenter.find((a) => a.id === "rapport_bevis")?.foring ?? "";
-    expect(uten).toContain("støtter også at feilen var der");
-    expect(med).not.toContain("støtter også at feilen var der");
+    expect(uten).toContain("fremgår også av verkstedrapporten at feilen sannsynligvis forelå");
+    expect(med).not.toContain("fremgår også av verkstedrapporten");
     expect(med).toContain("bare det den faktisk sier");
   });
 

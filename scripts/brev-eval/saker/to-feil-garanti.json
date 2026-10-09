@@ -2,11 +2,12 @@
   "id": "to-feil-garanti",
   "tittel": "Fukt og bremser; muntlig opplysning om bremsene; garanti; avvist; prisavslag med utgift",
   "feller": [
-    "Svaret «1 000–5 000 km» skal ikke stå som et intervall i brevet",
+    "Kjørelengden (2 800 km) står som tall eller øvre grense, ikke som intervall",
     "Et avklaringssvar med «eller» skal ikke limes inn som et uferdig valg",
     "Ingen overtalelse: «ta hensyn til», «bare», «lite sannsynlig»",
     "Lenken til vedtaket står ikke i forfatterens avsnitt",
-    "Kjøperens følelser («føles utrygt», «veldig fuktig») gjengis som observasjoner"
+    "Kjøperens følelser («føles utrygt», «veldig fuktig») gjengis som observasjoner",
+    "Mange gunstige momenter (garanti uklar, skjult feil, kort kjørt, forhandlerens påstand, uriktig opplysning) uten at brevet blir lengre enn grensen"
   ],
   "idag": "2026-10-07",
   "svar": {
@@ -33,7 +34,8 @@
       "regnr": "XX 10016",
       "merke": "Testmerke",
       "modell": "Elektra",
-      "ar": 2022
+      "ar": 2022,
+      "bruktimportert": false
     },
     "forhandler": {
       "type": "brreg",
@@ -51,14 +53,16 @@
     },
     "feilen": {
       "dato": "2026-05-01",
-      "egen": "Det er veldig fuktig i bilen hver dag, særlig etter perioder med regnvær. Det er fuktig under gulvmattene foran og bak, det kommer fukt fra taket, og det blir dugg på vinduene. I tillegg lager bremsene skrapelyd og har dårlig effekt hver gang jeg bremser, og det føles utrygt å kjøre bilen. Et verksted har sett på begge feilene og fant en lekkasje i taket.",
-      "feil": [
-        "Fukt i kupeen",
-        "Bremsene"
-      ],
+      "egen": "Det er veldig fuktig i bilen hver dag, særlig etter perioder med regnvær. Det er fuktig under gulvmattene foran og bak, det kommer fukt fra taket, og det blir dugg på vinduene. I tillegg lager bremsene skrapelyd og har dårlig effekt hver gang jeg bremser, og det føles utrygt å kjøre bilen.",
+      "feil": [],
       "avsnitt": [
-        "Det er veldig fuktig i bilen hver dag, særlig etter perioder med regnvær. Det er fuktig under gulvmattene foran og bak, det kommer fukt fra taket, og det blir dugg på vinduene. I tillegg lager bremsene skrapelyd og har dårlig effekt hver gang jeg bremser, og det føles utrygt å kjøre bilen. Et verksted har sett på begge feilene og fant en lekkasje i taket."
+        "Det er veldig fuktig i bilen hver dag, særlig etter perioder med regnvær. Det er fuktig under gulvmattene foran og bak, det kommer fukt fra taket, og det blir dugg på vinduene. I tillegg lager bremsene skrapelyd og har dårlig effekt hver gang jeg bremser, og det føles utrygt å kjøre bilen."
       ]
+    },
+    "kmVedFeil": 24800,
+    "verksted": {
+      "undersokt": "ja",
+      "funn": "Lekkasje i taket ved takluken."
     },
     "feilopplyst": "ja",
     "opplysning": {
@@ -82,12 +86,43 @@
         }
       ]
     },
-    "kmVedFeil": 24800,
     "momenter": {
+      "garanti_uklar": {
+        "svar": "Nei, jeg fikk ikke vite hva garantien dekket"
+      },
+      "bruksstans_sikkerhet": {
+        "svar": "Bilen er utrygg å kjøre"
+      },
       "skjult_feil": {
         "svar": "Den er skjult og ble funnet ved undersøkelse på verksted"
+      },
+      "tidlige_tegn": {
+        "svar": "Nei, det ble ikke skrevet ned"
+      },
+      "positiv_beskrivelse": {
+        "svar": "Forhandleren svarte ja da jeg spurte konkret om tilstanden"
+      },
+      "uriktig_service_arbeid_utstyr": {
+        "svar": "Deler som var byttet eller arbeid som var gjort"
+      },
+      "tidligere_skade_ikke_opplyst": {
+        "svar": "Nei"
+      },
+      "dokument_for_salg": {
+        "svar": "Nei, jeg har ikke sett noen slike"
+      },
+      "forhandler_erkjente": {
+        "svar": "Nei"
+      },
+      "forhandler_annen_arsak": {
+        "svar": "Ja, at det er min bruk, slitasje eller ytre skade, uten å vise til noen undersøkelse"
       }
-    }
+    },
+    "vedlegg": [
+      "kjopekontrakt",
+      "tilbud",
+      "kvitteringer"
+    ]
   },
   "avklaringer": [
     {
@@ -100,7 +135,7 @@
       "runde": 1,
       "tema": "feilen",
       "sporsmal": "Når viste bremsefeilen seg første gang?",
-      "svar": "Rundt 20. mai 2026"
+      "svar": "2026-05-20"
     }
   ],
   "forventet": {
@@ -123,7 +158,8 @@
       "lite sannsynlig",
       "føles utrygt",
       "veldig",
-      "[Pp]ristilbud eller takst"
+      "[Pp]ristilbud eller takst",
+      "2026-05-20"
     ],
     "tekst": [
       "§ 18 a"

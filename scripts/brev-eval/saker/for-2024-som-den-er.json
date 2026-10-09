@@ -3,7 +3,8 @@
   "tittel": "Kjøp før 2024 «som den er», understell innen seks måneder",
   "feller": [
     "Seks måneders formodning etter gammel lov",
-    "«som den er» etter § 17 slik den lød"
+    "«som den er» etter § 17 slik den lød",
+    "Verkstedets funn er oppgitt muntlig (ingen rapport): skal stå som funn, ikke som rapport"
   ],
   "idag": "2024-03-01",
   "svar": {
@@ -29,7 +30,8 @@
       "regnr": "XX 10011",
       "merke": "Testmerke",
       "modell": "Kombi",
-      "ar": 2009
+      "ar": 2009,
+      "bruktimportert": false
     },
     "forhandler": {
       "type": "brreg",
@@ -45,29 +47,57 @@
     },
     "feilen": {
       "dato": "2024-01-15",
-      "egen": "Det smeller i forstillingen over humper, og verkstedet fant knekt fjær og slitte bærebruer.",
-      "feil": [
-        "Forstillingen"
-      ],
+      "egen": "Det smeller i forstillingen over humper, og bilen føles ustabil i svinger.",
+      "feil": [],
       "avsnitt": [
-        "Det smeller i forstillingen over humper, og verkstedet fant knekt fjær og slitte bærebruer."
+        "Det smeller i forstillingen over humper, og bilen føles ustabil i svinger."
       ]
     },
+    "verksted": {
+      "undersokt": "ja",
+      "funn": "Knekt fjær foran til høyre og slitte bærebruer på begge sider."
+    },
+    "feilopplyst": "nei",
     "retting": "avvist",
     "reklamasjon": {
       "dato": "2024-01-20",
       "mate": "brev",
       "svarDato": "2024-02-01"
     },
+    "momenter": {
+      "bruksstans_sikkerhet": {
+        "svar": "Bilen er utrygg å kjøre"
+      },
+      "skjult_feil": {
+        "svar": "Den viser seg under bestemte forhold, for eksempel i regn eller med kald motor"
+      },
+      "tidligere_skade_ikke_opplyst": {
+        "svar": "Nei"
+      },
+      "dokument_for_salg": {
+        "svar": "Nei, jeg har ikke sett noen slike"
+      },
+      "forhandler_erkjente": {
+        "svar": "Nei"
+      },
+      "forhandler_annen_arsak": {
+        "svar": "Ja, at det er min bruk, slitasje eller ytre skade, uten å vise til noen undersøkelse"
+      }
+    },
     "krav": {
       "type": "prisavslag",
       "utgifter": []
-    }
+    },
+    "vedlegg": [
+      "kjopekontrakt",
+      "meldinger"
+    ]
   },
   "forventet": {
     "argumenter": [
       "formodning",
       "forbehold",
+      "momenter",
       "historikk",
       "krav_prisavslag",
       "rente"
@@ -77,7 +107,8 @@
       "«som den er»"
     ],
     "ikkeTekst": [
-      "to år etter levering"
+      "to år etter levering",
+      "rapport"
     ]
   }
 }

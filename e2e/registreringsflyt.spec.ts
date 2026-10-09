@@ -134,7 +134,7 @@ test("fra forsiden gjennom stegene og vurderingen til ferdig brev", async ({ pag
   await veiviser.neste();
 
   await expect(veiviser.tittel("Tilstandsrapport")).toBeVisible();
-  await velg("Har du en verksted- eller tilstandsrapport?", "Nei");
+  await velg("Har et verksted undersøkt feilen?", "Nei");
   await veiviser.neste();
 
   // The dealer has not had the chance to repair yet, so the claim is repair: nothing to choose.

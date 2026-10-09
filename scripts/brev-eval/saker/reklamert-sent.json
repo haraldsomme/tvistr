@@ -2,7 +2,9 @@
   "id": "reklamert-sent",
   "tittel": "Rust, kjøperen har ventet over ett år med å reklamere",
   "feller": [
-    "Brevet skal ikke påstå at reklamasjonen kom i tide"
+    "Brevet skal ikke påstå at reklamasjonen kom i tide",
+    "Ingen gunstige momentsvar: ingen faktum-setninger om forholdene, og ingen pynting på at feilen kunne ses",
+    "Bilder er valgt som vedlegg: skal stå i vedleggslisten"
   ],
   "idag": "2026-10-06",
   "svar": {
@@ -21,14 +23,15 @@
     "reklamertInnenFemAr": "",
     "verkstedrapport": "nei",
     "rapportSierForKjop": "",
-    "bilder": "nei"
+    "bilder": "ja"
   },
   "utfylling": {
     "kjoretoy": {
       "regnr": "XX 10004",
       "merke": "Testmerke",
       "modell": "Kombi",
-      "ar": 2008
+      "ar": 2008,
+      "bruktimportert": false
     },
     "forhandler": {
       "type": "brreg",
@@ -44,24 +47,55 @@
     },
     "feilen": {
       "dato": "2025-07-01",
-      "egen": "Rust under dørene og i hjulbuene, og EU-kontrollen ga merknad.",
-      "feil": [
-        "Rust"
-      ],
+      "egen": "Rust under dørene og i hjulbuene, og EU-kontrollen ga merknad om rust i kanalene.",
+      "feil": [],
       "avsnitt": [
-        "Rust under dørene og i hjulbuene, og EU-kontrollen ga merknad."
+        "Rust under dørene og i hjulbuene, og EU-kontrollen ga merknad om rust i kanalene."
       ]
-    }
+    },
+    "verksted": {
+      "undersokt": "nei"
+    },
+    "feilopplyst": "nei",
+    "retting": "ingen",
+    "momenter": {
+      "bruksstans_sikkerhet": {
+        "svar": "Feilen er mest kosmetisk"
+      },
+      "skjult_feil": {
+        "svar": "Den kunne ses eller merkes, men jeg la ikke merke til den"
+      },
+      "tidligere_skade_ikke_opplyst": {
+        "svar": "Nei"
+      },
+      "dokument_for_salg": {
+        "svar": "Ja, men den nevner ikke feilen"
+      }
+    },
+    "vedlegg": [
+      "kjopekontrakt",
+      "bilder"
+    ]
   },
   "forventet": {
     "argumenter": [
       "formodning",
       "reklamasjon",
-      "krav_retting"
+      "krav_retting",
+      "vedlegg"
+    ],
+    "ikke": [
+      "momenter",
+      "historikk"
+    ],
+    "tekst": [
+      "[Bb]ilder"
     ],
     "ikkeTekst": [
       "mindre enn to måneder",
-      "i tide"
+      "i tide",
+      "skjult",
+      "kunne ikke (ses|oppdages)"
     ]
   }
 }

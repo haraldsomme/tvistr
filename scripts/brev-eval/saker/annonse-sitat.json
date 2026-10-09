@@ -3,7 +3,8 @@
   "tittel": "Annonsen sa «Service fulgt»; annonseteksten er limt inn",
   "feller": [
     "Annonsen skal siteres ordrett",
-    "Forhandlerens telefonnummer i annonsen skal ikke med"
+    "Forhandlerens telefonnummer i annonsen skal ikke med",
+    "Gunstige momentsvar fra «Før kjøpet» (beskrivelse, service) står som fakta uten argumentasjon"
   ],
   "idag": "2026-10-06",
   "svar": {
@@ -29,7 +30,8 @@
       "regnr": "XX 10010",
       "merke": "Testmerke",
       "modell": "Kombi",
-      "ar": 2019
+      "ar": 2019,
+      "bruktimportert": false
     },
     "forhandler": {
       "type": "brreg",
@@ -46,18 +48,45 @@
     "feilen": {
       "dato": "2026-06-02",
       "egen": "Ved service hos merkeverksted kom det fram at to servicer mangler, ved 60 000 og 75 000 km.",
-      "feil": [
-        "Servicehistorikken"
-      ],
+      "feil": [],
       "avsnitt": [
         "Ved service hos merkeverksted kom det fram at to servicer mangler, ved 60 000 og 75 000 km."
       ]
+    },
+    "verksted": {
+      "undersokt": "ja",
+      "funn": "Merkeverkstedet slo opp servicehistorikken og fant at servicene ved 60 000 og 75 000 km ikke er registrert."
     },
     "feilopplyst": "ja",
     "opplysning": {
       "kilde": "annonse",
       "tekst": "Annonsen sa at service var fulgt"
-    }
+    },
+    "retting": "ingen",
+    "momenter": {
+      "bruksstans_sikkerhet": {
+        "egen": "Bilen kjører som normalt, men servicehistorikken er ufullstendig."
+      },
+      "skjult_feil": {
+        "svar": "Den er skjult og ble funnet ved undersøkelse på verksted"
+      },
+      "positiv_beskrivelse": {
+        "svar": "Med konkrete ord som «velholdt», «nylig EU-godkjent» eller «alt virker»"
+      },
+      "uriktig_service_arbeid_utstyr": {
+        "svar": "Service eller servicehistorikk"
+      },
+      "tidligere_skade_ikke_opplyst": {
+        "svar": "Nei"
+      },
+      "dokument_for_salg": {
+        "svar": "Nei, jeg har ikke sett noen slike"
+      }
+    },
+    "vedlegg": [
+      "kjopekontrakt",
+      "annonse"
+    ]
   },
   "kilder": {
     "opplysning": "Pent brukt familiebil. Service fulgt etter fabrikkens program. Ny EU-kontroll. Kontakt oss på 22 33 44 55."
@@ -66,6 +95,7 @@
     "argumenter": [
       "formodning",
       "opplysning",
+      "momenter",
       "reklamasjon",
       "krav_retting"
     ],

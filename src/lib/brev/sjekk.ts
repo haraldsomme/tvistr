@@ -191,7 +191,7 @@ export function sjekkBrev(input: KlageInput, u: Utfylling, idag: string, valgt?:
           fast: true,
           alvor: "hard",
           steg: "kontakt",
-          tekst: "Forhandleren har rett til å forsøke å rette feilen selv (§ 29 og § 30). Du fikk den reparert et annet sted uten at forhandleren fikk sjansen. Da kan forhandleren kreve at beløpet settes ned til det de selv ville brukt på å rette feilen, eller i verste fall avvise kravet.",
+          tekst: "Forhandleren har rett til å forsøke å rette feilen selv (§§ 29 og 30). Du fikk den reparert et annet sted uten at forhandleren fikk sjansen. Da kan forhandleren kreve at beløpet settes ned til det de selv ville brukt på å rette feilen, eller i verste fall avvise kravet.",
         });
       } else if (rep.grunn === "nodvendig" && (kontakt === "nei" || (r && rep.dato < r.dato))) {
         legg({

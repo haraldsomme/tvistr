@@ -3,7 +3,8 @@
   "tittel": "Kjøp over fem år siden, reklamert innen fem år",
   "feller": [
     "Femårsfristen og at den er overholdt",
-    "Ingen formodning"
+    "Ingen formodning",
+    "Kjørt 48 000 km før feilen og annonse med mest tekniske opplysninger: ugunstige svar som ikke skal pyntes på"
   ],
   "idag": "2026-10-06",
   "svar": {
@@ -29,7 +30,8 @@
       "regnr": "XX 10015",
       "merke": "Testmerke",
       "modell": "Kombi",
-      "ar": 2017
+      "ar": 2017,
+      "bruktimportert": false
     },
     "forhandler": {
       "type": "brreg",
@@ -45,31 +47,66 @@
     },
     "feilen": {
       "dato": "2025-11-20",
-      "egen": "Vann renner inn fra soltaket ved kraftig regn.",
-      "feil": [
-        "Lekkasje"
-      ],
+      "egen": "Vann renner inn fra soltaket ved kraftig regn, og taktrekket er vått.",
+      "feil": [],
       "avsnitt": [
-        "Vann renner inn fra soltaket ved kraftig regn."
+        "Vann renner inn fra soltaket ved kraftig regn, og taktrekket er vått."
       ]
     },
+    "kmVedFeil": 178000,
+    "verksted": {
+      "undersokt": "nei"
+    },
+    "feilopplyst": "nei",
     "retting": "venter",
     "reklamasjon": {
       "dato": "2025-12-01",
       "mate": "brev"
-    }
+    },
+    "momenter": {
+      "bruksstans_sikkerhet": {
+        "svar": "Bilen kan brukes, men feilen er til hinder"
+      },
+      "skjult_feil": {
+        "svar": "Den viser seg under bestemte forhold, for eksempel i regn eller med kald motor"
+      },
+      "tidlige_tegn": {
+        "svar": "Nei, det ble ikke skrevet ned"
+      },
+      "positiv_beskrivelse": {
+        "svar": "Annonsen hadde mest tekniske opplysninger"
+      },
+      "tidligere_skade_ikke_opplyst": {
+        "svar": "Nei"
+      },
+      "dokument_for_salg": {
+        "svar": "Nei, jeg har ikke sett noen slike"
+      },
+      "forhandler_erkjente": {
+        "svar": "Nei"
+      }
+    },
+    "vedlegg": [
+      "kjopekontrakt",
+      "meldinger"
+    ]
   },
   "forventet": {
     "argumenter": [
-      "tidspunkt",
+      "leveringstidspunkt",
       "femarsfrist",
       "frist_overholdt",
+      "momenter",
       "historikk",
       "reklamasjon",
       "krav_retting"
     ],
     "ikke": [
       "formodning"
+    ],
+    "ikkeTekst": [
+      "antas derfor å ha eksistert",
+      "velholdt"
     ]
   }
 }

@@ -1,6 +1,6 @@
 import { leggTilManeder, maneder } from "@/lib/vurdering/faktorer";
-import { NAAR } from "@/lib/vurdering/grunnlag";
 import {
+  foretaksform,
   harFatt,
   JURIDISK,
   kreverPenger,
@@ -28,6 +28,7 @@ export const ARGUMENT_IDER = [
   "feilen",
   "mangel",
   "formodning",
+  "leveringstidspunkt",
   "tidspunkt",
   "rapport_bevis",
   "opplysning",
@@ -79,6 +80,7 @@ export const DEL_FOR_ARGUMENT: Record<ArgumentId, Del> = {
   momenter: "faktum",
   historikk: "faktum",
   formodning: "rettslig_grunnlag",
+  leveringstidspunkt: "rettslig_grunnlag",
   rapport_bevis: "rettslig_grunnlag",
   opplysning: "rettslig_grunnlag",
   kjent_avvik: "rettslig_grunnlag",
@@ -164,8 +166,8 @@ export function planlegg(m: Saksmodell): Brevplan {
     { forsteGang: u.feilen?.dato ?? null, antallFeil: u.feilen?.feil.length ?? null },
   );
 
-  // Without the presumption, when the defect showed is a fact of its own; with it, it is the formodning.
-  if (!f.presumsjon) legg("tidspunkt", `Feilen viste seg ${NAAR[f.oppdaget]} etter levering.`);
+  // How long after delivery the defect showed is said once, in Rettslig grunnlag (`formodning` or
+  // `leveringstidspunkt`); Faktum has the date. `tidspunkt` stays for letters planned before.
   if (input.feilen.opplystForKjop === "nei") legg("kjente_ikke", "Jeg kjente ikke til feilen da jeg kjøpte bilen, og dere opplyste ikke om den.");
 
   // The moments the buyer answered with an alternative: a favourable answer becomes an argument in the moment's own wording;
@@ -216,27 +218,9 @@ export function planlegg(m: Saksmodell): Brevplan {
       kontaktBesvart ? "Kjøperen har ikke tatt opp feilen med dere før, og bilen er ikke reparert andre steder." : "Det er ikke oppgitt om kjøperen har tatt opp feilen med dere før.",
     );
 
-  // Rettslig grunnlag: the burden of proof and the information given; the conclusion that the car has a
-  // defect comes after them, as a lawyer would put it, then the decision and the deadlines.
-  if (f.presumsjon) {
-    const periode = f.presumsjonManeder === 24 ? "to år" : "seks måneder";
-    legg("formodning", `Feilen viste seg innen ${periode} etter levering og antas derfor å ha eksistert ved leveringen, med mindre dere beviser noe annet, jf. forbrukerkjøpsloven § 18 andre ledd.`, { periode });
-  } else forby("formodning", "Feilen viste seg etter formodningsperioden i § 18 andre ledd.");
-  if (f.rapportSierForKjop === true) {
-    legg(
-      "rapport_bevis",
-      // With the report's own text, the letter says what it says, not what the buyer answered it says.
-      m.kilder.rapport
-        ? `En verksted- eller tilstandsrapport er limt inn. Gjengi eller siter bare det den faktisk sier om årsaken og om når feilen oppsto. Sier den ikke noe om tidspunktet, skriv ikke at den viser eller støtter at feilen var der da jeg overtok bilen${f.presumsjon ? "" : ", jf. § 18 første ledd"}.`
-        : f.presumsjon
-          ? "En verksted- eller tilstandsrapport støtter også at feilen var der allerede da jeg overtok bilen."
-          : "En verksted- eller tilstandsrapport sier at feilen sannsynligvis var til stede før jeg overtok bilen, jf. § 18 første ledd.",
-      { fra: u.rapport ? rens(u.rapport.fra) : null, dato: u.rapport?.dato ?? null, kanSiteres: Boolean(m.kilder.rapport) },
-    );
-  } else if (input.bevis.verkstedrapport == null) {
-    mangel("om et verksted har skrevet en rapport om feilen", "rapport");
-    forby("rapport_bevis", "Det er ikke oppgitt om det finnes en rapport som sier at feilen var der før kjøpet.");
-  } else forby("rapport_bevis", "Ingen rapport sier at feilen var der før kjøpet.");
+  // Rettslig grunnlag, as a lawyer builds it: what the buyer could expect (§§ 15 and 16), then when the
+  // defect must have been there and what shows it (§ 18), what the dealer may object, and the conclusion
+  // that the car has a defect; after it the decision, the guarantee and the deadlines.
   if (f.feilOpplysninger === true) {
     if (!u.opplysning) mangel("hva annonsen eller selgeren opplyste som ikke stemte", "for-kjopet");
     legg("opplysning", "Det dere opplyste om bilen før kjøpet, var uriktig. Bilen svarer dermed ikke til de opplysningene dere ga, jf. § 16.", { kilde: u.opplysning?.kilde ?? null, kanSiteres: Boolean(m.kilder.opplysning) });
@@ -253,13 +237,46 @@ export function planlegg(m: Saksmodell): Brevplan {
       { kilde: u.opplysning?.kilde ?? null, kanSiteres: Boolean(m.kilder.opplysning) },
     );
   } else forby("kjent_avvik", f.opplyst === "nei" ? "Kjøperen kjente ikke til feilen." : "Kjøperen kjente til feilen slik den er.");
-
-  // What the dealer may object.
-  const forbehold = u.forbehold && JURIDISK.forbehold(u.forbehold, f.presumsjonManeder, f.opplyst !== "nei");
-  if (forbehold) legg("forbehold", forbehold, { forbehold: u.forbehold });
   const nevnerSlitasje = /slit/i.test([u.rapport?.sitat ?? "", u.feilen?.egen ?? "", ...(u.feilen?.avsnitt ?? []), m.kilder.rapport ?? ""].join(" "));
   if (slitasje) legg("slitasje", JURIDISK.slitasje(kmVedKjop, nevnerSlitasje), { kmVedKjop: kmVedKjop ?? null });
   else forby("slitasje", typerUkjent ? "Det er ikke oppgitt hva feilen gjelder." : "Feilen er ikke av en type slitasje kan forklare.");
+
+  // § 18: with the presumption the dealer must prove otherwise; without it the letter says so and shows
+  // what makes it likely that the defect was there at delivery.
+  const periode = f.presumsjonManeder === 24 ? "to år" : "seks måneder";
+  if (f.presumsjon) {
+    legg("formodning", `Feilen viste seg innen ${periode} etter levering og antas derfor å ha eksistert ved leveringen, med mindre dere beviser noe annet, jf. forbrukerkjøpsloven § 18 andre ledd.`, { periode });
+    forby("leveringstidspunkt", "Feilen viste seg innen formodningsperioden i § 18 andre ledd.");
+  } else {
+    forby("formodning", "Feilen viste seg etter formodningsperioden i § 18 andre ledd.");
+    legg(
+      "leveringstidspunkt",
+      `Om bilen har en mangel, avgjøres ut fra tilstanden da den ble levert, også når mangelen først viser seg senere, jf. forbrukerkjøpsloven § 18 første ledd. Formodningsregelen i § 18 andre ledd gjelder ikke, fordi feilen viste seg mer enn ${periode} etter levering. Det må derfor sannsynliggjøres at feilen forelå ved leveringen.`,
+      { periode },
+    );
+  }
+  if (f.rapportSierForKjop === true) {
+    const funn = u.verksted?.funn ? rens(u.verksted.funn) : null;
+    if (!m.kilder.rapport && !funn) mangel("hva verkstedet fant: hvilken del som har sviktet, og hvorfor", "rapport");
+    legg(
+      "rapport_bevis",
+      // With the report's own text, the letter says what it says, not what the buyer answered it says.
+      // The rule stands in `formodning` or `leveringstidspunkt`; a sentence on the report cites no law.
+      m.kilder.rapport
+        ? "En verksted- eller tilstandsrapport er limt inn. Gjengi eller siter bare det den faktisk sier om hvilken del som har sviktet, årsaken og når feilen oppsto. Sier den ikke noe om tidspunktet, skriv ikke at den viser eller støtter at feilen var der da jeg overtok bilen. Vis ikke til en paragraf i setningen om rapporten."
+        : `${f.presumsjon ? "Det fremgår også av verkstedrapporten" : "Det fremgår av verkstedrapporten"} at feilen sannsynligvis forelå da bilen ble levert. Angi konkret hva verkstedet fant, slik det står i verkstedets funn: hvilken del som har sviktet, og årsaken. Vis ikke til en paragraf i setningen om rapporten.`,
+      { fra: u.rapport ? rens(foretaksform(u.rapport.fra)) : null, dato: u.rapport?.dato ?? null, verkstedetsFunn: funn, kanSiteres: Boolean(m.kilder.rapport) },
+    );
+  } else if (input.bevis.verkstedrapport == null) {
+    mangel("om et verksted har skrevet en rapport om feilen", "rapport");
+    forby("rapport_bevis", "Det er ikke oppgitt om det finnes en rapport som sier at feilen var der før kjøpet.");
+  } else forby("rapport_bevis", "Ingen rapport sier at feilen var der før kjøpet.");
+
+  // What the dealer may object to the defect («som den er») comes before the conclusion; the guarantee
+  // (§ 18 a) adds to the buyer's rights and comes after the decision.
+  const forbehold = u.forbehold && JURIDISK.forbehold(u.forbehold, f.presumsjonManeder, f.opplyst !== "nei");
+  const garanti = u.forbehold === "garanti";
+  if (forbehold && !garanti) legg("forbehold", forbehold, { forbehold: u.forbehold });
 
   // The conclusion, after what it rests on.
   legg("mangel", `Bilen har etter dette ${flere ? "mangler" : "en mangel"} etter forbrukerkjøpsloven § 16${slitasje ? ", jf. § 15" : ""}.`);
@@ -286,6 +303,8 @@ export function planlegg(m: Saksmodell): Brevplan {
     });
   }
 
+  if (forbehold && garanti) legg("forbehold", forbehold, { forbehold: u.forbehold });
+
   // Deadlines. The two years run from delivery to the first complaint, or to this letter.
   const reklamert = r ? r.dato : idag;
   if (reklamert > leggTilManeder(kjopsdato, 24)) legg("femarsfrist", JURIDISK.femArsfrist);
@@ -301,14 +320,14 @@ export function planlegg(m: Saksmodell): Brevplan {
     kontakt
       ? `${komITide ? "Reklamasjonen kom innen to måneder etter at jeg oppdaget feilen, jf. § 27 første ledd. " : ""}Med dette brevet bekrefter jeg reklamasjonen skriftlig.`
       : kontaktBesvart
-        ? `Jeg reklamerer herved på ${mangelen}, jf. forbrukerkjøpsloven § 27${iTide ? ", innen to måneder etter at jeg oppdaget feilen" : ""}.`
-        : `Med dette brevet reklamerer jeg skriftlig på ${mangelen}, jf. forbrukerkjøpsloven § 27${iTide ? ", innen to måneder etter at jeg oppdaget feilen" : ""}.`,
+        ? `Jeg reklamerer med dette på ${mangelen}, jf. forbrukerkjøpsloven § 27.${iTide ? " Reklamasjonen kommer innen to måneder etter at jeg oppdaget feilen, og er i tide, jf. § 27 første ledd." : ""}`
+        : `Med dette brevet reklamerer jeg skriftlig på ${mangelen}, jf. forbrukerkjøpsloven § 27.${iTide ? " Reklamasjonen kommer innen to måneder etter at jeg oppdaget feilen, og er i tide, jf. § 27 første ledd." : ""}`,
   );
   if (retting === "forsokt" && f.presumsjonManeder === 24 && u.krav?.type) legg("avviser_nytt_forsok", JURIDISK.avviserNyttForsok);
 
   // Krav. The dealer has the first try (§ 29); then a price reduction or cancelling (§§ 31, 32).
   if (!harFatt(retting)) {
-    legg("krav_retting", `Jeg krever at dere retter ${mangelen} innen rimelig tid, uten kostnad og uten vesentlig ulempe for meg, jf. § 29 og § 30.`);
+    legg("krav_retting", `Jeg krever at dere retter ${mangelen} innen rimelig tid, uten kostnad og uten vesentlig ulempe for meg, jf. §§ 29 og 30.`);
     for (const id of ["krav_heving", "krav_prisavslag", "krav_valg"] as const) forby(id, "Dere har ikke fått forsøke å rette feilen ennå (§ 29).");
   } else {
     forby("krav_retting", "Dere har allerede fått forsøke å rette feilen, eller den er reparert andre steder.");
@@ -329,7 +348,7 @@ export function planlegg(m: Saksmodell): Brevplan {
       forby("krav_heving", "Kjøperen har valgt prisavslag.");
     } else {
       mangel("prisavslag eller heving av kjøpet", "krav");
-      legg("krav_valg", "Jeg krever prisavslag eller heving av kjøpet, jf. § 31 og § 32. Valget er ikke gjort, så plassholderen står der kravet skal stå.");
+      legg("krav_valg", "Jeg krever prisavslag eller heving av kjøpet, jf. §§ 31 og 32. Valget er ikke gjort, så plassholderen står der kravet skal stå.");
     }
   }
 
@@ -353,14 +372,14 @@ export function planlegg(m: Saksmodell): Brevplan {
       ? utgifter.length
         ? "Jeg forbeholder meg retten til å kreve erstatning for ytterligere tap."
         : "Jeg tar forbehold om å kreve erstatning for mitt økonomiske tap etter § 33."
-      : `Skjer retting ikke innen rimelig tid, tar jeg forbehold om å kreve prisavslag eller heving av kjøpet etter § 31 og § 32, og ${utgifter.length ? "ytterligere erstatning" : "erstatning for mitt økonomiske tap"} etter § 33.`,
+      : `Skjer retting ikke innen rimelig tid, tar jeg forbehold om å kreve prisavslag eller heving av kjøpet etter §§ 31 og 32, og ${utgifter.length ? "ytterligere erstatning" : "erstatning for mitt økonomiske tap"} etter § 33.`,
   );
 
   // Svarfrist og videre saksgang, and Vedlegg.
   if (u.avsender?.epost) merker.push("epost");
   legg(
     "svarfrist",
-    `Jeg ber om skriftlig svar innen ${SVARFRIST_DAGER} dager fra dette brevets dato, det vil si innen {{dato:svarfrist}}${u.avsender?.epost ? ", til e-post {{epost}}" : ""}. Får jeg ikke svar innen fristen, eller avviser dere kravet, vil jeg bringe saken inn for Forbrukertilsynet for mekling og eventuelt behandling i Forbrukerklageutvalget.`,
+    `Jeg ber om skriftlig svar innen ${SVARFRIST_DAGER} dager fra dette brevets dato, det vil si innen {{dato:svarfrist}}${u.avsender?.epost ? ", på e-post til {{epost}}" : ""}. Dersom svar ikke foreligger innen fristen, eller kravet avvises, vil jeg bringe saken inn for Forbrukertilsynet for mekling og eventuelt behandling i Forbrukerklageutvalget.`,
   );
   const vedlagt = vedleggFor(input, u).map((v) => VEDLEGG_NAVN[v]);
   if (vedlagt.length) legg("vedlegg", `Vedlagt følger ${liste(vedlagt)}.`, { vedlegg: vedlagt });

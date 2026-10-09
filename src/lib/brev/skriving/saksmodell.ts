@@ -4,6 +4,7 @@ import { tilKlageInput, type Innsending } from "@/lib/vurdering/innsending";
 import type { Kjoper } from "@/lib/vurdering/henvisninger";
 import { gyldigRetting, type KlageInput } from "@/lib/vurdering/typer";
 import { besvarteMomenter, momenterFor, vistSporsmal, type SporsmalKontekst } from "../momenter";
+import { foretaksform } from "../brev";
 import { avledSvar } from "../svar";
 import { AVKLARING_TEMAER, type Avklaring as LagretAvklaring, type Utfylling } from "../utfylling";
 
@@ -199,7 +200,7 @@ export function sakForModell(m: Saksmodell): Record<string, unknown> {
     },
     rapport:
       input.bevis.verkstedrapport || u.rapport
-        ? { sierAtFeilenVarDerForKjop: input.bevis.rapportSierForKjop, fra: u.rapport ? rens(u.rapport.fra) : null, dato: u.rapport?.dato ?? null, kjoperensGjengivelse: u.rapport?.sitat ? rens(u.rapport.sitat) : null }
+        ? { sierAtFeilenVarDerForKjop: input.bevis.rapportSierForKjop, fra: u.rapport ? rens(foretaksform(u.rapport.fra)) : null, dato: u.rapport?.dato ?? null, kjoperensGjengivelse: u.rapport?.sitat ? rens(u.rapport.sitat) : null }
         : null,
     krav: u.krav ? { ...u.krav, utgifter: u.krav.utgifter.map((x) => ({ ...x, ...(x.beskrivelse && { beskrivelse: rens(x.beskrivelse) }) })) } : null,
     avklaringer: m.avklaringer.map((a) => ({ ...a, svar: a.svar === null ? null : rens(a.svar) })),

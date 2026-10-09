@@ -1,6 +1,7 @@
 // Steps 1–2: the case and each defect, derived from the form (docs/sammenligningsmotor.md § 5).
 import { dagerMellom } from "@/lib/analyse/verifiser";
 import { HVOR_STO_DET, FORM_RANG } from "./fraser";
+import { erSpesifikk } from "./spesifikk";
 import type { FeilProfil, IngenSporArsak, Sak, SakProfil, Skjema, SkjemaFeil, Spor } from "./typer";
 
 function band(x: number, grenser: number[], navn: string[]): string {
@@ -66,25 +67,7 @@ export function erSlitedel(kategori: string, alder: number | null, km: number | 
   return SLITEDELER.includes(kategori) || (["motor", "girkasse", "clutch"].includes(kategori) && (alder ?? 0) >= 8 && (km ?? 0) >= 120_000);
 }
 const TAUSHET_KATEGORIER = ["kollisjonsskade", "servicehistorikk", "km_avvik", "bruktimport_opplysning", "arsmodell_identitet"];
-// docs/spor.md: a written statement is concrete unless it is only a general phrase about the whole
-// car ("god stand", "velholdt", "pen", "strøken"). A list of component words missed "WEBASTO" and
-// "oljeforbruk er litt høyere enn vanlig", so the rule is turned round: what is left after removing
-// general and function words makes it concrete.
-const GENERELLE_ORD = new Set(
-  (
-    "bilen bil den det denne er var har i en et og som med på av til for meget veldig svært særdeles helt alt generelt " +
-    "god godt gode fin fint fine pen pent pene strøken velholdt velstelt topp toppstand stand tilstand bra flott " +
-    "utmerket perfekt nydelig kjører går ser ut holdt brukt brukte kjørt"
-  ).split(" "),
-);
-
-export function erSpesifikk(avskrift: string): boolean {
-  if (/\d/.test(avskrift)) return true;
-  return avskrift
-    .toLowerCase()
-    .split(/[^a-zæøå-]+/)
-    .some((ord) => ord.length > 1 && !GENERELLE_ORD.has(ord));
-}
+export { erSpesifikk };
 
 export function avledFeil(sak: Sak, f: SkjemaFeil): FeilProfil {
   const kategori = f.kategori;

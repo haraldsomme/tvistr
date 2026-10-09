@@ -968,15 +968,15 @@
             "dager_til_feil": 588,
             "innen_frist": true,
             "slitedel": false,
-            "spor_primar": "A",
-            "a_variant": "uttalelse",
-            "spor_sekundar": "B",
+            "spor_primar": "B",
+            "a_variant": null,
+            "spor_sekundar": null,
             "kandidat_krav": [
-              "spor_vunnet inneholder A uttalelse",
+              "spor_vunnet inneholder B",
               "sanksjon <> heving"
             ],
             "kriterier_forventet": {
-              "konkrethet": "lik eller sterkere (WEBASTO er spesifikk)",
+              "konkrethet": "ikke vurdert: utsagnet er generelt etter presisjonsregelen (2026-10-10)",
               "forbehold": "lik eller svakere (bruker har som_den_er)"
             },
             "godkjent": "true hvis forbehold ikke blir eneste svakhet uten at andre er sterkere; forbehold er ikke adresserbar, så kandidat med forbehold = nei forkastes",
@@ -985,7 +985,7 @@
             ]
           }
         ],
-        "merknad": "Tester km-svakheten på saksnivå (25 000 km > 20 000) og at den alltid adresseres uavhengig av kandidat. Tester også at brukerens eget som_den_er-forbehold kan gi svakere på forbehold-kriteriet og dermed forkaste kandidater uten forbehold. Merk: km-svakhetssetningen forutsetter rapport_levering; her er den star_ikke, så setningen skal i stedet være den nøytrale varianten «Jeg har kjørt 25 000 km siden kjøpet.» uten andre ledd – legg til denne varianten i frasetabellen."
+        "merknad": "Tester km-svakheten på saksnivå (25 000 km > 20 000) og at den alltid adresseres uavhengig av kandidat. Tester også at brukerens eget som_den_er-forbehold kan gi svakere på forbehold-kriteriet og dermed forkaste kandidater uten forbehold. Merk: km-svakhetssetningen forutsetter rapport_levering; her er den star_ikke, så setningen skal i stedet være den nøytrale varianten «Jeg har kjørt 25 000 km siden kjøpet.» uten andre ledd – legg til denne varianten i frasetabellen. Endret 2026-10-10: erSpesifikk er nå optimalisert for presisjon, og «MYE UTSTYR» gjør hele utsagnet generelt, så WEBASTO gir ikke lenger spor A. Saken faller til B (22/6582, middels). Leddregelen for funksjonslister ville beholdt A, men den ga 10,1 % generelle kalt spesifikke på testhalvdelen."
       }
     },
     {

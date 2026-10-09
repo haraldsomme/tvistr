@@ -22,7 +22,7 @@ const IDAG = "2026-10-09";
 const SELGER = {
   nei: { selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null },
   muntlig: { selger_sa_noe: "ja_muntlig", hvor_sto_det: [], avskrift_selger: null },
-  skriftlig_spesifikk: { selger_sa_noe: "ja_skriftlig", hvor_sto_det: ["annonse"], avskrift_selger: "«Nylig kontrollert, ingen feil på denne delen»" },
+  skriftlig_spesifikk: { selger_sa_noe: "ja_skriftlig", hvor_sto_det: ["annonse"], avskrift_selger: "«Nye bremser foran og bak, service tatt ved 60 000 km»" },
   skriftlig_generell: { selger_sa_noe: "ja_skriftlig", hvor_sto_det: ["annonse"], avskrift_selger: "«Meget pen og velholdt bil»" },
 } as const;
 const R = (o: Partial<RapportSier>): RapportSier => ({ ...RAPPORT_TOM, kostnad: "ja", ...o });

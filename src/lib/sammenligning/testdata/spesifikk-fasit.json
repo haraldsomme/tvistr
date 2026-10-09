@@ -1,0 +1,17 @@
+{
+  "alle": {
+    "utsagn": 1843,
+    "generell_kalt_spesifikk_prosent": 5.8,
+    "spesifikk_kalt_generell_prosent": 19.7
+  },
+  "utvikling": {
+    "utsagn": 972,
+    "generell_kalt_spesifikk_prosent": 2.6,
+    "spesifikk_kalt_generell_prosent": 17.5
+  },
+  "test": {
+    "utsagn": 871,
+    "generell_kalt_spesifikk_prosent": 9.6,
+    "spesifikk_kalt_generell_prosent": 22.1
+  }
+}

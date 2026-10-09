@@ -1001,11 +1001,10 @@
         "dager_til_feil": 588,
         "innen_frist": true,
         "slitedel": false,
-        "spor_primar": "A",
-        "a_variant": "uttalelse",
-        "spor_sekundar": "B",
+        "spor_primar": "B",
+        "a_variant": null,
+        "spor_sekundar": null,
         "spor_alle": [
-          "A",
           "B"
         ],
         "ingen_spor_arsak": null,
@@ -1013,53 +1012,60 @@
         "alvor": false,
         "km_svakhet_i_avsnitt": false,
         "kandidat": {
-          "vedtak_id": 1534,
-          "saksnummer": "24/490",
-          "vedtaksdato": "2024-12-04",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024066692&dokid=1252964&versjon=1&variant=A&",
-          "feil_id": "f3",
+          "vedtak_id": 1920,
+          "saksnummer": "22/6582",
+          "vedtaksdato": "2023-04-26",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023022765&dokid=883900&versjon=1&variant=A&",
+          "feil_id": "f1",
           "kategori": "elektrisk",
           "spor_vunnet": [
-            "A"
+            "B"
           ],
-          "a_variant": "begge",
+          "a_variant": "uttalelse",
           "lovversjon": "før_2024",
-          "sanksjon": "erstatning",
-          "tilkjent_totalt_nok": 39643,
-          "opplysning": {
-            "form": "annonse",
-            "rekkevidde": "generell",
-            "ordlyd": "veldig fin og velholdt",
-            "svar_pa_direkte_sporsmal": false
-          },
+          "sanksjon": "prisavslag",
+          "tilkjent_totalt_nok": 5000,
+          "opplysning": null,
           "forbehold": true,
-          "dager_etter_levering": 61,
-          "selger_bevis_finnes": true
+          "dager_etter_levering": null,
+          "selger_bevis_finnes": false
         },
-        "kandidat_spor": "A",
+        "kandidat_spor": "B",
         "kriterier": [
           {
-            "navn": "form",
-            "bruker": "annonse",
-            "vedtak": "annonse",
+            "navn": "tid_til_feil",
+            "bruker": 588,
+            "vedtak": null,
             "utfall": "lik"
           },
           {
-            "navn": "konkrethet",
-            "bruker": "spesifikk",
-            "vedtak": "generell",
-            "utfall": "sterkere"
-          },
-          {
-            "navn": "direkte_sporsmal",
+            "navn": "selger_motbevis",
             "bruker": false,
             "vedtak": false,
             "utfall": "lik"
           },
           {
-            "navn": "forbehold",
+            "navn": "rapport_levering",
+            "bruker": false,
+            "vedtak": false,
+            "utfall": "lik"
+          },
+          {
+            "navn": "arsak",
+            "bruker": true,
+            "vedtak": false,
+            "utfall": "sterkere"
+          },
+          {
+            "navn": "ikke_slitedel",
             "bruker": true,
             "vedtak": true,
+            "utfall": "lik"
+          },
+          {
+            "navn": "reklamasjonstid",
+            "bruker": 2,
+            "vedtak": null,
             "utfall": "lik"
           },
           {
@@ -1073,49 +1079,133 @@
         "svakhet_adressert": null,
         "godkjent": true,
         "sitat": {
-          "tema": "mangel",
-          "tekst": "Innklagde har derfor brutt sin opplysningsplikt og feil med dieselvarmeren utgjør følgelig en mangel"
+          "tema": "formodning",
+          "tekst": "Etter utvalgets syn er formodningen om at feilen forelå ved risikoens overgang ikke uforenelig med varens eller mangelens art"
         },
         "argumenter": [
-          "Opplysningen i min sak gjelder et konkret forhold uttrykkelig, mens opplysningen i vedtaket var generell.",
-          "Vedtaket gjaldt samme type opplysning som i min sak."
+          "Verkstedet har i tillegg forklart hvorfor delen sviktet.",
+          "Vedtaket gjaldt samme type feil som i min sak."
         ],
-        "avsnitt": "Forbrukerklageutvalget har i vedtak 24/490 av 4. desember 2024 lagt til grunn at selger hadde gitt en uriktig opplysning om det elektriske utstyret. Opplysningen sto i annonsen og lød: «veldig fin og velholdt». Utvalget uttalte: «Innklagde har derfor brutt sin opplysningsplikt og feil med dieselvarmeren utgjør følgelig en mangel». Kjøperen fikk erstattet til sammen 39 643 kr for manglene i saken. Min sak står minst like sterkt på de momentene utvalget bygde på. Opplysningen i min sak gjelder et konkret forhold uttrykkelig, mens opplysningen i vedtaket var generell. Vedtaket gjaldt samme type opplysning som i min sak.",
+        "avsnitt": "Forbrukerklageutvalget har i vedtak 22/6582 av 26. april 2023 lagt til grunn at en feil som viste seg etter leveringen, forelå ved leveringen, fordi selger ikke hadde fremlagt bevis for noe annet. Saken gjaldt en elektrisk feil på en 10 år gammel bil. Utvalget uttalte: «Etter utvalgets syn er formodningen om at feilen forelå ved risikoens overgang ikke uforenelig med varens eller mangelens art». Kjøperen fikk prisavslag på 5 000 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Verkstedet har i tillegg forklart hvorfor delen sviktet. Vedtaket gjaldt samme type feil som i min sak.",
         "forkastede": [
           {
-            "saksnummer": "23/1127 f1",
-            "grunn": "svakere på direkte_sporsmal"
+            "saksnummer": "FKU-2026-57255 f3",
+            "grunn": "svakere på tid_til_feil, rapport_levering"
+          },
+          {
+            "saksnummer": "FKU-2026-110357 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "FKU-2025-141296 f4",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "FKU-2025-141296 f6",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "FKU-2025-141814 f2",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "23/17444 f8",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "23/12082 f2",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "23/400 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "22/2710 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "22/3436 f1",
+            "grunn": "svakere på tid_til_feil"
           },
           {
             "saksnummer": "22/1667 f4",
-            "grunn": "svakere på forbehold"
+            "grunn": "svakere på tid_til_feil, reklamasjonstid"
           },
           {
-            "saksnummer": "22/4917 f2",
-            "grunn": "ingen opplysning i vedtaket knyttet til feilen"
+            "saksnummer": "22/4099 f4",
+            "grunn": "svakere på tid_til_feil"
           },
           {
-            "saksnummer": "21/4781 f1",
-            "grunn": "svakere på form"
+            "saksnummer": "21/17278 f2",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/17278 f3",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/14188 f6",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/13339 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/6269 f1",
+            "grunn": "svakere på tid_til_feil, reklamasjonstid"
+          },
+          {
+            "saksnummer": "21/3722 f1",
+            "grunn": "svakere på tid_til_feil, reklamasjonstid"
+          },
+          {
+            "saksnummer": "21/4611 f2",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/4706 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/3708 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/5304 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/5099 f2",
+            "grunn": "svakere på tid_til_feil"
           },
           {
             "saksnummer": "21/4550 f1",
-            "grunn": "svakere på forbehold"
+            "grunn": "svakere på tid_til_feil"
           },
           {
             "saksnummer": "21/4846 f2",
-            "grunn": "svakere på form"
+            "grunn": "svakere på tid_til_feil, rapport_levering"
+          },
+          {
+            "saksnummer": "21/4494 f1",
+            "grunn": "svakere på tid_til_feil"
+          },
+          {
+            "saksnummer": "21/4602 f2",
+            "grunn": "svakere på tid_til_feil"
           }
         ],
         "styrke": "middels",
         "motstridende": {
-          "saksnummer": "21/12861",
-          "vedtaksdato": "2022-11-30",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022097077&dokid=791753&versjon=2&variant=A&",
+          "saksnummer": "23/17295",
+          "vedtaksdato": "2024-08-28",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024039709&dokid=1204227&versjon=2&variant=A&",
           "grunn": "paregnelig_slitasje",
           "skilte": [
-            "I 21/12861 la utvalget til grunn at feilen var vanlig slitasje for bilens alder og kjørelengde.",
-            "Feilen i 21/12861 viste seg etter 21 dager, mot 61 dager i 24/490."
+            "I 23/17295 la utvalget til grunn at feilen var vanlig slitasje for bilens alder og kjørelengde.",
+            "Bilen i 23/17295 var 12 år, mot 10 år i 22/6582."
           ]
         },
         "naermeste": null,

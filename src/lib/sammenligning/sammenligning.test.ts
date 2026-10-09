@@ -356,8 +356,17 @@ describe("sanksjon, valg og reproduserbarhet", () => {
 });
 
 describe("rettelser etter testsakene S01–S10", () => {
-  it("en skriftlig opplysning er konkret med mindre den bare er et helhetsutsagn (S09, S10)", () => {
-    expect(erSpesifikk("«LAV KM, WEBASTO, LANG, MYE UTSTYR ++»")).toBe(true);
+  it("en skriftlig opplysning er konkret når den nevner en komponent og ikke sier noe om hele bilen (presisjon først)", () => {
+    expect(erSpesifikk("«WEBASTO, NAVI, HENGEFESTER»")).toBe(true);
+    // «Mye utstyr» is about the whole car, so the list is general: a false A is worse than a missing one.
+    expect(erSpesifikk("«LAV KM, WEBASTO, LANG, MYE UTSTYR ++»")).toBe(false);
+    expect(erSpesifikk("«Dekk ser bra ut.»")).toBe(false);
+    expect(erSpesifikk("«Pen BMW x1 xDrive18d Sport Line til salgs.»")).toBe(false);
+    // Compounds by their last part, sale terms, and the form's legal facts.
+    expect(erSpesifikk("«Nye vinterdekk på alufelg»")).toBe(true);
+    expect(erSpesifikk("«Bilen selges fri for heftelser.»")).toBe(true);
+    expect(erSpesifikk("«Grei bruksbil selges billig.»")).toBe(false);
+    expect(erSpesifikk("«Tatt godt vare på»")).toBe(false);
     expect(erSpesifikk("«Kjøretøyets oljeforbruk er litt høyere enn vanlig.»")).toBe(true);
     expect(erSpesifikk("«Bilen er i meget god stand»")).toBe(false);
     expect(erSpesifikk("Pen og velholdt bil, strøken!")).toBe(false);

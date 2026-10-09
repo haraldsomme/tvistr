@@ -102,7 +102,13 @@ Testsakene ligger i `src/lib/sammenligning/testdata/testsaker.json`. `npm run sa
 
 ## Kjente svakheter
 
-- **`erSpesifikk`** bygger på en ordliste over helhetsutsagn. Et nytt helhetsord som ikke står i listen, gjør en generell opplysning konkret.
+- **`erSpesifikk`** (`spesifikk.ts`) er optimalisert for presisjon, fordi et falskt A-avsnitt er verre enn et manglende. En uttalelse er spesifikk når den nevner en komponent og ikke inneholder et generelt predikat.
+  - Komponentene er ord som forekommer minst fem ganger i pass 2 sine `komponenter[]`, minus ord om hele bilen (`npm run komponentord` skriver `komponentord.json`). I tillegg kommer korte ord (EU, AC, HK …) og skjemaets juridiske fakta (heftelse, pant, import, eier, kollisjon). Sammensatte ord teller etter siste ledd.
+  - Predikatene er fraser som «god stand», «velholdt», «ser bra ut», «ingen feil», «mye utstyr» og «selges» (men ikke «selges med/fri/ferdig»).
+  - `npm run spesifikk` måler regelen mot de 1 843 skriftlige uttalelsene pass 2 har merket, og feiler over 10 % generelle kalt spesifikke. Tall 2026-10-10:
+    - hele settet: 5,8 % generelle kalt spesifikke og 19,7 % spesifikke kalt generelle;
+    - testhalvdelen (odde `vedtak_id`), som regelen ikke ble tilpasset til: 9,6 % og 22,1 %. Den ble brukt til fire sammenligninger underveis, så tallet er litt optimistisk.
+  - En leddregel for funksjonslister («LAV KM, WEBASTO, …, MYE UTSTYR») ville beholdt spor A i S09, men ga 10,1 % på testhalvdelen og ble ikke tatt i bruk.
 - **Kategoribonusen telles to ganger** i `velgTilBrev`; på B og C også i rangeringen. Den er både et kriterium i `antall_sterkere` og et tillegg på +1, slik spesifikasjonen sier.
 - **Bare pass 2-data fra 2021 og senere.** Nesten alle vedtakene gjelder kjøp før 2024, så lovendringssetningen kommer i praktisk talt alle brev om kjøp etter 2024.
 - **`forbehold_frase`** dekker bare «som den er» og «som den står». Andre forbehold får den generelle setningen.

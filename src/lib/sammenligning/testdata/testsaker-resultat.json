@@ -356,22 +356,22 @@
         "alvor": false,
         "km_svakhet_i_avsnitt": false,
         "kandidat": {
-          "vedtak_id": 3160,
-          "saksnummer": "FKU-2025-134183",
-          "vedtaksdato": "2025-06-23",
-          "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-134183.pdf",
-          "feil_id": "f2",
+          "vedtak_id": 3128,
+          "saksnummer": "FKU-2025-58214",
+          "vedtaksdato": "2025-11-05",
+          "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-58214.pdf",
+          "feil_id": "f1",
           "kategori": "rust",
           "spor_vunnet": [
             "C"
           ],
-          "a_variant": "taushet",
+          "a_variant": "uttalelse",
           "lovversjon": "før_2024",
-          "sanksjon": "prisavslag",
-          "tilkjent_totalt_nok": 13648,
+          "sanksjon": "prisavslag_og_erstatning",
+          "tilkjent_totalt_nok": 17416,
           "opplysning": null,
           "forbehold": true,
-          "dager_etter_levering": 30,
+          "dager_etter_levering": 178,
           "selger_bevis_finnes": false
         },
         "kandidat_spor": "C",
@@ -385,8 +385,8 @@
           {
             "navn": "ved_levering",
             "bruker": true,
-            "vedtak": false,
-            "utfall": "sterkere"
+            "vedtak": true,
+            "utfall": "lik"
           },
           {
             "navn": "alvor",
@@ -397,31 +397,31 @@
           {
             "navn": "alder",
             "bruker": 2,
-            "vedtak": 13,
+            "vedtak": 15,
             "utfall": "sterkere"
           },
           {
             "navn": "km",
             "bruker": 22000,
-            "vedtak": 160919,
+            "vedtak": 178200,
             "utfall": "sterkere"
           },
           {
             "navn": "pris",
             "bruker": 520000,
-            "vedtak": 150000,
+            "vedtak": 49000,
             "utfall": "sterkere"
           },
           {
             "navn": "kostnad_pris",
             "bruker": 0.12307692307692308,
-            "vedtak": 0.09098666666666666,
-            "utfall": "sterkere"
+            "vedtak": 0.5179183673469387,
+            "utfall": "utelat"
           },
           {
             "navn": "tid_til_feil",
             "bruker": 585,
-            "vedtak": 30,
+            "vedtak": 178,
             "utfall": "svakere"
           },
           {
@@ -431,20 +431,19 @@
             "utfall": "sterkere"
           }
         ],
-        "antall_sterkere": 6,
+        "antall_sterkere": 4,
         "svakhet_adressert": "tid_til_feil",
         "godkjent": true,
         "sitat": {
-          "tema": "mangel",
-          "tekst": "Utvalget anser da at selv om bilen er av eldre årsmodell, er rustskadene av et slikt omfang at det overstiger hva klageren med rimelighet kunne forvente, også tatt i betraktning bilens kjøpesum, se fkjl. § 17 første ledd bokstav a"
+          "tema": "bevis",
+          "tekst": "Rapporten viser også til … at bilen har begynt å ruste for en god stund siden, og at dette har utviklet seg over tid, slik at utvalget finner det sannsynliggjort at rusten kan føres tilbake til leveringen, jf. fkjl. § 18 første ledd, jf. §§ 14 og 7"
         },
         "argumenter": [
-          "Bilen var 2 år med 22 000 km og kostet 520 000 kr, mot 13 år, 160 919 km og 150 000 kr i vedtaket.",
-          "Utbedringen koster 12 % av kjøpesummen, mot 9 % i vedtaket.",
+          "Bilen var 2 år med 22 000 km og kostet 520 000 kr, mot 15 år, 178 200 km og 49 000 kr i vedtaket.",
           "Vedtaket gjaldt samme type feil som i min sak.",
           "Feilen viste seg senere enn i vedtaket, men verkstedet har konkludert med at den forelå ved leveringen."
         ],
-        "avsnitt": "Forbrukerklageutvalget har i vedtak FKU-2025-134183 av 23. juni 2025 lagt til grunn at en feil som var dokumentert å gå ut over det påregnelige for bilens alder og kjørelengde, var en mangel. Saken gjaldt en 13 år gammel bil med 160 919 km, kjøpt for 150 000 kr. Den sakkyndige konkluderte med at feilen gikk ut over det påregnelige. Utvalget uttalte: «Utvalget anser da at selv om bilen er av eldre årsmodell, er rustskadene av et slikt omfang at det overstiger hva klageren med rimelighet kunne forvente, også tatt i betraktning bilens kjøpesum, se fkjl. § 17 første ledd bokstav a». Kjøperen fikk prisavslag på 13 648 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Bilen var 2 år med 22 000 km og kostet 520 000 kr, mot 13 år, 160 919 km og 150 000 kr i vedtaket. Utbedringen koster 12 % av kjøpesummen, mot 9 % i vedtaket. Vedtaket gjaldt samme type feil som i min sak. Feilen viste seg senere enn i vedtaket, men verkstedet har konkludert med at den forelå ved leveringen.",
+        "avsnitt": "Forbrukerklageutvalget har i vedtak FKU-2025-58214 av 5. november 2025 lagt til grunn at en feil som var dokumentert å gå ut over det påregnelige for bilens alder og kjørelengde, var en mangel. Saken gjaldt en 15 år gammel bil med 178 200 km, kjøpt for 49 000 kr. NAF konkluderte med at feilen gikk ut over det påregnelige og hadde oppstått før leveringen. Utvalget uttalte: «Rapporten viser også til … at bilen har begynt å ruste for en god stund siden, og at dette har utviklet seg over tid, slik at utvalget finner det sannsynliggjort at rusten kan føres tilbake til leveringen, jf. fkjl. § 18 første ledd, jf. §§ 14 og 7». Kjøperen fikk tilkjent 12 689 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Bilen var 2 år med 22 000 km og kostet 520 000 kr, mot 15 år, 178 200 km og 49 000 kr i vedtaket. Vedtaket gjaldt samme type feil som i min sak. Feilen viste seg senere enn i vedtaket, men verkstedet har konkludert med at den forelå ved leveringen.",
         "forkastede": [
           {
             "saksnummer": "23/10066 f3",
@@ -632,22 +631,23 @@
         "alvor": false,
         "km_svakhet_i_avsnitt": false,
         "kandidat": {
-          "vedtak_id": 2113,
-          "saksnummer": "21/13339",
-          "vedtaksdato": "2023-01-18",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022101396&dokid=800299&versjon=3&variant=A&",
-          "feil_id": "f1",
+          "vedtak_id": 1914,
+          "saksnummer": "22/1667",
+          "vedtaksdato": "2023-04-26",
+          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023018252&dokid=872941&versjon=1&variant=A&",
+          "feil_id": "f4",
           "kategori": "elektrisk",
           "spor_vunnet": [
+            "A",
             "B"
           ],
           "a_variant": "uttalelse",
           "lovversjon": "før_2024",
-          "sanksjon": "erstatning",
-          "tilkjent_totalt_nok": 3825,
+          "sanksjon": "prisavslag",
+          "tilkjent_totalt_nok": 25000,
           "opplysning": null,
-          "forbehold": true,
-          "dager_etter_levering": 324,
+          "forbehold": false,
+          "dager_etter_levering": 66,
           "selger_bevis_finnes": true
         },
         "kandidat_spor": "B",
@@ -655,8 +655,8 @@
           {
             "navn": "tid_til_feil",
             "bruker": 66,
-            "vedtak": 324,
-            "utfall": "sterkere"
+            "vedtak": 66,
+            "utfall": "lik"
           },
           {
             "navn": "selger_motbevis",
@@ -685,8 +685,8 @@
           {
             "navn": "reklamasjonstid",
             "bruker": 3,
-            "vedtak": 8,
-            "utfall": "sterkere"
+            "vedtak": 0,
+            "utfall": "svakere"
           },
           {
             "navn": "kategori",
@@ -695,17 +695,16 @@
             "utfall": "sterkere"
           }
         ],
-        "antall_sterkere": 4,
-        "svakhet_adressert": null,
+        "antall_sterkere": 2,
+        "svakhet_adressert": "reklamasjonstid",
         "godkjent": true,
         "sitat": null,
         "argumenter": [
-          "Feilen viste seg 66 dager etter leveringen, mot 324 dager i vedtaket.",
           "Verkstedet har i tillegg forklart hvorfor delen sviktet.",
-          "Jeg reklamerte 3 dager etter at feilen ble oppdaget.",
-          "Vedtaket gjaldt samme type feil som i min sak."
+          "Vedtaket gjaldt samme type feil som i min sak.",
+          "Reklamasjonen ble fremsatt innen lovens frist på to måneder."
         ],
-        "avsnitt": "Forbrukerklageutvalget har i vedtak 21/13339 av 18. januar 2023 lagt til grunn at en feil som viste seg 324 dager etter leveringen, forelå ved leveringen, og at selgers dokumentasjon ikke var tilstrekkelig til å motbevise dette. Saken gjaldt en elektrisk feil på en 3 år gammel bil. Kjøperen fikk erstattet 3 825 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Feilen viste seg 66 dager etter leveringen, mot 324 dager i vedtaket. Verkstedet har i tillegg forklart hvorfor delen sviktet. Jeg reklamerte 3 dager etter at feilen ble oppdaget. Vedtaket gjaldt samme type feil som i min sak.",
+        "avsnitt": "Forbrukerklageutvalget har i vedtak 22/1667 av 26. april 2023 lagt til grunn at en feil som viste seg 66 dager etter leveringen, forelå ved leveringen, og at selgers dokumentasjon ikke var tilstrekkelig til å motbevise dette. Saken gjaldt en elektrisk feil på en 12 år gammel bil. Kjøperen fikk prisavslag på til sammen 25 000 kr for manglene i saken. Min sak står minst like sterkt på de momentene utvalget bygde på. Verkstedet har i tillegg forklart hvorfor delen sviktet. Vedtaket gjaldt samme type feil som i min sak. Reklamasjonen ble fremsatt innen lovens frist på to måneder.",
         "forkastede": [
           {
             "saksnummer": "FKU-2026-57255 f3",
@@ -820,9 +819,8 @@
           "grunn": "ikke_sannsynliggjort_ved_levering",
           "skilte": [
             "I 23/16163 mente utvalget at det ikke var sannsynliggjort at feilen var der ved leveringen.",
-            "Bilen i 23/16163 hadde gått 178 000 km, mot 11 200 km i 21/13339.",
-            "Bilen i 23/16163 var 8 år, mot 3 år i 21/13339.",
-            "Feilen i 23/16163 viste seg etter 0 dager, mot 324 dager i 21/13339."
+            "Bilen i 23/16163 var 8 år, mot 12 år i 22/1667.",
+            "Feilen i 23/16163 viste seg etter 0 dager, mot 66 dager i 22/1667."
           ]
         },
         "naermeste": null,

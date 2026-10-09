@@ -84,6 +84,7 @@ export type VedtakFeil = {
   kilde_url: string;
   utfall: string;
   grunn: string | null; // why a lost defect was lost (pass 2), null when won
+  selger_type: string; // forhandler or formidling
   kategori: string;
   komponenter: string[];
   grunnlag: string | null;

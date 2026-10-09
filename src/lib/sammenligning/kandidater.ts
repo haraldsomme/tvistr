@@ -31,7 +31,7 @@ export function lagHentKandidater(db: { execute: (q: ReturnType<typeof sql>) => 
           and coalesce(s.grunn, '') not in ('reklamert_for_sent', 'utbedret_av_selger')`
       : sql`s.vurdering = 'mangel' and ${spor} = any(s.spor_vunnet) ${variant} and s.selger_type in ('forhandler', 'formidling') and s.utfall <> 'avvist' ${heving}`;
     const { rows } = await db.execute(sql`
-      select s.vedtak_id, s.feil_id, s.saksnummer, s.vedtaksdato::text as vedtaksdato, s.kilde_url, s.utfall::text as utfall, s.grunn,
+      select s.vedtak_id, s.feil_id, s.saksnummer, s.vedtaksdato::text as vedtaksdato, s.kilde_url, s.utfall::text as utfall, s.grunn, s.selger_type::text as selger_type,
         s.kategori, s.komponenter, s.grunnlag, s.spor_vunnet, s.a_variant, s.alvor, s.dager_etter_levering,
         s.lovversjon::text as lovversjon, s.alder_ved_kjop, s.km_ved_kjop, s.kjopesum_nok,
         s.belop_tilkjent_nok, v.tilkjent_totalt_nok, v.utbedringskostnad_nok, a.sanksjon, coalesce(v.forbehold, '{}') as forbehold,
@@ -74,6 +74,7 @@ function tilVedtakFeil(r: Record<string, unknown>, spor: Spor): VedtakFeil {
     kilde_url: String(r.kilde_url),
     utfall: String(r.utfall),
     grunn: (r.grunn as string) ?? null,
+    selger_type: String(r.selger_type),
     kategori: String(r.kategori),
     komponenter: (r.komponenter as string[]) ?? [],
     grunnlag: (r.grunnlag as string) ?? null,

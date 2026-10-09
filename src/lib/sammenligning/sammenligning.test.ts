@@ -21,6 +21,7 @@ function vedtakFeil(o: Partial<VedtakFeil> = {}): VedtakFeil {
     kilde_url: "https://example.org/1.pdf",
     utfall: "delvis_medhold",
     grunn: null,
+    selger_type: "forhandler",
     kategori: "elektrisk",
     komponenter: ["parkeringsvarmer"],
     grunnlag: "feil_opplysning",
@@ -667,5 +668,20 @@ describe("vedtak per feil: årsak, kategori, forlik og middels styrke", () => {
     const svakereTap = { ...tapt, bevis: [] };
     const lev = await sammenlign(s, async (q) => (q.spor !== "B" ? [] : q.tapte ? [svakereTap] : [vunnet]), IDAG);
     expect(lev.feil[0].styrke).toBe("sterk");
+  });
+});
+
+describe("rangering etter selgertype", () => {
+  it("mot en forhandler går et forhandlervedtak foran et formidlingsvedtak, rett etter kategori", () => {
+    const sak = avledSak(enyaq, IDAG);
+    const f = avledFeil(sak, enyaq.del3_feil[0]);
+    const x = (o: Partial<VedtakFeil>): Vurdert => ({ vedtak: vedtakFeil({ spor: "C", spor_vunnet: ["C"], kategori: "klimaanlegg", ...o }), opplysning: null, kriterier: [], antall_sterkere: 2, svakhet: null });
+    // The commission sale is newer and has more stronger points; the dealer decision still comes first.
+    const formidling = { ...x({ vedtak_id: 1, selger_type: "formidling", vedtaksdato: "2026-01-01" }), antall_sterkere: 4 };
+    const forhandler = x({ vedtak_id: 2, selger_type: "forhandler", vedtaksdato: "2022-01-01" });
+    expect(ranger([formidling, forhandler], f, sak).map((v) => v.vedtak.vedtak_id)).toEqual([2, 1]);
+    // The category still comes first.
+    const annenKategori = x({ vedtak_id: 3, selger_type: "forhandler", kategori: "elektrisk" });
+    expect(ranger([annenKategori, formidling], f, sak).map((v) => v.vedtak.vedtak_id)).toEqual([1, 3]);
   });
 });

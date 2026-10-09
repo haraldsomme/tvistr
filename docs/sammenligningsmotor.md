@@ -129,13 +129,15 @@ Testsakene ligger i `src/lib/sammenligning/testdata/testsaker.json`. `npm run sa
   - Høyst én svakhet, og den må kunne adresseres.
   - Har selger motbevis og selger i vedtaket ikke, forkastes vedtaket alltid på B og C. På A gjelder spørsmålet om opplysningen var uriktig, så der er `sak.selger_motbevis` bare et flagg til brevmotoren (innsigelsesblokken).
 - **Rangering:**
-  1. antall sterkere;
-  2. ingen svakhet;
-  3. samme kategori;
-  4. samme lovversjon;
-  5. sanksjonen passer ønsket løsning;
-  6. siterbar: verifisert ordlyd og et sitat som er en hel setning (lagt til i v1.1);
-  7. nyeste vedtak.
+  1. samme kategori (på B og C; på A er kategorien et kriterium);
+  2. forhandlervedtak foran formidlingsvedtak, siden brukeren alltid har kjøpt av en forhandler (lagt til 2026-10-10);
+  3. antall sterkere;
+  4. ingen svakhet;
+  5. samme kategori;
+  6. samme lovversjon;
+  7. sanksjonen passer ønsket løsning;
+  8. siterbar: verifisert ordlyd og et sitat som er en hel setning (lagt til i v1.1);
+  9. nyeste vedtak.
 - **Til brevet:** inntil to feil, rangert etter antall sterkere pluss 1 ved samme kategori, deretter kostnad.
 - **Avsnittet** har fem ledd: hva utvalget la til grunn, vedtakets faktum, utvalgets ord, resultat og sammenligningen. Lovendringen står ikke i avsnittet, men én gang etter det siste praksisavsnittet (`lovendring` i outputen).
 - **Utenfor modulen:** styrkevurdering, rapportbestilling og resten av brevet.
@@ -187,6 +189,8 @@ Av flere tap vises det med mest like fakta: færrest kriterier som skiller i noe
 - `middels` hvis og bare hvis `motstridende` er satt;
 - B og C har aldri vedtak fra en annen kategori;
 - ingen vedtak kommer fra en annen opplysningsgruppe.
+
+**Sveipet er regresjon, ikke produktstatistikk.** Alle kombinasjonene teller likt, men virkelige brukere har en annen miks: langt flere har annonse og rapport. Tallene skal derfor ikke brukes til forventningsstyring. En realistisk fordeling krever at kombinasjonene vektes med pass 1-andelene for kategori, bevistype og opplysning.
 
 **Tallene** sammenlignes med `testdata/sveip-fasit.json`: styrkefordelingen, årsakene til svak, andelen svake med nærmeste vedtak, kategoriblandingen, og svak-andelen etter selgers opplysning, rapport, tid og selgers motbevis. Kjør sveipet hver gang spor, kriterier eller kandidatfiltre endres. Les forskjellene, og frys med `npm run sveip -- --frys`.
 

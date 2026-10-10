@@ -483,7 +483,7 @@ function Brukerresultat({ svar }: { svar: Extract<SakSvar, { ok: true }> }) {
             <p className={TEKST}>Dere har inngått en avtale om denne feilen, så den tas ikke med i brevet.</p>
           ) : f.vedtak ? (
             <p className={TEKST}>
-              Forbrukerklageutvalget har gitt medhold i en sak om samme type feil som ikke var sterkere enn din:{" "}
+              Forbrukerklageutvalget har gitt medhold i en sak om samme type feil som {f.vedtak_svakhet ? "på ett punkt var sterkere enn din, men ikke på de andre" : "ikke var sterkere enn din"}:{" "}
               <a href={f.vedtak.kilde_url} target="_blank" rel="noreferrer" className={LENKE}>
                 vedtak {f.vedtak.saksnummer}
               </a>
@@ -499,8 +499,11 @@ function Brukerresultat({ svar }: { svar: Extract<SakSvar, { ok: true }> }) {
           )}
           {f.reklamasjon_over_to_mnd && (
             <p className="m-0 text-[14px] leading-[1.6] text-[#8a3b12]">
-              Du tok opp feilen med selger mer enn to måneder etter at du oppdaget den. Loven krever at du gjør det innen rimelig tid, og to måneder regnes alltid som tidsnok
-              (forbrukerkjøpsloven § 27). Senere enn det kan selger avvise kravet, og saken er derfor høyst middels.
+              {f.tatt_opp
+                ? "Du tok opp feilen med selger mer enn to måneder etter at du oppdaget den."
+                : "Du har ikke tatt opp feilen med selger ennå, og det er mer enn to måneder siden du oppdaget den."}{" "}
+              Loven krever at du gjør det innen rimelig tid, og to måneder regnes alltid som tidsnok (forbrukerkjøpsloven § 27). Senere enn det kan selger avvise kravet, og saken er
+              derfor høyst middels.
             </p>
           )}
         </article>

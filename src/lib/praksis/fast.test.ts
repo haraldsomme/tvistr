@@ -86,7 +86,7 @@ describe("skrivPraksisdel: spesifikk, så generell, så fast blokk", () => {
     hentKandidater: async () => [],
     hentFulltekst: async (ider: number[]) => new Map(ider.map((id) => [id, "Utvalget ser slik på saken\nUtvalget finner at feilen går ut over det påregnelige for bilens alder og kjørelengde."])),
     hentAnalyse: async () => new Map(),
-    hentEksempler: async (e: Array<{ vedtak_id: number; feil_id: string }>) => e.map((x) => vedtakFeil({ vedtak_id: x.vedtak_id, feil_id: x.feil_id })),
+    hentEksempler: async (e: Array<{ vedtak_id: number; feil_id: string }>) => e.map((x) => vedtakFeil({ vedtak_id: x.vedtak_id, feil_id: x.feil_id, saksnummer: `S${x.vedtak_id}` })),
     utkast: true,
     ...o,
   });
@@ -99,7 +99,7 @@ describe("skrivPraksisdel: spesifikk, så generell, så fast blokk", () => {
     expect(d.avsnitt[0].avsnitt).toContain("i saker om motoren");
     expect(d.forsok.map((f) => [f.feil_id, f.modus])).toEqual([["F2", "generell"]]);
     // The purchase is after 2024 and the examples are not.
-    expect(d.lovendring).toMatch(/^Begge vedtakene gjelder kjøp før forbrukerkjøpsloven ble endret/);
+    expect(d.lovendring).toMatch(/^Vedtak S3086 og S3128 gjelder kjøp før forbrukerkjøpsloven ble endret/);
   });
 
   it("uten godkjent blokk og uten utkast: ingen avsnitt og ingen kall", async () => {

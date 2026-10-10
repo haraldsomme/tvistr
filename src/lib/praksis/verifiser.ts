@@ -160,6 +160,8 @@ function sjekk(
   const stryk = (regel: StrykRegel, detalj: string): Sjekket => ({ regel, detalj });
   const tillatteLedd = g.modus === "spesifikk" ? [1, 2, 4, 5] : [1, 2];
   if (!s.tekst.trim() || !tillatteLedd.includes(s.ledd)) return stryk("ledd", `ledd ${s.ledd} er ikke tillatt i et ${g.modus} avsnitt`);
+  // A lead-in such as «Utvalget uttalte:» is not a sentence; the quote has its own field.
+  if (/:\s*$/.test(s.tekst) || s.tekst.trim().split(/\s+/).length < 4) return stryk("ledd", "ikke en hel setning");
 
   // A sentence about the decision needs a verbatim belegg from it; what the committee found (ledd 1),
   // from its own assessment.

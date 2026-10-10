@@ -65,7 +65,7 @@ Avsnittet har fem ledd, i denne rekkefølgen:
 1. Hva utvalget la til grunn, med vedtakets nummer og dato: «Forbrukerklageutvalget har i vedtak {{saksnummer}} av {{vedtaksdato}} lagt til grunn at …». Si hva utvalget faktisk fant, med utvalgets begrep: en uriktig opplysning er ikke det samme som at selger unnlot å opplyse om noe.
 2. Vedtakets faktum som er relevant for sammenligningen (hva opplysningen var, bilens alder og kjørelengde, når feilen viste seg, hva rapporten sa).
 3. Sitatet.
-4. Utfallet: hva kjøperen fikk. Bruk {{belop}} bare når belegget inneholder beløpet, og si hva beløpet dekket slik vedtaket sier det.
+4. Utfallet: hva kjøperen fikk for denne feilen. sanksjon og beløpene i utfall gjelder hele saken, som kan ha flere feil (andre_feil_i_saken): si bare hva kjøperen fikk for denne feilen (prisavslag, erstatning eller heving) når et sitat sier det om denne feilen. Bruk {{belop}} bare når belegget inneholder beløpet, og si hva beløpet dekket slik vedtaket sier det. Finner du ikke et slikt sitat, utelater du ledd 4.
 5. Sammenligningen: «Min sak står minst like sterkt på de momentene utvalget bygde på.» og deretter de momentene der kjøperen er sterkere ifølge <kriterier>. «Like sterkt» uten «minst» bare når ingen kriterier er sterkere og det ikke er noen svakhet. Påstå aldri at kjøperen er sterkere på et moment kriteriene ikke sier er sterkere. Har kandidaten en svakhet (svakhet i <meta>), ta den opp ærlig og forklar hvorfor den ikke endrer vurderingen, med fakta fra <feil>.
 
 5 til 9 setninger i alt.`;

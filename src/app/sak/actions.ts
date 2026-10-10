@@ -17,7 +17,10 @@ const idagINorge = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Eur
 export type FeilSvar = Pick<FeilResultat, "feil_id" | "kategori_pass2" | "styrke" | "styrke_grunn" | "ingen_spor_arsak" | "forlik" | "reklamasjon_over_to_mnd" | "tapte"> & {
   // The best approved decision, and how many more there are.
   vedtak: { saksnummer: string; vedtaksdato: string; kilde_url: string } | null;
+  // The decision has one point where the buyer is weaker, which the letter must answer.
+  vedtak_svakhet: boolean;
   flere_vedtak: number;
+  tatt_opp: boolean;
   til_brevet: boolean;
 };
 export type SakSvar = { ok: true; stopp: string | null; feil: FeilSvar[]; valgt_til_brev: string[] } | { ok: false; feil: Valideringsfeil[] } | { ok: false; melding: string };
@@ -47,7 +50,9 @@ export async function sendSak(skjema: Skjema): Promise<SakSvar> {
           reklamasjon_over_to_mnd: f.reklamasjon_over_to_mnd,
           tapte: f.tapte,
           vedtak: v ? { saksnummer: v.saksnummer, vedtaksdato: v.vedtaksdato, kilde_url: v.kilde_url } : null,
+          vedtak_svakhet: !!v?.svakhet,
           flere_vedtak: Math.max(0, f.kandidater.length - 1),
+          tatt_opp: skjema.del6_kontakt_med_selger.tatt_opp_med_selger !== "nei",
           til_brevet: r.valgt_til_brev.includes(f.feil_id),
         };
       }),

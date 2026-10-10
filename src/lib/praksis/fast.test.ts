@@ -85,6 +85,7 @@ describe("skrivPraksisdel: spesifikk, så generell, så fast blokk", () => {
   const deps = (o: { kall?: Parameters<typeof skrivPraksisdel>[2]["kall"] } = {}) => ({
     hentKandidater: async () => [],
     hentFulltekst: async (ider: number[]) => new Map(ider.map((id) => [id, "Utvalget ser slik på saken\nUtvalget finner at feilen går ut over det påregnelige for bilens alder og kjørelengde."])),
+    hentAnalyse: async () => new Map(),
     hentEksempler: async (e: Array<{ vedtak_id: number; feil_id: string }>) => e.map((x) => vedtakFeil({ vedtak_id: x.vedtak_id, feil_id: x.feil_id })),
     utkast: true,
     ...o,
@@ -123,7 +124,8 @@ describe("skrivPraksisdel når modellkallet feiler", () => {
     const deps = {
       hentKandidater: async () => [],
       hentFulltekst: async () => new Map(),
-      hentEksempler: async (e: Array<{ vedtak_id: number; feil_id: string }>) => e.map((x) => ({ vedtak_id: x.vedtak_id, feil_id: x.feil_id, spor: "C" }) as VedtakFeil),
+      hentAnalyse: async () => new Map(),
+      hentEksempler: async (e: Array<{ vedtak_id: number; feil_id: string }>) => e.map((x) => ({ vedtak_id: x.vedtak_id, feil_id: x.feil_id, spor: "C", opplysninger: [], bevis: [], komponenter: [] }) as unknown as VedtakFeil),
       utkast: true,
       kall: async () => {
         throw new Error("Your credit balance is too low");

@@ -12,7 +12,7 @@ import { join } from "node:path";
 import { sql } from "drizzle-orm";
 import { db } from "../../src/db";
 import { PRAKSIS_FAST } from "../../src/lib/praksis/fast";
-import { lagHentFulltekst } from "../../src/lib/praksis/fulltekst";
+import { lagHentAnalyse, lagHentFulltekst } from "../../src/lib/praksis/fulltekst";
 import { type Forsok, type Praksisdel, skrivPraksisdel } from "../../src/lib/praksis/praksisdel";
 import type { Kall } from "../../src/lib/praksis/skriv";
 import { MAKS_KANDIDATER, sammenlign, type Resultat } from "../../src/lib/sammenligning";
@@ -22,7 +22,8 @@ import type { Spor } from "../../src/lib/sammenligning/typer";
 import { type Skjema, validerSkjema } from "../../src/lib/skjema/skjema";
 import { UGYLDIG_FELT } from "./valider";
 
-const MAPPE = "data/testkjoring";
+// TESTKJORING_MAPPE runs a second set side by side (e.g. another model) without touching the first.
+const MAPPE = process.env.TESTKJORING_MAPPE ?? "data/testkjoring";
 const IDAG = "2026-10-10";
 
 type Sjekk = { ok: boolean; merknad?: string };
@@ -116,7 +117,7 @@ function praksisSjekker(r: Resultat, d: Praksisdel, igjen: Praksisdel | null, ek
 }
 
 async function kjorPraksis(ider: string[], fraLager: boolean) {
-  const deps = { hentKandidater: lagHentKandidater(db), hentFulltekst: lagHentFulltekst(db), hentEksempler: lagHentEksempler(db), utkast: true };
+  const deps = { hentKandidater: lagHentKandidater(db), hentFulltekst: lagHentFulltekst(db), hentAnalyse: lagHentAnalyse(db), hentEksempler: lagHentEksempler(db), utkast: true };
   mkdirSync(join(MAPPE, "praksis"), { recursive: true });
   const linjer: string[] = [];
   // Amounts the jurist's example decisions awarded: a general paragraph must not carry them (P4).

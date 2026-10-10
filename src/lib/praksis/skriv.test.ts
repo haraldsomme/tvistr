@@ -14,7 +14,7 @@ describe("opptak av modellsvar spilles av mot verifiseringen", () => {
     const fulltekst = new Map(Object.entries(o.fulltekst as Record<string, string>).map(([k, v]) => [Number(k), v]));
     const p = await skrivPraksis(
       { skjema: o.skjema, feil_id: o.feil_id, modus: o.modus ?? "spesifikk", kandidater: o.kandidater, idag: o.idag, fast: o.fast ?? null },
-      { hentFulltekst: async () => fulltekst, kall: async () => ({ input: o.raa, modell: "opptak", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } }) },
+      { hentFulltekst: async () => fulltekst, hentAnalyse: async () => new Map(), kall: async () => ({ input: o.raa, modell: "opptak", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } }) },
     );
     expect({ avsnitt: p.avsnitt, vedtak_id: p.vedtak_id, strykninger: p.strykninger }).toEqual(o.fasit);
     // The buyer's name, address and e-mail never reach the model.

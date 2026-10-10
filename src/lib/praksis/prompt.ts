@@ -1,11 +1,11 @@
-// The prompt and tool for the practice paragraph (docs/praksis.md). The model reads the candidates' full
-// texts and writes; what it may claim is limited by src/lib/praksis/verifiser.ts, which the prompt explains.
+// The prompt and tool for the practice paragraph (docs/praksis.md). The model reads the candidates'
+// extracted analysis (not the full text) and writes; what it may claim is limited by
+// src/lib/praksis/verifiser.ts, which checks every belegg against the full text.
 import { nullbar, objekt } from "@/lib/ai/skjema";
-import type { FeilProfil, Sak, Vurdert } from "@/lib/sammenligning/typer";
+import type { FeilProfil, Sak, VedtakFeil, Vurdert } from "@/lib/sammenligning/typer";
 import type { SkjemaFeil } from "@/lib/skjema/skjema";
 import { type Kjent, rensTekst } from "./rens";
-import { VURDERING_START } from "./tekst";
-import type { Modus } from "./typer";
+import type { Analyse, Modus } from "./typer";
 
 export const PRAKSIS_VERKTOY = {
   name: "skriv_praksis",
@@ -32,7 +32,7 @@ export const PRAKSIS_VERKTOY = {
         belegg: nullbar(
           objekt({
             vedtak_id: { type: "integer" },
-            sitat: { type: "string", description: "Et sammenhengende utdrag på minst 20 tegn, kopiert tegn for tegn fra vedtakets fulltekst, som viser det setningen sier om vedtaket." },
+            sitat: { type: "string", description: "Et sammenhengende utdrag på minst 20 tegn, kopiert tegn for tegn fra et ordrett felt i vedtakets analyse (sitat, tekst, ordlyd eller sitater), som viser det setningen sier om vedtaket." },
           }),
           "Påkrevd når om er vedtak eller begge. null når om er min_sak.",
         ),
@@ -44,9 +44,10 @@ export const PRAKSIS_VERKTOY = {
 const FELLES = `Du skriver ett avsnitt i et reklamasjonsbrev som en forbruker selv sender til bilforhandleren som solgte bilen. Avsnittet står under overskriften «Praksis fra Forbrukerklageutvalget». Skriv i jeg-form, på bokmål, saklig og presist, slik en erfaren jurist ville skrevet for en forbruker.
 
 Motparten vil slå opp vedtakene. Én uriktig påstand ødelegger brevet. Derfor:
-- Hver setning som sier noe om et vedtak (om = vedtak eller begge) skal ha et belegg: et sammenhengende utdrag på minst 20 tegn, kopiert tegn for tegn fra vedtakets fulltekst, som viser det setningen sier. Linjeskift i fulltekst teller som mellomrom. Finner du ikke et slikt utdrag, skriver du ikke setningen.
-- Setninger om hva utvalget fant eller legger vekt på (ledd 1), skal ha belegg fra utvalgets egen vurdering: delen etter overskriften «Utvalget ser slik på saken» («Utvalet ser slik på saka»). Det partene hevder, er ikke det utvalget fant.
-- Sitatet (ledd 3) er én hel setning fra utvalgets vurdering, kopiert tegn for tegn, uten «…».
+Hvert vedtak i <kandidater> er gitt som en analyse (<vedtak>), ikke som fulltekst. Feltene «sitat», «tekst» (i utvalgets_begrunnelse), «ordlyd» og verdiene i «sitater» er ordrette utdrag som er kontrollert mot vedtaksteksten. Alt annet (sammendrag, nøkkelmomenter, kategorier som grunnlag, bevisgrunnlag og ved_levering) er analysens egen oppsummering: bruk det til å forstå saken, men aldri som belegg.
+- Hver setning som sier noe om et vedtak (om = vedtak eller begge) skal ha et belegg: et sammenhengende utdrag på minst 20 tegn, kopiert tegn for tegn fra et av de ordrette feltene, som viser det setningen sier. Inneholder utdraget «…», tar du bare en sammenhengende del uten «…». Finner du ikke et slikt utdrag, skriver du ikke setningen.
+- Setninger om hva utvalget fant eller legger vekt på (ledd 1), skal ha belegg fra utvalgets egen vurdering: utvalgets_begrunnelse eller denne_feilen.sitat. Det partene hevder, er ikke det utvalget fant.
+- Sitatet (ledd 3) er én hel setning fra utvalgets_begrunnelse, kopiert tegn for tegn, uten «…».
 - Skriv aldri saksnummer, vedtaksdato eller beløp fra vedtaket med tall. Skriv {{saksnummer}}, {{vedtaksdato}} og «{{belop}} kr»; de fylles inn fra databasen.
 - Tall og datoer om kjøperens sak tar du bare fra <sak> og <feil>. Datoer skrives som «20. november 2025», beløp som «16 066 kr».
 - Paragrafer nevnes bare når de står i belegget for samme setning.
@@ -58,7 +59,7 @@ Kall verktøyet skriv_praksis nøyaktig én gang.`;
 
 export const PRAKSIS_SPESIFIKK = `${FELLES}
 
-Oppgaven: velg høyst ett vedtak fra <kandidater> og skriv avsnittet. Kandidatene er vunne vedtak om samme type feil som et filter har funnet at kjøperens sak er minst like sterk som, kriterium for kriterium (<kriterier>). Ta den første med mindre fulltekst viser at en annen er en klart bedre analogi. Er ingen av dem en analogi en jurist ville godtatt for denne feilen, for eksempel fordi utvalget bygde på noe kjøperens sak ikke har, setter du valgt_vedtak_id til null og forklarer i grunn_ingen. Det er bedre enn en svak analogi.
+Oppgaven: velg høyst ett vedtak fra <kandidater> og skriv avsnittet. Kandidatene er vunne vedtak om samme type feil som et filter har funnet at kjøperens sak er minst like sterk som, kriterium for kriterium (<kriterier>). Ta den første med mindre analysen viser at en annen er en klart bedre analogi. Er ingen av dem en analogi en jurist ville godtatt for denne feilen, for eksempel fordi utvalget bygde på noe kjøperens sak ikke har, setter du valgt_vedtak_id til null og forklarer i grunn_ingen. Det er bedre enn en svak analogi. «Minst like sterkt» forutsetter at kjøperen har alt utvalget bygde på (se nøkkelmomentene og utvalgets_begrunnelse); mangler kjøperen noe av det, må avsnittet si det og svare på det, eller du velger ingen.
 
 Avsnittet har fem ledd, i denne rekkefølgen:
 1. Hva utvalget la til grunn, med vedtakets nummer og dato: «Forbrukerklageutvalget har i vedtak {{saksnummer}} av {{vedtaksdato}} lagt til grunn at …». Si hva utvalget faktisk fant, med utvalgets begrep: en uriktig opplysning er ikke det samme som at selger unnlot å opplyse om noe.
@@ -78,33 +79,60 @@ Oppgaven: kjøperens sak har ingen vunne vedtak om samme type feil å sammenlign
 - Ikke sammenlign: aldri «like sterkt», «minst like sterkt», «sterkere», «samme type» eller «tilsvarende sak». Ikke si hva kjøperen i et eksempel fikk, og ingen beløp ({{belop}} er ikke tillatt).
 - Ingen ledd 4 eller 5. Høyst 8 setninger. valgt_vedtak_id er null, og eksempel_vedtak_ids lister vedtakene du nevner.`;
 
-// The full texts within the budget: the best candidates in full; the lower-ranked trimmed to the head and
-// the committee's assessment, or left out, so the input stays at about 30 000 tokens (the decisions run
-// at about 2,2 characters per token: 100 000 characters were 45 000 tokens for Enyaq F1).
-export const BUDSJETT_TEGN = 65_000;
-export const MAKS_PER_VEDTAK = 25_000;
-const HODE = 2_000;
+// One decision as the model reads it: the defect the filter matched, the statements, evidence and
+// committee sentences tied to it (or to the whole case), the outcome, and pass 1's summary. No full text:
+// the analysis is what was extracted to decide on, and its quotes are verified (docs/praksis.md).
+// Pass 1's quotes on the outcome, the amounts and the reservation; the claims are left out.
+const SITATER_UTFALL = ["utfall", "forbehold", "kjopesum_nok", "utbedringskostnad_nok", "tilkjent_prisavslag_nok", "tilkjent_erstatning_nok", "tilkjent_totalt_nok"];
 
-export function tilBudsjett(tekster: Array<{ vedtak_id: number; tekst: string }>, budsjett = BUDSJETT_TEGN): Array<{ vedtak_id: number; tekst: string; trimmet: boolean }> {
-  const ut: Array<{ vedtak_id: number; tekst: string; trimmet: boolean }> = [];
-  let igjen = budsjett;
-  for (const { vedtak_id, tekst } of tekster) {
-    if (tekst.length <= Math.min(MAKS_PER_VEDTAK, igjen)) {
-      ut.push({ vedtak_id, tekst, trimmet: false });
-      igjen -= tekst.length;
-      continue;
-    }
-    const start = tekst.search(VURDERING_START);
-    const kort = start > HODE ? `${tekst.slice(0, HODE)}\n[… saksfremstillingen er utelatt …]\n${tekst.slice(start)}` : tekst.slice(0, MAKS_PER_VEDTAK);
-    const passer = kort.slice(0, Math.min(MAKS_PER_VEDTAK, igjen));
-    if (passer.length < HODE * 2) continue;
-    ut.push({ vedtak_id, tekst: passer, trimmet: true });
-    igjen -= passer.length;
-  }
-  return ut;
+export function vedtakForModell(v: VedtakFeil, a: Analyse | undefined) {
+  const egen = (refs: string[] | undefined) => !refs?.length || refs.includes(v.feil_id);
+  const verifisert = <T extends { sitat?: unknown; sitat_verifisert?: unknown }>(x: T) => (x.sitat_verifisert ? x.sitat : null);
+  const feil = a?.feil.find((f) => f.id === v.feil_id);
+  return {
+    sammendrag: a?.sammendrag ?? null,
+    utvalgets_nokkelmomenter: a?.utvalgets_nokkelmomenter ?? [],
+    forbehold: a?.forbehold_tekst ?? null,
+    bilen: { kjopesum_nok: v.kjopesum_nok, km_ved_kjop: v.km_ved_kjop, alder_ved_kjop: v.alder_ved_kjop },
+    denne_feilen: {
+      kategori: v.kategori,
+      komponenter: v.komponenter,
+      grunnlag: v.grunnlag,
+      bevisgrunnlag: feil?.bevisgrunnlag ?? null,
+      formodning: feil?.formodning ?? null,
+      dager_etter_levering: v.dager_etter_levering,
+      dager_er_pavist_senest: v.viste_seg_kilde === "bevisdato",
+      sitat: feil?.sitat_verifisert ? (feil.sitat ?? null) : null,
+    },
+    andre_feil_i_saken: (a?.feil ?? []).filter((f) => f.id !== v.feil_id).map((f) => ({ kategori: f.kategori, vurdering: f.vurdering, grunn: f.grunn })),
+    opplysninger: v.opplysninger
+      .filter((o) => egen(o.gjelder_feil))
+      .map((o) => ({ type: o.type, form: o.form, ordlyd: o.ordlyd_verifisert ? o.ordlyd : null, status: o.status, vekt: o.vekt, rekkevidde: o.rekkevidde, svar_pa_direkte_sporsmal: o.svar_pa_direkte_sporsmal, sitat: verifisert(o) })),
+    // Evidence the committee neither weighed nor quoted says little about what it built on.
+    bevis: v.bevis
+      .filter((b) => egen(b.gjelder_feil) && (b.utvalgets_vurdering !== "ikke_nevnt" || b.sitat_verifisert))
+      .map((b) => ({ type: b.type, fremlagt_av: b.fremlagt_av, arsak: b.arsak, ved_levering: b.ved_levering, paregnelig: b.paregnelig, utvalgets_vurdering: b.utvalgets_vurdering, avslagsgrunn: b.avslagsgrunn, sitat: verifisert(b) })),
+    utvalgets_begrunnelse: (a?.begrunnelse_sitater ?? []).filter((b) => egen(b.gjelder_feil)).map((b) => ({ tema: b.tema, tekst: b.tekst })),
+    utfall: {
+      sanksjon: v.sanksjon,
+      tilkjent_for_denne_feilen_nok: v.belop_tilkjent_nok,
+      tilkjent_prisavslag_nok: a?.tilkjent_prisavslag_nok ?? null,
+      tilkjent_erstatning_nok: a?.tilkjent_erstatning_nok ?? null,
+      tilkjent_totalt_nok: v.tilkjent_totalt_nok,
+      utbedringskostnad_nok: v.utbedringskostnad_nok,
+    },
+    sitater: Object.fromEntries(Object.entries(a?.sitater ?? {}).filter(([k]) => SITATER_UTFALL.includes(k))),
+  };
 }
 
-const json = (x: unknown) => JSON.stringify(x, null, 1);
+// Compact JSON without empty fields: the model reads what is there, and every character is paid for.
+const tom = (x: unknown) => x == null || x === "" || (Array.isArray(x) && !x.length) || (typeof x === "object" && !Array.isArray(x) && !Object.keys(x as object).length);
+function kompakt(x: unknown): unknown {
+  if (Array.isArray(x)) return x.map(kompakt).filter((y) => !tom(y));
+  if (x && typeof x === "object") return Object.fromEntries(Object.entries(x).map(([k, v]) => [k, kompakt(v)]).filter(([, v]) => !tom(v)));
+  return x;
+}
+const json = (x: unknown) => JSON.stringify(kompakt(x));
 
 export function praksisBruker(o: {
   modus: Modus;
@@ -112,7 +140,7 @@ export function praksisBruker(o: {
   feil: FeilProfil;
   skjemaFeil: SkjemaFeil;
   kandidater: Vurdert[];
-  fulltekst: Map<number, string>;
+  analyse: Map<number, Analyse>;
   kjente: Kjent[];
   fast?: { tekst: string; spor: string } | null;
 }): string {
@@ -152,28 +180,18 @@ export function praksisBruker(o: {
     kostnad_kr: f.kostnad_kr != null && (f.kostnad_kr <= sak.pris_kr || f.kostnad_over_pris_bekreftet) ? f.kostnad_kr : null,
     dager_fra_feil_til_reklamasjon: f.dager_til_reklamasjon,
   };
-  const tekster = tilBudsjett(o.kandidater.map((x) => ({ vedtak_id: x.vedtak.vedtak_id, tekst: o.fulltekst.get(x.vedtak.vedtak_id) ?? "" })).filter((x) => x.tekst));
-  const kandidater = tekster
-    .map(({ vedtak_id, tekst, trimmet }) => {
-      const x = o.kandidater.find((k) => k.vedtak.vedtak_id === vedtak_id)!;
+  const kandidater = o.kandidater
+    .map((x) => {
       const v = x.vedtak;
       const meta = {
-        vedtak_id,
+        vedtak_id: v.vedtak_id,
         spor: v.spor,
-        kategori: v.kategori,
         sanksjon: v.sanksjon,
         lovversjon: v.lovversjon,
-        alder_ved_kjop: v.alder_ved_kjop,
-        km_ved_kjop: v.km_ved_kjop,
-        kjopesum_nok: v.kjopesum_nok,
-        dager_etter_levering: v.dager_etter_levering,
-        dager_er_pavist_senest: v.viste_seg_kilde === "bevisdato",
-        tilkjent_for_denne_feilen_nok: v.belop_tilkjent_nok,
-        tilkjent_totalt_nok: v.tilkjent_totalt_nok,
         ...(o.modus === "spesifikk" ? { antall_sterkere: x.antall_sterkere, svakhet: x.svakhet?.navn ?? null } : {}),
       };
       const kriterier = o.modus === "spesifikk" ? `\n<kriterier>${json(x.kriterier.map(({ navn, bruker, vedtak, utfall }) => ({ navn, min_sak: bruker, vedtaket: vedtak, utfall })))}</kriterier>` : "";
-      return `<kandidat vedtak_id="${vedtak_id}">\n<meta>${json(meta)}</meta>${kriterier}\n<fulltekst trimmet="${trimmet}">\n${tekst}\n</fulltekst>\n</kandidat>`;
+      return `<kandidat vedtak_id="${v.vedtak_id}">\n<meta>${json(meta)}</meta>${kriterier}\n<vedtak>${json(vedtakForModell(v, o.analyse.get(v.vedtak_id)))}</vedtak>\n</kandidat>`;
     })
     .join("\n");
   const fast = o.modus === "generell" && o.fast ? `\n<fast_blokk spor="${o.fast.spor}">\n${o.fast.tekst}\n</fast_blokk>` : "";

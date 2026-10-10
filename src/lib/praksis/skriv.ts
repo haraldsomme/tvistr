@@ -8,7 +8,7 @@ import type { Vurdert } from "@/lib/sammenligning/typer";
 import type { Skjema } from "@/lib/skjema/skjema";
 import { PRAKSIS_GENERELL, PRAKSIS_SPESIFIKK, PRAKSIS_VERKTOY, praksisBruker } from "./prompt";
 import { kjenteOpplysninger } from "./rens";
-import type { HentFulltekst, Modus, Praksis, PraksisSvar } from "./typer";
+import type { HentAnalyse, HentFulltekst, Modus, Praksis, PraksisSvar } from "./typer";
 import { verifiserPraksis } from "./verifiser";
 
 export type Kall = (o: { system: string; bruker: string; modell: Modell }) => Promise<VerktoySvar<PraksisSvar>>;
@@ -27,7 +27,8 @@ export type SkrivInn = {
   fast?: { tekst: string; spor: string } | null;
 };
 
-export type Avhengigheter = { hentFulltekst: HentFulltekst; kall?: Kall; modell?: Modell };
+// The model reads the analysis; the verifier checks against the full text, which never goes to the model.
+export type Avhengigheter = { hentFulltekst: HentFulltekst; hentAnalyse: HentAnalyse; kall?: Kall; modell?: Modell };
 
 export async function skrivPraksis(inn: SkrivInn, deps: Avhengigheter): Promise<Praksis & { bruker: string | null }> {
   const tom = (grunn: string) => ({
@@ -49,8 +50,9 @@ export async function skrivPraksis(inn: SkrivInn, deps: Avhengigheter): Promise<
   const sak = avledSak(inn.skjema, inn.idag);
   const feil = avledFeil(sak, sf);
   const kjente = kjenteOpplysninger(inn.skjema);
-  const fulltekst = await deps.hentFulltekst(inn.kandidater.map((x) => x.vedtak.vedtak_id));
-  const bruker = praksisBruker({ modus: inn.modus, sak, feil, skjemaFeil: sf, kandidater: inn.kandidater, fulltekst, kjente, fast: inn.fast });
+  const ider = inn.kandidater.map((x) => x.vedtak.vedtak_id);
+  const [fulltekst, analyse] = await Promise.all([deps.hentFulltekst(ider), deps.hentAnalyse(ider)]);
+  const bruker = praksisBruker({ modus: inn.modus, sak, feil, skjemaFeil: sf, kandidater: inn.kandidater, analyse, kjente, fast: inn.fast });
   const modell = deps.modell ?? MODELL_FORFATTER;
 
   let svar: VerktoySvar<PraksisSvar>;

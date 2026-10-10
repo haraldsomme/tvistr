@@ -7,7 +7,8 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { wilson } from "../../src/lib/wilson";
 
-const MAPPE = "data/testkjoring";
+// TESTKJORING_MAPPE runs a second set side by side (e.g. another model) without touching the first.
+const MAPPE = process.env.TESTKJORING_MAPPE ?? "data/testkjoring";
 
 export type Grad = "ok" | "mindre" | "moderat" | "alvorlig" | "blokkerende" | "ikke_relevant";
 export type Merknad = { kriterium: string; feil_id?: string | null; grad: Grad; merknad: string; kilde: string };

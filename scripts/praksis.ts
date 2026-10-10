@@ -15,7 +15,7 @@ import { kandidaterForFeil } from "../src/lib/sammenligning";
 import { avledFeil, avledSak } from "../src/lib/sammenligning/avled";
 import { lagHentEksempler, lagHentKandidater } from "../src/lib/sammenligning/kandidater";
 import { PRAKSIS_FAST } from "../src/lib/praksis/fast";
-import { lagHentFulltekst } from "../src/lib/praksis/fulltekst";
+import { lagHentAnalyse, lagHentFulltekst } from "../src/lib/praksis/fulltekst";
 import { skrivPraksis } from "../src/lib/praksis/skriv";
 import type { Skjema } from "../src/lib/skjema/skjema";
 
@@ -31,7 +31,7 @@ async function oppdaterOpptak(fil: string) {
   const fulltekst = new Map(Object.entries(o.fulltekst as Record<string, string>).map(([k, v]) => [Number(k), v]));
   const p = await skrivPraksis(
     { skjema: o.skjema, feil_id: o.feil_id, modus: o.modus ?? "spesifikk", kandidater: o.kandidater, idag: o.idag, fast: o.fast ?? null },
-    { hentFulltekst: async () => fulltekst, kall: async () => ({ input: o.raa, modell: "opptak", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } }) },
+    { hentFulltekst: async () => fulltekst, hentAnalyse: async () => new Map(), kall: async () => ({ input: o.raa, modell: "opptak", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } }) },
   );
   o.fasit = { avsnitt: p.avsnitt, vedtak_id: p.vedtak_id, strykninger: p.strykninger };
   writeFileSync(fil, JSON.stringify(o, null, 2) + "\n");
@@ -56,7 +56,7 @@ async function main() {
   const hent = lagHentFulltekst(db);
   const modus = blokk ? "generell" : "spesifikk";
   const fast = blokk ? { tekst: blokk.tekst, spor: blokk.spor } : null;
-  const p = await skrivPraksis({ skjema, feil_id: feilId, modus, kandidater, idag, fast }, { hentFulltekst: hent });
+  const p = await skrivPraksis({ skjema, feil_id: feilId, modus, kandidater, idag, fast }, { hentFulltekst: hent, hentAnalyse: lagHentAnalyse(db) });
 
   console.log(`\nValgt: ${p.vedtak_id ?? (p.eksempel_vedtak_ids.join(", ") || "–")}  Grunn: ${p.grunn ?? "–"}  Kostnad: ${p.forbruk ? `${p.forbruk.kostnadUsd.toFixed(3)} USD, ${p.forbruk.tokensInn} inn / ${p.forbruk.tokensUt} ut` : "–"}`);
   console.log(`\nAvsnitt:\n${p.avsnitt ?? "(ingen)"}`);

@@ -39,3 +39,17 @@ export type Verifisert = {
 export type Praksis = Verifisert & { raa: PraksisSvar | null; versjon: string; modell: string | null; forbruk: Forbruk | null; feil?: boolean };
 
 export type HentFulltekst = (ider: number[]) => Promise<Map<number, string>>;
+
+// What pass 1 and pass 2 extracted from a decision: what the model reads instead of the full text. The
+// quotes in it were checked against the full text at import; the rest is the analysis's own summary.
+export type Analyse = {
+  sammendrag: string | null;
+  utvalgets_nokkelmomenter: string[];
+  forbehold_tekst: string | null;
+  tilkjent_prisavslag_nok: number | null;
+  tilkjent_erstatning_nok: number | null;
+  sitater: Record<string, string> | null; // pass 1: field → verbatim quote
+  feil: Array<Record<string, unknown> & { id: string }>; // pass 2: every defect the decision assessed
+  begrunnelse_sitater: Array<{ tema: string; tekst: string; gjelder_feil: string[] }>;
+};
+export type HentAnalyse = (ider: number[]) => Promise<Map<number, Analyse>>;

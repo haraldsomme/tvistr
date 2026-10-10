@@ -12,7 +12,7 @@ import type { Skjema } from "@/lib/skjema/skjema";
 import { brukbar, fastBlokk, PRAKSIS_FAST } from "./fast";
 import { lovendring } from "./lovendring";
 import { type Kall, skrivPraksis } from "./skriv";
-import type { HentFulltekst, Praksis } from "./typer";
+import type { HentAnalyse, HentFulltekst, Praksis } from "./typer";
 
 export const MAKS_AVSNITT = 2;
 
@@ -25,6 +25,7 @@ export type Praksisdel = { avsnitt: Avsnitt[]; lovendring: string | null; forsok
 export type Deps = {
   hentKandidater: HentKandidater;
   hentFulltekst: HentFulltekst;
+  hentAnalyse: HentAnalyse;
   hentEksempler: (eksempler: Array<{ vedtak_id: number; feil_id: string }>, spor: Spor) => Promise<VedtakFeil[]>;
   kall?: Kall;
   modell?: Modell;
@@ -45,7 +46,7 @@ export async function skrivPraksisdel(skjema: Skjema, idag: string, deps: Deps):
   const r = await sammenlign(skjema, deps.hentKandidater, idag);
   if (r.stopp) return { avsnitt: [], lovendring: null, forsok: [] };
   const forsok: Forsok[] = [];
-  const skriv = { hentFulltekst: deps.hentFulltekst, kall: deps.kall, modell: deps.modell };
+  const skriv = { hentFulltekst: deps.hentFulltekst, hentAnalyse: deps.hentAnalyse, kall: deps.kall, modell: deps.modell };
 
   // 1. Specific paragraphs, in parallel. One decision is cited once.
   const spesifikke = await Promise.all(

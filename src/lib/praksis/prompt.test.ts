@@ -1,20 +1,46 @@
 import { describe, expect, it } from "vitest";
-import { tilBudsjett } from "./prompt";
+import type { VedtakFeil } from "@/lib/sammenligning/typer";
+import { vedtakForModell } from "./prompt";
 import { rensTekst } from "./rens";
+import type { Analyse } from "./typer";
 
-const vedtak = (id: number, lengde: number) => ({ vedtak_id: id, tekst: `Saken gjelder ${"x".repeat(3000)}\nUtvalget ser slik på saken\n${"y".repeat(Math.max(0, lengde - 3050))}` });
+describe("vedtakForModell", () => {
+  const v = {
+    feil_id: "f1",
+    kategori: "klimaanlegg",
+    komponenter: ["AC-kompressor"],
+    grunnlag: "feil_opplysning",
+    opplysninger: [
+      { type: "uttalelse", form: "annonse", ordlyd: "klimaanlegg", ordlyd_verifisert: true, sitat: "Bilen ble solgt med klimaanlegg.", sitat_verifisert: true, gjelder_feil: ["f1"] },
+      { type: "uttalelse", form: "annonse", ordlyd: "EU-godkjent", ordlyd_verifisert: null, sitat: "Ikke kontrollert.", sitat_verifisert: null, gjelder_feil: ["f2"] },
+    ],
+    bevis: [{ type: "faktura", fremlagt_av: "klager", sitat: "Defekt kompressor.", sitat_verifisert: true, gjelder_feil: [] }],
+  } as unknown as VedtakFeil;
+  const a = {
+    sammendrag: "Kort.",
+    utvalgets_nokkelmomenter: ["Annonsert med klimaanlegg"],
+    forbehold_tekst: null,
+    tilkjent_prisavslag_nok: 10_000,
+    tilkjent_erstatning_nok: 2_490,
+    sitater: { utfall: "kroner 12 490,-" },
+    feil: [
+      { id: "f1", sitat: "Utvalget finner uriktige opplysninger.", sitat_verifisert: true, bevisgrunnlag: "formodning_ikke_motbevist" },
+      { id: "f2", vurdering: "ikke_mangel", kategori: "motor", grunn: "ikke_dokumentert" },
+    ],
+    begrunnelse_sitater: [
+      { tema: "mangel", tekst: "Om klimaanlegget.", gjelder_feil: ["f1"] },
+      { tema: "mangel", tekst: "Om kjølehuset.", gjelder_feil: ["f2"] },
+    ],
+  } as Analyse;
 
-describe("tilBudsjett", () => {
-  it("tar de beste hele, trimmer de lavest rangerte til hode og vurdering, og dropper det som ikke får plass", () => {
-    const ut = tilBudsjett([vedtak(1, 20_000), vedtak(2, 20_000), vedtak(3, 20_000)], 50_000);
-    expect(ut.map((x) => [x.vedtak_id, x.trimmet])).toEqual([
-      [1, false],
-      [2, false],
-      [3, true],
-    ]);
-    expect(ut[2].tekst).toContain("[… saksfremstillingen er utelatt …]\nUtvalget ser slik på saken");
-    expect(ut.reduce((n, x) => n + x.tekst.length, 0)).toBeLessThanOrEqual(50_000);
-    expect(tilBudsjett([vedtak(1, 20_000), vedtak(2, 20_000)], 21_000).map((x) => x.vedtak_id)).toEqual([1]);
+  it("tar med det som gjelder feilen og hele saken, og bare kontrollerte sitater", () => {
+    const m = vedtakForModell(v, a);
+    expect(m.opplysninger.map((o) => o.ordlyd)).toEqual(["klimaanlegg"]);
+    expect(m.bevis.map((b) => b.sitat)).toEqual(["Defekt kompressor."]);
+    expect(m.utvalgets_begrunnelse.map((b) => b.tekst)).toEqual(["Om klimaanlegget."]);
+    expect(m.denne_feilen.sitat).toBe("Utvalget finner uriktige opplysninger.");
+    expect(m.andre_feil_i_saken).toEqual([{ kategori: "motor", vurdering: "ikke_mangel", grunn: "ikke_dokumentert" }]);
+    expect(JSON.stringify(m)).not.toContain("fulltekst");
   });
 });
 

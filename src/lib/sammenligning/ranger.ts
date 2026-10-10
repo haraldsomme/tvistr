@@ -1,6 +1,7 @@
 // Steps 5–7: which decided defects the user's case is at least as strong as, which one is best, and
 // which defects get a practice paragraph (§§ 8–9).
 import { velgSitat } from "./argumenter";
+import { kategoriavstand } from "./avled";
 import { leksikografisk } from "./kriterier";
 import type { FeilProfil, Kriterium, Sak, VedtakFeil, Vurdert } from "./typer";
 
@@ -27,6 +28,45 @@ function siterbar(x: Vurdert): number {
   return (x.vedtak.spor !== "A" || x.opplysning?.ordlyd_verifisert ? 1 : 0) + (sitat ? 1 : 0);
 }
 
+// Words of a statement, without case, quote marks or punctuation: «Kjøretøyets oljeforbruk er litt
+// høyere enn vanlig.» → kjøretøyets oljeforbruk er litt høyere enn vanlig.
+const ord = (t: string) => t.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+
+// Character-bigram similarity (Sørensen–Dice), for wordings that differ by a word or a spelling.
+function likhet(a: string, b: string): number {
+  const bigram = (t: string) => {
+    const s = t.replace(/\s+/g, " ");
+    return Array.from({ length: Math.max(0, s.length - 1) }, (_, i) => s.slice(i, i + 2));
+  };
+  const x = bigram(a);
+  const y = bigram(b);
+  if (!x.length || !y.length) return 0;
+  const telling = new Map<string, number>();
+  for (const g of x) telling.set(g, (telling.get(g) ?? 0) + 1);
+  let felles = 0;
+  for (const g of y) {
+    const n = telling.get(g) ?? 0;
+    if (n > 0) {
+      felles++;
+      telling.set(g, n - 1);
+    }
+  }
+  return (2 * felles) / (x.length + y.length);
+}
+
+// The decision's verified wording is the buyer's statement: its words stand in a row in what the
+// buyer copied, or the two are at least 80 % alike. Such a decision is the one the seller cannot tell
+// apart from the user's case, so it goes before decisions the user is «stronger» than (S10, 52074).
+export function opplysningIdentisk(x: Vurdert, f: FeilProfil): boolean {
+  const o = x.opplysning;
+  if (x.vedtak.spor !== "A" || !o?.ordlyd || !o.ordlyd_verifisert || !f.avskrift_selger) return false;
+  const v = ord(o.ordlyd);
+  const b = ord(f.avskrift_selger);
+  if (!v.length) return false;
+  const iRekke = b.some((_, i) => v.every((w, j) => b[i + j] === w));
+  return iRekke || likhet(v.join(" "), b.join(" ")) >= 0.8;
+}
+
 const LOSNINGER_UTEN_HEVING = ["prisavslag", "erstatning", "prisavslag_og_erstatning", "retting"];
 
 function rangering(x: Vurdert, f: FeilProfil, sak: Sak): number[] {
@@ -35,11 +75,14 @@ function rangering(x: Vurdert, f: FeilProfil, sak: Sak): number[] {
   const sammeKategori = v.kategori === f.kategori_pass2 ? 1 : 0;
   return [
     // On B and C the analogy is the defect itself: a rust case is compared with rust before a
-    // four-wheel-drive failure with more stronger points (S04). On A the category is already a criterion.
-    v.spor === "A" ? 0 : sammeKategori,
+    // four-wheel-drive failure with more stronger points (S04), and in a fallback the nearest kind
+    // first. On A the category is already a criterion.
+    v.spor === "A" ? 0 : -kategoriavstand(f.kategori_pass2, v.kategori, v.spor),
     // Against a dealer, a dealer decision is the stronger analogy than a commission sale (the form only
     // reaches matching for dealer purchases).
     v.selger_type === "forhandler" ? 1 : 0,
+    // Likeness before difference: «sterkere» rewards a different case, the analogy's worth is likeness.
+    opplysningIdentisk(x, f) ? 1 : 0,
     x.antall_sterkere,
     x.svakhet ? 0 : 1,
     sammeKategori,

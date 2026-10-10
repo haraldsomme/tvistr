@@ -1,117 +1,140 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { type Forslag, tittel } from "@/lib/brreg";
 import type { BrregTreff } from "@/lib/skjema/skjema";
-import { Tekst } from "./felt";
 
-const orgnr = (s: string) => s.replace(/(\d{3})(\d{3})(\d{3})/, "$1 $2 $3");
+const gruppertOrgnr = (s: string) => s.replace(/^(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3");
 
 export const tilTreff = (f: Forslag): BrregTreff => ({
   foretaksnavn: tittel(f.navn),
-  organisasjonsnummer: orgnr(f.orgnr),
+  organisasjonsnummer: gruppertOrgnr(f.orgnr),
   forretningsadresse: f.forretningsadresse ?? "",
 });
 
-// Questions 6–6c: the name the buyer types, suggestions from Brønnøysund (/api/firma, which leaves
-// out sole proprietorships on purpose) and a confirmation. Without a confirmed match the form goes
-// on with the typed name only.
+// Questions 6–6c (docs/skjema.md): the dealer by name or organisation number, with suggestions from
+// Brønnøysund (/api/firma, which leaves out sole proprietorships on purpose). Picking a suggestion is
+// the confirmation (treff_bekreftet); typing again unlinks it. A dealer missing from the register
+// stays the typed name with no match. Rebuilt from the earlier letter page's dealer picker.
 export function Forhandlervelger({
   navn,
   treff,
-  bekreftet,
-  onNavn,
-  onTreff,
+  onChange,
+  inputClass,
+  labelClass,
 }: {
   navn: string;
   treff: BrregTreff | null;
-  bekreftet: boolean;
-  onNavn: (v: string) => void;
-  onTreff: (t: BrregTreff | null, bekreftet: boolean) => void;
+  onChange: (v: { firmanavn_oppgitt: string | null; bronnoysund_treff: BrregTreff | null; treff_bekreftet: boolean }) => void;
+  inputClass: string;
+  labelClass: string;
 }) {
+  const id = useId();
   const [forslag, setForslag] = useState<Forslag[]>([]);
-  const [status, setStatus] = useState<"" | "soker" | "feil">("");
-  const [soktPa, setSoktPa] = useState("");
+  const [apen, setApen] = useState(false);
+  const [aktiv, setAktiv] = useState(-1);
+  const abort = useRef<AbortController | null>(null);
+
+  const sok = !treff && navn.trim().length >= 3;
+  const liste = sok ? forslag : [];
 
   useEffect(() => {
-    const q = navn.trim();
-    if (treff || (q.length < 3 && !/^\d{9}$/.test(q.replace(/\s/g, "")))) return;
-    const avbryt = new AbortController();
+    abort.current?.abort();
+    if (!sok) return;
+    const ac = new AbortController();
+    abort.current = ac;
     const t = setTimeout(async () => {
-      setStatus("soker");
       try {
-        const res = await fetch(`/api/firma?${new URLSearchParams({ q })}`, { signal: avbryt.signal });
-        const json = (await res.json()) as { forslag: Forslag[]; feil?: true };
+        const res = await fetch(`/api/firma?q=${encodeURIComponent(navn.trim())}`, { signal: ac.signal });
+        const json = (await res.json()) as { forslag: Forslag[] };
         setForslag(json.forslag);
-        setSoktPa(q);
-        setStatus(json.feil ? "feil" : "");
+        setAktiv(-1);
       } catch {
-        if (!avbryt.signal.aborted) setStatus("feil");
+        /* aborted or network error: keep the name as typed */
       }
-    }, 350);
+    }, 250);
     return () => {
       clearTimeout(t);
-      avbryt.abort();
+      ac.abort();
     };
-  }, [navn, treff]);
+  }, [navn, sok]);
 
-  if (treff) {
-    return (
-      <div className="flex flex-col gap-3 rounded-[6px] border border-[#cfcac0] bg-white px-4 py-4">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[16px] font-semibold text-[#17263d]">{treff.foretaksnavn}</span>
-          <span className="font-kode text-[14px] text-[#5b6472]">Org.nr. {treff.organisasjonsnummer}</span>
-          {treff.forretningsadresse && <span className="text-[14px] text-[#5b6472]">{treff.forretningsadresse}</span>}
-        </div>
-        {bekreftet ? (
-          <div className="flex items-center justify-between gap-3 text-[15px]">
-            <span className="text-[#2d6a3e]">✓ Bekreftet</span>
-            <button type="button" onClick={() => onTreff(null, false)} className="text-[#1f3a5f] underline underline-offset-2">
-              Endre
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            <span className="text-[15px] font-medium text-[#17263d]">Er dette riktig firma?</span>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => onTreff(treff, true)} className="rounded-[6px] bg-[#17263d] px-4 py-2.5 text-[15px] font-semibold text-[#f6f4ef]">
-                Ja, det stemmer
-              </button>
-              <button type="button" onClick={() => onTreff(null, false)} className="rounded-[6px] border border-[#cfcac0] bg-white px-4 py-2.5 text-[15px] font-semibold text-[#17263d]">
-                Nei
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
+  const velg = (i: number) => {
+    const f = liste[i];
+    if (!f) return;
+    const t = tilTreff(f);
+    onChange({ firmanavn_oppgitt: t.foretaksnavn, bronnoysund_treff: t, treff_bekreftet: true });
+    setApen(false);
+  };
+
+  function tast(e: React.KeyboardEvent) {
+    if (e.key === "ArrowDown" && liste.length) {
+      e.preventDefault();
+      setApen(true);
+      setAktiv((a) => (a + 1) % liste.length);
+    } else if (e.key === "ArrowUp" && liste.length) {
+      e.preventDefault();
+      setAktiv((a) => (a <= 0 ? liste.length - 1 : a - 1));
+    } else if (e.key === "Enter" && apen && aktiv >= 0) {
+      e.preventDefault();
+      velg(aktiv);
+    } else if (e.key === "Escape") setApen(false);
   }
 
+  const visListe = apen && liste.length > 0;
+
   return (
-    <div className="flex flex-col gap-2">
-      <Tekst verdi={navn} onChange={onNavn} etikett="Firmanavn" autoComplete="organization" placeholder="Firmanavn eller organisasjonsnummer" />
-      {status === "soker" && <span className="text-[14px] text-[#5b6472]">Søker i Brønnøysundregistrene …</span>}
-      {status === "feil" && <span className="text-[14px] text-[#5b6472]">Fikk ikke svar fra Brønnøysundregistrene. Du kan gå videre med navnet du har skrevet.</span>}
-      {forslag.length > 0 && soktPa === navn.trim() && (
-        <ul className="m-0 flex list-none flex-col gap-1.5 p-0" aria-label="Treff i Brønnøysundregistrene">
-          {forslag.map((f) => (
-            <li key={f.orgnr}>
-              <button
-                type="button"
-                onClick={() => onTreff(tilTreff(f), false)}
-                className="flex w-full flex-col items-start gap-0.5 rounded-[6px] border border-[#cfcac0] bg-white px-4 py-3 text-left hover:border-[#1f3a5f]"
-              >
-                <span className="text-[16px] font-medium text-[#17263d]">{tittel(f.navn)}</span>
-                <span className="text-[14px] text-[#5b6472]">
-                  {orgnr(f.orgnr)}
-                  {f.kommune && ` · ${tittel(f.kommune)}`}
-                  {f.status && ` · ${f.status === "konkurs" ? "konkurs" : "under avvikling"}`}
-                </span>
-              </button>
+    <div className="relative flex flex-col gap-1.5">
+      <label htmlFor={id} className={labelClass}>
+        Hva heter firmaet du kjøpte av?
+      </label>
+      <input
+        id={id}
+        role="combobox"
+        aria-expanded={visListe}
+        aria-controls={`${id}-liste`}
+        aria-activedescendant={visListe && aktiv >= 0 ? `${id}-${aktiv}` : undefined}
+        aria-autocomplete="list"
+        autoComplete="off"
+        placeholder="Firmanavn eller organisasjonsnummer"
+        className={inputClass}
+        value={navn}
+        onChange={(e) => {
+          onChange({ firmanavn_oppgitt: e.target.value.slice(0, 120) || null, bronnoysund_treff: null, treff_bekreftet: false });
+          setApen(true);
+        }}
+        onFocus={() => setApen(true)}
+        onBlur={() => setTimeout(() => setApen(false), 120)}
+        onKeyDown={tast}
+      />
+      {treff && (
+        <div className="text-[13px] leading-[1.4] text-[#1f5a45]">
+          Koblet til Enhetsregisteret · org.nr {treff.organisasjonsnummer}
+          {treff.forretningsadresse && ` · ${treff.forretningsadresse}`}
+        </div>
+      )}
+      {visListe && (
+        <ul
+          id={`${id}-liste`}
+          role="listbox"
+          className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-[6px] border border-[#bfbab0] bg-white shadow-[0_8px_24px_-12px_rgba(23,38,61,.35)]"
+        >
+          {liste.map((f, i) => (
+            <li
+              key={f.orgnr}
+              id={`${id}-${i}`}
+              role="option"
+              aria-selected={aktiv === i}
+              onMouseDown={() => velg(i)}
+              onMouseEnter={() => setAktiv(i)}
+              className={`cursor-pointer px-3.5 py-3 ${aktiv === i ? "bg-[#f6f4ef]" : ""} ${i > 0 ? "border-t border-[#eceae4]" : ""}`}
+            >
+              <span className="text-[15px] font-semibold text-[#17263d]">{tittel(f.navn)}</span>
+              {f.status && <span className="ml-2 rounded bg-[oklch(0.95_0.03_25)] px-1.5 py-0.5 text-[12px] text-[oklch(0.42_0.12_25)]">{f.status}</span>}
+              <span className="mt-0.5 block text-[13px] leading-[1.4] text-[#5b6472]">
+                {[f.kommune && tittel(f.kommune), `org.nr ${gruppertOrgnr(f.orgnr)}`].filter(Boolean).join(" · ")}
+              </span>
             </li>
           ))}
         </ul>
-      )}
-      {soktPa === navn.trim() && status === "" && forslag.length === 0 && (
-        <span className="text-[14px] text-[#5b6472]">Ingen treff. Du kan gå videre med navnet du har skrevet.</span>
       )}
     </div>
   );

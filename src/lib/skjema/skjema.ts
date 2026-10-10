@@ -1,7 +1,7 @@
 // The complaint form (docs/skjema.md, spec v1.0): its JSON, the closed value lists and the
 // validation the form and the server both run. The comparison engine reads this structure as is.
 
-export const SKJEMA_VERSJON = "1.1";
+export const SKJEMA_VERSJON = "1.2";
 
 // Pass 2's categories (src/lib/analyse/skjema.ts), so the engine needs no mapping.
 export const KATEGORIER = [
@@ -60,6 +60,9 @@ export type SkjemaFeil = {
   verksted_navn_dato: string | null;
   rapport_sier: RapportSier;
   kostnad_kr: number | null;
+  // 16f (v1.2): the buyer confirmed a repair cost above the price paid. Such a cost is either a
+  // rescission case or a typo, and nothing can tell which; the letter never states it unconfirmed.
+  kostnad_over_pris_bekreftet: boolean;
   avskrift_verksted: string | null; // completes «Verkstedet skriver at …»
 };
 
@@ -124,6 +127,7 @@ const NOKLER = {
     "verksted_navn_dato",
     "rapport_sier",
     "kostnad_kr",
+    "kostnad_over_pris_bekreftet",
     "avskrift_verksted",
   ],
   del6_kontakt_med_selger: [
@@ -190,7 +194,7 @@ export function validerSkjema(raa: unknown, idag: string): Valideringsfeil[] {
 
   const liste = Array.isArray(s.del3_feil) ? s.del3_feil : [];
   if (liste.length < 1 || liste.length > MAKS_FEIL) feil("del3_feil", `meld fra én til ${MAKS_FEIL} feil`);
-  liste.forEach((f, i) => validerFeil(f, i, k.kjopsdato as string, idag, ut));
+  liste.forEach((f, i) => validerFeil(f, i, k.kjopsdato as string, k.pris_kr as number, idag, ut));
 
   if (!heltall(s.km_na, 0, 1_500_000) || (typeof k.km_ved_kjop === "number" && (s.km_na as number) < k.km_ved_kjop))
     feil("km_na", "kan ikke være lavere enn kilometerstanden ved kjøpet");
@@ -241,7 +245,7 @@ export function validerSkjema(raa: unknown, idag: string): Valideringsfeil[] {
   return ut;
 }
 
-function validerFeil(raa: unknown, i: number, kjopsdato: string, idag: string, ut: Valideringsfeil[]) {
+function validerFeil(raa: unknown, i: number, kjopsdato: string, pris: number, idag: string, ut: Valideringsfeil[]) {
   const p = `del3_feil[${i}]`;
   const feil = (felt: string, melding: string) => ut.push({ felt: `${p}.${felt}`, melding });
   if (!nokler(raa, NOKLER.feil, p, ut)) return;
@@ -273,5 +277,9 @@ function validerFeil(raa: unknown, i: number, kjopsdato: string, idag: string, u
   }
   if (rapport ? !tekst(f.verksted_navn_dato, 2, 120) : f.verksted_navn_dato !== null) feil("verksted_navn_dato", rapport ? "skriv verkstedet og datoen" : "skal være tom");
   if (r!.kostnad === "ja" ? !heltall(f.kostnad_kr, 1, 3_000_000) : f.kostnad_kr !== null) feil("kostnad_kr", r!.kostnad === "ja" ? "skriv beløpet" : "skal være tom");
+  const overPris = typeof f.kostnad_kr === "number" && Number.isFinite(pris) && f.kostnad_kr > pris;
+  if (typeof f.kostnad_over_pris_bekreftet !== "boolean") feil("kostnad_over_pris_bekreftet", "mangler");
+  else if (overPris && !f.kostnad_over_pris_bekreftet) feil("kostnad_over_pris_bekreftet", "reparasjonen koster mer enn du betalte for bilen; bekreft at beløpene stemmer");
+  else if (!overPris && f.kostnad_over_pris_bekreftet) feil("kostnad_over_pris_bekreftet", "gjelder bare når kostnaden er høyere enn kjøpesummen");
   if (rapport ? !tekst(f.avskrift_verksted, 10, 600) : f.avskrift_verksted !== null) feil("avskrift_verksted", rapport ? "skriv av konklusjonen (10–600 tegn)" : "skal være tom");
 }

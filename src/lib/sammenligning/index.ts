@@ -2,7 +2,9 @@
 // strong as, and the finished practice paragraph out (docs/sammenligningsmotor.md). Deterministic.
 import { byggArgumenter, kmSvakhetIAvsnitt, lovendring, renderAvsnitt, velgSitat } from "./argumenter";
 import { SKJEMA_VERSJON } from "@/lib/skjema/skjema";
-import { avledFeil, avledSak, gruppenUtenom } from "./avled";
+import { FEILKATEGORIER } from "@/lib/analyse/skjema";
+import { avledFeil, avledSak, kategoritrinn } from "./avled";
+import { BESVART, GENERELLE_SPOR, generelltAvsnitt } from "./generelt";
 import { tall } from "./fraser";
 import { velgOpplysning, vurderKriterier } from "./kriterier";
 import { fordel, ranger, sterkereEnn, velgTilBrev } from "./ranger";
@@ -43,14 +45,13 @@ function mangler(sak: Sak, f: FeilProfil, v: VedtakFeil, kriterier: Kriterium[])
   return ut;
 }
 
-// The category first; on A the rest of the information group only when nothing in the category was
-// approved. Two queries, so 30 rejected hits in the category cannot hide the group.
-async function vurderSpor(sak: Sak, f: FeilProfil, spor: Spor, hent: HentKandidater): Promise<Vurdering> {
-  const forste = vurderKandidater(sak, f, spor, await hentSpor(sak, f, spor, hent, [f.kategori_pass2]));
-  const gruppe = spor === "A" ? gruppenUtenom(f.kategori_pass2) : [];
-  if (forste.godkjente.length || !gruppe.length) return forste;
-  const andre = vurderKandidater(sak, f, spor, await hentSpor(sak, f, spor, hent, gruppe));
-  return { godkjente: andre.godkjente, forkastede: [...forste.forkastede, ...andre.forkastede], naer: [...forste.naer, ...andre.naer], antall: forste.antall + andre.antall };
+// One step of the category fallback (avled.ts kategoritrinn) on one track: the category itself, then
+// on A its group and on B the nearest categories. Separate queries, so 30 rejected hits in the
+// category cannot hide the next step.
+async function vurderSpor(sak: Sak, f: FeilProfil, spor: Spor, hent: HentKandidater, trinn = 0): Promise<Vurdering> {
+  const kategorier = kategoritrinn(f.kategori_pass2, spor)[trinn] ?? [];
+  if (!kategorier.length) return { godkjente: [], forkastede: [], naer: [], antall: 0 };
+  return vurderKandidater(sak, f, spor, await hentSpor(sak, f, spor, hent, kategorier));
 }
 
 function vurderKandidater(sak: Sak, f: FeilProfil, spor: Spor, kandidater: VedtakFeil[]): Vurdering {
@@ -133,30 +134,27 @@ const GRUNN: Record<string, string> = {
   forbehold: "la utvalget vekt på forbeholdet i kontrakten",
 };
 
-// A loss for want of something the user's report has, is no loss on the user's facts. Grounds the
-// form cannot answer (known to the buyer, visible on inspection, «annet») always count.
-const BESVART: Record<string, (sak: Sak, f: FeilProfil) => boolean> = {
-  paregnelig_slitasje: (_, f) => f.rapport_paregnelig,
-  ikke_dokumentert: (_, f) => f.rapport_ok,
-  ikke_sannsynliggjort_ved_levering: (_, f) => f.rapport_levering,
-  oppstatt_etter_levering: (_, f) => f.rapport_levering,
-  forbehold: (sak) => sak.uten_forbehold === true,
-};
+// A day count from a document date is an upper bound (kriterier.ts tidTilFeil).
+const senest = (v: VedtakFeil) => (v.viste_seg_kilde === "bevisdato" ? "senest " : "");
 
-function skilte(vunnet: VedtakFeil, tapt: VedtakFeil): string[] {
-  const x = vunnet.saksnummer;
+// Without a won decision only the ground of the loss is told; there is nothing to set it against.
+function skilte(vunnet: VedtakFeil | null, tapt: VedtakFeil): string[] {
   const y = tapt.saksnummer;
   const ut = tapt.grunn && GRUNN[tapt.grunn] ? [`I ${y} ${GRUNN[tapt.grunn]}.`] : [];
+  if (!vunnet) return ut;
+  const x = vunnet.saksnummer;
   const ulik = (a: number | null, b: number | null, terskel: (a: number, b: number) => boolean): a is number => a != null && b != null && terskel(a, b);
   if (ulik(tapt.km_ved_kjop, vunnet.km_ved_kjop, (a, b) => Math.max(a, b) >= 1.25 * Math.min(a, b)))
     ut.push(`Bilen i ${y} hadde gått ${tall(tapt.km_ved_kjop)} km, mot ${tall(vunnet.km_ved_kjop!)} km i ${x}.`);
   if (ulik(tapt.alder_ved_kjop, vunnet.alder_ved_kjop, (a, b) => Math.abs(a - b) >= 2)) ut.push(`Bilen i ${y} var ${tapt.alder_ved_kjop} år, mot ${vunnet.alder_ved_kjop} år i ${x}.`);
   if (ulik(tapt.dager_etter_levering, vunnet.dager_etter_levering, (a, b) => Math.abs(a - b) >= 30))
-    ut.push(`Feilen i ${y} viste seg etter ${tapt.dager_etter_levering} dager, mot ${vunnet.dager_etter_levering} dager i ${x}.`);
+    ut.push(
+      `Feilen i ${y} ${tapt.viste_seg_kilde === "bevisdato" ? "var påvist senest" : "viste seg"} etter ${tapt.dager_etter_levering} dager, mot ${senest(vunnet)}${vunnet.dager_etter_levering} dager i ${x}.`,
+    );
   return ut;
 }
 
-function motstridende(sak: Sak, f: FeilProfil, vunnet: VedtakFeil, tapte: VedtakFeil[]): Motstridende | null {
+function motstridende(sak: Sak, f: FeilProfil, vunnet: VedtakFeil | null, tapte: VedtakFeil[]): Motstridende | null {
   const treff = tapte
     .filter((v) => !(v.grunn && BESVART[v.grunn]?.(sak, f)))
     .map((v) => {
@@ -178,6 +176,19 @@ function motstridende(sak: Sak, f: FeilProfil, vunnet: VedtakFeil, tapte: Vedtak
   return { saksnummer: v.saksnummer, vedtaksdato: v.vedtaksdato, kilde_url: v.kilde_url, grunn: v.grunn, skilte: skilte(vunnet, v) };
 }
 
+// The strength describes the case, not the corpus (decided 2026-10-10): a track with a full report is
+// not weak because its category has few decisions. Whether there is practice to cite is `praksis`.
+//   no track → svak;
+//   a track, a won decision, no contradicting loss, same category → sterk;
+//   a decision with a contradicting loss, or from another category (a weaker analogy) → middels;
+//   a track but no decision → middels, or svak when a similar case on the track was lost.
+function styrke(f: FeilProfil, x: Vurdert | null, mot: Motstridende | null): FeilResultat["styrke"] {
+  if (f.forlik) return null;
+  if (!f.spor_alle.length) return "svak";
+  if (x) return mot || x.vedtak.kategori !== f.kategori_pass2 ? "middels" : "sterk";
+  return mot ? "svak" : "middels";
+}
+
 export async function sammenlign(skjema: Skjema, hent: HentKandidater, idag = new Date().toISOString().slice(0, 10)): Promise<Resultat> {
   // The engine reads one version of the form; an unknown one is refused (docs/skjema.md § 4).
   if (skjema._meta?.skjema_versjon !== SKJEMA_VERSJON) throw new Error(`Ukjent skjemaversjon: ${skjema._meta?.skjema_versjon ?? "mangler"}`);
@@ -188,43 +199,75 @@ export async function sammenlign(skjema: Skjema, hent: HentKandidater, idag = ne
   // A settled defect is not claimed (110357): it is not matched, so it can never take a decision from
   // a defect that goes into the letter.
   const aktive = profiler.filter((f) => !f.forlik);
-  // Primary track first; the secondary only when the primary leaves the defect without a decision (§ 6),
-  // either because nothing was approved or because another defect took what was.
-  const vurderinger = new Map<string, { primar: Vurdering | null; sekundar: Vurdering | null }>();
-  const primare = await Promise.all(aktive.map((f) => (f.spor_primar ? vurderSpor(sak, f, f.spor_primar, hent) : null)));
-  profiler.forEach((f) => vurderinger.set(f.feil_id, { primar: null, sekundar: null }));
-  aktive.forEach((f, i) => (vurderinger.get(f.feil_id)!.primar = primare[i]));
-  const lister = () =>
-    new Map(aktive.map((f) => [f.feil_id, [...(vurderinger.get(f.feil_id)!.primar?.godkjente ?? []), ...(vurderinger.get(f.feil_id)!.sekundar?.godkjente ?? [])]]));
+  // Step by step (avled.ts kategoritrinn): the same category on every track the defect has, primary
+  // track first; only when that leaves the defect without a decision (nothing approved, or another
+  // defect took it), the next step: the information group on A, the nearest categories on B, nothing
+  // on C. Within a step the primary track comes before the secondary (§ 6).
+  const vurderinger = new Map<string, Vurdering[]>(profiler.map((f) => [f.feil_id, []]));
+  const lister = () => new Map(aktive.map((f) => [f.feil_id, vurderinger.get(f.feil_id)!.flatMap((v) => v.godkjente)]));
   const kostnader = new Map(aktive.map((f) => [f.feil_id, f.kostnad_kr ?? 0]));
-  let valgt = fordel(lister(), kostnader);
-  const mangler = aktive.filter((f) => !valgt.get(f.feil_id) && f.spor_sekundar);
-  const sekundare = await Promise.all(mangler.map((f) => vurderSpor(sak, f, f.spor_sekundar!, hent)));
-  mangler.forEach((f, i) => (vurderinger.get(f.feil_id)!.sekundar = sekundare[i]));
-  if (mangler.length) valgt = fordel(lister(), kostnader);
+  let valgt = new Map<string, Vurdert | null>();
+  for (const trinn of [0, 1]) {
+    const mangler = aktive.filter((f) => !valgt.get(f.feil_id) && f.spor_alle.length);
+    if (!mangler.length) break;
+    const nye = await Promise.all(mangler.map((f) => Promise.all([f.spor_primar, f.spor_sekundar].filter((s): s is Spor => s != null).map((s) => vurderSpor(sak, f, s, hent, trinn)))));
+    mangler.forEach((f, i) => vurderinger.get(f.feil_id)!.push(...nye[i]));
+    valgt = fordel(lister(), kostnader);
+  }
   const godkjenteListe = lister();
   // A defect left without a decision gets the nearest won one, also on the tracks a report would open.
   const utenVedtak = aktive.filter((f) => !valgt.get(f.feil_id));
   const ekstra = await Promise.all(utenVedtak.map((f) => Promise.all(sporMedRapport(f).map((s) => vurderSpor(sak, f, s, hent)))));
   const naerListe = new Map(
     utenVedtak.map((f, i) => {
-      const { primar, sekundar } = vurderinger.get(f.feil_id)!;
-      return [f.feil_id, [primar, sekundar, ...ekstra[i]].flatMap((x) => x?.naer ?? [])];
+      return [f.feil_id, [...vurderinger.get(f.feil_id)!, ...ekstra[i]].flatMap((x) => x.naer)];
     }),
   );
   const tilBrev = velgTilBrev(
     aktive.map((f) => ({ feil_id: f.feil_id, kostnad: f.kostnad_kr ?? 0, valgt: valgt.get(f.feil_id) ?? null, kategori: f.kategori_pass2 })),
   );
   // A lost case on the same track and kind of defect, as strong as the user's, lowers the strength.
-  const medVedtak = aktive.filter((f) => valgt.get(f.feil_id));
-  const tapte = await Promise.all(medVedtak.map((f) => hentSpor(sak, f, valgt.get(f.feil_id)!.vedtak.spor, hent, [f.kategori_pass2], true)));
-  const mot = new Map(medVedtak.map((f, i) => [f.feil_id, motstridende(sak, f, valgt.get(f.feil_id)!.vedtak, tapte[i])]));
+  // With a decision: losses on its track, in both its category and the user's (a category fallback).
+  // Without one, but with a track: losses on the primary track in the user's category.
+  const medSpor = aktive.filter((f) => valgt.get(f.feil_id) || f.spor_primar);
+  const tapte = await Promise.all(
+    medSpor.map((f) => {
+      const v = valgt.get(f.feil_id)?.vedtak;
+      return v ? hentSpor(sak, f, v.spor, hent, [...new Set([f.kategori_pass2, v.kategori])], true) : hentSpor(sak, f, f.spor_primar!, hent, [f.kategori_pass2], true);
+    }),
+  );
+  const mot = new Map(medSpor.map((f, i) => [f.feil_id, motstridende(sak, f, valgt.get(f.feil_id)?.vedtak ?? null, tapte[i])]));
+
+  // A defect with a track on C or B but no decision gets the general paragraph: the rule with two
+  // examples from the won decisions on the track (counted across categories; no rescission when the
+  // buyer does not want one, as F9), the buyer's facts, and the answer to the most common loss
+  // (generelt.ts). The queries are the same for every defect.
+  const perSpor = new Map<Spor, Promise<[VedtakFeil[], VedtakFeil[]]>>();
+  const praksisPaSpor = (f: FeilProfil, spor: Spor) => {
+    if (!perSpor.has(spor)) {
+      const q = { spor, a_variant: null, kategori: f.kategori_pass2, kategorier: [...FEILKATEGORIER], heving_tillatt: sak.heving_tillatt_i_praksis, nyeste: true };
+      perSpor.set(spor, Promise.all([hent(q), hent({ ...q, tapte: true })]));
+    }
+    return perSpor.get(spor)!;
+  };
+  const generelle = new Map<string, string>();
+  for (const f of aktive.filter((f) => !valgt.get(f.feil_id))) {
+    for (const spor of GENERELLE_SPOR.filter((s) => f.spor_alle.includes(s))) {
+      const [vunne, tapteSpor] = await praksisPaSpor(f, spor);
+      const tekst = generelltAvsnitt(sak, f, spor, vunne, tapteSpor);
+      if (tekst) {
+        generelle.set(f.feil_id, tekst);
+        break;
+      }
+    }
+  }
 
   const ingenTreff: Resultat["ingen_treff"] = [];
   const feil = profiler.map((f): FeilResultat => {
-    const { primar, sekundar } = vurderinger.get(f.feil_id)!;
+    const egne = vurderinger.get(f.feil_id)!;
     const x = valgt.get(f.feil_id) ?? null;
-    const forkastede = [...(primar?.forkastede ?? []), ...(sekundar?.forkastede ?? [])];
+    const forkastede = egne.flatMap((v) => v.forkastede);
+    const antall = egne.reduce((n, v) => n + v.antall, 0);
     // A won decision another defect took is not lost, only used elsewhere.
     for (const g of godkjenteListe.get(f.feil_id) ?? []) {
       if (g === x) break;
@@ -236,9 +279,9 @@ export async function sammenlign(skjema: Skjema, hent: HentKandidater, idag = ne
         ? "forlik: ikke vurdert"
         : !f.spor_primar
         ? `ingen_spor: ${f.ingen_spor_arsak}`
-        : !(primar?.antall || sekundar?.antall)
+        : !antall
           ? `ingen kandidater på spor ${f.spor_alle.slice(0, 2).join("/")}`
-          : `alle ${(primar?.antall ?? 0) + (sekundar?.antall ?? 0)} kandidater forkastet`;
+          : `alle ${antall} kandidater forkastet`;
       ingenTreff.push({ feil_id: f.feil_id, siste_stopp: stopp });
     }
     const argumenter = x ? byggArgumenter(sak, f, x) : [];
@@ -260,6 +303,7 @@ export async function sammenlign(skjema: Skjema, hent: HentKandidater, idag = ne
       km_svakhet_i_avsnitt: x != null && kmSvakhetIAvsnitt(sak, f),
       kandidat: x ? kandidatRef(x) : null,
       kandidat_spor: x?.vedtak.spor ?? null,
+      kategori_tilbakefall: x != null && x.vedtak.kategori !== f.kategori_pass2,
       kriterier: (x?.kriterier ?? []).map(({ navn, bruker, vedtak, utfall }) => ({ navn, bruker, vedtak, utfall })),
       antall_sterkere: x?.antall_sterkere ?? 0,
       svakhet_adressert: x?.svakhet?.navn ?? null,
@@ -267,9 +311,10 @@ export async function sammenlign(skjema: Skjema, hent: HentKandidater, idag = ne
       sitat,
       argumenter,
       // Rendered for every approved defect so it can be checked; the letter only uses those in valgt_til_brev.
-      avsnitt: x ? renderAvsnitt(f, x, argumenter, sitat) : null,
+      avsnitt: x ? renderAvsnitt(f, x, argumenter, sitat) : (generelle.get(f.feil_id) ?? null),
       forkastede,
-      styrke: f.forlik ? null : !x ? "svak" : mot.get(f.feil_id) ? "middels" : "sterk",
+      styrke: styrke(f, x, mot.get(f.feil_id) ?? null),
+      praksis: f.forlik ? null : x ? "vedtak" : generelle.has(f.feil_id) ? "generell" : "ingen",
       motstridende: mot.get(f.feil_id) ?? null,
       naermeste: x ? null : naermeste(f, naerListe.get(f.feil_id) ?? []),
       forlik: f.forlik,

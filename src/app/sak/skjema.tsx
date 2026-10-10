@@ -1,542 +1,775 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
-import { Logo } from "@/app/logo";
-import { HVOR_STO_DET, KATEGORIER, MAKS_FEIL, type Valideringsfeil, validerSkjema } from "@/lib/skjema/skjema";
-import { byggSkjema, type FeilUtkast, fjernFeil, idagINorge, STUBB_AVTALE, STUBB_FEIL, STUBB_VERKSTED, tomFeil, tomtUtkast, type Utkast, vises } from "@/lib/skjema/utkast";
+import { CalendarIcon } from "lucide-react";
+import { useState, useTransition } from "react";
+import { nb } from "react-day-picker/locale";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
+import { HVOR_STO_DET, KATEGORIER, MAKS_FEIL, RAPPORT_TOM, SKJEMA_VERSJON, validerSkjema, type Skjema, type SkjemaFeil } from "@/lib/skjema/skjema";
 import { type SakSvar, sendSak } from "./actions";
-import { Avkrysning, Flervalg, Fritekst, Merknad, Sporsmal, Stubb, Tekst, Valg } from "./felt";
 import { Forhandlervelger } from "./forhandler";
-import { Resultat } from "./resultat";
 
-const JA_NEI = [
-  { verdi: "ja", tekst: "Ja" },
-  { verdi: "nei", tekst: "Nei" },
+type Valgliste<T extends string> = readonly (readonly [T, string])[];
+type Kontakt = Skjema["del6_kontakt_med_selger"];
+
+const JA_NEI: Valgliste<"ja" | "nei"> = [
+  ["ja", "Ja"],
+  ["nei", "Nei"],
 ];
-const RAPPORTSVAR = [
-  { verdi: "ja", tekst: "Ja" },
-  { verdi: "nei", tekst: "Nei" },
-  { verdi: "star_ikke", tekst: "Står ikke" },
+const RAPPORTSVAR: Valgliste<"ja" | "nei" | "star_ikke"> = [...JA_NEI, ["star_ikke", "Står ikke"]];
+// Spec 16a–16d (docs/skjema.md).
+const RAPPORT_SPORSMAL = [
+  ["hva", "Står det hvilken del som er feil?"],
+  ["hvorfor", "Står det hvorfor den sviktet (årsak)?"],
+  ["var_der_ved_overtakelse", "Står det at feilen sannsynligvis var der da du overtok bilen?"],
+  ["mer_enn_normal_slitasje", "Står det at feilen er mer enn normal slitasje for alder og kjørelengde?"],
+  ["kostnad", "Står det hva reparasjonen koster?"],
+] as const;
+const SELGERS_SVAR: Valgliste<NonNullable<Kontakt["selgers_svar"]>> = [
+  ["ikke_svart", "Ikke svart"],
+  ["avvist", "Avvist"],
+  ["tilbudt_reparasjon", "Tilbudt reparasjon"],
+  ["tilbudt_delvis", "Tilbudt noe, men ikke alt"],
+  ["enige_om_noe", "Vi ble enige om noe"],
 ];
 
-type Steg = { navn: string; prefiks: string[]; feil?: number };
+const nyFeil = (id: string): SkjemaFeil => ({
+  id,
+  kategori: "motor",
+  en_setning: "",
+  dato_oppdaget: "",
+  kan_bilen_brukes: "ja",
+  selger_sa_noe: "nei",
+  hvor_sto_det: [],
+  avskrift_selger: null,
+  svar_pa_direkte_sporsmal: false,
+  verksted_sett_pa: "nei",
+  verksted_navn_dato: null,
+  rapport_sier: RAPPORT_TOM,
+  kostnad_kr: null,
+  kostnad_over_pris_bekreftet: false,
+  avskrift_verksted: null,
+});
 
-// The steps follow docs/skjema.md § 2; each defect is a step of its own (parts 3–5).
-function stegFor(u: Utkast): Steg[] {
-  return [
-    { navn: "Kjøpet", prefiks: ["del1_kjopet"] },
-    { navn: "Selger", prefiks: ["del2_selger"] },
-    ...u.feil.map((_, i) => ({ navn: u.feil.length > 1 ? `Feil ${i + 1}` : "Feilen", prefiks: [`del3_feil[${i}]`], feil: i })),
-    { navn: "Kontakt med selger", prefiks: ["km_na", "del6_kontakt_med_selger"] },
-    { navn: "Ønske og kontakt", prefiks: ["del7_onske_og_kontakt"] },
-    { navn: "Send", prefiks: ["bekreftelser", "_meta"] },
-  ];
+// An empty form: the buyer and the confirmations are asked, not filled in.
+const TOMT: Skjema = {
+  _meta: { skjema_versjon: SKJEMA_VERSJON, registrert: "" },
+  del1_kjopet: { selgertype: "forhandler", kjopsdato: "", pris_kr: 0, km_ved_kjop: 0, aarsmodell: 0, merke_modell_valgfritt: null },
+  del2_selger: { firmanavn_oppgitt: null, bronnoysund_treff: null, treff_bekreftet: false, som_den_er_i_kontrakt: "vet_ikke" },
+  del3_feil: [nyFeil("F1")],
+  km_na: 0,
+  del6_kontakt_med_selger: {
+    tatt_opp_med_selger: "nei",
+    dato_forste_gang: null,
+    selgers_svar: null,
+    avtale_inngatt: "nei",
+    avtale_beskrivelse: null,
+    avtale_gjelder_feil: [],
+    selger_la_frem_dokumentasjon: "nei",
+    selger_dokumentasjon_kort: null,
+  },
+  del7_onske_og_kontakt: { onsket_losning: "reparasjon", kjoper: { navn: "", adresse: "", epost: "" } },
+  bekreftelser: { opplysningene_er_riktige: false, lest_at_brevet_ikke_er_juridisk_radgivning: false },
+};
+
+// Validation paths in the buyer's words: «del3_feil[1].en_setning» → «Feil 2».
+function delnavn(felt: string): string {
+  const feil = /^del3_feil\[(\d+)\]/.exec(felt);
+  if (feil) return `Feil ${Number(feil[1]) + 1}`;
+  if (felt.startsWith("del1_kjopet")) return "Kjøpet";
+  if (felt.startsWith("del2_selger")) return "Selger";
+  if (felt === "km_na" || felt.startsWith("del6")) return "Kontakt med selger";
+  if (felt.startsWith("del7")) return "Ønske og kontakt";
+  if (felt.startsWith("bekreftelser")) return "Bekreftelser";
+  return "Skjemaet";
 }
 
-export function Sakskjema() {
-  const [u, setU] = useState<Utkast>(tomtUtkast);
-  const [steg, setSteg] = useState(0);
-  const [visFeil, setVisFeil] = useState(false);
-  const [svar, setSvar] = useState<SakSvar | null>(null);
-  const [sendes, startSending] = useTransition();
-  const idag = idagINorge();
-
-  const alleSteg = stegFor(u);
-  const navarende = alleSteg[steg];
-  const skjema = useMemo(() => byggSkjema(u, new Date().toISOString()), [u]);
-  const alleFeil = useMemo(() => validerSkjema(skjema, idag), [skjema, idag]);
-  const stegFeil = (s: Steg) => alleFeil.filter((f) => s.prefiks.some((p) => f.felt === p || f.felt.startsWith(`${p}.`)));
-  const feilHer = stegFeil(navarende);
-  const feilFor = (felt: string) => (visFeil ? feilHer.find((f) => f.felt === felt || f.felt.startsWith(`${felt}.`))?.melding : undefined);
-
-  const sett = (endring: Partial<Utkast>) => setU((x) => ({ ...x, ...endring }));
-  const settFeil = (i: number, endring: Partial<FeilUtkast>) => setU((x) => ({ ...x, feil: x.feil.map((f, j) => (j === i ? { ...f, ...endring } : f)) }));
-
-  const ga = (til: number) => {
-    setVisFeil(false);
-    setSteg(til);
-    window.scrollTo({ top: 0 });
+// Hidden answers are kept while the user toggles; the engine gets what the form would send (spec § 3–4).
+function tilMotor(s: Skjema, registrert: string): Skjema {
+  const k = s.del6_kontakt_med_selger;
+  const tattOpp = k.tatt_opp_med_selger !== "nei";
+  const svar = tattOpp ? k.selgers_svar : null;
+  const avtale = svar === "tilbudt_delvis" || svar === "enige_om_noe" ? k.avtale_inngatt : "nei";
+  const dok = svar === "avvist" ? k.selger_la_frem_dokumentasjon : "nei";
+  return {
+    ...s,
+    _meta: { skjema_versjon: SKJEMA_VERSJON, registrert },
+    del3_feil: s.del3_feil.map((f, i) => {
+      const skriftlig = f.selger_sa_noe === "ja_skriftlig";
+      const hvor = skriftlig ? f.hvor_sto_det : [];
+      const rapport = f.verksted_sett_pa === "ja_skriftlig";
+      const r = rapport ? f.rapport_sier : RAPPORT_TOM;
+      return {
+        ...f,
+        id: `F${i + 1}`,
+        hvor_sto_det: hvor,
+        avskrift_selger: skriftlig ? f.avskrift_selger : null,
+        svar_pa_direkte_sporsmal: hvor.includes("sms_epost_chat") && f.svar_pa_direkte_sporsmal,
+        verksted_navn_dato: rapport ? f.verksted_navn_dato : null,
+        rapport_sier: r,
+        kostnad_kr: r.kostnad === "ja" ? f.kostnad_kr : null,
+        // Only a cost above the price can be confirmed; a corrected amount drops the confirmation.
+        kostnad_over_pris_bekreftet: r.kostnad === "ja" && (f.kostnad_kr ?? 0) > s.del1_kjopet.pris_kr && f.kostnad_over_pris_bekreftet,
+        avskrift_verksted: rapport ? f.avskrift_verksted : null,
+      };
+    }),
+    del6_kontakt_med_selger: {
+      tatt_opp_med_selger: k.tatt_opp_med_selger,
+      dato_forste_gang: tattOpp ? k.dato_forste_gang : null,
+      selgers_svar: svar,
+      avtale_inngatt: avtale,
+      avtale_beskrivelse: avtale === "ja" ? k.avtale_beskrivelse : null,
+      avtale_gjelder_feil: avtale === "ja" ? k.avtale_gjelder_feil.filter((id) => Number(id.slice(1)) <= s.del3_feil.length) : [],
+      selger_la_frem_dokumentasjon: dok,
+      selger_dokumentasjon_kort: dok === "ja" ? k.selger_dokumentasjon_kort : null,
+    },
   };
-  const neste = () => {
-    if (feilHer.length) {
-      setVisFeil(true);
-      requestAnimationFrame(() => document.querySelector('[aria-invalid="true"]')?.scrollIntoView({ block: "center", behavior: "smooth" }));
-      return;
-    }
-    ga(steg + 1);
-  };
-  const send = () => {
-    if (alleFeil.length) {
-      setVisFeil(true);
-      return;
-    }
-    startSending(async () => setSvar(await sendSak(byggSkjema(u, new Date().toISOString()))));
-  };
+}
 
-  if (svar?.ok) return <Ramme><Resultat svar={svar} skjema={skjema} /></Ramme>;
+const ETIKETT = "text-[13px] font-medium text-[#3d4757]";
+const INPUT = "rounded border border-[#dcd8cf] bg-white px-3 py-2 text-[15px] text-[#17263d] outline-none focus:border-[#1f3a5f]";
+const KORT = "flex flex-col gap-4 rounded border border-[#dcd8cf] bg-white/60 p-5";
+const MERKNAD = "m-0 rounded bg-[#ecebe7] px-3 py-2 text-[13px] text-[#3d4757]";
 
-  const privat = u.selgertype === "privat";
-  const sisteSteg = steg === alleSteg.length - 1;
-
+function Felt({ navn, children }: { navn: string; children: React.ReactNode }) {
   return (
-    <Ramme>
-      <div className="flex flex-col gap-1.5">
-        <span className="text-[13px] font-medium text-[#1f3a5f]">
-          Steg {steg + 1} av {alleSteg.length}
-        </span>
-        <h1 className="m-0 font-brev text-[30px] font-semibold leading-[1.15] md:text-[36px]">{navarende.navn}</h1>
-        <div className="mt-2 flex gap-1" aria-hidden>
-          {alleSteg.map((s, i) => (
-            <span key={s.navn} className={`h-1 flex-1 rounded-full ${i <= steg ? "bg-[#1f3a5f]" : "bg-[#dcd8cf]"}`} />
-          ))}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-8">
-        {steg === 0 && <Kjopet u={u} sett={sett} feilFor={feilFor} idag={idag} />}
-        {steg === 1 && <Selger u={u} sett={sett} feilFor={feilFor} />}
-        {navarende.feil != null && (
-          <Feilen
-            i={navarende.feil}
-            f={u.feil[navarende.feil]}
-            u={u}
-            sett={(e) => settFeil(navarende.feil!, e)}
-            feilFor={(felt) => feilFor(`del3_feil[${navarende.feil}].${felt}`)}
-            idag={idag}
-          />
-        )}
-        {navarende.navn === "Kontakt med selger" && <Kontakt u={u} sett={sett} feilFor={feilFor} idag={idag} />}
-        {navarende.navn === "Ønske og kontakt" && <Onske u={u} sett={sett} feilFor={feilFor} />}
-        {sisteSteg && <Bekreft u={u} sett={sett} feilFor={feilFor} alleFeil={visFeil ? alleFeil : []} alleSteg={alleSteg} stegFeil={stegFeil} ga={ga} />}
-      </div>
-
-      {navarende.feil != null && navarende.feil === u.feil.length - 1 && (
-        <div className="flex flex-col gap-3 border-t border-[#dcd8cf] pt-6">
-          {u.feil.length < MAKS_FEIL && (
-            <button
-              type="button"
-              onClick={() => (feilHer.length ? neste() : (sett({ feil: [...u.feil, tomFeil()] }), ga(steg + 1)))}
-              className="self-start rounded-[6px] border border-[#1f3a5f] bg-white px-4 py-2.5 text-[15px] font-semibold text-[#1f3a5f]"
-            >
-              + Meld en feil til
-            </button>
-          )}
-          {u.feil.length > 1 && (
-            <button
-              type="button"
-              onClick={() => (sett(fjernFeil(u, navarende.feil!)), ga(steg - 1))}
-              className="self-start text-[15px] text-[#a3372b] underline underline-offset-2"
-            >
-              Fjern denne feilen
-            </button>
-          )}
-        </div>
-      )}
-
-      {svar && !svar.ok && (
-        <p role="alert" className="m-0 text-[15px] font-medium text-[#a3372b]">
-          {"melding" in svar ? svar.melding : `Svarene ble ikke godtatt: ${svar.feil.map((f) => `${f.felt} ${f.melding}`).join("; ")}`}
-        </p>
-      )}
-
-      <div className="flex items-center justify-between gap-3 border-t border-[#dcd8cf] pt-6">
-        {steg > 0 ? (
-          <button type="button" onClick={() => ga(steg - 1)} className="rounded-[6px] px-2 py-3 text-[16px] font-medium text-[#1f3a5f]">
-            ← Tilbake
-          </button>
-        ) : (
-          <span />
-        )}
-        {!privat && !sisteSteg && (
-          <button type="button" onClick={neste} className="rounded-[6px] bg-[#17263d] px-7 py-3.5 text-[16px] font-semibold text-[#f6f4ef]">
-            Neste
-          </button>
-        )}
-        {sisteSteg && (
-          <button type="button" onClick={send} disabled={sendes} className="rounded-[6px] bg-[#17263d] px-7 py-3.5 text-[16px] font-semibold text-[#f6f4ef] disabled:opacity-60">
-            {sendes ? "Vurderer …" : "Se vurderingen"}
-          </button>
-        )}
-      </div>
-    </Ramme>
+    <label className="relative flex flex-col gap-1.5">
+      <span className={ETIKETT}>{navn}</span>
+      {children}
+    </label>
   );
 }
 
-function Ramme({ children }: { children: React.ReactNode }) {
+function Valg<T extends string>({ navn, verdi, valg, onChange }: { navn: string; verdi: T | null | undefined; valg: Valgliste<T>; onChange: (v: T) => void }) {
   return (
-    <div className="min-h-screen bg-[#f6f4ef] font-ui text-[#17263d]">
-      <header className="border-b border-[#dcd8cf] px-4 py-[18px] md:px-16">
-        <Link href="/" aria-label="Til forsiden">
-          <Logo liten />
-        </Link>
-      </header>
-      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-8 px-4 pb-16 pt-8 md:pt-12">{children}</div>
+    <div role="group" aria-label={navn} className="flex flex-col gap-1.5">
+      <span className={ETIKETT}>{navn}</span>
+      <div className="flex flex-wrap gap-1.5">
+        {valg.map(([v, tekst]) => (
+          <button
+            key={v}
+            type="button"
+            aria-pressed={verdi === v}
+            onClick={() => onChange(v)}
+            className="rounded border border-[#dcd8cf] bg-white px-3 py-1.5 text-[14px] aria-pressed:border-[#1f3a5f] aria-pressed:bg-[#1f3a5f] aria-pressed:text-white"
+          >
+            {tekst}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 
-type Del = { u: Utkast; sett: (e: Partial<Utkast>) => void; feilFor: (felt: string) => string | undefined };
-
-function Kjopet({ u, sett, feilFor, idag }: Del & { idag: string }) {
+function Tall({ navn, verdi, onChange, paakrevd }: { navn: string; verdi: number | null; onChange: (v: number | null) => void; paakrevd?: boolean }) {
   return (
-    <>
-      <Sporsmal tittel="Kjøpte du bilen av et firma (forhandler) eller en privatperson?" feil={feilFor("del1_kjopet.selgertype")}>
-        <Valg
-          navn="selgertype"
-          verdi={u.selgertype}
-          onChange={(v) => sett({ selgertype: v })}
-          alternativer={[
-            { verdi: "forhandler", tekst: "Et firma (forhandler)" },
-            { verdi: "privat", tekst: "En privatperson" },
-          ]}
-        />
-      </Sporsmal>
-      {u.selgertype === "privat" ? (
-        <Merknad>
-          Ved kjøp fra en privatperson gjelder kjøpsloven, ikke forbrukerkjøpsloven. Tjenesten dekker foreløpig bare kjøp fra forhandler, så vi kan dessverre ikke hjelpe deg med denne
-          saken.
-        </Merknad>
-      ) : (
-        <>
-          <Sporsmal tittel="Når kjøpte du bilen?" feil={feilFor("del1_kjopet.kjopsdato")}>
-            <Tekst type="date" verdi={u.kjopsdato} onChange={(v) => sett({ kjopsdato: v })} etikett="Kjøpsdato" min="2010-01-01" max={idag} bredde="w-[200px]" />
-          </Sporsmal>
-          <Sporsmal tittel="Hva betalte du?" feil={feilFor("del1_kjopet.pris_kr")}>
-            <Tekst verdi={u.pris_kr} onChange={(v) => sett({ pris_kr: v })} etikett="Pris" inputMode="numeric" etter="kr" bredde="w-[200px]" />
-          </Sporsmal>
-          <Sporsmal tittel="Hva var kilometerstanden ved kjøp?" feil={feilFor("del1_kjopet.km_ved_kjop")}>
-            <Tekst verdi={u.km_ved_kjop} onChange={(v) => sett({ km_ved_kjop: v })} etikett="Kilometerstand ved kjøp" inputMode="numeric" etter="km" bredde="w-[200px]" />
-          </Sporsmal>
-          <Sporsmal tittel="Hvilken årsmodell er bilen?" feil={feilFor("del1_kjopet.aarsmodell")}>
-            <Tekst verdi={u.aarsmodell} onChange={(v) => sett({ aarsmodell: v })} etikett="Årsmodell" inputMode="numeric" maxLength={4} bredde="w-[120px]" />
-          </Sporsmal>
-          <Sporsmal tittel="Merke og modell (valgfritt)" feil={feilFor("del1_kjopet.merke_modell_valgfritt")}>
-            <Tekst verdi={u.merke_modell} onChange={(v) => sett({ merke_modell: v })} etikett="Merke og modell" maxLength={60} placeholder="For eksempel Skoda Enyaq iV 80" />
-          </Sporsmal>
-        </>
+    <Felt navn={navn}>
+      <input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        required={paakrevd}
+        className={INPUT}
+        value={verdi ? verdi : ""}
+        onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+      />
+    </Felt>
+  );
+}
+
+const tilIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+function Dato({ navn, verdi, onChange, paakrevd }: { navn: string; verdi: string | null; onChange: (v: string) => void; paakrevd?: boolean }) {
+  const [apen, setApen] = useState(false);
+  const dato = verdi ? new Date(`${verdi}T00:00:00`) : undefined;
+  return (
+    <Felt navn={navn}>
+      <Popover open={apen} onOpenChange={setApen}>
+        <PopoverTrigger asChild>
+          <button type="button" className={`${INPUT} flex items-center justify-between gap-2 text-left`}>
+            {dato ? dato.toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" }) : <span className="text-[#8a8577]">Velg dato</span>}
+            <CalendarIcon className="size-4 opacity-60" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            locale={nb}
+            captionLayout="dropdown"
+            startMonth={new Date(2000, 0)}
+            endMonth={new Date(new Date().getFullYear() + 1, 11)}
+            selected={dato}
+            defaultMonth={dato}
+            onSelect={(d) => {
+              if (d) onChange(tilIso(d));
+              setApen(false);
+            }}
+          />
+        </PopoverContent>
+      </Popover>
+      {paakrevd && <input tabIndex={-1} aria-hidden required value={verdi ?? ""} onChange={() => {}} className="pointer-events-none absolute h-0 w-0 opacity-0" />}
+    </Felt>
+  );
+}
+
+function Tekst({ navn, verdi, onChange, rader = 2, paakrevd }: { navn: string; verdi: string | null; onChange: (v: string | null) => void; rader?: number; paakrevd?: boolean }) {
+  return (
+    <Felt navn={navn}>
+      <textarea required={paakrevd} rows={rader} className={INPUT} value={verdi ?? ""} onChange={(e) => onChange(e.target.value || null)} />
+    </Felt>
+  );
+}
+
+// Looked up first in Statens vegvesen (/api/kjoretoy); `funnet` fills in what the registry knows.
+// It sits inside the form, so Enter looks the vehicle up instead of submitting.
+function Regnr({ funnet }: { funnet: (k: Kjoretoy, eierFra: string | null) => void }) {
+  const [regnr, setRegnr] = useState("");
+  const [henter, setHenter] = useState(false);
+  const [melding, setMelding] = useState<{ ok: boolean; tekst: string } | null>(null);
+
+  async function hent() {
+    if (!regnr.trim() || henter) return;
+    setHenter(true);
+    setMelding(null);
+    try {
+      const res = await fetch(`/api/kjoretoy?${new URLSearchParams({ regnr })}`);
+      const json = (await res.json()) as { kjoretoy?: Kjoretoy; eierFra?: string | null; feil?: string };
+      if (!json.kjoretoy) throw new Error(json.feil ?? "Noe gikk galt. Prøv igjen.");
+      const k = json.kjoretoy;
+      funnet(k, json.eierFra ?? null);
+      setMelding({
+        ok: true,
+        tekst: [
+          k.regnr,
+          `${k.merke} ${k.modell}`,
+          k.ar && `første gang registrert ${k.ar}`,
+          json.eierFra && `på nåværende eier siden ${json.eierFra}`,
+          k.bruktimportert && "bruktimportert",
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      });
+    } catch (e) {
+      setMelding({ ok: false, tekst: e instanceof Error && !(e instanceof TypeError) ? e.message : "Noe gikk galt. Prøv igjen." });
+    } finally {
+      setHenter(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Felt navn="Registreringsnummer">
+        <div className="flex gap-2">
+          <input
+            className={`${INPUT} min-w-0 flex-1 font-kode uppercase tracking-[.06em]`}
+            value={regnr}
+            onChange={(e) => setRegnr(e.target.value.toUpperCase())}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return;
+              e.preventDefault();
+              void hent();
+            }}
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={8}
+            placeholder="AB 12345"
+          />
+          <button
+            type="button"
+            onClick={() => void hent()}
+            disabled={!regnr.trim() || henter}
+            className="rounded border border-[#1f3a5f] px-4 py-2 text-[14px] font-medium text-[#1f3a5f] disabled:opacity-50"
+          >
+            {henter ? "Henter …" : "Hent bilen"}
+          </button>
+        </div>
+      </Felt>
+      {melding && (
+        <p role={melding.ok ? "status" : "alert"} className={`m-0 text-[13px] ${melding.ok ? "text-[#1f5a2e]" : "text-[#a3372b]"}`}>
+          {melding.ok ? `${melding.tekst}. Merke, årsmodell og kjøpsdato er fylt inn under.` : melding.tekst}
+        </p>
       )}
-    </>
+    </div>
   );
 }
 
-function Selger({ u, sett, feilFor }: Del) {
+// 16f: a repair dearer than the car is a rescission case or a typo (52 000 for 520 000 kr). The buyer
+// confirms it or corrects one of the amounts; the letter never states an unconfirmed share over 100 %.
+function KostnadOverPris({ kostnad, pris, bekreftet, endre }: { kostnad: number; pris: number; bekreftet: boolean; endre: (p: Partial<SkjemaFeil>) => void }) {
+  const kr = (n: number) => `${n.toLocaleString("nb-NO")} kr`;
   return (
-    <>
-      <Sporsmal tittel="Hva heter firmaet du kjøpte av?" feil={feilFor("del2_selger.firmanavn_oppgitt") ?? feilFor("del2_selger.bronnoysund_treff")}>
-        <Forhandlervelger
-          navn={u.firmanavn}
-          treff={u.treff}
-          bekreftet={u.treff_bekreftet}
-          onNavn={(v) => sett({ firmanavn: v })}
-          onTreff={(t, b) => sett({ treff: t, treff_bekreftet: b })}
-        />
-      </Sporsmal>
-      <Sporsmal tittel="Sto det «som den er», «som forevist» eller lignende i kontrakten?" feil={feilFor("del2_selger.som_den_er_i_kontrakt")}>
-        <Valg
-          navn="som_den_er"
-          verdi={u.som_den_er}
-          onChange={(v) => sett({ som_den_er: v })}
-          alternativer={[
-            { verdi: "ja", tekst: "Ja" },
-            { verdi: "nei", tekst: "Nei" },
-            { verdi: "vet_ikke", tekst: "Vet ikke" },
-          ]}
-        />
-      </Sporsmal>
-    </>
+    <div role="alertdialog" aria-label="Kontroller beløpene" className="flex flex-col gap-3 rounded border border-[#d9b98a] bg-[#fbf3e6] p-4 text-[14px] text-[#3d4757]">
+      <p className="m-0">
+        Reparasjonen koster <strong>{kr(kostnad)}</strong>, mer enn de <strong>{kr(pris)}</strong> du betalte for bilen. Stemmer begge beløpene? Sjekk at kjøpesummen ikke mangler et siffer.
+      </p>
+      {bekreftet ? (
+        <p className="m-0 font-medium text-[#1f5a2e]">✓ Du har bekreftet beløpene.</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => endre({ kostnad_over_pris_bekreftet: true })} className="rounded bg-[#17263d] px-3 py-2 font-semibold text-[#f6f4ef]">
+            Ja, beløpene stemmer
+          </button>
+          <span className="self-center text-[13px]">Hvis ikke: rett kostnaden her eller kjøpesummen under «Kjøpet».</span>
+        </div>
+      )}
+    </div>
   );
 }
 
-function Feilen({
-  i,
-  f,
-  u,
-  sett,
-  feilFor,
-  idag,
-}: {
-  i: number;
-  f: FeilUtkast;
-  u: Utkast;
-  sett: (e: Partial<FeilUtkast>) => void;
-  feilFor: (felt: string) => string | undefined;
-  idag: string;
-}) {
-  const n = `f${i}`;
+function Feilskjema({ f, nr, pris, endre, fjern }: { f: SkjemaFeil; nr: number; pris: number; endre: (p: Partial<SkjemaFeil>) => void; fjern?: () => void }) {
   return (
-    <>
-      <Sporsmal tittel="Hva slags feil er det?" feil={feilFor("kategori")}>
-        <select
-          aria-label="Type feil"
-          value={f.kategori}
-          onChange={(e) => sett({ kategori: e.target.value })}
-          className="w-full rounded-[6px] border border-[#cfcac0] bg-white px-3.5 py-3 text-[16px] text-[#17263d] outline-none focus:border-[#1f3a5f] focus:ring-2 focus:ring-[#1f3a5f]/20"
-        >
-          <option value="">Velg …</option>
+    <div className={KORT}>
+      <div className="flex items-center justify-between">
+        <h3 className="m-0 text-[16px] font-semibold">Feil F{nr}</h3>
+        {fjern && (
+          <button type="button" onClick={fjern} className="text-[13px] text-[#8a3b2e] underline">
+            Fjern
+          </button>
+        )}
+      </div>
+      <Felt navn="Hva slags feil er det?">
+        <select className={INPUT} value={f.kategori} onChange={(e) => endre({ kategori: e.target.value as SkjemaFeil["kategori"] })}>
           {KATEGORIER.map((k) => (
             <option key={k.nokkel} value={k.nokkel}>
               {k.navn}
             </option>
           ))}
         </select>
-      </Sporsmal>
-      <Sporsmal tittel="Hva er feilen?" hjelp="Én setning. Skriv hva som skjer, ikke hva du tror årsaken er." feil={feilFor("en_setning")}>
-        <Stubb stubb={STUBB_FEIL} verdi={f.en_setning} onChange={(v) => sett({ en_setning: v })} maks={220} rader={2} />
-      </Sporsmal>
-      <Sporsmal tittel="Når oppdaget du feilen?" feil={feilFor("dato_oppdaget")}>
-        <Tekst type="date" verdi={f.dato_oppdaget} onChange={(v) => sett({ dato_oppdaget: v })} etikett="Dato oppdaget" min={u.kjopsdato} max={idag} bredde="w-[200px]" />
-      </Sporsmal>
-      <Sporsmal tittel="Kan bilen brukes?" feil={feilFor("kan_bilen_brukes")}>
-        <Valg
-          navn={`${n}-brukes`}
-          verdi={f.kan_bilen_brukes}
-          onChange={(v) => sett({ kan_bilen_brukes: v })}
-          alternativer={[
-            { verdi: "ja", tekst: "Ja" },
-            { verdi: "ja_begrenset", tekst: "Ja, men begrenset" },
-            { verdi: "nei", tekst: "Nei" },
-          ]}
-        />
-      </Sporsmal>
+      </Felt>
+      <Tekst navn="Beskriv feilen med èn setning" verdi={f.en_setning} onChange={(v) => endre({ en_setning: v ?? "" })} paakrevd />
+      <Dato navn="Når oppdaget du feilen?" verdi={f.dato_oppdaget} onChange={(v) => endre({ dato_oppdaget: v })} paakrevd />
+      <Valg
+        navn="Kan bilen brukes?"
+        verdi={f.kan_bilen_brukes}
+        valg={[
+          ["ja", "Ja"],
+          ["ja_begrenset", "Ja, men begrenset"],
+          ["nei", "Nei"],
+        ]}
+        onChange={(v) => endre({ kan_bilen_brukes: v })}
+      />
 
-      <h2 className="m-0 border-t border-[#dcd8cf] pt-8 font-brev text-[22px] font-semibold">Hva selger sa</h2>
-      <Sporsmal tittel="Sa eller skrev selger noe om dette før kjøpet?" feil={feilFor("selger_sa_noe")}>
-        <Valg
-          navn={`${n}-sa`}
-          verdi={f.selger_sa_noe}
-          onChange={(v) => sett({ selger_sa_noe: v })}
-          alternativer={[
-            { verdi: "nei", tekst: "Nei" },
-            { verdi: "ja_skriftlig", tekst: "Ja, skriftlig", forklaring: "I annonsen, kontrakten, en melding eller lignende" },
-            { verdi: "ja_muntlig", tekst: "Ja, men bare muntlig" },
-          ]}
-        />
-      </Sporsmal>
+      <Valg
+        navn="Sa eller skrev selger noe om dette før kjøpet?"
+        verdi={f.selger_sa_noe}
+        valg={[
+          ["nei", "Nei"],
+          ["ja_skriftlig", "Ja, skriftlig"],
+          ["ja_muntlig", "Ja, muntlig"],
+        ]}
+        onChange={(v) => endre({ selger_sa_noe: v })}
+      />
       {f.selger_sa_noe === "ja_muntlig" && (
-        <Merknad>Muntlige løfter er vanskelige å bevise og teller sjelden alene. Vi tar det med i beskrivelsen, men bygger ikke kravet på det.</Merknad>
+        <p className={MERKNAD}>Muntlige løfter er vanskelige å bevise og teller sjelden alene. Vi tar det med i beskrivelsen, men bygger ikke kravet på det.</p>
       )}
-      {vises.hvorStoDet(f) && (
-        <>
-          <Sporsmal tittel="Hvor sto det?" hjelp="Velg alle som passer." feil={feilFor("hvor_sto_det")}>
-            <Flervalg verdier={f.hvor_sto_det} onChange={(v) => sett({ hvor_sto_det: v })} alternativer={HVOR_STO_DET.map((h) => ({ verdi: h.nokkel, tekst: h.navn }))} />
-          </Sporsmal>
-          <Sporsmal tittel="Skriv av det som sto, så nøyaktig du kan" hjelp="Kopier ordene slik de sto i annonsen, kontrakten eller meldingen. Ikke omskriv." feil={feilFor("avskrift_selger")}>
-            <Fritekst verdi={f.avskrift_selger} onChange={(v) => sett({ avskrift_selger: v })} etikett="Det selger skrev" maks={500} />
-          </Sporsmal>
-          {vises.direkteSporsmal(f) && (
-            <Sporsmal tittel="Var meldingen svar på et spørsmål du stilte selger?" feil={feilFor("svar_pa_direkte_sporsmal")}>
-              <Valg navn={`${n}-direkte`} verdi={f.svar_pa_direkte_sporsmal} onChange={(v) => sett({ svar_pa_direkte_sporsmal: v })} alternativer={JA_NEI} />
-            </Sporsmal>
-          )}
-        </>
-      )}
-
-      <h2 className="m-0 border-t border-[#dcd8cf] pt-8 font-brev text-[22px] font-semibold">Verkstedet</h2>
-      <Sporsmal tittel="Har et verksted sett på feilen?" feil={feilFor("verksted_sett_pa")}>
-        <Valg
-          navn={`${n}-verksted`}
-          verdi={f.verksted_sett_pa}
-          onChange={(v) => sett({ verksted_sett_pa: v })}
-          alternativer={[
-            { verdi: "nei", tekst: "Nei" },
-            { verdi: "ja_skriftlig", tekst: "Ja, og jeg har det skriftlig", forklaring: "Rapport, faktura, arbeidsordre eller e-post fra verkstedet" },
-            { verdi: "ja_muntlig", tekst: "Ja, men bare muntlig" },
-          ]}
-        />
-      </Sporsmal>
-      {(f.verksted_sett_pa === "nei" || f.verksted_sett_pa === "ja_muntlig") && (
-        <Merknad>Sammen med brevet får du et ark til verkstedet med det rapporten bør si. En skriftlig rapport gjør saken din mye sterkere.</Merknad>
-      )}
-      {vises.rapport(f) && (
-        <>
-          <Sporsmal tittel="Hvilket verksted, og når?" feil={feilFor("verksted_navn_dato")}>
-            <Tekst verdi={f.verksted_navn_dato} onChange={(v) => sett({ verksted_navn_dato: v })} etikett="Verksted og dato" placeholder="For eksempel Skoda Haugesund AS, 04.12.2025" />
-          </Sporsmal>
-          <Merknad>Svar ut fra det som faktisk står i rapporten. «Står ikke» er et vanlig svar – da forteller vi deg hva du bør be verkstedet legge til.</Merknad>
-          <Sporsmal tittel="Står det hvilken del som er feil?" hjelp="En faktura eller en diagnoseutskrift som nevner delen, holder." feil={feilFor("rapport_sier.hva")}>
-            <Valg navn={`${n}-hva`} verdi={f.rapport_sier.hva} onChange={(v) => sett({ rapport_sier: { ...f.rapport_sier, hva: v } })} alternativer={RAPPORTSVAR} />
-          </Sporsmal>
-          <Sporsmal tittel="Står det hvorfor den sviktet (årsak)?" feil={feilFor("rapport_sier.hvorfor")}>
-            <Valg navn={`${n}-hvorfor`} verdi={f.rapport_sier.hvorfor} onChange={(v) => sett({ rapport_sier: { ...f.rapport_sier, hvorfor: v } })} alternativer={RAPPORTSVAR} />
-          </Sporsmal>
-          <Sporsmal tittel="Står det at feilen sannsynligvis var der da du overtok bilen?" feil={feilFor("rapport_sier.var_der_ved_overtakelse")}>
+      {f.selger_sa_noe === "ja_skriftlig" && (
+        <div className="flex flex-col gap-4 border-l-2 border-[#dcd8cf] pl-4">
+          <div role="group" aria-label="Hvor sto det?" className="flex flex-col gap-1.5">
+            <span className={ETIKETT}>Hvor sto det?</span>
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+              {HVOR_STO_DET.map((h) => (
+                <label key={h.nokkel} className="flex items-center gap-2 text-[14px]">
+                  <input
+                    type="checkbox"
+                    checked={f.hvor_sto_det.includes(h.nokkel)}
+                    onChange={(e) => endre({ hvor_sto_det: e.target.checked ? [...f.hvor_sto_det, h.nokkel] : f.hvor_sto_det.filter((x) => x !== h.nokkel) })}
+                  />
+                  {h.navn}
+                </label>
+              ))}
+            </div>
+          </div>
+          <Tekst navn="Skriv av det som sto, så nøyaktig du kan" verdi={f.avskrift_selger} onChange={(v) => endre({ avskrift_selger: v })} rader={3} />
+          {f.hvor_sto_det.includes("sms_epost_chat") && (
             <Valg
-              navn={`${n}-overtakelse`}
-              verdi={f.rapport_sier.var_der_ved_overtakelse}
-              onChange={(v) => sett({ rapport_sier: { ...f.rapport_sier, var_der_ved_overtakelse: v } })}
-              alternativer={RAPPORTSVAR}
+              navn="Var dette svar på et spørsmål du stilte selger?"
+              verdi={f.svar_pa_direkte_sporsmal ? "ja" : "nei"}
+              valg={JA_NEI}
+              onChange={(v) => endre({ svar_pa_direkte_sporsmal: v === "ja" })}
             />
-          </Sporsmal>
-          <Sporsmal tittel="Står det at feilen er mer enn normal slitasje for bilens alder og kjørelengde?" feil={feilFor("rapport_sier.mer_enn_normal_slitasje")}>
-            <Valg
-              navn={`${n}-slitasje`}
-              verdi={f.rapport_sier.mer_enn_normal_slitasje}
-              onChange={(v) => sett({ rapport_sier: { ...f.rapport_sier, mer_enn_normal_slitasje: v } })}
-              alternativer={RAPPORTSVAR}
-            />
-          </Sporsmal>
-          <Sporsmal tittel="Står det hva reparasjonen koster?" feil={feilFor("rapport_sier.kostnad")}>
-            <Valg navn={`${n}-kostnad`} verdi={f.rapport_sier.kostnad} onChange={(v) => sett({ rapport_sier: { ...f.rapport_sier, kostnad: v } })} alternativer={RAPPORTSVAR} />
-          </Sporsmal>
-          {vises.kostnad(f) && (
-            <Sporsmal tittel="Hvor mye?" feil={feilFor("kostnad_kr")}>
-              <Tekst verdi={f.kostnad_kr} onChange={(v) => sett({ kostnad_kr: v })} etikett="Kostnad" inputMode="numeric" etter="kr" bredde="w-[200px]" />
-            </Sporsmal>
           )}
-          <Sporsmal tittel="Hva skriver verkstedet?" hjelp="Skriv av verkstedets konklusjon, gjerne den setningen som sier hva som er feil og hvorfor." feil={feilFor("avskrift_verksted")}>
-            <Stubb stubb={STUBB_VERKSTED} verdi={f.avskrift_verksted} onChange={(v) => sett({ avskrift_verksted: v })} maks={620} />
-          </Sporsmal>
-        </>
-      )}
-    </>
-  );
-}
-
-function Kontakt({ u, sett, feilFor, idag }: Del & { idag: string }) {
-  const tidligst = u.feil.map((f) => f.dato_oppdaget).filter(Boolean).sort()[0];
-  return (
-    <>
-      <Sporsmal tittel="Hva er kilometerstanden nå?" feil={feilFor("km_na")}>
-        <Tekst verdi={u.km_na} onChange={(v) => sett({ km_na: v })} etikett="Kilometerstand nå" inputMode="numeric" etter="km" bredde="w-[200px]" />
-      </Sporsmal>
-      <Sporsmal tittel="Har du tatt dette opp med selger?" feil={feilFor("del6_kontakt_med_selger.tatt_opp_med_selger")}>
-        <Valg
-          navn="tatt_opp"
-          verdi={u.tatt_opp}
-          onChange={(v) => sett({ tatt_opp: v })}
-          alternativer={[
-            { verdi: "nei", tekst: "Nei, ikke ennå" },
-            { verdi: "ja_muntlig", tekst: "Ja, muntlig" },
-            { verdi: "ja_skriftlig", tekst: "Ja, skriftlig" },
-          ]}
-        />
-      </Sporsmal>
-      {vises.kontakt(u) && (
-        <>
-          <Sporsmal tittel="Når tok du det opp første gang?" feil={feilFor("del6_kontakt_med_selger.dato_forste_gang")}>
-            <Tekst type="date" verdi={u.dato_forste_gang} onChange={(v) => sett({ dato_forste_gang: v })} etikett="Første kontakt" min={tidligst} max={idag} bredde="w-[200px]" />
-          </Sporsmal>
-          <Sporsmal tittel="Hva svarte selger?" feil={feilFor("del6_kontakt_med_selger.selgers_svar")}>
-            <Valg
-              navn="selgers_svar"
-              verdi={u.selgers_svar}
-              onChange={(v) => sett({ selgers_svar: v })}
-              alternativer={[
-                { verdi: "ikke_svart", tekst: "Selger har ikke svart" },
-                { verdi: "avvist", tekst: "Selger avviste kravet" },
-                { verdi: "tilbudt_reparasjon", tekst: "Selger tilbød å reparere" },
-                { verdi: "tilbudt_delvis", tekst: "Selger tilbød å dekke en del" },
-                { verdi: "enige_om_noe", tekst: "Vi ble enige om noe" },
-              ]}
-            />
-          </Sporsmal>
-        </>
-      )}
-      {vises.avtale(u) && (
-        <>
-          <Sporsmal tittel="Har dere inngått en avtale eller et forlik?" feil={feilFor("del6_kontakt_med_selger.avtale_inngatt")}>
-            <Valg navn="avtale" verdi={u.avtale_inngatt} onChange={(v) => sett({ avtale_inngatt: v })} alternativer={JA_NEI} />
-          </Sporsmal>
-          {u.avtale_inngatt === "ja" && (
-            <>
-              <Sporsmal tittel="Hva går avtalen ut på?" feil={feilFor("del6_kontakt_med_selger.avtale_beskrivelse")}>
-                <Stubb stubb={STUBB_AVTALE} verdi={u.avtale_beskrivelse} onChange={(v) => sett({ avtale_beskrivelse: v })} maks={500} />
-              </Sporsmal>
-              <Sporsmal
-                tittel="Hvilke av feilene gjelder avtalen?"
-                hjelp="Feilene avtalen gjelder, tar vi ikke med i kravet. De andre tar vi med som vanlig."
-                feil={feilFor("del6_kontakt_med_selger.avtale_gjelder_feil")}
-              >
-                <Flervalg
-                  verdier={u.avtale_gjelder_feil}
-                  onChange={(v) => sett({ avtale_gjelder_feil: v })}
-                  alternativer={u.feil.map((f, i) => ({ verdi: `F${i + 1}`, tekst: `Feil ${i + 1}: ${f.en_setning.trim() || "(ikke beskrevet)"}` }))}
-                />
-              </Sporsmal>
-            </>
-          )}
-        </>
-      )}
-      {vises.dokumentasjon(u) && (
-        <>
-          <Sporsmal
-            tittel="La selger frem noen dokumentasjon, for eksempel en rapport eller verkstedhistorikk?"
-            hjelp="Dette er viktig. Har selger vist til en egen rapport eller verkstedhistorikk, må brevet svare på den."
-            feil={feilFor("del6_kontakt_med_selger.selger_la_frem_dokumentasjon")}
-          >
-            <Valg navn="dokumentasjon" verdi={u.selger_la_frem} onChange={(v) => sett({ selger_la_frem: v })} alternativer={JA_NEI} />
-          </Sporsmal>
-          {u.selger_la_frem === "ja" && (
-            <Sporsmal tittel="Hva slags dokumentasjon?" feil={feilFor("del6_kontakt_med_selger.selger_dokumentasjon_kort")}>
-              <Fritekst verdi={u.selger_dokumentasjon} onChange={(v) => sett({ selger_dokumentasjon: v })} etikett="Selgers dokumentasjon" maks={200} rader={2} />
-            </Sporsmal>
-          )}
-        </>
-      )}
-    </>
-  );
-}
-
-function Onske({ u, sett, feilFor }: Del) {
-  return (
-    <>
-      <Sporsmal tittel="Hva ønsker du?" feil={feilFor("del7_onske_og_kontakt.onsket_losning")}>
-        <Valg
-          navn="onske"
-          verdi={u.onsket_losning}
-          onChange={(v) => sett({ onsket_losning: v })}
-          alternativer={[
-            { verdi: "reparasjon", tekst: "At selger reparerer feilen" },
-            { verdi: "prisavslag", tekst: "Prisavslag" },
-            { verdi: "angre_kjopet", tekst: "Å gå fra kjøpet" },
-          ]}
-        />
-      </Sporsmal>
-      {u.onsket_losning === "angre_kjopet" && <Merknad>Å gå fra kjøpet krever at feilen er vesentlig. Brevet vil kreve det, men også ta forbehold om prisavslag.</Merknad>}
-      <Sporsmal tittel="Navnet ditt" feil={feilFor("del7_onske_og_kontakt.kjoper.navn")}>
-        <Tekst verdi={u.navn} onChange={(v) => sett({ navn: v })} etikett="Navn" autoComplete="name" />
-      </Sporsmal>
-      <Sporsmal tittel="Adressen din" hjelp="Brukes som avsender i brevet." feil={feilFor("del7_onske_og_kontakt.kjoper.adresse")}>
-        <Tekst verdi={u.adresse} onChange={(v) => sett({ adresse: v })} etikett="Adresse" autoComplete="street-address" placeholder="Gate 1, 0000 Sted" />
-      </Sporsmal>
-      <Sporsmal tittel="E-postadressen din" feil={feilFor("del7_onske_og_kontakt.kjoper.epost")}>
-        <Tekst type="email" inputMode="email" verdi={u.epost} onChange={(v) => sett({ epost: v })} etikett="E-post" autoComplete="email" />
-      </Sporsmal>
-    </>
-  );
-}
-
-function Bekreft({
-  u,
-  sett,
-  feilFor,
-  alleFeil,
-  alleSteg,
-  stegFeil,
-  ga,
-}: Del & { alleFeil: Valideringsfeil[]; alleSteg: Steg[]; stegFeil: (s: Steg) => Valideringsfeil[]; ga: (i: number) => void }) {
-  // Steps that still have unanswered questions, when the buyer jumped back and changed something.
-  const ufullstendige = alleFeil.length ? alleSteg.map((s, i) => ({ s, i })).filter(({ s, i }) => i < alleSteg.length - 1 && stegFeil(s).length > 0) : [];
-  return (
-    <>
-      <p className="m-0 text-[16px] leading-[1.6] text-[#3d4757]">Du får en gratis vurdering av saken. Brevet kan du kjøpe etterpå.</p>
-      <Avkrysning verdi={u.bekreft_riktig} onChange={(v) => sett({ bekreft_riktig: v })} feil={feilFor("bekreftelser.opplysningene_er_riktige")}>
-        Opplysningene jeg har gitt, er riktige så langt jeg vet.
-      </Avkrysning>
-      <Avkrysning verdi={u.bekreft_ikke_radgivning} onChange={(v) => sett({ bekreft_ikke_radgivning: v })} feil={feilFor("bekreftelser.lest_at_brevet_ikke_er_juridisk_radgivning")}>
-        Jeg har lest at brevet ikke er juridisk rådgivning.
-      </Avkrysning>
-      {ufullstendige.length > 0 && (
-        <div role="alert" className="flex flex-col gap-2 text-[15px] text-[#a3372b]">
-          <span className="font-medium">Noen svar mangler:</span>
-          {ufullstendige.map(({ s, i }) => (
-            <button key={s.navn} type="button" onClick={() => ga(i)} className="self-start text-left underline underline-offset-2">
-              {s.navn}
-            </button>
-          ))}
         </div>
       )}
+
+      <Valg
+        navn="Har et verksted sett på feilen?"
+        verdi={f.verksted_sett_pa}
+        valg={[
+          ["nei", "Nei"],
+          ["ja_skriftlig", "Ja, skriftlig"],
+          ["ja_muntlig", "Ja, muntlig"],
+        ]}
+        onChange={(v) => endre({ verksted_sett_pa: v })}
+      />
+      {f.verksted_sett_pa === "ja_skriftlig" && (
+        <div className="flex flex-col gap-4 border-l-2 border-[#dcd8cf] pl-4">
+          <Felt navn="Hvilket verksted, og når?">
+            <input className={INPUT} value={f.verksted_navn_dato ?? ""} onChange={(e) => endre({ verksted_navn_dato: e.target.value || null })} />
+          </Felt>
+          {RAPPORT_SPORSMAL.map(([k, t]) => (
+            <Valg key={k} navn={t} verdi={f.rapport_sier[k]} valg={RAPPORTSVAR} onChange={(v) => endre({ rapport_sier: { ...f.rapport_sier, [k]: v } })} />
+          ))}
+          {f.rapport_sier.kostnad === "ja" && <Tall navn="Hvor mye? (kr)" verdi={f.kostnad_kr} onChange={(v) => endre({ kostnad_kr: v, kostnad_over_pris_bekreftet: false })} />}
+          {f.rapport_sier.kostnad === "ja" && f.kostnad_kr != null && pris > 0 && f.kostnad_kr > pris && (
+            <KostnadOverPris kostnad={f.kostnad_kr} pris={pris} bekreftet={f.kostnad_over_pris_bekreftet} endre={endre} />
+          )}
+          <Tekst navn="Verkstedet skriver at …" verdi={f.avskrift_verksted} onChange={(v) => endre({ avskrift_verksted: v })} rader={3} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Merke({ children, mork }: { children: React.ReactNode; mork?: boolean }) {
+  return <span className={`rounded px-2 py-0.5 text-[12px] font-medium ${mork ? "bg-[#1f3a5f] text-white" : "bg-[#ecebe7] text-[#3d4757]"}`}>{children}</span>;
+}
+
+const STYRKE: Record<string, string> = { sterk: "Sterk", middels: "Middels", svak: "Svak" };
+const INGEN_SPOR: Record<string, string> = {
+  muntlig_opplysning: "Selgers løfte var muntlig, og det er vanskelig å bevise.",
+  rapport_mangler: "Det mangler skriftlig dokumentasjon fra et verksted av hva som er feil.",
+  utenfor_frist: "Feilen viste seg etter fristen der loven legger til grunn at den var der ved kjøpet, og rapporten sier ikke at den går ut over normal slitasje.",
+};
+
+// What the buyer sees: the strength of each defect, with what the letter can cite as an explanation
+// under it («uten praksis» is not a strength). The paragraph itself is the letter's and is not shown.
+function Brukerresultat({ svar }: { svar: Extract<SakSvar, { ok: true }> }) {
+  if (svar.stopp) return <p className={MERKNAD}>Kjøp fra privatperson dekkes ikke av tjenesten ennå.</p>;
+  return (
+    <>
+      <h2 className="m-0 font-brev text-[26px] font-semibold">Vurderingen</h2>
+      {svar.feil.map((f, i) => (
+        <article key={f.feil_id} className={KORT}>
+          <header className="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="m-0 text-[16px] font-semibold">Feil {i + 1}</h3>
+            {f.styrke && <Merke mork={f.styrke === "sterk"}>{STYRKE[f.styrke]}</Merke>}
+          </header>
+          {f.forlik ? (
+            <p className="m-0 text-[14px] text-[#3d4757]">Dere har inngått en avtale om denne feilen, så den tas ikke med i brevet.</p>
+          ) : f.vedtak ? (
+            <p className="m-0 text-[14px] leading-[1.6] text-[#3d4757]">
+              Forbrukerklageutvalget har gitt medhold i en sak som ikke var sterkere enn din:{" "}
+              <a href={f.vedtak.kilde_url} target="_blank" rel="noreferrer" className="font-medium text-[#1f3a5f] underline">
+                vedtak {f.vedtak.saksnummer}
+              </a>
+              {f.kategori_tilbakefall && ", som gjaldt en nærliggende type feil"}.{f.til_brevet && " Brevet viser til dette vedtaket."}
+            </p>
+          ) : f.praksis === "generell" ? (
+            <p className="m-0 text-[14px] leading-[1.6] text-[#3d4757]">
+              <span className="font-medium">Uten praksis for denne typen feil:</span> vi fant ikke et tidligere vedtak å sammenligne med. Brevet viser derfor til regelen
+              Forbrukerklageutvalget anvender, med eksempler fra praksis, og til dokumentasjonen din.
+            </p>
+          ) : f.ingen_spor_arsak ? (
+            <p className="m-0 text-[14px] leading-[1.6] text-[#3d4757]">{INGEN_SPOR[f.ingen_spor_arsak] ?? "Saken mangler dokumentasjon brevet kan bygge på."}</p>
+          ) : (
+            <p className="m-0 text-[14px] leading-[1.6] text-[#3d4757]">
+              <span className="font-medium">Uten praksis:</span> vi fant ikke et tidligere vedtak å vise til for denne typen feil. Brevet bygger på loven og dokumentasjonen din.
+            </p>
+          )}
+          {f.motstridende && (
+            <p className="m-0 text-[13px] leading-[1.6] text-[#5b6472]">
+              Utvalget har også avvist en sak med lignende fakta (
+              <a href={f.motstridende.kilde_url} target="_blank" rel="noreferrer" className="text-[#1f3a5f] underline">
+                {f.motstridende.saksnummer}
+              </a>
+              ). {f.motstridende.skilte.join(" ")}
+            </p>
+          )}
+        </article>
+      ))}
     </>
+  );
+}
+
+// The letter's practice section as the letter engine sets it in (docs/sammenligningsmotor.md): the
+// paragraphs of the defects chosen for the letter, in that order, then the general paragraphs of
+// defects without a decision, then the amendment sentence once. The rest of the letter comes here.
+function Brevet({ svar }: { svar: Extract<SakSvar, { ok: true }> }) {
+  if (svar.stopp) return null;
+  const vedtak = svar.valgt_til_brev.map((id) => svar.feil.find((f) => f.feil_id === id)).filter((f): f is NonNullable<typeof f> => !!f?.avsnitt);
+  const generelle = svar.feil.filter((f) => f.praksis === "generell" && f.avsnitt);
+  const avsnitt = [...vedtak, ...generelle];
+  return (
+    <article className="flex flex-col gap-4 rounded border border-[#dcd8cf] bg-white px-6 py-8 shadow-[0_18px_40px_-24px_rgba(23,38,61,.35)] md:px-10">
+      <span className={ETIKETT}>Brevet</span>
+      <h2 className="m-0 font-brev text-[20px] font-semibold">Praksis fra Forbrukerklageutvalget</h2>
+      {avsnitt.length ? (
+        avsnitt.map((f) => (
+          <p key={f.feil_id} className="m-0 font-brev text-[16px] leading-[1.7] text-[#17263d]">
+            {f.avsnitt}
+          </p>
+        ))
+      ) : (
+        <p className={MERKNAD}>Brevet har ingen praksisdel for disse feilene. Det bygger på loven og dokumentasjonen.</p>
+      )}
+      {svar.lovendring && <p className="m-0 font-brev text-[16px] leading-[1.7] text-[#17263d]">{svar.lovendring}</p>}
+    </article>
+  );
+}
+
+// The one form (decided 2026-10-10): the assessment and the letter are built on this page.
+export function Sakskjema() {
+  const [s, setS] = useState<Skjema>(TOMT);
+  const [brukersvar, setBrukersvar] = useState<SakSvar | null>(null);
+  const [forsokt, setForsokt] = useState(false);
+  const [idag] = useState(() => new Date().toISOString().slice(0, 10));
+  const [venter, start] = useTransition();
+
+  type Del = "del1_kjopet" | "del2_selger" | "del6_kontakt_med_selger" | "del7_onske_og_kontakt";
+  const del =
+    <K extends Del>(k: K) =>
+    (p: Partial<Skjema[K]>) =>
+      setS((x) => ({ ...x, [k]: { ...x[k], ...p } }));
+  const k1 = del("del1_kjopet");
+  const k6 = del("del6_kontakt_med_selger");
+  const kontakt = s.del6_kontakt_med_selger;
+  const privat = s.del1_kjopet.selgertype === "privat";
+
+  // The registry has no model year, only the first registration; the current owner's registration
+  // day is the suggested purchase date. Everything stays editable.
+  const fraVegvesen = (k: Kjoretoy, eierFra: string | null) =>
+    k1({
+      merke_modell_valgfritt: `${k.merke} ${k.modell}`.slice(0, 60),
+      ...(k.ar ? { aarsmodell: k.ar } : {}),
+      ...(eierFra ? { kjopsdato: eierFra } : {}),
+    });
+  const endreFeil = (i: number) => (p: Partial<SkjemaFeil>) => setS((x) => ({ ...x, del3_feil: x.del3_feil.map((f, j) => (j === i ? { ...f, ...p } : f)) }));
+  // Render must be deterministic (hydration); the real timestamp is set on submit.
+  const sendes = tilMotor(s, `${idag}T00:00:00.000Z`);
+  const valideringsfeil = validerSkjema(sendes, idag);
+
+  return (
+    <div className="min-h-screen bg-[#f6f4ef] font-ui text-[#17263d]">
+      {/* minmax(0, 1fr): without it the single mobile column grows with its content (464 px in a 412 px screen). */}
+      <div className="mx-auto grid max-w-[720px] grid-cols-[minmax(0,1fr)] gap-8 px-4 py-8 lg:px-8">
+        <form
+          className="flex flex-col gap-6"
+          // The buyer gets the whole list of what is missing, not the browser's one field at a time.
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            const skjema = tilMotor(s, new Date().toISOString());
+            // The buyer's form is only sent when it passes validation; the server checks again.
+            setForsokt(true);
+            if (validerSkjema(skjema, idag).length) return;
+            start(async () => setBrukersvar(await sendSak(skjema)));
+          }}
+        >
+          <header className="flex flex-col gap-3">
+            <h1 className="m-0 font-brev text-[30px] font-semibold">Reklamasjon på bruktbil</h1>
+            <p className="m-0 text-[14px] text-[#5b6472]">Svar på spørsmålene om kjøpet og feilen. Du får en vurdering av saken og brevet under skjemaet.</p>
+          </header>
+
+          <section className={KORT}>
+            <h2 className="m-0 text-[18px] font-semibold">Bilen</h2>
+            <Regnr funnet={fraVegvesen} />
+          </section>
+
+          <section className={KORT}>
+            <h2 className="m-0 text-[18px] font-semibold">Kjøpet</h2>
+            <Valg
+              navn="Kjøpte du bilen av et firma (forhandler) eller en privatperson?"
+              verdi={s.del1_kjopet.selgertype}
+              valg={[
+                ["forhandler", "Forhandler"],
+                ["privat", "Privatperson"],
+              ]}
+              onChange={(v) => k1({ selgertype: v })}
+            />
+            {privat && <p className={MERKNAD}>Kjøpsloven gjelder, og tjenesten dekker foreløpig bare kjøp fra forhandler. Motoren stopper her.</p>}
+            <div className="grid grid-cols-2 gap-4">
+              <Dato navn="Når kjøpte du bilen?" verdi={s.del1_kjopet.kjopsdato} onChange={(v) => k1({ kjopsdato: v })} paakrevd />
+              <Tall navn="Hva betalte du? (kr)" verdi={s.del1_kjopet.pris_kr} onChange={(v) => k1({ pris_kr: v ?? 0 })} paakrevd />
+              <Tall navn="Kilometerstand ved kjøp" verdi={s.del1_kjopet.km_ved_kjop} onChange={(v) => k1({ km_ved_kjop: v ?? 0 })} paakrevd />
+              <Tall navn="Årsmodell" verdi={s.del1_kjopet.aarsmodell} onChange={(v) => k1({ aarsmodell: v ?? 0 })} paakrevd />
+            </div>
+            <Felt navn="Merke og modell (valgfritt)">
+              <input className={INPUT} value={s.del1_kjopet.merke_modell_valgfritt ?? ""} onChange={(e) => k1({ merke_modell_valgfritt: e.target.value || null })} />
+            </Felt>
+          </section>
+
+          {!privat && (
+            <>
+              <section className={KORT}>
+                <h2 className="m-0 text-[18px] font-semibold">Selger</h2>
+                <Forhandlervelger
+                  navn={s.del2_selger.firmanavn_oppgitt ?? ""}
+                  treff={s.del2_selger.treff_bekreftet ? s.del2_selger.bronnoysund_treff : null}
+                  onChange={(v) => del("del2_selger")(v)}
+                  inputClass={INPUT}
+                  labelClass={ETIKETT}
+                />
+                <Valg
+                  navn="Sto det «som den er», «som forevist» eller lignende i kontrakten?"
+                  verdi={s.del2_selger.som_den_er_i_kontrakt}
+                  valg={[...JA_NEI, ["vet_ikke", "Vet ikke"]]}
+                  onChange={(v) => del("del2_selger")({ som_den_er_i_kontrakt: v })}
+                />
+              </section>
+
+              <section className="flex flex-col gap-4">
+                <h2 className="m-0 text-[18px] font-semibold">Feil</h2>
+                {s.del3_feil.map((f, i) => (
+                  <Feilskjema
+                    key={i}
+                    f={f}
+                    nr={i + 1}
+                    pris={s.del1_kjopet.pris_kr}
+                    endre={endreFeil(i)}
+                    fjern={s.del3_feil.length > 1 ? () => setS((x) => ({ ...x, del3_feil: x.del3_feil.filter((_, j) => j !== i) })) : undefined}
+                  />
+                ))}
+                {s.del3_feil.length < MAKS_FEIL && (
+                  <button
+                    type="button"
+                    onClick={() => setS((x) => ({ ...x, del3_feil: [...x.del3_feil, nyFeil(`F${x.del3_feil.length + 1}`)] }))}
+                    className="self-start rounded border border-[#1f3a5f] px-4 py-2 text-[14px] font-medium text-[#1f3a5f]"
+                  >
+                    Legg til feil
+                  </button>
+                )}
+              </section>
+
+              <section className={KORT}>
+                <h2 className="m-0 text-[18px] font-semibold">Kontakt med selger</h2>
+                <Tall navn="Hva er kilometerstanden nå?" verdi={s.km_na} onChange={(v) => setS((x) => ({ ...x, km_na: v ?? 0 }))} paakrevd />
+                <Valg
+                  navn="Har du tatt dette opp med selger?"
+                  verdi={kontakt.tatt_opp_med_selger}
+                  valg={[
+                    ["nei", "Nei"],
+                    ["ja_muntlig", "Ja, muntlig"],
+                    ["ja_skriftlig", "Ja, skriftlig"],
+                  ]}
+                  onChange={(v) => k6({ tatt_opp_med_selger: v })}
+                />
+                {kontakt.tatt_opp_med_selger !== "nei" && (
+                  <div className="flex flex-col gap-4 border-l-2 border-[#dcd8cf] pl-4">
+                    <Dato navn="Når tok du det opp første gang?" verdi={kontakt.dato_forste_gang} onChange={(v) => k6({ dato_forste_gang: v || null })} paakrevd />
+                    <Valg navn="Hva svarte selger?" verdi={kontakt.selgers_svar} valg={SELGERS_SVAR} onChange={(v) => k6({ selgers_svar: v })} />
+                    {(kontakt.selgers_svar === "tilbudt_delvis" || kontakt.selgers_svar === "enige_om_noe") && (
+                      <>
+                        <Valg navn="Har dere inngått en avtale eller et forlik?" verdi={kontakt.avtale_inngatt} valg={JA_NEI} onChange={(v) => k6({ avtale_inngatt: v })} />
+                        {kontakt.avtale_inngatt === "ja" && (
+                          <>
+                            <Tekst navn="Avtalen går ut på at …" verdi={kontakt.avtale_beskrivelse} onChange={(v) => k6({ avtale_beskrivelse: v })} />
+                            <div role="group" aria-label="Hvilke av feilene gjelder avtalen?" className="flex flex-col gap-1.5">
+                              <span className={ETIKETT}>Hvilke av feilene gjelder avtalen?</span>
+                              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                                {s.del3_feil.map((_, i) => {
+                                  const id = `F${i + 1}`;
+                                  const valgt = kontakt.avtale_gjelder_feil.includes(id);
+                                  return (
+                                    <label key={id} className="flex items-center gap-2 text-[14px]">
+                                      <input
+                                        type="checkbox"
+                                        checked={valgt}
+                                        onChange={() => k6({ avtale_gjelder_feil: valgt ? kontakt.avtale_gjelder_feil.filter((x) => x !== id) : [...kontakt.avtale_gjelder_feil, id].sort() })}
+                                      />
+                                      {id}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                    {kontakt.selgers_svar === "avvist" && (
+                      <>
+                        <Valg
+                          navn="La selger frem dokumentasjon (rapport, verkstedhistorikk)?"
+                          verdi={kontakt.selger_la_frem_dokumentasjon}
+                          valg={JA_NEI}
+                          onChange={(v) => k6({ selger_la_frem_dokumentasjon: v })}
+                        />
+                        {kontakt.selger_la_frem_dokumentasjon === "ja" && (
+                          <Tekst navn="Hva slags?" verdi={kontakt.selger_dokumentasjon_kort} onChange={(v) => k6({ selger_dokumentasjon_kort: v })} />
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </section>
+
+              <section className={KORT}>
+                <h2 className="m-0 text-[18px] font-semibold">Ønske</h2>
+                <Valg
+                  navn="Hva ønsker du?"
+                  verdi={s.del7_onske_og_kontakt.onsket_losning}
+                  valg={[
+                    ["reparasjon", "Reparasjon"],
+                    ["prisavslag", "Prisavslag"],
+                    ["angre_kjopet", "Angre kjøpet"],
+                  ]}
+                  onChange={(v) => del("del7_onske_og_kontakt")({ onsket_losning: v })}
+                />
+                {s.del7_onske_og_kontakt.onsket_losning === "angre_kjopet" && (
+                  <p className={MERKNAD}>Å gå fra kjøpet krever at feilen er vesentlig. Brevet vil kreve det, men også ta forbehold om prisavslag.</p>
+                )}
+                {(["navn", "adresse", "epost"] as const).map((k) => (
+                      <Felt key={k} navn={{ navn: "Navnet ditt", adresse: "Adressen din (avsender i brevet)", epost: "E-postadressen din" }[k]}>
+                        <input
+                          className={INPUT}
+                          type={k === "epost" ? "email" : "text"}
+                          autoComplete={{ navn: "name", adresse: "street-address", epost: "email" }[k]}
+                          value={s.del7_onske_og_kontakt.kjoper[k]}
+                          onChange={(e) => del("del7_onske_og_kontakt")({ kjoper: { ...s.del7_onske_og_kontakt.kjoper, [k]: e.target.value } })}
+                        />
+                      </Felt>
+                    ))}
+              </section>
+
+                <section className={KORT}>
+                  <h2 className="m-0 text-[18px] font-semibold">Bekreft</h2>
+                  {(
+                    [
+                      ["opplysningene_er_riktige", "Opplysningene jeg har gitt, er riktige så langt jeg vet."],
+                      ["lest_at_brevet_ikke_er_juridisk_radgivning", "Jeg har lest at brevet ikke er juridisk rådgivning."],
+                    ] as const
+                  ).map(([k, tekst]) => (
+                    <label key={k} className="flex items-start gap-3 text-[15px]">
+                      <input type="checkbox" className="mt-1" checked={s.bekreftelser[k]} onChange={(e) => setS((x) => ({ ...x, bekreftelser: { ...x.bekreftelser, [k]: e.target.checked } }))} />
+                      {tekst}
+                    </label>
+                  ))}
+                </section>
+            </>
+          )}
+
+          {valideringsfeil.length > 0 && forsokt && (
+            <div role="alert" className="rounded border border-[#e8c9a0] bg-[#fbf3e8] px-4 py-3 text-[13px] text-[#7a4a12]">
+              <p className="m-0 font-medium">Noen svar mangler eller må rettes:</p>
+              <ul className="m-0 mt-1 pl-4">
+                {valideringsfeil.map((v, i) => (
+                  <li key={i}>
+                    {delnavn(v.felt)}: {v.melding}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {brukersvar && !brukersvar.ok && (
+            <p role="alert" className="m-0 rounded bg-[#f6dcd7] px-4 py-3 text-[14px] text-[#8a3b2e]">
+              {"melding" in brukersvar ? brukersvar.melding : `Svarene ble ikke godtatt: ${brukersvar.feil.map((v) => `${delnavn(v.felt)}: ${v.melding}`).join("; ")}`}
+            </p>
+          )}
+
+          <button type="submit" disabled={venter} className="sticky bottom-4 z-10 rounded bg-[#1f3a5f] px-5 py-3 text-[16px] font-semibold text-white shadow-lg disabled:opacity-60">
+            {venter ? "Vurderer …" : "Se vurderingen og brevet"}
+          </button>
+        </form>
+
+        {brukersvar?.ok && (
+          <section aria-live="polite" className="flex flex-col gap-6">
+            <Brukerresultat svar={brukersvar} />
+            <Brevet svar={brukersvar} />
+          </section>
+        )}
+      </div>
+    </div>
   );
 }

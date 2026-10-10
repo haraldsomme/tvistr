@@ -13,7 +13,7 @@
       ],
       "input": {
         "_meta": {
-          "skjema_versjon": "1.1",
+          "skjema_versjon": "1.2",
           "registrert": "2026-10-09T12:00:00+02:00"
         },
         "del1_kjopet": {
@@ -55,6 +55,7 @@
               "kostnad": "ja"
             },
             "kostnad_kr": 9800,
+            "kostnad_over_pris_bekreftet": false,
             "avskrift_verksted": "bremseskiver foran og bak under minimumsmål. Belegg nedslitt. Anbefaler bytte"
           }
         ],
@@ -118,7 +119,7 @@
       ],
       "input": {
         "_meta": {
-          "skjema_versjon": "1.1",
+          "skjema_versjon": "1.2",
           "registrert": "2026-10-09T12:00:00+02:00"
         },
         "del1_kjopet": {
@@ -160,6 +161,7 @@
               "kostnad": "nei"
             },
             "kostnad_kr": null,
+            "kostnad_over_pris_bekreftet": false,
             "avskrift_verksted": "feilkoder lagret på girkasse. Rykking bekreftet ved prøvekjøring. Pris ikke beregnet"
           }
         ],
@@ -222,7 +224,7 @@
       ],
       "input": {
         "_meta": {
-          "skjema_versjon": "1.1",
+          "skjema_versjon": "1.2",
           "registrert": "2026-10-09T12:00:00+02:00"
         },
         "del1_kjopet": {
@@ -264,6 +266,7 @@
               "kostnad": "nei"
             },
             "kostnad_kr": null,
+            "kostnad_over_pris_bekreftet": false,
             "avskrift_verksted": "mye rust i bærende elementer. Ikke anbefalt reparert. Rustskadene er så store at det ikke er mulig å ruste så mye på et par måneder"
           }
         ],
@@ -329,7 +332,7 @@
       ],
       "input": {
         "_meta": {
-          "skjema_versjon": "1.1",
+          "skjema_versjon": "1.2",
           "registrert": "2026-10-09T12:00:00+02:00"
         },
         "del1_kjopet": {
@@ -371,6 +374,7 @@
               "kostnad": "ja"
             },
             "kostnad_kr": 64000,
+            "kostnad_over_pris_bekreftet": false,
             "avskrift_verksted": "rust fra innsiden av hjulbue og terskel, skjult under lakk og tetningsmasse. Omfanget er langt over det som er normalt for en fire år gammel bil med 30 000 km. Rusten har utviklet seg over flere år og var til stede ved salget"
           }
         ],
@@ -454,7 +458,7 @@
       ],
       "input": {
         "_meta": {
-          "skjema_versjon": "1.1",
+          "skjema_versjon": "1.2",
           "registrert": "2026-10-09T12:00:00+02:00"
         },
         "del1_kjopet": {
@@ -498,6 +502,7 @@
               "kostnad": "ja"
             },
             "kostnad_kr": 8900,
+            "kostnad_over_pris_bekreftet": false,
             "avskrift_verksted": "bilen er ikke utstyrt med ryggekamera fra fabrikk. Ettermontering 8 900 kr"
           }
         ],
@@ -574,7 +579,7 @@
       ],
       "input": {
         "_meta": {
-          "skjema_versjon": "1.1",
+          "skjema_versjon": "1.2",
           "registrert": "2026-10-09T12:00:00+02:00"
         },
         "del1_kjopet": {
@@ -616,6 +621,7 @@
               "kostnad": "ja"
             },
             "kostnad_kr": 21500,
+            "kostnad_over_pris_bekreftet": false,
             "avskrift_verksted": "hovedenhet infotainment defekt, intern feil. Må byttes"
           }
         ],
@@ -680,7 +686,7 @@
       ],
       "input": {
         "_meta": {
-          "skjema_versjon": "1.1",
+          "skjema_versjon": "1.2",
           "registrert": "2026-10-09T12:00:00+02:00"
         },
         "del1_kjopet": {
@@ -720,6 +726,7 @@
               "kostnad": "ja"
             },
             "kostnad_kr": 20625,
+            "kostnad_over_pris_bekreftet": false,
             "avskrift_verksted": "rust litt der og der på ramme, sandblåst og grunnet. Ikke alvorlig rust"
           }
         ],
@@ -764,7 +771,7 @@
       ],
       "input": {
         "_meta": {
-          "skjema_versjon": "1.1",
+          "skjema_versjon": "1.2",
           "registrert": "2026-10-09T12:00:00+02:00"
         },
         "del1_kjopet": {
@@ -806,6 +813,7 @@
               "kostnad": "nei"
             },
             "kostnad_kr": null,
+            "kostnad_over_pris_bekreftet": false,
             "avskrift_verksted": "faktura datert 25.07.2025 i selgers navn for utskifting av panser, frontfanger og høyre frontskjerm etter kollisjon"
           }
         ],
@@ -881,7 +889,7 @@
       ],
       "input": {
         "_meta": {
-          "skjema_versjon": "1.1",
+          "skjema_versjon": "1.2",
           "registrert": "2026-10-09T12:00:00+02:00"
         },
         "del1_kjopet": {
@@ -925,6 +933,7 @@
               "kostnad": "ja"
             },
             "kostnad_kr": 14200,
+            "kostnad_over_pris_bekreftet": false,
             "avskrift_verksted": "varmeren er en Eberspächer, ikke Webasto. Brennkammer defekt. Bytte 14 200 kr"
           }
         ],
@@ -998,7 +1007,7 @@
       ],
       "input": {
         "_meta": {
-          "skjema_versjon": "1.1",
+          "skjema_versjon": "1.2",
           "registrert": "2026-10-09T12:00:00+02:00"
         },
         "del1_kjopet": {
@@ -1042,6 +1051,7 @@
               "kostnad": "ja"
             },
             "kostnad_kr": 78000,
+            "kostnad_over_pris_bekreftet": false,
             "avskrift_verksted": "forbruk målt til 1,1 liter per 1000 km. Fabrikken godtar inntil 0,2. Skyldes slitte stempelringer, krever motorbytte. Tilstanden har utviklet seg over lang tid og var til stede ved salget. Bilen bør ikke kjøres"
           }
         ],

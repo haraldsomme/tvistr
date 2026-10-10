@@ -11,7 +11,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { db } from "../src/db";
 import { sammenlign } from "../src/lib/sammenligning";
-import { sammeGruppe } from "../src/lib/sammenligning/avled";
+import { kategoriavstand } from "../src/lib/sammenligning/avled";
 import { lagHentKandidater } from "../src/lib/sammenligning/kandidater";
 import type { HentKandidater } from "../src/lib/sammenligning/typer";
 import { KATEGORIER, RAPPORT_TOM, type RapportSier, SKJEMA_VERSJON, type Skjema, validerSkjema } from "../src/lib/skjema/skjema";
@@ -65,6 +65,7 @@ function skjema(k: Kombinasjon): Skjema {
         ...v,
         verksted_navn_dato: rapport ? "Verksted AS" : null,
         kostnad_kr: v.rapport_sier.kostnad === "ja" ? 20_000 : null,
+        kostnad_over_pris_bekreftet: false,
         avskrift_verksted: rapport ? "Se rapporten" : null,
       },
     ],
@@ -108,8 +109,10 @@ async function main() {
   const telle = <K extends string>() => ({} as Record<K, number>);
   const styrke = telle<string>();
   const arsak = telle<string>();
+  const praksis = telle<string>();
   const svakEtter: Record<string, Record<string, [number, number]>> = { sel: {}, ver: {}, tid: {}, motbevis: {} };
-  const blanding = { samme_kategori: 0, samme_gruppe: 0, annen_gruppe: 0 };
+  // Where the cited decision comes from (avled.ts kategoritrinn); utenfor_regelen must stay 0.
+  const blanding = { samme_kategori: 0, tilbakefall_A_gruppe: 0, tilbakefall_B_naermeste: 0, utenfor_regelen: 0 };
   let totalt = 0;
   let medNaermeste = 0;
   const t = Date.now();
@@ -130,24 +133,42 @@ async function main() {
       x[1]++;
       if (f.styrke === "svak") x[0]++;
     }
+    const pr = f.praksis ?? "ingen";
+    praksis[pr] = (praksis[pr] ?? 0) + 1;
     if (f.styrke === "svak") {
-      const a = r.ingen_treff[0]?.siste_stopp.startsWith("ingen_spor") ? r.ingen_treff[0].siste_stopp : "alle kandidater forkastet";
+      const a = r.ingen_treff[0]?.siste_stopp.startsWith("ingen_spor") ? r.ingen_treff[0].siste_stopp : f.kandidat ? "vedtak med motstridende tap" : "spor uten vedtak, lignende sak tapt";
       arsak[a] = (arsak[a] ?? 0) + 1;
       if (f.naermeste) medNaermeste++;
     }
 
     // The rules that must hold for every combination.
     if (r.stopp) brudd.push(`stopp uten privat selger: ${navn}`);
-    if ((f.kandidat != null) === (f.styrke === "svak")) brudd.push(`vedtak og styrke stemmer ikke: ${navn}`);
-    if (f.styrke === "svak" && f.avsnitt) brudd.push(`svak feil har avsnitt: ${navn}`);
-    if ((f.styrke === "middels") !== (f.motstridende != null)) brudd.push(`middels uten motstridende vedtak: ${navn}`);
+    // Strength describes the case, praksis what can be cited (2026-10-10, index.ts styrke).
+    const harSpor = f.spor_alle.length > 0;
+    const forventet = !harSpor ? "svak" : f.kandidat ? (f.motstridende || f.kategori_tilbakefall ? "middels" : "sterk") : f.motstridende ? "svak" : "middels";
+    if (f.styrke !== forventet) brudd.push(`styrke ${f.styrke}, forventet ${forventet}: ${navn}`);
+    if ((f.praksis === "vedtak") !== (f.kandidat != null)) brudd.push(`praksis og vedtak stemmer ikke: ${navn}`);
+    // Without a decision a paragraph is only the general one, on C or B, never comparing (generelt.ts).
+    if (!f.kandidat && f.avsnitt && f.praksis !== "generell") brudd.push(`avsnitt uten vedtak og uten generell praksis: ${navn}`);
+    if ((f.praksis === "generell") !== (!f.kandidat && f.avsnitt != null)) brudd.push(`generell praksis og avsnitt stemmer ikke: ${navn}`);
+    if (f.praksis === "generell" && (f.avsnitt!.includes("like sterkt") || !/se for eksempel vedtak .+ og vedtak /.test(f.avsnitt!)))
+      brudd.push(`generelt avsnitt sammenligner eller mangler to eksempler: ${navn}`);
+    if (f.praksis === "generell" && !f.spor_alle.some((x) => x === "C" || x === "B")) brudd.push(`generelt avsnitt uten spor C eller B: ${navn}`);
     if (f.kandidat) {
       const kk = f.kandidat.kategori;
       if (kk === k.kat) blanding.samme_kategori++;
-      else if (sammeGruppe(kk, k.kat)) blanding.samme_gruppe++;
-      else blanding.annen_gruppe++;
-      if (f.kandidat_spor !== "A" && kk !== k.kat) brudd.push(`spor ${f.kandidat_spor} med annen kategori (${kk}): ${navn}`);
-      if (!sammeGruppe(kk, k.kat)) brudd.push(`vedtak fra annen opplysningsgruppe (${kk}): ${navn}`);
+      else if (kategoriavstand(k.kat, kk, f.kandidat_spor!) === 99) blanding.utenfor_regelen++;
+      else if (f.kandidat_spor === "A") blanding.tilbakefall_A_gruppe++;
+      else blanding.tilbakefall_B_naermeste++;
+      // The category fallback per track (2026-10-10): A within the information group, B to the nearest
+      // categories, C never. A fallback says so in the letter and is at most «middels».
+      if (f.kategori_tilbakefall !== (kk !== k.kat)) brudd.push(`kategori_tilbakefall stemmer ikke (${kk}): ${navn}`);
+      if (kk !== k.kat) {
+        if (f.kandidat_spor === "C") brudd.push(`spor C med annen kategori (${kk}): ${navn}`);
+        if (kategoriavstand(k.kat, kk, f.kandidat_spor!) === 99) brudd.push(`spor ${f.kandidat_spor} utenfor tilbakefallet (${kk}): ${navn}`);
+        if (f.styrke === "sterk") brudd.push(`tilbakefall med styrke sterk (${kk}): ${navn}`);
+        if (!/i min sak gjelder opplysningen|Det samme gjelder i min sak|også innen fristen/.test(f.avsnitt ?? "")) brudd.push(`tilbakefall uten setning om kategorien (${kk}): ${navn}`);
+      }
     }
   }
 
@@ -155,6 +176,7 @@ async function main() {
     kombinasjoner: totalt,
     styrke: Object.fromEntries(Object.entries(styrke).map(([k, n]) => [k, { antall: n, prosent: andel(n, totalt) }])),
     svak_arsak: arsak,
+    praksis: Object.fromEntries(Object.entries(praksis).map(([k, n]) => [k, { antall: n, prosent: andel(n, totalt) }])),
     svak_med_naermeste_prosent: andel(medNaermeste, styrke.svak ?? 0),
     kategoriblanding: blanding,
     svak_prosent_etter: Object.fromEntries(Object.entries(svakEtter).map(([d, x]) => [d, Object.fromEntries(Object.entries(x).map(([k, [n, av]]) => [k, andel(n, av)]))])),

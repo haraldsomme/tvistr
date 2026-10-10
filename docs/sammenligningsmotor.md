@@ -57,6 +57,13 @@ Motoren tar skjemaet og finner for hver feil **høyst ett vunnet vedtak** som br
 
 **Lovendringen** står ikke i avsnittene. Motoren returnerer den som `lovendring` på toppnivå, og brevmotoren setter den inn én gang etter det siste praksisavsnittet. Teksten er i entall eller flertall etter hvor mange av de siterte vedtakene som gjelder kjøp før 2024. Den sier hva som faktisk ble endret (fristen for formodningsregelen ble forlenget fra seks måneder til to år) i stedet for å gjenta samme setning.
 
+**Kostnad over kjøpesummen (skjema 1.2):** `kostnad_kr > pris_kr` gir en bekreftelsesdialog i skjemaet (`kostnad_over_pris_bekreftet`), og valideringen stopper til beløpet er bekreftet. Kriteriet `kostnad_pris` utelates når andelen er over 100 % uten bekreftelse, så brevet sier aldri at reparasjonen koster mer enn bilen hvis det kan være en skrivefeil (52 000 for 520 000 kr).
+
+**Ledd 1 på spor B** følger hva vedtaket oppgir om tid:
+- **Tid fra vedtaket:** «en feil som viste seg N dager etter leveringen, forelå …».
+- **Tid fra en bevisdato:** «en feil som var påvist senest N dager etter leveringen, forelå …». Tallet er en øvre grense, så `tid_til_feil` blir ikke sterkere innenfor grensen, og reklamasjonstid blir ikke svakere.
+- **Ingen tid:** «feilen forelå ved leveringen, fordi …».
+
 **Ledd 1** bruker frasetabellen `OPPLYSNING_OM` per kategori («uriktig opplysning om klimaanlegget»), ikke agentens fritekstfelt `opplysning.gjelder`. Det feltet er ikke verifisert og ga setninger som «opplysning om Bilen har klimaanlegg». Selgers egne ord kommer i ledd 2, og bare når `ordlyd_verifisert = true`.
 
 **Sitater.** Sitatet velges etter tema og kobling til feilen (A: `opplysning`, så `mangel`; B: `formodning`, så `mangel`; C: `bevis`, så `mangel`). To tilpasninger:
@@ -129,13 +136,25 @@ Testsakene ligger i `src/lib/sammenligning/testdata/testsaker.json`. `npm run sa
   - vedtak fra 2021 og senere;
   - ikke en ikke-mangelssak;
   - ikke heving når brukeren ikke vil heve;
-  - samme kategori. På A kjøres en egen spørring mot resten av opplysningsgruppen bare når ingen vedtak i kategorien ble godkjent. Det er to spørringer med 30 rader hver, så forkastede treff i kategorien kan ikke skygge for gruppen.
+  - **kategori i trinn, per spor (besluttet 2026-10-10, `avled.ts` `kategoritrinn`):**
+
+    | Spor | Trinn 1 | Trinn 2 |
+    |---|---|---|
+    | A | samme kategori | samme opplysningsgruppe (sammenligningen gjelder opplysningen, ikke feilen) |
+    | B | samme kategori | nærmeste kategorier i `NAERMESTE` (formodningen bærer saken, og den er ikke kategorispesifikk) |
+    | C | samme kategori | – (poenget er at feilen er dokumentert utover det påregnelige for denne typen feil, og det har ingen nabo) |
+
+    Det finnes ikke noe trinn ut over dette. En sak uten vedtak der står på lov og rapport alene. Et forsøk med et tredje trinn («alle andre kategorier») ble forkastet: et turbovedtak (21/8891) ble sitert for et høyvoltbatteri, og «vilkårene er de samme» er en påstand brukeren ikke kan forsvare. Hvert trinn prøves på primær- og sekundærsporet, i den rekkefølgen, før neste trinn. Hvert trinn er en egen spørring.
 - **Sterkere enn:**
-  - Ingen kravkriterier kan være svakere. `kategori` er krav på alle spor: lik kategori er sterkere; på A er samme gruppe lik (speil → ryggekamera), og alt annet er svakere (pant → DAB-radio).
+  - Ingen kravkriterier kan være svakere. `kategori` er ikke krav: samme kategori er sterkere, og alt annet er lik. En annen kategori hentes bare i trinn 2, og `kategori_tilbakefall` settes da på feilen.
+  - **Avsnittet nevner momentene konkret** (`argumenter.ts` `tilbakefallSetning`), aldri «vilkårene er de samme»:
+    - **A:** «Vedtaket gjaldt opplysninger om bilens utstyr; i min sak gjelder opplysningen klimaanlegget.»
+    - **B:** «Vedtaket gjaldt en elektrisk feil. Utvalget bygde på at feilen viste seg innen fristen og at selger ikke fremla bevis for at den oppsto senere. Det samme gjelder i min sak.» Hadde selger i vedtaket bevis, lyder midten «at selgers dokumentasjon ikke var tilstrekkelig …». Har brukerens selger motbevis, står bare «I min sak viste feilen seg også innen fristen».
+  - **Styrke ved tilbakefall:** høyst `middels`. Tapte vedtak hentes da fra begge kategoriene, brukerens og vedtakets.
   - Høyst én svakhet, og den må kunne adresseres.
   - Har selger motbevis og selger i vedtaket ikke, forkastes vedtaket alltid på B og C. På A gjelder spørsmålet om opplysningen var uriktig, så der er `sak.selger_motbevis` bare et flagg til brevmotoren (innsigelsesblokken).
 - **Rangering:**
-  1. samme kategori (på B og C; på A er kategorien et kriterium);
+  1. på B og C: nærmeste kategori (`kategoriavstand`: samme, så rekkefølgen i `NAERMESTE`, så resten). På A er kategorien et kriterium;
   2. forhandlervedtak foran formidlingsvedtak, siden brukeren alltid har kjøpt av en forhandler (lagt til 2026-10-10);
   3. antall sterkere;
   4. ingen svakhet;
@@ -151,19 +170,55 @@ Testsakene ligger i `src/lib/sammenligning/testdata/testsaker.json`. `npm run sa
 ## Feil uten vedtak (regler fra 2026-10-09)
 
 - **Bare privat selger stopper motoren.** For sen reklamasjon og forlik er flagg til brevmotoren: `reklamasjon_over_to_mnd` og `forlik` per feil. Om tiden var rimelig (fkjl § 27), avgjør ikke motoren. Et forlik dekker bare feilene avtalen gjelder (`avtale_gjelder_feil`, 110357). De får `forlik = true`, matches ikke, og står med `styrke: null` og uten vedtak. Da kan de aldri ta et vedtak fra en feil som går i brevet. De andre feilene behandles som før.
-- **Et vedtak som ikke består «sterkere enn», siteres aldri.** En feil uten vedtak får `styrke: "svak"`, og brevet skrives uten praksisavsnitt for den. Det gjelder både når feilen mangler spor (`ingen_spor_arsak`) og når alle kandidatene er forkastet.
+- **Et vedtak som ikke består «sterkere enn», siteres aldri,** heller ikke i tilbakefallet. En feil uten vedtak får `styrke: "svak"`, og brevet skrives uten praksisavsnitt for den. Det gjelder både når feilen mangler spor (`ingen_spor_arsak`), og når alle kandidatene i alle kategorier er forkastet.
 - **`naermeste`** er det nærmeste vinnende vedtaket, med det brukeren mangler (`mangler`: kriterienavn, pluss `rapport_ok` når B krever dokumentasjon). Det er grunnlaget for styrkevurderingen og rapportbestillingen: «Nærmeste vinnende sak er X; den hadde Y, som du mangler». Det står aldri i brevet.
   - Kandidatene er de forkastede på feilens egne spor og på sporene en rapport kunne åpnet: C alltid, og B innen fristen.
   - Rekkefølge: samme kategori, færrest mangler som en rapport ikke kan rette (`RAPPORT_KAN_GI`), færrest mangler, nyeste vedtak.
-  - Med kategori som krav kan en feil stå uten nærmeste vedtak når kategorien ikke har vunne vedtak på sporene.
+  - En feil med spor kan stå uten vedtak når kategorien (og på A og B trinn 2) ikke har et vunnet vedtak som saken er minst like sterk som. Et eksempel er batteri på spor C: korpuset har ingen batterisak vunnet på C.
 
-## Styrke
+## Styrke og praksis (besluttet 2026-10-10)
+
+Styrken beskriver saken, ikke datagrunnlaget. Hva brevet kan vise til, står i et eget felt, `praksis`.
 
 | `styrke` | Når |
 |---|---|
-| `sterk` | Feilen har et vedtak, og det finnes ikke noe tapt vedtak med lignende fakta. |
-| `middels` | Feilen har et vedtak, men et tapt vedtak i samme kategori og på samme spor har minst like god profil (`motstridende`). Praksisavsnittet beholdes. Brukeren ser begge: «Utvalget har gitt medhold i X, men avvist Y med lignende fakta. Det som skilte: …» |
-| `svak` | Feilen har ikke vedtak. |
+| `svak` | Feilen har ikke spor, eller den har spor men ikke vedtak, og et lignende tap finnes på sporet. |
+| `middels` | Feilen har spor, men ikke vedtak, og det finnes ikke noe lignende tap. Eller den har vedtak, men også et tap med minst like god profil (`motstridende`), eller vedtaket kommer fra en annen kategori. |
+| `sterk` | Feilen har vedtak i samme kategori og ingen motstridende tap. |
+
+| `praksis` | Hva brevet viser til |
+|---|---|
+| `vedtak` | Et vunnet vedtak saken er minst like sterk som (praksisavsnittet). |
+| `generell` | Regelen utvalget anvender, med to eksempler. Ingen sammenligning (`generelt.ts`, se under). |
+| `ingen` | Ingenting. Brevet bygger på loven og dokumentasjonen alene. |
+
+I brukervisningen står «uten praksis» som forklaring under styrken, aldri som styrken selv.
+
+### Det generelle avsnittet (`generelt.ts`)
+
+- **Når:** feilen har spor C eller B, men ikke vedtak. C prøves først, så B. Spor A trenger det ikke, fordi tilbakefallet til opplysningsgruppen dekker det.
+- **Terskel:** minst 20 vunne vedtak på sporet fra 2021 og senere, talt på tvers av kategorier. Under 20 gir det ikke noe avsnitt.
+- **Innhold:**
+  1. regelen med paragraf;
+  2. «se for eksempel vedtak X av … og vedtak Y av …», som eksempler på regelen, ikke som sammenligning;
+  3. kjøperens egne fakta: avskriften fra verkstedet og hva rapporten sier;
+  4. svar på den vanligste tapsgrunnen på sporet, men bare når skjemaet viser at kjøperen har svaret (`BESVART`).
+- **Unntak:** aldri «minst like sterkt», og aldri tall fra indeksen.
+- **Eksemplene:** de to nyeste av de talte vedtakene, som:
+  - er to forskjellige vedtak;
+  - har et helsetningssitat;
+  - ikke er heving når brukeren ikke vil heve;
+  - på C har en sakkyndig fra klageren som sa både «utover det påregnelige» og «til stede ved leveringen». Et vedtak vunnet på C krever bare det første, og FKU-2026-77525 og 66298 hadde hver bare én av delene.
+- **Slitedeler får ikke B-varianten.** Slitedelregelen tillater B bare mot samme slitedel, og «mangelens art» er nettopp selgerens innvending.
+- **Eksempel (batterisaken):** «… se for eksempel vedtak FKU-2026-78962 av 2. februar 2026 og vedtak FKU-2025-115068 av 24. november 2025.»
+- **Sveipet:** praksis vedtak 44,5 %, generell 10,5 %, ingen 45 %.
+
+### Identisk opplysning (rangering på A)
+
+`opplysningIdentisk` i `ranger.ts` gjelder når vedtakets verifiserte ordlyd står ordrett i brukerens avskrift (hele ord, i rekkefølge), eller er minst 80 % lik (Dice-koeffisient på tegnpar). Et slikt vedtak går foran `antall_sterkere`: «sterkere» belønner forskjell, mens analogien har sin verdi i likhet.
+- **S10:** 52074 med samme kontraktsordlyd.
+- **S05:** 21/16429 med «Ryggekamera».
+- **Enyaq F3:** 21/13270 med «Alle servicer fulgt».
 
 **Tapte vedtak** (`hent` med `tapte: true`):
 - `vurdering = 'ikke_mangel'` og sporet er prøvd;
@@ -193,17 +248,20 @@ Av flere tap vises det med mest like fakta: færrest kriterier som skiller i noe
 - vedtak hvis og bare hvis styrken ikke er svak;
 - ingen avsnitt for svake feil;
 - `middels` hvis og bare hvis `motstridende` er satt;
-- B og C har aldri vedtak fra en annen kategori;
-- ingen vedtak kommer fra en annen opplysningsgruppe.
+- `kategori_tilbakefall` er satt hvis og bare hvis vedtaket gjelder en annen kategori;
+- spor C har aldri vedtak fra en annen kategori, og A og B aldri utenfor trinn 2 (`kategoriblanding.utenfor_regelen` = 0);
+- tilbakefall har den konkrete setningen i avsnittet og styrke høyst `middels`;
+- `middels` hvis og bare hvis `motstridende` er satt eller vedtaket er et tilbakefall.
 
 **Sveipet er regresjon, ikke produktstatistikk.** Alle kombinasjonene teller likt, men virkelige brukere har en annen miks: langt flere har annonse og rapport. Tallene skal derfor ikke brukes til forventningsstyring. En realistisk fordeling krever at kombinasjonene vektes med pass 1-andelene for kategori, bevistype og opplysning.
 
 **Tallene** sammenlignes med `testdata/sveip-fasit.json`: styrkefordelingen, årsakene til svak, andelen svake med nærmeste vedtak, kategoriblandingen, og svak-andelen etter selgers opplysning, rapport, tid og selgers motbevis. Kjør sveipet hver gang spor, kriterier eller kandidatfiltre endres. Les forskjellene, og frys med `npm run sveip -- --frys`.
 
-Tall 2026-10-10:
-- **Styrke:** sterk 10,8 %, middels 29,6 %, svak 59,6 %.
-- **Vedtakenes kategori:** 21 760 fra samme kategori, 3 216 fra samme gruppe på A, 0 fra en annen gruppe.
-- **Nærmeste vedtak:** 73,9 % av de svake har et.
+Tall 2026-10-10, med tilbakefall per spor:
+- **Styrke:** sterk 9,6 %, middels 34,5 %, svak 55,9 % (uten tilbakefall: 10,8 / 29,6 / 59,6).
+- **Vedtakenes kategori:** 22 164 fra samme kategori, 2 812 fra A-gruppen, 2 268 fra nærmeste kategori på B og 0 utenfor regelen.
+- **Svak med full rapport:** 32,5 %. Et tredje trinn ville gitt 7,9 %, men gevinsten lå i tynne kategorier som batteri og ramme, der korpuset mangler vinnende vedtak av en grunn. Batteri vinner i 49 % av sakene, det laveste av alle.
+- **Nærmeste vedtak:** 72,1 % av de svake har et.
 - **Fra 2026-10-09 til 2026-10-10** falt svak fra 67,2 til 59,6 %, målt ved å slå av én endring om gangen:
   - todelt A-spørring: cirka 4,5 prosentpoeng. Den forklarer nesten hele fallet for spesifikke skriftlige uttalelser (23,2 → 2,1 %).
   - formidling på vinnersiden: 2,3 poeng;

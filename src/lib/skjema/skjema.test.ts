@@ -74,3 +74,13 @@ describe("stubb", () => {
     expect(stubb("EU-kontrollen ble ikke godkjent.", "Feilen er at")).toBe("EU-kontrollen ble ikke godkjent");
   });
 });
+
+describe("kostnad over kjøpesummen (1.2)", () => {
+  it("må bekreftes, og kan bare bekreftes når den er over kjøpesummen", () => {
+    const over = (bekreftet: boolean) => endret((s) => ((s.del1_kjopet.pris_kr = 30_000), (s.del3_feil[0].kostnad_over_pris_bekreftet = bekreftet)));
+    expect(felt(over(false))).toEqual(["del3_feil[0].kostnad_over_pris_bekreftet"]);
+    expect(felt(over(true))).toEqual([]);
+    expect(felt(endret((s) => (s.del3_feil[0].kostnad_over_pris_bekreftet = true)))).toEqual(["del3_feil[0].kostnad_over_pris_bekreftet"]);
+  });
+});
+

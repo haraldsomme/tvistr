@@ -2,31 +2,29 @@
 
 import { headers } from "next/headers";
 import { db } from "@/db";
-import { sammenlign } from "@/lib/sammenligning";
+import { sammenlign, type Skjema } from "@/lib/sammenligning";
 import { lagHentKandidater } from "@/lib/sammenligning/kandidater";
-import type { FeilResultat, Naermeste, Spor } from "@/lib/sammenligning/typer";
+import type { FeilResultat, Motstridende } from "@/lib/sammenligning/typer";
 import { lagGrense } from "@/lib/rategrense";
-import { type Skjema, type Valideringsfeil, validerSkjema } from "@/lib/skjema/skjema";
-import { idagINorge } from "@/lib/skjema/utkast";
+import { type Valideringsfeil, validerSkjema } from "@/lib/skjema/skjema";
 
-// What the page shows per defect. The practice paragraph itself is the letter's and is not sent.
-export type FeilSvar = {
-  feil_id: string;
-  spor: Spor | null;
-  ingen_spor_arsak: string | null;
-  vedtak: { saksnummer: string; vedtaksdato: string; kilde_url: string; sanksjon: string | null; tilkjent_totalt_nok: number | null } | null;
+const idagINorge = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Oslo" });
+
+// The buyer's form (/sak): validated again on the server. Back come the assessment per defect and
+// the letter's practice section (the paragraphs, their order and the amendment sentence), which the
+// page shows under the form while the letter is built there (2026-10-10).
+export type FeilSvar = Pick<FeilResultat, "feil_id" | "kategori_pass2" | "styrke" | "praksis" | "ingen_spor_arsak" | "forlik" | "kategori_tilbakefall" | "avsnitt"> & {
+  vedtak: { saksnummer: string; vedtaksdato: string; kilde_url: string } | null;
+  motstridende: Pick<Motstridende, "saksnummer" | "vedtaksdato" | "kilde_url" | "skilte"> | null;
   til_brevet: boolean;
-  styrke: FeilResultat["styrke"];
-  motstridende: FeilResultat["motstridende"];
-  forlik: boolean;
-  // Only when no decision passed: the nearest won one and what the buyer lacks against it.
-  naermeste: Naermeste | null;
 };
-export type SakSvar = { ok: true; stopp: string | null; feil: FeilSvar[] } | { ok: false; feil: Valideringsfeil[] } | { ok: false; melding: string };
+export type SakSvar =
+  | { ok: true; stopp: string | null; feil: FeilSvar[]; valgt_til_brev: string[]; lovendring: string | null }
+  | { ok: false; feil: Valideringsfeil[] }
+  | { ok: false; melding: string };
 
 const forMange = lagGrense({ antall: 10, vinduMs: 60_000 });
 
-// A Server Action is a public POST endpoint, so the form is validated again here.
 export async function sendSak(skjema: Skjema): Promise<SakSvar> {
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "ukjent";
   if (forMange(ip)) return { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
@@ -37,22 +35,20 @@ export async function sendSak(skjema: Skjema): Promise<SakSvar> {
     return {
       ok: true,
       stopp: r.stopp,
+      valgt_til_brev: r.valgt_til_brev,
+      lovendring: r.lovendring,
       feil: r.feil.map((f) => ({
         feil_id: f.feil_id,
-        spor: f.kandidat_spor ?? f.spor_primar,
-        ingen_spor_arsak: f.ingen_spor_arsak,
-        vedtak: f.kandidat && {
-          saksnummer: f.kandidat.saksnummer,
-          vedtaksdato: f.kandidat.vedtaksdato,
-          kilde_url: f.kandidat.kilde_url,
-          sanksjon: f.kandidat.sanksjon,
-          tilkjent_totalt_nok: f.kandidat.tilkjent_totalt_nok,
-        },
-        til_brevet: r.valgt_til_brev.includes(f.feil_id),
+        kategori_pass2: f.kategori_pass2,
         styrke: f.styrke,
-        motstridende: f.motstridende,
+        praksis: f.praksis,
+        ingen_spor_arsak: f.ingen_spor_arsak,
         forlik: f.forlik,
-        naermeste: f.naermeste,
+        kategori_tilbakefall: f.kategori_tilbakefall,
+        avsnitt: f.avsnitt,
+        vedtak: f.kandidat && { saksnummer: f.kandidat.saksnummer, vedtaksdato: f.kandidat.vedtaksdato, kilde_url: f.kandidat.kilde_url },
+        motstridende: f.motstridende && { saksnummer: f.motstridende.saksnummer, vedtaksdato: f.motstridende.vedtaksdato, kilde_url: f.motstridende.kilde_url, skilte: f.motstridende.skilte },
+        til_brevet: r.valgt_til_brev.includes(f.feil_id),
       })),
     };
   } catch (e) {

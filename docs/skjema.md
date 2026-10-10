@@ -1,6 +1,6 @@
 # Skjema for reklamasjon på bruktbil
 
-*Byggespesifikasjon v1.1, 2026-10-09. v1.0 ble skrevet utenfor prosjektet. v1.1 deler 16a i to (16a, 16a2) og legger til 21c (hvilke feil avtalen gjelder). Skjemaet ligger på `/sak`. JSON-strukturen og valideringen står i `src/lib/skjema/skjema.ts`. Sammenligningsmotoren (`docs/sammenligningsmotor.md`) leser JSON-en uendret. Tilpasningene til prosjektet står i siste avsnitt.*
+*Byggespesifikasjon v1.1, 2026-10-09. v1.0 ble skrevet utenfor prosjektet. v1.1 deler 16a i to (16a, 16a2) og legger til 21c (hvilke feil avtalen gjelder). Skjemaet ligger på `/sak`, med vurderingen og brevet under (2026-10-10; `/vurdering` er fjernet). JSON-strukturen og valideringen står i `src/lib/skjema/skjema.ts`. Sammenligningsmotoren (`docs/sammenligningsmotor.md`) leser JSON-en uendret. Tilpasningene til prosjektet står i siste avsnitt.*
 
 ## 1. Prinsipper
 
@@ -140,14 +140,20 @@ Brukeren får beskjed om at et ark til verkstedet følger med brevet.
 | Del | Fil |
 |---|---|
 | JSON-type, lukkede lister, `validerSkjema`, `stubb` | `src/lib/skjema/skjema.ts` |
-| Utkast mens brukeren fyller ut, `byggSkjema` | `src/lib/skjema/utkast.ts` |
-| Side og veiviser | `src/app/sak/{page,skjema,felt,forhandler,resultat}.tsx` |
-| Server Action | `src/app/sak/actions.ts` |
-| Tester | `src/lib/skjema/*.test.ts`, `e2e/sak.spec.ts` |
+| Skjemaet med regnr- og Brønnøysund-oppslag | `src/app/sak/{page,skjema,forhandler,actions}.tsx` |
+| Regnr-oppslag (Statens vegvesen) | `src/app/api/kjoretoy/route.ts`, `src/lib/kjoretoy/vegvesen.ts` |
+| Tester | `src/lib/skjema/skjema.test.ts` |
+
+*Veiviseren, Server Action-en `sendSak`, `utkast.ts` (`byggSkjema`) og `e2e/sak.spec.ts` ble fjernet 2026-10-10 og ligger i git-historikken (commit før fjerningen). Avsnittene «Skjemaet», «Selger og Brønnøysund» og «Etter innsending» under beskriver den veiviseren og står som grunnlag når den bygges på nytt.*
+
+**Regnr-oppslaget på `/sak`**
+
+- Registreringsnummeret fylles inn først. Oppslaget fyller ut merke og modell (`merke_modell_valgfritt`), årsmodell (registerets første registreringsår, som kan bomme med ett år) og kjøpsdato (dagen bilen ble registrert på nåværende eier). Alle feltene kan endres etterpå.
+- Regnr lagres ikke og er ikke et felt i skjemaet.
 
 **Skjemaet**
 
-- **Rute:** skjemaet ligger på `/sak`. `/vurdering` er en egen testside for motoren.
+- **Rute:** skjemaet lå på `/sak`.
 - **Felles validering:** skjemaet og serveren kjører samme `validerSkjema`. Klienten viser feilene per steg før brukeren kommer videre. Serveren validerer på nytt, fordi en Server Action er et åpent POST-endepunkt.
 - **Veiviseren:**
   - Del 1, Del 2, én side per feil (del 3–5), «Kontakt med selger» (km nå og del 6), Del 7 og Send.
@@ -184,3 +190,23 @@ Brukeren får beskjed om at et ark til verkstedet følger med brevet.
   - andre versjoner gir en feil;
   - `Skjema` importeres fra `src/lib/skjema`.
 - **Testdataene** (`enyaq-skjema.json` og input i `testsaker.json`) er konvertert til v1.1: `hva` og `hvorfor` arver det gamle `hva_og_hvorfor`, bortsett fra S02 («rapport uten årsak»), der `hvorfor` er `star_ikke`. `avtale_gjelder_feil` er `[]`.
+
+## Versjon 1.2 (2026-10-10)
+
+- **Nytt felt per feil:** `kostnad_over_pris_bekreftet` (bool).
+- **Når det vises:** når `kostnad_kr` er høyere enn `pris_kr`, får brukeren en dialog: «Reparasjonen koster X kr, mer enn de Y kr du betalte for bilen. Stemmer begge beløpene?»
+- **Validering:** feltet må være `true` når kostnaden er over kjøpesummen, og `false` ellers.
+- **Hvorfor:** en kostnad over kjøpesummen er enten en hevingssak eller en skrivefeil, og motoren kan ikke vite hvilken. Brevet viser aldri en kostnadsandel over 100 % uten bekreftelse.
+
+## Skjemaet på `/sak` (2026-10-10)
+
+`src/app/sak/skjema.tsx` er det eneste skjemaet. `/vurdering` er fjernet, med testmodusen.
+- **Validering:** skjemaet sender ikke før valideringen består, og serveren validerer på nytt (`sendSak`).
+- **Firmavelgeren** (`forhandler.tsx`) søker i Brønnøysund via `/api/firma` mens brukeren skriver. Når brukeren velger et treff, kobles det (`treff_bekreftet`). Skriver brukeren videre, kobles det fra.
+- **Under skjemaet** vises vurderingen per feil (styrke, og praksis som forklaring) og brevets praksisdel slik brevmotoren setter den inn:
+  1. avsnittene for feilene i `valgt_til_brev`;
+  2. de generelle avsnittene;
+  3. lovendringssetningen én gang.
+
+  Resten av brevet bygges videre her.
+

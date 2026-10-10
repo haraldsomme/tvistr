@@ -60,6 +60,8 @@ export type FeilProfil = {
   a_former: string[];
   a_form: string | null;
   a_spesifikk: boolean;
+  avskrift_selger: string | null; // what the seller wrote, as the buyer copied it (identical-statement ranking)
+  avskrift_verksted: string | null; // what the workshop wrote, as the buyer copied it (the general paragraph)
   a_direkte: boolean;
   rapport_ok: boolean; // 16a: the report names the faulty part
   rapport_arsak: boolean; // 16a2: and says why it failed
@@ -68,6 +70,7 @@ export type FeilProfil = {
   alvor: boolean;
   kan_bilen_brukes: SkjemaFeil["kan_bilen_brukes"];
   kostnad_kr: number | null;
+  kostnad_over_pris_bekreftet: boolean;
   dager_til_reklamasjon: number | null;
   forlik: boolean;
 };
@@ -92,6 +95,9 @@ export type VedtakFeil = {
   a_variant: string | null;
   alvor: string[];
   dager_etter_levering: number | null;
+  // "bevisdato" when the day count is the date of a document that records the defect: an upper bound
+  // («påvist senest»), not when the defect showed itself. "vedtak" when the decision gives the time.
+  viste_seg_kilde: "vedtak" | "bevisdato" | null;
   lovversjon: string;
   alder_ved_kjop: number | null;
   km_ved_kjop: number | null;
@@ -185,6 +191,8 @@ export type FeilResultat = {
   km_svakhet_i_avsnitt: boolean;
   kandidat: KandidatRef | null;
   kandidat_spor: Spor | null;
+  // The decision concerns another kind of defect: the category had none (avled.ts kategoritrinn).
+  kategori_tilbakefall: boolean;
   kriterier: Array<{ navn: string; bruker: unknown; vedtak: unknown; utfall: Utfall }>;
   antall_sterkere: number;
   svakhet_adressert: string | null;
@@ -193,9 +201,13 @@ export type FeilResultat = {
   argumenter: string[];
   avsnitt: string | null;
   forkastede: Forkastet[];
-  // sterk: a decision and no contradicting loss; middels: a decision, but a similar case was lost; svak: no
-  // decision; null: settled (forlik), so not claimed and not matched.
+  // The case, not the corpus (index.ts styrke): svak without a track; sterk with a won decision in the
+  // category and no contradicting loss; middels otherwise, or svak when a track has no decision and a
+  // similar case was lost. null: settled (forlik), so not claimed and not matched.
   styrke: "sterk" | "middels" | "svak" | null;
+  // What the letter can cite: a won decision, a general paragraph on the rule (no single case), or
+  // nothing. Shown under the strength as an explanation («uten praksis»), never as the strength.
+  praksis: "vedtak" | "generell" | "ingen" | null;
   motstridende: Motstridende | null;
   naermeste: Naermeste | null;
   // Covered by the settlement: not claimed in the letter.
@@ -215,6 +227,15 @@ export type Resultat = {
 };
 
 // Fetches won defects for one track. Injected so the tests can run without a database.
-// `kategorier` is what may be fetched: the category on B and C, its information group on A. `tapte`
+// `kategorier` is what may be fetched, nearest first (one step of avled.ts kategoritrinn). `tapte`
 // fetches lost defects on the track instead of won ones.
-export type HentKandidater = (q: { spor: Spor; a_variant: AVariant | null; kategori: string; kategorier: string[]; heving_tillatt: boolean; tapte?: boolean }) => Promise<VedtakFeil[]>;
+// `nyeste` orders by decision date alone (the general paragraph's examples), not by category first.
+export type HentKandidater = (q: {
+  spor: Spor;
+  a_variant: AVariant | null;
+  kategori: string;
+  kategorier: string[];
+  heving_tillatt: boolean;
+  tapte?: boolean;
+  nyeste?: boolean;
+}) => Promise<VedtakFeil[]>;

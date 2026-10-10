@@ -61,7 +61,7 @@ export default function Home() {
             </span>
           </p>
           <div className="flex flex-col items-center gap-3 pt-2 md:flex-row md:gap-4 md:pt-0">
-            <Link href="/vurdering" className="w-full rounded-[6px] bg-[#17263d] p-[18px] text-center text-[16px] font-semibold text-[#f6f4ef] md:w-auto md:px-7">
+            <Link href="/sak" className="w-full rounded-[6px] bg-[#17263d] p-[18px] text-center text-[16px] font-semibold text-[#f6f4ef] md:w-auto md:px-7">
               Start vurderingen
             </Link>
             <span className="text-[13px] text-[#5b6472] md:text-[14px]">Gratis · tar ca. 5 minutter</span>

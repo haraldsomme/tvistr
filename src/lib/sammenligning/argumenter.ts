@@ -65,6 +65,23 @@ function svakhetSetning(k: Kriterium): string {
 
 export const kmSvakhetIAvsnitt = (sak: Sak, f: FeilProfil) => sak.svakhet_sak === "km" && f.rapport_levering;
 
+// A decision from the category fallback (avled.ts kategoritrinn) names what differs and the concrete
+// points the committee built on that hold in the user's case too; never «the conditions are the same».
+function tilbakefallSetning(sak: Sak, f: FeilProfil, v: VedtakFeil): string | null {
+  if (v.kategori === f.kategori_pass2) return null;
+  if (v.spor === "A")
+    return `Vedtaket gjaldt opplysninger om ${OPPLYSNING_OM[v.kategori] ?? OPPLYSNING_OM.annet}; i min sak gjelder opplysningen ${OPPLYSNING_OM[f.kategori_pass2] ?? OPPLYSNING_OM.annet}.`;
+  if (v.spor === "B") {
+    const bevis = v.selger_bevis_finnes
+      ? "at selgers dokumentasjon ikke var tilstrekkelig til å vise at den oppsto senere"
+      : "at selger ikke fremla bevis for at den oppsto senere";
+    // The user's seller has put forward evidence: the second point is not established in the user's case.
+    const min = sak.selger_motbevis ? "I min sak viste feilen seg også innen fristen." : "Det samme gjelder i min sak.";
+    return `Vedtaket gjaldt ${KATEGORI_FRASE[v.kategori] ?? KATEGORI_FRASE.annet}. Utvalget bygde på at feilen viste seg innen fristen og ${bevis}. ${min}`;
+  }
+  return null; // C has no fallback
+}
+
 export function byggArgumenter(sak: Sak, f: FeilProfil, x: Vurdert): string[] {
   const v = x.vedtak;
   const ut: string[] = [];
@@ -90,6 +107,8 @@ export function byggArgumenter(sak: Sak, f: FeilProfil, x: Vurdert): string[] {
     if (s) ut.push(s);
   }
   if (x.svakhet) ut.push(svakhetSetning(x.svakhet));
+  const tilbakefall = tilbakefallSetning(sak, f, v);
+  if (tilbakefall) ut.unshift(tilbakefall);
   // The mileage since purchase is only raised here when it can be answered. Otherwise the flag
   // (km_svakhet_i_avsnitt = false) goes to the letter engine, which takes it up only if the seller has.
   if (kmSvakhetIAvsnitt(sak, f))
@@ -158,11 +177,22 @@ function ledd1(x: Vurdert, f: FeilProfil): string {
   if (v.spor === "A" && f.a_variant === "taushet") return `${start} selger hadde unnlatt å opplyse om ${gjelder}, og at dette var en mangel.`;
   if (v.spor === "A") return `${start} selger hadde gitt en uriktig opplysning om ${gjelder}.`;
   if (v.spor === "B") {
-    const når = v.dager_etter_levering == null ? "etter leveringen" : etterLevering(v.dager_etter_levering);
+    // A day count from a document date is when the defect was recorded at the latest, not when it
+    // showed itself (21/5099: the workshop's quote 182 days after delivery).
+    // Without a time in the decision the clause says only that the defect was there at delivery:
+    // «a defect that showed itself after delivery» is true of every defect and says nothing.
+    const feilen =
+      v.dager_etter_levering == null
+        ? "feilen"
+        : v.viste_seg_kilde === "bevisdato"
+          ? `en feil som var påvist senest ${etterLevering(v.dager_etter_levering)}`
+          : `en feil som viste seg ${etterLevering(v.dager_etter_levering)}`;
     // When the decision's seller did put forward evidence, the committee found it insufficient (S06).
+    // The relative clause takes its commas; the bare «feilen» none.
+    const subjekt = v.dager_etter_levering == null ? feilen : `${feilen},`;
     return v.selger_bevis_finnes
-      ? `${start} en feil som viste seg ${når}, forelå ved leveringen, og at selgers dokumentasjon ikke var tilstrekkelig til å motbevise dette.`
-      : `${start} en feil som viste seg ${når}, forelå ved leveringen, fordi selger ikke hadde fremlagt bevis for noe annet.`;
+      ? `${start} ${subjekt} forelå ved leveringen, og at selgers dokumentasjon ikke var tilstrekkelig til å motbevise dette.`
+      : `${start} ${subjekt} forelå ved leveringen, fordi selger ikke hadde fremlagt bevis for noe annet.`;
   }
   return `${start} en feil som var dokumentert å gå ut over det påregnelige for bilens alder og kjørelengde, var en mangel.`;
 }

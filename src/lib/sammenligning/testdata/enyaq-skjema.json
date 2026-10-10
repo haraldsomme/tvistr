@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "skjema_versjon": "1.1",
+    "skjema_versjon": "1.2",
     "registrert": "2026-10-09T08:19:40+02:00"
   },
   "del1_kjopet": {
@@ -45,6 +45,7 @@
         "kostnad": "ja"
       },
       "kostnad_kr": 38400,
+      "kostnad_over_pris_bekreftet": false,
       "avskrift_verksted": "varmepumpekompressor defekt, intern mekanisk feil. Feilkode P1D5A lagret med første forekomst ved 43 100 km. Kompressorhavari på en fire år gammel bil med 50 000 km er ikke normal slitasje. Feilen gir ikke symptom ved mildt vær og kan ikke oppdages ved prøvekjøring"
     },
     {
@@ -69,6 +70,7 @@
         "kostnad": "ja"
       },
       "kostnad_kr": 11900,
+      "kostnad_over_pris_bekreftet": false,
       "avskrift_verksted": "4 stk Nokian Hakkapeliitta R3, DOT 3819 (produsert uke 38/2019). Mønsterdybde 4,5–4,8 mm"
     },
     {
@@ -93,6 +95,7 @@
         "kostnad": "ja"
       },
       "kostnad_kr": 6900,
+      "kostnad_over_pris_bekreftet": false,
       "avskrift_verksted": "servicehistorikk: siste registrerte service ved 15 200 km (11.04.2023). Ingen service registrert ved 30 000 km / 2 år. Bremsevæske ikke skiftet"
     }
   ],

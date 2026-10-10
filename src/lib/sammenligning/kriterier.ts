@@ -3,7 +3,7 @@
 import { SKRIFTLIGE_FORMER } from "@/lib/analyse/skjema";
 import type { VerifisertBevis, VerifisertOpplysning } from "@/lib/analyse/verifiser";
 import { dagerMellom } from "@/lib/analyse/verifiser";
-import { erSlitedel, sammeGruppe } from "./avled";
+import { erSlitedel } from "./avled";
 import { FORM_RANG } from "./fraser";
 import type { FeilProfil, Kriterium, Sak, Utfall, VedtakFeil } from "./typer";
 
@@ -58,10 +58,10 @@ export function leksikografisk(a: number[], b: number[]): number {
   return 0;
 }
 
-// Required on every track: the same kind of defect is the analogy, and a bonus. On A the same
-// information group is no weakness (mirror → reversing camera), any other kind is (lien → DAB radio).
-const kategori = (f: FeilProfil, v: VedtakFeil) =>
-  k("kategori", f.kategori_pass2, v.kategori, f.kategori_pass2 === v.kategori ? "sterkere" : v.spor === "A" && sammeGruppe(f.kategori_pass2, v.kategori) ? "lik" : "svakere", true);
+// The same kind of defect is a bonus. Another kind is no weakness of the user's case: it is only
+// fetched when the category has no won decision the case is as strong as, nearest first
+// (avled.ts kategoritrinn), and the letter says the decision concerned another kind of defect.
+const kategori = (f: FeilProfil, v: VedtakFeil) => k("kategori", f.kategori_pass2, v.kategori, f.kategori_pass2 === v.kategori ? "sterkere" : "lik");
 
 function sporA(sak: Sak, f: FeilProfil, v: VedtakFeil, o: VerifisertOpplysning): Kriterium[] {
   const forbehold = k(
@@ -86,11 +86,25 @@ function sporA(sak: Sak, f: FeilProfil, v: VedtakFeil, o: VerifisertOpplysning):
   ];
 }
 
-// Days from the defect showing itself to the first complaint, in the decision.
+// Days from the defect showing itself to the first complaint, in the decision. With a document date
+// for the defect (viste_seg_kilde = bevisdato) the defect may have shown itself earlier, so this is
+// a lower bound of the decision's complaint time.
 function vedtakReklamasjon(v: VedtakFeil): number | null {
   if (!v.forste_henvendelse_dato || !v.start_dato || v.dager_etter_levering == null) return null;
   const d = dagerMellom(v.start_dato, v.forste_henvendelse_dato) - v.dager_etter_levering;
   return d >= 0 ? d : null;
+}
+
+// The decision's day count from a document date is «påvist senest»: a user whose defect showed itself
+// within it is not shown to be earlier (the decision's may have been earlier still), only one after it
+// is shown to be later. The same bound turned round holds for the complaint time.
+function tidTilFeil(f: FeilProfil, v: VedtakFeil): Kriterium["utfall"] {
+  const u = mindreErBedre(f.dager_til_feil, v.dager_etter_levering);
+  return v.viste_seg_kilde === "bevisdato" && u === "sterkere" ? "lik" : u;
+}
+function reklamasjonstid(f: FeilProfil, v: VedtakFeil, vRek: number | null): Kriterium["utfall"] {
+  const u = mindreErBedre(f.dager_til_reklamasjon, vRek);
+  return v.viste_seg_kilde === "bevisdato" && u === "svakere" ? "lik" : u;
 }
 
 function sporB(sak: Sak, f: FeilProfil, v: VedtakFeil): Kriterium[] {
@@ -106,12 +120,12 @@ function sporB(sak: Sak, f: FeilProfil, v: VedtakFeil): Kriterium[] {
   const vArsak = arsaker.includes("rotarsak") ? true : arsaker.includes("komponent") ? false : null;
   return [
     // A later defect is only answered when the workshop tied it to delivery (S06).
-    k("tid_til_feil", f.dager_til_feil, v.dager_etter_levering, mindreErBedre(f.dager_til_feil, v.dager_etter_levering), false, f.rapport_levering),
+    k("tid_til_feil", f.dager_til_feil, v.dager_etter_levering, tidTilFeil(f, v), false, f.rapport_levering),
     k("selger_motbevis", sak.selger_motbevis, v.selger_bevis_finnes, fordel(!sak.selger_motbevis, !v.selger_bevis_finnes), true),
     k("rapport_levering", f.rapport_levering, vLevering, fordel(f.rapport_levering, vLevering)),
     k("arsak", f.rapport_arsak, vArsak, fordel(f.rapport_arsak, vArsak)),
     k("ikke_slitedel", !f.slitedel, !vSlitedel, slitedel, true),
-    k("reklamasjonstid", f.dager_til_reklamasjon, vRek, mindreErBedre(f.dager_til_reklamasjon, vRek), false, (f.dager_til_reklamasjon ?? Infinity) <= 60),
+    k("reklamasjonstid", f.dager_til_reklamasjon, vRek, reklamasjonstid(f, v, vRek), false, (f.dager_til_reklamasjon ?? Infinity) <= 60),
     kategori(f, v),
   ];
 }
@@ -124,7 +138,9 @@ function sporC(sak: Sak, f: FeilProfil, v: VedtakFeil): Kriterium[] {
   const vLevering = bevis.some((b) => b.ved_levering === "ja");
   // The decision's repair cost, not the largest invoice: a diagnosis invoice of 2 600 kr is no repair (22/3370).
   const vAndel = v.utbedringskostnad_nok && v.kjopesum_nok ? v.utbedringskostnad_nok / v.kjopesum_nok : null;
-  const bAndel = f.kostnad_kr != null ? f.kostnad_kr / sak.pris_kr : null;
+  // A repair costing more than the car is a rescission case or a typo (52 000 for 520 000 kr): it is
+  // only compared when the buyer confirmed it in the form.
+  const bAndel = f.kostnad_kr != null && (f.kostnad_kr <= sak.pris_kr || f.kostnad_over_pris_bekreftet) ? f.kostnad_kr / sak.pris_kr : null;
   const andel: Kriterium["utfall"] = bAndel == null || vAndel == null ? "utelat" : bAndel > vAndel ? "sterkere" : bAndel === vAndel ? "lik" : "utelat";
   const vAlvor = v.alvor.length > 0;
   return [
@@ -136,7 +152,7 @@ function sporC(sak: Sak, f: FeilProfil, v: VedtakFeil): Kriterium[] {
     k("km", sak.km_ved_kjop, v.km_ved_kjop, mindreErBedre(sak.km_ved_kjop, v.km_ved_kjop)),
     k("pris", sak.pris_kr, v.kjopesum_nok, storreErBedre(sak.pris_kr, v.kjopesum_nok)),
     k("kostnad_pris", bAndel, vAndel, andel),
-    k("tid_til_feil", f.dager_til_feil, v.dager_etter_levering, mindreErBedre(f.dager_til_feil, v.dager_etter_levering), false, f.rapport_levering),
+    k("tid_til_feil", f.dager_til_feil, v.dager_etter_levering, tidTilFeil(f, v), false, f.rapport_levering),
     kategori(f, v),
   ];
 }

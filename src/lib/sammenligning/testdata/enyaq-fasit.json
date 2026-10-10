@@ -62,6 +62,7 @@
         "selger_bevis_finnes": true
       },
       "kandidat_spor": "A",
+      "kategori_tilbakefall": false,
       "kriterier": [
         {
           "navn": "form",
@@ -112,9 +113,22 @@
         {
           "saksnummer": "22/8615 f5",
           "grunn": "ingen opplysning i vedtaket knyttet til feilen"
+        },
+        {
+          "saksnummer": "22/10322 f1",
+          "grunn": "svakere på km, tid_til_feil"
+        },
+        {
+          "saksnummer": "21/17615 f1",
+          "grunn": "svakere på alder, km"
+        },
+        {
+          "saksnummer": "21/4356 f1",
+          "grunn": "svakere på alder, km"
         }
       ],
       "styrke": "sterk",
+      "praksis": "vedtak",
       "motstridende": null,
       "naermeste": null,
       "forlik": false,
@@ -163,6 +177,7 @@
         "selger_bevis_finnes": true
       },
       "kandidat_spor": "A",
+      "kategori_tilbakefall": false,
       "kriterier": [
         {
           "navn": "form",
@@ -223,9 +238,18 @@
         {
           "saksnummer": "21/8961 f2",
           "grunn": "ingen opplysning i vedtaket knyttet til feilen"
+        },
+        {
+          "saksnummer": "FKU-2025-55355 f6",
+          "grunn": "svakere på tid_til_feil, reklamasjonstid"
+        },
+        {
+          "saksnummer": "FKU-2025-55355-2 f6",
+          "grunn": "svakere på tid_til_feil, reklamasjonstid"
         }
       ],
       "styrke": "middels",
+      "praksis": "vedtak",
       "motstridende": {
         "saksnummer": "23/9774",
         "vedtaksdato": "2023-11-08",
@@ -258,10 +282,10 @@
       "alvor": false,
       "km_svakhet_i_avsnitt": false,
       "kandidat": {
-        "vedtak_id": 1585,
-        "saksnummer": "23/15972",
-        "vedtaksdato": "2024-08-28",
-        "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024042324&dokid=1208841&versjon=1&variant=A&",
+        "vedtak_id": 2104,
+        "saksnummer": "21/13270",
+        "vedtaksdato": "2023-01-18",
+        "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022103796&dokid=806175&versjon=1&variant=A&",
         "feil_id": "f1",
         "kategori": "servicehistorikk",
         "spor_vunnet": [
@@ -269,19 +293,20 @@
         ],
         "a_variant": "uttalelse",
         "lovversjon": "før_2024",
-        "sanksjon": "prisavslag_og_erstatning",
-        "tilkjent_totalt_nok": 26875,
+        "sanksjon": "prisavslag",
+        "tilkjent_totalt_nok": 11224,
         "opplysning": {
           "form": "annonse",
           "rekkevidde": "spesifikk",
-          "ordlyd": "Bilens serviceprogram er fulgt. Det er tatt servicer på bilen i henhold til fabrikkens retningslinjer.",
+          "ordlyd": "Alle servicer fulgt",
           "svar_pa_direkte_sporsmal": false
         },
         "forbehold": true,
-        "dager_etter_levering": 18,
-        "selger_bevis_finnes": true
+        "dager_etter_levering": 88,
+        "selger_bevis_finnes": false
       },
       "kandidat_spor": "A",
+      "kategori_tilbakefall": false,
       "kriterier": [
         {
           "navn": "form",
@@ -318,14 +343,14 @@
       "svakhet_adressert": null,
       "godkjent": true,
       "sitat": {
-        "tema": "opplysning",
-        "tekst": "Utvalget bemerker at opplysninger om servicehistorikk er sentrale ved kjøp av bruktbil, og det må antas at de har virket inn på kjøpet"
+        "tema": "mangel",
+        "tekst": "Utvalget finner følgelig at det ble gitt feilaktige opplysninger om at serviceintervall var fulgt, og forholdet utgjør en mangel"
       },
       "argumenter": [
         "Bilen i vedtaket var solgt «som den står»; min bil ble solgt uten forbehold.",
         "Vedtaket gjaldt samme type opplysning som i min sak."
       ],
-      "avsnitt": "Forbrukerklageutvalget har i vedtak 23/15972 av 28. august 2024 lagt til grunn at selger hadde gitt en uriktig opplysning om servicehistorikken. Opplysningen sto i annonsen og lød: «Bilens serviceprogram er fulgt. Det er tatt servicer på bilen i henhold til fabrikkens retningslinjer». Utvalget uttalte: «Utvalget bemerker at opplysninger om servicehistorikk er sentrale ved kjøp av bruktbil, og det må antas at de har virket inn på kjøpet». Kjøperen fikk tilkjent 10 000 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Bilen i vedtaket var solgt «som den står»; min bil ble solgt uten forbehold. Vedtaket gjaldt samme type opplysning som i min sak.",
+      "avsnitt": "Forbrukerklageutvalget har i vedtak 21/13270 av 18. januar 2023 lagt til grunn at selger hadde gitt en uriktig opplysning om servicehistorikken. Opplysningen sto i annonsen og lød: «Alle servicer fulgt». Utvalget uttalte: «Utvalget finner følgelig at det ble gitt feilaktige opplysninger om at serviceintervall var fulgt, og forholdet utgjør en mangel». Kjøperen fikk prisavslag på 11 224 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Bilen i vedtaket var solgt «som den står»; min bil ble solgt uten forbehold. Vedtaket gjaldt samme type opplysning som i min sak.",
       "forkastede": [
         {
           "saksnummer": "21/3303 f2",
@@ -333,13 +358,15 @@
         }
       ],
       "styrke": "middels",
+      "praksis": "vedtak",
       "motstridende": {
         "saksnummer": "22/9693",
         "vedtaksdato": "2023-05-03",
         "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023029190&dokid=898548&versjon=1&variant=A&",
         "grunn": "annet",
         "skilte": [
-          "Bilen i 22/9693 var 4 år, mot 7 år i 23/15972."
+          "Bilen i 22/9693 hadde gått 85 463 km, mot 148 000 km i 21/13270.",
+          "Bilen i 22/9693 var 4 år, mot 6 år i 21/13270."
         ]
       },
       "naermeste": null,

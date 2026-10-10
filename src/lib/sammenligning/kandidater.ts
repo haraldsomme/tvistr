@@ -4,6 +4,9 @@ import { sql } from "drizzle-orm";
 import type { HentKandidater, Sanksjon, Spor, VedtakFeil } from "./typer";
 
 export const KANDIDATGRENSE = 30;
+// The general paragraph's query (nyeste) counts the won decisions on a track and picks examples among
+// them; every one of them, so a stricter example rule cannot run out of rows.
+export const EKSEMPELGRENSE = 500;
 
 // Track A has two kinds (docs/spor.md). The kind is read from the statements, not the legal basis: a
 // written statement linked to the defect and weighed for the buyer is a statement even when the
@@ -18,7 +21,7 @@ const A_VARIANT = {
 };
 
 export function lagHentKandidater(db: { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: Record<string, unknown>[] }> }): HentKandidater {
-  return async ({ spor, a_variant, kategori, kategorier, heving_tillatt, tapte = false }) => {
+  return async ({ spor, a_variant, kategori, kategorier, heving_tillatt, tapte = false, nyeste = false }) => {
     const variant = spor === "A" && a_variant ? A_VARIANT[a_variant] : sql``;
     // F9: the sanction is read from the decision's conclusion at import (vedtak_analyse.sanksjon).
     const heving = heving_tillatt ? sql`` : sql`and a.sanksjon is distinct from 'heving'`;
@@ -32,7 +35,7 @@ export function lagHentKandidater(db: { execute: (q: ReturnType<typeof sql>) => 
       : sql`s.vurdering = 'mangel' and ${spor} = any(s.spor_vunnet) ${variant} and s.selger_type in ('forhandler', 'formidling') and s.utfall <> 'avvist' ${heving}`;
     const { rows } = await db.execute(sql`
       select s.vedtak_id, s.feil_id, s.saksnummer, s.vedtaksdato::text as vedtaksdato, s.kilde_url, s.utfall::text as utfall, s.grunn, s.selger_type::text as selger_type,
-        s.kategori, s.komponenter, s.grunnlag, s.spor_vunnet, s.a_variant, s.alvor, s.dager_etter_levering,
+        s.kategori, s.komponenter, s.grunnlag, s.spor_vunnet, s.a_variant, s.alvor, s.dager_etter_levering, s.viste_seg_kilde,
         s.lovversjon::text as lovversjon, s.alder_ved_kjop, s.km_ved_kjop, s.kjopesum_nok,
         s.belop_tilkjent_nok, v.tilkjent_totalt_nok, v.utbedringskostnad_nok, a.sanksjon, coalesce(v.forbehold, '{}') as forbehold,
         -- The reservation's own words, when tolk's summary has them and the decision does too.
@@ -57,8 +60,8 @@ export function lagHentKandidater(db: { execute: (q: ReturnType<typeof sql>) => 
         and ${iKategorier}
         and s.vedtaksdato >= date '2021-01-01'
         and not s.ikke_mangelssak
-      order by (s.kategori = ${kategori}) desc, s.vedtaksdato desc, s.vedtak_id, s.feil_id
-      limit ${KANDIDATGRENSE}`);
+      order by ${nyeste ? sql`s.vedtaksdato desc` : sql`(s.kategori = ${kategori}) desc, array_position(array[${sql.join(kategorier.map((k) => sql`${k}`), sql`, `)}]::text[], s.kategori), s.vedtaksdato desc`}, s.vedtak_id, s.feil_id
+      limit ${nyeste ? EKSEMPELGRENSE : KANDIDATGRENSE}`);
     return rows.map((r) => tilVedtakFeil(r, spor));
   };
 }
@@ -82,6 +85,7 @@ function tilVedtakFeil(r: Record<string, unknown>, spor: Spor): VedtakFeil {
     a_variant: (r.a_variant as string) ?? null,
     alvor: (r.alvor as string[]) ?? [],
     dager_etter_levering: n(r.dager_etter_levering),
+    viste_seg_kilde: (r.viste_seg_kilde as VedtakFeil["viste_seg_kilde"]) ?? null,
     lovversjon: String(r.lovversjon),
     alder_ved_kjop: n(r.alder_ved_kjop),
     km_ved_kjop: n(r.km_ved_kjop),

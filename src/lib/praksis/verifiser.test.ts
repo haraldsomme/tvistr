@@ -180,3 +180,53 @@ describe("verifiserPraksis, spesifikt avsnitt", () => {
     expect(verifiserPraksis(svar({ setninger: [LEDD1, uten] }), grunnlag()).strykninger).toMatchObject([{ regel: "paragraf" }]);
   });
 });
+
+describe("verifiserPraksis, generelt avsnitt", () => {
+  const EKS2 = `Vedtak i sak FKU-2026-104368\n\nSaken gjelder motorhavari.\n\nUtvalget ser slik på saken\nIfølge uttalelsen fra NAF er dette komponenter i bilen som forventes å ha en vesentlig lengre levetid enn 7 år.`;
+  const g = (o: Partial<Grunnlag> = {}) =>
+    grunnlag({
+      modus: "generell",
+      kandidater: [kandidat({}, 0), { vedtak: vedtak({ vedtak_id: 2, saksnummer: "FKU-2026-104368", vedtaksdato: "2026-02-02" }), kriterier: [], antall_sterkere: 0, svakhet: null }],
+      fulltekst: new Map([
+        [1, FULLTEKST],
+        [2, EKS2],
+      ]),
+      ...o,
+    });
+  const REGEL = S(1, "Forbrukerklageutvalget legger vekt på om bilen svarer til det som er opplyst, se for eksempel sak {{saksnummer}}.", "Utvalget legger til grunn at varmepumpen ikke fungerte ved levering");
+  const MIN = S(2, `Bilen kostet ${tall(enyaq.del1_kjopet.pris_kr)} kr.`, null, "min_sak");
+  const gsvar = (o: Partial<PraksisSvar> = {}) => svar({ valgt_vedtak_id: null, eksempel_vedtak_ids: [1], sitat: null, setninger: [REGEL, MIN], ...o });
+
+  it("en sann tekst med belegg fra et eksempel rendres, og eksemplene er de som har belegg", () => {
+    const v = verifiserPraksis(gsvar(), g());
+    expect(v.strykninger).toEqual([]);
+    expect(v.avsnitt).toBe(`Forbrukerklageutvalget legger vekt på om bilen svarer til det som er opplyst, se for eksempel sak 22/2952. Bilen kostet ${tall(enyaq.del1_kjopet.pris_kr)} kr.`);
+    expect(v.eksempel_vedtak_ids).toEqual([1]);
+  });
+
+  it("ledd 4 og 5 strykes", () => {
+    expect(verifiserPraksis(gsvar({ setninger: [REGEL, MIN, LEDD4] }), g()).strykninger).toMatchObject([{ regel: "ledd" }]);
+  });
+
+  it("sammenligning strykes, også «minst like sterkt»", () => {
+    const like = S(2, "Min sak står minst like sterkt.", null, "min_sak");
+    expect(verifiserPraksis(gsvar({ setninger: [REGEL, like] }), g()).strykninger).toMatchObject([{ regel: "sammenligning" }]);
+  });
+
+  it("et eksempel utenfor juristens liste gir ikke noe avsnitt", () => {
+    expect(verifiserPraksis(gsvar({ eksempel_vedtak_ids: [9] }), g()).grunn).toBe("eksempel utenfor juristens eksempler");
+    expect(verifiserPraksis(gsvar({ valgt_vedtak_id: 1 }), g()).grunn).toBe("et generelt avsnitt viser ikke til ett vedtak");
+  });
+
+  it("belegg fra et vedtak utenfor eksemplene strykes; to strykninger gir ikke noe avsnitt", () => {
+    const fremmed = { ...REGEL, belegg: { vedtak_id: 9, sitat: REGEL.belegg!.sitat } };
+    expect(verifiserPraksis(gsvar({ setninger: [REGEL, fremmed] }), g()).strykninger).toMatchObject([{ regel: "belegg" }]);
+    expect(verifiserPraksis(gsvar({ setninger: [REGEL, fremmed, LEDD4] }), g())).toMatchObject({ avsnitt: null, grunn: "2 setninger strøket" });
+  });
+
+  it("et valgfritt sitat fra et eksempel står sist med saksnummeret", () => {
+    const v = verifiserPraksis(gsvar({ sitat: { vedtak_id: 2, tekst: "Ifølge uttalelsen fra NAF er dette komponenter i bilen som forventes å ha en vesentlig lengre levetid enn 7 år." } }), g());
+    expect(v.avsnitt).toMatch(/I sak FKU-2026-104368 uttalte utvalget: «Ifølge uttalelsen fra NAF .* enn 7 år»\.$/);
+    expect(v.eksempel_vedtak_ids).toEqual([1, 2]);
+  });
+});

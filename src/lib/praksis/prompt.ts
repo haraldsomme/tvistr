@@ -44,7 +44,7 @@ export const PRAKSIS_VERKTOY = {
 const FELLES = `Du skriver ett avsnitt i et reklamasjonsbrev som en forbruker selv sender til bilforhandleren som solgte bilen. Avsnittet står under overskriften «Praksis fra Forbrukerklageutvalget». Skriv i jeg-form, på bokmål, saklig og presist, slik en erfaren jurist ville skrevet for en forbruker.
 
 Motparten vil slå opp vedtakene. Én uriktig påstand ødelegger brevet. Derfor:
-- Hver setning som sier noe om et vedtak (om = vedtak eller begge) skal ha et belegg: et sammenhengende utdrag på minst 20 tegn, kopiert tegn for tegn fra vedtakets fulltekst, som viser det setningen sier. Finner du ikke et slikt utdrag, skriver du ikke setningen.
+- Hver setning som sier noe om et vedtak (om = vedtak eller begge) skal ha et belegg: et sammenhengende utdrag på minst 20 tegn, kopiert tegn for tegn fra vedtakets fulltekst, som viser det setningen sier. Linjeskift i fulltekst teller som mellomrom. Finner du ikke et slikt utdrag, skriver du ikke setningen.
 - Setninger om hva utvalget fant eller legger vekt på (ledd 1), skal ha belegg fra utvalgets egen vurdering: delen etter overskriften «Utvalget ser slik på saken» («Utvalet ser slik på saka»). Det partene hevder, er ikke det utvalget fant.
 - Sitatet (ledd 3) er én hel setning fra utvalgets vurdering, kopiert tegn for tegn, uten «…».
 - Skriv aldri saksnummer, vedtaksdato eller beløp fra vedtaket med tall. Skriv {{saksnummer}}, {{vedtaksdato}} og «{{belop}} kr»; de fylles inn fra databasen.
@@ -72,7 +72,7 @@ Avsnittet har fem ledd, i denne rekkefølgen:
 export const PRAKSIS_GENERELL = `${FELLES}
 
 Oppgaven: kjøperens sak har ingen vunne vedtak om samme type feil å sammenligne med. Skriv i stedet et generelt avsnitt om regelen Forbrukerklageutvalget anvender på sporet, med <fast_blokk> som disposisjon. Blokken er skrevet av en jurist; følg innholdet, men tilpass ordlyden til kjøperens feil og fakta.
-- Ledd 1: hva utvalget legger vekt på, med belegg fra et av eksempelvedtakene i <kandidater> (fra utvalgets vurdering). Eksemplene nevnes bare som «se for eksempel sak {{saksnummer}}», i samme setning som belegget fra det vedtaket.
+- Ledd 1: hva utvalget legger vekt på, med belegg fra et av eksempelvedtakene i <kandidater> (fra utvalgets vurdering). Eksemplene nevnes bare som «se for eksempel sak {{saksnummer}}», i samme setning som belegget fra det vedtaket, og hvert eksempel nevnes én gang.
 - Ledd 2: kjøperens egne fakta (om = min_sak) som viser at kjøperen har det utvalget legger vekt på.
 - Sitat (ledd 3) er valgfritt, fra ett av eksempelvedtakene.
 - Ikke sammenlign: aldri «like sterkt», «minst like sterkt», «sterkere», «samme type» eller «tilsvarende sak». Ikke si hva kjøperen i et eksempel fikk, og ingen beløp ({{belop}} er ikke tillatt).

@@ -1,0 +1,642 @@
+{
+  "skjema": {
+    "_meta": {
+      "skjema_versjon": "1.2",
+      "registrert": "2026-10-09T12:00:00+02:00"
+    },
+    "del1_kjopet": {
+      "selgertype": "forhandler",
+      "kjopsdato": "2024-06-04",
+      "pris_kr": 520000,
+      "km_ved_kjop": 22000,
+      "aarsmodell": 2022,
+      "merke_modell_valgfritt": "BMW iX3"
+    },
+    "del2_selger": {
+      "firmanavn_oppgitt": "Premium Auto Oslo",
+      "bronnoysund_treff": {
+        "foretaksnavn": "Premium Auto Oslo AS",
+        "organisasjonsnummer": "999 000 204",
+        "forretningsadresse": "Testveien 4, 0150 Oslo"
+      },
+      "treff_bekreftet": true,
+      "som_den_er_i_kontrakt": "nei"
+    },
+    "del3_feil": [
+      {
+        "id": "F1",
+        "kategori": "batteri_elbil",
+        "en_setning": "Feilen er at rekkevidden har falt kraftig og bilen viser feilmelding om høyvoltbatteriet",
+        "dato_oppdaget": "2026-01-10",
+        "kan_bilen_brukes": "ja",
+        "selger_sa_noe": "nei",
+        "hvor_sto_det": [],
+        "avskrift_selger": null,
+        "svar_pa_direkte_sporsmal": false,
+        "verksted_sett_pa": "ja_skriftlig",
+        "verksted_navn_dato": "NAF Oslo, 20.01.2026",
+        "rapport_sier": {
+          "hva": "ja",
+          "hvorfor": "ja",
+          "var_der_ved_overtakelse": "ja",
+          "mer_enn_normal_slitasje": "ja",
+          "kostnad": "ja"
+        },
+        "kostnad_kr": 98000,
+        "kostnad_over_pris_bekreftet": false,
+        "avskrift_verksted": "«Cellemodul 3 har for lav spenning. Feilen går ut over normal degradering for bilens alder og kjørelengde og var etter vår vurdering til stede ved overtakelsen.»"
+      }
+    ],
+    "km_na": 31500,
+    "del6_kontakt_med_selger": {
+      "tatt_opp_med_selger": "ja_skriftlig",
+      "dato_forste_gang": "2026-01-22",
+      "selgers_svar": "avvist",
+      "avtale_inngatt": "nei",
+      "avtale_beskrivelse": null,
+      "avtale_gjelder_feil": [],
+      "selger_la_frem_dokumentasjon": "nei",
+      "selger_dokumentasjon_kort": null
+    },
+    "del7_onske_og_kontakt": {
+      "onsket_losning": "prisavslag",
+      "kjoper": {
+        "navn": "Harald Testsen",
+        "adresse": "Prøvegata 5, 0150 Oslo",
+        "epost": "harald@example.no"
+      }
+    },
+    "bekreftelser": {
+      "opplysningene_er_riktige": true,
+      "lest_at_brevet_ikke_er_juridisk_radgivning": true
+    }
+  },
+  "feil_id": "F1",
+  "idag": "2026-10-09",
+  "modus": "generell",
+  "fast": {
+    "tekst": "Forbrukerklageutvalget legger i saker om {komponent_bestemt} avgjørende vekt på om en sakkyndig vurdering viser at feilen går ut over det som er påregnelig for bilens alder og kjørelengde, og om feilen kan føres tilbake til leveringstidspunktet, se for eksempel {eksempler}. I min sak har verkstedet konkludert slik: «{avskrift_verksted}». Bilen var {alder_ved_kjop} år gammel med {km_ved_kjop} km da jeg kjøpte den for {pris_kr} kr, og utbedringen er beregnet til {kostnad_kr} kr. Vurderingen oppfyller de kravene utvalget stiller.",
+    "spor": "C"
+  },
+  "kandidater": [
+    {
+      "vedtak": {
+        "vedtak_id": 3086,
+        "feil_id": "f1",
+        "spor": "C",
+        "saksnummer": "FKU-2026-104368",
+        "vedtaksdato": "2026-02-02",
+        "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-104368.pdf",
+        "utfall": "medhold",
+        "grunn": null,
+        "selger_type": "forhandler",
+        "kategori": "motor",
+        "komponenter": [
+          "el-motor",
+          "rotorlager",
+          "reduksjonskasse"
+        ],
+        "grunnlag": "avvik_fra_avtale",
+        "spor_vunnet": [
+          "C"
+        ],
+        "a_variant": "uttalelse",
+        "alvor": [],
+        "dager_etter_levering": 270,
+        "viste_seg_kilde": "vedtak",
+        "lovversjon": "før_2024",
+        "alder_ved_kjop": 5,
+        "km_ved_kjop": 2079,
+        "kjopesum_nok": 63000,
+        "tilkjent_totalt_nok": 64277,
+        "utbedringskostnad_nok": 52600,
+        "belop_tilkjent_nok": 63000,
+        "sanksjon": "heving",
+        "selger_bevis_finnes": false,
+        "forbehold": [],
+        "forste_henvendelse_dato": "2023-05-23",
+        "start_dato": "2022-08-22",
+        "antall_feil": 1,
+        "opplysninger": [
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Velholdt Twizy",
+            "status": "omtvistet",
+            "gjelder": "Bilen er velholdt",
+            "rekkevidde": "generell",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "lav kilometerstand",
+            "status": "omtvistet",
+            "gjelder": "Lav kilometerstand",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "4 hjuls elektrisk motorsykkel som kan kjøres på vanlig førerkort klasse B",
+            "status": "omtvistet",
+            "gjelder": "Kjøretøyets art og førerkortkrav",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Realistisk rekkevidde 60-70 km.",
+            "status": "omtvistet",
+            "gjelder": "Rekkevidde 60-70 km",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "5 Årlige service utført nå.",
+            "status": "omtvistet",
+            "gjelder": "Årlige servicer utført",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Følger med vinterdekk.",
+            "status": "omtvistet",
+            "gjelder": "Vinterdekk følger med",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Denne har ettermontert nedfellbare sideruter og stereoanlegg (streaming via telefon (se bilder)",
+            "status": "omtvistet",
+            "gjelder": "Ettermontert utstyr: nedfellbare sideruter og stereoanlegg",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "Kilometerstand oppgitt til 2079 i kjøpekontrakten",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          }
+        ],
+        "bevis": [
+          {
+            "dato": "2023-05-12",
+            "type": "verkstedrapport",
+            "arsak": "komponent",
+            "sitat": "Klageren har fremlagt dokumentasjon fra Motor Forum Oslo og NAF der det står at bilen har feil med ulyd fra rotorlagrene i el-motoren og innvendig feil i reduksjonskasse, som medfører at både el-motor og girkasse må skiftes.",
+            "avsender": "Motor Forum Oslo (ordrebekreftelse)",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 52601,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2023-06-06",
+            "type": "verkstedrapport",
+            "arsak": "komponent",
+            "sitat": "Klageren har fremlagt dokumentasjon fra Motor Forum Oslo og NAF der det står at bilen har feil med ulyd fra rotorlagrene i el-motoren og innvendig feil i reduksjonskasse, som medfører at både el-motor og girkasse må skiftes.",
+            "avsender": "Motor Forum Oslo (tilleggsuttalelse datert 26.11.2024)",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": 5195,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2025-01-27",
+            "type": "sakkyndig_uttalelse",
+            "arsak": "komponent",
+            "sitat": "Ifølge uttalelsen fra NAF er dette komponenter i bilen som forventes å ha en vesentlig lengre levetid enn 7 år og … ikke påregnelig å skifte disse komponentene sett hen til bilens alder og kilometerstand.",
+            "avsender": "NAF",
+            "paregnelig": "utover",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          }
+        ]
+      },
+      "kriterier": [],
+      "antall_sterkere": 0,
+      "svakhet": null
+    },
+    {
+      "vedtak": {
+        "vedtak_id": 3128,
+        "feil_id": "f1",
+        "spor": "C",
+        "saksnummer": "FKU-2025-58214",
+        "vedtaksdato": "2025-11-05",
+        "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-58214.pdf",
+        "utfall": "delvis_medhold",
+        "grunn": null,
+        "selger_type": "forhandler",
+        "kategori": "rust",
+        "komponenter": [
+          "høyre kanal"
+        ],
+        "grunnlag": "avvik_fra_avtale",
+        "spor_vunnet": [
+          "C"
+        ],
+        "a_variant": "uttalelse",
+        "alvor": [],
+        "dager_etter_levering": 178,
+        "viste_seg_kilde": "vedtak",
+        "lovversjon": "før_2024",
+        "alder_ved_kjop": 15,
+        "km_ved_kjop": 178200,
+        "kjopesum_nok": 49000,
+        "tilkjent_totalt_nok": 17416,
+        "utbedringskostnad_nok": 25378,
+        "belop_tilkjent_nok": 12689,
+        "sanksjon": "prisavslag_og_erstatning",
+        "selger_bevis_finnes": false,
+        "forbehold": [
+          "annet"
+        ],
+        "forste_henvendelse_dato": "2023-12-21",
+        "start_dato": "2023-06-23",
+        "antall_feil": 2,
+        "opplysninger": [
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Selger utfører ACservice før overlevering",
+            "status": "omtvistet",
+            "gjelder": "AC-service før overlevering",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": "Utvalget finner derfor at opplysningen i kontrakten om at klageren er gjort kjent med bilens kosmetiske stand ikke kan tillegges noe særlig vekt.",
+            "ordlyd": "Kjøper er kjent med bilens kosmetiske tilstand",
+            "status": "avvist",
+            "gjelder": "bilens kosmetiske tilstand",
+            "rekkevidde": "generell",
+            "gjelder_feil": [
+              "f1",
+              "f2"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Hel og grei Golf med hyggelig km stand",
+            "status": "omtvistet",
+            "gjelder": "bilens generelle stand og kilometerstand",
+            "rekkevidde": "generell",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Utstyrt med blant annet cruise kontroll, Bluetooth tilkobling, 2-soners klima og alu. felger",
+            "status": "omtvistet",
+            "gjelder": "utstyr: cruise control, Bluetooth, 2-soners klima, alufelger",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Siste service er nylig utført",
+            "status": "omtvistet",
+            "gjelder": "service",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Registerreim sist skiftet på 168t km i 05/21",
+            "status": "omtvistet",
+            "gjelder": "registerreim",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Bilen er nettopp EU-godkjent for 2 nye år",
+            "status": "omtvistet",
+            "gjelder": "EU-godkjenning",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f1"
+            ],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Gode sommer og vinterhjul",
+            "status": "omtvistet",
+            "gjelder": "hjul",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "muntlig",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": "Klageren har vist til at innklagde hadde opplyst at de skulle «ordne all rust» på bilen, men en slik avtale er ikke videre dokumentert, utenom klagerens egen forklaring.",
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "at selger skulle ordne all rust / at alt av rust var ordnet",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f1",
+              "f2"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          }
+        ],
+        "bevis": [
+          {
+            "dato": "2024-03-02",
+            "type": "NAF_test",
+            "arsak": "rotarsak",
+            "sitat": "Ut ifra NAF rapporten, er omfanget av rust på høyre kanal noe som overstiger hva en kan forvente sett hen til bilens alder.",
+            "avsender": "NAF",
+            "paregnelig": "utover",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1",
+              "f2"
+            ],
+            "ved_levering": "ja",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": "Klageren har dokumentert utlegg til NAF-test på 2 650 kroner og taksering av rustskadene på 800 kroner.",
+            "avsender": "NAF",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2024-09-13",
+            "type": "takst",
+            "arsak": "ingen",
+            "sitat": "Klageren har innhentet et prisoverslag på 25 378 kroner for utbedring av rusten.",
+            "avsender": "Lenvik Billakkering AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 25378,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1",
+              "f2"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2024-09-13",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": "Klageren har dokumentert utlegg til NAF-test på 2 650 kroner og taksering av rustskadene på 800 kroner.",
+            "avsender": "Lenvik Billakkering AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "bilder",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": null,
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1",
+              "f2"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          }
+        ]
+      },
+      "kriterier": [],
+      "antall_sterkere": 0,
+      "svakhet": null
+    }
+  ],
+  "fulltekst": {
+    "3086": "1\nVedtak i Forbrukerklageutvalgets sak 104368\nSakens parter\nKlager: [KLAGER]\nInnklaget: Haraldsen Auto AS, [ADRESSE]\nKort oppsummering av saken og utfall\nKjøp av brukt bil fra næringsdrivende. Klage på mangler på en Renault Twizy 2017-\nmodell. Prinsipalt krav om heving og erstatning. Subsidiært krav om prisavslag og\nerstatning. Medhold.\nSammendrag av faktiske forhold og partenes anførsler\nKlageren kjøpte 22.08.2022 en brukt Renault Twizy 2017-modell, med\nregistreringsnummer [PERSONOPPLYSNING], av innklagde for 63 000 kroner. Kjøpekontrakt er fremlagt. I\ndenne er bilens kilometerstand oppgitt til å være 2079. Det står også i kjøpekontrakten at\nbilen ble solgt med 3 måneder/ 3 000 kilometers garanti.\nBilen ble annonsert til salgs på Finn.no. Salgsannonsen er fremlagt. I denne står det\nfølgende under punktet «Beskrivelse»:\n«Velholdt Twizy med lav kilometerstand selges\n4 hjuls elektrisk motorsykkel som kan kjøres på vanlig førerkort klasse B\nRealistisk rekkevidde 60-70 km.\n- 5 Årlige service utført nå.\n- Følger med vinterdekk.\n2\n- Denne har ettermontert nedfellbare sideruter og stereoanlegg (streaming via\ntelefon (se bilder)»\nKlageren forklarer at han i mai 2023 skulle levere bilen inn på service hos Motor Forum\nOslo. På service ble det ifølge klageren oppdaget feil i form av høy elektrisk hvining.\nDette medførte at motor og drivverk måtte byttes. Klageren har til støtte for dette fremlagt\nordrebekreftelse fra Motor Forum Oslo datert 12.05.2023. I denne står det følgende:\n«1. KONT. SERV LAMPE LYSER\n2. KONT. ULYD VED HASTIGHET, HVINELYD\nVANSKELIG Å LOKALISERE HVORFRA.\nFEILSØKT\nFUNNET ULYD/DEFEKT EL MOTOR\nNY EL MOTOR OG GIRKASSE MÅ SKIFTES\nSENDT PRISOVERSLAG TIL KUNDE»\nAv dokumentasjonen fra Motor Forum Oslo står det at estimerte reparasjonskostnader er\n52 600,63 kroner inkl. mva.\nKlageren har også fremlagt en tilleggsuttalelse fra Motor Forum Oslo datert 26.11.2024. I\ndenne står det følgende:\n«Vi har funnet ulyd fra rotor lagrene i el motoren.\nDet er også en innvendig feil i reduksjons kasse.\nEl motor og reduksjons kasse bør skiftes.\nVi kan dessverre ikke konstanter når skaden har oppstått vi har bare konstanter\nulyd fra rotor lageret og reduksjons kasse 6/6-2023 på km:5195.\nVi kontrollerte bare ulyden vi har ikke åpnet/demontert noe videre for å kontrollere\ngraden av slitasje i forhold til km..»\n3\nKlageren har til slutt fremlagt uttalelse fra NAF datert 27.01.2025 til støtte for sin sak. I\ndenne står det følgende:\n«Bakgrunn:\nOvennevnte elektriske firehjuls-motorsykkel har feil i motor og girkasse. Begge\ndisse komponentene må, ifølge Motor Forum, Oslo, skiftes for å bli kvitt feilene.\nBilen er ikke besiktiget eller prøvekjørt av oss.\nVurdering:\nRenault Twizy har en enkel elektrisk motor med langt færre bevegelige deler enn\nen forbrenningsmotor. Dette betyr vanligvis svært god driftssikkerhet. Girkassen er\nogså enkel og ukomplisert. I tillegg er bilen lett og motoreffekten moderat. Dette\nunderbygger ytterligere god driftssikkerhet.\nMotor Forum, Oslo, forklarer at det er en ulyd i lagrene til elmotoren og at det er en\ninnvendig feil i girkassen, uten at sistenvent er nærmere spesifisert.\nKonklusjon:\nBåde en el-motor og en girkasse forventes å ha vesentlig lengre levetid enn syv år\nog 7.000 kilometer.\nVår konklusjon er derfor at det ikke er påregnelig å måtte skifte disse\nkomponentene allerede nå.»\nIfølge klageren har lyden vært der siden kjøpet, men klageren trodde det skulle være slik.\nIfølge klageren var det hans kone som primært skulle bruke bilen til og fra jobb. Klageren\nhar selv så vidt kjørt bilen. Klageren opplyser at bilen er kjørbar og har vært noe i bruk\netter at feilen ble oppdaget.\nKlageren reklamerte skriftlig til innklagde i fremlagt e-postkorrespondanse fra 23.05.2023.\nKlageren anfører på denne bakgrunn at bilen er mangelfull. Han krever som følge av\ndette prinsipalt heving og erstatning, subsidiært prisavslag og erstatning.\nInnklagde har blant annet i e-post datert 29.10.2024 og 28.11.2025 gjort rede for sitt syn\npå saken. Innklagde avviser klagerens krav. De viser til at de tidligere blant annet har\ntilbudt klageren å dele reparasjonskostnaden 50/50, men klageren ønsket ikke å godta\nnoen av tilbudene. Innklagde viser også til at det gikk omtrent 10 måneder fra klageren\n4\nkjøpte bilen til feilen oppsto. I denne perioden har klageren kjørt bilen over 3 000\nkilometer. Innklagde mener som følge av dette at feilen ikke var til stede på\nkjøpstidspunktet. Innklagde viser også til at garantitiden i kjøpekontrakten er utløpt.\nInnklagde har heller ikke selv undersøkt bilen og har heller ikke kunnskap om hvordan\nbilen er brukt og vedlikeholdt i klagerens eiertid. Når det gjelder uttalelsen fra NAF, viser\ninnklagde til at den er noe tynn da NAF heller ikke har undersøkt bilen selv, men uttaler\nseg på generelt grunnlag.\nForbrukerklageutvalget går ikke nærmere inn på partenes anførsler i sakssammendraget,\nenn det som er beskrevet ovenfor. Utvalget har mottatt alle saksdokumentene og har satt\nseg inn i disse.\nSakens gang\nSaken ble 24.02.2024 brakt inn for Forbrukertilsynet og fikk saksnummer 24/3097.\nForbrukertilsynet henvendte seg skriftlig til innklagde første gang 11.10.2024. Saken ble\nhenlagt som uforlikt ved Forbrukertilsynets brev av 14.01.2025. Klagen til\nForbrukerklageutvalget er datert 15.01.2025, og er rettidig. Forbrukerklageutvalget\nmottok klagen 15.01.2025.\nSaken ble lagt frem i Forbrukerklageutvalgets møte den 02.02.2026.\nKlagerens påstander\nKlageren har prinsipalt nedlagt påstand om heving med 63 000 kroner og erstatning med\n1 277 kroner. Subsidiært har klageren nedlagt påstand om prisavslag med 63 000 kroner\nog erstatning med 1 277 kroner. Klageren har også krevd renter.\nUtvalget ser slik på saken\nSaken gjelder et kjøp mellom en næringsdrivende og en forbruker, og forholdet vurderes\nderfor etter forbrukerkjøpsloven 21. juni 2002 nr. 34 (fkjl.), jf. lovens § 1. Utvalget\nbemerker at forbrukerkjøpsloven ble endret fra 01.01.2024. Fordi kjøpet skjedde før\ndenne datoen, reguleres denne saken av forbrukerkjøpsloven slik den lød før dette\ntidspunktet.\nKlageren anfører at bilen er mangelfull.\n5\nEtter fkjl. § 15 første ledd skal tingen være i samsvar med de krav til art, mengde, kvalitet,\nandre egenskaper og innpakning som følger av avtalen. Det fremgår av fkjl. § 15 andre\nledd, bokstav b at tingen skal svare til det som forbrukeren har grunn til å forvente ved\nkjøp av en slik ting når det gjelder holdbarhet og andre egenskaper. I motsatt fall\nforeligger det en mangel, jf. fkjl. § 16 første ledd bokstav a.\nKlageren har fremlagt dokumentasjon fra Motor Forum Oslo og NAF der det står at bilen\nhar feil med ulyd fra rotorlagrene i el-motoren og innvendig feil i reduksjonskasse, som\nmedfører at både el-motor og girkasse må skiftes. Ifølge uttalelsen fra NAF er dette\nkomponenter i bilen som forventes å ha en vesentlig lengre levetid enn 7 år og 7 000\nkjørte kilometer, og det er som følge av dette ikke påregnelig å skifte disse\nkomponentene sett hen til bilens alder og kilometerstand. Utvalget har sett hen til at\ninnklagde har tilbudt klageren en form for avhjelp ved at partene skulle dele\nreparasjonskostnaden 50/50 mellom seg forutsatt at klageren leverte bilen inn til\ninnklagde. Utvalget finner imidlertid ikke at dette tilbudet tilfredsstiller lovens krav til\navhjelp etter fkjl. § 30. Utvalget finner etter dette at bilen er mangelfull etter fkjl. § 15 første\nledd.\nKlageren har prinsipalt krevd heving. Heving av kjøpet krever at mangelen ikke er\nuvesentlig, jf. fkjl. § 32.\nIfølge dokumentasjonen fra Motor Forum Oslo koster det 52 600 kroner inkl. mva. å\nreparere manglene med bilen. Utvalget finner at vilkårene for heving etter fkjl. § 32 er\noppfylt og viser til at reparasjonskostnaden nærmer seg nesten hele bilens kjøpesum.\nVirkningene av heving er at partenes plikt til å oppfylle avtalen faller bort og at mottatte\nytelser skal returneres, jf. fkjl. § 49 første og andre ledd. Hvordan kjøpsgjenstanden skal\ntilbakeføres er omtalt i NOU 1993: 27 s. 149, hvor det fremkommer at:\n«Kjøperen må normalt kunne nøye seg med å stille gjenstanden til selgerens disposisjon\npå sin egen bopel. Han plikter dermed ikke å besørge og bekoste den sendt tilbake til\nselgeren».\nUtvalget bemerker at innklagde ikke har krevd nyttefradrag.\nRenter på kjøpesummen, i henhold til forsinkelsesrenteloven § 3 første ledd, første\npunktum, løper ifølge fkjl. § 50 andre ledd fra den dagen forbrukeren reklamerte første\n6\ngang og fram til betaling skjer. Klageren reklamerte første gang den 23.05.2023, og\nrenter regnes fra denne datoen.\nKlageren har i tillegg krevd erstatning for saksbehandlingsgebyret han måtte betale for å\nfå saken behandlet hos Forbrukerklageutvalget.\nKlageren kan kreve erstatning for kostnader som han har hatt som følge av mangelen, jf.\nfkjl. § 33.\nDen 01.07.2024 ble det innført saksbehandlingsgebyr for å sende saken inn til mekling\nhos Forbrukertilsynet og klage saken inn til Forbrukerklageutvalget, jf.\nforbrukerklageloven § 7 jf. forbrukerklageforskriften § 2a.\nKrav om saksbehandlingsgebyr ble behandlet i utvidet utvalg i Forbrukerklageutvalgets\nsak FKU-55729, den 24.09.2025. Her ble det konkludert med at saksbehandlingsgebyret\nskal anses som et erstatningskrav som kan dekkes etter alminnelige erstatningsregler,\ndersom klageren får medhold i kravet sitt.\nUtvalget finner etter dette at saksbehandlingsgebyret kan dekkes etter reglene i fkjl. § 33.\nUtvalget finner at kostnaden på 1 277 kroner i saksbehandlingsgebyr til\nForbrukerklageutvalget, ble påført i forbindelse med den mangelfulle bilen, jf. § 33.\nUtvalget tilkjenner etter dette erstatning for saksbehandlingsgebyr på 1 277 kroner.\nEtter forsinkelsesrenteloven § 2 løper renten på beløpet fra 30 dager etter at skriftlig\npåkrav ble fremsatt. Første gang klageren rettet skriftlig og beløpsfestet krav om\nerstatning var ved klagen av saken til Forbrukerklageutvalget datert 15.01.2025. Kopi av\nklageskjemaet ble oversendt innklagde i brev av 28.11.2025, og renter regnes derfor fra\n28.12.2025.\nKonklusjon og vedtak\nForbrukerklageutvalget fatter slikt vedtak:\n1. Haraldsen Auto AS plikter å betale 63 000 – sekstitretusen – kroner til [KLAGER] med tillegg av forsinkelsesrenter etter forsinkelsesrenteloven § 3 første\nledd første punktum fra 23.05.2023 til betaling skjer, mot at Renault Twizy med\nregistreringsnummer [PERSONOPPLYSNING] stilles til disposisjon for Haraldsen Auto AS.\n7\n2. Haraldsen Auto AS plikter å betale 1 277 – ettusentohundreogsyttisyv – kroner til\n[KLAGER] med tillegg av forsinkelsesrenter etter forsinkelsesrenteloven §\n3 første ledd første punktum fra 28.12.2025 til betaling skjer.\nOppfyllelsesfristen er 1 – én – måned fra vedtakets forkynnelse.\nVedtaket er enstemmig.\nPorsgrunn, den 02.02.2026\n[PERSON] [PERSON]\n[PERSON]\nSaksbehandler: [PERSON]",
+    "3128": "1\nVedtak i Forbrukerklageutvalgets sak 58214\nSakens parter\nKlager: [KLAGER]\nInnklaget: Alt i Alt AS, [ADRESSE]\nKort oppsummering av saken og utfall\nKjøp av bruktbil fra forhandler. Klage på rust. Krav om prisavslag og erstatning. Delvis\nmedhold.\nSammendrag av faktiske forhold og partenes anførsler\nKlageren kjøpte 20.06.2023 en Volkswagen Golf 2008-modell med registreringsnummer\n[PERSONOPPLYSNING] for 49 000 kroner. Kilometerstand på kjøpstidspunktet var 178 200 km.\nKjøpekontrakten er fremlagt, hvor det fremgår følgende opplysninger: «Selger utfører ACservice før overlevering. Kjøper er kjent med bilens kosmetiske tilstand».\nBilen ble før kjøp annonsert på Finn.no, og i salgsannonsen ble bilen beskrevet som\nfølger:\n«Hel og grei Golf med hyggelig km stand. Utstyrt med blant annet cruise kontroll,\nBluetooth tilkobling, 2-soners klima og alu. felger. Siste service er nylig utført.\nRegisterreim sist skiftet på 168t km i 05/21. Bilen er nettopp EU-godkjent for 2 nye\når. Gode sommer og vinterhjul».\nBilen ble overlevert klageren 23.06.2023. Klageren oppdaget 18.12.2023 at det var mye\nrust i kanalene på bilen. Klageren har fremlagt bilder av rusten, og forklart at dersom hun\ntar borti rustområde, så smuldrer det seg opp. Klageren reklamerte på dette til innklagde\n21.12.2023, hvor hun påpekte at innklagde hadde informert henne før kjøp at «alt av rust\n2\nvar ordnet». Klageren mente at utbedringen ikke hadde vært god nok i så tilfelle,\nettersom det forelå mye rust på bilen. Klageren viste til at det var opplyst før kjøp at bilen\nnettopp hadde blitt godkjent ved periodisk kjøretøykontroll, hvilket hun stilte spørsmål\nved, med tanke på omfanget av rusten. Klageren bemerket også at hun ikke hadde blitt\nopplyst om rusten på bilen før kjøp, og spurte innklagde om de var villige til å utbedre\nforholdet. Klageren mottok ikke svar på reklamasjonen.\nKlageren fikk også foretatt en NAF-test på bilen, hvor det blant annet ble påvist «lakkrust\nkanaler forkant og under hengsling til fordørene». Klageren har fremlagt kvittering for\ndenne NAF-testen på 2 650 kroner. Klageren har også innhentet en NAF-rapport datert\n02.03.2024, hvor det fremgår følgende vurdering:\n«Det er mye rust skjult under steinsprutmasse og tectyl på spesielt høyre kanal,\nstort hull foran bakhjul, men rust hele veien mer eller mindre i hele kanalen, skjult\nunder steinsprutbeskyttelsen.\nDet er også rust i venstre kanal fra bahjul og til midt under bakdør, også skjult\nunder tectyl og steinsprut masse.\nDette er rust som har begynt for en god stund siden, og som har bare fortsatt å\nruste mer og mer over tid, skjult under tectyl og steinsprut masse.\nPå høyre kanal er det mer enn det som kan forventes i forhold til bilens alder.\nRusten som for det meste har kommet fra innsiden har nok begynt for en god\nstund tilbake siden og bare utviklet seg mer og mer over tid.\nRustskadene kan nok repareres, ved at begge kanalene på bilen blir skiftet\nSlik som rusten i spesielt høyre kanal er ville ikke bilen blitt godkjent på EUkontroll».\nDet er også fremlagt en skadetakst fra Lenvik Billakkering AS datert 13.09.2024, hvor de\nhar gitt et prisoverslag på 25 378 kroner for utbedring av rusten. Klageren har betalt\n800 kroner for takseringen i henhold til fremlagt faktura datert 13.09.2024.\nInnklagde har avvist klagerens krav, med henvisning til at klageren ved kjøpet var gjort\nkjent med bilens kosmetiske tilstand, jf. kjøpekontrakten. Innklagde viste også til at bilen\nvar 16 år gammel og hadde kjørt nesten 180 000 km på kjøpstidspunktet, og mente at\n3\nklageren derfor måtte forvente rust og slitasje på bilen. De var ikke villige til å tilby noe\nmer i saken, ettersom de allerede hadde fått erstatning i form av reparasjon på bilen\ntilsvarende 33 435,43 kroner.\nKlageren har kommentert innklagdes anførsel vedrørende erstatning, hvor hun opplyser\nat erstatningen ble gitt grunnet en annen feil ved bilen. Klageren har forklart at hun var\ngjort kjent med kosmetisk rust på bilen, men ikke rust i kanaler som er i bærende\nkonstruksjoner. Ifølge klageren ble hun informert av NAF at bilen ikke var trafikksikker\ngrunnet rustomfanget.\nForbrukerklageutvalget går ikke nærmere inn på partenes anførsler i sakssammendraget,\nenn det som er beskrevet ovenfor. Utvalget har mottatt alle saksdokumentene og har satt\nseg inn i disse.\nSakens gang\nSaken ble 27.12.2023 brakt inn for Forbrukertilsynet og fikk saksnummer 23/17456.\nForbrukertilsynet henvendte seg skriftlig til innklagde første gang 18.07.2024. Saken ble\nhenlagt som uforlikt ved Forbrukertilsynets brev av 05.09.2024, og klagen til\nForbrukerklageutvalget ble sendt inn 03.10.2024.\nSaken ble lagt frem i Forbrukerklageutvalgets møte den 05.11.2025.\nKlagerens påstand\nKlageren har nedlagt påstand om 25 378 kroner i prisavslag. Klageren har også krevd\n4 727 kroner i erstatning.\nUtvalget ser slik på saken\nSaken gjelder et kjøp mellom en næringsdrivende og en forbruker, og forholdet vurderes\nderfor etter forbrukerkjøpsloven 21. juni 2002 nr. 34 (fkjl.), jf. lovens § 1. Utvalget\nbemerker at forbrukerkjøpsloven ble endret fra 01.01.2024. Fordi kjøpet skjedde før\ndenne datoen, reguleres denne saken av forbrukerkjøpsloven slik den lød før dette\ntidspunktet.\n4\nEtter fkjl. § 15 første ledd skal tingen være i samsvar med de krav til art, mengde, kvalitet,\nandre egenskaper og innpakning som følger av avtalen. Det fremgår av fkjl. § 15 andre\nledd, bokstav b at tingen skal svare til det som forbrukeren har grunn til å forvente ved\nkjøp av en slik ting når det gjelder holdbarhet og andre egenskaper. I motsatt fall\nforeligger det en mangel, jf. fkjl. § 16 første ledd bokstav a.\nHvorvidt tingen er mangelfull skal vurderes ut ifra forholdene ved leveringen, jf. fkjl. § 18\nførste ledd, jf. §§ 14 og 7. I henhold til alminnelige bevisregler er det klageren som har\nbevisbyrden for å sannsynliggjøre den eller de omstendigheter som kravet er grunnet på.\nDet følger av fkjl. § 16 tredje ledd at forbrukeren ikke kan gjøre gjeldende en mangel han\neller hun kjente, eller måtte kjenne til før kjøpet.\nInnklagde har vist til at klageren var gjort kjent med bilens kosmetiske tilstand før kjøp, jf.\nkjøpekontrakten. Klageren har bekreftet at hun var gjort kjent med kosmetisk rust på\nbilen, men ikke rust i bærende konstruksjoner. Ifølge fremlagt NAF rapport var mye av\nrusten skjult, samt at rusten foreligger i hovedsak på bilens kanaler, slik at dette fremstår\nsom noe klageren ikke ville kunne oppdaget ved en visuell sjekk av bilen. Utvalget finner\nderfor at opplysningen i kontrakten om at klageren er gjort kjent med bilens kosmetiske\nstand ikke kan tillegges noe særlig vekt.\nKlageren har vist til at innklagde hadde opplyst at de skulle «ordne all rust» på bilen, men\nen slik avtale er ikke videre dokumentert, utenom klagerens egen forklaring. Innklagde\nhar anført at klageren allerede har fått erstatning i saken, men klageren har opplyst at\ndenne erstatningen gjaldt en annen feil ved bilen. Utvalget kan ikke vektlegge den ene\nparts forklaring fremfor den andres, og finner det ikke sannsynliggjort at det ble gitt\nerstatning som kompensasjon for rustskadene.\nSaken gjelder en bil som var 15 år på kjøpstidspunktet, og som ble solgt til en kjøpesum\npå 49 000 kroner. Ut ifra dette, måtte klageren forvente at det forelå noe rust på bilen.\nSpørsmålet i saken blir dermed om omfanget av rust overstiger det klageren kunne\nforvente ved kjøp av bilen, tatt i betraktning bilens alder, kilometerstand, kjøpesum og de\nopplysninger som ble gitt om bilen før kjøp.\nUt ifra NAF rapporten, er omfanget av rust på høyre kanal noe som overstiger hva en kan\nforvente sett hen til bilens alder. Det vises også til at bilen ikke hadde blitt godkjent ved\nperiodisk kjøretøykontroll på bakgrunn av rusten på høyre kanal. Rapporten viser også til\n5\nat bilen har begynt å ruste for en god stund siden, og at dette har utviklet seg over tid, slik\nat utvalget finner det sannsynliggjort at rusten kan føres tilbake til leveringen, jf. fkjl. § 18\nførste ledd, jf. §§ 14 og 7. Rusten på høyre kanal utgjør således en mangel, jf. fkjl. § 16\nførste ledd bokstav a.\nNår det gjelder de øvrige rustskadene, finner ikke utvalget det tilstrekkelig sannsynliggjort\nat omfanget overstiger hva klageren kunne forvente ved kjøp av bilen, all den tid dette\nikke fremgår av NAF-rapporten. Øvrige rustskader utgjør dermed ingen mangel ved bilen.\nEtter fkjl. § 31 første ledd skal prisavslaget settes slik at forholdet mellom nedsatt og\navtalt pris svarer til forholdet mellom tingens verdi i mangelfull og kontraktsmessig stand\npå leveringstidspunktet.\nKlageren har innhentet et prisoverslag på 25 378 kroner for utbedring av rusten.\nPrisoverslaget gjelder imidlertid utbedring av rust på begge kanaler, og utvalget har\nfunnet at kun rusten på høyre kanal utgjør en mangel ved bilen. Utvalget finner derfor at\nprisavslaget må settes skjønnsmessig. Utvalget mener at prisavslaget kan settes til\nhalvparten av fremlagt prisoverslag, slik at klageren tilkjennes 12 689 kroner i prisavslag.\nKlageren har også krevd erstatning. Klageren kan kreve erstatning for kostnader som\nhan har hatt som følge av mangelen, jf. fkjl. § 33.I tråd med fkjl. § 52 første ledd skal\nerstatningen svare til det økonomiske tapet, herunder utlegg, prisforskjell og tapt\nfortjeneste, som den annen part er påført ved kontraktsbruddet.\nKlageren har dokumentert utlegg til NAF-test på 2 650 kroner og taksering av\nrustskadene på 800 kroner. Begge utlegg er som følge av mangelen på bilen, og\ntilkjennes i sin helhet.\nKlageren har også krevd erstatning for saksbehandlingsgebyret på 1 277 kroner. Krav\nom saksbehandlingsgebyr ble behandlet i utvidet utvalg i Forbrukerklageutvalgets sak,\nFKU-55729, den 24.09.2025. Her ble det konkludert med at saksbehandlingsgebyret skal\nanses som et erstatningskrav som kan dekkes etter alminnelige erstatningsregler,\ndersom klageren får medhold i kravet sitt. Utvalget finner etter dette at\nsaksbehandlingsgebyret kan dekkes etter fkjl. § 33, og klageren tilkjennes etter dette\nerstatning for saksbehandlingsgebyret på 1 277 kroner.\nKlageren tilkjennes etter dette en samlet sum på 17 416 kroner.\n6\nKonklusjon og vedtak\nForbrukerklageutvalget fatter slikt vedtak:\nAlt i Alt AS plikter å betale 17 416 – syttentusenfirehundreogseksten – kroner til [KLAGER].\nOppfyllelsesfristen er 1 – én – måned fra vedtakets forkynnelse.\nVedtaket er enstemmig.\nPorsgrunn, den 05.11.2025\n[PERSON] [PERSON]\n[PERSON]\nSaksbehandler: [PERSON]"
+  },
+  "raa": {
+    "valgt_vedtak_id": null,
+    "eksempel_vedtak_ids": [
+      3128,
+      3086
+    ],
+    "grunn_ingen": null,
+    "begrunnelse": "Generelt avsnitt etter fast blokk for spor C. Ledd 1 bygger på utvalgets egen vurdering i rustsaken (forventning ut fra alder, kilometerstand og kjøpesum, og tilbakeføring til leveringen) og motorsaken (sakkyndig uttalelse om at utskifting ikke var påregnelig). Ledd 2 gjengir verkstedets konklusjon og kjøperens egne fakta. Sitat er utelatt fordi de aktuelle setningene går over linjeskift.",
+    "sitat": null,
+    "setninger": [
+      {
+        "ledd": 1,
+        "om": "vedtak",
+        "tekst": "Forbrukerklageutvalget vurderer om en feil går ut over det kjøperen kunne forvente ved kjøp av bilen, tatt i betraktning bilens alder, kilometerstand og kjøpesum, se for eksempel sak {{saksnummer}}.",
+        "belegg": {
+          "vedtak_id": 3128,
+          "sitat": "forvente ved kjøp av bilen, tatt i betraktning bilens alder, kilometerstand, kjøpesum og de"
+        }
+      },
+      {
+        "ledd": 1,
+        "om": "vedtak",
+        "tekst": "Utvalget har i den vurderingen bygget på en sakkyndig uttalelse om at det ikke var påregnelig å måtte skifte de aktuelle komponentene, se for eksempel sak {{saksnummer}}.",
+        "belegg": {
+          "vedtak_id": 3086,
+          "sitat": "kjørte kilometer, og det er som følge av dette ikke påregnelig å skifte disse"
+        }
+      },
+      {
+        "ledd": 1,
+        "om": "vedtak",
+        "tekst": "Utvalget legger også vekt på om den sakkyndige dokumentasjonen gjør det sannsynlig at feilen kan føres tilbake til leveringen, se for eksempel sak {{saksnummer}}.",
+        "belegg": {
+          "vedtak_id": 3128,
+          "sitat": "utvalget finner det sannsynliggjort at rusten kan føres tilbake til leveringen"
+        }
+      },
+      {
+        "ledd": 2,
+        "om": "min_sak",
+        "tekst": "Feilen ved min bil er at rekkevidden har falt kraftig, og at bilen viser feilmelding om høyvoltbatteriet.",
+        "belegg": null
+      },
+      {
+        "ledd": 2,
+        "om": "min_sak",
+        "tekst": "Verkstedet har konkludert slik: «Cellemodul 3 har for lav spenning. Feilen går ut over normal degradering for bilens alder og kjørelengde og var etter vår vurdering til stede ved overtakelsen.»",
+        "belegg": null
+      },
+      {
+        "ledd": 2,
+        "om": "min_sak",
+        "tekst": "Bilen var 2 år gammel og hadde gått 22 000 km da jeg kjøpte den 4. juni 2024 for 520 000 kr, og utbedringen er beregnet til 98 000 kr.",
+        "belegg": null
+      },
+      {
+        "ledd": 2,
+        "om": "min_sak",
+        "tekst": "Verkstedets vurdering tar dermed uttrykkelig stilling både til om feilen går ut over det som er normalt for bilens alder og kjørelengde, og til om den var til stede ved overtakelsen.",
+        "belegg": null
+      }
+    ]
+  },
+  "fasit": {
+    "avsnitt": "Forbrukerklageutvalget vurderer om en feil går ut over det kjøperen kunne forvente ved kjøp av bilen, tatt i betraktning bilens alder, kilometerstand og kjøpesum, se for eksempel sak FKU-2025-58214. Utvalget har i den vurderingen bygget på en sakkyndig uttalelse om at det ikke var påregnelig å måtte skifte de aktuelle komponentene, se for eksempel sak FKU-2026-104368. Utvalget legger også vekt på om den sakkyndige dokumentasjonen gjør det sannsynlig at feilen kan føres tilbake til leveringen, se for eksempel sak FKU-2025-58214. Feilen ved min bil er at rekkevidden har falt kraftig, og at bilen viser feilmelding om høyvoltbatteriet. Verkstedet har konkludert slik: «Cellemodul 3 har for lav spenning. Feilen går ut over normal degradering for bilens alder og kjørelengde og var etter vår vurdering til stede ved overtakelsen.» Bilen var 2 år gammel og hadde gått 22 000 km da jeg kjøpte den 4. juni 2024 for 520 000 kr, og utbedringen er beregnet til 98 000 kr. Verkstedets vurdering tar dermed uttrykkelig stilling både til om feilen går ut over det som er normalt for bilens alder og kjørelengde, og til om den var til stede ved overtakelsen.",
+    "vedtak_id": null,
+    "strykninger": []
+  }
+}

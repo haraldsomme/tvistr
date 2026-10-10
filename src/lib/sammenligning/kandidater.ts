@@ -18,6 +18,19 @@ const A_VARIANT = {
   taushet: sql`and s.a_variant in ('taushet', 'begge') and s.grunnlag = 'tilbakeholdt_opplysning'`,
 };
 
+// The columns the comparison needs, from the search view joined with the decision and its analysis.
+const UTVALG = sql`
+      select s.vedtak_id, s.feil_id, s.saksnummer, s.vedtaksdato::text as vedtaksdato, s.kilde_url, s.utfall::text as utfall, s.grunn, s.selger_type::text as selger_type,
+        s.kategori, s.komponenter, s.grunnlag, s.spor_vunnet, s.a_variant, s.alvor, s.dager_etter_levering, s.viste_seg_kilde,
+        s.lovversjon::text as lovversjon, s.alder_ved_kjop, s.km_ved_kjop, s.kjopesum_nok,
+        s.belop_tilkjent_nok, v.tilkjent_totalt_nok, v.utbedringskostnad_nok, a.sanksjon, coalesce(v.forbehold, '{}') as forbehold,
+        coalesce(v.overtakelsesdato, v.kjopsdato)::text as start_dato,
+        a.selger_bevis_finnes, a.forste_henvendelse_dato::text as forste_henvendelse_dato,
+        jsonb_array_length(a.feil) as antall_feil, a.opplysninger, a.bevis
+      from vedtak_feil_sok s
+      join vedtak v on v.id = s.vedtak_id
+      join vedtak_analyse a on a.vedtak_id = s.vedtak_id`;
+
 export function lagHentKandidater(db: { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: Record<string, unknown>[] }> }): HentKandidater {
   return async ({ spor, a_variant, kategori, heving_tillatt, tapte = false }) => {
     const variant = spor === "A" && a_variant ? A_VARIANT[a_variant] : sql``;
@@ -31,22 +44,26 @@ export function lagHentKandidater(db: { execute: (q: ReturnType<typeof sql>) => 
           and coalesce(s.grunn, '') not in ('reklamert_for_sent', 'utbedret_av_selger')`
       : sql`s.vurdering = 'mangel' and ${spor} = any(s.spor_vunnet) ${variant} and s.selger_type in ('forhandler', 'formidling') and s.utfall <> 'avvist' ${heving}`;
     const { rows } = await db.execute(sql`
-      select s.vedtak_id, s.feil_id, s.saksnummer, s.vedtaksdato::text as vedtaksdato, s.kilde_url, s.utfall::text as utfall, s.grunn, s.selger_type::text as selger_type,
-        s.kategori, s.komponenter, s.grunnlag, s.spor_vunnet, s.a_variant, s.alvor, s.dager_etter_levering, s.viste_seg_kilde,
-        s.lovversjon::text as lovversjon, s.alder_ved_kjop, s.km_ved_kjop, s.kjopesum_nok,
-        s.belop_tilkjent_nok, v.tilkjent_totalt_nok, v.utbedringskostnad_nok, a.sanksjon, coalesce(v.forbehold, '{}') as forbehold,
-        coalesce(v.overtakelsesdato, v.kjopsdato)::text as start_dato,
-        a.selger_bevis_finnes, a.forste_henvendelse_dato::text as forste_henvendelse_dato,
-        jsonb_array_length(a.feil) as antall_feil, a.opplysninger, a.bevis
-      from vedtak_feil_sok s
-      join vedtak v on v.id = s.vedtak_id
-      join vedtak_analyse a on a.vedtak_id = s.vedtak_id
+      ${UTVALG}
       where ${utvalg}
         and s.kategori = ${kategori}
         and s.vedtaksdato >= date '2021-01-01'
         and not s.ikke_mangelssak
       order by s.vedtaksdato desc, s.vedtak_id, s.feil_id
       ${tapte ? sql`` : sql`limit ${KANDIDATGRENSE}`}`);
+    return rows.map((r) => tilVedtakFeil(r, spor));
+  };
+}
+
+// Given decided defects (the jurist's examples for the general paragraph, src/lib/praksis/fast.ts) as rows
+// the paragraph's verifier can read, on the track they illustrate.
+export function lagHentEksempler(db: { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: Record<string, unknown>[] }> }) {
+  return async (eksempler: Array<{ vedtak_id: number; feil_id: string }>, spor: Spor): Promise<VedtakFeil[]> => {
+    if (!eksempler.length) return [];
+    const { rows } = await db.execute(sql`
+      ${UTVALG}
+      where (s.vedtak_id, s.feil_id) in (${sql.join(eksempler.map((e) => sql`(${e.vedtak_id}, ${e.feil_id})`), sql`, `)})
+      order by s.vedtaksdato desc, s.vedtak_id, s.feil_id`);
     return rows.map((r) => tilVedtakFeil(r, spor));
   };
 }

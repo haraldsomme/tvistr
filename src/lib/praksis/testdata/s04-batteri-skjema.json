@@ -1,0 +1,72 @@
+{
+  "_meta": {
+    "skjema_versjon": "1.2",
+    "registrert": "2026-10-09T12:00:00+02:00"
+  },
+  "del1_kjopet": {
+    "selgertype": "forhandler",
+    "kjopsdato": "2024-06-04",
+    "pris_kr": 520000,
+    "km_ved_kjop": 22000,
+    "aarsmodell": 2022,
+    "merke_modell_valgfritt": "BMW iX3"
+  },
+  "del2_selger": {
+    "firmanavn_oppgitt": "Premium Auto Oslo",
+    "bronnoysund_treff": {
+      "foretaksnavn": "Premium Auto Oslo AS",
+      "organisasjonsnummer": "999 000 204",
+      "forretningsadresse": "Testveien 4, 0150 Oslo"
+    },
+    "treff_bekreftet": true,
+    "som_den_er_i_kontrakt": "nei"
+  },
+  "del3_feil": [
+    {
+      "id": "F1",
+      "kategori": "batteri_elbil",
+      "en_setning": "Feilen er at rekkevidden har falt kraftig og bilen viser feilmelding om høyvoltbatteriet",
+      "dato_oppdaget": "2026-01-10",
+      "kan_bilen_brukes": "ja",
+      "selger_sa_noe": "nei",
+      "hvor_sto_det": [],
+      "avskrift_selger": null,
+      "svar_pa_direkte_sporsmal": false,
+      "verksted_sett_pa": "ja_skriftlig",
+      "verksted_navn_dato": "NAF Oslo, 20.01.2026",
+      "rapport_sier": {
+        "hva": "ja",
+        "hvorfor": "ja",
+        "var_der_ved_overtakelse": "ja",
+        "mer_enn_normal_slitasje": "ja",
+        "kostnad": "ja"
+      },
+      "kostnad_kr": 98000,
+      "kostnad_over_pris_bekreftet": false,
+      "avskrift_verksted": "«Cellemodul 3 har for lav spenning. Feilen går ut over normal degradering for bilens alder og kjørelengde og var etter vår vurdering til stede ved overtakelsen.»"
+    }
+  ],
+  "km_na": 31500,
+  "del6_kontakt_med_selger": {
+    "tatt_opp_med_selger": "ja_skriftlig",
+    "dato_forste_gang": "2026-01-22",
+    "selgers_svar": "avvist",
+    "avtale_inngatt": "nei",
+    "avtale_beskrivelse": null,
+    "avtale_gjelder_feil": [],
+    "selger_la_frem_dokumentasjon": "nei",
+    "selger_dokumentasjon_kort": null
+  },
+  "del7_onske_og_kontakt": {
+    "onsket_losning": "prisavslag",
+    "kjoper": {
+      "navn": "Harald Testsen",
+      "adresse": "Prøvegata 5, 0150 Oslo",
+      "epost": "harald@example.no"
+    }
+  },
+  "bekreftelser": {
+    "opplysningene_er_riktige": true,
+    "lest_at_brevet_ikke_er_juridisk_radgivning": true
+  }
+}

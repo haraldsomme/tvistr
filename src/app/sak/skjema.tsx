@@ -521,7 +521,7 @@ function Brevet({ skjema, svar }: { skjema: Skjema; svar: Extract<SakSvar, { ok:
       <h2 className="m-0 font-brev text-[20px] font-semibold">Praksis fra Forbrukerklageutvalget</h2>
       {!praksis?.ok ? (
         <>
-          {svar.valgt_til_brev.length ? (
+          {svar.feil.some((f) => f.styrke && f.styrke !== "svak") ? (
             <button
               type="button"
               disabled={skriver}

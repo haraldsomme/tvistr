@@ -2,7 +2,7 @@
 
 *Besluttet og bygget 2026-10-10. Kode: `src/lib/praksis/`. Kjøring på ett skjema: `npm run praksis -- <skjema.json> <feil_id> [--idag ÅÅÅÅ-MM-DD] [--opptak fil.json] [--generell]`.*
 
-Avsnittet under «Praksis fra Forbrukerklageutvalget» er den eneste delen av brevet som krever at noen leser vedtakene. Det skrives av en modell, og en deterministisk verifisering stryker alt modellen ikke kan belegge med vedtakets egen tekst. Prinsippet er **aldri si noe usant**: et avsnitt som ikke kan belegges, skrives ikke.
+Avsnittet under «Praksis fra Forbrukerklageutvalget» er den eneste delen av brevet som krever at noen leser vedtakene. Det skrives av en modell som leser *analysen* av vedtakene (det pass 1 og pass 2 hentet ut), ikke fulltekst. En deterministisk verifisering stryker alt som ikke står ordrett i et av analysens kontrollerte sitater. Prinsippet er **aldri si noe usant**: et avsnitt som ikke kan belegges, skrives ikke.
 
 ## Flyt
 

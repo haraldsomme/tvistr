@@ -5,7 +5,7 @@ import { nullbar, objekt } from "@/lib/ai/skjema";
 import type { FeilProfil, Sak, VedtakFeil, Vurdert } from "@/lib/sammenligning/typer";
 import type { SkjemaFeil } from "@/lib/skjema/skjema";
 import { type Kjent, rensTekst } from "./rens";
-import type { Analyse, Modus } from "./typer";
+import type { Analyse, Kilder, Modus } from "./typer";
 
 export const PRAKSIS_VERKTOY = {
   name: "skriv_praksis",
@@ -121,8 +121,19 @@ export function vedtakForModell(v: VedtakFeil, a: Analyse | undefined) {
       tilkjent_totalt_nok: v.tilkjent_totalt_nok,
       utbedringskostnad_nok: v.utbedringskostnad_nok,
     },
-    sitater: Object.fromEntries(Object.entries(a?.sitater ?? {}).filter(([k]) => SITATER_UTFALL.includes(k))),
+    // Pass 1 only flagged a quote it could not find verbatim; such a quote is left out.
+    sitater: Object.fromEntries(Object.entries(a?.sitater ?? {}).filter(([k]) => SITATER_UTFALL.includes(k) && !a?.kontroll_arsaker?.some((x) => x.startsWith(`sitat for ${k} finnes ikke`)))),
   };
+}
+
+// The verified quotes in what the model saw: the only text a belegg may be taken from. The committee's own
+// reasoning (its sentences and its conclusion on this defect) is what ledd 1 and the quote must come from.
+export function kilderFor(v: VedtakFeil, a: Analyse | undefined): Kilder {
+  const m = vedtakForModell(v, a);
+  const vurdering = [m.denne_feilen.sitat, ...m.utvalgets_begrunnelse.map((b) => b.tekst)];
+  const alle = [...vurdering, ...m.opplysninger.flatMap((o) => [o.ordlyd, o.sitat]), ...m.bevis.map((b) => b.sitat), ...Object.values(m.sitater)];
+  const tekster = (xs: unknown[]) => xs.filter((x): x is string => typeof x === "string" && x.trim() !== "");
+  return { alle: tekster(alle), vurdering: tekster(vurdering) };
 }
 
 // Compact JSON without empty fields: the model reads what is there, and every character is paid for.

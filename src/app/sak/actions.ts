@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { db } from "@/db";
-import { lagHentAnalyse, lagHentFulltekst } from "@/lib/praksis/fulltekst";
+import { lagHentAnalyse } from "@/lib/praksis/analyse";
 import { type Avsnitt, skrivPraksisdel } from "@/lib/praksis/praksisdel";
 import { sammenlign, type Skjema } from "@/lib/sammenligning";
 import { lagHentEksempler, lagHentKandidater } from "@/lib/sammenligning/kandidater";
@@ -75,7 +75,7 @@ export async function skrivPraksisFor(skjema: Skjema): Promise<PraksisUt> {
   const idag = idagINorge();
   if (validerSkjema(skjema, idag).length) return { ok: false, melding: "Skjemaet har feil. Rett dem og send på nytt." };
   try {
-    const d = await skrivPraksisdel(skjema, idag, { hentKandidater: lagHentKandidater(db), hentFulltekst: lagHentFulltekst(db), hentAnalyse: lagHentAnalyse(db), hentEksempler: lagHentEksempler(db),
+    const d = await skrivPraksisdel(skjema, idag, { hentKandidater: lagHentKandidater(db), hentAnalyse: lagHentAnalyse(db), hentEksempler: lagHentEksempler(db),
       // The jurist's blocks before approval, only where PRAKSIS_UTKAST=1 is set (local testing).
       utkast: process.env.PRAKSIS_UTKAST === "1",
     });

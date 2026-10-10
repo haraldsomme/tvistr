@@ -6,15 +6,21 @@
 //   … --praksis      also writes the practice section with the model (about 0,35 USD per paragraph),
 //                    the jurist's draft blocks included, and checks P1–P4 (data/testkjoring/praksis)
 //   … --fra-lager    replays the stored model answers through the current verifier, without the API
+//   … --praksis --agent   no API: each prompt is written to <mappe>/prompter/<hash>.json for a Claude Code
+//                    agent to answer in <mappe>/svar/<hash>.json; run again until nothing waits
 
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { sql } from "drizzle-orm";
 import { db } from "../../src/db";
 import { PRAKSIS_FAST } from "../../src/lib/praksis/fast";
-import { lagHentAnalyse, lagHentFulltekst } from "../../src/lib/praksis/fulltekst";
+import { lagHentAnalyse } from "../../src/lib/praksis/analyse";
 import { type Forsok, type Praksisdel, skrivPraksisdel } from "../../src/lib/praksis/praksisdel";
+import { sjekkSkjema } from "../../src/lib/ai/skjemasjekk";
+import { PRAKSIS_VERKTOY } from "../../src/lib/praksis/prompt";
 import type { Kall } from "../../src/lib/praksis/skriv";
+import type { PraksisSvar } from "../../src/lib/praksis/typer";
 import { MAKS_KANDIDATER, sammenlign, type Resultat } from "../../src/lib/sammenligning";
 import { erSpesifikk } from "../../src/lib/sammenligning/avled";
 import { lagHentEksempler, lagHentKandidater } from "../../src/lib/sammenligning/kandidater";
@@ -116,8 +122,31 @@ function praksisSjekker(r: Resultat, d: Praksisdel, igjen: Praksisdel | null, ek
   };
 }
 
-async function kjorPraksis(ider: string[], fraLager: boolean) {
-  const deps = { hentKandidater: lagHentKandidater(db), hentFulltekst: lagHentFulltekst(db), hentAnalyse: lagHentAnalyse(db), hentEksempler: lagHentEksempler(db), utkast: true };
+// The model call answered by a Claude Code agent: the prompt goes to a file, the answer comes from one.
+// A missing answer makes the case wait for the next round.
+const nokkel = (system: string, bruker: string) => createHash("sha256").update(`${system}\n${bruker}`).digest("hex").slice(0, 16);
+function agentKall(venter: Set<string>): Kall {
+  mkdirSync(join(MAPPE, "prompter"), { recursive: true });
+  mkdirSync(join(MAPPE, "svar"), { recursive: true });
+  return async ({ system, bruker }) => {
+    const h = nokkel(system, bruker);
+    const svar = join(MAPPE, "svar", `${h}.json`);
+    if (!existsSync(svar)) {
+      writeFileSync(join(MAPPE, "prompter", `${h}.json`), JSON.stringify({ hash: h, system, bruker }, null, 2) + "\n");
+      venter.add(h);
+      throw new Error(`venter på svar ${h}`);
+    }
+    const input = JSON.parse(readFileSync(svar, "utf8")) as PraksisSvar;
+    const feil = sjekkSkjema(PRAKSIS_VERKTOY.input_schema, input);
+    if (feil.length) throw new Error(`ugyldig svar ${h}: ${feil.slice(0, 3).join("; ")}`);
+    return { input, modell: "claude-code-opus", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } };
+  };
+}
+
+async function kjorPraksis(ider: string[], fraLager: boolean, agent: boolean) {
+  const venter = new Set<string>();
+  const ventende: string[] = [];
+  const deps = { hentKandidater: lagHentKandidater(db), hentAnalyse: lagHentAnalyse(db), hentEksempler: lagHentEksempler(db), utkast: true };
   mkdirSync(join(MAPPE, "praksis"), { recursive: true });
   const linjer: string[] = [];
   // Amounts the jurist's example decisions awarded: a general paragraph must not carry them (P4).
@@ -141,7 +170,13 @@ async function kjorPraksis(ider: string[], fraLager: boolean) {
       };
       igjen = await skrivPraksisdel(res.skjema, IDAG, { ...deps, kall });
     } else {
-      d = await skrivPraksisdel(res.skjema, IDAG, deps);
+      try {
+        d = await skrivPraksisdel(res.skjema, IDAG, agent ? { ...deps, kall: agentKall(venter) } : deps);
+      } catch (e) {
+        if (!agent) throw e;
+        ventende.push(`${id}: ${e instanceof Error ? e.message : e}`);
+        return;
+      }
       writeFileSync(lager, JSON.stringify(d, null, 2) + "\n");
     }
     const sjekker = praksisSjekker(res.resultat, d, igjen, belop);
@@ -158,6 +193,7 @@ async function kjorPraksis(ider: string[], fraLager: boolean) {
     linjer.push(`${id}: ${sjekker.P1.merknad} (${sjekker.P2.merknad})${brudd.length ? ` | BRUDD ${brudd.map(([k, v]) => `${k}: ${v.merknad}`).join("; ")}` : ""}`);
   });
   console.log(linjer.sort().join("\n"));
+  if (agent) console.log(`\n${venter.size} prompter venter på svar i ${MAPPE}/prompter (${ventende.length} saker):\n${ventende.sort().join("\n")}`);
 }
 
 async function main() {
@@ -213,7 +249,7 @@ async function main() {
     oversikt.push(`${id}: ${r.feil.map((f) => `${f.feil_id} ${f.styrke ?? "forlik"}${f.kandidater.length ? ` ${f.kandidater.map((k) => k.saksnummer).join(" ")}` : ""}`).join(", ")}${brudd.length ? ` | BRUDD ${brudd.map(([k, v]) => `${k}: ${v.merknad}`).join("; ")}` : ""} (${ms} ms)`);
   }
   console.log(oversikt.join("\n"));
-  if (praksis || fraLager) await kjorPraksis(ider, fraLager);
+  if (praksis || fraLager) await kjorPraksis(ider, fraLager, process.argv.includes("--agent"));
 }
 
 main()

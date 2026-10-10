@@ -8,7 +8,7 @@ import type { Vurdert } from "@/lib/sammenligning/typer";
 import type { Skjema } from "@/lib/skjema/skjema";
 import { PRAKSIS_GENERELL, PRAKSIS_SPESIFIKK, PRAKSIS_VERKTOY, praksisBruker } from "./prompt";
 import { kjenteOpplysninger } from "./rens";
-import type { HentAnalyse, HentFulltekst, Modus, Praksis, PraksisSvar } from "./typer";
+import type { HentAnalyse, Modus, Praksis, PraksisSvar } from "./typer";
 import { verifiserPraksis } from "./verifiser";
 
 export type Kall = (o: { system: string; bruker: string; modell: Modell }) => Promise<VerktoySvar<PraksisSvar>>;
@@ -27,8 +27,8 @@ export type SkrivInn = {
   fast?: { tekst: string; spor: string } | null;
 };
 
-// The model reads the analysis; the verifier checks against the full text, which never goes to the model.
-export type Avhengigheter = { hentFulltekst: HentFulltekst; hentAnalyse: HentAnalyse; kall?: Kall; modell?: Modell };
+// The model reads the analysis, and the verifier checks against its verified quotes.
+export type Avhengigheter = { hentAnalyse: HentAnalyse; kall?: Kall; modell?: Modell };
 
 export async function skrivPraksis(inn: SkrivInn, deps: Avhengigheter): Promise<Praksis & { bruker: string | null }> {
   const tom = (grunn: string) => ({
@@ -51,7 +51,7 @@ export async function skrivPraksis(inn: SkrivInn, deps: Avhengigheter): Promise<
   const feil = avledFeil(sak, sf);
   const kjente = kjenteOpplysninger(inn.skjema);
   const ider = inn.kandidater.map((x) => x.vedtak.vedtak_id);
-  const [fulltekst, analyse] = await Promise.all([deps.hentFulltekst(ider), deps.hentAnalyse(ider)]);
+  const analyse = await deps.hentAnalyse(ider);
   const bruker = praksisBruker({ modus: inn.modus, sak, feil, skjemaFeil: sf, kandidater: inn.kandidater, analyse, kjente, fast: inn.fast });
   const modell = deps.modell ?? MODELL_FORFATTER;
 
@@ -61,6 +61,6 @@ export async function skrivPraksis(inn: SkrivInn, deps: Avhengigheter): Promise<
   } catch (e) {
     return { ...tom(`modell: ${e instanceof Error ? e.message : String(e)}`), bruker, feil: true };
   }
-  const verifisert = verifiserPraksis(svar.input, { modus: inn.modus, kandidater: inn.kandidater, fulltekst, sak, feil, skjemaFeil: sf, km_na: inn.skjema.km_na, kjente });
+  const verifisert = verifiserPraksis(svar.input, { modus: inn.modus, kandidater: inn.kandidater, analyse, sak, feil, skjemaFeil: sf, km_na: inn.skjema.km_na, kjente });
   return { ...verifisert, raa: svar.input, versjon: PRAKSIS_VERSJON, modell: svar.modell, forbruk: svar.forbruk, bruker };
 }

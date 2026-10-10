@@ -4,25 +4,32 @@ import { avledFeil, avledSak } from "@/lib/sammenligning/avled";
 import type { Skjema, VedtakFeil, Vurdert } from "@/lib/sammenligning/typer";
 import { kjenteOpplysninger } from "./rens";
 import { tall } from "./tekst";
-import type { PraksisSvar, Setning } from "./typer";
+import type { Analyse, PraksisSvar, Setning } from "./typer";
 import { type Grunnlag, verifiserPraksis } from "./verifiser";
 
 const IDAG = "2026-10-09";
 const enyaq = skjemaJson as unknown as Skjema;
 
-// A made-up decision: the case summary first, the committee's assessment after its heading.
-const FULLTEKST = `Vedtak i Forbrukerklageutvalgets sak 22/2952
-
-Saken gjelder krav om erstatning etter kjøp av brukt bil. Klageren hevder at varmepumpen ikke virket.
-Innklagde hevder at bilen var i god stand ved levering.
-
-Utvalget ser slik på saken
-Det fremgår av annonsen at bilen hadde varmepumpe. Utvalget legger til grunn at varmepumpen ikke fungerte ved levering, og at bilen ikke var som opplyst.
-Utvalget finner at bilen har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.
-Klageren tilkjennes erstatning med kr 16 066 for utbedringen.
-
-Konklusjon og vedtak
-Innklagde betaler 16 066 kroner.`;
+// A made-up decision's analysis: the committee's sentences, a party's claim, and pass 1's outcome quote.
+const ANALYSE: Analyse = {
+  sammendrag: "Varmepumpen virket ikke.",
+  utvalgets_nokkelmomenter: [],
+  forbehold_tekst: null,
+  tilkjent_prisavslag_nok: null,
+  tilkjent_erstatning_nok: 16_066,
+  sitater: { tilkjent_erstatning_nok: "Klageren tilkjennes erstatning med kr 16 066 for utbedringen." },
+  kontroll_arsaker: [],
+  feil: [{ id: "f1", sitat: "Utvalget finner at bilen har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.", sitat_verifisert: true }],
+  begrunnelse_sitater: [
+    { tema: "opplysning", tekst: "Utvalget legger til grunn at varmepumpen ikke fungerte ved levering, og at bilen ikke var som opplyst.", gjelder_feil: ["f1"] },
+  ],
+};
+// Statements as pass 2 stored them: what the ad said (the committee's finding) and what the parties claimed.
+const OPPLYSNINGER = [
+  { type: "uttalelse", form: "annonse", ordlyd: "varmepumpe", ordlyd_verifisert: true, sitat: "Det fremgår av annonsen at bilen hadde varmepumpe.", sitat_verifisert: true, status: "lagt_til_grunn", vekt: "for_klager", rekkevidde: "spesifikk", svar_pa_direkte_sporsmal: false, gjelder: "", gjelder_feil: ["f1"] },
+  { type: "uttalelse", form: "annet", ordlyd: null, ordlyd_verifisert: null, sitat: "Innklagde hevder at bilen var i god stand ved levering.", sitat_verifisert: true, status: "omtvistet", vekt: "ingen", rekkevidde: "generell", svar_pa_direkte_sporsmal: false, gjelder: "", gjelder_feil: ["f1"] },
+  { type: "uttalelse", form: "annet", ordlyd: null, ordlyd_verifisert: null, sitat: "Klageren hevder at varmepumpen ikke virket.", sitat_verifisert: true, status: "omtvistet", vekt: "ingen", rekkevidde: "generell", svar_pa_direkte_sporsmal: false, gjelder: "", gjelder_feil: ["f1"] },
+] as unknown as VedtakFeil["opplysninger"];
 
 function vedtak(o: Partial<VedtakFeil> = {}): VedtakFeil {
   return {
@@ -56,7 +63,7 @@ function vedtak(o: Partial<VedtakFeil> = {}): VedtakFeil {
     forste_henvendelse_dato: null,
     start_dato: "2021-10-01",
     antall_feil: 1,
-    opplysninger: [],
+    opplysninger: OPPLYSNINGER,
     bevis: [],
     ...o,
   };
@@ -70,7 +77,7 @@ function grunnlag(o: Partial<Grunnlag> = {}): Grunnlag {
   return {
     modus: "spesifikk",
     kandidater: [kandidat()],
-    fulltekst: new Map([[1, FULLTEKST]]),
+    analyse: new Map([[1, ANALYSE]]),
     sak,
     feil: avledFeil(sak, f),
     skjemaFeil: f,
@@ -141,12 +148,12 @@ describe("verifiserPraksis, spesifikt avsnitt", () => {
     expect(verifiserPraksis(svar({ valgt_vedtak_id: null, grunn_ingen: "vedtaket gjaldt en annen bil" }), grunnlag()).grunn).toContain("vedtaket gjaldt en annen bil");
   });
 
-  it("et sitat fra saksfremstillingen gir ikke noe avsnitt: det kan være en parts påstand", () => {
+  it("et sitat som ikke er fra utvalgets begrunnelse, gir ikke noe avsnitt: det kan være en parts påstand", () => {
     const v = verifiserPraksis(svar({ sitat: { vedtak_id: 1, tekst: "Innklagde hevder at bilen var i god stand ved levering." } }), grunnlag());
-    expect(v).toMatchObject({ avsnitt: null, grunn: "sitatet står ikke i utvalgets vurdering" });
+    expect(v).toMatchObject({ avsnitt: null, grunn: "sitatet er ikke fra utvalgets begrunnelse" });
   });
 
-  it("ledd 1 må ha belegg fra utvalgets vurdering", () => {
+  it("ledd 1 må ha belegg fra utvalgets begrunnelse", () => {
     const v = verifiserPraksis(svar({ setninger: [S(1, "Utvalget la til grunn at varmepumpen ikke virket.", "Klageren hevder at varmepumpen ikke virket."), LEDD2] }), grunnlag());
     expect(v).toMatchObject({ avsnitt: null, grunn: "ledd 1 mangler" });
     expect(v.strykninger).toMatchObject([{ regel: "vurderingsdel" }]);
@@ -182,13 +189,13 @@ describe("verifiserPraksis, spesifikt avsnitt", () => {
 });
 
 describe("verifiserPraksis, generelt avsnitt", () => {
-  const EKS2 = `Vedtak i sak FKU-2026-104368\n\nSaken gjelder motorhavari.\n\nUtvalget ser slik på saken\nIfølge uttalelsen fra NAF er dette komponenter i bilen som forventes å ha en vesentlig lengre levetid enn 7 år.`;
+  const EKS2: Analyse = { ...ANALYSE, sitater: {}, feil: [{ id: "f1" }], begrunnelse_sitater: [{ tema: "bevis", tekst: "Ifølge uttalelsen fra NAF er dette komponenter i bilen som forventes å ha en vesentlig lengre levetid enn 7 år.", gjelder_feil: [] }] };
   const g = (o: Partial<Grunnlag> = {}) =>
     grunnlag({
       modus: "generell",
       kandidater: [kandidat({}, 0), { vedtak: vedtak({ vedtak_id: 2, saksnummer: "FKU-2026-104368", vedtaksdato: "2026-02-02" }), kriterier: [], antall_sterkere: 0, svakhet: null }],
-      fulltekst: new Map([
-        [1, FULLTEKST],
+      analyse: new Map([
+        [1, ANALYSE],
         [2, EKS2],
       ]),
       ...o,

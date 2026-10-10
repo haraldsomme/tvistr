@@ -84,7 +84,6 @@ describe("skrivPraksisdel: spesifikk, så generell, så fast blokk", () => {
     ({ vedtak_id: 1, feil_id: "f1", spor: "C", saksnummer: "X", vedtaksdato: "2025-01-01", kilde_url: "u", utfall: "medhold", grunn: null, selger_type: "forhandler", kategori: "motor", komponenter: [], grunnlag: null, spor_vunnet: ["C"], a_variant: null, alvor: [], dager_etter_levering: 100, viste_seg_kilde: "vedtak", lovversjon: "før_2024", alder_ved_kjop: 4, km_ved_kjop: 50_000, kjopesum_nok: 400_000, utbedringskostnad_nok: null, tilkjent_totalt_nok: null, belop_tilkjent_nok: null, sanksjon: "erstatning", selger_bevis_finnes: false, forbehold: [], forste_henvendelse_dato: null, start_dato: null, antall_feil: 1, opplysninger: [], bevis: [], ...o }) as VedtakFeil;
   const deps = (o: { kall?: Parameters<typeof skrivPraksisdel>[2]["kall"] } = {}) => ({
     hentKandidater: async () => [],
-    hentFulltekst: async (ider: number[]) => new Map(ider.map((id) => [id, "Utvalget ser slik på saken\nUtvalget finner at feilen går ut over det påregnelige for bilens alder og kjørelengde."])),
     hentAnalyse: async () => new Map(),
     hentEksempler: async (e: Array<{ vedtak_id: number; feil_id: string }>) => e.map((x) => vedtakFeil({ vedtak_id: x.vedtak_id, feil_id: x.feil_id, saksnummer: `S${x.vedtak_id}` })),
     utkast: true,
@@ -123,7 +122,6 @@ describe("skrivPraksisdel når modellkallet feiler", () => {
     s.del3_feil = [{ ...s.del3_feil[0], kategori: "batteri_elbil", selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, svar_pa_direkte_sporsmal: false, rapport_sier: { hva: "ja", hvorfor: "ja", var_der_ved_overtakelse: "ja", mer_enn_normal_slitasje: "ja", kostnad: "ja" }, kostnad_kr: 50_000, avskrift_verksted: "Cellefeil, mer enn normal slitasje, til stede ved overtakelsen." }];
     const deps = {
       hentKandidater: async () => [],
-      hentFulltekst: async () => new Map(),
       hentAnalyse: async () => new Map(),
       hentEksempler: async (e: Array<{ vedtak_id: number; feil_id: string }>) => e.map((x) => ({ vedtak_id: x.vedtak_id, feil_id: x.feil_id, spor: "C", opplysninger: [], bevis: [], komponenter: [] }) as unknown as VedtakFeil),
       utkast: true,

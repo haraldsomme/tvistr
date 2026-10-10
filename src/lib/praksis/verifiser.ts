@@ -1,13 +1,15 @@
 // The deterministic check of the model's paragraph (docs/praksis.md). A pure function of the model's
-// answer and what the filter, the form and the decision's full text say. Every sentence about a decision
-// must carry a verbatim belegg from it; numbers about the decision come from the database; a sentence
-// that breaks a rule is struck, and more than one struck sentence means no paragraph.
-import { fulltekstVarianter, normaliser } from "@/lib/analyse/verifiser";
+// answer and what the filter, the form and the decision's analysis say. Every sentence about a decision
+// must carry a belegg that stands verbatim in one of the analysis's verified quotes (themselves checked
+// against the full text at import); numbers about the decision come from the database; a sentence that
+// breaks a rule is struck, and more than one struck sentence means no paragraph.
+import { normaliser } from "@/lib/analyse/verifiser";
 import type { FeilProfil, Sak, VedtakFeil, Vurdert } from "@/lib/sammenligning/typer";
 import type { SkjemaFeil } from "@/lib/skjema/skjema";
 import { harPersonopplysning, type Kjent } from "./rens";
-import { datoerI, datoLang, helSetning, indreAnforsel, MOT_KJOPER, PARAGRAF, tall, tallI, VURDERING_START } from "./tekst";
-import type { Belegg, Modus, PraksisSvar, Setning, StrykRegel, Verifisert } from "./typer";
+import { kilderFor } from "./prompt";
+import { datoerI, datoLang, helSetning, indreAnforsel, MOT_KJOPER, PARAGRAF, tall, tallI } from "./tekst";
+import type { Analyse, Belegg, Kilder, Modus, PraksisSvar, Setning, StrykRegel, Verifisert } from "./typer";
 
 export const MIN_BELEGG = 20;
 export const MAKS_STRYKNINGER = 1;
@@ -23,7 +25,7 @@ const ELLIPSE = /…|\.\.\./;
 export type Grunnlag = {
   modus: Modus;
   kandidater: Vurdert[];
-  fulltekst: Map<number, string>;
+  analyse: Map<number, Analyse>;
   sak: Sak;
   feil: FeilProfil;
   skjemaFeil: SkjemaFeil;
@@ -31,27 +33,18 @@ export type Grunnlag = {
   kjente: Kjent[];
 };
 
-type Tekst = { varianter: string[]; vurderingFra: number[] };
+// The quotes split at their ellipses: a belegg must stand within one piece.
+const biter = (xs: string[]) => xs.flatMap((x) => x.split(ELLIPSE)).map(normaliser).filter(Boolean);
+type Tekst = { alle: string[]; vurdering: string[] };
+const lagTekst = (k: Kilder): Tekst => ({ alle: biter(k.alle), vurdering: biter(k.vurdering) });
 
-function lagTekst(fulltekst: string): Tekst {
-  const varianter = fulltekstVarianter(fulltekst);
-  return { varianter, vurderingFra: varianter.map((v) => v.search(VURDERING_START)) };
-}
-
-// Where the passage stands in the full text, or null when it is not there verbatim. Whether it stands in
-// the committee's own assessment (after «Utvalget ser slik på saken»).
+// Whether the passage stands verbatim in a verified quote the model saw, and whether in the committee's
+// own reasoning. null when it does not.
 function finn(passasje: string, t: Tekst): { iVurdering: boolean } | null {
   const p = normaliser(passasje);
   if (p.length < MIN_BELEGG || ELLIPSE.test(p)) return null;
-  let funnet = false;
-  let iVurdering = false;
-  t.varianter.forEach((v, i) => {
-    const pos = v.indexOf(p);
-    if (pos < 0) return;
-    funnet = true;
-    iVurdering ||= t.vurderingFra[i] >= 0 && pos >= t.vurderingFra[i];
-  });
-  return funnet ? { iVurdering } : null;
+  if (!t.alle.some((x) => x.includes(p))) return null;
+  return { iVurdering: t.vurdering.some((x) => x.includes(p)) };
 }
 
 const datoDeler = (d: (string | null | undefined)[]) => d.filter((x): x is string => !!x).flatMap((x) => x.split("-").map(Number));
@@ -78,7 +71,8 @@ export function verifiserPraksis(svar: PraksisSvar, g: Grunnlag): Verifisert {
   const kandidat = new Map(g.kandidater.map((x) => [x.vedtak.vedtak_id, x]));
   const tekster = new Map<number, Tekst>();
   const tekst = (id: number) => {
-    if (!tekster.has(id) && g.fulltekst.has(id)) tekster.set(id, lagTekst(g.fulltekst.get(id)!));
+    const x = kandidat.get(id);
+    if (!tekster.has(id) && x) tekster.set(id, lagTekst(kilderFor(x.vedtak, g.analyse.get(id))));
     return tekster.get(id) ?? null;
   };
 
@@ -88,7 +82,6 @@ export function verifiserPraksis(svar: PraksisSvar, g: Grunnlag): Verifisert {
     if (svar.valgt_vedtak_id == null) return ingen(`modellen fant ikke et sammenlignbart vedtak: ${svar.grunn_ingen ?? "uten grunn"}`);
     valgt = kandidat.get(svar.valgt_vedtak_id) ?? null;
     if (!valgt) return ingen(`vedtak ${svar.valgt_vedtak_id} er ikke blant kandidatene`);
-    if (!tekst(valgt.vedtak.vedtak_id)) return ingen("vedtaket mangler fulltekst");
   } else {
     if (svar.valgt_vedtak_id != null) return ingen("et generelt avsnitt viser ikke til ett vedtak");
     if (svar.eksempel_vedtak_ids.some((id) => !kandidat.has(id))) return ingen("eksempel utenfor juristens eksempler");
@@ -104,9 +97,9 @@ export function verifiserPraksis(svar: PraksisSvar, g: Grunnlag): Verifisert {
     const feil = !t
       ? "fra et vedtak avsnittet ikke kan vise til"
       : !funnet
-        ? "står ikke ordrett i vedtaket"
+        ? "står ikke ordrett i et kontrollert sitat fra vedtaket"
         : !funnet.iVurdering
-          ? "står ikke i utvalgets vurdering"
+          ? "er ikke fra utvalgets begrunnelse"
           : !helSetning(s.tekst)
             ? "er ikke en hel setning"
             : MOT_KJOPER.test(s.tekst)
@@ -172,8 +165,8 @@ function sjekk(
     if (!b || !lovlig(b.vedtak_id)) return stryk("belegg", b ? `belegg fra vedtak ${b.vedtak_id}, som avsnittet ikke kan vise til` : "setningen om vedtaket mangler belegg");
     const t = tekst(b.vedtak_id);
     const funnet = t ? finn(b.sitat, t) : null;
-    if (!funnet) return stryk("belegg", "belegget står ikke ordrett i vedtaket");
-    if (s.ledd === 1 && !funnet.iVurdering) return stryk("vurderingsdel", "ledd 1 må ha belegg fra utvalgets vurdering");
+    if (!funnet) return stryk("belegg", "belegget står ikke ordrett i et kontrollert sitat fra vedtaket");
+    if (s.ledd === 1 && !funnet.iVurdering) return stryk("vurderingsdel", "ledd 1 må ha belegg fra utvalgets begrunnelse");
     v = kandidat.get(b.vedtak_id)!.vedtak;
   }
 

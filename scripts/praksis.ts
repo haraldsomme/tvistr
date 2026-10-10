@@ -6,8 +6,8 @@
 //
 // --generell writes the general paragraph from the jurist's block and examples for the defect's primary
 // track, as when the filter finds no decision (src/lib/praksis/fast.ts; drafts are used before approval).
-// --opptak saves the input, the model's answer and the verified paragraph, so skriv.test.ts can replay
-// it without the API. Only the full texts the answer draws on are saved (redacted text, never the PDF).
+// --opptak saves the input (with the candidates' analysis), the model's answer and the verified
+// paragraph, so skriv.test.ts can replay it without the API. No full text is saved.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { db } from "../src/db";
@@ -15,7 +15,7 @@ import { kandidaterForFeil } from "../src/lib/sammenligning";
 import { avledFeil, avledSak } from "../src/lib/sammenligning/avled";
 import { lagHentEksempler, lagHentKandidater } from "../src/lib/sammenligning/kandidater";
 import { PRAKSIS_FAST } from "../src/lib/praksis/fast";
-import { lagHentAnalyse, lagHentFulltekst } from "../src/lib/praksis/fulltekst";
+import { lagHentAnalyse } from "../src/lib/praksis/analyse";
 import { skrivPraksis } from "../src/lib/praksis/skriv";
 import type { Skjema } from "../src/lib/skjema/skjema";
 
@@ -28,10 +28,10 @@ const arg = (navn: string) => {
 // the verifier's rules change on purpose.
 async function oppdaterOpptak(fil: string) {
   const o = JSON.parse(readFileSync(fil, "utf8"));
-  const fulltekst = new Map(Object.entries(o.fulltekst as Record<string, string>).map(([k, v]) => [Number(k), v]));
+  const analyse = new Map(Object.entries(o.analyse as Record<string, never>).map(([k, v]) => [Number(k), v]));
   const p = await skrivPraksis(
     { skjema: o.skjema, feil_id: o.feil_id, modus: o.modus ?? "spesifikk", kandidater: o.kandidater, idag: o.idag, fast: o.fast ?? null },
-    { hentFulltekst: async () => fulltekst, hentAnalyse: async () => new Map(), kall: async () => ({ input: o.raa, modell: "opptak", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } }) },
+    { hentAnalyse: async () => analyse, kall: async () => ({ input: o.raa, modell: "opptak", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } }) },
   );
   o.fasit = { avsnitt: p.avsnitt, vedtak_id: p.vedtak_id, strykninger: p.strykninger };
   writeFileSync(fil, JSON.stringify(o, null, 2) + "\n");
@@ -53,10 +53,10 @@ async function main() {
     ? (await lagHentEksempler(db)(blokk.eksempler, blokk.spor)).map((vedtak) => ({ vedtak, kriterier: [], antall_sterkere: 0, svakhet: null }))
     : await kandidaterForFeil(skjema, feilId, lagHentKandidater(db), idag);
   console.log(`${kandidater.length} ${blokk ? "eksempler" : "kandidater"}: ${kandidater.map((k) => `${k.vedtak.saksnummer} (${k.vedtak.spor}, ${k.antall_sterkere} sterkere)`).join(", ") || "–"}`);
-  const hent = lagHentFulltekst(db);
+  const hent = lagHentAnalyse(db);
   const modus = blokk ? "generell" : "spesifikk";
   const fast = blokk ? { tekst: blokk.tekst, spor: blokk.spor } : null;
-  const p = await skrivPraksis({ skjema, feil_id: feilId, modus, kandidater, idag, fast }, { hentFulltekst: hent, hentAnalyse: lagHentAnalyse(db) });
+  const p = await skrivPraksis({ skjema, feil_id: feilId, modus, kandidater, idag, fast }, { hentAnalyse: hent });
 
   console.log(`\nValgt: ${p.vedtak_id ?? (p.eksempel_vedtak_ids.join(", ") || "–")}  Grunn: ${p.grunn ?? "–"}  Kostnad: ${p.forbruk ? `${p.forbruk.kostnadUsd.toFixed(3)} USD, ${p.forbruk.tokensInn} inn / ${p.forbruk.tokensUt} ut` : "–"}`);
   console.log(`\nAvsnitt:\n${p.avsnitt ?? "(ingen)"}`);
@@ -65,9 +65,8 @@ async function main() {
 
   const ut = arg("--opptak");
   if (ut && p.raa) {
-    const brukt = new Set([p.raa.valgt_vedtak_id, p.raa.sitat?.vedtak_id, ...p.raa.eksempel_vedtak_ids, ...p.raa.setninger.map((s) => s.belegg?.vedtak_id)].filter((x): x is number => x != null));
-    const fulltekst = Object.fromEntries(await hent([...brukt]));
-    writeFileSync(ut, JSON.stringify({ skjema, feil_id: feilId, idag, modus, fast, kandidater, fulltekst, raa: p.raa, fasit: { avsnitt: p.avsnitt, vedtak_id: p.vedtak_id, strykninger: p.strykninger } }, null, 2) + "\n");
+    const analyse = Object.fromEntries(await hent(kandidater.map((k) => k.vedtak.vedtak_id)));
+    writeFileSync(ut, JSON.stringify({ skjema, feil_id: feilId, idag, modus, fast, kandidater, analyse, raa: p.raa, fasit: { avsnitt: p.avsnitt, vedtak_id: p.vedtak_id, strykninger: p.strykninger } }, null, 2) + "\n");
     console.log(`\nSkrev ${ut}`);
   }
 }

@@ -2,7 +2,7 @@
 //   npx tsx --env-file=.env.local scripts/praksis-maal.ts <skjema.json> <feil_id> [--idag ÅÅÅÅ-MM-DD]
 import { readFileSync } from "node:fs";
 import { db } from "../src/db";
-import { lagHentAnalyse, lagHentFulltekst } from "../src/lib/praksis/fulltekst";
+import { lagHentAnalyse } from "../src/lib/praksis/analyse";
 import { PRAKSIS_SPESIFIKK } from "../src/lib/praksis/prompt";
 import { skrivPraksis } from "../src/lib/praksis/skriv";
 import { kandidaterForFeil } from "../src/lib/sammenligning";
@@ -16,7 +16,6 @@ async function main() {
   const kandidater = await kandidaterForFeil(skjema, feilId, lagHentKandidater(db), idag);
   let bruker = "";
   await skrivPraksis({ skjema, feil_id: feilId, modus: "spesifikk", kandidater, idag }, {
-    hentFulltekst: lagHentFulltekst(db),
     hentAnalyse: lagHentAnalyse(db),
     kall: async (o) => {
       bruker = o.bruker;

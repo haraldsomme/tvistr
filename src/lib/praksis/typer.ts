@@ -13,6 +13,10 @@ export type Belegg = { vedtak_id: number; sitat: string };
 // 5 the comparison. The quote (ledd 3) is its own field.
 export type Setning = { ledd: number; om: "vedtak" | "min_sak" | "begge"; tekst: string; belegg: Belegg | null };
 
+// The verified quotes the model may use as belegg, as it saw them in the analysis; those from the
+// committee's own reasoning (ledd 1 and the quote) separately.
+export type Kilder = { alle: string[]; vurdering: string[] };
+
 // What the model returns (the tool's input).
 export type PraksisSvar = {
   valgt_vedtak_id: number | null;
@@ -38,8 +42,6 @@ export type Verifisert = {
 // feil: the model call itself failed (not a verifier verdict).
 export type Praksis = Verifisert & { raa: PraksisSvar | null; versjon: string; modell: string | null; forbruk: Forbruk | null; feil?: boolean };
 
-export type HentFulltekst = (ider: number[]) => Promise<Map<number, string>>;
-
 // What pass 1 and pass 2 extracted from a decision: what the model reads instead of the full text. The
 // quotes in it were checked against the full text at import; the rest is the analysis's own summary.
 export type Analyse = {
@@ -48,7 +50,8 @@ export type Analyse = {
   forbehold_tekst: string | null;
   tilkjent_prisavslag_nok: number | null;
   tilkjent_erstatning_nok: number | null;
-  sitater: Record<string, string> | null; // pass 1: field → verbatim quote
+  sitater: Record<string, string> | null; // pass 1: field → quote
+  kontroll_arsaker: string[]; // pass 1 flags a quote it could not find verbatim here, without removing it
   feil: Array<Record<string, unknown> & { id: string }>; // pass 2: every defect the decision assessed
   begrunnelse_sitater: Array<{ tema: string; tekst: string; gjelder_feil: string[] }>;
 };

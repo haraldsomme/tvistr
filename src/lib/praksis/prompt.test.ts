@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { VedtakFeil } from "@/lib/sammenligning/typer";
-import { vedtakForModell } from "./prompt";
+import { kilderFor, vedtakForModell } from "./prompt";
 import { rensTekst } from "./rens";
 import type { Analyse } from "./typer";
 
@@ -22,7 +22,8 @@ describe("vedtakForModell", () => {
     forbehold_tekst: null,
     tilkjent_prisavslag_nok: 10_000,
     tilkjent_erstatning_nok: 2_490,
-    sitater: { utfall: "kroner 12 490,-" },
+    sitater: { utfall: "kroner 12 490,-", tilkjent_totalt_nok: "ikke funnet" },
+    kontroll_arsaker: ["sitat for tilkjent_totalt_nok finnes ikke ordrett i vedtaket"],
     feil: [
       { id: "f1", sitat: "Utvalget finner uriktige opplysninger.", sitat_verifisert: true, bevisgrunnlag: "formodning_ikke_motbevist" },
       { id: "f2", vurdering: "ikke_mangel", kategori: "motor", grunn: "ikke_dokumentert" },
@@ -41,6 +42,15 @@ describe("vedtakForModell", () => {
     expect(m.denne_feilen.sitat).toBe("Utvalget finner uriktige opplysninger.");
     expect(m.andre_feil_i_saken).toEqual([{ kategori: "motor", vurdering: "ikke_mangel", grunn: "ikke_dokumentert" }]);
     expect(JSON.stringify(m)).not.toContain("fulltekst");
+    // Pass 1 flagged this quote without removing it: it is left out.
+    expect(m.sitater).toEqual({ utfall: "kroner 12 490,-" });
+  });
+
+  it("kildene er de kontrollerte sitatene modellen så, og utvalgets egne for ledd 1", () => {
+    const k = kilderFor(v, a);
+    expect(k.vurdering).toEqual(["Utvalget finner uriktige opplysninger.", "Om klimaanlegget."]);
+    expect(k.alle).toEqual(expect.arrayContaining(["klimaanlegg", "Bilen ble solgt med klimaanlegg.", "Defekt kompressor.", "kroner 12 490,-"]));
+    expect(k.alle).not.toContain("Ikke kontrollert.");
   });
 });
 

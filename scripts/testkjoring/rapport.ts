@@ -15,8 +15,8 @@ type Kontroll = { id: string; merknader: Merknad[] };
 
 const RANG: Record<Grad, number> = { ikke_relevant: -1, ok: 0, mindre: 1, moderat: 2, alvorlig: 3, blokkerende: 4 };
 const KRAV: Record<string, number> = {
-  A1: 1, A2: 1, A3: 1, A4: 1, A5: 1, B1: 1, B2: 1, B5: 1,
-  C1: 0.9, C2: 1, C3: 0.95, C4: 0.85, C5: 0.95, D1: 1, D2: 1, D3: 1, D4: 0.95, D5: 1, D6: 0.95, D7: 0.9, E1: 0.85, E2: 0.9,
+  A1: 1, A2: 1, A3: 1, A4: 1, A5: 1, B1: 1, B2: 1, B5: 1, P3: 1, P4: 1,
+  C1: 0.9, C2: 1, C3: 0.95, C4: 0.85, C5: 1, F1: 1, D1: 1, D2: 1, D3: 1, D4: 0.95, D5: 1, F2: 1, D6: 0.95, D7: 0.9, E1: 0.85, E2: 0.9,
 };
 const KRITERIER = Object.keys(KRAV);
 
@@ -33,7 +33,13 @@ const pst = (x: number) => `${Math.round(x * 100)} %`;
 const celle = (s: string) => s.replace(/\|/g, "\\|").replace(/\n+/g, " ");
 
 function main() {
-  const resultater = les<{ id: string; maskinelt: Record<string, { ok: boolean; merknad?: string }> }>("resultat");
+  type Res = {
+    id: string;
+    maskinelt: Record<string, { ok: boolean; merknad?: string }>;
+    resultat?: { stopp: string | null; feil: Array<{ feil_id: string; forlik: boolean; spor_alle: string[] }> };
+    praksis?: { avsnitt: Array<{ feil_id: string; modus: string }>; forsok: Array<{ feil_id: string; modus: string; grunn: string | null; strykninger: unknown[] }> };
+  };
+  const resultater = les<Res>("resultat");
   const kontroller = les<Kontroll>("kontroll");
   const andre = les<Kontroll>("kontroll2");
   const ut: string[] = [];
@@ -43,7 +49,7 @@ function main() {
 
   ut.push("## Andel oppfylt per kriterium", "", "| Kriterium | Krav | Oppfylt | 95 % intervall | Saker | Status | Enighet ved kalibrering |", "|---|---|---|---|---|---|---|");
   for (const k of KRITERIER) {
-    const verdier = k < "C"
+    const verdier = ["A", "B", "P"].includes(k[0])
       ? resultater.map((r) => r.maskinelt[k]).filter(Boolean).map((v) => v.ok)
       : kontroller.map((x) => verdikt(x, k)).filter((v): v is boolean => v != null);
     const n = verdier.length;
@@ -52,6 +58,27 @@ function main() {
     const par = andre.map((b) => [verdikt(kontroller.find((a) => a.id === b.id) ?? { id: b.id, merknader: [] }, k), verdikt(b, k)]).filter(([a, b]) => a != null && b != null);
     const enighet = par.length ? `${pst(par.filter(([a, b]) => a === b).length / par.length)} (${par.length})` : "–";
     ut.push(`| ${k} | ${pst(KRAV[k])} | ${n ? pst(oppfylt / n) : "–"} | ${n ? `${pst(lav)}–${pst(hoy)}` : "–"} | ${n} | ${!n ? "–" : oppfylt / n >= KRAV[k] ? "oppfylt" : "**ikke oppfylt**"} | ${enighet} |`);
+  }
+
+  // The practice section (P1, P2): how many letters got a paragraph, of which kind, and at what cost.
+  const medPraksis = resultater.filter((r) => r.praksis);
+  if (medPraksis.length) {
+    const brev = medPraksis.filter((r) => r.resultat?.feil.some((f) => !f.forlik && f.spor_alle.length));
+    const avsnitt = medPraksis.flatMap((r) => r.praksis!.avsnitt);
+    const per = (m: string) => avsnitt.filter((a) => a.modus === m).length;
+    const usd = medPraksis.reduce((n, r) => n + Number((r.maskinelt.P2?.merknad ?? "0").split(" ")[0]), 0);
+    const forsok = medPraksis.flatMap((r) => r.praksis!.forsok.map((f) => ({ ...f, id: r.id })));
+    const grunner = forsok.filter((f) => f.grunn).map((f) => `| ${f.id} | ${f.feil_id} | ${f.modus} | ${celle(f.grunn!)} |`);
+    ut.push(
+      "",
+      "## Praksisdelen",
+      "",
+      `- **Brev med minst ett avsnitt:** ${brev.filter((r) => r.praksis!.avsnitt.length).length} av ${brev.length} brev med spor (${pst(brev.filter((r) => r.praksis!.avsnitt.length).length / Math.max(brev.length, 1))}).`,
+      `- **Avsnitt:** ${per("spesifikk")} spesifikke, ${per("generell")} generelle, ${per("fast")} faste blokker.`,
+      `- **Modellkall:** ${forsok.length}, ${forsok.filter((f) => f.strykninger.length).length} med strøkne setninger. Kostnad ${usd.toFixed(2)} USD i alt, ${(usd / Math.max(medPraksis.length, 1)).toFixed(2)} USD per skjema.`,
+      "",
+      ...(grunner.length ? ["### Forsøk uten avsnitt (C6)", "", "| Sak | Feil | Modus | Grunn |", "|---|---|---|---|", ...grunner, ""] : []),
+    );
   }
 
   const alle = kontroller.flatMap((x) => x.merknader.map((m) => ({ ...m, id: x.id })));

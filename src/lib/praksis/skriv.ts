@@ -57,7 +57,7 @@ export async function skrivPraksis(inn: SkrivInn, deps: Avhengigheter): Promise<
   try {
     svar = await (deps.kall ?? modellKall)({ system: inn.modus === "spesifikk" ? PRAKSIS_SPESIFIKK : PRAKSIS_GENERELL, bruker, modell });
   } catch (e) {
-    return { ...tom(`modell: ${e instanceof Error ? e.message : String(e)}`), bruker };
+    return { ...tom(`modell: ${e instanceof Error ? e.message : String(e)}`), bruker, feil: true };
   }
   const verifisert = verifiserPraksis(svar.input, { modus: inn.modus, kandidater: inn.kandidater, fulltekst, sak, feil, skjemaFeil: sf, km_na: inn.skjema.km_na, kjente });
   return { ...verifisert, raa: svar.input, versjon: PRAKSIS_VERSJON, modell: svar.modell, forbruk: svar.forbruk, bruker };

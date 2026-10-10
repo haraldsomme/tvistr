@@ -35,6 +35,7 @@ export type Verifisert = {
   strykninger: Strykning[];
 };
 
-export type Praksis = Verifisert & { raa: PraksisSvar | null; versjon: string; modell: string | null; forbruk: Forbruk | null };
+// feil: the model call itself failed (not a verifier verdict).
+export type Praksis = Verifisert & { raa: PraksisSvar | null; versjon: string; modell: string | null; forbruk: Forbruk | null; feil?: boolean };
 
 export type HentFulltekst = (ider: number[]) => Promise<Map<number, string>>;

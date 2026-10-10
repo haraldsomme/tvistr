@@ -3,14 +3,21 @@
 // the control agents need to read (data/testkjoring/vedtak). The full text is the redacted one.
 //
 //   npx tsx --env-file=.env.local scripts/testkjoring/kjor.ts [T001 T002 …]
+//   … --praksis      also writes the practice section with the model (about 0,35 USD per paragraph),
+//                    the jurist's draft blocks included, and checks P1–P4 (data/testkjoring/praksis)
+//   … --fra-lager    replays the stored model answers through the current verifier, without the API
 
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { sql } from "drizzle-orm";
 import { db } from "../../src/db";
+import { PRAKSIS_FAST } from "../../src/lib/praksis/fast";
+import { lagHentFulltekst } from "../../src/lib/praksis/fulltekst";
+import { type Forsok, type Praksisdel, skrivPraksisdel } from "../../src/lib/praksis/praksisdel";
+import type { Kall } from "../../src/lib/praksis/skriv";
 import { MAKS_KANDIDATER, sammenlign, type Resultat } from "../../src/lib/sammenligning";
 import { erSpesifikk } from "../../src/lib/sammenligning/avled";
-import { lagHentKandidater } from "../../src/lib/sammenligning/kandidater";
+import { lagHentEksempler, lagHentKandidater } from "../../src/lib/sammenligning/kandidater";
 import type { Spor } from "../../src/lib/sammenligning/typer";
 import { type Skjema, validerSkjema } from "../../src/lib/skjema/skjema";
 import { UGYLDIG_FELT } from "./valider";
@@ -75,8 +82,87 @@ async function eksporter(saksnummer: string[]) {
   for (const r of rows) writeFileSync(join(MAPPE, "vedtak", `${trygt(String(r.saksnummer))}.json`), JSON.stringify(r, null, 2) + "\n");
 }
 
+// The general paragraph and the fixed block describe the rule; they never compare (docs/praksis.md).
+const SAMMENLIGNING = /like sterk|sterkere|samme type|tilsvarende sak/i;
+const SAMTIDIG = 5;
+
+async function iParallell<T>(xs: T[], n: number, f: (x: T) => Promise<void>) {
+  const ko = [...xs];
+  await Promise.all(Array.from({ length: n }, async () => {
+    while (ko.length) await f(ko.shift()!);
+  }));
+}
+
+// P1–P4 (docs/testkriterier-sak.md): the paragraphs follow the order and limits, and a general paragraph
+// carries no amount from a decision and no comparison.
+function praksisSjekker(r: Resultat, d: Praksisdel, igjen: Praksisdel | null, eksempelbelop: number[]): Record<string, Sjekk> {
+  const generelle = d.avsnitt.filter((a) => a.modus !== "spesifikk");
+  const vedtak = d.avsnitt.filter((a) => a.modus === "spesifikk").map((a) => a.vedtak[0].vedtak_id);
+  const medSpor = new Set(r.feil.filter((f) => !f.forlik && f.spor_alle.length).map((f) => f.feil_id));
+  const tall = (t: string) => [...t.matchAll(/\d{1,3}(?:[ \u00a0]\d{3})+|\d+/g)].map((m) => Number(m[0].replace(/\s/g, "")));
+  return {
+    P1: { ok: true, merknad: `${d.avsnitt.map((a) => `${a.feil_id} ${a.modus}`).join(", ") || "ingen avsnitt"}` },
+    P2: { ok: true, merknad: `${d.forsok.reduce((n, f) => n + (f.forbruk?.kostnadUsd ?? 0), 0).toFixed(3)} USD` },
+    P3: ok(
+      d.avsnitt.length <= 2 && generelle.length <= 1 && new Set(vedtak).size === vedtak.length && d.avsnitt.every((a) => medSpor.has(a.feil_id)) &&
+        (igjen == null || JSON.stringify(igjen.avsnitt) === JSON.stringify(d.avsnitt)),
+      "for mange avsnitt, samme vedtak to ganger, avsnitt for en feil uten spor, eller ny verifisering ga et annet avsnitt",
+    ),
+    P4: ok(
+      generelle.every((a) => !SAMMENLIGNING.test(a.avsnitt) && !tall(a.avsnitt).some((n) => eksempelbelop.includes(n))),
+      "et generelt avsnitt sammenligner eller har et beløp fra et eksempelvedtak",
+    ),
+  };
+}
+
+async function kjorPraksis(ider: string[], fraLager: boolean) {
+  const deps = { hentKandidater: lagHentKandidater(db), hentFulltekst: lagHentFulltekst(db), hentEksempler: lagHentEksempler(db), utkast: true };
+  mkdirSync(join(MAPPE, "praksis"), { recursive: true });
+  const linjer: string[] = [];
+  // Amounts the jurist's example decisions awarded: a general paragraph must not carry them (P4).
+  const eksempler = await deps.hentEksempler(Object.values(PRAKSIS_FAST).flatMap((b) => b.eksempler), "C");
+  const belop = eksempler.flatMap((v) => [v.tilkjent_totalt_nok, v.belop_tilkjent_nok]).filter((x): x is number => x != null);
+  await iParallell(ider, fraLager ? 1 : SAMTIDIG, async (id) => {
+    const fil = join(MAPPE, "resultat", `${id}.json`);
+    const res = JSON.parse(readFileSync(fil, "utf8"));
+    if (!res.resultat || res.resultat.stopp) return;
+    const lager = join(MAPPE, "praksis", `${id}.json`);
+    let d: Praksisdel;
+    let igjen: Praksisdel | null = null;
+    if (fraLager) {
+      d = JSON.parse(readFileSync(lager, "utf8"));
+      // The same calls, answered from the store by their prompt.
+      const lagret = new Map(d.forsok.filter((f) => f.bruker && f.raa).map((f) => [f.bruker!, f.raa!]));
+      const kall: Kall = async ({ bruker }) => {
+        const raa = lagret.get(bruker);
+        if (!raa) throw new Error("ikke i lageret");
+        return { input: raa, modell: "lager", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } };
+      };
+      igjen = await skrivPraksisdel(res.skjema, IDAG, { ...deps, kall });
+    } else {
+      d = await skrivPraksisdel(res.skjema, IDAG, deps);
+      writeFileSync(lager, JSON.stringify(d, null, 2) + "\n");
+    }
+    const sjekker = praksisSjekker(res.resultat, d, igjen, belop);
+    // The decisions the paragraphs cite, for the control agents.
+    await eksporter([...new Set(d.avsnitt.flatMap((a) => a.vedtak.map((v) => v.saksnummer)))]);
+    res.praksis = {
+      avsnitt: d.avsnitt.map((a) => ({ ...a, filer: a.vedtak.map((v) => `vedtak/${trygt(v.saksnummer)}.json`) })),
+      lovendring: d.lovendring,
+      forsok: d.forsok.map((f: Forsok) => ({ feil_id: f.feil_id, modus: f.modus, vedtak_id: f.vedtak_id, eksempel_vedtak_ids: f.eksempel_vedtak_ids, grunn: f.grunn, strykninger: f.strykninger, begrunnelse: f.raa?.begrunnelse ?? null })),
+    };
+    res.maskinelt = { ...res.maskinelt, ...sjekker };
+    writeFileSync(fil, JSON.stringify(res, null, 2) + "\n");
+    const brudd = Object.entries(sjekker).filter(([, v]) => !v.ok);
+    linjer.push(`${id}: ${sjekker.P1.merknad} (${sjekker.P2.merknad})${brudd.length ? ` | BRUDD ${brudd.map(([k, v]) => `${k}: ${v.merknad}`).join("; ")}` : ""}`);
+  });
+  console.log(linjer.sort().join("\n"));
+}
+
 async function main() {
-  const valgte = process.argv.slice(2);
+  const praksis = process.argv.includes("--praksis");
+  const fraLager = process.argv.includes("--fra-lager");
+  const valgte = process.argv.slice(2).filter((a) => !a.startsWith("--"));
   const ider = (valgte.length ? valgte : readdirSync(join(MAPPE, "saker")).map((f) => f.replace(/\.json$/, ""))).sort();
   const plan = readdirSync(MAPPE)
     .filter((f) => f.startsWith("plan-"))
@@ -126,6 +212,7 @@ async function main() {
     oversikt.push(`${id}: ${r.feil.map((f) => `${f.feil_id} ${f.styrke ?? "forlik"}${f.kandidater.length ? ` ${f.kandidater.map((k) => k.saksnummer).join(" ")}` : ""}`).join(", ")}${brudd.length ? ` | BRUDD ${brudd.map(([k, v]) => `${k}: ${v.merknad}`).join("; ")}` : ""} (${ms} ms)`);
   }
   console.log(oversikt.join("\n"));
+  if (praksis || fraLager) await kjorPraksis(ider, fraLager);
 }
 
 main()

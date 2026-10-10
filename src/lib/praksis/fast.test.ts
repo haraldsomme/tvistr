@@ -115,3 +115,20 @@ describe("skrivPraksisdel: spesifikk, så generell, så fast blokk", () => {
     expect(kalt).toBe(false);
   });
 });
+
+describe("skrivPraksisdel når modellkallet feiler", () => {
+  it("feiler hele praksisdelen i stedet for å falle tilbake til den faste blokken", async () => {
+    const s = structuredClone(skjemaJson as unknown as Skjema);
+    s.del3_feil = [{ ...s.del3_feil[0], kategori: "batteri_elbil", selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, svar_pa_direkte_sporsmal: false, rapport_sier: { hva: "ja", hvorfor: "ja", var_der_ved_overtakelse: "ja", mer_enn_normal_slitasje: "ja", kostnad: "ja" }, kostnad_kr: 50_000, avskrift_verksted: "Cellefeil, mer enn normal slitasje, til stede ved overtakelsen." }];
+    const deps = {
+      hentKandidater: async () => [],
+      hentFulltekst: async () => new Map(),
+      hentEksempler: async (e: Array<{ vedtak_id: number; feil_id: string }>) => e.map((x) => ({ vedtak_id: x.vedtak_id, feil_id: x.feil_id, spor: "C" }) as VedtakFeil),
+      utkast: true,
+      kall: async () => {
+        throw new Error("Your credit balance is too low");
+      },
+    };
+    await expect(skrivPraksisdel(s, IDAG, deps)).rejects.toThrow(/credit balance/);
+  });
+});

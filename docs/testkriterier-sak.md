@@ -1,6 +1,6 @@
 # Kriterier for fiktive testsaker gjennom `/sak`
 
-*Utkast 2026-10-10. Gjelder testsaker som fylles ut i skjemaet på `/sak` (skjema 1.2) og vurderes på det motoren svarer: vurderingen per feil og brevets praksisdel. Reglene som testes, står i `docs/sammenligningsmotor.md` og `docs/spor.md`.*
+*2026-10-10, revidert samme dag etter piloten: motoren er et filter, og praksisdelen skrives av en modell med belegg (`docs/praksis.md`). Gjelder testsaker som fylles ut i skjemaet på `/sak` (skjema 1.2): vurderingen per feil og brevets praksisdel. Reglene som testes, står i `docs/sammenligningsmotor.md`, `docs/praksis.md` og `docs/spor.md`. Kriteriene C2, D4, D5, E1 og E2 er gjort presise fordi to kontrollører var uenige om dem i piloten.*
 
 ## Alvorlighetsgrad
 
@@ -33,34 +33,46 @@
 
 *B3, B4 og B6 utgikk 2026-10-10 da motoren ble et filter (`docs/sammenligningsmotor.md`). Regler for praksisavsnittet kommer i `docs/praksis.md`.*
 
-## C. Valg av vedtak (lest av kontrollagent)
+## P. Praksisdelen (maskinelt, med `--praksis`)
 
 | # | Kriterium | Krav |
 |---|---|---|
-| C1 | **Analogi:** en jurist ville akseptert vedtaket som sammenlignbart for denne feilen og dette sporet. Ved tilbakefall: holder analogien når motparten innvender at det gjaldt en annen type feil? | ≥ 90 % |
-| C2 | **«Sterkere» er sant:** hvert moment avsnittet bruker som sterkere, stemmer mot vedtakets tekst | 100 % |
-| C3 | **Ingen skjult svakhet:** kjøperen er ikke reelt svakere på et moment vedtaket bygde på, men som ikke ble sammenlignet | ≥ 95 % |
-| C4 | **Ikke et åpenbart bedre vedtak:** kontrollagenten sjekker tre andre vunne vedtak i samme kategori og spor | ≥ 85 % |
-| C5 | **Sporet vedtaket vant på:** vedtaket er faktisk vunnet på det sporet avsnittet bygger på | ≥ 95 % |
+| P1 | Andel feil med spesifikt avsnitt, generelt avsnitt og fast blokk | rapporteres, ingen terskel |
+| P2 | Kostnad per skjema | rapporteres |
+| P3 | Høyst to avsnitt og høyst ett generelt eller fast, ingen vedtak sitert to ganger, ingen avsnitt for feil uten spor, og samme avsnitt når lagrede modellsvar verifiseres på nytt | 100 % |
+| P4 | Et generelt avsnitt eller en fast blokk sammenligner aldri og har ingen beløp fra et eksempelvedtak | 100 % |
+
+## C. Valg av vedtak (lest av kontrollagent, bare spesifikke avsnitt)
+
+| # | Kriterium | Krav |
+|---|---|---|
+| C1 | **Analogi:** vedtaket gjelder samme type feil, og det utvalget bygde på, finnes også i kjøperens sak. Kontrolløren siterer setningen i vedtaket som bar resultatet og feltet i skjemaet som svarer til den. Mangler kjøperen det utvalget bygde på, er C1 ikke oppfylt. | ≥ 90 % |
+| C2 | **«Sterkere» er sant:** hvert moment avsnittet *uttrykkelig* sier at kjøperen er sterkere på, stemmer med vedtakets tekst og med skjemaet. Momenter avsnittet ikke nevner, vurderes ikke her. | 100 % |
+| C3 | **Ingen skjult svakhet:** utvalget bygde uttrykkelig på et moment (sitér), kjøperen er svakere på det ifølge skjemaet, og avsnittet nevner det ikke. | ≥ 95 % |
+| C4 | **Ikke en klart bedre kandidat:** blant de andre kandidatene filteret ga (`resultat.feil[].kandidater`), er ingen en klart bedre analogi etter C1. Hele korpuset vurderes ikke. | ≥ 85 % |
+| C5 | **Sporet:** vedtaket er vunnet på det grunnlaget avsnittet beskriver (uriktig opplysning, taushet, formodning eller sakkyndig dokumentasjon). | 100 % |
+| C6 | **Når modellen valgte ingen** (`grunn` i `praksis.forsok`): var det riktig? Rapporteres, ingen terskel. | – |
 
 ## D. Teksten i brevet (lest av kontrollagent)
 
 | # | Kriterium | Krav |
 |---|---|---|
-| D1 | **Fakta om vedtaket** stemmer med fulltekst: saksnummer og dato, ordlyd, forbehold («som den er» eller «som den står»), «påvist senest», hvor gammel bilen var og km. Beløpet og hva det dekker (denne mangelen eller manglene i saken). | 100 % |
-| D2 | **Sitatet** er ordrett, en hel setning og handler om det avsnittet bruker det til | 100 % |
-| D3 | **Fakta om kjøperens sak** kommer fra skjemaet. Ingenting er lagt til. | 100 % |
-| D4 | **Ingenting kan snus mot kjøperen:** «synlig», «burde», innrømmet slitasje, svakheter som ikke er adressert | ≥ 95 % |
-| D5 | **Generelt avsnitt:** ingen sammenligning og ingen tall fra indeksen. To forskjellige eksempler som faktisk viser regelen slik den er formulert, og svar på tapsgrunnen bare når skjemaet gir svaret. | 100 % |
-| D6 | **Norsk:** grammatisk og idiomatisk bokmål. Ingen tomme ledd, gjentakelser, plassholdere ([KLAGER]) eller tall i feil bøyning. | ≥ 95 % |
+| F1 | **Belegget bærer setningen:** for hver setning om et vedtak sier belegget (`forsok[].raa.setninger[].belegg` i `data/testkjoring/praksis/<id>.json`) det setningen påstår, ikke bare noe som ligner. Gjelder spesifikke og generelle avsnitt. | 100 %, blokkerende |
+| D1 | **Fakta om vedtaket** i det ferdige avsnittet stemmer med fulltekst: hva utvalget fant (uriktig opplysning er ikke taushet), saksnummer og dato, beløp og hva det dekket, alder, km og tid. | 100 % |
+| D2 | **Sitatet** handler om det avsnittet bruker det til. (At det er ordrett og en hel setning, sjekker koden.) | 100 % |
+| D3 | **Fakta om kjøperens sak** kommer fra skjemaet. Ingenting er lagt til, og en avtalt feil (forlik) er ikke med. | 100 % |
+| D4 | **Ingenting kan snus mot kjøperen.** Kontrolløren siterer setningen og sier hvilken av disse den gir motparten: (a) kjøperen burde ha oppdaget feilen, (b) feilen er slitasje, (c) kjøperen reklamerte sent, (d) en svakhet nevnt uten svar. Uten en av (a)–(d) er D4 oppfylt. | ≥ 95 % |
+| D5 | **Fast blokk:** slotene stemmer med skjemaet, og ingen tall kommer fra korpuset. | 100 % |
+| F2 | **Et generelt avsnitt eller en fast blokk påstår ikke likhet:** ingen sammenligning med et eksempel, og ingenting om hva kjøperen i eksemplet fikk. | 100 %, blokkerende |
+| D6 | **Norsk:** en grammatisk feil, en setning som må leses to ganger for å forstås, eller samme opplysning to ganger, er ikke oppfylt. Ordvalg er «mindre». | ≥ 95 % |
 | D7 | **Tonen** passer for et brev en forbruker sender selv til en forhandler | ≥ 90 % |
 
 ## E. Vurderingen kjøperen ser (lest av kontrollagent)
 
 | # | Kriterium | Krav |
 |---|---|---|
-| E1 | **Styrken er forsvarlig** når kontrollagenten ser på saken som helhet. Uenighet skal begrunnes. | ≥ 85 % |
-| E2 | **Forklaringen** (vedtak, uten praksis, grunnen til at saken mangler spor) er riktig og forståelig for en forbruker | ≥ 90 % |
+| E1 | **Styrken er ikke villedende.** At styrken følger regelen, sjekker B2. E1 er ikke oppfylt bare når kontrolløren navngir et konkret forhold i skjemaet som regelen ikke fanger, og som gjør styrken villedende i akkurat denne saken. | ≥ 85 % |
+| E2 | **Forklaringen** kjøperen ser for feilen (`Brukerresultat` i `src/app/sak/skjema.tsx`) er sann ut fra resultatet og forståelig for en forbruker. | ≥ 90 % |
 
 ## Testsakene selv
 
@@ -79,6 +91,8 @@
 ## Når er vi ferdige?
 
 - **Ingen blokkerende merknader.**
+- **Ingen uriktige faktapåstander** (F1, D1 og F2 fullt oppfylt).
 - **Under 5 % alvorlige merknader** i C, D og E samlet.
-- **Alle maskinelle krav i A og B** er oppfylt.
+- **Alle maskinelle krav i A, B og P** er oppfylt.
+- Andelen brev med praksisavsnitt rapporteres, men har ingen terskel.
 - **Hver alvorlig merknad** er enten rettet i reglene, eller ført opp som kjent svakhet i `docs/sammenligningsmotor.md`.

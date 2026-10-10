@@ -8,8 +8,8 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { sql } from "drizzle-orm";
 import { db } from "../../src/db";
-import { sammenlign, type Resultat } from "../../src/lib/sammenligning";
-import { erSpesifikk, kategoriavstand } from "../../src/lib/sammenligning/avled";
+import { MAKS_KANDIDATER, sammenlign, type Resultat } from "../../src/lib/sammenligning";
+import { erSpesifikk } from "../../src/lib/sammenligning/avled";
 import { lagHentKandidater } from "../../src/lib/sammenligning/kandidater";
 import type { Spor } from "../../src/lib/sammenligning/typer";
 import { type Skjema, validerSkjema } from "../../src/lib/skjema/skjema";
@@ -17,7 +17,6 @@ import { UGYLDIG_FELT } from "./valider";
 
 const MAPPE = "data/testkjoring";
 const IDAG = "2026-10-10";
-const LOVENDRING_START = /gjelder (et )?kjøp før forbrukerkjøpsloven ble endret/;
 
 type Sjekk = { ok: boolean; merknad?: string };
 const ok = (betingelse: boolean, merknad: string): Sjekk => (betingelse ? { ok: true } : { ok: false, merknad });
@@ -38,22 +37,11 @@ function forventetSpor(s: Skjema, f: Skjema["del3_feil"][number]): Spor[] {
   return ut;
 }
 
-// The letter's practice section as /sak shows it (src/app/sak/skjema.tsx Brevet).
-function brevet(r: Resultat): string[] {
-  const valgt = r.valgt_til_brev.map((id) => r.feil.find((f) => f.feil_id === id)?.avsnitt).filter((a): a is string => !!a);
-  const generelle = r.feil.filter((f) => f.praksis === "generell" && f.avsnitt).map((f) => f.avsnitt!);
-  return [...valgt, ...generelle, ...(r.lovendring ? [r.lovendring] : [])];
-}
-
 function maskinelt(s: Skjema, r: Resultat, r2: Resultat, ms: number): Record<string, Sjekk> {
   const aktive = r.feil.filter((f) => !f.forlik);
-  const kandidater = aktive.map((f) => f.kandidat?.vedtak_id).filter((x): x is number => x != null);
   const spor = s.del3_feil.map((f, i) => ({ id: f.id, ventet: forventetSpor(s, f), fikk: r.feil[i]?.spor_alle ?? [] }));
-  const styrkeFeil = aktive.filter((f) => {
-    const ventet = !f.spor_alle.length ? "svak" : f.kandidat ? (f.motstridende || f.kategori_tilbakefall ? "middels" : "sterk") : f.motstridende ? "svak" : "middels";
-    return f.styrke !== ventet;
-  });
-  const tilbakefall = aktive.filter((f) => f.kandidat && f.kandidat.kategori !== f.kategori_pass2 && (f.kandidat_spor === "C" || kategoriavstand(f.kategori_pass2, f.kandidat.kategori, f.kandidat_spor!) === 99));
+  // The strength rule (docs/sammenligningsmotor.md): no track → svak; no decision or a late complaint → middels.
+  const styrkeFeil = aktive.filter((f) => f.styrke !== (!f.spor_alle.length ? "svak" : !f.kandidater.length || f.reklamasjon_over_to_mnd ? "middels" : "sterk"));
   const forlik = s.del6_kontakt_med_selger.avtale_gjelder_feil;
   return {
     A1: { ok: true },
@@ -61,23 +49,14 @@ function maskinelt(s: Skjema, r: Resultat, r2: Resultat, ms: number): Record<str
     A4: ok(ms < 10_000, `${ms} ms`),
     A5: ok(
       (s.del1_kjopet.selgertype === "privat") === (r.stopp === "privat_selger") &&
-        r.feil.every((f) => !forlik.includes(f.feil_id) || (f.forlik && f.avsnitt == null && f.styrke == null)),
+        r.feil.every((f) => !forlik.includes(f.feil_id) || (f.forlik && !f.kandidater.length && f.styrke == null)),
       "privatkjøp eller forlik er ikke håndtert",
     ),
     B1: ok(spor.every((x) => JSON.stringify(x.ventet) === JSON.stringify(x.fikk)), spor.filter((x) => JSON.stringify(x.ventet) !== JSON.stringify(x.fikk)).map((x) => `${x.id}: ventet ${x.ventet.join("") || "–"}, fikk ${x.fikk.join("") || "–"}`).join("; ")),
     B2: ok(!styrkeFeil.length, styrkeFeil.map((f) => `${f.feil_id}: ${f.styrke}`).join("; ")),
-    B3: ok(
-      aktive.every((f) => (f.praksis === "vedtak") === (f.kandidat != null) && (f.praksis === "generell") === (!f.kandidat && f.avsnitt != null)),
-      "praksis og innhold stemmer ikke",
-    ),
-    B4: ok(!tilbakefall.length, tilbakefall.map((f) => `${f.feil_id}: ${f.kategori_pass2} → ${f.kandidat!.kategori} på ${f.kandidat_spor}`).join("; ")),
     B5: ok(
-      new Set(kandidater).size === kandidater.length && r.valgt_til_brev.length <= 2 && !r.feil.some((f) => f.avsnitt && LOVENDRING_START.test(f.avsnitt)),
-      "samme vedtak på to feil, mer enn to avsnitt, eller lovendringen inne i et avsnitt",
-    ),
-    B6: ok(
-      s.del3_feil.every((f, i) => !(f.kostnad_kr != null && f.kostnad_kr > s.del1_kjopet.pris_kr && !f.kostnad_over_pris_bekreftet) || !/\d{3,} % av kjøpesummen/.test(r.feil[i]?.avsnitt ?? "")),
-      "kostnad over kjøpesummen gjengitt uten bekreftelse",
+      r.valgt_til_brev.length <= 2 && r.feil.every((f) => f.kandidater.length <= MAKS_KANDIDATER && f.kandidater.every((k) => f.spor_alle.includes(k.spor))),
+      "mer enn to feil til brevet, for mange kandidater, eller kandidat på et spor feilen ikke har",
     ),
   };
 }
@@ -135,30 +114,16 @@ async function main() {
     }
     const sjekker = { A2, ...maskinelt(s, r, r2, ms) };
 
-    // Every decision the control agents read: the chosen one, the contradicting loss, the nearest
-    // won one, the general paragraph's examples, and three other won ones per defect (criterion C4).
-    const referanser = await Promise.all(
-      r.feil.map(async (f) => {
-        const spor = f.kandidat_spor ?? f.spor_primar;
-        const alternativer = f.kandidat && spor
-          ? (await hent({ spor, a_variant: spor === "A" ? (f.a_variant ?? null) : null, kategori: f.kategori_pass2, kategorier: [f.kandidat.kategori], heving_tillatt: r.sak.heving_tillatt_i_praksis }))
-              .filter((v) => v.vedtak_id !== f.kandidat!.vedtak_id)
-              .slice(0, 3)
-              .map((v) => v.saksnummer)
-          : [];
-        const eksempler = f.praksis === "generell" ? [...(f.avsnitt ?? "").matchAll(/vedtak (\S+) av/g)].map((m) => m[1]) : [];
-        return { feil_id: f.feil_id, kandidat: f.kandidat?.saksnummer ?? null, motstridende: f.motstridende?.saksnummer ?? null, naermeste: f.naermeste?.saksnummer ?? null, eksempler, alternativer };
-      }),
-    );
-    const alle = [...new Set(referanser.flatMap((x) => [x.kandidat, x.motstridende, x.naermeste, ...x.eksempler, ...x.alternativer]).filter((x): x is string => !!x))];
-    await eksporter(alle);
+    // The candidates' decisions, for the control agents and the practice paragraph.
+    const referanser = r.feil.map((f) => ({ feil_id: f.feil_id, kandidater: f.kandidater.map((k) => k.saksnummer) }));
+    await eksporter([...new Set(referanser.flatMap((x) => x.kandidater))]);
 
     writeFileSync(
       join(MAPPE, "resultat", `${id}.json`),
-      JSON.stringify({ id, spes, skjema: s, resultat: r, brevet: brevet(r), maskinelt: sjekker, vedtak: referanser.map((x) => ({ ...x, filer: [x.kandidat, x.motstridende, x.naermeste, ...x.eksempler, ...x.alternativer].filter(Boolean).map((n) => `vedtak/${trygt(n!)}.json`) })) }, null, 2) + "\n",
+      JSON.stringify({ id, spes, skjema: s, resultat: r, maskinelt: sjekker, vedtak: referanser.map((x) => ({ ...x, filer: x.kandidater.map((n) => `vedtak/${trygt(n)}.json`) })) }, null, 2) + "\n",
     );
     const brudd = Object.entries(sjekker).filter(([, v]) => !v.ok);
-    oversikt.push(`${id}: ${r.feil.map((f) => `${f.feil_id} ${f.styrke ?? "forlik"}/${f.praksis ?? "–"}${f.kandidat ? ` ${f.kandidat.saksnummer}` : ""}`).join(", ")}${brudd.length ? ` | BRUDD ${brudd.map(([k, v]) => `${k}: ${v.merknad}`).join("; ")}` : ""} (${ms} ms)`);
+    oversikt.push(`${id}: ${r.feil.map((f) => `${f.feil_id} ${f.styrke ?? "forlik"}${f.kandidater.length ? ` ${f.kandidater.map((k) => k.saksnummer).join(" ")}` : ""}`).join(", ")}${brudd.length ? ` | BRUDD ${brudd.map(([k, v]) => `${k}: ${v.merknad}`).join("; ")}` : ""} (${ms} ms)`);
   }
   console.log(oversikt.join("\n"));
 }

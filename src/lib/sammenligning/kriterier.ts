@@ -3,8 +3,7 @@
 import { SKRIFTLIGE_FORMER } from "@/lib/analyse/skjema";
 import type { VerifisertBevis, VerifisertOpplysning } from "@/lib/analyse/verifiser";
 import { dagerMellom } from "@/lib/analyse/verifiser";
-import { erSlitedel } from "./avled";
-import { FORM_RANG } from "./fraser";
+import { erSlitedel, FORM_RANG } from "./avled";
 import type { FeilProfil, Kriterium, Sak, Utfall, VedtakFeil } from "./typer";
 
 // Better for the buyer when `bedre` holds on the user's side and not the decision's.
@@ -58,11 +57,6 @@ export function leksikografisk(a: number[], b: number[]): number {
   return 0;
 }
 
-// The same kind of defect is a bonus. Another kind is no weakness of the user's case: it is only
-// fetched when the category has no won decision the case is as strong as, nearest first
-// (avled.ts kategoritrinn), and the letter says the decision concerned another kind of defect.
-const kategori = (f: FeilProfil, v: VedtakFeil) => k("kategori", f.kategori_pass2, v.kategori, f.kategori_pass2 === v.kategori ? "sterkere" : "lik");
-
 function sporA(sak: Sak, f: FeilProfil, v: VedtakFeil, o: VerifisertOpplysning): Kriterium[] {
   const forbehold = k(
     "forbehold",
@@ -71,7 +65,7 @@ function sporA(sak: Sak, f: FeilProfil, v: VedtakFeil, o: VerifisertOpplysning):
     fordel(sak.uten_forbehold, v.forbehold.length === 0),
   );
   if (f.a_variant === "taushet") {
-    return [k("dokumentert_fortielse", f.rapport_ok, knyttetBevis(v).length > 0, fordel(f.rapport_ok, knyttetBevis(v).length > 0)), forbehold, kategori(f, v)];
+    return [k("dokumentert_fortielse", f.rapport_ok, knyttetBevis(v).length > 0, fordel(f.rapport_ok, knyttetBevis(v).length > 0)), forbehold];
   }
   const br = FORM_RANG[f.a_form ?? ""] ?? 0;
   const vr = FORM_RANG[o.form ?? ""] ?? 0;
@@ -82,7 +76,6 @@ function sporA(sak: Sak, f: FeilProfil, v: VedtakFeil, o: VerifisertOpplysning):
     k("konkrethet", bSpes, o.rekkevidde, o.rekkevidde == null || o.rekkevidde === bSpes ? "lik" : f.a_spesifikk ? "sterkere" : "svakere"),
     k("direkte_sporsmal", f.a_direkte, o.svar_pa_direkte_sporsmal, fordel(f.a_direkte, o.svar_pa_direkte_sporsmal)),
     forbehold,
-    kategori(f, v),
   ];
 }
 
@@ -126,7 +119,6 @@ function sporB(sak: Sak, f: FeilProfil, v: VedtakFeil): Kriterium[] {
     k("arsak", f.rapport_arsak, vArsak, fordel(f.rapport_arsak, vArsak)),
     k("ikke_slitedel", !f.slitedel, !vSlitedel, slitedel, true),
     k("reklamasjonstid", f.dager_til_reklamasjon, vRek, reklamasjonstid(f, v, vRek), false, (f.dager_til_reklamasjon ?? Infinity) <= 60),
-    kategori(f, v),
   ];
 }
 
@@ -153,7 +145,6 @@ function sporC(sak: Sak, f: FeilProfil, v: VedtakFeil): Kriterium[] {
     k("pris", sak.pris_kr, v.kjopesum_nok, storreErBedre(sak.pris_kr, v.kjopesum_nok)),
     k("kostnad_pris", bAndel, vAndel, andel),
     k("tid_til_feil", f.dager_til_feil, v.dager_etter_levering, tidTilFeil(f, v), false, f.rapport_levering),
-    kategori(f, v),
   ];
 }
 

@@ -203,10 +203,6 @@ Brukeren får beskjed om at et ark til verkstedet følger med brevet.
 `src/app/sak/skjema.tsx` er det eneste skjemaet. `/vurdering` er fjernet, med testmodusen.
 - **Validering:** skjemaet sender ikke før valideringen består, og serveren validerer på nytt (`sendSak`).
 - **Firmavelgeren** (`forhandler.tsx`) søker i Brønnøysund via `/api/firma` mens brukeren skriver. Når brukeren velger et treff, kobles det (`treff_bekreftet`). Skriver brukeren videre, kobles det fra.
-- **Under skjemaet** vises vurderingen per feil (styrke, og praksis som forklaring) og brevets praksisdel slik brevmotoren setter den inn:
-  1. avsnittene for feilene i `valgt_til_brev`;
-  2. de generelle avsnittene;
-  3. lovendringssetningen én gang.
-
-  Resten av brevet bygges videre her.
+- **Under skjemaet** vises vurderingen per feil straks, uten modellkall (`docs/sammenligningsmotor.md`): styrken, hvorfor den ikke er sterk, det beste vedtaket som lenke, og ved sen reklamasjon en advarsel om fkjl. § 27. Mangler saken vedtak, vises hva lignende saker tapte på.
+- **Brevets praksisdel** skrives når kjøperen ber om det, i en egen server-handling (`docs/praksis.md`). Resten av brevet bygges videre her.
 

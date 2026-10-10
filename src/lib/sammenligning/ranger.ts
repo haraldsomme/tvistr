@@ -1,9 +1,7 @@
-// Steps 5–7: which decided defects the user's case is at least as strong as, which one is best, and
-// which defects get a practice paragraph (§§ 8–9).
-import { velgSitat } from "./argumenter";
-import { kategoriavstand } from "./avled";
+// Steps 5–7: which decided defects the user's case is at least as strong as, in which order, and which
+// defects go to the practice paragraph (§§ 8–9).
 import { leksikografisk } from "./kriterier";
-import type { FeilProfil, Kriterium, Sak, VedtakFeil, Vurdert } from "./typer";
+import type { Kriterium, Sak, VedtakFeil, Vurdert } from "./typer";
 
 export type Dom = { godkjent: true; svakhet: Kriterium | null } | { godkjent: false; grunn: string };
 
@@ -21,112 +19,22 @@ export function sterkereEnn(kriterier: Kriterium[], sak: Sak, v: VedtakFeil): Do
   return { godkjent: false, grunn: `svakere på ${svake.map((k) => k.navn).join(", ")}` };
 }
 
-// Not in the spec's list, but a paragraph without the seller's words or the committee's own sentence
-// is a weaker paragraph: the verified wording and a whole-sentence quote come before recency.
-function siterbar(x: Vurdert): number {
-  const sitat = velgSitat(x.vedtak);
-  return (x.vedtak.spor !== "A" || x.opplysning?.ordlyd_verifisert ? 1 : 0) + (sitat ? 1 : 0);
-}
+// More stronger points, no weakness, newest. The last tie-breakers only make the order total, so the
+// same input always gives the same order.
+const rangering = (x: Vurdert) => [x.antall_sterkere, x.svakhet ? 0 : 1, Date.parse(x.vedtak.vedtaksdato)];
 
-// Words of a statement, without case, quote marks or punctuation: «Kjøretøyets oljeforbruk er litt
-// høyere enn vanlig.» → kjøretøyets oljeforbruk er litt høyere enn vanlig.
-const ord = (t: string) => t.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-
-// Character-bigram similarity (Sørensen–Dice), for wordings that differ by a word or a spelling.
-function likhet(a: string, b: string): number {
-  const bigram = (t: string) => {
-    const s = t.replace(/\s+/g, " ");
-    return Array.from({ length: Math.max(0, s.length - 1) }, (_, i) => s.slice(i, i + 2));
-  };
-  const x = bigram(a);
-  const y = bigram(b);
-  if (!x.length || !y.length) return 0;
-  const telling = new Map<string, number>();
-  for (const g of x) telling.set(g, (telling.get(g) ?? 0) + 1);
-  let felles = 0;
-  for (const g of y) {
-    const n = telling.get(g) ?? 0;
-    if (n > 0) {
-      felles++;
-      telling.set(g, n - 1);
-    }
-  }
-  return (2 * felles) / (x.length + y.length);
-}
-
-// The decision's verified wording is the buyer's statement: its words stand in a row in what the
-// buyer copied, or the two are at least 80 % alike. Such a decision is the one the seller cannot tell
-// apart from the user's case, so it goes before decisions the user is «stronger» than (S10, 52074).
-export function opplysningIdentisk(x: Vurdert, f: FeilProfil): boolean {
-  const o = x.opplysning;
-  if (x.vedtak.spor !== "A" || !o?.ordlyd || !o.ordlyd_verifisert || !f.avskrift_selger) return false;
-  const v = ord(o.ordlyd);
-  const b = ord(f.avskrift_selger);
-  if (!v.length) return false;
-  const iRekke = b.some((_, i) => v.every((w, j) => b[i + j] === w));
-  return iRekke || likhet(v.join(" "), b.join(" ")) >= 0.8;
-}
-
-const LOSNINGER_UTEN_HEVING = ["prisavslag", "erstatning", "prisavslag_og_erstatning", "retting"];
-
-function rangering(x: Vurdert, f: FeilProfil, sak: Sak): number[] {
-  const v = x.vedtak;
-  const sanksjonPasser = sak.onsket_losning === "heving" ? v.sanksjon === "heving" : LOSNINGER_UTEN_HEVING.includes(v.sanksjon ?? "");
-  const sammeKategori = v.kategori === f.kategori_pass2 ? 1 : 0;
-  return [
-    // On B and C the analogy is the defect itself: a rust case is compared with rust before a
-    // four-wheel-drive failure with more stronger points (S04), and in a fallback the nearest kind
-    // first. On A the category is already a criterion.
-    v.spor === "A" ? 0 : -kategoriavstand(f.kategori_pass2, v.kategori, v.spor),
-    // Against a dealer, a dealer decision is the stronger analogy than a commission sale (the form only
-    // reaches matching for dealer purchases).
-    v.selger_type === "forhandler" ? 1 : 0,
-    // Likeness before difference: «sterkere» rewards a different case, the analogy's worth is likeness.
-    opplysningIdentisk(x, f) ? 1 : 0,
-    x.antall_sterkere,
-    x.svakhet ? 0 : 1,
-    sammeKategori,
-    v.lovversjon === sak.lov ? 1 : 0,
-    sanksjonPasser ? 1 : 0,
-    siterbar(x),
-    Date.parse(v.vedtaksdato),
-  ];
-}
-
-// Best first; the last tie-breakers only make the order total, so the same input always gives the same pick.
-export function ranger(godkjente: Vurdert[], f: FeilProfil, sak: Sak): Vurdert[] {
+export function ranger(godkjente: Vurdert[]): Vurdert[] {
   return [...godkjente].sort(
-    (a, b) =>
-      leksikografisk(rangering(b, f, sak), rangering(a, f, sak)) || a.vedtak.vedtak_id - b.vedtak.vedtak_id || a.vedtak.feil_id.localeCompare(b.vedtak.feil_id),
+    (a, b) => leksikografisk(rangering(b), rangering(a)) || a.vedtak.vedtak_id - b.vedtak.vedtak_id || a.vedtak.feil_id.localeCompare(b.vedtak.feil_id),
   );
 }
 
-// One decision per defect. When two defects want the same decision, the one with more stronger
-// points gets it, then the costlier one; the other takes its next candidate.
-export function fordel(lister: Map<string, Vurdert[]>, kostnad: Map<string, number>): Map<string, Vurdert | null> {
-  const valgt = new Map<string, Vurdert | null>();
-  const brukt = new Set<number>();
-  const igjen = new Set(lister.keys());
-  while (igjen.size) {
-    const neste = [...igjen].map((id) => ({ id, v: lister.get(id)!.find((x) => !brukt.has(x.vedtak.vedtak_id)) ?? null }));
-    neste.sort(
-      (a, b) =>
-        (b.v?.antall_sterkere ?? -1) - (a.v?.antall_sterkere ?? -1) || (kostnad.get(b.id) ?? 0) - (kostnad.get(a.id) ?? 0) || a.id.localeCompare(b.id),
-    );
-    const { id, v } = neste[0];
-    valgt.set(id, v);
-    if (v) brukt.add(v.vedtak.vedtak_id);
-    igjen.delete(id);
-  }
-  return valgt;
-}
-
-// At most two defects get a paragraph: strength plus a bonus for the same category, then cost.
-export function velgTilBrev(feil: Array<{ feil_id: string; kostnad: number; valgt: Vurdert | null; kategori: string }>): string[] {
-  const poeng = (x: (typeof feil)[number]) => x.valgt!.antall_sterkere + (x.valgt!.vedtak.kategori === x.kategori ? 1 : 0);
+// At most two defects go to the practice paragraph: those whose best decision has the most stronger
+// points, then the costlier.
+export function velgTilBrev(feil: Array<{ feil_id: string; kostnad: number; antall_sterkere: number | null }>): string[] {
   return feil
-    .filter((x) => x.valgt)
-    .sort((a, b) => poeng(b) - poeng(a) || b.kostnad - a.kostnad || a.feil_id.localeCompare(b.feil_id))
+    .filter((x) => x.antall_sterkere != null)
+    .sort((a, b) => b.antall_sterkere! - a.antall_sterkere! || b.kostnad - a.kostnad || a.feil_id.localeCompare(b.feil_id))
     .slice(0, 2)
     .map((x) => x.feil_id);
 }

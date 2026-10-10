@@ -1,8 +1,9 @@
-// Types for the comparison engine (docs/sammenligningsmotor.md): the user's form in, the chosen
-// decision and the finished practice paragraph out. No LLM anywhere in the engine.
+// Types for the comparison engine (docs/sammenligningsmotor.md): the user's form in, per defect the
+// strength and up to five won decisions in the same category the case is at least as strong as. A filter:
+// no text, no LLM. The practice paragraph is written from these candidates in src/lib/praksis.
 import type { Sanksjon as AnalyseSanksjon } from "@/lib/analyse/avled";
 import type { Spor } from "@/lib/analyse/skjema";
-import type { VerifisertBegrunnelse, VerifisertBevis, VerifisertOpplysning } from "@/lib/analyse/verifiser";
+import type { VerifisertBevis, VerifisertOpplysning } from "@/lib/analyse/verifiser";
 
 export type { Spor };
 export type AVariant = "uttalelse" | "taushet";
@@ -37,6 +38,8 @@ export type Sak = SakProfil & {
   // null when the buyer does not know whether the contract said "som den er".
   uten_forbehold: boolean | null;
   dato_forste_gang: string | null;
+  // When the defect is complained of: the first contact, or today when the letter is the complaint.
+  reklamasjonsdato: string;
   // The defects a settlement covers (avtale_gjelder_feil); the rest are claimed as before.
   forlik_feil: string[];
 };
@@ -56,12 +59,11 @@ export type FeilProfil = {
   spor_alle: Spor[];
   ingen_spor_arsak: IngenSporArsak | null;
   // Not shown; used by the criteria.
-  har_skriftlig_opplysning: boolean;
-  a_former: string[];
   a_form: string | null;
   a_spesifikk: boolean;
-  avskrift_selger: string | null; // what the seller wrote, as the buyer copied it (identical-statement ranking)
-  avskrift_verksted: string | null; // what the workshop wrote, as the buyer copied it (the general paragraph)
+  // What the seller and the workshop wrote, as the buyer copied it (for the practice paragraph).
+  avskrift_selger: string | null;
+  avskrift_verksted: string | null;
   a_direkte: boolean;
   rapport_ok: boolean; // 16a: the report names the faulty part
   rapport_arsak: boolean; // 16a2: and says why it failed
@@ -105,71 +107,51 @@ export type VedtakFeil = {
   utbedringskostnad_nok: number | null;
   tilkjent_totalt_nok: number | null;
   belop_tilkjent_nok: number | null; // tied to this defect by the decision
-  antall_mangler: number; // defects in the decision found to be defects
   sanksjon: Sanksjon;
   selger_bevis_finnes: boolean;
   forbehold: string[];
-  forbehold_frase: "som den er" | "som den står" | null;
   forste_henvendelse_dato: string | null;
   start_dato: string | null; // overtakelsesdato, else kjopsdato
   antall_feil: number;
   opplysninger: VerifisertOpplysning[];
   bevis: VerifisertBevis[];
-  // neste_tegn: the three characters after the quote in the full text (null when not found verbatim).
-  begrunnelse_sitater: Array<VerifisertBegrunnelse & { neste_tegn?: string | null }>;
 };
 
 export type Utfall = "sterkere" | "lik" | "svakere" | "utelat";
 export type Kriterium = { navn: string; bruker: unknown; vedtak: unknown; utfall: Utfall; krav: boolean; adresserbar: boolean };
 
-export type Sitat = { tema: string; tekst: string };
-
 export type Vurdert = {
   vedtak: VedtakFeil;
-  opplysning: VerifisertOpplysning | null; // the statement or silence the paragraph cites (track A)
   kriterier: Kriterium[];
   antall_sterkere: number;
-  svakhet: Kriterium | null;
+  svakhet: Kriterium | null; // the one addressable weakness, if any
 };
 
 export type Forkastet = { saksnummer: string; grunn: string };
 
+// An approved candidate as the result shows it.
 export type KandidatRef = {
   vedtak_id: number;
+  feil_id: string; // the decision's defect
   saksnummer: string;
   vedtaksdato: string;
   kilde_url: string;
-  feil_id: string;
-  kategori: string;
-  spor_vunnet: Spor[];
-  a_variant: string | null;
+  spor: Spor; // the track it was fetched and approved on
   lovversjon: string;
   sanksjon: Sanksjon;
-  tilkjent_totalt_nok: number | null;
-  opplysning: { form: string | null; rekkevidde: string | null; ordlyd: string | null; svar_pa_direkte_sporsmal: boolean } | null;
-  forbehold: boolean;
-  dager_etter_levering: number | null;
-  selger_bevis_finnes: boolean;
+  kriterier: Array<{ navn: string; bruker: unknown; vedtak: unknown; utfall: Utfall }>;
+  antall_sterkere: number;
+  svakhet: string | null;
 };
 
-// The nearest won decision for a defect that got none: what it had that the user lacks (criterion
-// names, plus rapport_ok when B needs written documentation). For the strength assessment and the
-// report order, never for the letter.
-export type Naermeste = {
-  saksnummer: string;
-  vedtaksdato: string;
-  kilde_url: string;
-  kategori: string;
-  spor: Spor;
-  sanksjon: Sanksjon;
-  tilkjent_totalt_nok: number | null;
-  mangler: string[];
+// Lost decisions in the same category on the primary track: information for the report order, never
+// the strength and never the letter.
+export type Tapte = {
+  fordeling: Record<string, number>; // grunn → count
+  nyeste: Array<{ saksnummer: string; vedtaksdato: string; kilde_url: string; grunn: string | null }>;
 };
 
-// A lost decision in the same category and track whose profile is at least as good as the user's
-// (the qualitative criteria; days, age, km and price are the «similar facts»). It lowers the strength
-// to «middels»; the paragraph stays.
-export type Motstridende = { saksnummer: string; vedtaksdato: string; kilde_url: string; grunn: string | null; skilte: string[] };
+export type StyrkeGrunn = "ingen_spor" | "ingen_vedtak" | "reklamert_sent";
 
 export type FeilResultat = {
   feil_id: string;
@@ -183,36 +165,20 @@ export type FeilResultat = {
   spor_sekundar: Spor | null;
   spor_alle: Spor[];
   ingen_spor_arsak: IngenSporArsak | null;
-  // For the letter engine's assessment of how serious the defect is.
   kan_bilen_brukes: SkjemaFeil["kan_bilen_brukes"];
   alvor: boolean;
-  // false when sak.svakhet_sak = "km" but the paragraph could not answer it: the letter engine
-  // takes it up only if the seller has raised the mileage.
-  km_svakhet_i_avsnitt: boolean;
-  kandidat: KandidatRef | null;
-  kandidat_spor: Spor | null;
-  // The decision concerns another kind of defect: the category had none (avled.ts kategoritrinn).
-  kategori_tilbakefall: boolean;
-  kriterier: Array<{ navn: string; bruker: unknown; vedtak: unknown; utfall: Utfall }>;
-  antall_sterkere: number;
-  svakhet_adressert: string | null;
-  godkjent: boolean;
-  sitat: Sitat | null;
-  argumenter: string[];
-  avsnitt: string | null;
+  // 0–5, best first: primary track before secondary, same category only.
+  kandidater: KandidatRef[];
   forkastede: Forkastet[];
-  // The case, not the corpus (index.ts styrke): svak without a track; sterk with a won decision in the
-  // category and no contradicting loss; middels otherwise, or svak when a track has no decision and a
-  // similar case was lost. null: settled (forlik), so not claimed and not matched.
+  // svak without a track; middels with a track but no decision, or a late complaint (fkjl § 27);
+  // sterk with a decision. null: settled (forlik), so not claimed and not matched.
   styrke: "sterk" | "middels" | "svak" | null;
-  // What the letter can cite: a won decision, a general paragraph on the rule (no single case), or
-  // nothing. Shown under the strength as an explanation («uten praksis»), never as the strength.
-  praksis: "vedtak" | "generell" | "ingen" | null;
-  motstridende: Motstridende | null;
-  naermeste: Naermeste | null;
+  // Why it is not sterk; null when it is (or settled).
+  styrke_grunn: StyrkeGrunn | null;
+  tapte: Tapte | null;
   // Covered by the settlement: not claimed in the letter.
   forlik: boolean;
-  // A flag for the letter engine, not a stop: whether the time was reasonable is not ours to decide (fkjl § 27).
+  // More than two months from discovery to the first complaint (fkjl § 27): at most middels.
   reklamasjon_over_to_mnd: boolean | null;
 };
 
@@ -220,22 +186,11 @@ export type Resultat = {
   stopp: "privat_selger" | null;
   sak: SakProfil;
   feil: FeilResultat[];
+  // At most two defects with a decision, for the practice paragraph.
   valgt_til_brev: string[];
-  // Said once, after the last practice paragraph, when a cited decision predates the 2024 amendment.
-  lovendring: string | null;
   ingen_treff: Array<{ feil_id: string; siste_stopp: string }>;
 };
 
-// Fetches won defects for one track. Injected so the tests can run without a database.
-// `kategorier` is what may be fetched, nearest first (one step of avled.ts kategoritrinn). `tapte`
-// fetches lost defects on the track instead of won ones.
-// `nyeste` orders by decision date alone (the general paragraph's examples), not by category first.
-export type HentKandidater = (q: {
-  spor: Spor;
-  a_variant: AVariant | null;
-  kategori: string;
-  kategorier: string[];
-  heving_tillatt: boolean;
-  tapte?: boolean;
-  nyeste?: boolean;
-}) => Promise<VedtakFeil[]>;
+// Fetches won defects in one category on one track (or lost ones with `tapte`). Injected so the tests
+// can run without a database.
+export type HentKandidater = (q: { spor: Spor; a_variant: AVariant | null; kategori: string; heving_tillatt: boolean; tapte?: boolean }) => Promise<VedtakFeil[]>;

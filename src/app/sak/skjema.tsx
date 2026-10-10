@@ -7,7 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 import { HVOR_STO_DET, KATEGORIER, MAKS_FEIL, RAPPORT_TOM, SKJEMA_VERSJON, validerSkjema, type Skjema, type SkjemaFeil } from "@/lib/skjema/skjema";
-import { type SakSvar, sendSak } from "./actions";
+import { type FeilSvar, type SakSvar, sendSak } from "./actions";
 import { Forhandlervelger } from "./forhandler";
 
 type Valgliste<T extends string> = readonly (readonly [T, string])[];
@@ -431,9 +431,43 @@ const INGEN_SPOR: Record<string, string> = {
   rapport_mangler: "Det mangler skriftlig dokumentasjon fra et verksted av hva som er feil.",
   utenfor_frist: "Feilen viste seg etter fristen der loven legger til grunn at den var der ved kjøpet, og rapporten sier ikke at den går ut over normal slitasje.",
 };
+// The committee's reasons in lost cases (pass 2), as the buyer reads them.
+const TAPSGRUNN: Record<string, string> = {
+  paregnelig_slitasje: "påregnelig slitasje",
+  ikke_dokumentert: "feilen var ikke dokumentert",
+  ikke_sannsynliggjort_ved_levering: "ikke vist at feilen var der ved leveringen",
+  kjent_eller_opplyst: "feilen var kjent eller opplyst ved kjøpet",
+  synlig_ved_besiktigelse: "feilen var synlig ved besiktigelse",
+  oppstatt_etter_levering: "feilen oppsto etter leveringen",
+  forbehold: "forbehold i kontrakten",
+};
+const LENKE = "font-medium text-[#1f3a5f] underline";
+const TEKST = "m-0 text-[14px] leading-[1.6] text-[#3d4757]";
 
-// What the buyer sees: the strength of each defect, with what the letter can cite as an explanation
-// under it («uten praksis» is not a strength). The paragraph itself is the letter's and is not shown.
+// What similar cases lost on, for deciding whether to order a report: never the strength, never the letter.
+function Tapte({ tapte }: { tapte: NonNullable<FeilSvar["tapte"]> }) {
+  const grunner = Object.entries(tapte.fordeling)
+    .filter(([g]) => TAPSGRUNN[g])
+    .sort((a, b) => b[1] - a[1]);
+  if (!grunner.length) return null;
+  return (
+    <p className="m-0 text-[13px] leading-[1.6] text-[#5b6472]">
+      Lignende saker har tapt på: {grunner.map(([g, n]) => `${TAPSGRUNN[g]} ${n}`).join(", ")}. De nyeste:{" "}
+      {tapte.nyeste.map((v, i) => (
+        <span key={v.saksnummer}>
+          {i > 0 && " og "}
+          <a href={v.kilde_url} target="_blank" rel="noreferrer" className="text-[#1f3a5f] underline">
+            {v.saksnummer}
+          </a>
+        </span>
+      ))}
+      .
+    </p>
+  );
+}
+
+// What the buyer sees: the strength of each defect and why. The letter's practice paragraph is written
+// on request, from the decisions behind this assessment.
 function Brukerresultat({ svar }: { svar: Extract<SakSvar, { ok: true }> }) {
   if (svar.stopp) return <p className={MERKNAD}>Kjøp fra privatperson dekkes ikke av tjenesten ennå.</p>;
   return (
@@ -446,65 +480,32 @@ function Brukerresultat({ svar }: { svar: Extract<SakSvar, { ok: true }> }) {
             {f.styrke && <Merke mork={f.styrke === "sterk"}>{STYRKE[f.styrke]}</Merke>}
           </header>
           {f.forlik ? (
-            <p className="m-0 text-[14px] text-[#3d4757]">Dere har inngått en avtale om denne feilen, så den tas ikke med i brevet.</p>
+            <p className={TEKST}>Dere har inngått en avtale om denne feilen, så den tas ikke med i brevet.</p>
           ) : f.vedtak ? (
-            <p className="m-0 text-[14px] leading-[1.6] text-[#3d4757]">
-              Forbrukerklageutvalget har gitt medhold i en sak som ikke var sterkere enn din:{" "}
-              <a href={f.vedtak.kilde_url} target="_blank" rel="noreferrer" className="font-medium text-[#1f3a5f] underline">
+            <p className={TEKST}>
+              Forbrukerklageutvalget har gitt medhold i en sak om samme type feil som ikke var sterkere enn din:{" "}
+              <a href={f.vedtak.kilde_url} target="_blank" rel="noreferrer" className={LENKE}>
                 vedtak {f.vedtak.saksnummer}
               </a>
-              {f.kategori_tilbakefall && ", som gjaldt en nærliggende type feil"}.{f.til_brevet && " Brevet viser til dette vedtaket."}
+              {f.flere_vedtak > 0 && ` (og ${f.flere_vedtak} til)`}.
             </p>
-          ) : f.praksis === "generell" ? (
-            <p className="m-0 text-[14px] leading-[1.6] text-[#3d4757]">
-              <span className="font-medium">Uten praksis for denne typen feil:</span> vi fant ikke et tidligere vedtak å sammenligne med. Brevet viser derfor til regelen
-              Forbrukerklageutvalget anvender, med eksempler fra praksis, og til dokumentasjonen din.
-            </p>
-          ) : f.ingen_spor_arsak ? (
-            <p className="m-0 text-[14px] leading-[1.6] text-[#3d4757]">{INGEN_SPOR[f.ingen_spor_arsak] ?? "Saken mangler dokumentasjon brevet kan bygge på."}</p>
+          ) : f.styrke_grunn === "ingen_spor" ? (
+            <p className={TEKST}>{(f.ingen_spor_arsak && INGEN_SPOR[f.ingen_spor_arsak]) ?? "Saken mangler dokumentasjon brevet kan bygge på."}</p>
           ) : (
-            <p className="m-0 text-[14px] leading-[1.6] text-[#3d4757]">
-              <span className="font-medium">Uten praksis:</span> vi fant ikke et tidligere vedtak å vise til for denne typen feil. Brevet bygger på loven og dokumentasjonen din.
-            </p>
+            <>
+              <p className={TEKST}>Vi fant ikke et vedtak om samme type feil som saken din er minst like sterk som. Brevet bygger på loven og dokumentasjonen din.</p>
+              {f.tapte && <Tapte tapte={f.tapte} />}
+            </>
           )}
-          {f.motstridende && (
-            <p className="m-0 text-[13px] leading-[1.6] text-[#5b6472]">
-              Utvalget har også avvist en sak med lignende fakta (
-              <a href={f.motstridende.kilde_url} target="_blank" rel="noreferrer" className="text-[#1f3a5f] underline">
-                {f.motstridende.saksnummer}
-              </a>
-              ). {f.motstridende.skilte.join(" ")}
+          {f.reklamasjon_over_to_mnd && (
+            <p className="m-0 text-[14px] leading-[1.6] text-[#8a3b12]">
+              Du tok opp feilen med selger mer enn to måneder etter at du oppdaget den. Loven krever at du gjør det innen rimelig tid, og to måneder regnes alltid som tidsnok
+              (forbrukerkjøpsloven § 27). Senere enn det kan selger avvise kravet, og saken er derfor høyst middels.
             </p>
           )}
         </article>
       ))}
     </>
-  );
-}
-
-// The letter's practice section as the letter engine sets it in (docs/sammenligningsmotor.md): the
-// paragraphs of the defects chosen for the letter, in that order, then the general paragraphs of
-// defects without a decision, then the amendment sentence once. The rest of the letter comes here.
-function Brevet({ svar }: { svar: Extract<SakSvar, { ok: true }> }) {
-  if (svar.stopp) return null;
-  const vedtak = svar.valgt_til_brev.map((id) => svar.feil.find((f) => f.feil_id === id)).filter((f): f is NonNullable<typeof f> => !!f?.avsnitt);
-  const generelle = svar.feil.filter((f) => f.praksis === "generell" && f.avsnitt);
-  const avsnitt = [...vedtak, ...generelle];
-  return (
-    <article className="flex flex-col gap-4 rounded border border-[#dcd8cf] bg-white px-6 py-8 shadow-[0_18px_40px_-24px_rgba(23,38,61,.35)] md:px-10">
-      <span className={ETIKETT}>Brevet</span>
-      <h2 className="m-0 font-brev text-[20px] font-semibold">Praksis fra Forbrukerklageutvalget</h2>
-      {avsnitt.length ? (
-        avsnitt.map((f) => (
-          <p key={f.feil_id} className="m-0 font-brev text-[16px] leading-[1.7] text-[#17263d]">
-            {f.avsnitt}
-          </p>
-        ))
-      ) : (
-        <p className={MERKNAD}>Brevet har ingen praksisdel for disse feilene. Det bygger på loven og dokumentasjonen.</p>
-      )}
-      {svar.lovendring && <p className="m-0 font-brev text-[16px] leading-[1.7] text-[#17263d]">{svar.lovendring}</p>}
-    </article>
   );
 }
 
@@ -766,7 +767,6 @@ export function Sakskjema() {
         {brukersvar?.ok && (
           <section aria-live="polite" className="flex flex-col gap-6">
             <Brukerresultat svar={brukersvar} />
-            <Brevet svar={brukersvar} />
           </section>
         )}
       </div>

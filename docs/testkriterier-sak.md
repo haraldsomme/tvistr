@@ -28,11 +28,10 @@
 | # | Kriterium | Krav |
 |---|---|---|
 | B1 | Sporene stemmer med reglene: skriftlig og konkret opplysning gir A, full rapport gir C, rapport innen fristen gir B. Fristen er seks måneder før 2024 og to år etter. Muntlige løfter gir aldri A. | 100 % |
-| B2 | Styrken følger regelen: uten spor er svak, vedtak uten motstrid er sterk, tilbakefall er høyst middels, spor uten vedtak er middels (svak ved lignende tap) | 100 % |
-| B3 | `praksis` stemmer med innholdet: `vedtak` når saken har et vedtak, `generell` når den har et generelt avsnitt, ellers `ingen` | 100 % |
-| B4 | Tilbakefall bare innenfor regelen: A i opplysningsgruppen, B til nærmeste kategori, C aldri | 100 % |
-| B5 | Flere feil: aldri samme vedtak på to feil, høyst to praksisavsnitt og lovendringssetningen én gang | 100 % |
-| B6 | En kostnad over kjøpesummen gjengis aldri uten bekreftelse | 100 % |
+| B2 | Styrken følger regelen: uten spor er svak; spor uten vedtak, eller reklamasjon mer enn to måneder etter oppdagelsen, er middels; ellers sterk | 100 % |
+| B5 | Høyst to feil til brevet, høyst fem kandidater per feil, og bare på spor feilen har | 100 % |
+
+*B3, B4 og B6 utgikk 2026-10-10 da motoren ble et filter (`docs/sammenligningsmotor.md`). Regler for praksisavsnittet kommer i `docs/praksis.md`.*
 
 ## C. Valg av vedtak (lest av kontrollagent)
 

@@ -1,6 +1,5 @@
 // Steps 1–2: the case and each defect, derived from the form (docs/sammenligningsmotor.md § 5).
 import { dagerMellom } from "@/lib/analyse/verifiser";
-import { HVOR_STO_DET, FORM_RANG } from "./fraser";
 import { erSpesifikk } from "./spesifikk";
 import type { FeilProfil, IngenSporArsak, Sak, SakProfil, Skjema, SkjemaFeil, Spor } from "./typer";
 
@@ -43,6 +42,7 @@ export function avledSak(s: Skjema, idag: string): Sak {
     km_ved_kjop: k.km_ved_kjop,
     uten_forbehold: forbehold === "nei" ? true : forbehold === "ja" ? false : null,
     dato_forste_gang: s.del6_kontakt_med_selger.dato_forste_gang,
+    reklamasjonsdato: s.del6_kontakt_med_selger.dato_forste_gang ?? idag,
     forlik_feil: s.del6_kontakt_med_selger.avtale_inngatt === "ja" ? s.del6_kontakt_med_selger.avtale_gjelder_feil : [],
   };
 }
@@ -50,61 +50,23 @@ export function avledSak(s: Skjema, idag: string): Sak {
 // The form uses pass 2's categories (docs/skjema.md), so § 5.2's mapping is gone.
 const SLITEDELER = ["bremser", "dekk_felger", "drivlinje"];
 
-// Track A may fall back to these groups when its own category has no decision, never across them.
-// B falls back to NAERMESTE, C never leaves the category (kategoritrinn).
-const OPPLYSNINGSGRUPPER = [
-  ["utstyr_mangler", "elektrisk", "klimaanlegg", "dekk_felger", "karosseri_lakk_glass", "interior_lukt"],
-  ["motor", "girkasse", "clutch", "drivlinje", "bremser", "understell_hjuloppheng", "rust", "fukt_lekkasje", "eksos_utslipp", "batteri_elbil"],
-  ["servicehistorikk", "km_avvik", "kollisjonsskade", "bruktimport_opplysning", "arsmodell_identitet"],
-  ["heftelse_pant", "eu_kontroll_registrering"],
-];
-export const sammeGruppe = (a: string, b: string) => a === b || OPPLYSNINGSGRUPPER.some((g) => g.includes(a) && g.includes(b));
-// The rest of the category's group, for track A's second query.
-export const gruppenUtenom = (kategori: string): string[] => (OPPLYSNINGSGRUPPER.find((g) => g.includes(kategori)) ?? []).filter((k) => k !== kategori);
-
-// The nearest kinds of defect on track B, nearest first. On B the presumption carries the case and it
-// is not specific to the kind of defect, so a neighbouring category is defensible as long as «sterkere
-// enn» and the wear-part rule hold. Not on C: there the point is that the defect is documented beyond
-// what is to be expected for this kind of defect, and that has no neighbour (decided 2026-10-10).
-const NAERMESTE: Record<string, string[]> = {
-  motor: ["girkasse", "clutch", "drivlinje", "eksos_utslipp", "batteri_elbil"],
-  girkasse: ["clutch", "drivlinje", "motor"],
-  clutch: ["girkasse", "drivlinje", "motor"],
-  drivlinje: ["girkasse", "clutch", "understell_hjuloppheng", "motor"],
-  bremser: ["understell_hjuloppheng", "dekk_felger"],
-  understell_hjuloppheng: ["bremser", "ramme_chassis", "drivlinje", "dekk_felger"],
-  dekk_felger: ["understell_hjuloppheng", "bremser"],
-  rust: ["ramme_chassis", "karosseri_lakk_glass", "fukt_lekkasje"],
-  ramme_chassis: ["rust", "understell_hjuloppheng", "kollisjonsskade"],
-  karosseri_lakk_glass: ["rust", "kollisjonsskade", "fukt_lekkasje"],
-  fukt_lekkasje: ["karosseri_lakk_glass", "rust", "interior_lukt"],
-  interior_lukt: ["fukt_lekkasje", "karosseri_lakk_glass"],
-  elektrisk: ["batteri_elbil", "klimaanlegg", "utstyr_mangler"],
-  batteri_elbil: ["elektrisk", "motor", "klimaanlegg"],
-  klimaanlegg: ["elektrisk", "motor"],
-  eksos_utslipp: ["motor"],
-  utstyr_mangler: ["elektrisk", "interior_lukt"],
-  kollisjonsskade: ["karosseri_lakk_glass", "ramme_chassis"],
+// Where the written statement stood, strongest first (kontrakt > annonse > melding).
+export const FORM_RANG: Record<string, number> = {
+  kontrakt: 3,
+  tilstandsrapport_fra_selger: 3,
+  annonse: 2,
+  salgsoppgave: 2,
+  melding: 1,
 };
 
-// The categories to fetch, step by step, per track (decided 2026-10-10):
-//   A: the category, then its information group (the comparison is about the statement);
-//   B: the category, then NAERMESTE;
-//   C: the category only.
-// There is no step beyond: a case without a decision there stands on the law and the report.
-export function kategoritrinn(kategori: string, spor: Spor): string[][] {
-  if (spor === "A") return [[kategori], gruppenUtenom(kategori)];
-  if (spor === "B") return [[kategori], NAERMESTE[kategori] ?? []];
-  return [[kategori]];
-}
-
-// 0 for the same category, 1 … for the next step's categories in order, 99 for anything else (never fetched).
-export function kategoriavstand(fra: string, til: string, spor: Spor): number {
-  if (fra === til) return 0;
-  const naer = kategoritrinn(fra, spor)[1] ?? [];
-  const i = naer.indexOf(til);
-  return i === -1 ? 99 : 1 + (spor === "A" ? 0 : i);
-}
+// The form's "hvor_sto_det" answers mapped to pass 2's opplysning.form.
+export const HVOR_STO_DET: Record<string, string> = {
+  annonse: "annonse",
+  kontrakt: "kontrakt",
+  sms_epost_chat: "melding",
+  salgsoppgave: "salgsoppgave",
+  tilstandsrapport: "tilstandsrapport_fra_selger",
+};
 
 // The same rule for the user and for a decided defect, so a wear part is only compared with a wear part.
 export function erSlitedel(kategori: string, alder: number | null, km: number | null): boolean {
@@ -144,7 +106,8 @@ export function avledFeil(sak: Sak, f: SkjemaFeil): FeilProfil {
   // does not carry C; inside the period a report always gives B.
   const arsak: IngenSporArsak | null = spor.length ? null : f.selger_sa_noe === "ja_muntlig" ? "muntlig_opplysning" : !rapportOk ? "rapport_mangler" : "utenfor_frist";
 
-  const reklamasjon = sak.dato_forste_gang ? dagerMellom(f.dato_oppdaget, sak.dato_forste_gang) : null;
+  // Not yet taken up with the seller: the letter is the complaint, so it counts to today (fkjl § 27).
+  const reklamasjon = dagerMellom(f.dato_oppdaget, sak.reklamasjonsdato);
   return {
     feil_id: f.id,
     kategori_skjema: f.kategori,
@@ -157,8 +120,6 @@ export function avledFeil(sak: Sak, f: SkjemaFeil): FeilProfil {
     spor_sekundar: spor[1] ?? null,
     spor_alle: spor,
     ingen_spor_arsak: arsak,
-    har_skriftlig_opplysning: skriftlig,
-    a_former: former,
     a_form: former[0] ?? null,
     a_spesifikk: erSpesifikk(avskrift),
     avskrift_selger: skriftlig ? avskrift : null,

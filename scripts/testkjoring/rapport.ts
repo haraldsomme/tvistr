@@ -15,7 +15,7 @@ type Kontroll = { id: string; merknader: Merknad[] };
 
 const RANG: Record<Grad, number> = { ikke_relevant: -1, ok: 0, mindre: 1, moderat: 2, alvorlig: 3, blokkerende: 4 };
 const KRAV: Record<string, number> = {
-  A1: 1, A2: 1, A3: 1, A4: 1, A5: 1, B1: 1, B2: 1, B3: 1, B4: 1, B5: 1, B6: 1,
+  A1: 1, A2: 1, A3: 1, A4: 1, A5: 1, B1: 1, B2: 1, B5: 1,
   C1: 0.9, C2: 1, C3: 0.95, C4: 0.85, C5: 0.95, D1: 1, D2: 1, D3: 1, D4: 0.95, D5: 1, D6: 0.95, D7: 0.9, E1: 0.85, E2: 0.9,
 };
 const KRITERIER = Object.keys(KRAV);

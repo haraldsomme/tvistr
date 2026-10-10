@@ -1,12 +1,10 @@
-// Step 3: won defects that can be compared with the user's, one track at a time (§ 6).
+// Step 3: won defects in the user's category that can be compared with the user's, one track at a time (§ 6).
 // The search view has no sanction, reservations or the analysis JSON, so they are joined in here.
 import { sql } from "drizzle-orm";
 import type { HentKandidater, Sanksjon, Spor, VedtakFeil } from "./typer";
 
+// Won defects per track; the lost ones are all fetched, since they are counted by reason.
 export const KANDIDATGRENSE = 30;
-// The general paragraph's query (nyeste) counts the won decisions on a track and picks examples among
-// them; every one of them, so a stricter example rule cannot run out of rows.
-export const EKSEMPELGRENSE = 500;
 
 // Track A has two kinds (docs/spor.md). The kind is read from the statements, not the legal basis: a
 // written statement linked to the defect and weighed for the buyer is a statement even when the
@@ -21,11 +19,10 @@ const A_VARIANT = {
 };
 
 export function lagHentKandidater(db: { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: Record<string, unknown>[] }> }): HentKandidater {
-  return async ({ spor, a_variant, kategori, kategorier, heving_tillatt, tapte = false, nyeste = false }) => {
+  return async ({ spor, a_variant, kategori, heving_tillatt, tapte = false }) => {
     const variant = spor === "A" && a_variant ? A_VARIANT[a_variant] : sql``;
     // F9: the sanction is read from the decision's conclusion at import (vedtak_analyse.sanksjon).
     const heving = heving_tillatt ? sql`` : sql`and a.sanksjon is distinct from 'heving'`;
-    const iKategorier = sql`s.kategori in (${sql.join(kategorier.map((k) => sql`${k}`), sql`, `)})`;
     // Won: a defect found on the track. Lost: a defect tried on the track and not found, and not for
     // reasons the user's form shows they do not share. Both include commission sales: they are judged
     // under the consumer purchase act with joint liability (56288).
@@ -38,30 +35,18 @@ export function lagHentKandidater(db: { execute: (q: ReturnType<typeof sql>) => 
         s.kategori, s.komponenter, s.grunnlag, s.spor_vunnet, s.a_variant, s.alvor, s.dager_etter_levering, s.viste_seg_kilde,
         s.lovversjon::text as lovversjon, s.alder_ved_kjop, s.km_ved_kjop, s.kjopesum_nok,
         s.belop_tilkjent_nok, v.tilkjent_totalt_nok, v.utbedringskostnad_nok, a.sanksjon, coalesce(v.forbehold, '{}') as forbehold,
-        -- The reservation's own words, when tolk's summary has them and the decision does too.
-        case when v.forbehold_tekst ~* 'som den står' and v.fulltekst_renset ~* 'som den står' then 'som den står'
-             when v.forbehold_tekst ~* 'som den er' and v.fulltekst_renset ~* 'som den er' then 'som den er' end as forbehold_frase,
-        (select count(*) from vedtak_feil m where m.vedtak_id = s.vedtak_id
-           and (m.vurdering = 'mangel' or (m.vurdering = 'samlet_vurdering' and m.samlet_utfall = 'mangel'))) as antall_mangler, coalesce(v.overtakelsesdato, v.kjopsdato)::text as start_dato,
+        coalesce(v.overtakelsesdato, v.kjopsdato)::text as start_dato,
         a.selger_bevis_finnes, a.forste_henvendelse_dato::text as forste_henvendelse_dato,
-        jsonb_array_length(a.feil) as antall_feil, a.opplysninger, a.bevis,
-        -- The characters after each quote in the full text, so a quote stored without its full stop
-        -- is still known to end a sentence, and one cut short by the agent is not.
-        -- The full text is normalised once per decision, not once per quote (that was 0.8 s of 0.85 s).
-        (select coalesce(jsonb_agg(b || jsonb_build_object('neste_tegn',
-            case when strpos(t.n, q.q) > 0 then substr(t.n, strpos(t.n, q.q) + length(q.q), 3) end)), '[]'::jsonb)
-         from (select regexp_replace(v.fulltekst_renset, '[[:space:]]+', ' ', 'g') as n offset 0) t,
-              jsonb_array_elements(a.begrunnelse_sitater) b,
-              lateral (select regexp_replace(trim(b->>'tekst'), '[[:space:]]+', ' ', 'g') as q) q) as begrunnelse_sitater
+        jsonb_array_length(a.feil) as antall_feil, a.opplysninger, a.bevis
       from vedtak_feil_sok s
       join vedtak v on v.id = s.vedtak_id
       join vedtak_analyse a on a.vedtak_id = s.vedtak_id
       where ${utvalg}
-        and ${iKategorier}
+        and s.kategori = ${kategori}
         and s.vedtaksdato >= date '2021-01-01'
         and not s.ikke_mangelssak
-      order by ${nyeste ? sql`s.vedtaksdato desc` : sql`(s.kategori = ${kategori}) desc, array_position(array[${sql.join(kategorier.map((k) => sql`${k}`), sql`, `)}]::text[], s.kategori), s.vedtaksdato desc`}, s.vedtak_id, s.feil_id
-      limit ${nyeste ? EKSEMPELGRENSE : KANDIDATGRENSE}`);
+      order by s.vedtaksdato desc, s.vedtak_id, s.feil_id
+      ${tapte ? sql`` : sql`limit ${KANDIDATGRENSE}`}`);
     return rows.map((r) => tilVedtakFeil(r, spor));
   };
 }
@@ -93,16 +78,13 @@ function tilVedtakFeil(r: Record<string, unknown>, spor: Spor): VedtakFeil {
     tilkjent_totalt_nok: n(r.tilkjent_totalt_nok),
     utbedringskostnad_nok: n(r.utbedringskostnad_nok),
     belop_tilkjent_nok: n(r.belop_tilkjent_nok),
-    antall_mangler: Number(r.antall_mangler),
     sanksjon: (r.sanksjon as Sanksjon) ?? null,
     selger_bevis_finnes: Boolean(r.selger_bevis_finnes),
     forbehold: r.forbehold as string[],
-    forbehold_frase: (r.forbehold_frase as VedtakFeil["forbehold_frase"]) ?? null,
     forste_henvendelse_dato: (r.forste_henvendelse_dato as string) ?? null,
     start_dato: (r.start_dato as string) ?? null,
     antall_feil: Number(r.antall_feil),
     opplysninger: r.opplysninger as VedtakFeil["opplysninger"],
     bevis: r.bevis as VedtakFeil["bevis"],
-    begrunnelse_sitater: r.begrunnelse_sitater as VedtakFeil["begrunnelse_sitater"],
   };
 }

@@ -34,17 +34,7 @@
         "ingen_spor_arsak": null,
         "kan_bilen_brukes": "ja_begrenset",
         "alvor": true,
-        "km_svakhet_i_avsnitt": false,
-        "kandidat": null,
-        "kandidat_spor": null,
-        "kategori_tilbakefall": false,
-        "kriterier": [],
-        "antall_sterkere": 0,
-        "svakhet_adressert": null,
-        "godkjent": false,
-        "sitat": null,
-        "argumenter": [],
-        "avsnitt": null,
+        "kandidater": [],
         "forkastede": [
           {
             "saksnummer": "22/1667 f1",
@@ -57,81 +47,32 @@
           {
             "saksnummer": "21/3944 f1",
             "grunn": "svakere på tid_til_feil, reklamasjonstid"
-          },
-          {
-            "saksnummer": "23/17444 f6",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "21/11443 f3",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "21/13300 f1",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "21/4460 f1",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "FKU-2026-57255 f1",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "FKU-2025-55355 f6",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "FKU-2025-55355-2 f6",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "FKU-2025-131368 f3",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "23/17444 f7",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "23/4109 f1",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "21/3494 f3",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "21/4067 f4",
-            "grunn": "svakere på ikke_slitedel"
-          },
-          {
-            "saksnummer": "21/4214 f2",
-            "grunn": "svakere på ikke_slitedel"
           }
         ],
-        "styrke": "svak",
-        "praksis": "ingen",
-        "motstridende": {
-          "saksnummer": "24/3280",
-          "vedtaksdato": "2024-11-18",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024063741&dokid=1247544&versjon=1&variant=A&",
-          "grunn": "paregnelig_slitasje",
-          "skilte": [
-            "I 24/3280 la utvalget til grunn at feilen var vanlig slitasje for bilens alder og kjørelengde."
-          ]
-        },
-        "naermeste": {
-          "saksnummer": "22/1667",
-          "vedtaksdato": "2023-04-26",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023018252&dokid=872941&versjon=1&variant=A&",
-          "kategori": "bremser",
-          "spor": "B",
-          "sanksjon": "prisavslag",
-          "tilkjent_totalt_nok": 25000,
-          "mangler": [
-            "tid_til_feil"
+        "styrke": "middels",
+        "styrke_grunn": "ingen_vedtak",
+        "tapte": {
+          "fordeling": {
+            "paregnelig_slitasje": 56,
+            "ikke_dokumentert": 7,
+            "annet": 2,
+            "ikke_sannsynliggjort_ved_levering": 3,
+            "oppstatt_etter_levering": 1,
+            "kjent_eller_opplyst": 2
+          },
+          "nyeste": [
+            {
+              "saksnummer": "FKU-2026-17894",
+              "vedtaksdato": "2026-04-29",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-17894.pdf",
+              "grunn": "paregnelig_slitasje"
+            },
+            {
+              "saksnummer": "FKU-2026-116844",
+              "vedtaksdato": "2025-11-05",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-116844.pdf",
+              "grunn": "ikke_dokumentert"
+            }
           ]
         },
         "forlik": false,
@@ -139,11 +80,10 @@
       }
     ],
     "valgt_til_brev": [],
-    "lovendring": null,
     "ingen_treff": [
       {
         "feil_id": "F1",
-        "siste_stopp": "alle 16 kandidater forkastet"
+        "siste_stopp": "alle 3 kandidater forkastet"
       }
     ]
   },
@@ -182,85 +122,58 @@
         "ingen_spor_arsak": null,
         "kan_bilen_brukes": "ja_begrenset",
         "alvor": true,
-        "km_svakhet_i_avsnitt": false,
-        "kandidat": {
-          "vedtak_id": 2175,
-          "saksnummer": "21/13427",
-          "vedtaksdato": "2022-12-07",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022102543&dokid=802826&versjon=1&variant=A&",
-          "feil_id": "f1",
-          "kategori": "girkasse",
-          "spor_vunnet": [
-            "B"
-          ],
-          "a_variant": "uttalelse",
-          "lovversjon": "før_2024",
-          "sanksjon": "erstatning",
-          "tilkjent_totalt_nok": 31629,
-          "opplysning": null,
-          "forbehold": true,
-          "dager_etter_levering": 31,
-          "selger_bevis_finnes": true
-        },
-        "kandidat_spor": "B",
-        "kategori_tilbakefall": false,
-        "kriterier": [
+        "kandidater": [
           {
-            "navn": "tid_til_feil",
-            "bruker": 10,
-            "vedtak": 31,
-            "utfall": "sterkere"
-          },
-          {
-            "navn": "selger_motbevis",
-            "bruker": true,
-            "vedtak": true,
-            "utfall": "lik"
-          },
-          {
-            "navn": "rapport_levering",
-            "bruker": false,
-            "vedtak": false,
-            "utfall": "lik"
-          },
-          {
-            "navn": "arsak",
-            "bruker": false,
-            "vedtak": false,
-            "utfall": "lik"
-          },
-          {
-            "navn": "ikke_slitedel",
-            "bruker": false,
-            "vedtak": false,
-            "utfall": "lik"
-          },
-          {
-            "navn": "reklamasjonstid",
-            "bruker": 1,
-            "vedtak": 11,
-            "utfall": "sterkere"
-          },
-          {
-            "navn": "kategori",
-            "bruker": "girkasse",
-            "vedtak": "girkasse",
-            "utfall": "sterkere"
+            "vedtak_id": 2175,
+            "feil_id": "f1",
+            "saksnummer": "21/13427",
+            "vedtaksdato": "2022-12-07",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022102543&dokid=802826&versjon=1&variant=A&",
+            "spor": "B",
+            "lovversjon": "før_2024",
+            "sanksjon": "erstatning",
+            "kriterier": [
+              {
+                "navn": "tid_til_feil",
+                "bruker": 10,
+                "vedtak": 31,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "selger_motbevis",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "rapport_levering",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "arsak",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "ikke_slitedel",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "reklamasjonstid",
+                "bruker": 1,
+                "vedtak": 11,
+                "utfall": "sterkere"
+              }
+            ],
+            "antall_sterkere": 2,
+            "svakhet": null
           }
         ],
-        "antall_sterkere": 3,
-        "svakhet_adressert": null,
-        "godkjent": true,
-        "sitat": {
-          "tema": "formodning",
-          "tekst": "Feilen viste seg rundt 4-5 uker etter kjøpet, og formodningsregelen i kjl. § 18 annet ledd kommer i utgangspunktet til anvendelse"
-        },
-        "argumenter": [
-          "Feilen viste seg 10 dager etter leveringen, mot 31 dager i vedtaket.",
-          "Jeg reklamerte 1 dag etter at feilen ble oppdaget.",
-          "Vedtaket gjaldt samme type feil som i min sak."
-        ],
-        "avsnitt": "Forbrukerklageutvalget har i vedtak 21/13427 av 7. desember 2022 lagt til grunn at en feil som viste seg 31 dager etter leveringen, forelå ved leveringen, og at selgers dokumentasjon ikke var tilstrekkelig til å motbevise dette. Saken gjaldt feil på girkassen på en 10 år gammel bil. Utvalget uttalte: «Feilen viste seg rundt 4-5 uker etter kjøpet, og formodningsregelen i kjl. § 18 annet ledd kommer i utgangspunktet til anvendelse». Kjøperen fikk erstattet 26 687 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Feilen viste seg 10 dager etter leveringen, mot 31 dager i vedtaket. Jeg reklamerte 1 dag etter at feilen ble oppdaget. Vedtaket gjaldt samme type feil som i min sak.",
         "forkastede": [
           {
             "saksnummer": "FKU-2026-73578 f1",
@@ -287,19 +200,31 @@
             "grunn": "selger har motbevis, det hadde ikke selger i vedtaket"
           }
         ],
-        "styrke": "middels",
-        "praksis": "vedtak",
-        "motstridende": {
-          "saksnummer": "FKU-2026-56288",
-          "vedtaksdato": "2026-02-18",
-          "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-56288.pdf",
-          "grunn": "paregnelig_slitasje",
-          "skilte": [
-            "I FKU-2026-56288 la utvalget til grunn at feilen var vanlig slitasje for bilens alder og kjørelengde.",
-            "Bilen i FKU-2026-56288 hadde gått 255 000 km, mot 126 400 km i 21/13427."
+        "styrke": "sterk",
+        "styrke_grunn": null,
+        "tapte": {
+          "fordeling": {
+            "paregnelig_slitasje": 15,
+            "forbehold": 1,
+            "ikke_sannsynliggjort_ved_levering": 6,
+            "ikke_dokumentert": 10,
+            "oppstatt_etter_levering": 1
+          },
+          "nyeste": [
+            {
+              "saksnummer": "FKU-2026-17074",
+              "vedtaksdato": "2026-04-29",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-17074.pdf",
+              "grunn": "paregnelig_slitasje"
+            },
+            {
+              "saksnummer": "FKU-2026-56288",
+              "vedtaksdato": "2026-02-18",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-56288.pdf",
+              "grunn": "paregnelig_slitasje"
+            }
           ]
         },
-        "naermeste": null,
         "forlik": false,
         "reklamasjon_over_to_mnd": false
       }
@@ -307,7 +232,6 @@
     "valgt_til_brev": [
       "F1"
     ],
-    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
     "ingen_treff": []
   },
   "S03": {
@@ -343,40 +267,16 @@
         "ingen_spor_arsak": "utenfor_frist",
         "kan_bilen_brukes": "nei",
         "alvor": true,
-        "km_svakhet_i_avsnitt": false,
-        "kandidat": null,
-        "kandidat_spor": null,
-        "kategori_tilbakefall": false,
-        "kriterier": [],
-        "antall_sterkere": 0,
-        "svakhet_adressert": null,
-        "godkjent": false,
-        "sitat": null,
-        "argumenter": [],
-        "avsnitt": null,
+        "kandidater": [],
         "forkastede": [],
         "styrke": "svak",
-        "praksis": "ingen",
-        "motstridende": null,
-        "naermeste": {
-          "saksnummer": "21/4203",
-          "vedtaksdato": "2021-12-01",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021095135&dokid=537047&versjon=1&variant=A&",
-          "kategori": "rust",
-          "spor": "C",
-          "sanksjon": "heving",
-          "tilkjent_totalt_nok": 80000,
-          "mangler": [
-            "utover_paregnelig",
-            "pris"
-          ]
-        },
+        "styrke_grunn": "ingen_spor",
+        "tapte": null,
         "forlik": false,
         "reklamasjon_over_to_mnd": false
       }
     ],
     "valgt_til_brev": [],
-    "lovendring": null,
     "ingen_treff": [
       {
         "feil_id": "F1",
@@ -420,97 +320,294 @@
         "ingen_spor_arsak": null,
         "kan_bilen_brukes": "ja",
         "alvor": false,
-        "km_svakhet_i_avsnitt": false,
-        "kandidat": {
-          "vedtak_id": 3128,
-          "saksnummer": "FKU-2025-58214",
-          "vedtaksdato": "2025-11-05",
-          "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-58214.pdf",
-          "feil_id": "f1",
-          "kategori": "rust",
-          "spor_vunnet": [
-            "C"
-          ],
-          "a_variant": "uttalelse",
-          "lovversjon": "før_2024",
-          "sanksjon": "prisavslag_og_erstatning",
-          "tilkjent_totalt_nok": 17416,
-          "opplysning": null,
-          "forbehold": true,
-          "dager_etter_levering": 178,
-          "selger_bevis_finnes": false
-        },
-        "kandidat_spor": "C",
-        "kategori_tilbakefall": false,
-        "kriterier": [
+        "kandidater": [
           {
-            "navn": "utover_paregnelig",
-            "bruker": true,
-            "vedtak": true,
-            "utfall": "lik"
+            "vedtak_id": 3160,
+            "feil_id": "f2",
+            "saksnummer": "FKU-2025-134183",
+            "vedtaksdato": "2025-06-23",
+            "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-134183.pdf",
+            "spor": "C",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "utover_paregnelig",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "ved_levering",
+                "bruker": true,
+                "vedtak": false,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "alvor",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "alder",
+                "bruker": 2,
+                "vedtak": 13,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "km",
+                "bruker": 22000,
+                "vedtak": 160919,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "pris",
+                "bruker": 520000,
+                "vedtak": 150000,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "kostnad_pris",
+                "bruker": 0.12307692307692308,
+                "vedtak": 0.09098666666666666,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "tid_til_feil",
+                "bruker": 585,
+                "vedtak": 30,
+                "utfall": "svakere"
+              }
+            ],
+            "antall_sterkere": 5,
+            "svakhet": "tid_til_feil"
           },
           {
-            "navn": "ved_levering",
-            "bruker": true,
-            "vedtak": true,
-            "utfall": "lik"
+            "vedtak_id": 3128,
+            "feil_id": "f1",
+            "saksnummer": "FKU-2025-58214",
+            "vedtaksdato": "2025-11-05",
+            "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-58214.pdf",
+            "spor": "C",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag_og_erstatning",
+            "kriterier": [
+              {
+                "navn": "utover_paregnelig",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "ved_levering",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "alvor",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "alder",
+                "bruker": 2,
+                "vedtak": 15,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "km",
+                "bruker": 22000,
+                "vedtak": 178200,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "pris",
+                "bruker": 520000,
+                "vedtak": 49000,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "kostnad_pris",
+                "bruker": 0.12307692307692308,
+                "vedtak": 0.5179183673469387,
+                "utfall": "utelat"
+              },
+              {
+                "navn": "tid_til_feil",
+                "bruker": 585,
+                "vedtak": 178,
+                "utfall": "svakere"
+              }
+            ],
+            "antall_sterkere": 3,
+            "svakhet": "tid_til_feil"
           },
           {
-            "navn": "alvor",
-            "bruker": false,
-            "vedtak": false,
-            "utfall": "lik"
+            "vedtak_id": 2204,
+            "feil_id": "f1",
+            "saksnummer": "21/12163",
+            "vedtaksdato": "2022-11-23",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022094442&dokid=785691&versjon=1&variant=A&",
+            "spor": "C",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "utover_paregnelig",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "ved_levering",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "alvor",
+                "bruker": false,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "alder",
+                "bruker": 2,
+                "vedtak": 16,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "km",
+                "bruker": 22000,
+                "vedtak": 143000,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "pris",
+                "bruker": 520000,
+                "vedtak": 44000,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "kostnad_pris",
+                "bruker": 0.12307692307692308,
+                "vedtak": null,
+                "utfall": "utelat"
+              },
+              {
+                "navn": "tid_til_feil",
+                "bruker": 585,
+                "vedtak": 30,
+                "utfall": "svakere"
+              }
+            ],
+            "antall_sterkere": 3,
+            "svakhet": "tid_til_feil"
           },
           {
-            "navn": "alder",
-            "bruker": 2,
-            "vedtak": 15,
-            "utfall": "sterkere"
+            "vedtak_id": 25,
+            "feil_id": "f3",
+            "saksnummer": "22/5076",
+            "vedtaksdato": "2023-08-09",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023052060&dokid=952823&versjon=1&variant=A&",
+            "spor": "B",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "tid_til_feil",
+                "bruker": 585,
+                "vedtak": 381,
+                "utfall": "svakere"
+              },
+              {
+                "navn": "selger_motbevis",
+                "bruker": false,
+                "vedtak": true,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "rapport_levering",
+                "bruker": true,
+                "vedtak": false,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "arsak",
+                "bruker": true,
+                "vedtak": null,
+                "utfall": "lik"
+              },
+              {
+                "navn": "ikke_slitedel",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "reklamasjonstid",
+                "bruker": 12,
+                "vedtak": null,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 2,
+            "svakhet": "tid_til_feil"
           },
           {
-            "navn": "km",
-            "bruker": 22000,
-            "vedtak": 178200,
-            "utfall": "sterkere"
-          },
-          {
-            "navn": "pris",
-            "bruker": 520000,
-            "vedtak": 49000,
-            "utfall": "sterkere"
-          },
-          {
-            "navn": "kostnad_pris",
-            "bruker": 0.12307692307692308,
-            "vedtak": 0.5179183673469387,
-            "utfall": "utelat"
-          },
-          {
-            "navn": "tid_til_feil",
-            "bruker": 585,
-            "vedtak": 178,
-            "utfall": "svakere"
-          },
-          {
-            "navn": "kategori",
-            "bruker": "rust",
-            "vedtak": "rust",
-            "utfall": "sterkere"
+            "vedtak_id": 2420,
+            "feil_id": "f3",
+            "saksnummer": "21/3860",
+            "vedtaksdato": "2022-06-15",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022035376&dokid=656176&versjon=1&variant=A&",
+            "spor": "B",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag_og_erstatning",
+            "kriterier": [
+              {
+                "navn": "tid_til_feil",
+                "bruker": 585,
+                "vedtak": 23,
+                "utfall": "svakere"
+              },
+              {
+                "navn": "selger_motbevis",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "rapport_levering",
+                "bruker": true,
+                "vedtak": false,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "arsak",
+                "bruker": true,
+                "vedtak": false,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "ikke_slitedel",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "reklamasjonstid",
+                "bruker": 12,
+                "vedtak": null,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 2,
+            "svakhet": "tid_til_feil"
           }
         ],
-        "antall_sterkere": 4,
-        "svakhet_adressert": "tid_til_feil",
-        "godkjent": true,
-        "sitat": {
-          "tema": "bevis",
-          "tekst": "Rapporten viser også til … at bilen har begynt å ruste for en god stund siden, og at dette har utviklet seg over tid, slik at utvalget finner det sannsynliggjort at rusten kan føres tilbake til leveringen, jf. fkjl. § 18 første ledd, jf. §§ 14 og 7"
-        },
-        "argumenter": [
-          "Bilen var 2 år med 22 000 km og kostet 520 000 kr, mot 15 år, 178 200 km og 49 000 kr i vedtaket.",
-          "Vedtaket gjaldt samme type feil som i min sak.",
-          "Feilen viste seg senere enn i vedtaket, men verkstedet har konkludert med at den forelå ved leveringen."
-        ],
-        "avsnitt": "Forbrukerklageutvalget har i vedtak FKU-2025-58214 av 5. november 2025 lagt til grunn at en feil som var dokumentert å gå ut over det påregnelige for bilens alder og kjørelengde, var en mangel. Saken gjaldt en 15 år gammel bil med 178 200 km, kjøpt for 49 000 kr. NAF konkluderte med at feilen gikk ut over det påregnelige og hadde oppstått før leveringen. Utvalget uttalte: «Rapporten viser også til … at bilen har begynt å ruste for en god stund siden, og at dette har utviklet seg over tid, slik at utvalget finner det sannsynliggjort at rusten kan føres tilbake til leveringen, jf. fkjl. § 18 første ledd, jf. §§ 14 og 7». Kjøperen fikk tilkjent 12 689 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Bilen var 2 år med 22 000 km og kostet 520 000 kr, mot 15 år, 178 200 km og 49 000 kr i vedtaket. Vedtaket gjaldt samme type feil som i min sak. Feilen viste seg senere enn i vedtaket, men verkstedet har konkludert med at den forelå ved leveringen.",
         "forkastede": [
           {
             "saksnummer": "23/10066 f3",
@@ -522,9 +619,28 @@
           }
         ],
         "styrke": "sterk",
-        "praksis": "vedtak",
-        "motstridende": null,
-        "naermeste": null,
+        "styrke_grunn": null,
+        "tapte": {
+          "fordeling": {
+            "paregnelig_slitasje": 11,
+            "ikke_sannsynliggjort_ved_levering": 3,
+            "oppstatt_etter_levering": 1
+          },
+          "nyeste": [
+            {
+              "saksnummer": "FKU-2026-59997",
+              "vedtaksdato": "2026-02-09",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-59997.pdf",
+              "grunn": "paregnelig_slitasje"
+            },
+            {
+              "saksnummer": "FKU-2026-82824",
+              "vedtaksdato": "2026-02-09",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-82824.pdf",
+              "grunn": "paregnelig_slitasje"
+            }
+          ]
+        },
         "forlik": false,
         "reklamasjon_over_to_mnd": false
       }
@@ -532,7 +648,6 @@
     "valgt_til_brev": [
       "F1"
     ],
-    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
     "ingen_treff": []
   },
   "S05": {
@@ -571,91 +686,225 @@
         "ingen_spor_arsak": null,
         "kan_bilen_brukes": "ja",
         "alvor": false,
-        "km_svakhet_i_avsnitt": false,
-        "kandidat": {
-          "vedtak_id": 2096,
-          "saksnummer": "21/16429",
-          "vedtaksdato": "2023-01-25",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022108791&dokid=817568&versjon=1&variant=A&",
-          "feil_id": "f1",
-          "kategori": "utstyr_mangler",
-          "spor_vunnet": [
-            "A"
-          ],
-          "a_variant": "uttalelse",
-          "lovversjon": "før_2024",
-          "sanksjon": "prisavslag",
-          "tilkjent_totalt_nok": 5000,
-          "opplysning": {
-            "form": "annonse",
-            "rekkevidde": "spesifikk",
-            "ordlyd": "Ryggekamera",
-            "svar_pa_direkte_sporsmal": false
-          },
-          "forbehold": true,
-          "dager_etter_levering": null,
-          "selger_bevis_finnes": true
-        },
-        "kandidat_spor": "A",
-        "kategori_tilbakefall": false,
-        "kriterier": [
+        "kandidater": [
           {
-            "navn": "form",
-            "bruker": "annonse",
-            "vedtak": "annonse",
-            "utfall": "lik"
-          },
-          {
-            "navn": "konkrethet",
-            "bruker": "spesifikk",
-            "vedtak": "spesifikk",
-            "utfall": "lik"
-          },
-          {
-            "navn": "direkte_sporsmal",
-            "bruker": false,
-            "vedtak": false,
-            "utfall": "lik"
+            "vedtak_id": 3047,
+            "feil_id": "f1",
+            "saksnummer": "FKU-2026-11954",
+            "vedtaksdato": "2026-04-20",
+            "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-11954.pdf",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag_og_erstatning",
+            "kriterier": [
+              {
+                "navn": "form",
+                "bruker": "annonse",
+                "vedtak": "annonse",
+                "utfall": "lik"
+              },
+              {
+                "navn": "konkrethet",
+                "bruker": "spesifikk",
+                "vedtak": "spesifikk",
+                "utfall": "lik"
+              },
+              {
+                "navn": "direkte_sporsmal",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": false,
+                "vedtak": true,
+                "utfall": "sterkere"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           },
           {
-            "navn": "forbehold",
-            "bruker": false,
-            "vedtak": true,
-            "utfall": "sterkere"
+            "vedtak_id": 3065,
+            "feil_id": "f1",
+            "saksnummer": "FKU-2026-66298",
+            "vedtaksdato": "2026-03-04",
+            "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-66298.pdf",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag_og_erstatning",
+            "kriterier": [
+              {
+                "navn": "form",
+                "bruker": "annonse",
+                "vedtak": "annonse",
+                "utfall": "lik"
+              },
+              {
+                "navn": "konkrethet",
+                "bruker": "spesifikk",
+                "vedtak": "spesifikk",
+                "utfall": "lik"
+              },
+              {
+                "navn": "direkte_sporsmal",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": false,
+                "vedtak": true,
+                "utfall": "sterkere"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           },
           {
-            "navn": "kategori",
-            "bruker": "utstyr_mangler",
-            "vedtak": "utstyr_mangler",
-            "utfall": "sterkere"
+            "vedtak_id": 3125,
+            "feil_id": "f3",
+            "saksnummer": "FKU-2025-55355",
+            "vedtaksdato": "2025-10-01",
+            "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-55355.pdf",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag_og_erstatning",
+            "kriterier": [
+              {
+                "navn": "form",
+                "bruker": "annonse",
+                "vedtak": "annonse",
+                "utfall": "lik"
+              },
+              {
+                "navn": "konkrethet",
+                "bruker": "spesifikk",
+                "vedtak": "spesifikk",
+                "utfall": "lik"
+              },
+              {
+                "navn": "direkte_sporsmal",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": false,
+                "vedtak": true,
+                "utfall": "sterkere"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
+          },
+          {
+            "vedtak_id": 3147,
+            "feil_id": "f3",
+            "saksnummer": "FKU-2025-55355-2",
+            "vedtaksdato": "2025-10-01",
+            "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-55355-2.pdf",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag_og_erstatning",
+            "kriterier": [
+              {
+                "navn": "form",
+                "bruker": "annonse",
+                "vedtak": "annonse",
+                "utfall": "lik"
+              },
+              {
+                "navn": "konkrethet",
+                "bruker": "spesifikk",
+                "vedtak": "spesifikk",
+                "utfall": "lik"
+              },
+              {
+                "navn": "direkte_sporsmal",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": false,
+                "vedtak": true,
+                "utfall": "sterkere"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
+          },
+          {
+            "vedtak_id": 3144,
+            "feil_id": "f1",
+            "saksnummer": "FKU-2025-115538",
+            "vedtaksdato": "2025-08-27",
+            "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-115538.pdf",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "form",
+                "bruker": "annonse",
+                "vedtak": "annonse",
+                "utfall": "lik"
+              },
+              {
+                "navn": "konkrethet",
+                "bruker": "spesifikk",
+                "vedtak": "spesifikk",
+                "utfall": "lik"
+              },
+              {
+                "navn": "direkte_sporsmal",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": false,
+                "vedtak": true,
+                "utfall": "sterkere"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           }
         ],
-        "antall_sterkere": 2,
-        "svakhet_adressert": null,
-        "godkjent": true,
-        "sitat": {
-          "tema": "opplysning",
-          "tekst": "Utvalget legger til grunn som ubestridt at bilen ikke hadde ryggekamera, slik den var annonsert med"
-        },
-        "argumenter": [
-          "Salget i vedtaket hadde et forbehold om bilens stand; min bil ble solgt uten forbehold.",
-          "Vedtaket gjaldt samme type opplysning som i min sak."
-        ],
-        "avsnitt": "Forbrukerklageutvalget har i vedtak 21/16429 av 25. januar 2023 lagt til grunn at selger hadde gitt en uriktig opplysning om bilens utstyr. Annonsen oppga «Ryggekamera». Utvalget uttalte: «Utvalget legger til grunn som ubestridt at bilen ikke hadde ryggekamera, slik den var annonsert med». Kjøperen fikk prisavslag på 5 000 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Salget i vedtaket hadde et forbehold om bilens stand; min bil ble solgt uten forbehold. Vedtaket gjaldt samme type opplysning som i min sak.",
         "forkastede": [],
-        "styrke": "middels",
-        "praksis": "vedtak",
-        "motstridende": {
-          "saksnummer": "21/17448",
-          "vedtaksdato": "2023-05-24",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023033571&dokid=908872&versjon=1&variant=A&",
-          "grunn": "kjent_eller_opplyst",
-          "skilte": [
-            "I 21/17448 var feilen kjent for kjøperen eller opplyst av selger.",
-            "Bilen i 21/17448 hadde gått 16 363 km, mot 24 500 km i 21/16429."
+        "styrke": "sterk",
+        "styrke_grunn": null,
+        "tapte": {
+          "fordeling": {
+            "ikke_dokumentert": 18,
+            "annet": 7,
+            "kjent_eller_opplyst": 6,
+            "synlig_ved_besiktigelse": 2,
+            "ikke_sannsynliggjort_ved_levering": 1,
+            "paregnelig_slitasje": 1
+          },
+          "nyeste": [
+            {
+              "saksnummer": "FKU-2026-28973",
+              "vedtaksdato": "2026-04-29",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-28973.pdf",
+              "grunn": "ikke_dokumentert"
+            },
+            {
+              "saksnummer": "FKU-2026-82824",
+              "vedtaksdato": "2026-02-09",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-82824.pdf",
+              "grunn": "annet"
+            }
           ]
         },
-        "naermeste": null,
         "forlik": false,
         "reklamasjon_over_to_mnd": false
       }
@@ -663,7 +912,6 @@
     "valgt_til_brev": [
       "F1"
     ],
-    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
     "ingen_treff": []
   },
   "S06": {
@@ -701,82 +949,158 @@
         "ingen_spor_arsak": null,
         "kan_bilen_brukes": "ja",
         "alvor": false,
-        "km_svakhet_i_avsnitt": false,
-        "kandidat": {
-          "vedtak_id": 1914,
-          "saksnummer": "22/1667",
-          "vedtaksdato": "2023-04-26",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023018252&dokid=872941&versjon=1&variant=A&",
-          "feil_id": "f4",
-          "kategori": "elektrisk",
-          "spor_vunnet": [
-            "A",
-            "B"
-          ],
-          "a_variant": "uttalelse",
-          "lovversjon": "før_2024",
-          "sanksjon": "prisavslag",
-          "tilkjent_totalt_nok": 25000,
-          "opplysning": null,
-          "forbehold": false,
-          "dager_etter_levering": 66,
-          "selger_bevis_finnes": true
-        },
-        "kandidat_spor": "B",
-        "kategori_tilbakefall": false,
-        "kriterier": [
+        "kandidater": [
           {
-            "navn": "tid_til_feil",
-            "bruker": 66,
-            "vedtak": 66,
-            "utfall": "lik"
+            "vedtak_id": 2113,
+            "feil_id": "f1",
+            "saksnummer": "21/13339",
+            "vedtaksdato": "2023-01-18",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2022101396&dokid=800299&versjon=3&variant=A&",
+            "spor": "B",
+            "lovversjon": "før_2024",
+            "sanksjon": "erstatning",
+            "kriterier": [
+              {
+                "navn": "tid_til_feil",
+                "bruker": 66,
+                "vedtak": 324,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "selger_motbevis",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "rapport_levering",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "arsak",
+                "bruker": true,
+                "vedtak": false,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "ikke_slitedel",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "reklamasjonstid",
+                "bruker": 3,
+                "vedtak": 8,
+                "utfall": "sterkere"
+              }
+            ],
+            "antall_sterkere": 3,
+            "svakhet": null
           },
           {
-            "navn": "selger_motbevis",
-            "bruker": true,
-            "vedtak": true,
-            "utfall": "lik"
+            "vedtak_id": 1670,
+            "feil_id": "f2",
+            "saksnummer": "23/12082",
+            "vedtaksdato": "2024-03-04",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023119914&dokid=1112598&versjon=1&variant=A&",
+            "spor": "B",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag_og_erstatning",
+            "kriterier": [
+              {
+                "navn": "tid_til_feil",
+                "bruker": 66,
+                "vedtak": 136,
+                "utfall": "lik"
+              },
+              {
+                "navn": "selger_motbevis",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "rapport_levering",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "arsak",
+                "bruker": true,
+                "vedtak": false,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "ikke_slitedel",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "reklamasjonstid",
+                "bruker": 3,
+                "vedtak": null,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           },
           {
-            "navn": "rapport_levering",
-            "bruker": false,
-            "vedtak": false,
-            "utfall": "lik"
-          },
-          {
-            "navn": "arsak",
-            "bruker": true,
-            "vedtak": false,
-            "utfall": "sterkere"
-          },
-          {
-            "navn": "ikke_slitedel",
-            "bruker": true,
-            "vedtak": true,
-            "utfall": "lik"
-          },
-          {
-            "navn": "reklamasjonstid",
-            "bruker": 3,
-            "vedtak": 0,
-            "utfall": "lik"
-          },
-          {
-            "navn": "kategori",
-            "bruker": "elektrisk",
-            "vedtak": "elektrisk",
-            "utfall": "sterkere"
+            "vedtak_id": 1914,
+            "feil_id": "f4",
+            "saksnummer": "22/1667",
+            "vedtaksdato": "2023-04-26",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023018252&dokid=872941&versjon=1&variant=A&",
+            "spor": "B",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "tid_til_feil",
+                "bruker": 66,
+                "vedtak": 66,
+                "utfall": "lik"
+              },
+              {
+                "navn": "selger_motbevis",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "rapport_levering",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "arsak",
+                "bruker": true,
+                "vedtak": false,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "ikke_slitedel",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "reklamasjonstid",
+                "bruker": 3,
+                "vedtak": 0,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           }
         ],
-        "antall_sterkere": 2,
-        "svakhet_adressert": null,
-        "godkjent": true,
-        "sitat": null,
-        "argumenter": [
-          "Verkstedet har i tillegg forklart hvorfor delen sviktet.",
-          "Vedtaket gjaldt samme type feil som i min sak."
-        ],
-        "avsnitt": "Forbrukerklageutvalget har i vedtak 22/1667 av 26. april 2023 lagt til grunn at en feil som var påvist senest 66 dager etter leveringen, forelå ved leveringen, og at selgers dokumentasjon ikke var tilstrekkelig til å motbevise dette. Saken gjaldt en elektrisk feil på en 12 år gammel bil. Kjøperen fikk prisavslag på til sammen 25 000 kr for manglene i saken. Min sak står minst like sterkt på de momentene utvalget bygde på. Verkstedet har i tillegg forklart hvorfor delen sviktet. Vedtaket gjaldt samme type feil som i min sak.",
         "forkastede": [
           {
             "saksnummer": "FKU-2026-57255 f3",
@@ -883,20 +1207,33 @@
             "grunn": "svakere på tid_til_feil"
           }
         ],
-        "styrke": "middels",
-        "praksis": "vedtak",
-        "motstridende": {
-          "saksnummer": "23/16163",
-          "vedtaksdato": "2024-05-22",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024033090&dokid=1192395&versjon=1&variant=A&",
-          "grunn": "ikke_sannsynliggjort_ved_levering",
-          "skilte": [
-            "I 23/16163 mente utvalget at det ikke var sannsynliggjort at feilen var der ved leveringen.",
-            "Bilen i 23/16163 var 8 år, mot 12 år i 22/1667.",
-            "Feilen i 23/16163 viste seg etter 0 dager, mot senest 66 dager i 22/1667."
+        "styrke": "sterk",
+        "styrke_grunn": null,
+        "tapte": {
+          "fordeling": {
+            "annet": 7,
+            "paregnelig_slitasje": 66,
+            "ikke_dokumentert": 59,
+            "ikke_sannsynliggjort_ved_levering": 15,
+            "kjent_eller_opplyst": 4,
+            "oppstatt_etter_levering": 2,
+            "synlig_ved_besiktigelse": 1
+          },
+          "nyeste": [
+            {
+              "saksnummer": "FKU-2026-20340",
+              "vedtaksdato": "2026-06-22",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-20340.pdf",
+              "grunn": "annet"
+            },
+            {
+              "saksnummer": "FKU-2026-86264",
+              "vedtaksdato": "2026-06-22",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-86264.pdf",
+              "grunn": "paregnelig_slitasje"
+            }
           ]
         },
-        "naermeste": null,
         "forlik": false,
         "reklamasjon_over_to_mnd": false
       }
@@ -904,7 +1241,6 @@
     "valgt_til_brev": [
       "F1"
     ],
-    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
     "ingen_treff": []
   },
   "S07": {
@@ -927,7 +1263,6 @@
     },
     "feil": [],
     "valgt_til_brev": [],
-    "lovendring": null,
     "ingen_treff": []
   },
   "S08": {
@@ -966,85 +1301,169 @@
         "ingen_spor_arsak": null,
         "kan_bilen_brukes": "ja",
         "alvor": false,
-        "km_svakhet_i_avsnitt": false,
-        "kandidat": {
-          "vedtak_id": 1646,
-          "saksnummer": "23/13659",
-          "vedtaksdato": "2024-04-30",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024025941&dokid=1179503&versjon=1&variant=A&",
-          "feil_id": "f1",
-          "kategori": "kollisjonsskade",
-          "spor_vunnet": [
-            "A",
-            "B"
-          ],
-          "a_variant": "begge",
-          "lovversjon": "før_2024",
-          "sanksjon": "prisavslag",
-          "tilkjent_totalt_nok": 50000,
-          "opplysning": {
-            "form": null,
-            "rekkevidde": null,
-            "ordlyd": null,
-            "svar_pa_direkte_sporsmal": false
-          },
-          "forbehold": true,
-          "dager_etter_levering": 0,
-          "selger_bevis_finnes": false
-        },
-        "kandidat_spor": "A",
-        "kategori_tilbakefall": false,
-        "kriterier": [
+        "kandidater": [
           {
-            "navn": "dokumentert_fortielse",
-            "bruker": true,
-            "vedtak": true,
-            "utfall": "lik"
+            "vedtak_id": 3134,
+            "feil_id": "f1",
+            "saksnummer": "FKU-2025-58554",
+            "vedtaksdato": "2025-10-22",
+            "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-58554.pdf",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "dokumentert_fortielse",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": false,
+                "vedtak": true,
+                "utfall": "sterkere"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           },
           {
-            "navn": "forbehold",
-            "bruker": false,
-            "vedtak": true,
-            "utfall": "sterkere"
+            "vedtak_id": 1646,
+            "feil_id": "f1",
+            "saksnummer": "23/13659",
+            "vedtaksdato": "2024-04-30",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024025941&dokid=1179503&versjon=1&variant=A&",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "dokumentert_fortielse",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": false,
+                "vedtak": true,
+                "utfall": "sterkere"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           },
           {
-            "navn": "kategori",
-            "bruker": "kollisjonsskade",
-            "vedtak": "kollisjonsskade",
-            "utfall": "sterkere"
+            "vedtak_id": 2704,
+            "feil_id": "f1",
+            "saksnummer": "21/3492",
+            "vedtaksdato": "2021-10-06",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021077531&dokid=499688&versjon=2&variant=A&",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag_og_erstatning",
+            "kriterier": [
+              {
+                "navn": "dokumentert_fortielse",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": false,
+                "vedtak": true,
+                "utfall": "sterkere"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
+          },
+          {
+            "vedtak_id": 1587,
+            "feil_id": "f2",
+            "saksnummer": "24/1223",
+            "vedtaksdato": "2024-08-28",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024035866&dokid=1197174&versjon=2&variant=A&",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "dokumentert_fortielse",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 0,
+            "svakhet": null
+          },
+          {
+            "vedtak_id": 1967,
+            "feil_id": "f1",
+            "saksnummer": "22/6291",
+            "vedtaksdato": "2023-03-29",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023021551&dokid=880996&versjon=1&variant=A&",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "dokumentert_fortielse",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 0,
+            "svakhet": null
           }
         ],
-        "antall_sterkere": 2,
-        "svakhet_adressert": null,
-        "godkjent": true,
-        "sitat": {
-          "tema": "mangel",
-          "tekst": "Innklagdes forsømmelse av opplysningsplikten utgjør dermed en kjøpsrettslig mangel, jf. fkjl. § 16 første ledd bokstav b"
-        },
-        "argumenter": [
-          "Bilen i vedtaket var solgt «som den er»; min bil ble solgt uten forbehold.",
-          "Vedtaket gjaldt samme type opplysning som i min sak."
-        ],
-        "avsnitt": "Forbrukerklageutvalget har i vedtak 23/13659 av 30. april 2024 lagt til grunn at selger hadde unnlatt å opplyse om skadehistorikken, og at dette var en mangel. Forholdet var dokumentert i saken. Utvalget uttalte: «Innklagdes forsømmelse av opplysningsplikten utgjør dermed en kjøpsrettslig mangel, jf. fkjl. § 16 første ledd bokstav b». Kjøperen fikk prisavslag på 50 000 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Bilen i vedtaket var solgt «som den er»; min bil ble solgt uten forbehold. Vedtaket gjaldt samme type opplysning som i min sak.",
         "forkastede": [
           {
             "saksnummer": "23/13659 f1",
             "grunn": "svakere på tid_til_feil, reklamasjonstid"
           }
         ],
-        "styrke": "middels",
-        "praksis": "vedtak",
-        "motstridende": {
-          "saksnummer": "21/3925",
-          "vedtaksdato": "2022-01-26",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2021108977&dokid=566000&versjon=1&variant=A&",
-          "grunn": "paregnelig_slitasje",
-          "skilte": [
-            "I 21/3925 la utvalget til grunn at feilen var vanlig slitasje for bilens alder og kjørelengde.",
-            "Feilen i 21/3925 viste seg etter 120 dager, mot 0 dager i 23/13659."
+        "styrke": "sterk",
+        "styrke_grunn": null,
+        "tapte": {
+          "fordeling": {
+            "ikke_dokumentert": 7,
+            "ikke_sannsynliggjort_ved_levering": 2,
+            "kjent_eller_opplyst": 3,
+            "paregnelig_slitasje": 1,
+            "annet": 1
+          },
+          "nyeste": [
+            {
+              "saksnummer": "FKU-2025-64269",
+              "vedtaksdato": "2025-11-11",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-64269.pdf",
+              "grunn": "ikke_dokumentert"
+            },
+            {
+              "saksnummer": "23/15554",
+              "vedtaksdato": "2024-05-29",
+              "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024027773&dokid=1182873&versjon=4&variant=A&",
+              "grunn": "ikke_sannsynliggjort_ved_levering"
+            }
           ]
         },
-        "naermeste": null,
         "forlik": false,
         "reklamasjon_over_to_mnd": false
       }
@@ -1052,7 +1471,6 @@
     "valgt_til_brev": [
       "F1"
     ],
-    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
     "ingen_treff": []
   },
   "S09": {
@@ -1090,84 +1508,108 @@
         "ingen_spor_arsak": null,
         "kan_bilen_brukes": "ja",
         "alvor": false,
-        "km_svakhet_i_avsnitt": false,
-        "kandidat": {
-          "vedtak_id": 1920,
-          "saksnummer": "22/6582",
-          "vedtaksdato": "2023-04-26",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023022765&dokid=883900&versjon=1&variant=A&",
-          "feil_id": "f1",
-          "kategori": "elektrisk",
-          "spor_vunnet": [
-            "B"
-          ],
-          "a_variant": "uttalelse",
-          "lovversjon": "før_2024",
-          "sanksjon": "prisavslag",
-          "tilkjent_totalt_nok": 5000,
-          "opplysning": null,
-          "forbehold": true,
-          "dager_etter_levering": null,
-          "selger_bevis_finnes": false
-        },
-        "kandidat_spor": "B",
-        "kategori_tilbakefall": false,
-        "kriterier": [
+        "kandidater": [
           {
-            "navn": "tid_til_feil",
-            "bruker": 588,
-            "vedtak": null,
-            "utfall": "lik"
+            "vedtak_id": 1920,
+            "feil_id": "f1",
+            "saksnummer": "22/6582",
+            "vedtaksdato": "2023-04-26",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023022765&dokid=883900&versjon=1&variant=A&",
+            "spor": "B",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "tid_til_feil",
+                "bruker": 588,
+                "vedtak": null,
+                "utfall": "lik"
+              },
+              {
+                "navn": "selger_motbevis",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "rapport_levering",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "arsak",
+                "bruker": true,
+                "vedtak": false,
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "ikke_slitedel",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "reklamasjonstid",
+                "bruker": 2,
+                "vedtak": null,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           },
           {
-            "navn": "selger_motbevis",
-            "bruker": false,
-            "vedtak": false,
-            "utfall": "lik"
-          },
-          {
-            "navn": "rapport_levering",
-            "bruker": false,
-            "vedtak": false,
-            "utfall": "lik"
-          },
-          {
-            "navn": "arsak",
-            "bruker": true,
-            "vedtak": false,
-            "utfall": "sterkere"
-          },
-          {
-            "navn": "ikke_slitedel",
-            "bruker": true,
-            "vedtak": true,
-            "utfall": "lik"
-          },
-          {
-            "navn": "reklamasjonstid",
-            "bruker": 2,
-            "vedtak": null,
-            "utfall": "lik"
-          },
-          {
-            "navn": "kategori",
-            "bruker": "elektrisk",
-            "vedtak": "elektrisk",
-            "utfall": "sterkere"
+            "vedtak_id": 1506,
+            "feil_id": "f3",
+            "saksnummer": "24/4038",
+            "vedtaksdato": "2025-02-24",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024071380&dokid=1262949&versjon=1&variant=A&",
+            "spor": "B",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag",
+            "kriterier": [
+              {
+                "navn": "tid_til_feil",
+                "bruker": 588,
+                "vedtak": null,
+                "utfall": "lik"
+              },
+              {
+                "navn": "selger_motbevis",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "rapport_levering",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "arsak",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "ikke_slitedel",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              },
+              {
+                "navn": "reklamasjonstid",
+                "bruker": 2,
+                "vedtak": null,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 0,
+            "svakhet": null
           }
         ],
-        "antall_sterkere": 2,
-        "svakhet_adressert": null,
-        "godkjent": true,
-        "sitat": {
-          "tema": "formodning",
-          "tekst": "Etter utvalgets syn er formodningen om at feilen forelå ved risikoens overgang ikke uforenelig med varens eller mangelens art"
-        },
-        "argumenter": [
-          "Verkstedet har i tillegg forklart hvorfor delen sviktet.",
-          "Vedtaket gjaldt samme type feil som i min sak."
-        ],
-        "avsnitt": "Forbrukerklageutvalget har i vedtak 22/6582 av 26. april 2023 lagt til grunn at feilen forelå ved leveringen, fordi selger ikke hadde fremlagt bevis for noe annet. Saken gjaldt en elektrisk feil på en 10 år gammel bil. Utvalget uttalte: «Etter utvalgets syn er formodningen om at feilen forelå ved risikoens overgang ikke uforenelig med varens eller mangelens art». Kjøperen fikk prisavslag på 5 000 kr for denne mangelen. Min sak står minst like sterkt på de momentene utvalget bygde på. Verkstedet har i tillegg forklart hvorfor delen sviktet. Vedtaket gjaldt samme type feil som i min sak.",
         "forkastede": [
           {
             "saksnummer": "FKU-2026-57255 f3",
@@ -1278,19 +1720,33 @@
             "grunn": "svakere på tid_til_feil"
           }
         ],
-        "styrke": "middels",
-        "praksis": "vedtak",
-        "motstridende": {
-          "saksnummer": "23/17295",
-          "vedtaksdato": "2024-08-28",
-          "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024039709&dokid=1204227&versjon=2&variant=A&",
-          "grunn": "paregnelig_slitasje",
-          "skilte": [
-            "I 23/17295 la utvalget til grunn at feilen var vanlig slitasje for bilens alder og kjørelengde.",
-            "Bilen i 23/17295 var 12 år, mot 10 år i 22/6582."
+        "styrke": "sterk",
+        "styrke_grunn": null,
+        "tapte": {
+          "fordeling": {
+            "annet": 7,
+            "paregnelig_slitasje": 66,
+            "ikke_dokumentert": 59,
+            "ikke_sannsynliggjort_ved_levering": 15,
+            "kjent_eller_opplyst": 4,
+            "oppstatt_etter_levering": 2,
+            "synlig_ved_besiktigelse": 1
+          },
+          "nyeste": [
+            {
+              "saksnummer": "FKU-2026-20340",
+              "vedtaksdato": "2026-06-22",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-20340.pdf",
+              "grunn": "annet"
+            },
+            {
+              "saksnummer": "FKU-2026-86264",
+              "vedtaksdato": "2026-06-22",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-86264.pdf",
+              "grunn": "paregnelig_slitasje"
+            }
           ]
         },
-        "naermeste": null,
         "forlik": false,
         "reklamasjon_over_to_mnd": false
       }
@@ -1298,7 +1754,6 @@
     "valgt_til_brev": [
       "F1"
     ],
-    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
     "ingen_treff": []
   },
   "S10": {
@@ -1338,74 +1793,198 @@
         "ingen_spor_arsak": null,
         "kan_bilen_brukes": "nei",
         "alvor": true,
-        "km_svakhet_i_avsnitt": false,
-        "kandidat": {
-          "vedtak_id": 3115,
-          "saksnummer": "FKU-2025-52074",
-          "vedtaksdato": "2025-11-24",
-          "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-52074.pdf",
-          "feil_id": "f1",
-          "kategori": "motor",
-          "spor_vunnet": [
-            "A",
-            "C"
-          ],
-          "a_variant": "begge",
-          "lovversjon": "før_2024",
-          "sanksjon": "heving",
-          "tilkjent_totalt_nok": 84539,
-          "opplysning": {
-            "form": "kontrakt",
-            "rekkevidde": "spesifikk",
-            "ordlyd": "Kjøretøyets oljeforbruk er litt høyere enn vanlig.",
-            "svar_pa_direkte_sporsmal": false
-          },
-          "forbehold": true,
-          "dager_etter_levering": 14,
-          "selger_bevis_finnes": false
-        },
-        "kandidat_spor": "A",
-        "kategori_tilbakefall": false,
-        "kriterier": [
+        "kandidater": [
           {
-            "navn": "form",
-            "bruker": "kontrakt",
-            "vedtak": "kontrakt",
-            "utfall": "lik"
-          },
-          {
-            "navn": "konkrethet",
-            "bruker": "spesifikk",
-            "vedtak": "spesifikk",
-            "utfall": "lik"
+            "vedtak_id": 3024,
+            "feil_id": "f3",
+            "saksnummer": "FKU-2026-120759",
+            "vedtaksdato": "2026-06-03",
+            "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-120759.pdf",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "erstatning",
+            "kriterier": [
+              {
+                "navn": "form",
+                "bruker": "kontrakt",
+                "vedtak": "annonse",
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "konkrethet",
+                "bruker": "spesifikk",
+                "vedtak": "spesifikk",
+                "utfall": "lik"
+              },
+              {
+                "navn": "direkte_sporsmal",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           },
           {
-            "navn": "direkte_sporsmal",
-            "bruker": false,
-            "vedtak": false,
-            "utfall": "lik"
+            "vedtak_id": 3141,
+            "feil_id": "f2",
+            "saksnummer": "FKU-2025-115321",
+            "vedtaksdato": "2025-09-17",
+            "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-115321.pdf",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "prisavslag_og_erstatning",
+            "kriterier": [
+              {
+                "navn": "form",
+                "bruker": "kontrakt",
+                "vedtak": "annonse",
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "konkrethet",
+                "bruker": "spesifikk",
+                "vedtak": "spesifikk",
+                "utfall": "lik"
+              },
+              {
+                "navn": "direkte_sporsmal",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           },
           {
-            "navn": "forbehold",
-            "bruker": true,
-            "vedtak": true,
-            "utfall": "lik"
+            "vedtak_id": 1615,
+            "feil_id": "f1",
+            "saksnummer": "23/14587",
+            "vedtaksdato": "2024-06-10",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024027948&dokid=1183115&versjon=1&variant=A&",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "erstatning",
+            "kriterier": [
+              {
+                "navn": "form",
+                "bruker": "kontrakt",
+                "vedtak": "annonse",
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "konkrethet",
+                "bruker": "spesifikk",
+                "vedtak": "spesifikk",
+                "utfall": "lik"
+              },
+              {
+                "navn": "direkte_sporsmal",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           },
           {
-            "navn": "kategori",
-            "bruker": "motor",
-            "vedtak": "motor",
-            "utfall": "sterkere"
+            "vedtak_id": 1918,
+            "feil_id": "f3",
+            "saksnummer": "21/12379",
+            "vedtaksdato": "2023-04-26",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023024089&dokid=886743&versjon=1&variant=A&",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "heving",
+            "kriterier": [
+              {
+                "navn": "form",
+                "bruker": "kontrakt",
+                "vedtak": "melding",
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "konkrethet",
+                "bruker": "spesifikk",
+                "vedtak": "spesifikk",
+                "utfall": "lik"
+              },
+              {
+                "navn": "direkte_sporsmal",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
+          },
+          {
+            "vedtak_id": 2066,
+            "feil_id": "f1",
+            "saksnummer": "21/15193",
+            "vedtaksdato": "2023-02-08",
+            "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023001128&dokid=833290&versjon=3&variant=A&",
+            "spor": "A",
+            "lovversjon": "før_2024",
+            "sanksjon": "erstatning",
+            "kriterier": [
+              {
+                "navn": "form",
+                "bruker": "kontrakt",
+                "vedtak": "annonse",
+                "utfall": "sterkere"
+              },
+              {
+                "navn": "konkrethet",
+                "bruker": "spesifikk",
+                "vedtak": "spesifikk",
+                "utfall": "lik"
+              },
+              {
+                "navn": "direkte_sporsmal",
+                "bruker": false,
+                "vedtak": false,
+                "utfall": "lik"
+              },
+              {
+                "navn": "forbehold",
+                "bruker": true,
+                "vedtak": true,
+                "utfall": "lik"
+              }
+            ],
+            "antall_sterkere": 1,
+            "svakhet": null
           }
         ],
-        "antall_sterkere": 1,
-        "svakhet_adressert": null,
-        "godkjent": true,
-        "sitat": null,
-        "argumenter": [
-          "Vedtaket gjaldt samme type opplysning som i min sak."
-        ],
-        "avsnitt": "Forbrukerklageutvalget har i vedtak FKU-2025-52074 av 24. november 2025 lagt til grunn at selger hadde gitt en uriktig opplysning om motoren. Opplysningen sto i kontrakten og lød: «Kjøretøyets oljeforbruk er litt høyere enn vanlig». Kjøpet ble hevet. Min sak står minst like sterkt på de momentene utvalget bygde på. Vedtaket gjaldt samme type opplysning som i min sak.",
         "forkastede": [
           {
             "saksnummer": "24/571 f2",
@@ -1526,21 +2105,38 @@
           {
             "saksnummer": "21/497 f1",
             "grunn": "svakere på alder, km, pris"
+          },
+          {
+            "saksnummer": "21/4420 f1",
+            "grunn": "svakere på tid_til_feil, reklamasjonstid"
           }
         ],
-        "styrke": "middels",
-        "praksis": "vedtak",
-        "motstridende": {
-          "saksnummer": "FKU-2026-20340",
-          "vedtaksdato": "2026-06-22",
-          "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-20340.pdf",
-          "grunn": "kjent_eller_opplyst",
-          "skilte": [
-            "I FKU-2026-20340 var feilen kjent for kjøperen eller opplyst av selger.",
-            "Bilen i FKU-2026-20340 hadde gått 234 706 km, mot 96 423 km i FKU-2025-52074."
+        "styrke": "sterk",
+        "styrke_grunn": null,
+        "tapte": {
+          "fordeling": {
+            "ikke_sannsynliggjort_ved_levering": 20,
+            "kjent_eller_opplyst": 5,
+            "paregnelig_slitasje": 55,
+            "ikke_dokumentert": 16,
+            "forbehold": 2,
+            "annet": 2
+          },
+          "nyeste": [
+            {
+              "saksnummer": "FKU-2026-33495",
+              "vedtaksdato": "2026-06-22",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-33495.pdf",
+              "grunn": "ikke_sannsynliggjort_ved_levering"
+            },
+            {
+              "saksnummer": "FKU-2026-20340",
+              "vedtaksdato": "2026-06-22",
+              "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-20340.pdf",
+              "grunn": "kjent_eller_opplyst"
+            }
           ]
         },
-        "naermeste": null,
         "forlik": false,
         "reklamasjon_over_to_mnd": false
       }
@@ -1548,7 +2144,6 @@
     "valgt_til_brev": [
       "F1"
     ],
-    "lovendring": "Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024. Endringen forlenget blant annet fristen der en feil som viser seg, formodes å ha vært til stede ved leveringen, fra seks måneder til to år. Ingen av reglene vedtaket bygger på, er endret til kjøperens ugunst.",
     "ingen_treff": []
   }
 }

@@ -1,22 +1,18 @@
 // Runs every combination of the form's deciding answers through the comparison engine against the
-// index, checks the rules that must always hold, and compares the shares with the frozen baseline.
-// Run it whenever the tracks, criteria or candidate filters change (docs/sammenligningsmotor.md).
+// index and checks the rules that must always hold (docs/sammenligningsmotor.md). Invariants only: the
+// shares are printed for information, not compared with a baseline.
 //
-//   npm run sveip                 # compare with src/lib/sammenligning/testdata/sveip-fasit.json
-//   npm run sveip -- --frys       # write a new baseline after checking the diff
+//   npm run sveip
 //
-// Exits with 1 when an invariant is broken. The queries are cached per (track, variant, categories,
-// heving, lost), so the ~60 000 runs need under 200 queries.
+// Exits with 1 when an invariant is broken. The queries are cached per (track, variant, category,
+// heving, lost), so the ~60 000 runs need a few hundred queries.
 
-import { readFileSync, writeFileSync } from "node:fs";
 import { db } from "../src/db";
-import { sammenlign } from "../src/lib/sammenligning";
-import { kategoriavstand } from "../src/lib/sammenligning/avled";
+import { MAKS_KANDIDATER, sammenlign } from "../src/lib/sammenligning";
 import { lagHentKandidater } from "../src/lib/sammenligning/kandidater";
 import type { HentKandidater } from "../src/lib/sammenligning/typer";
 import { KATEGORIER, RAPPORT_TOM, type RapportSier, SKJEMA_VERSJON, type Skjema, validerSkjema } from "../src/lib/skjema/skjema";
 
-const FASIT = "src/lib/sammenligning/testdata/sveip-fasit.json";
 const IDAG = "2026-10-09";
 
 const SELGER = {
@@ -94,28 +90,29 @@ function* kombinasjoner(): Generator<Kombinasjon> {
             for (const heving of [false, true]) for (const motbevis of [false, true]) for (const somDenEr of [false, true]) yield { kat, sel, ver, tid, bil, heving, motbevis, somDenEr };
 }
 
-const andel = (n: number, av: number) => Math.round((1000 * n) / Math.max(av, 1)) / 10;
-
 async function main() {
   const ekte = lagHentKandidater(db);
   const cache = new Map<string, ReturnType<HentKandidater>>();
+  let kall = 0;
   const hent: HentKandidater = (q) => {
+    kall++;
     const n = JSON.stringify(q);
     if (!cache.has(n)) cache.set(n, ekte(q));
     return cache.get(n)!;
   };
 
   const brudd: string[] = [];
-  const telle = <K extends string>() => ({} as Record<K, number>);
-  const styrke = telle<string>();
-  const arsak = telle<string>();
-  const praksis = telle<string>();
-  const svakEtter: Record<string, Record<string, [number, number]>> = { sel: {}, ver: {}, tid: {}, motbevis: {} };
-  // Where the cited decision comes from (avled.ts kategoritrinn); utenfor_regelen must stay 0.
-  const blanding = { samme_kategori: 0, tilbakefall_A_gruppe: 0, tilbakefall_B_naermeste: 0, utenfor_regelen: 0 };
+  const styrke: Record<string, number> = {};
+  const medKandidat = { ja: 0, nei: 0 };
   let totalt = 0;
-  let medNaermeste = 0;
   const t = Date.now();
+
+  // A private sale stops before matching.
+  const privat = skjema(kombinasjoner().next().value!);
+  privat.del1_kjopet.selgertype = "privat";
+  const forPrivat = kall;
+  const rp = await sammenlign(privat, hent, IDAG);
+  if (rp.stopp !== "privat_selger" || kall !== forPrivat) brudd.push("privatkjøp stoppet ikke før matching");
 
   for (const k of kombinasjoner()) {
     const s = skjema(k);
@@ -125,89 +122,28 @@ async function main() {
     const f = r.feil[0];
     const navn = JSON.stringify(k);
     totalt++;
-    if (f.styrke == null) brudd.push(`styrke mangler uten forlik: ${navn}`);
-    const st = f.styrke ?? "ingen";
-    styrke[st] = (styrke[st] ?? 0) + 1;
-    for (const d of ["sel", "ver", "tid", "motbevis"] as const) {
-      const x = (svakEtter[d][String(k[d])] ??= [0, 0]);
-      x[1]++;
-      if (f.styrke === "svak") x[0]++;
-    }
-    const pr = f.praksis ?? "ingen";
-    praksis[pr] = (praksis[pr] ?? 0) + 1;
-    if (f.styrke === "svak") {
-      const a = r.ingen_treff[0]?.siste_stopp.startsWith("ingen_spor") ? r.ingen_treff[0].siste_stopp : f.kandidat ? "vedtak med motstridende tap" : "spor uten vedtak, lignende sak tapt";
-      arsak[a] = (arsak[a] ?? 0) + 1;
-      if (f.naermeste) medNaermeste++;
-    }
+    styrke[f.styrke ?? "ingen"] = (styrke[f.styrke ?? "ingen"] ?? 0) + 1;
+    medKandidat[f.kandidater.length ? "ja" : "nei"]++;
 
     // The rules that must hold for every combination.
     if (r.stopp) brudd.push(`stopp uten privat selger: ${navn}`);
-    // Strength describes the case, praksis what can be cited (2026-10-10, index.ts styrke).
-    const harSpor = f.spor_alle.length > 0;
-    const forventet = !harSpor ? "svak" : f.kandidat ? (f.motstridende || f.kategori_tilbakefall ? "middels" : "sterk") : f.motstridende ? "svak" : "middels";
+    if (!k.heving && f.kandidater.some((x) => x.sanksjon === "heving")) brudd.push(`hevingsvedtak uten ønske om heving: ${navn}`);
+    if (!f.spor_alle.length && f.kandidater.length) brudd.push(`vedtak uten spor: ${navn}`);
+    const forventet = !f.spor_alle.length ? "svak" : !f.kandidater.length || f.reklamasjon_over_to_mnd ? "middels" : "sterk";
     if (f.styrke !== forventet) brudd.push(`styrke ${f.styrke}, forventet ${forventet}: ${navn}`);
-    if ((f.praksis === "vedtak") !== (f.kandidat != null)) brudd.push(`praksis og vedtak stemmer ikke: ${navn}`);
-    // Without a decision a paragraph is only the general one, on C or B, never comparing (generelt.ts).
-    if (!f.kandidat && f.avsnitt && f.praksis !== "generell") brudd.push(`avsnitt uten vedtak og uten generell praksis: ${navn}`);
-    if ((f.praksis === "generell") !== (!f.kandidat && f.avsnitt != null)) brudd.push(`generell praksis og avsnitt stemmer ikke: ${navn}`);
-    if (f.praksis === "generell" && (f.avsnitt!.includes("like sterkt") || !/se for eksempel vedtak .+ og vedtak /.test(f.avsnitt!)))
-      brudd.push(`generelt avsnitt sammenligner eller mangler to eksempler: ${navn}`);
-    if (f.praksis === "generell" && !f.spor_alle.some((x) => x === "C" || x === "B")) brudd.push(`generelt avsnitt uten spor C eller B: ${navn}`);
-    if (f.kandidat) {
-      const kk = f.kandidat.kategori;
-      if (kk === k.kat) blanding.samme_kategori++;
-      else if (kategoriavstand(k.kat, kk, f.kandidat_spor!) === 99) blanding.utenfor_regelen++;
-      else if (f.kandidat_spor === "A") blanding.tilbakefall_A_gruppe++;
-      else blanding.tilbakefall_B_naermeste++;
-      // The category fallback per track (2026-10-10): A within the information group, B to the nearest
-      // categories, C never. A fallback says so in the letter and is at most «middels».
-      if (f.kategori_tilbakefall !== (kk !== k.kat)) brudd.push(`kategori_tilbakefall stemmer ikke (${kk}): ${navn}`);
-      if (kk !== k.kat) {
-        if (f.kandidat_spor === "C") brudd.push(`spor C med annen kategori (${kk}): ${navn}`);
-        if (kategoriavstand(k.kat, kk, f.kandidat_spor!) === 99) brudd.push(`spor ${f.kandidat_spor} utenfor tilbakefallet (${kk}): ${navn}`);
-        if (f.styrke === "sterk") brudd.push(`tilbakefall med styrke sterk (${kk}): ${navn}`);
-        if (!/i min sak gjelder opplysningen|Det samme gjelder i min sak|også innen fristen/.test(f.avsnitt ?? "")) brudd.push(`tilbakefall uten setning om kategorien (${kk}): ${navn}`);
-      }
-    }
+    if (f.kandidater.length > MAKS_KANDIDATER) brudd.push(`flere enn ${MAKS_KANDIDATER} kandidater: ${navn}`);
+    if (f.kandidater.some((x) => !f.spor_alle.includes(x.spor))) brudd.push(`kandidat på et spor feilen ikke har: ${navn}`);
   }
 
-  const resultat = {
-    kombinasjoner: totalt,
-    styrke: Object.fromEntries(Object.entries(styrke).map(([k, n]) => [k, { antall: n, prosent: andel(n, totalt) }])),
-    svak_arsak: arsak,
-    praksis: Object.fromEntries(Object.entries(praksis).map(([k, n]) => [k, { antall: n, prosent: andel(n, totalt) }])),
-    svak_med_naermeste_prosent: andel(medNaermeste, styrke.svak ?? 0),
-    kategoriblanding: blanding,
-    svak_prosent_etter: Object.fromEntries(Object.entries(svakEtter).map(([d, x]) => [d, Object.fromEntries(Object.entries(x).map(([k, [n, av]]) => [k, andel(n, av)]))])),
-  };
-
-  console.log(JSON.stringify(resultat, null, 2));
+  const andel = (n: number) => Math.round((1000 * n) / Math.max(totalt, 1)) / 10;
+  console.log(JSON.stringify({ kombinasjoner: totalt, styrke: Object.fromEntries(Object.entries(styrke).map(([k, n]) => [k, `${n} (${andel(n)} %)`])), med_kandidat: `${andel(medKandidat.ja)} %` }, null, 2));
   console.log(`${totalt} kombinasjoner, ${cache.size} spørringer, ${((Date.now() - t) / 1000).toFixed(0)} s`);
-
-  if (process.argv.includes("--frys")) {
-    writeFileSync(FASIT, JSON.stringify(resultat, null, 2) + "\n");
-    console.log(`Skrev ${FASIT}`);
-  } else {
-    let fasit: typeof resultat | null = null;
-    try {
-      fasit = JSON.parse(readFileSync(FASIT, "utf8"));
-    } catch {
-      console.log(`Ingen fasit ennå (${FASIT}); kjør med --frys.`);
-    }
-    if (fasit) {
-      const flat = (o: unknown, sti = ""): [string, unknown][] =>
-        o && typeof o === "object" ? Object.entries(o).flatMap(([k, v]) => flat(v, sti ? `${sti}.${k}` : k)) : [[sti, o]];
-      const gml = new Map(flat(fasit));
-      const endringer = flat(resultat).filter(([k, v]) => gml.get(k) !== v);
-      console.log(endringer.length ? `\nEndret mot fasiten:\n${endringer.map(([k, v]) => `  ${k}: ${gml.get(k) ?? "–"} → ${v}`).join("\n")}` : "\nSom fasiten.");
-    }
-  }
 
   if (brudd.length) {
     console.error(`\n${brudd.length} brudd på invariantene, de første:\n${brudd.slice(0, 10).join("\n")}`);
     process.exit(1);
   }
+  console.log("Ingen brudd på invariantene.");
   process.exit(0);
 }
 main();

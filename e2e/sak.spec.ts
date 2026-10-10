@@ -33,7 +33,7 @@ test("/sak sender ikke før svarene er gyldige", async ({ page }) => {
   await expect(mangler).toContainText("Kjøpet");
 });
 
-test("Enyaq-saken gir vurderingen og praksisdelen av brevet under skjemaet", async ({ page }) => {
+test("Enyaq-saken gir vurderingen med vedtaket under skjemaet", async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto("/sak");
   const k = enyaq.del1_kjopet;
@@ -50,7 +50,7 @@ test("Enyaq-saken gir vurderingen og praksisdelen av brevet under skjemaet", asy
   await expect(page.getByText("Koblet til Enhetsregisteret · org.nr 999 000 123")).toBeVisible();
   await knapp(page, "Sto det «som den er», «som forevist» eller lignende i kontrakten?", "Nei").click();
 
-  // One defect is enough to see the letter section: F1 (heat pump).
+  // One defect is enough to see the assessment: F1 (heat pump).
   const f = enyaq.del3_feil[0];
   await felt(page, "Hva slags feil er det?").locator("select").selectOption(f.kategori);
   await felt(page, "Beskriv feilen med èn setning").locator("textarea").fill(f.en_setning);
@@ -87,9 +87,9 @@ test("Enyaq-saken gir vurderingen og praksisdelen av brevet under skjemaet", asy
   await page.getByRole("button", { name: "Se vurderingen og brevet" }).click();
 
   await expect(page.getByRole("heading", { name: "Vurderingen" })).toBeVisible({ timeout: 60_000 });
-  const brevet = page.getByRole("article").filter({ hasText: "Praksis fra Forbrukerklageutvalget" });
-  await expect(brevet).toContainText("Forbrukerklageutvalget har i vedtak 22/2952");
-  await expect(brevet).toContainText("Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024");
+  const feil1 = page.getByRole("article").filter({ hasText: "Feil 1" });
+  await expect(feil1).toContainText("Sterk");
+  await expect(feil1.getByRole("link", { name: "vedtak 22/2952" })).toBeVisible();
 });
 
 test("forsiden lenker til /sak, og /vurdering finnes ikke", async ({ page }) => {

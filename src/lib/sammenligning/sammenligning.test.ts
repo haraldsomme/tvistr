@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import skjemaJson from "./testdata/enyaq-skjema.json";
 import { avledSanksjon, type SanksjonFakta } from "@/lib/analyse/avled";
-import { byggArgumenter, lovendring, renderAvsnitt, velgSitat } from "./argumenter";
-import { avledFeil, avledSak, erSpesifikk, kategoritrinn } from "./avled";
-import { sammenlign } from "./index";
+import { avledFeil, avledSak, erSpesifikk } from "./avled";
+import { MAKS_KANDIDATER, sammenlign } from "./index";
 import { velgOpplysning, vurderKriterier } from "./kriterier";
-import { fordel, opplysningIdentisk, ranger, sterkereEnn, velgTilBrev } from "./ranger";
+import { sterkereEnn, velgTilBrev } from "./ranger";
 import type { HentKandidater, Skjema, SkjemaFeil, VedtakFeil, Vurdert } from "./typer";
 
 const IDAG = "2026-10-09";
@@ -37,11 +36,9 @@ function vedtakFeil(o: Partial<VedtakFeil> = {}): VedtakFeil {
     utbedringskostnad_nok: null,
     tilkjent_totalt_nok: 16_066,
     belop_tilkjent_nok: null,
-    antall_mangler: 1,
     sanksjon: "erstatning",
     selger_bevis_finnes: false,
     forbehold: ["som_den_er"],
-    forbehold_frase: "som den er",
     forste_henvendelse_dato: null,
     start_dato: "2023-07-10",
     antall_feil: 1,
@@ -62,7 +59,6 @@ function vedtakFeil(o: Partial<VedtakFeil> = {}): VedtakFeil {
       },
     ],
     bevis: [],
-    begrunnelse_sitater: [{ tema: "opplysning", tekst: "Utvalget finner at bilen ikke hadde parkeringsvarmer slik annonsen opplyste.", gjelder_feil: ["f1"] }],
     ...o,
   };
 }
@@ -81,7 +77,7 @@ function vurder(s: Skjema, f: SkjemaFeil, v: VedtakFeil): Vurdert & { dom: Retur
   const opplysning = v.spor === "A" && p.a_variant ? velgOpplysning(v, p.a_variant) : null;
   const kriterier = vurderKriterier(sak, p, v, opplysning);
   const dom = sterkereEnn(kriterier, sak, v);
-  return { vedtak: v, opplysning, kriterier, antall_sterkere: kriterier.filter((k) => k.utfall === "sterkere").length, svakhet: dom.godkjent ? dom.svakhet : null, dom };
+  return { vedtak: v, kriterier, antall_sterkere: kriterier.filter((k) => k.utfall === "sterkere").length, svakhet: dom.godkjent ? dom.svakhet : null, dom };
 }
 
 describe("avledning (fasit: forventet_output_enyaq.json)", () => {
@@ -146,72 +142,16 @@ describe("avledning (fasit: forventet_output_enyaq.json)", () => {
 });
 
 describe("kriterier og «sterkere enn»", () => {
-  it("T1: F1 mot et 110357-lignende vedtak gir to sterkere og fasitens argumenter", () => {
+  it("T1: F1 mot et 110357-lignende vedtak gir to sterkere", () => {
     const x = vurder(enyaq, enyaq.del3_feil[0], vedtakFeil());
     expect(x.kriterier.map((k) => [k.navn, k.utfall])).toEqual([
       ["form", "lik"],
       ["konkrethet", "lik"],
       ["direkte_sporsmal", "sterkere"],
       ["forbehold", "sterkere"],
-      ["kategori", "lik"],
     ]);
     expect(x.dom.godkjent).toBe(true);
-    const sak = avledSak(enyaq, IDAG);
-    expect(byggArgumenter(sak, avledFeil(sak, enyaq.del3_feil[0]), x)).toEqual([
-      "Vedtaket gjaldt opplysninger om det elektriske utstyret; i min sak gjelder opplysningen klimaanlegget.",
-      "I vedtaket sto opplysningen i annonsen; i min sak står den både i annonsen og i en skriftlig melding fra selger.",
-      "Opplysningen ble gitt som svar på mitt direkte spørsmål.",
-      "Bilen i vedtaket var solgt «som den er»; min bil ble solgt uten forbehold.",
-    ]);
-  });
-
-  it("praksisavsnittet har fem ledd i fast rekkefølge", () => {
-    const x = vurder(enyaq, enyaq.del3_feil[0], vedtakFeil());
-    const sak = avledSak(enyaq, IDAG);
-    const p = avledFeil(sak, enyaq.del3_feil[0]);
-    expect(renderAvsnitt(p, x, byggArgumenter(sak, p, x), { tema: "formodning", tekst: "Innklagde har ikke bevist at feilen er oppstått senere" })).toBe(
-      "Forbrukerklageutvalget har i vedtak FKU-2026-110357 av 18. februar 2026 lagt til grunn at selger hadde gitt en uriktig opplysning om det elektriske utstyret. " +
-        "Annonsen oppga «parkeringsvarmer». Utvalget uttalte: «Innklagde har ikke bevist at feilen er oppstått senere». Kjøperen fikk erstattet 16 066 kr. " +
-        "Min sak står minst like sterkt på de momentene utvalget bygde på. " +
-        "Vedtaket gjaldt opplysninger om det elektriske utstyret; i min sak gjelder opplysningen klimaanlegget." +
-        " I vedtaket sto opplysningen i annonsen; i min sak står den både i annonsen og i en skriftlig melding fra selger. " +
-        "Opplysningen ble gitt som svar på mitt direkte spørsmål. Bilen i vedtaket var solgt «som den er»; min bil ble solgt uten forbehold.",
-    );
-  });
-
-  const avsnitt = (o: Partial<VedtakFeil>, endre?: (v: VedtakFeil) => void) => {
-    const v = vedtakFeil(o);
-    endre?.(v);
-    const x = vurder(enyaq, enyaq.del3_feil[0], v);
-    const sak = avledSak(enyaq, IDAG);
-    const p = avledFeil(sak, enyaq.del3_feil[0]);
-    return renderAvsnitt(p, x, byggArgumenter(sak, p, x), null);
-  };
-
-  it("beløpet sier hva det dekker", () => {
-    expect(avsnitt({ belop_tilkjent_nok: 3_000, antall_mangler: 4, sanksjon: "prisavslag_og_erstatning", tilkjent_totalt_nok: 38_652 })).toContain(
-      "Kjøperen fikk tilkjent 3 000 kr for denne mangelen.",
-    );
-    expect(avsnitt({ antall_mangler: 3, sanksjon: "prisavslag_og_erstatning", tilkjent_totalt_nok: 12_490 })).toContain(
-      "Kjøperen fikk prisavslag og erstatning på til sammen 12 490 kr for manglene i saken.",
-    );
-    expect(avsnitt({ belop_tilkjent_nok: 12_490, sanksjon: "prisavslag_og_erstatning", tilkjent_totalt_nok: 12_490 })).toContain(
-      "Kjøperen fikk prisavslag og erstatning på til sammen 12 490 kr for denne mangelen.",
-    );
-    expect(avsnitt({ antall_mangler: 2, sanksjon: "prisavslag", tilkjent_totalt_nok: 7_000 })).toContain("Kjøperen fikk prisavslag på til sammen 7 000 kr for manglene i saken.");
-    expect(avsnitt({ sanksjon: "heving", belop_tilkjent_nok: 11_535 })).toContain("Kjøpet ble hevet.");
-  });
-
-  it("forbeholdet siteres med vedtakets ord", () => {
-    expect(avsnitt({ forbehold_frase: "som den står" })).toContain("Bilen i vedtaket var solgt «som den står»; min bil ble solgt uten forbehold.");
-    expect(avsnitt({ forbehold: ["annet"], forbehold_frase: null })).toContain("Salget i vedtaket hadde et forbehold om bilens stand; min bil ble solgt uten forbehold.");
-  });
-
-  it("kort ordlyd: «i utstyrslisten» bare når vedtaket sier det", () => {
-    expect(avsnitt({}, (v) => Object.assign(v.opplysninger[0], { sitat: "Klimaanlegg sto i utstyrslisten i annonsen.", sitat_verifisert: true }))).toContain(
-      "Annonsen oppga «parkeringsvarmer» i utstyrslisten.",
-    );
-    expect(avsnitt({}, (v) => Object.assign(v.opplysninger[0], { ordlyd: "Bilen har nye bremser bak" }))).toContain("Opplysningen sto i annonsen og lød: «Bilen har nye bremser bak».");
+    expect(x.antall_sterkere).toBe(2);
   });
 
   it("direkte spørsmål leses fra skjemaet, ikke fra at det var en melding", () => {
@@ -222,20 +162,6 @@ describe("kriterier og «sterkere enn»", () => {
 
   it("ukjent skjemaversjon avvises", async () => {
     await expect(sammenlign(skjema((s) => (s._meta.skjema_versjon = "0.4")), async () => [], IDAG)).rejects.toThrow(/skjemaversjon/);
-  });
-
-  it("lovendringen sies én gang, i entall eller flertall", () => {
-    const sak = avledSak(enyaq, IDAG);
-    expect(lovendring(sak, [vedtakFeil()])).toMatch(/^Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1\. januar 2024\..*Ingen av reglene vedtaket bygger på/);
-    expect(lovendring(sak, [vedtakFeil(), vedtakFeil()])).toMatch(/^Begge vedtakene gjelder kjøp/);
-    expect(lovendring(sak, [vedtakFeil({ lovversjon: "etter_2024" })])).toBeNull();
-    expect(lovendring(avledSak(skjema((s) => (s.del1_kjopet.kjopsdato = "2023-05-01")), IDAG), [vedtakFeil()])).toBeNull();
-  });
-
-  it("T3: samme kategori gir kategoribonus", () => {
-    const x = vurder(enyaq, enyaq.del3_feil[2], vedtakFeil({ kategori: "servicehistorikk", forbehold: [] }));
-    expect(x.kriterier.find((k) => k.navn === "kategori")?.utfall).toBe("sterkere");
-    expect(x.antall_sterkere).toBe(1);
   });
 
   it("T8: annonse mot kontrakt er én adressert svakhet", () => {
@@ -264,16 +190,11 @@ describe("kriterier og «sterkere enn»", () => {
         { type: "verkstedrapport", avsender: null, fremlagt_av: "klager", dato: null, km_ved_undersokelse: null, arsak: "rotarsak", ved_levering: "ja", paregnelig: "utover", kostnad_nok: 20_000, utvalgets_vurdering: "vektlagt", avslagsgrunn: null, gjelder_feil: ["f1"], sitat: null, sitat_verifisert: null },
       ],
     });
-    const sak = avledSak(s, IDAG);
-    const p = avledFeil(sak, f);
-    expect(p.spor_primar).toBe("C");
+    expect(avledFeil(avledSak(s, IDAG), f).spor_primar).toBe("C");
     const x = vurder(s, f, v);
     expect(x.dom).toMatchObject({ godkjent: true });
     expect(x.svakhet?.navn).toBe("tid_til_feil");
     expect(x.kriterier.filter((k) => k.utfall === "sterkere").map((k) => k.navn)).toEqual(expect.arrayContaining(["alder", "km", "pris"]));
-    expect(byggArgumenter(sak, p, x)).toContain(
-      "Bilen var 2 år med 22 000 km og kostet 520 000 kr, mot 6 år, 90 000 km og 300 000 kr i vedtaket.",
-    );
   });
 
   it("T9: selger har lagt frem motbevis; B-vedtak uten selgers bevis forkastes", () => {
@@ -323,39 +244,24 @@ describe("sanksjon, valg og reproduserbarhet", () => {
     expect(hentet).toBe(false);
   });
 
-  it("T12: velgTilBrev bruker styrke og kategoribonus før kostnad", () => {
-    const x = (antall: number, kategori: string): Vurdert => ({ vedtak: vedtakFeil({ kategori }), opplysning: null, kriterier: [], antall_sterkere: antall, svakhet: null });
+  it("T12: velgTilBrev tar de to feilene med flest sterkere momenter, så kostnad", () => {
     expect(
       velgTilBrev([
-        { feil_id: "F1", kostnad: 38_400, valgt: x(2, "elektrisk"), kategori: "klimaanlegg" },
-        { feil_id: "F2", kostnad: 90_000, valgt: x(1, "utstyr_mangler"), kategori: "dekk_felger" },
-        { feil_id: "F3", kostnad: 6_900, valgt: x(1, "servicehistorikk"), kategori: "servicehistorikk" },
+        { feil_id: "F1", kostnad: 38_400, antall_sterkere: 2 },
+        { feil_id: "F2", kostnad: 90_000, antall_sterkere: 1 },
+        { feil_id: "F3", kostnad: 6_900, antall_sterkere: 1 },
+        { feil_id: "F4", kostnad: 500_000, antall_sterkere: null },
       ]),
-    ).toEqual(["F1", "F3"]);
-  });
-
-  it("to feil som peker på samme vedtak: den sterkeste får det, den andre tar neste", () => {
-    const x = (id: number, antall: number): Vurdert => ({ vedtak: vedtakFeil({ vedtak_id: id }), opplysning: null, kriterier: [], antall_sterkere: antall, svakhet: null });
-    const valgt = fordel(
-      new Map([
-        ["F1", [x(7, 2), x(8, 1)]],
-        ["F2", [x(7, 3)]],
-      ]),
-      new Map([["F1", 1], ["F2", 1]]),
-    );
-    expect(valgt.get("F2")?.vedtak.vedtak_id).toBe(7);
-    expect(valgt.get("F1")?.vedtak.vedtak_id).toBe(8);
+    ).toEqual(["F1", "F2"]);
   });
 
   it("T13: samme input gir identisk output", async () => {
     const hent: HentKandidater = async (q) =>
-      q.spor === "A"
-        ? [vedtakFeil({ vedtak_id: 3 }), vedtakFeil({ vedtak_id: 2, kategori: "klimaanlegg" }), vedtakFeil({ vedtak_id: 1, kategori: "servicehistorikk", forbehold: [] })]
-        : [];
+      q.spor === "A" && !q.tapte ? [vedtakFeil({ vedtak_id: 3 }), vedtakFeil({ vedtak_id: 2, vedtaksdato: "2026-03-01" }), vedtakFeil({ vedtak_id: 1, forbehold: [] })] : [];
     const forste = JSON.stringify(await sammenlign(enyaq, hent, IDAG));
     for (let i = 0; i < 100; i++) expect(JSON.stringify(await sammenlign(enyaq, hent, IDAG))).toBe(forste);
-    const r = JSON.parse(forste);
-    expect(r.feil.map((f: { kandidat: { vedtak_id: number } | null }) => f.kandidat?.vedtak_id)).toEqual([2, 3, 1]);
+    // Most stronger points first (1 was sold without reservation, so the buyer's is not stronger there), then the newest.
+    expect(JSON.parse(forste).feil[0].kandidater.map((k: { vedtak_id: number }) => k.vedtak_id)).toEqual([2, 3, 1]);
   });
 });
 
@@ -376,18 +282,6 @@ describe("rettelser etter testsakene S01–S10", () => {
     expect(erSpesifikk("Pen og velholdt bil, strøken!")).toBe(false);
   });
 
-  it("på spor C går samme kategori foran flere sterkere momenter (S04)", () => {
-    const s = skjema((s) => Object.assign(s.del1_kjopet, { kjopsdato: "2024-06-04", aarsmodell: 2022, km_ved_kjop: 22_000, pris_kr: 520_000 }));
-    const f = feil({ kategori: "rust", en_setning: "Rust i terskel.", dato_oppdaget: "2026-01-10", selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, kan_bilen_brukes: "ja" });
-    const bevis = [{ type: "verkstedrapport" as const, avsender: null, fremlagt_av: "klager" as const, dato: null, km_ved_undersokelse: null, arsak: "rotarsak" as const, ved_levering: "ja" as const, paregnelig: "utover" as const, kostnad_nok: null, utvalgets_vurdering: "vektlagt" as const, avslagsgrunn: null, gjelder_feil: ["f1"], sitat: null, sitat_verifisert: null }];
-    const annen = vurder(s, f, vedtakFeil({ vedtak_id: 1, spor: "C", kategori: "drivlinje", dager_etter_levering: 600, alder_ved_kjop: 4, km_ved_kjop: 24_000, kjopesum_nok: 318_900, bevis }));
-    const rust = vurder(s, f, vedtakFeil({ vedtak_id: 2, spor: "C", kategori: "rust", dager_etter_levering: 178, alder_ved_kjop: 15, km_ved_kjop: 178_200, kjopesum_nok: 49_000, bevis }));
-    expect(annen.antall_sterkere).toBeGreaterThan(rust.antall_sterkere - 1);
-    expect(rust.kriterier.find((k) => k.navn === "kategori")?.utfall).toBe("sterkere");
-    const sak = avledSak(s, IDAG);
-    expect(ranger([annen, rust], avledFeil(sak, f), sak)[0].vedtak.kategori).toBe("rust");
-  });
-
   it("kostnadsandelen bruker vedtakets utbedringskostnad, ikke en bevisfaktura", () => {
     const s = skjema((s) => Object.assign(s.del1_kjopet, { kjopsdato: "2024-06-04", pris_kr: 520_000 }));
     const f = feil({ kategori: "rust", en_setning: "Rust.", dato_oppdaget: "2025-01-10", selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, kostnad_kr: 64_000 });
@@ -396,55 +290,12 @@ describe("rettelser etter testsakene S01–S10", () => {
     expect(vurder(s, f, vedtakFeil({ spor: "C", bevis, utbedringskostnad_nok: 15_000 })).kriterier.find((k) => k.navn === "kostnad_pris")?.utfall).toBe("sterkere");
   });
 
-  it("km-svakheten tas opp i avsnittet bare når verkstedet knytter feilen til leveringen (S09)", () => {
-    const s = skjema((s) => ((s.del1_kjopet.kjopsdato = "2024-04-01"), (s.km_na = s.del1_kjopet.km_ved_kjop + 25_000)));
-    const sak = avledSak(s, IDAG);
-    const uten = feil({ rapport_sier: { hva: "ja", hvorfor: "ja", var_der_ved_overtakelse: "star_ikke", mer_enn_normal_slitasje: "star_ikke", kostnad: "ja" } });
-    expect(byggArgumenter(sak, avledFeil(sak, uten), vurder(s, uten, vedtakFeil())).join(" ")).not.toContain("km siden kjøpet");
-    const med = feil({});
-    expect(byggArgumenter(sak, avledFeil(sak, med), vurder(s, med, vedtakFeil()))).toContain(
-      "Jeg har kjørt 25 000 km siden kjøpet. Verkstedet har likevel knyttet feilen til leveringstidspunktet.",
-    );
-  });
-
   it("spor B: senere feil kan bare adresseres når verkstedet knytter den til leveringen (S06)", () => {
     const f = (levering: "ja" | "star_ikke") =>
       feil({ selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, kategori: "elektrisk", dato_oppdaget: "2025-05-20", rapport_sier: { hva: "ja", hvorfor: "ja", var_der_ved_overtakelse: levering, mer_enn_normal_slitasje: "star_ikke", kostnad: "ja" } });
     const v = vedtakFeil({ spor: "B", kategori: "elektrisk", spor_vunnet: ["B"], dager_etter_levering: 5 });
     expect(vurder(enyaq, f("star_ikke"), v).dom).toMatchObject({ godkjent: false });
     expect(vurder(enyaq, f("ja"), v).dom).toMatchObject({ godkjent: true });
-  });
-
-  it("spor B: egen innledning når selger i vedtaket la frem dokumentasjon (S06)", () => {
-    const f = feil({ selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, kategori: "elektrisk", dato_oppdaget: "2025-03-16" });
-    const x = vurder(enyaq, f, vedtakFeil({ spor: "B", kategori: "elektrisk", spor_vunnet: ["B"], dager_etter_levering: 5, selger_bevis_finnes: true }));
-    const sak = avledSak(enyaq, IDAG);
-    expect(renderAvsnitt(avledFeil(sak, f), x, [], null)).toContain(
-      "lagt til grunn at en feil som viste seg 5 dager etter leveringen, forelå ved leveringen, og at selgers dokumentasjon ikke var tilstrekkelig til å motbevise dette.",
-    );
-  });
-
-  it("sitater som kan snus mot kjøperen, brukes ikke (S08)", () => {
-    const synlig = { tema: "opplysning" as const, tekst: "På bakgrunn av at skaden er lett synlig på bilen mener utvalget at innklagde var klar over skaden.", gjelder_feil: ["f1"] };
-    expect(velgSitat(vedtakFeil({ begrunnelse_sitater: [synlig] }))).toBeNull();
-    const annet = { ...synlig, tekst: "Utvalget legger til grunn at selger kjente til skaden da bilen ble solgt." };
-    expect(velgSitat(vedtakFeil({ begrunnelse_sitater: [synlig, annet] }))?.tekst).toBe(annet.tekst.replace(/\.$/, ""));
-    const sannsynlig = { ...synlig, tekst: "Utvalget finner det sannsynliggjort at innklagde har gitt uriktige opplysninger om bilen." };
-    expect(velgSitat(vedtakFeil({ begrunnelse_sitater: [sannsynlig] }))).not.toBeNull();
-    const senere = { ...synlig, tekst: "Utvalget finner at selger har gitt uriktige opplysninger om klimaanlegget. Kjøperen burde likevel ha undersøkt bilen." };
-    expect(velgSitat(vedtakFeil({ begrunnelse_sitater: [senere] }))?.tekst).toBe("Utvalget finner at selger har gitt uriktige opplysninger om klimaanlegget");
-  });
-
-  it("sitatfragmenter brukes ikke (S06, S09)", () => {
-    const fragment = { tema: "formodning" as const, tekst: "foreligget på overtagelsestidspunktet ettersom selgeren ikke har ført motbevis", gjelder_feil: ["f1"] };
-    expect(velgSitat(vedtakFeil({ spor: "B", begrunnelse_sitater: [fragment] }))).toBeNull();
-    const hel = { ...fragment, tekst: "Utvalget legger til grunn at feilen forelå ved leveringen, ettersom selgeren ikke har ført motbevis." };
-    expect(velgSitat(vedtakFeil({ spor: "B", begrunnelse_sitater: [fragment, hel] }))?.tekst).toBe(hel.tekst.replace(/\.$/, ""));
-    // Stored without its full stop, but the full text shows the sentence ends there.
-    const utenPunktum = { ...fragment, tekst: "Utvalget legger til grunn at feilen forelå ved leveringen", neste_tegn: " De" };
-    expect(velgSitat(vedtakFeil({ spor: "B", begrunnelse_sitater: [utenPunktum] }))?.tekst).toBe(utenPunktum.tekst);
-    const avkuttet = { ...fragment, tekst: "Det foreligger uansett opplysningssvikt i form av feilopplysninger knyttet til at bilen", neste_tegn: " ik" };
-    expect(velgSitat(vedtakFeil({ spor: "B", begrunnelse_sitater: [avkuttet] }))).toBeNull();
   });
 
   it("alvor ligger i outputen (S10)", async () => {
@@ -489,63 +340,53 @@ describe("vedtak per feil: regler fra 2026-10-09", () => {
     expect(x.kriterier.find((k) => k.navn === "ikke_slitedel")?.utfall).toBe("sterkere");
   });
 
-  it("spor uten vedtak er middels, uten praksis, og får nærmeste vinnende vedtak med det brukeren mangler", async () => {
-    // Seller showed counter-evidence; the only B decision had none, so it is rejected and becomes the nearest.
+  it("spor uten vedtak er middels; tapte saker er informasjon og påvirker ikke styrken", async () => {
+    // Seller showed counter-evidence; the only B decision had none, so it is rejected.
     const s = skjema((s) => {
       s.del3_feil = [{ ...brems, kategori: "motor" }];
       s.del6_kontakt_med_selger.selger_la_frem_dokumentasjon = "ja";
       s.del6_kontakt_med_selger.selger_dokumentasjon_kort = "EU-kontroll";
     });
-    const r = await sammenlign(s, async (q) => (q.spor === "B" ? [bVedtak({ kategori: "motor", saksnummer: "22/1000", dager_etter_levering: 300 })] : []), IDAG);
-    expect(r.feil[0]).toMatchObject({ godkjent: false, avsnitt: null, styrke: "middels", praksis: "ingen" });
-    expect(r.feil[0].naermeste).toMatchObject({ saksnummer: "22/1000", spor: "B", mangler: ["selger_motbevis"] });
+    const tapt = (id: number, grunn: string, dato: string) => bVedtak({ vedtak_id: id, kategori: "motor", saksnummer: `22/${id}`, vedtaksdato: dato, grunn, selger_bevis_finnes: true, bevis: [RAPPORT_LEVERING] });
+    const r = await sammenlign(
+      s,
+      async (q) => (q.spor !== "B" ? [] : q.tapte ? [tapt(3, "paregnelig_slitasje", "2026-01-01"), tapt(2, "paregnelig_slitasje", "2025-01-01"), tapt(1, "ikke_dokumentert", "2024-01-01")] : [bVedtak({ kategori: "motor", saksnummer: "22/1000", dager_etter_levering: 300 })]),
+      IDAG,
+    );
+    expect(r.feil[0]).toMatchObject({ kandidater: [], styrke: "middels", styrke_grunn: "ingen_vedtak" });
+    expect(r.feil[0].tapte).toEqual({
+      fordeling: { paregnelig_slitasje: 2, ikke_dokumentert: 1 },
+      nyeste: [
+        { saksnummer: "22/3", vedtaksdato: "2026-01-01", kilde_url: "https://example.org/1.pdf", grunn: "paregnelig_slitasje" },
+        { saksnummer: "22/2", vedtaksdato: "2025-01-01", kilde_url: "https://example.org/1.pdf", grunn: "paregnelig_slitasje" },
+      ],
+    });
     expect(r.valgt_til_brev).toEqual([]);
   });
 
-  it("spor uten vedtak er svak når en lignende sak på sporet er tapt", async () => {
-    const s = skjema((s) => {
-      s.del3_feil = [{ ...brems, kategori: "motor" }];
-      s.del6_kontakt_med_selger.selger_la_frem_dokumentasjon = "ja";
-      s.del6_kontakt_med_selger.selger_dokumentasjon_kort = "EU-kontroll";
-    });
-    // The same profile as the user: the seller had evidence, and the workshop tied the defect to delivery.
-    const tapt = bVedtak({ kategori: "motor", saksnummer: "22/2000", dager_etter_levering: 300, selger_bevis_finnes: true, grunn: "annet", bevis: [RAPPORT_LEVERING] });
-    const r = await sammenlign(s, async (q) => (q.spor !== "B" ? [] : q.tapte ? [tapt] : [bVedtak({ kategori: "motor", saksnummer: "22/1000", dager_etter_levering: 300 })]), IDAG);
-    expect(r.feil[0]).toMatchObject({ godkjent: false, styrke: "svak", praksis: "ingen" });
-    expect(r.feil[0].motstridende?.saksnummer).toBe("22/2000");
-  });
-
-  it("feil uten spor får nærmeste C-vedtak, med rapportens innhold som det som mangler", async () => {
+  it("feil uten spor er svak og hentes ikke", async () => {
     const s = skjema((s) => (s.del3_feil = [feil({ kategori: "motor", selger_sa_noe: "ja_muntlig", hvor_sto_det: [], avskrift_selger: null, verksted_sett_pa: "ja_muntlig" })]));
-    const spurt: string[] = [];
-    const r = await sammenlign(s, async (q) => (spurt.push(q.spor), q.spor === "C" ? [vedtakFeil({ spor: "C", spor_vunnet: ["C"], kategori: "motor", saksnummer: "23/3446", dager_etter_levering: 300, bevis: [RAPPORT_LEVERING] })] : []), IDAG);
-    expect(r.feil[0]).toMatchObject({ ingen_spor_arsak: "muntlig_opplysning", godkjent: false, styrke: "svak", kandidat: null, avsnitt: null });
-    expect(r.feil[0].naermeste).toMatchObject({ saksnummer: "23/3446", spor: "C" });
-    expect(r.feil[0].naermeste?.mangler).toEqual(expect.arrayContaining(["utover_paregnelig", "ved_levering"]));
-    expect(spurt).toEqual(expect.arrayContaining(["C", "B"]));
+    let hentet = false;
+    const r = await sammenlign(s, async () => ((hentet = true), [vedtakFeil({ kategori: "motor" })]), IDAG);
+    expect(r.feil[0]).toMatchObject({ ingen_spor_arsak: "muntlig_opplysning", styrke: "svak", styrke_grunn: "ingen_spor", kandidater: [], tapte: null });
+    expect(hentet).toBe(false);
   });
 
-  it("nærmeste foretrekker vedtak der alt som mangler, kan skaffes med en rapport", async () => {
-    const s = skjema((s) => (s.del3_feil = [feil({ kategori: "motor", selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, verksted_sett_pa: "nei" })]));
-    const c = (o: Partial<VedtakFeil>) => vedtakFeil({ spor: "C", spor_vunnet: ["C"], kategori: "motor", dager_etter_levering: 300, ...o });
-    // Newer, but the user's car is older than the decision's (no report changes that).
-    const nyereMenEldreBil = c({ vedtak_id: 1, saksnummer: "26/1", vedtaksdato: "2026-05-01", alder_ved_kjop: 2, bevis: [] });
-    const rapportKanLukke = c({ vedtak_id: 2, saksnummer: "24/2", vedtaksdato: "2024-05-01", bevis: [RAPPORT_LEVERING] });
-    const r = await sammenlign(s, async (q) => (q.spor === "C" ? [nyereMenEldreBil, rapportKanLukke] : []), IDAG);
-    expect(r.feil[0].naermeste).toMatchObject({ saksnummer: "24/2", mangler: ["utover_paregnelig", "ved_levering"] });
+  it("feil med vedtak er sterk, også når en lignende sak er tapt", async () => {
+    const r = await sammenlign(enyaq, async (q) => (q.spor === "A" ? [vedtakFeil({ kategori: "klimaanlegg", grunn: q.tapte ? "annet" : null })] : []), IDAG);
+    expect(r.feil[0]).toMatchObject({ styrke: "sterk", styrke_grunn: null, kandidater: [{ vedtak_id: 1 }] });
   });
 
-  it("feil med vedtak og uten motstridende tap er sterk og har ingen nærmeste", async () => {
-    const r = await sammenlign(enyaq, async (q) => (q.spor === "A" && !q.tapte ? [vedtakFeil({ kategori: "klimaanlegg" })] : []), IDAG);
-    expect(r.feil[0]).toMatchObject({ godkjent: true, styrke: "sterk", naermeste: null, motstridende: null });
-  });
-
-  it("én dag står i entall i avsnittet", () => {
-    const s = skjema((s) => (s.del6_kontakt_med_selger.dato_forste_gang = "2025-10-29"));
-    const f = { ...brems, kategori: "motor" as const, dato_oppdaget: "2025-10-28" };
-    const x = vurder(s, f, bVedtak({ kategori: "motor", dager_etter_levering: 300, start_dato: "2023-07-10", forste_henvendelse_dato: "2024-05-16" }));
-    const sak = avledSak(s, IDAG);
-    expect(byggArgumenter(sak, avledFeil(sak, f), x)).toContain("Jeg reklamerte 1 dag etter at feilen ble oppdaget.");
+  it("reklamasjon mer enn to måneder etter oppdagelsen gir høyst middels (fkjl. § 27)", async () => {
+    const s = skjema((s) => (s.del6_kontakt_med_selger.dato_forste_gang = "2026-03-01"));
+    const r = await sammenlign(s, async (q) => (q.spor === "A" && !q.tapte ? [vedtakFeil({ kategori: q.kategori })] : []), IDAG);
+    expect(r.feil[0]).toMatchObject({ reklamasjon_over_to_mnd: true, styrke: "middels", styrke_grunn: "reklamert_sent" });
+    expect(r.feil[0].kandidater).toHaveLength(1);
+    // Not taken up yet: the letter is the complaint, so the time runs to today.
+    const ikke = skjema((s) => Object.assign(s.del6_kontakt_med_selger, { tatt_opp_med_selger: "nei", dato_forste_gang: null, selgers_svar: null }));
+    expect((await sammenlign(ikke, async () => [], IDAG)).feil.map((f) => f.reklamasjon_over_to_mnd)).toEqual([true, true, true]);
+    const nylig = skjema((s) => (Object.assign(s.del6_kontakt_med_selger, { tatt_opp_med_selger: "nei", dato_forste_gang: null, selgers_svar: null }), (s.del3_feil = [{ ...s.del3_feil[0], dato_oppdaget: "2026-09-20" }])));
+    expect((await sammenlign(nylig, async () => [], IDAG)).feil[0].reklamasjon_over_to_mnd).toBe(false);
   });
 
   it("reklamert for sent og forlik er flagg, ikke stopp", async () => {
@@ -566,6 +407,7 @@ describe("vedtak per feil: årsak, kategori, forlik og middels styrke", () => {
   const motor = feil({ kategori: "motor", selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, rapport_sier: RAPPORT });
   const bevis = (arsak: string) => ({ type: "verkstedrapport", avsender: null, fremlagt_av: "klager", dato: null, km_ved_undersokelse: null, arsak, ved_levering: "uttaler_seg_ikke", paregnelig: "uttaler_seg_ikke", kostnad_nok: null, utvalgets_vurdering: "vektlagt", avslagsgrunn: null, gjelder_feil: ["f1"], sitat: null, sitat_verifisert: null }) as VedtakFeil["bevis"][number];
   const b = (o: Partial<VedtakFeil>) => vedtakFeil({ spor: "B", spor_vunnet: ["B"], grunnlag: null, opplysninger: [], forbehold: [], kategori: "motor", dager_etter_levering: 300, ...o });
+  const RAPPORT_LEVERING_C = { ...bevis("rotarsak"), ved_levering: "ja", paregnelig: "utover" } as VedtakFeil["bevis"][number];
 
   it("B krever bare at rapporten sier hvilken del som er feil", () => {
     const sak = avledSak(enyaq, IDAG);
@@ -579,96 +421,42 @@ describe("vedtak per feil: årsak, kategori, forlik og middels styrke", () => {
     expect(utfall(medArsak, b({ bevis: [bevis("komponent")] }))).toMatchObject({ utfall: "sterkere", krav: false });
     expect(utfall(motor, b({ bevis: [bevis("rotarsak")] }))).toMatchObject({ utfall: "svakere", krav: false });
     expect(utfall(motor, b({ bevis: [] }))?.utfall).toBe("lik");
-    const sak = avledSak(enyaq, IDAG);
-    expect(byggArgumenter(sak, avledFeil(sak, medArsak), vurder(enyaq, medArsak, b({ bevis: [bevis("komponent")] })))).toContain(
-      "Verkstedet har i tillegg forklart hvorfor delen sviktet.",
-    );
   });
 
-  it("manglende årsak inngår i det nærmeste vedtaket som noe en rapport kan gi", async () => {
-    const s = skjema((s) => (s.del3_feil = [motor]));
-    const r = await sammenlign(s, async (q) => (q.spor === "B" && !q.tapte ? [b({ saksnummer: "22/7", bevis: [bevis("rotarsak")] })] : []), IDAG);
-    expect(r.feil[0].naermeste).toMatchObject({ saksnummer: "22/7", mangler: ["arsak"] });
-  });
-
-  it("en annen kategori er ingen svakhet, men brevet sier det (tilbakefall 2026-10-10)", async () => {
-    const x = vurder(enyaq, motor, b({ kategori: "girkasse" }));
-    expect(x.dom).toMatchObject({ godkjent: true });
-    expect(x.kriterier.find((k) => k.navn === "kategori")?.utfall).toBe("lik");
-    const sak = avledSak(enyaq, IDAG);
-    expect(byggArgumenter(sak, avledFeil(sak, motor), x)[0]).toBe(
-      "Vedtaket gjaldt feil på girkassen. Utvalget bygde på at feilen viste seg innen fristen og at selger ikke fremla bevis for at den oppsto senere. Det samme gjelder i min sak.",
-    );
-    // When the decision's seller had evidence, and the user's seller has too, only what holds is said.
-    const medMotbevis = skjema((s) => (s.del6_kontakt_med_selger = { ...s.del6_kontakt_med_selger, selgers_svar: "avvist", selger_la_frem_dokumentasjon: "ja", selger_dokumentasjon_kort: "egen rapport" }));
-    const sak2 = avledSak(medMotbevis, IDAG);
-    const y = vurder(medMotbevis, motor, b({ kategori: "girkasse", selger_bevis_finnes: true }));
-    expect(byggArgumenter(sak2, avledFeil(sak2, motor), y)[0]).toBe(
-      "Vedtaket gjaldt feil på girkassen. Utvalget bygde på at feilen viste seg innen fristen og at selgers dokumentasjon ikke var tilstrekkelig til å vise at den oppsto senere. I min sak viste feilen seg også innen fristen.",
-    );
-    // Per track: A within the information group, B to the nearest categories, C never leaves the category.
-    expect(kategoritrinn("heftelse_pant", "A")[1]).not.toContain("elektrisk");
-    expect(kategoritrinn("batteri_elbil", "B")).toEqual([["batteri_elbil"], ["elektrisk", "motor", "klimaanlegg"]]);
-    expect(kategoritrinn("batteri_elbil", "C")).toEqual([["batteri_elbil"]]);
-    // A fetches its own category first; the rest of the group only when nothing there is approved.
-    const s = skjema((s) => (s.del3_feil = [{ ...enyaq.del3_feil[0], kategori: "utstyr_mangler" }]));
-    const vedtak = [vedtakFeil({ vedtak_id: 1, kategori: "elektrisk" }), vedtakFeil({ vedtak_id: 2, kategori: "utstyr_mangler", forbehold: [] })];
-    const spurt: string[][] = [];
-    const fra = (godkjennes: boolean): HentKandidater => async (q) => {
-      if (q.tapte || q.spor !== "A") return [];
-      spurt.push(q.kategorier);
-      return vedtak.filter((v) => q.kategorier.includes(v.kategori)).map((v) => (godkjennes || v.kategori !== "utstyr_mangler" ? v : { ...v, opplysninger: [] }));
-    };
-    const r = await sammenlign(s, fra(true), IDAG);
-    expect(r.feil[0].kandidat?.vedtak_id).toBe(2);
-    expect(spurt).toEqual([["utstyr_mangler"]]);
-    // 30 rejected hits in the category cannot hide the group: it is a query of its own.
-    spurt.length = 0;
-    const r2 = await sammenlign(s, fra(false), IDAG);
-    expect(spurt).toEqual([["utstyr_mangler"], ["elektrisk", "klimaanlegg", "dekk_felger", "karosseri_lakk_glass", "interior_lukt"]]);
-    expect(r2.feil[0].kandidat?.vedtak_id).toBe(1);
-    // C asks for the category only; B also for the nearest categories; nothing beyond.
-    const alle: string[][] = [];
-    // The general paragraph's example query (nyeste) spans the categories on purpose; it is not matching.
-    await sammenlign(enyaq, async (q) => (q.tapte || q.nyeste ? [] : (alle.push([q.spor, ...q.kategorier]), [])), IDAG);
-    expect(alle).toContainEqual(["C", "klimaanlegg"]);
-    expect(alle.filter(([spor]) => spor === "C").every((x) => x.length === 2)).toBe(true);
-    const lov = (x: string[]) => enyaq.del3_feil.some((f) => kategoritrinn(f.kategori, "B").some((t) => JSON.stringify(t) === JSON.stringify(x)));
-    expect(alle.filter(([spor]) => spor === "B").every(([, ...k]) => lov(k))).toBe(true);
-  });
-
-  it("tilbakefall gir høyst middels, og tapte vedtak hentes fra begge kategoriene", async () => {
-    const s = skjema((s) => (s.del3_feil = [{ ...enyaq.del3_feil[2], kategori: "girkasse" }]));
-    const tapteSpurt: string[][] = [];
-    const hent: HentKandidater = async (q) => {
-      if (q.tapte) return (tapteSpurt.push(q.kategorier), []);
-      if (q.spor === "B" && q.kategorier.includes("clutch")) return [vedtakFeil({ vedtak_id: 7, spor: "B", kategori: "clutch", spor_vunnet: ["B"], dager_etter_levering: 300 })];
-      return [];
-    };
-    const r = await sammenlign(s, hent, IDAG);
-    expect(r.feil[0]).toMatchObject({ kandidat_spor: "B", kategori_tilbakefall: true, styrke: "middels", motstridende: null });
-    expect(tapteSpurt).toEqual([["girkasse", "clutch"]]);
-  });
-
-  it("samme kategori på sekundærsporet går foran en annen kategori på primærsporet", async () => {
-    const s = skjema((s) => (s.del3_feil = [enyaq.del3_feil[2]]));
+  it("bare samme kategori, ett kall per spor, primærsporet først", async () => {
+    const s = skjema((s) => (s.del3_feil = [enyaq.del3_feil[0]]));
+    const spurt: Array<[string, string]> = [];
     const hent: HentKandidater = async (q) => {
       if (q.tapte) return [];
-      if (q.spor === "B" && q.kategorier.includes("servicehistorikk"))
-        return [vedtakFeil({ vedtak_id: 7, spor: "B", kategori: "servicehistorikk", spor_vunnet: ["B"], dager_etter_levering: 300 })];
-      if (q.spor === "A" && q.kategorier.includes("km_avvik")) return [vedtakFeil({ vedtak_id: 8, kategori: "km_avvik" })];
+      spurt.push([q.spor, q.kategori]);
+      if (q.spor === "A") return [vedtakFeil({ vedtak_id: 8, kategori: q.kategori, vedtaksdato: "2021-01-01" })];
+      if (q.spor === "C") return [vedtakFeil({ vedtak_id: 7, spor: "C", spor_vunnet: ["C"], kategori: q.kategori, bevis: [RAPPORT_LEVERING_C], dager_etter_levering: 300 })];
       return [];
     };
     const r = await sammenlign(s, hent, IDAG);
-    expect(r.feil[0]).toMatchObject({ kandidat_spor: "B", kategori_tilbakefall: false });
-    expect(r.feil[0].kandidat?.vedtak_id).toBe(7);
+    expect(spurt).toEqual([
+      ["A", "klimaanlegg"],
+      ["C", "klimaanlegg"],
+      ["B", "klimaanlegg"],
+    ]);
+    // A comes before C, even though the C decision is newer.
+    expect(r.feil[0].kandidater.map((k) => [k.vedtak_id, k.spor])).toEqual([
+      [8, "A"],
+      [7, "C"],
+    ]);
   });
 
-  it("tap hentes bare fra samme kategori, også på A", async () => {
-    const tapteSpurt: string[][] = [];
-    await sammenlign(enyaq, async (q) => (q.nyeste ? [] : q.tapte ? (tapteSpurt.push(q.kategorier), []) : q.spor === "A" ? [vedtakFeil({ kategori: "klimaanlegg" })] : []), IDAG);
-    expect(tapteSpurt.length).toBeGreaterThan(0);
-    expect(tapteSpurt.every((k) => k.length === 1)).toBe(true);
+  it("et vedtak på to spor teller én gang, og høyst fem kandidater", async () => {
+    const s = skjema((s) => (s.del3_feil = [enyaq.del3_feil[0]]));
+    const mange = (spor: "A" | "C") =>
+      Array.from({ length: 4 }, (_, i) =>
+        vedtakFeil({ vedtak_id: i + 1, spor, spor_vunnet: ["A", "C"], kategori: "klimaanlegg", bevis: [RAPPORT_LEVERING_C], dager_etter_levering: 300, vedtaksdato: `2025-0${i + 1}-01` }),
+      );
+    const r = await sammenlign(s, async (q) => (q.tapte || q.spor === "B" ? [] : q.spor === "A" ? mange("A") : [...mange("C"), vedtakFeil({ vedtak_id: 9, spor: "C", spor_vunnet: ["C"], kategori: "klimaanlegg", bevis: [RAPPORT_LEVERING_C], dager_etter_levering: 300 })]), IDAG);
+    const ider = r.feil[0].kandidater.map((k) => k.vedtak_id);
+    expect(new Set(ider).size).toBe(ider.length);
+    expect(ider).toHaveLength(MAKS_KANDIDATER);
+    expect(ider).toContain(9);
   });
 
   it("selgers motbevis forkaster vedtak på B og C, ikke på A", () => {
@@ -684,7 +472,6 @@ describe("vedtak per feil: årsak, kategori, forlik og middels styrke", () => {
     const s = skjema((s) =>
       Object.assign(s.del6_kontakt_med_selger, { selgers_svar: "enige_om_noe", avtale_inngatt: "ja", avtale_beskrivelse: "selger betaler dekkene", avtale_gjelder_feil: ["F2"] }),
     );
-    // F1 and F2 both want decision 7; F2 is settled and must not take it from F1.
     const spurt: string[] = [];
     const hent: HentKandidater = async (q) => {
       if (q.tapte) return [];
@@ -697,61 +484,14 @@ describe("vedtak per feil: årsak, kategori, forlik og middels styrke", () => {
     });
     const r = await sammenlign(s2, hent, IDAG);
     expect(r.feil.map((f) => f.forlik)).toEqual([false, true, false]);
-    expect(r.feil[0].kandidat?.vedtak_id).toBe(7);
-    expect(r.feil[1]).toMatchObject({ kandidat: null, styrke: null, naermeste: null, motstridende: null });
+    expect(r.feil[0].kandidater[0]?.vedtak_id).toBe(7);
+    expect(r.feil[1]).toMatchObject({ kandidater: [], styrke: null, styrke_grunn: null, tapte: null });
     expect(r.valgt_til_brev).not.toContain("F2");
     // The settled defect is not matched at all.
     expect(spurt).not.toContain("interior_lukt");
-    expect((await sammenlign(s, hent, IDAG)).feil[1].kandidat).toBeNull();
+    expect((await sammenlign(s, hent, IDAG)).feil[1].kandidater).toEqual([]);
   });
 
-  it("et tapt vedtak i samme kategori og spor med minst like god profil gir middels, med det som skilte", async () => {
-    // S02: a wear part (old car), the report ties the defect to delivery but gives no cause.
-    const gammel = (s: Skjema) => (Object.assign(s.del1_kjopet, { aarsmodell: 2014, km_ved_kjop: 255_000 }), (s.km_na = 256_000), (s.del3_feil = [{ ...motor, dato_oppdaget: "2025-03-24" }]));
-    const s = skjema(gammel);
-    const levering = { ...bevis("komponent"), ved_levering: "ja" } as VedtakFeil["bevis"][number];
-    const vunnet = b({ vedtak_id: 10, saksnummer: "21/13427", dager_etter_levering: 31, alder_ved_kjop: 10, km_ved_kjop: 126_400 });
-    const tapt = b({ vedtak_id: 11, saksnummer: "FKU-2026-56288", spor_vunnet: [], utfall: "avvist", grunn: "paregnelig_slitasje", dager_etter_levering: 16, alder_ved_kjop: 11, km_ved_kjop: 255_000, bevis: [levering] });
-    const hent: HentKandidater = async (q) => (q.spor !== "B" ? [] : q.tapte ? [tapt] : [vunnet]);
-    const r = await sammenlign(s, hent, IDAG);
-    expect(r.feil[0]).toMatchObject({ godkjent: true, styrke: "middels", kandidat: { saksnummer: "21/13427" } });
-    expect(r.feil[0].avsnitt).not.toBeNull();
-    expect(r.feil[0].motstridende).toMatchObject({ saksnummer: "FKU-2026-56288", grunn: "paregnelig_slitasje" });
-    expect(r.feil[0].motstridende?.skilte).toEqual([
-      "I FKU-2026-56288 la utvalget til grunn at feilen var vanlig slitasje for bilens alder og kjørelengde.",
-      "Bilen i FKU-2026-56288 hadde gått 255 000 km, mot 126 400 km i 21/13427.",
-    ]);
-    // A loss where the user is stronger on the profile (here: the losing buyer had no report on delivery while ours has) is no contradiction.
-    // Of two losses, the one with the most similar facts is shown, not the one strongest against the user.
-    const sterkTaper = b({ vedtak_id: 12, saksnummer: "FKU-2025-141827", spor_vunnet: [], utfall: "avvist", grunn: "paregnelig_slitasje", dager_etter_levering: 2, alder_ved_kjop: 14, km_ved_kjop: 261_000, bevis: [{ ...levering, arsak: "rotarsak" }] });
-    const to = await sammenlign(s, async (q) => (q.spor !== "B" ? [] : q.tapte ? [sterkTaper, tapt] : [vunnet]), IDAG);
-    expect(to.feil[0].motstridende?.saksnummer).toBe("FKU-2026-56288");
-    // Lost for lack of what the user has: the report calls it more than normal wear.
-    const utover = skjema((x) => (gammel(x), (x.del3_feil[0].rapport_sier.mer_enn_normal_slitasje = "ja")));
-    expect((await sammenlign(utover, async (q) => (q.spor !== "B" ? [] : q.tapte ? [tapt] : [vunnet]), IDAG)).feil[0].styrke).toBe("sterk");
-    // Unknown on the lost side is not «as good»: the user has the cause, the lost decision's evidence does not say.
-    const medArsak = skjema((x) => (gammel(x), (x.del3_feil[0].rapport_sier.hvorfor = "ja")));
-    const ukjentArsak = { ...tapt, bevis: [{ ...levering, arsak: "ingen" }] } as VedtakFeil;
-    expect((await sammenlign(medArsak, async (q) => (q.spor !== "B" ? [] : q.tapte ? [ukjentArsak] : [vunnet]), IDAG)).feil[0].styrke).toBe("sterk");
-    const svakereTap = { ...tapt, bevis: [] };
-    const lev = await sammenlign(s, async (q) => (q.spor !== "B" ? [] : q.tapte ? [svakereTap] : [vunnet]), IDAG);
-    expect(lev.feil[0].styrke).toBe("sterk");
-  });
-});
-
-describe("rangering etter selgertype", () => {
-  it("mot en forhandler går et forhandlervedtak foran et formidlingsvedtak, rett etter kategori", () => {
-    const sak = avledSak(enyaq, IDAG);
-    const f = avledFeil(sak, enyaq.del3_feil[0]);
-    const x = (o: Partial<VedtakFeil>): Vurdert => ({ vedtak: vedtakFeil({ spor: "C", spor_vunnet: ["C"], kategori: "klimaanlegg", ...o }), opplysning: null, kriterier: [], antall_sterkere: 2, svakhet: null });
-    // The commission sale is newer and has more stronger points; the dealer decision still comes first.
-    const formidling = { ...x({ vedtak_id: 1, selger_type: "formidling", vedtaksdato: "2026-01-01" }), antall_sterkere: 4 };
-    const forhandler = x({ vedtak_id: 2, selger_type: "forhandler", vedtaksdato: "2022-01-01" });
-    expect(ranger([formidling, forhandler], f, sak).map((v) => v.vedtak.vedtak_id)).toEqual([2, 1]);
-    // The category still comes first.
-    const annenKategori = x({ vedtak_id: 3, selger_type: "forhandler", kategori: "elektrisk" });
-    expect(ranger([annenKategori, formidling], f, sak).map((v) => v.vedtak.vedtak_id)).toEqual([1, 3]);
-  });
 });
 
 describe("kostnad over kjøpesummen (skjema 1.2)", () => {
@@ -770,130 +510,9 @@ describe("dager fra en bevisdato er «påvist senest» (21/5099)", () => {
   const v = vedtakFeil({ spor: "B", kategori: "elektrisk", spor_vunnet: ["B"], dager_etter_levering: 182, viste_seg_kilde: "bevisdato" });
   const tid = (dato: string) => vurder(enyaq, f(dato), v).kriterier.find((k) => k.navn === "tid_til_feil")?.utfall;
 
-  it("ledd 1 sier «påvist senest»", () => {
-    const x = vurder(enyaq, f("2025-07-12"), v);
-    const sak = avledSak(enyaq, IDAG);
-    expect(renderAvsnitt(avledFeil(sak, f("2025-07-12")), x, [], null)).toContain("lagt til grunn at en feil som var påvist senest 182 dager etter leveringen, forelå ved leveringen");
-  });
-
   it("tidligere enn grensen er ikke vist å være tidligere; senere er vist å være senere", () => {
     expect(tid("2025-07-12")).toBe("lik"); // 120 days against «senest 182»
     expect(tid("2025-12-12")).toBe("svakere"); // 273 days
     expect(vurder(enyaq, f("2025-07-12"), { ...v, viste_seg_kilde: "vedtak" }).kriterier.find((k) => k.navn === "tid_til_feil")?.utfall).toBe("sterkere");
   });
 });
-
-describe("ledd 1 på B uten tid i vedtaket", () => {
-  it("sier bare at feilen forelå ved leveringen", () => {
-    const f = feil({ selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, kategori: "elektrisk", dato_oppdaget: "2025-07-12" });
-    const sak = avledSak(enyaq, IDAG);
-    const tekst = (o: Partial<VedtakFeil>) => {
-      const v = vedtakFeil({ spor: "B", kategori: "elektrisk", spor_vunnet: ["B"], dager_etter_levering: null, viste_seg_kilde: null, ...o });
-      return renderAvsnitt(avledFeil(sak, f), vurder(enyaq, f, v), [], null);
-    };
-    expect(tekst({})).toContain("lagt til grunn at feilen forelå ved leveringen, fordi selger ikke hadde fremlagt bevis for noe annet.");
-    expect(tekst({ selger_bevis_finnes: true })).toContain("lagt til grunn at feilen forelå ved leveringen, og at selgers dokumentasjon ikke var tilstrekkelig til å motbevise dette.");
-    expect(tekst({})).not.toContain("viste seg etter leveringen");
-  });
-});
-
-describe("identisk opplysning går foran flere sterkere momenter (S10)", () => {
-  const olje = "Kjøretøyets oljeforbruk er litt høyere enn vanlig.";
-  const s = skjema((s) => (s.del2_selger.som_den_er_i_kontrakt = "ja"));
-  const f = feil({ kategori: "motor", hvor_sto_det: ["kontrakt"], avskrift_selger: `«${olje}»`, svar_pa_direkte_sporsmal: false });
-  const med = (vedtak_id: number, ordlyd: string, form: "kontrakt" | "melding") =>
-    vedtakFeil({ vedtak_id, kategori: "motor", opplysninger: [{ ...vedtakFeil().opplysninger[0], ordlyd, form }] });
-
-  it("ordlyden i rekke eller ≥ 0,8 lik", () => {
-    const sak = avledSak(s, IDAG);
-    const p = avledFeil(sak, f);
-    expect(opplysningIdentisk(vurder(s, f, med(1, olje, "kontrakt")), p)).toBe(true);
-    expect(opplysningIdentisk(vurder(s, f, med(1, "oljeforbruket er litt høyere enn vanlig", "kontrakt")), p)).toBe(true);
-    expect(opplysningIdentisk(vurder(s, f, med(1, "Da må den glødelampa bort først", "melding")), p)).toBe(false);
-    // Whole words: «dekk» is not in «vinterdekk».
-    const dekk = feil({ kategori: "dekk_felger", hvor_sto_det: ["annonse"], avskrift_selger: "«Nye vinterdekk følger med»" });
-    expect(opplysningIdentisk(vurder(s, dekk, med(1, "dekk", "kontrakt")), avledFeil(sak, dekk))).toBe(false);
-  });
-
-  it("vinner over et vedtak brukeren er sterkere enn", () => {
-    const sak = avledSak(s, IDAG);
-    const p = avledFeil(sak, f);
-    const lik = vurder(s, f, med(1, olje, "kontrakt"));
-    const ulik = vurder(s, f, med(2, "Da må den glødelampa bort først", "melding"));
-    expect(ulik.antall_sterkere).toBeGreaterThan(lik.antall_sterkere);
-    expect(ranger([ulik, lik], p, sak)[0].vedtak.vedtak_id).toBe(1);
-  });
-});
-
-describe("generelt avsnitt når saken har spor, men ikke et vedtak (2026-10-10)", () => {
-  const batteri = feil({ kategori: "batteri_elbil", selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, avskrift_verksted: "Feil på en battericelle ved måling, sannsynligvis fabrikasjonsfeil." });
-  const s = skjema((s) => (s.del3_feil = [batteri]));
-  const KATS = ["motor", "rust", "elektrisk", "girkasse"];
-  const SITAT = { tema: "bevis" as const, tekst: "Utvalget finner at feilen går ut over det påregnelige og forelå ved leveringen.", gjelder_feil: ["f1"] };
-  const vunne = (n: number, spor: "B" | "C" = "C") =>
-    Array.from({ length: n }, (_, i) =>
-      vedtakFeil({
-        vedtak_id: 100 + i,
-        spor,
-        spor_vunnet: [spor],
-        kategori: KATS[i % KATS.length],
-        saksnummer: `24/${100 + i}`,
-        vedtaksdato: `2025-${String(12 - (i % 12)).padStart(2, "0")}-${String(28 - Math.floor(i / 12)).padStart(2, "0")}`,
-        // The newest has no usable quote: the examples are the newest WITH one.
-        begrunnelse_sitater: i === 0 ? [] : [spor === "C" ? SITAT : { ...SITAT, tema: "formodning" as const }],
-        // On C an example needs an expert who said both «utover» and «ved levering»; 24/103 has neither.
-        bevis: i === 3 ? [] : [{ ...UTOVER_OG_LEVERING, gjelder_feil: ["f1"] }],
-      }),
-    );
-  const UTOVER_OG_LEVERING = { type: "verkstedrapport", avsender: null, fremlagt_av: "klager", dato: null, km_ved_undersokelse: null, arsak: "rotarsak", ved_levering: "ja", paregnelig: "utover", kostnad_nok: null, utvalgets_vurdering: "vektlagt", avslagsgrunn: null, gjelder_feil: ["f1"], sitat: null, sitat_verifisert: null } as VedtakFeil["bevis"][number];
-  const tapte = (grunn: string, n = 5) => Array.from({ length: n }, (_, i) => vedtakFeil({ vedtak_id: 500 + i, spor: "C", grunn, saksnummer: `23/${500 + i}` }));
-  const hent =
-    (antall: number, grunn = "paregnelig_slitasje"): HentKandidater =>
-    async (q) =>
-      q.nyeste && q.spor === "C" ? (q.tapte ? tapte(grunn) : vunne(antall)) : [];
-
-  it("batterisaken får regelen, to eksempler, sine egne fakta og svaret på slitasjeinnvendingen", async () => {
-    const r = await sammenlign(s, hent(20), IDAG);
-    const f = r.feil[0];
-    expect(f).toMatchObject({ kandidat: null, praksis: "generell", styrke: "middels" });
-    expect(f.avsnitt).toContain("jf. forbrukerkjøpsloven § 18 første ledd");
-    // The two newest with a usable quote, as examples of the rule.
-    expect(f.avsnitt).toContain("se for eksempel vedtak 24/101 av 28. november 2025 og vedtak 24/102 av 28. oktober 2025");
-    expect(f.avsnitt).not.toContain("24/103");
-    expect(f.avsnitt).toContain("Verkstedet skriver: «Feil på en battericelle ved måling, sannsynligvis fabrikasjonsfeil».");
-    expect(f.avsnitt).toContain("Den vanligste innvendingen i slike saker er at feilen er vanlig slitasje.");
-    // No comparison and no number from the index.
-    expect(f.avsnitt).not.toContain("like sterkt");
-    expect(f.avsnitt).not.toMatch(/\d+ ?%|\b20\b/);
-  });
-
-  it("under 20 vunne vedtak på sporet gir ikke noe generelt avsnitt", async () => {
-    const r = await sammenlign(s, hent(19), IDAG);
-    expect(r.feil[0]).toMatchObject({ praksis: "ingen", avsnitt: null, styrke: "middels" });
-  });
-
-  it("svaret på den vanligste tapsgrunnen bare når skjemaet besvarer den", async () => {
-    const r = await sammenlign(s, hent(20, "kjent_eller_opplyst"), IDAG);
-    expect(r.feil[0].avsnitt).not.toContain("vanligste innvendingen");
-  });
-
-  it("spor B: formodningsregelen med kjøperens egen frist", async () => {
-    const b = feil({ kategori: "batteri_elbil", selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, dato_oppdaget: "2025-07-12", rapport_sier: { hva: "ja", hvorfor: "nei", var_der_ved_overtakelse: "star_ikke", mer_enn_normal_slitasje: "star_ikke", kostnad: "ja" } });
-    const sb = skjema((s) => (s.del3_feil = [b]));
-    const r = await sammenlign(sb, async (q) => (q.nyeste && q.spor === "B" && !q.tapte ? vunne(20, "B") : []), IDAG);
-    expect(r.feil[0].praksis).toBe("generell");
-    expect(r.feil[0].avsnitt).toContain("skal en mangel som viser seg innen to år etter leveringen, antas å ha vært der ved leveringen");
-    expect(r.feil[0].avsnitt).toContain("Feilen i min sak viste seg 120 dager etter leveringen");
-  });
-
-  it("to forskjellige vedtak som eksempler, og ikke for slitedeler på B", async () => {
-    const tvilling = vunne(20).map((v, i) => (i === 2 ? { ...v, vedtak_id: 101, feil_id: "f2" } : v));
-    const r = await sammenlign(s, async (q) => (q.nyeste && q.spor === "C" && !q.tapte ? tvilling : []), IDAG);
-    expect(r.feil[0].avsnitt).toContain("se for eksempel vedtak 24/101 av 28. november 2025 og vedtak 24/104");
-    const brems = feil({ kategori: "bremser", selger_sa_noe: "nei", hvor_sto_det: [], avskrift_selger: null, dato_oppdaget: "2025-07-12", rapport_sier: { hva: "ja", hvorfor: "nei", var_der_ved_overtakelse: "star_ikke", mer_enn_normal_slitasje: "star_ikke", kostnad: "ja" } });
-    const sb = skjema((s) => (s.del3_feil = [brems]));
-    const rb = await sammenlign(sb, async (q) => (q.nyeste && q.spor === "B" && !q.tapte ? vunne(20, "B") : []), IDAG);
-    expect(rb.feil[0]).toMatchObject({ slitedel: true, praksis: "ingen", avsnitt: null });
-  });
-});
-

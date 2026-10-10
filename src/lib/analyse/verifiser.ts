@@ -52,7 +52,7 @@ export function dagerMellom(fra: string, til: string): number {
   return Math.round((Date.parse(`${til}T00:00:00Z`) - Date.parse(`${fra}T00:00:00Z`)) / 86_400_000);
 }
 
-function normaliser(s: string): string {
+export function normaliser(s: string): string {
   return s
     .replace(/[«»“”„"]/g, '"')
     .replace(/[‘’`´]/g, "'")

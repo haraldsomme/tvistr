@@ -1,0 +1,2260 @@
+{
+  "skjema": {
+    "_meta": {
+      "skjema_versjon": "1.2",
+      "registrert": "2026-10-09T08:19:40+02:00"
+    },
+    "del1_kjopet": {
+      "selgertype": "forhandler",
+      "kjopsdato": "2025-03-14",
+      "pris_kr": 478000,
+      "km_ved_kjop": 41200,
+      "aarsmodell": 2021,
+      "merke_modell_valgfritt": "Skoda Enyaq iV 80"
+    },
+    "del2_selger": {
+      "firmanavn_oppgitt": "Fjordbil Haugesund",
+      "bronnoysund_treff": {
+        "foretaksnavn": "Fjordbil Haugesund AS",
+        "organisasjonsnummer": "999 000 123",
+        "forretningsadresse": "Industrigata 7, 5537 Haugesund"
+      },
+      "treff_bekreftet": true,
+      "som_den_er_i_kontrakt": "nei"
+    },
+    "del3_feil": [
+      {
+        "id": "F1",
+        "kategori": "klimaanlegg",
+        "en_setning": "varmepumpen gir ikke varme, og rekkevidden faller kraftig i kulde",
+        "dato_oppdaget": "2025-11-20",
+        "kan_bilen_brukes": "ja_begrenset",
+        "selger_sa_noe": "ja_skriftlig",
+        "hvor_sto_det": [
+          "annonse",
+          "sms_epost_chat"
+        ],
+        "avskrift_selger": "Annonse: «Varmepumpe» i overskriften og utstyrslisten. SMS 12.03.2025: «Ja, varmepumpa fungerer helt fint, bilen har bare gått 41 000 og alt er sjekket på vårt verksted før salg.»",
+        "svar_pa_direkte_sporsmal": true,
+        "verksted_sett_pa": "ja_skriftlig",
+        "verksted_navn_dato": "Skoda Haugesund AS, 04.12.2025",
+        "rapport_sier": {
+          "hva": "ja",
+          "hvorfor": "ja",
+          "var_der_ved_overtakelse": "ja",
+          "mer_enn_normal_slitasje": "ja",
+          "kostnad": "ja"
+        },
+        "kostnad_kr": 38400,
+        "kostnad_over_pris_bekreftet": false,
+        "avskrift_verksted": "varmepumpekompressor defekt, intern mekanisk feil. Feilkode P1D5A lagret med første forekomst ved 43 100 km. Kompressorhavari på en fire år gammel bil med 50 000 km er ikke normal slitasje. Feilen gir ikke symptom ved mildt vær og kan ikke oppdages ved prøvekjøring"
+      },
+      {
+        "id": "F2",
+        "kategori": "dekk_felger",
+        "en_setning": "vinterdekkene som fulgte med er fra 2019 og har 4,5 mm mønster, ikke nye 2024-dekk som annonsert",
+        "dato_oppdaget": "2025-10-28",
+        "kan_bilen_brukes": "ja",
+        "selger_sa_noe": "ja_skriftlig",
+        "hvor_sto_det": [
+          "annonse"
+        ],
+        "avskrift_selger": "«Nye vinterdekk på alufelg (2024-sesongen) følger med.»",
+        "svar_pa_direkte_sporsmal": false,
+        "verksted_sett_pa": "ja_skriftlig",
+        "verksted_navn_dato": "Dekkhuset Haugesund AS, 28.10.2025",
+        "rapport_sier": {
+          "hva": "ja",
+          "hvorfor": "ja",
+          "var_der_ved_overtakelse": "ja",
+          "mer_enn_normal_slitasje": "star_ikke",
+          "kostnad": "ja"
+        },
+        "kostnad_kr": 11900,
+        "kostnad_over_pris_bekreftet": false,
+        "avskrift_verksted": "4 stk Nokian Hakkapeliitta R3, DOT 3819 (produsert uke 38/2019). Mønsterdybde 4,5–4,8 mm"
+      },
+      {
+        "id": "F3",
+        "kategori": "servicehistorikk",
+        "en_setning": "service ved 30 000 km er ikke utført, selv om annonsen sa at alle servicer var fulgt",
+        "dato_oppdaget": "2025-12-04",
+        "kan_bilen_brukes": "ja",
+        "selger_sa_noe": "ja_skriftlig",
+        "hvor_sto_det": [
+          "annonse"
+        ],
+        "avskrift_selger": "«Alle servicer fulgt hos Skoda-forhandler etter fabrikkens retningslinjer.»",
+        "svar_pa_direkte_sporsmal": false,
+        "verksted_sett_pa": "ja_skriftlig",
+        "verksted_navn_dato": "Skoda Haugesund AS, 04.12.2025",
+        "rapport_sier": {
+          "hva": "ja",
+          "hvorfor": "ja",
+          "var_der_ved_overtakelse": "ja",
+          "mer_enn_normal_slitasje": "star_ikke",
+          "kostnad": "ja"
+        },
+        "kostnad_kr": 6900,
+        "kostnad_over_pris_bekreftet": false,
+        "avskrift_verksted": "servicehistorikk: siste registrerte service ved 15 200 km (11.04.2023). Ingen service registrert ved 30 000 km / 2 år. Bremsevæske ikke skiftet"
+      }
+    ],
+    "km_na": 52900,
+    "del6_kontakt_med_selger": {
+      "tatt_opp_med_selger": "ja_skriftlig",
+      "dato_forste_gang": "2025-10-29",
+      "selgers_svar": "avvist",
+      "avtale_inngatt": "nei",
+      "avtale_beskrivelse": null,
+      "avtale_gjelder_feil": [],
+      "selger_la_frem_dokumentasjon": "nei",
+      "selger_dokumentasjon_kort": null
+    },
+    "del7_onske_og_kontakt": {
+      "onsket_losning": "reparasjon",
+      "kjoper": {
+        "navn": "Ingrid Solheim",
+        "adresse": "Fjellveien 14B, 5532 Haugesund",
+        "epost": "ingrid.solheim@example.no"
+      }
+    },
+    "bekreftelser": {
+      "opplysningene_er_riktige": true,
+      "lest_at_brevet_ikke_er_juridisk_radgivning": true
+    }
+  },
+  "feil_id": "F1",
+  "idag": "2026-10-09",
+  "kandidater": [
+    {
+      "vedtak": {
+        "vedtak_id": 1966,
+        "feil_id": "f1",
+        "spor": "A",
+        "saksnummer": "22/2952",
+        "vedtaksdato": "2023-03-29",
+        "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023015158&dokid=865669&versjon=1&variant=A&",
+        "utfall": "delvis_medhold",
+        "grunn": null,
+        "selger_type": "forhandler",
+        "kategori": "klimaanlegg",
+        "komponenter": [
+          "airconditionanlegg",
+          "AC-kompressor"
+        ],
+        "grunnlag": "feil_opplysning",
+        "spor_vunnet": [
+          "A",
+          "B"
+        ],
+        "a_variant": "uttalelse",
+        "alvor": [],
+        "dager_etter_levering": 37,
+        "viste_seg_kilde": "bevisdato",
+        "lovversjon": "før_2024",
+        "alder_ved_kjop": 12,
+        "km_ved_kjop": 145300,
+        "kjopesum_nok": 66000,
+        "tilkjent_totalt_nok": 12490,
+        "utbedringskostnad_nok": 13386,
+        "belop_tilkjent_nok": 12490,
+        "sanksjon": "prisavslag_og_erstatning",
+        "selger_bevis_finnes": true,
+        "forbehold": [
+          "som_den_er"
+        ],
+        "forste_henvendelse_dato": "2021-07-08",
+        "start_dato": "2021-05-30",
+        "antall_feil": 3,
+        "opplysninger": [
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "for_klager",
+            "sitat": "Utvalget finner det sannsynliggjort at bilen ble solgt med klimaanlegg, jf. fremlagt salgsannonse.",
+            "ordlyd": "klimaanlegg",
+            "status": "lagt_til_grunn",
+            "gjelder": "Bilen har klimaanlegg",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f1"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "Bilen EU-godkjent til mai 2023",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "Datoer for utførte servicer er oppført",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "Bilen EU-godkjent 05.05.2021",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annet",
+            "type": "uttalelse",
+            "vekt": "for_klager",
+            "sitat": "Utvalget legger vekt på at klageren fikk et prisavslag på 3 000 kroner for etterfylling av kjølevæske, noe som indikerer at problemene ved airconditionanlegget var til stede allerede på kjøpstidspunktet.",
+            "ordlyd": null,
+            "status": "lagt_til_grunn",
+            "gjelder": "Selger opplyste om behov for etterfylling av kjølevæske og ga 3 000 kr i prisavslag til kjølevæske for airconditionanlegget",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f1"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          }
+        ],
+        "bevis": [
+          {
+            "dato": "2015-05-13",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": "Klageren har fremlagt faktura fra Møller bil Bergen AS, datert 13.05.2015, hvor det konkluderes med at «klimaanlegget kjøler ikke» og «kontroller ac. Defekt kompressor».",
+            "avsender": "Møller Bil Bergen AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2015-02-13",
+            "type": "EU_kontroll",
+            "arsak": "komponent",
+            "sitat": null,
+            "avsender": "Autoteam AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-07-06",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": "Videre er det fremlagt faktura fra Møller Bil Asker og Bærum datert 06.07.2021, hvor det fremkommer at det er «Feil i AC kompressor» og «må skifte kompressor».",
+            "avsender": "Møller Bil Asker og Bærum",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2021-07-06",
+            "type": "takst",
+            "arsak": "komponent",
+            "sitat": "Videre har klageren fremlagt dokumentasjon som bekrefter at det var feil i aircondition anlegget, og at kompressoren måtte skiftes, jf. prisoverslag fra Møller Bil Asker og Bærum datert 06.07.2021 på 13 385,55 kroner.",
+            "avsender": "Møller Bil Asker og Bærum",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 13386,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "sakkyndig_uttalelse",
+            "arsak": "komponent",
+            "sitat": "Etter utvalgets syn har klageren ikke dokumentert at sprekk i kjølehuset var en feil som var til stede på leveringstidspunktet.",
+            "avsender": "Holmen Auto AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": "sier_ikke_naar",
+            "gjelder_feil": [
+              "f2"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_vektlagt"
+          },
+          {
+            "dato": "2021-07-07",
+            "type": "korrespondanse",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Bertel O. Steen Bergen AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-04-21",
+            "type": "NAF_test",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "NAF",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "selger",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": 145180,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": null,
+            "type": "servicehistorikk",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": null,
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "selger",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          }
+        ]
+      },
+      "kriterier": [
+        {
+          "navn": "form",
+          "bruker": "annonse",
+          "vedtak": "annonse",
+          "utfall": "lik",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "konkrethet",
+          "bruker": "spesifikk",
+          "vedtak": "spesifikk",
+          "utfall": "lik",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "direkte_sporsmal",
+          "bruker": true,
+          "vedtak": false,
+          "utfall": "sterkere",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "forbehold",
+          "bruker": false,
+          "vedtak": true,
+          "utfall": "sterkere",
+          "krav": false,
+          "adresserbar": false
+        }
+      ],
+      "antall_sterkere": 2,
+      "svakhet": null
+    },
+    {
+      "vedtak": {
+        "vedtak_id": 3165,
+        "feil_id": "f3",
+        "spor": "B",
+        "saksnummer": "FKU-2025-141296",
+        "vedtaksdato": "2025-06-23",
+        "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-141296.pdf",
+        "utfall": "delvis_medhold",
+        "grunn": null,
+        "selger_type": "forhandler",
+        "kategori": "klimaanlegg",
+        "komponenter": [
+          "klimaanlegg"
+        ],
+        "grunnlag": "darligere_stand_som_den_er",
+        "spor_vunnet": [
+          "B"
+        ],
+        "a_variant": "begge",
+        "alvor": [],
+        "dager_etter_levering": 30,
+        "viste_seg_kilde": "vedtak",
+        "lovversjon": "før_2024",
+        "alder_ved_kjop": 12,
+        "km_ved_kjop": 205287,
+        "kjopesum_nok": 213000,
+        "tilkjent_totalt_nok": 22710,
+        "utbedringskostnad_nok": 249935,
+        "belop_tilkjent_nok": null,
+        "sanksjon": "prisavslag_og_erstatning",
+        "selger_bevis_finnes": true,
+        "forbehold": [
+          "som_den_er",
+          "defekt_delebil",
+          "kjente_feil_opplyst"
+        ],
+        "forste_henvendelse_dato": "2023-10-16",
+        "start_dato": "2023-09-23",
+        "antall_feil": 13,
+        "opplysninger": [
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "mot_klager",
+            "sitat": "Videre ble det opplyst i kjøpekontrakten om at det forelå rust på bilen og at ACC ikke fungerte.",
+            "ordlyd": "Det finnes rust på bilen.",
+            "status": "lagt_til_grunn",
+            "gjelder": "rust på bilen",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f1"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "mot_klager",
+            "sitat": "Videre ble det opplyst i kjøpekontrakten om at det forelå rust på bilen og at ACC ikke fungerte.",
+            "ordlyd": "acc fungerer ikke",
+            "status": "lagt_til_grunn",
+            "gjelder": "ACC fungerer ikke",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f2"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "mulig lekkasje fra en av belgene",
+            "status": "omtvistet",
+            "gjelder": "mulig lekkasje fra en av belgene",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "for_klager",
+            "sitat": "Ettersom dette utstyret fremgikk av annonsen, kunne klageren i det minste forvente at dette utstyret fungerte ved overtakelsen.",
+            "ordlyd": null,
+            "status": "lagt_til_grunn",
+            "gjelder": "utstyr som klimaanlegg, xenonlys, hengerfeste og ryggekamera",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f3",
+              "f4",
+              "f5",
+              "f6"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": null,
+            "type": "taushet",
+            "vekt": "ingen",
+            "sitat": "Slik saken er opplyst, finner utvalget det ikke sannsynliggjort at innklagde har holdt tilbake eller gitt uriktige opplysninger ved kjøpet.",
+            "ordlyd": null,
+            "status": "avvist",
+            "gjelder": "påviste feil som selger ikke opplyste om",
+            "rekkevidde": null,
+            "gjelder_feil": [],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          }
+        ],
+        "bevis": [
+          {
+            "dato": "2023-10-10",
+            "type": "NAF_test",
+            "arsak": "komponent",
+            "sitat": "Ut ifra fremlagt NAF-test legger utvalget til grunn at feilene ble oppdaget under én måned etter overtakelsen.",
+            "avsender": "NAF",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2023-12-13",
+            "type": "takst",
+            "arsak": "komponent",
+            "sitat": "Innklagde har imidlertid dokumentert at feilene kan utbedres rimeligere i henhold til tilbud fra Stabekk Bilsenter AS",
+            "avsender": "Frydenbø Bil Ålesund AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 249935,
+            "avslagsgrunn": "motbevist",
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "takst",
+            "arsak": "komponent",
+            "sitat": "Utvalget finner ikke tilstrekkelig grunn til å trekke verkstedets habilitet i tvil.",
+            "avsender": "Stabekk Bilsenter AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "selger",
+            "kostnad_nok": 68871,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f3",
+              "f4",
+              "f5",
+              "f6"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "takst",
+            "arsak": "komponent",
+            "sitat": null,
+            "avsender": "Autofiks AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "selger",
+            "kostnad_nok": 15936,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": null,
+            "type": "sakkyndig_uttalelse",
+            "arsak": "komponent",
+            "sitat": "Dette underbygges også av uttalelsen fra MyMechanic AS.",
+            "avsender": "MyMechanic AS",
+            "paregnelig": "innenfor",
+            "fremlagt_av": "selger",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f9",
+              "f13"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": "Klageren har dokumentert utlegg til NAF-test på 2 710 kroner, hvilket er erstatningsberettiget.",
+            "avsender": "NAF",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          }
+        ]
+      },
+      "kriterier": [
+        {
+          "navn": "tid_til_feil",
+          "bruker": 251,
+          "vedtak": 30,
+          "utfall": "svakere",
+          "krav": false,
+          "adresserbar": true
+        },
+        {
+          "navn": "selger_motbevis",
+          "bruker": false,
+          "vedtak": true,
+          "utfall": "sterkere",
+          "krav": true,
+          "adresserbar": false
+        },
+        {
+          "navn": "rapport_levering",
+          "bruker": true,
+          "vedtak": false,
+          "utfall": "sterkere",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "arsak",
+          "bruker": true,
+          "vedtak": false,
+          "utfall": "sterkere",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "ikke_slitedel",
+          "bruker": true,
+          "vedtak": true,
+          "utfall": "lik",
+          "krav": true,
+          "adresserbar": false
+        },
+        {
+          "navn": "reklamasjonstid",
+          "bruker": null,
+          "vedtak": null,
+          "utfall": "utelat",
+          "krav": false,
+          "adresserbar": false
+        }
+      ],
+      "antall_sterkere": 3,
+      "svakhet": {
+        "navn": "tid_til_feil",
+        "bruker": 251,
+        "vedtak": 30,
+        "utfall": "svakere",
+        "krav": false,
+        "adresserbar": true
+      }
+    },
+    {
+      "vedtak": {
+        "vedtak_id": 1807,
+        "feil_id": "f1",
+        "spor": "B",
+        "saksnummer": "22/6563",
+        "vedtaksdato": "2023-08-09",
+        "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2023060673&dokid=972465&versjon=1&variant=A&",
+        "utfall": "delvis_medhold",
+        "grunn": null,
+        "selger_type": "formidling",
+        "kategori": "klimaanlegg",
+        "komponenter": [
+          "klimaanlegg",
+          "AC-rør",
+          "radiator"
+        ],
+        "grunnlag": "avvik_fra_avtale",
+        "spor_vunnet": [
+          "B"
+        ],
+        "a_variant": "uttalelse",
+        "alvor": [],
+        "dager_etter_levering": 120,
+        "viste_seg_kilde": "vedtak",
+        "lovversjon": "før_2024",
+        "alder_ved_kjop": 10,
+        "km_ved_kjop": 68992,
+        "kjopesum_nok": 234153,
+        "tilkjent_totalt_nok": 5494,
+        "utbedringskostnad_nok": null,
+        "belop_tilkjent_nok": null,
+        "sanksjon": "erstatning",
+        "selger_bevis_finnes": true,
+        "forbehold": [
+          "som_den_er"
+        ],
+        "forste_henvendelse_dato": null,
+        "start_dato": "2020-07-30",
+        "antall_feil": 7,
+        "opplysninger": [
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "for_klager",
+            "sitat": "Utvalget har lagt vekt på at det i salgsannonsen ble annonsert at bilen",
+            "ordlyd": "Kaldt klima",
+            "status": "lagt_til_grunn",
+            "gjelder": "ekstrautstyr «Kaldt klima»",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f1"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "flott BMW 5-serie 523i",
+            "rekkevidde": "generell",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "lav kilometerstand",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "navigasjonssystem",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "kilometerstand 68 992",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "muntlig",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": "finner utvalget ikke tilstrekkelige holdepunkter for at…innklagde har holdt tilbake eller gitt uriktige opplysninger.",
+            "ordlyd": null,
+            "status": "avvist",
+            "gjelder": "at bilen nylig hadde gjennomgått et batteribytte",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f7"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": null,
+            "type": "taushet",
+            "vekt": "ingen",
+            "sitat": "finner utvalget ikke tilstrekkelige holdepunkter for at…innklagde har holdt tilbake eller gitt uriktige opplysninger.",
+            "ordlyd": null,
+            "status": "avvist",
+            "gjelder": "tidligere lekkasje fra dører",
+            "rekkevidde": null,
+            "gjelder_feil": [
+              "f6"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          }
+        ],
+        "bevis": [
+          {
+            "dato": "2020-08-12",
+            "type": "takst",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Bilia Personbil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 8292,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2020-11-02",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Bilia Personbil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 823,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-02-16",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": "venstre fordør på grunn av fryst dørwire, representerer utgifter relatert til lekkasje fra dør.",
+            "avsender": "Bilia Personbil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 600,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f6"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2021-08-05",
+            "type": "faktura",
+            "arsak": "rotarsak",
+            "sitat": "videre at fremlagt dokumentasjon ikke sier noe om hvorvidt avdekkede feil er",
+            "avsender": "Bilia Personbil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 1850,
+            "avslagsgrunn": "sier_ikke_paregnelig",
+            "gjelder_feil": [
+              "f2"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_vektlagt"
+          },
+          {
+            "dato": "2021-08-05",
+            "type": "takst",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Bilia Personbil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 13624,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f2"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-09-16",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Bilia Personbil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 34062,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-09-24",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Bilia Personbil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 970,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-11-25",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": null,
+            "avsender": "Bilia Personbil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 11548,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2022-06-24",
+            "type": "verkstedrapport",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Bilia Personbil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2022-02-11",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Bilia Personbil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 10987,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-07-07",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": "videre at fremlagt dokumentasjon ikke sier noe om hvorvidt avdekkede feil er",
+            "avsender": "Strandveien Auto AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 5494,
+            "avslagsgrunn": "sier_ikke_paregnelig",
+            "gjelder_feil": [
+              "f3"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_vektlagt"
+          },
+          {
+            "dato": "2021-08-11",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Strandveien Auto AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 4353,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f2"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-08-27",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": "videre at fremlagt dokumentasjon ikke sier noe om hvorvidt avdekkede feil er",
+            "avsender": "Strandveien Auto AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 6258,
+            "avslagsgrunn": "sier_ikke_paregnelig",
+            "gjelder_feil": [
+              "f5"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_vektlagt"
+          },
+          {
+            "dato": "2022-08-08",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": null,
+            "avsender": "Strandveien Auto AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 9200,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2023-03-03",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Strandveien Auto AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 2269,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-06-23",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": "korrosjon venstre framdør, faktura av 23.06.2021 på 1 419 kroner for montering av",
+            "avsender": "Fornebu Bil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 1419,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f6"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2021-08-17",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Fornebu Bil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 1318,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f2"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-11-04",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": null,
+            "avsender": "Fornebu Bil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 3347,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2022-04-12",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": null,
+            "avsender": "Fornebu Bil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 1745,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2020-08-14",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Koed AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 1274,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f6"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2020-11-05",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": "Klageren har ikke krav på dobbeltkompensasjon for samme",
+            "avsender": "Vianor AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 8535,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "verkstedrapport",
+            "arsak": "rotarsak",
+            "sitat": null,
+            "avsender": "Vianor AS (avdelingsleder)",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2020-11-17",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Alfa Bilsenter AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 1440,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2021-04-12",
+            "type": "annet",
+            "arsak": "komponent",
+            "sitat": "Utvalget legger til grunn at serviceordre datert 12.04.2021 på 975,28 kroner vedrørende",
+            "avsender": "serviceordre",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 975,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f6"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2021-09-28",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Koed AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 1841,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2022-06-09",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": "Klageren har ikke krav på dobbeltkompensasjon for samme",
+            "avsender": "Bavaria Oslo AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 2250,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2022-03-24",
+            "type": "faktura",
+            "arsak": "rotarsak",
+            "sitat": null,
+            "avsender": "Bilia Skøyen AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 1850,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2020-02-14",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": "har utvalget vektlagt at forholdet forelå da innklagde",
+            "avsender": "Kokstad Autosenter AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "selger",
+            "kostnad_nok": 4035,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f6"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "bilder",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "klageren",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": null,
+            "type": "annet",
+            "arsak": "ingen",
+            "sitat": "Ettersom innklagde i henhold til fremlagte betalingsoverføringer kun har betalt",
+            "avsender": "kontoutskrift fra klagerens bank",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          }
+        ]
+      },
+      "kriterier": [
+        {
+          "navn": "tid_til_feil",
+          "bruker": 251,
+          "vedtak": 120,
+          "utfall": "svakere",
+          "krav": false,
+          "adresserbar": true
+        },
+        {
+          "navn": "selger_motbevis",
+          "bruker": false,
+          "vedtak": true,
+          "utfall": "sterkere",
+          "krav": true,
+          "adresserbar": false
+        },
+        {
+          "navn": "rapport_levering",
+          "bruker": true,
+          "vedtak": false,
+          "utfall": "sterkere",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "arsak",
+          "bruker": true,
+          "vedtak": true,
+          "utfall": "lik",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "ikke_slitedel",
+          "bruker": true,
+          "vedtak": true,
+          "utfall": "lik",
+          "krav": true,
+          "adresserbar": false
+        },
+        {
+          "navn": "reklamasjonstid",
+          "bruker": null,
+          "vedtak": null,
+          "utfall": "utelat",
+          "krav": false,
+          "adresserbar": false
+        }
+      ],
+      "antall_sterkere": 2,
+      "svakhet": {
+        "navn": "tid_til_feil",
+        "bruker": 251,
+        "vedtak": 120,
+        "utfall": "svakere",
+        "krav": false,
+        "adresserbar": true
+      }
+    },
+    {
+      "vedtak": {
+        "vedtak_id": 3023,
+        "feil_id": "f1",
+        "spor": "B",
+        "saksnummer": "FKU-2026-11234",
+        "vedtaksdato": "2026-06-03",
+        "kilde_url": "https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2026-11234.pdf",
+        "utfall": "delvis_medhold",
+        "grunn": null,
+        "selger_type": "forhandler",
+        "kategori": "klimaanlegg",
+        "komponenter": [
+          "klimaanlegg",
+          "luftsirkulasjon",
+          "oppvarming av frontrute"
+        ],
+        "grunnlag": "avvik_fra_avtale",
+        "spor_vunnet": [
+          "B"
+        ],
+        "a_variant": "uttalelse",
+        "alvor": [],
+        "dager_etter_levering": 0,
+        "viste_seg_kilde": "bevisdato",
+        "lovversjon": "etter_2024",
+        "alder_ved_kjop": 14,
+        "km_ved_kjop": 183000,
+        "kjopesum_nok": 83000,
+        "tilkjent_totalt_nok": 13694,
+        "utbedringskostnad_nok": null,
+        "belop_tilkjent_nok": 5670,
+        "sanksjon": "erstatning",
+        "selger_bevis_finnes": false,
+        "forbehold": [],
+        "forste_henvendelse_dato": "2024-01-13",
+        "start_dato": "2024-01-12",
+        "antall_feil": 3,
+        "opplysninger": [
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "for_klager",
+            "sitat": "Ettersom klimaanlegg var opplistet i bilens utstyrsliste, burde klageren i det minste kunne forvente at denne fungerte ved overtakelsen.",
+            "ordlyd": "klimaanlegg",
+            "status": "lagt_til_grunn",
+            "gjelder": "klimaanlegg oppført i utstyrslisten",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f1"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": "Utvalget finner ikke holdepunkter for at innklage har holdt tilbake eller gitt uriktige opplysninger om bilen.",
+            "ordlyd": "Godt vedlikeholdt",
+            "status": "avvist",
+            "gjelder": "bilens vedlikehold",
+            "rekkevidde": "generell",
+            "gjelder_feil": [],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Bilen er besiktiget ved annonse og blir besiktiget og prøvekjørt før utlevering. Vi avtaler tid med kunde for reparasjoner i henhold til EU kontrollseddel",
+            "status": "omtvistet",
+            "gjelder": "besiktigelse og prøvekjøring før utlevering",
+            "rekkevidde": "generell",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          }
+        ],
+        "bevis": [
+          {
+            "dato": "2024-01-12",
+            "type": "annet",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": null,
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": null,
+            "type": "annet",
+            "arsak": "ingen",
+            "sitat": "Ettersom klimaanlegg var opplistet i bilens utstyrsliste, burde klageren i det minste kunne forvente at denne fungerte ved overtakelsen.",
+            "avsender": null,
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2024-02-16",
+            "type": "korrespondanse",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "klager",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": null,
+            "type": "korrespondanse",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "klager",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2024-05-30",
+            "type": "faktura",
+            "arsak": "rotarsak",
+            "sitat": "Klageren har dokumentert kostnader til feilsøking og utbedring av klimaanlegg, jf. faktura på 5 670 kroner",
+            "avsender": "Toyota Romerike AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 5670,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2024-04-29",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": null,
+            "avsender": "Toyota Romerike AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 444,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f3"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2024-06-24",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": "samt batteribytte, jf. faktura datert 24.06.2024 på 5 777 kroner.",
+            "avsender": "Toyota Romerike AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 5777,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f2"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2024-03-15",
+            "type": "faktura",
+            "arsak": "ingen",
+            "sitat": "Til sammen utgjør reisekostnadene 933 kroner.",
+            "avsender": null,
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 933,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          }
+        ]
+      },
+      "kriterier": [
+        {
+          "navn": "tid_til_feil",
+          "bruker": 251,
+          "vedtak": 0,
+          "utfall": "svakere",
+          "krav": false,
+          "adresserbar": true
+        },
+        {
+          "navn": "selger_motbevis",
+          "bruker": false,
+          "vedtak": false,
+          "utfall": "lik",
+          "krav": true,
+          "adresserbar": false
+        },
+        {
+          "navn": "rapport_levering",
+          "bruker": true,
+          "vedtak": false,
+          "utfall": "sterkere",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "arsak",
+          "bruker": true,
+          "vedtak": true,
+          "utfall": "lik",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "ikke_slitedel",
+          "bruker": true,
+          "vedtak": true,
+          "utfall": "lik",
+          "krav": true,
+          "adresserbar": false
+        },
+        {
+          "navn": "reklamasjonstid",
+          "bruker": null,
+          "vedtak": 1,
+          "utfall": "utelat",
+          "krav": false,
+          "adresserbar": false
+        }
+      ],
+      "antall_sterkere": 1,
+      "svakhet": {
+        "navn": "tid_til_feil",
+        "bruker": 251,
+        "vedtak": 0,
+        "utfall": "svakere",
+        "krav": false,
+        "adresserbar": true
+      }
+    },
+    {
+      "vedtak": {
+        "vedtak_id": 1566,
+        "feil_id": "f2",
+        "spor": "B",
+        "saksnummer": "24/1215",
+        "vedtaksdato": "2024-10-09",
+        "kilde_url": "https://innsyn.onacos.no/forbrukertilsynet/prod/wfdocument.ashx?journalpostid=2024042231&dokid=1208671&versjon=1&variant=A&",
+        "utfall": "delvis_medhold",
+        "grunn": null,
+        "selger_type": "forhandler",
+        "kategori": "klimaanlegg",
+        "komponenter": [
+          "AC-kompressor",
+          "klimaanlegg"
+        ],
+        "grunnlag": "tilbakeholdt_opplysning",
+        "spor_vunnet": [
+          "A",
+          "B"
+        ],
+        "a_variant": "begge",
+        "alvor": [],
+        "dager_etter_levering": 51,
+        "viste_seg_kilde": "vedtak",
+        "lovversjon": "før_2024",
+        "alder_ved_kjop": 6,
+        "km_ved_kjop": 109600,
+        "kjopesum_nok": 129000,
+        "tilkjent_totalt_nok": 34336,
+        "utbedringskostnad_nok": null,
+        "belop_tilkjent_nok": 14210,
+        "sanksjon": "erstatning",
+        "selger_bevis_finnes": false,
+        "forbehold": [
+          "som_den_er"
+        ],
+        "forste_henvendelse_dato": "2023-04-14",
+        "start_dato": "2023-03-23",
+        "antall_feil": 5,
+        "opplysninger": [
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "Diverse kosmetiske feil/rust kan finnes",
+            "status": "omtvistet",
+            "gjelder": "kosmetiske feil og rust kan finnes",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f4"
+            ],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "bilen ble levert med ny oljeskift",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "kontrakt",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": "Når det gjelder garantivilkårene, så er det bekreftet at garantitiden er oppjustert, og",
+            "ordlyd": null,
+            "status": "lagt_til_grunn",
+            "gjelder": "forlenget garanti fra 6 til 12 måneder eller 200 000 km",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f5"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": "fin i karosseri",
+            "status": "omtvistet",
+            "gjelder": "karosseriets stand",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f4"
+            ],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": true,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": "annonse",
+            "type": "uttalelse",
+            "vekt": "ingen",
+            "sitat": null,
+            "ordlyd": null,
+            "status": "omtvistet",
+            "gjelder": "bilen har klimaanlegg (utstyrslisten)",
+            "rekkevidde": "spesifikk",
+            "gjelder_feil": [
+              "f2"
+            ],
+            "sitat_verifisert": null,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": null,
+            "type": "taushet",
+            "vekt": "for_klager",
+            "sitat": "Disse feil burde klageren fått opplysninger om, og feilene",
+            "ordlyd": null,
+            "status": "lagt_til_grunn",
+            "gjelder": "defekt klimaanlegg, som var bemerket på tilstandsrapporten",
+            "rekkevidde": null,
+            "gjelder_feil": [
+              "f2"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          },
+          {
+            "form": null,
+            "type": "taushet",
+            "vekt": "for_klager",
+            "sitat": "Disse feil burde klageren fått opplysninger om, og feilene",
+            "ordlyd": null,
+            "status": "lagt_til_grunn",
+            "gjelder": "hull i bunnpanne med oljelekkasje, som var bemerket på tilstandsrapporten",
+            "rekkevidde": null,
+            "gjelder_feil": [
+              "f3"
+            ],
+            "sitat_verifisert": true,
+            "ordlyd_verifisert": null,
+            "svar_pa_direkte_sporsmal": false
+          }
+        ],
+        "bevis": [
+          {
+            "dato": "2023-05-05",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": "På bakgrunn av verkstedsdokument fra Mekonomen Blaker Bil AS legges det til grunn at",
+            "avsender": "Mekonomen Blaker Bil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 3900,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": 110500,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2023-12-12",
+            "type": "verkstedrapport",
+            "arsak": "komponent",
+            "sitat": "På bakgrunn av verkstedsdokument fra Mekonomen Blaker Bil AS legges det til grunn at",
+            "avsender": "Mekonomen Blaker Bil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1",
+              "f3"
+            ],
+            "ved_levering": "ja",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2024-04-12",
+            "type": "sakkyndig_uttalelse",
+            "arsak": "komponent",
+            "sitat": "Anbefalt bytteintervall, og således normal levetid, på registerreim og … vannpumpe er opplyst å være 210 000 km. I dette tilfellet hadde bilen kjørt 110 500 km,",
+            "avsender": "NAF",
+            "paregnelig": "utover",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f1",
+              "f2"
+            ],
+            "ved_levering": "ja",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2023-07-05",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": "vannpumpe, 14 210 kroner for skifte av AC-kompressor og 11 851 kroner for skift av",
+            "avsender": "Mekonomen Blaker Bil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 14210,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f2"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2023-07-13",
+            "type": "faktura",
+            "arsak": "komponent",
+            "sitat": "vannpumpe, 14 210 kroner for skifte av AC-kompressor og 11 851 kroner for skift av",
+            "avsender": "Mekonomen Blaker Bil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 11851,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f3"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2023-07-04",
+            "type": "korrespondanse",
+            "arsak": "komponent",
+            "sitat": null,
+            "avsender": "Mekonomen Blaker Bil AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f3"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2023-12-11",
+            "type": "sakkyndig_uttalelse",
+            "arsak": "komponent",
+            "sitat": "utvalget det sannsynliggjort at dette er feil som allerede forelå før kjøp og som var bemerket på",
+            "avsender": "NAF",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f3"
+            ],
+            "ved_levering": "ja",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": "2023-03-01",
+            "type": "tilstandsrapport",
+            "arsak": "komponent",
+            "sitat": "utvalget det sannsynliggjort at dette er feil som allerede forelå før kjøp og som var bemerket på",
+            "avsender": "selger",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "ukjent",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f2",
+              "f3"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "korrespondanse",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Vianor AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f3"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2024-04-26",
+            "type": "takst",
+            "arsak": "komponent",
+            "sitat": "Videre finner ikke utvalget at skade på speil og dør utgjør en mangel, ettersom dette kun",
+            "avsender": "Møller Bil Romerike AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": 10903,
+            "avslagsgrunn": "annet",
+            "gjelder_feil": [
+              "f4"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "korrespondanse",
+            "arsak": "komponent",
+            "sitat": "Videre finner ikke utvalget at skade på speil og dør utgjør en mangel, ettersom dette kun",
+            "avsender": "Møller Bil Romerike AS",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": "annet",
+            "gjelder_feil": [
+              "f4"
+            ],
+            "ved_levering": "ja",
+            "sitat_verifisert": true,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_vektlagt"
+          },
+          {
+            "dato": null,
+            "type": "bilder",
+            "arsak": "komponent",
+            "sitat": null,
+            "avsender": null,
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [
+              "f4"
+            ],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          },
+          {
+            "dato": "2023-09-08",
+            "type": "annet",
+            "arsak": "ingen",
+            "sitat": null,
+            "avsender": "Statens vegvesen",
+            "paregnelig": "uttaler_seg_ikke",
+            "fremlagt_av": "klager",
+            "kostnad_nok": null,
+            "avslagsgrunn": null,
+            "gjelder_feil": [],
+            "ved_levering": "uttaler_seg_ikke",
+            "sitat_verifisert": null,
+            "km_ved_undersokelse": null,
+            "utvalgets_vurdering": "ikke_nevnt"
+          }
+        ]
+      },
+      "kriterier": [
+        {
+          "navn": "tid_til_feil",
+          "bruker": 251,
+          "vedtak": 51,
+          "utfall": "svakere",
+          "krav": false,
+          "adresserbar": true
+        },
+        {
+          "navn": "selger_motbevis",
+          "bruker": false,
+          "vedtak": false,
+          "utfall": "lik",
+          "krav": true,
+          "adresserbar": false
+        },
+        {
+          "navn": "rapport_levering",
+          "bruker": true,
+          "vedtak": true,
+          "utfall": "lik",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "arsak",
+          "bruker": true,
+          "vedtak": false,
+          "utfall": "sterkere",
+          "krav": false,
+          "adresserbar": false
+        },
+        {
+          "navn": "ikke_slitedel",
+          "bruker": true,
+          "vedtak": true,
+          "utfall": "lik",
+          "krav": true,
+          "adresserbar": false
+        },
+        {
+          "navn": "reklamasjonstid",
+          "bruker": null,
+          "vedtak": null,
+          "utfall": "utelat",
+          "krav": false,
+          "adresserbar": false
+        }
+      ],
+      "antall_sterkere": 1,
+      "svakhet": {
+        "navn": "tid_til_feil",
+        "bruker": 251,
+        "vedtak": 51,
+        "utfall": "svakere",
+        "krav": false,
+        "adresserbar": true
+      }
+    }
+  ],
+  "fulltekst": {
+    "1966": "1\nForbrukertilsynet:\nPostboks 2862 Kjørbekk\n3702 Skien\nTelefon: 23 400 600\nFU-sak: 22/2952 (FT-sak: 21/13514)\nKlager: [KLAGER]\nProsessfullmektig: [PERSON], [ADRESSE]\nInnklaget: [PERSON], [ADRESSE]\n2013 Skjetten\nSaken gjelder: Kjøp av brukt Golf 1,6. 90 TDI, 2009-modell mellom næringsdrivende og\nprivat. Klage på aircondition, varsellamper og sprekk i kjølehuset. Krav om heving og\nerstatning, subsidiært prisavslag og erstatning. Delvis medhold.\nI\nSammendrag av faktiske forhold og partenes anførsler.\nKlageren kjøpte den 30.05.2021 en Golf 1, 6. 90 TDI 2009-modell av innklagde for\n66 000 kroner. Bilen har registreringsnummer [PERSONOPPLYSNING]. På kjøpstidspunktet hadde bilen\nen kilometerstand på 145 300 kilometer.\nDet fremkommer av kjøpekontrakten at bilen ble solgt med et «som den er»-forbehold, og\ndet er krysset av på «nei» på spørsmålet om kjøretøyet selges som\nrep/oppussingsobjekt. Videre fremkom det av kontrakten at bilen ble EU-godkjent den\n05.05.2021. Det fremkommer av salgsannonsen at bilen ble solgt med «klimaanlegg».\nVidere sto det at bilen var EU-godkjent til mai 2023. Det var opplistet hvilke datoer bilen\nhadde vært på service, og det sto også «Ta gjerne en NAF test forut for kjøpet.»\nKlageren reklamerte første gang til innklagde den 08.07.2021. Videre ble reklamasjonen\nfulgt opp per e-post den 16.07.2021 og 19.07.2021.\nKlageren forklarer at innklagde opplyste om at det var behov for etterfylling av kjølevæske\nog ga et prisavslag på 3 000 kroner til dekning av kostnader til kjølevæske til bilens\naircondition-anlegg. Klageren fikk time den 06.07.2021 på verkstedet Møller Bil Asker og\n2\nBærum for etterfylling av kjølevæske. Ifølge klageren ble det da oppdaget at airconditionanlegget var defekt, og at det var behov for utbytting av kompressor. Videre forklarer\nklageren at verkstedet ikke hadde tid til å gjøre nærmere undersøkelser av «lyssirkus»\nsom stadig slo inn og forsvant. Slik utvalget oppfatter klageren, skal «lyssirkuset» forstås\nsom at varsellampene for motorfeilsvikt, avgassvikt, ABS-bremsesvikt og antiskrenssvikt\nstadig slo inn. Videre forklarer klageren at det var sprekk i kjølehuset, som ifølge\nklageren er dokumentert av Holmen Auto AS. Klageren forklarer at ettersom\nkjølevæskeanlegget stadig måtte etterfylles ble det konstatert at væsketapet skyldtes\nlekkasje ved sprekk i pumpeinnretning og ikke sterk fordamping.\nVidere forklarer klageren at en tidligere eier hadde sagt at hun solgte bilen til Bertel O.\nSteen Bergen AS kort tid før klageren kjøpte bilen, og at bilen da hadde et defekt\naircondition-anlegg, sammen med en rekke andre feil. Ifølge klageren opplyste også\ntidligere eier at hun hadde blitt fortalt at kostnadene for airconditionanlegget alene ville\nkoste minst 15 000 kroner. Klageren forklarer også at tidligere eier fikk 6 000 kroner for\nsalget av bilen til Bertel O. Steen Bergen AS. Ifølge klageren har Bertel O. Steen Bergen\nAS i juli 2021 skriftlig bekreftet at bilen led av svært mange mangler og at de ønsket å\nkvitte seg med bilen uten at feil og mangler ble utbedret. Bilen ble solgt videre fra Bertel\nO. Steen Bergen AS til Autoringen, som igjen solgte bilen videre til innklagde.\nKlageren har fremlagt e-post fra Bertel O. Steen Bergen AS datert 07.07.2021. Bertel O.\nSteen Bergen AS skriver her at de har undersøkt bilen gjennom en visuell sjekk og\navdekket feil ved bilen. Videre skriver Bertel O. Steen Bergen AS at «vi har ikke gitt rep\nløsning da det vil kreve mye mer arbeid rundt dette, men på denne bilen var det så mye\nfeil at vi kun gjorde en kontroll og gikk gjennom bilen med kunde.» Videre står det at det\nble utført takst fra NAF eller Viking kontroll før denne bilen ble solgt videre.\nKlageren forklarer at innklagde har nektet å fremlegge dokumentasjon på de manglene\ninnklagde har vært kjent med. Klageren forklarer også at innklagde har nektet å opplyse\nhvor mye innklagde kjøpte bilen for, hvilke utbedringer som er gjort mens innklagde eide\nbilen og eventuelt hvilke verksteder som har foretatt utbedring. Klageren forklarer også at\nbilen var overpriset.\nVidere er det fremlagt udatert sakkyndig uttalelse fra Holmen Auto AS. Uttalelsen er\nsendt som vedlegg i epost fra klageren til Forbrukertilsynet datert 24.09.2021. I uttalelsen\nstår det: «Etter trykktest av kjøleanlegget, ble det slått fast at det er kjølevæskelekkasje\nfra huset til oljefilter/oljekjøler. Pris for del hos Møller er kr. 5.123,- + mva. Arbeid er antatt\nvil koste ca. 4.500-5.000,- inkl. mva».\nKlageren har videre fremlagt faktura fra Møller Bil Asker og Bærum datert 06.07.2021 på\n2 490 kroner. Fakturaen gjaldt undersøkelse etter at klageren opplevde dårlig effekt i\nklimaanlegget. Det fremkommer av fakturaen «Feil i AC kompressor» og «må skifte\nkompressor».\nKlageren har fremlagt prisoverslag fra Møller Bil Asker og Bærum datert 06.07.2021.\nPristilbudet gjaldt kompressor og var på 13 385,55 kroner.\nDet er også fremlagt kontantfaktura fra Lillestrøm Bilservice AS datert 19.01.2023 på 300\nkroner. Fra fakturaen siteres: «begge fjærer foran er brukket. Bør ikke kjøres.»\nKlageren har også fremlagt kontrollseddel etter periodisk kjøretøykontroll datert\n03.02.2023. Bilen hadde da en kilometerstand på 169 144. Det fremkommer av\n3\nkjøretøykontrollen at «kjøretøyet er ikke godkjent og er i trafikkfarlig stand. Kjøretøyet har\nbruksforbud, jf. vegtrafikkloven § 36 nr. 1 bokstav c. Statens vegvesen varsler herved om\nat kjøretøyet kan bli avskiltet av kontrollmyndighetene dersom det observeres på offentlig\nveg.» Det er også fremlagt faktura fra Møller Bil Asker og Bærum datert 03.02.2023 på 1\n295 kroner. Fakturaen gjaldt EU-kontroll. Under beskrivelse sto det følgende:\n«ANM 567657 – Pris skifte Kompressor\nTåkelys bak venstre side virker ikke.pkk2\nBaklys venstre indre virker ikke-pkk1\nVenstre skiltlys virker ikke-pkk1\nKnekt fjær begge suide foran.pkk2, mye rust opp mot topplager\nMangler varseltrekant. pkk1\nBremser bak ligger på.pkk2\nEksoslekasje, knekt eksosklemme midtre.pkk2\nLøst motorunderplate.trenger rep.s\nABS/EPS lampe lyser av og til.pkk2»\nVidere er det fremlagt prisoverslag fra Møller Bil Asker og Bærum datert 03.02.2023 på\n84 649 kroner. Pristilbudet gjaldt reparasjoner etter at bilen ikke ble godkjent på EUkontroll.\nKlageren har også fremlagt ordrebekreftelse for EU-kontroll datert 13.02.2015 fra\nAutoteam AS. Denne EU-kontrollen ble gjennomført før klagerens eierskap. Av\nordrebekreftelsen fremgår det at «ac kompressor slår ikke inn, mulig lite gass».\nDet er også fremlagt faktura fra Møller Bil Bergen AS, datert 13.05.2015. Også denne\nfakturaen stammer fra tiden før klagerens eierskap. Fakturaen gjaldt undersøkelse\n«klimaanlegg kjøler ikke». Videre sto det «Kontrollere årsak til at klimaanlegg ikke virker,\nfått aksept for fylling av gass og kontroll på inntil kr 3 000,- Om vi ikke finner feil ved\ndenne kontroll må det settes opp ny time på tekniker. 13.05. Kontrollert ac. Defekt\nkompressor.»\nKlageren anfører at det er gitt mangelfulle og uriktige opplysninger. Det anføres også at\nbilen ikke svarer til det klageren kunne forvente. På denne bakgrunn krever klageren\nheving av kjøpet og erstatning, subsidiært prisavslag og erstatning.\nInnklagde avviser klagerens påstander og krav. Innklagde skriver i e-post til klageren den\n09.07.2021 at klageren ikke har gitt innklagde mulighet til å utbedre feilen. Videre skriver\ninnklagde at klageren ikke har fremlagt noen dokumentasjon, men kommer med et\nubegrunnet krav. Videre viser innklagde til at det fremkommer av kjøpekontrakten at\nkjøperen er oppfordret til å ta med kjøretøyet til NAF/merkeverksted eller det verksted\nkjøper selv ønsker for en faglig vurdering. Videre skriver innklagde i e-post datert\n22.07.2021 til klageren at bilen ble solgt med prisavslag på 3000 kroner knyttet til feilen\nmed kjølevæske. I samme e-post minner innklagde om avhendingsloven § 3-10 om\nkjøpers undersøkelsesplikt.\nInnklagde skriver videre i e-post datert 02.01.2022 til Forbrukertilsynet at feilen ved\nairconditionkompressoren ikke var til stede på overtakelsestidspunktet, og at det ble kjørt\nen diagnosetest på bilen forut for salget og at det ikke lå noen feilkoder i bilens systemer\npå overtakelsestidspunktet. Innklagde skriver også at han ikke har fått anledning til å\nverifisere feilene på bilen.\n4\nVidere har innklagde oversendt tilleggsopplysninger i saken til Forbrukerklageutvalget i epost datert 23.09.2022. Innklagde sendte da inn komplett servicehistorikk, og to av fem\nsider av NAF-test datert 21.04.2021. Bilen hadde på dette tidspunktet en kilometerstand\npå 145 180. Ifølge innklagde fremkom det ingen informasjon i NAF-testen om at\nairconditionanlegget ikke fungerte.\nForbrukerklageutvalget går i sakssammendraget ikke nærmere inn på partenes anførsler\nenn det som fremgår ovenfor. Utvalget har mottatt samtlige saksdokumenter og har satt\nseg inn i disse.\nII\nSakens gang. Påstand.\nSaken ble 12.08.2021 brakt inn for Forbrukertilsynet, som den 15.12.2021 første gang\nhenvendte seg skriftlig til innklagde. Saken ble henlagt som uforlikt ved Forbrukertilsynets\nbrev av 31.01.2022, og klagen til Forbrukerklageutvalget er datert 28.02.2022. Klagen er\npoststemplet 28.02.2022, og er rettidig. Oversendelse fra Forbrukertilsynet til\nForbrukerklageutvalget skjedde ved ekspedisjon av 18.03.2022.\nKlageren har nedlagt påstand om at innklagde skal betale 66 000 i hevingsoppgjør og\nerstatning på 2 490 kroner. Subsidiært kreves det prisavslag på 24 789,3 kroner og\nerstatning på 2 490 kroner. Det kreves forsinkelsesrenter for alle forhold.\nSaken ble lagt frem i Forbrukerklageutvalgets møte den: 29.03.2023.\nIII\nUtvalget ser slik på saken:\nSaken gjelder kjøp mellom en næringsdrivende og en forbruker, og forholdet reguleres\nderfor av forbrukerkjøpsloven av 21. juni 2002 nr. 34 (fkjl), jf. lovens § 1.\nSelv om tingen er solgt «som den er» eller med lignende forbehold, foreligger det en\nmangel etter fkjl. § 17 første ledd bokstav b, jf. § 16 første ledd bokstav b og c,\ndersom selgeren har gitt uriktige opplysninger om tingen med betydning for kjøpet,\neller unnlatt å opplyse om forhold ved tingen eller dens bruk som selger burde kjenne\ntil, og som forbrukeren hadde grunn til å regne med å få, dersom unnlatelsen kan\nantas å ha virket inn på kjøpet.\nDet vil også være en mangel der tingen er i dårligere stand enn kjøperen hadde\nrimelig grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og\nforholdene ellers, jf. fkjl. § 17 første ledd bokstav a.\nHvorvidt tingen er mangelfull skal vurderes ut ifra forholdene ved leveringen, jf. fkjl. §\n18 første ledd, jf. § 14 og § 7.\nKlageren har bevisbyrden for å sannsynliggjøre egne anførsler.\n5\nKlageren har fremlagt faktura fra Møller bil Bergen AS, datert 13.05.2015, hvor det\nkonkluderes med at «klimaanlegget kjøler ikke» og «kontroller ac. Defekt kompressor».\nVidere er det fremlagt faktura fra Møller Bil Asker og Bærum datert 06.07.2021, hvor det\nfremkommer at det er «Feil i AC kompressor» og «må skifte kompressor». På bakgrunn\nav fremlagt dokumentasjon finner utvalget at feilen på aircondition og kompressor var til\nstede på leveringstidspunktet.\nKnyttet til sprekk i kjølehuset har klageren fremlagt udatert sakkyndig uttalelse fra Holmen\nAuto AS. I uttalelsen står det: «Etter trykktest av kjøleanlegget, ble det slått fast at det er\nkjølevæskelekkasje fra huset til oljefilter/oljekjøler […]» Etter utvalgets syn har klageren\nikke dokumentert at sprekk i kjølehuset var en feil som var til stede på\nleveringstidspunktet. Når det gjelder varsellampene som stadig slo inn, finner utvalget det\nheller ikke dokumentert at de anførte varsellampene var til stede på leveringstidspunktet.\nUtvalget finner dermed at disse forholdene ikke utgjør en mangel, jf. fkjl. § 17 annet ledd\nbokstav a.\nSpørsmålet er videre om innklagde har gitt uriktige opplysninger eller unnlatt å opplyse\nom forhold ved aircondition som selgeren burde kjenne til, og som forbrukeren hadde\ngrunn til å regne med å få, jf. fvl. § 16 første ledd bokstav b og c, jf. fkjl. § 17 første ledd\nbokstav b.\nUtvalget finner det sannsynliggjort at bilen ble solgt med klimaanlegg, jf. fremlagt\nsalgsannonse. Videre har klageren fremlagt dokumentasjon som bekrefter at det var feil i\naircondition anlegget, og at kompressoren måtte skiftes, jf. prisoverslag fra Møller Bil\nAsker og Bærum datert 06.07.2021 på 13 385,55 kroner.\nUtvalget finner det sannsynliggjort at innklagde har gitt uriktige opplysninger om\nairconditionanlegget på bilen. Utvalget legger vekt på at klageren fikk et prisavslag på\n3 000 kroner for etterfylling av kjølevæske, noe som indikerer at problemene ved\nairconditionanlegget var til stede allerede på kjøpstidspunktet. Det har videre\nformodningene mot seg at AC-kompressoren ble ødelagt i tidsperioden mellom\novertakelsen 30.05.2021, og verkstedsundersøkelsen som ble gjennomført 06.07.2021,\njf. fkjl. § 18 annet ledd første punktum.\nKlageren har krevd heving. Heving av kjøpet krever at mangelen ikke er uvesentlig, jf. fkjl.\n§ 32. Utvalget er av den oppfatning at mangelen ved airconditionanlegget i seg selv ikke\ner tilstrekkelig til å heve kjøpet, jf. fkjl. § 32. Det vises til at forholdene kan utbedres og at\nklageren ved kjøp av en 12 år gammel bil som har gått 145 300 kilometer må forvente\nutgifter til vedlikehold og reparasjoner. Klageren må i stedet tilkjennes et prisavslag, jf. fkjl.\n§ 31. Avslaget må fastsettes skjønnsmessig, og etter en helhetsvurdering finner utvalget\net samlet prisavslag på 10 000 kroner passende.\nVidere har klageren krevd erstatning. I tråd med fkjl. § 52 første ledd skal erstatningen\nsvare til det økonomiske tapet, herunder utlegg, prisforskjell og tapt fortjeneste, som den\nannen part er påført ved kontraktsbruddet. Dette gjelder likevel bare tap som en med\nrimelighet kunne ha forutsett som en mulig følge av kontraktsbruddet. Klageren har\nfremlagt faktura fra Møller Bil Asker og Bærum datert 06.07.2021 på 2 490 kroner.\nFakturaen gjaldt undersøkelse etter at klageren opplevde dårlig effekt i klimaanlegget.\nKlageren har dermed krav på erstatning på 2 490 kroner.\n6\nKlageren har krevd renter, og disse løper fra 30 dager etter at skriftlig påkrav om betaling\nble sendt til innklagde, jf. forsinkelsesrenteloven § 2 første ledd annet punktum. Det\nskjedde ved brev om forkynnelse av saken som ble sendt til innklagde den 26.08.2022,\nslik at renter tilkjennes fra 25.09.2022.\nIV\nKONKLUSJON\nForbrukerklageutvalget fatter slikt\nVedtak:\n1. [PERSON] (Bil Ringen [PERSON] ENK) plikter å betale til [KLAGER] kroner 12 490,- -kronertolvtusenfirehundreognitti,- med tillegg av\nforsinkelsesrenter etter forsinkelsesrenteloven § 3 første ledd første punktum fra\n25.09.2022 til betaling skjer.\nOppfyllelsesfristen er 1 – én – måned fra vedtakets forkynnelse.\nVedtaket er enstemmig.\nPorsgrunn, den 29.03.2023\n[PERSON] [PERSON]\n[PERSON]\n[PERSON]\nRett utskrift:\n[PERSON] – saksbehandler"
+  },
+  "raa": {
+    "valgt_vedtak_id": 1966,
+    "eksempel_vedtak_ids": [],
+    "grunn_ingen": null,
+    "begrunnelse": "Vedtak 1966 er den første kandidaten og den beste analogien. Utvalget fant at selger hadde gitt uriktige opplysninger fordi bilen var annonsert med klimaanlegg mens kompressoren var defekt ved levering. Det svarer til at min bil ble annonsert med varmepumpe og at selger bekreftet at den virket. De øvrige kandidatene gjelder alminnelig mangel (spor B), og der fant utvalget ingen uriktige opplysninger.",
+    "sitat": {
+      "vedtak_id": 1966,
+      "tekst": "Utvalget finner det sannsynliggjort at bilen ble solgt med klimaanlegg, jf. fremlagt salgsannonse."
+    },
+    "setninger": [
+      {
+        "ledd": 1,
+        "om": "vedtak",
+        "tekst": "Forbrukerklageutvalget har i vedtak {{saksnummer}} av {{vedtaksdato}} lagt til grunn at selgeren hadde gitt uriktige opplysninger om airconditionanlegget på bilen.",
+        "belegg": {
+          "vedtak_id": 1966,
+          "sitat": "innklagde har gitt uriktige opplysninger om"
+        }
+      },
+      {
+        "ledd": 1,
+        "om": "vedtak",
+        "tekst": "Utvalget fant at feilen på aircondition og kompressor var til stede på leveringstidspunktet.",
+        "belegg": {
+          "vedtak_id": 1966,
+          "sitat": "finner utvalget at feilen på aircondition og kompressor var til"
+        }
+      },
+      {
+        "ledd": 2,
+        "om": "vedtak",
+        "tekst": "I salgsannonsen var bilen oppført med «klimaanlegg».",
+        "belegg": {
+          "vedtak_id": 1966,
+          "sitat": "Det fremkommer av salgsannonsen at bilen ble solgt med «klimaanlegg»."
+        }
+      },
+      {
+        "ledd": 2,
+        "om": "vedtak",
+        "tekst": "Bilen var 12 år gammel og hadde gått 145 300 kilometer.",
+        "belegg": {
+          "vedtak_id": 1966,
+          "sitat": "ved kjøp av en 12 år gammel bil som har gått 145 300 kilometer"
+        }
+      },
+      {
+        "ledd": 4,
+        "om": "vedtak",
+        "tekst": "Utvalget tilkjente kjøperen et prisavslag i stedet for heving.",
+        "belegg": {
+          "vedtak_id": 1966,
+          "sitat": "Klageren må i stedet tilkjennes et prisavslag"
+        }
+      },
+      {
+        "ledd": 4,
+        "om": "vedtak",
+        "tekst": "Samlet ble selgeren pålagt å betale kjøperen {{belop}} med tillegg av forsinkelsesrenter.",
+        "belegg": {
+          "vedtak_id": 1966,
+          "sitat": "kroner 12 490,- -kronertolvtusenfirehundreognitti,- med tillegg av"
+        }
+      },
+      {
+        "ledd": 5,
+        "om": "min_sak",
+        "tekst": "Min sak står minst like sterkt på de momentene utvalget bygde på.",
+        "belegg": null
+      },
+      {
+        "ledd": 5,
+        "om": "begge",
+        "tekst": "I den saken var bilen solgt med et «som den er»-forbehold, mens min bil ikke er solgt med noe slikt forbehold, og selgeren svarte i SMS 12. mars 2025 på mitt direkte spørsmål at «varmepumpa fungerer helt fint» og at alt var sjekket på verkstedet før salg.",
+        "belegg": {
+          "vedtak_id": 1966,
+          "sitat": "Det fremkommer av kjøpekontrakten at bilen ble solgt med et «som den er»-forbehold"
+        }
+      }
+    ]
+  },
+  "fasit": {
+    "avsnitt": "Forbrukerklageutvalget har i vedtak 22/2952 av 29. mars 2023 lagt til grunn at selgeren hadde gitt uriktige opplysninger om airconditionanlegget på bilen. Utvalget fant at feilen på aircondition og kompressor var til stede på leveringstidspunktet. I salgsannonsen var bilen oppført med «klimaanlegg». Bilen var 12 år gammel og hadde gått 145 300 kilometer. Utvalget uttalte: «Utvalget finner det sannsynliggjort at bilen ble solgt med klimaanlegg, jf. fremlagt salgsannonse». Utvalget tilkjente kjøperen et prisavslag i stedet for heving. Samlet ble selgeren pålagt å betale kjøperen 12 490 med tillegg av forsinkelsesrenter. Min sak står minst like sterkt på de momentene utvalget bygde på. I den saken var bilen solgt med et «som den er»-forbehold, mens min bil ikke er solgt med noe slikt forbehold, og selgeren svarte i SMS 12. mars 2025 på mitt direkte spørsmål at «varmepumpa fungerer helt fint» og at alt var sjekket på verkstedet før salg.",
+    "vedtak_id": 1966,
+    "strykninger": []
+  }
+}

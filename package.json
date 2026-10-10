@@ -27,6 +27,7 @@
     "pass2:rapport": "tsx --env-file=.env.local scripts/pass2-rapport.ts",
     "pass2:sanksjon": "tsx --env-file=.env.local scripts/pass2-sanksjon.ts",
     "sammenlign": "tsx --env-file=.env.local scripts/sammenlign.ts",
+    "praksis": "tsx --env-file=.env.local scripts/praksis.ts",
     "sammenlign:testsaker": "tsx --env-file=.env.local scripts/sammenlign-testsaker.ts",
     "sveip": "tsx --env-file=.env.local scripts/sveip.ts",
     "komponentord": "tsx --env-file=.env.local scripts/komponentord.ts",

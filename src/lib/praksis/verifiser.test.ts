@@ -1,0 +1,182 @@
+import { describe, expect, it } from "vitest";
+import skjemaJson from "@/lib/sammenligning/testdata/enyaq-skjema.json";
+import { avledFeil, avledSak } from "@/lib/sammenligning/avled";
+import type { Skjema, VedtakFeil, Vurdert } from "@/lib/sammenligning/typer";
+import { kjenteOpplysninger } from "./rens";
+import { tall } from "./tekst";
+import type { PraksisSvar, Setning } from "./typer";
+import { type Grunnlag, verifiserPraksis } from "./verifiser";
+
+const IDAG = "2026-10-09";
+const enyaq = skjemaJson as unknown as Skjema;
+
+// A made-up decision: the case summary first, the committee's assessment after its heading.
+const FULLTEKST = `Vedtak i Forbrukerklageutvalgets sak 22/2952
+
+Saken gjelder krav om erstatning etter kjøp av brukt bil. Klageren hevder at varmepumpen ikke virket.
+Innklagde hevder at bilen var i god stand ved levering.
+
+Utvalget ser slik på saken
+Det fremgår av annonsen at bilen hadde varmepumpe. Utvalget legger til grunn at varmepumpen ikke fungerte ved levering, og at bilen ikke var som opplyst.
+Utvalget finner at bilen har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.
+Klageren tilkjennes erstatning med kr 16 066 for utbedringen.
+
+Konklusjon og vedtak
+Innklagde betaler 16 066 kroner.`;
+
+function vedtak(o: Partial<VedtakFeil> = {}): VedtakFeil {
+  return {
+    vedtak_id: 1,
+    feil_id: "f1",
+    spor: "A",
+    saksnummer: "22/2952",
+    vedtaksdato: "2022-05-18",
+    kilde_url: "https://example.org/1.pdf",
+    utfall: "medhold",
+    grunn: null,
+    selger_type: "forhandler",
+    kategori: "klimaanlegg",
+    komponenter: [],
+    grunnlag: "feil_opplysning",
+    spor_vunnet: ["A"],
+    a_variant: "uttalelse",
+    alvor: [],
+    dager_etter_levering: 40,
+    viste_seg_kilde: "vedtak",
+    lovversjon: "før_2024",
+    alder_ved_kjop: 3,
+    km_ved_kjop: 30_000,
+    kjopesum_nok: 400_000,
+    utbedringskostnad_nok: null,
+    tilkjent_totalt_nok: 16_066,
+    belop_tilkjent_nok: null,
+    sanksjon: "erstatning",
+    selger_bevis_finnes: false,
+    forbehold: [],
+    forste_henvendelse_dato: null,
+    start_dato: "2021-10-01",
+    antall_feil: 1,
+    opplysninger: [],
+    bevis: [],
+    ...o,
+  };
+}
+
+const kandidat = (o: Partial<VedtakFeil> = {}, antall_sterkere = 2): Vurdert => ({ vedtak: vedtak(o), kriterier: [], antall_sterkere, svakhet: null });
+
+function grunnlag(o: Partial<Grunnlag> = {}): Grunnlag {
+  const sak = avledSak(enyaq, IDAG);
+  const f = enyaq.del3_feil[0];
+  return {
+    modus: "spesifikk",
+    kandidater: [kandidat()],
+    fulltekst: new Map([[1, FULLTEKST]]),
+    sak,
+    feil: avledFeil(sak, f),
+    skjemaFeil: f,
+    km_na: enyaq.km_na,
+    kjente: kjenteOpplysninger(enyaq),
+    ...o,
+  };
+}
+
+const S = (ledd: number, tekst: string, sitat: string | null, om: Setning["om"] = "vedtak", vedtak_id = 1): Setning => ({ ledd, om, tekst, belegg: sitat ? { vedtak_id, sitat } : null });
+
+const LEDD1 = S(1, "Forbrukerklageutvalget har i vedtak {{saksnummer}} av {{vedtaksdato}} lagt til grunn at varmepumpen ikke fungerte ved levering", "Utvalget legger til grunn at varmepumpen ikke fungerte ved levering");
+const LEDD2 = S(2, "Det sto i annonsen at bilen hadde varmepumpe.", "Det fremgår av annonsen at bilen hadde varmepumpe.");
+const LEDD4 = S(4, "Kjøperen fikk erstattet {{belop}} kr.", "Klageren tilkjennes erstatning med kr 16 066 for utbedringen.");
+const LEDD5 = S(5, `Min sak står minst like sterkt: opplysningen sto i både annonsen og en melding, og bilen kostet ${tall(enyaq.del1_kjopet.pris_kr)} kr.`, null, "min_sak");
+
+const svar = (o: Partial<PraksisSvar> = {}): PraksisSvar => ({
+  valgt_vedtak_id: 1,
+  eksempel_vedtak_ids: [],
+  grunn_ingen: null,
+  begrunnelse: "Samme type opplysning.",
+  sitat: { vedtak_id: 1, tekst: "Utvalget legger til grunn at varmepumpen ikke fungerte ved levering, og at bilen ikke var som opplyst." },
+  setninger: [LEDD1, LEDD2, LEDD4, LEDD5],
+  ...o,
+});
+
+describe("verifiserPraksis, spesifikt avsnitt", () => {
+  it("et sant avsnitt rendres med saksnummer, dato og beløp fra basen", () => {
+    const v = verifiserPraksis(svar(), grunnlag());
+    expect(v.strykninger).toEqual([]);
+    expect(v.vedtak_id).toBe(1);
+    expect(v.avsnitt).toBe(
+      "Forbrukerklageutvalget har i vedtak 22/2952 av 18. mai 2022 lagt til grunn at varmepumpen ikke fungerte ved levering. " +
+        "Det sto i annonsen at bilen hadde varmepumpe. " +
+        "Utvalget uttalte: «Utvalget legger til grunn at varmepumpen ikke fungerte ved levering, og at bilen ikke var som opplyst». " +
+        "Kjøperen fikk erstattet 16 066 kr. " +
+        `Min sak står minst like sterkt: opplysningen sto i både annonsen og en melding, og bilen kostet ${tall(enyaq.del1_kjopet.pris_kr)} kr.`,
+    );
+  });
+
+  it("to kjøringer gir samme svar", () => {
+    expect(verifiserPraksis(svar(), grunnlag())).toEqual(verifiserPraksis(svar(), grunnlag()));
+  });
+
+  it("et endret belegg stryker setningen, men avsnittet består", () => {
+    const endret = S(2, "Det sto i annonsen at bilen hadde varmepumpe.", "Det fremgår av annonsen at bilen hadde ny varmepumpe.");
+    const v = verifiserPraksis(svar({ setninger: [LEDD1, endret, LEDD4] }), grunnlag());
+    expect(v.strykninger).toMatchObject([{ regel: "belegg" }]);
+    expect(v.avsnitt).not.toContain("Det sto i annonsen");
+  });
+
+  it("to strøkne setninger gir ikke noe avsnitt", () => {
+    const uten = S(2, "Bilen var solgt som den er.", null);
+    const v = verifiserPraksis(svar({ setninger: [LEDD1, uten, { ...LEDD4, belegg: null }] }), grunnlag());
+    expect(v).toMatchObject({ avsnitt: null, grunn: "2 setninger strøket" });
+  });
+
+  it("et tall som ikke står i kildene stryker setningen", () => {
+    const v = verifiserPraksis(svar({ setninger: [LEDD1, S(2, "Bilen hadde gått 45 000 km.", "Det fremgår av annonsen at bilen hadde varmepumpe.")] }), grunnlag());
+    expect(v.strykninger).toMatchObject([{ regel: "tall", detalj: "tallet 45000 står ikke i kildene" }]);
+  });
+
+  it("et vedtak utenfor kandidatene gir ikke noe avsnitt", () => {
+    expect(verifiserPraksis(svar({ valgt_vedtak_id: 9 }), grunnlag())).toMatchObject({ avsnitt: null, grunn: "vedtak 9 er ikke blant kandidatene" });
+  });
+
+  it("modellen kan si at ingen er sammenlignbar", () => {
+    expect(verifiserPraksis(svar({ valgt_vedtak_id: null, grunn_ingen: "vedtaket gjaldt en annen bil" }), grunnlag()).grunn).toContain("vedtaket gjaldt en annen bil");
+  });
+
+  it("et sitat fra saksfremstillingen gir ikke noe avsnitt: det kan være en parts påstand", () => {
+    const v = verifiserPraksis(svar({ sitat: { vedtak_id: 1, tekst: "Innklagde hevder at bilen var i god stand ved levering." } }), grunnlag());
+    expect(v).toMatchObject({ avsnitt: null, grunn: "sitatet står ikke i utvalgets vurdering" });
+  });
+
+  it("ledd 1 må ha belegg fra utvalgets vurdering", () => {
+    const v = verifiserPraksis(svar({ setninger: [S(1, "Utvalget la til grunn at varmepumpen ikke virket.", "Klageren hevder at varmepumpen ikke virket."), LEDD2] }), grunnlag());
+    expect(v).toMatchObject({ avsnitt: null, grunn: "ledd 1 mangler" });
+    expect(v.strykninger).toMatchObject([{ regel: "vurderingsdel" }]);
+  });
+
+  it("«like sterkt» bare når kjøperen ikke er sterkere og ikke har en svakhet", () => {
+    const like = S(5, "Min sak står like sterkt på de momentene utvalget bygde på.", null, "min_sak");
+    expect(verifiserPraksis(svar({ setninger: [LEDD1, like] }), grunnlag()).strykninger).toMatchObject([{ regel: "like_sterkt" }]);
+    expect(verifiserPraksis(svar({ setninger: [LEDD1, like] }), grunnlag({ kandidater: [kandidat({}, 0)] })).strykninger).toEqual([]);
+  });
+
+  it("ord som kan snus mot kjøperen stryker en setning om vedtaket", () => {
+    const synlig = S(2, "Utvalget fant at feilen ikke var synlig ved levering.", "Utvalget legger til grunn at varmepumpen ikke fungerte ved levering");
+    expect(verifiserPraksis(svar({ setninger: [LEDD1, synlig] }), grunnlag()).strykninger).toMatchObject([{ regel: "ord" }]);
+  });
+
+  it("kjøperens navn stryker setningen", () => {
+    const navn = S(5, `Jeg, ${enyaq.del7_onske_og_kontakt.kjoper.navn}, har reklamert i tide.`, null, "min_sak");
+    expect(verifiserPraksis(svar({ setninger: [LEDD1, navn] }), grunnlag()).strykninger).toMatchObject([{ regel: "personopplysning" }]);
+  });
+
+  it("et beløp som ikke står i belegget stryker setningen", () => {
+    const belop = S(4, "Kjøperen fikk erstattet {{belop}} kr.", "Det fremgår av annonsen at bilen hadde varmepumpe.");
+    expect(verifiserPraksis(svar({ setninger: [LEDD1, belop] }), grunnlag()).strykninger).toMatchObject([{ regel: "belegg" }]);
+  });
+
+  it("en paragraf bare når den står i belegget", () => {
+    const med = S(1, "Utvalget fant en mangel etter forbrukerkjøpsloven § 16.", "Utvalget finner at bilen har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.");
+    expect(verifiserPraksis(svar({ setninger: [med] }), grunnlag()).strykninger).toEqual([]);
+    const uten = S(5, "Etter § 17 er bilen mangelfull.", null, "min_sak");
+    expect(verifiserPraksis(svar({ setninger: [LEDD1, uten] }), grunnlag()).strykninger).toMatchObject([{ regel: "paragraf" }]);
+  });
+});

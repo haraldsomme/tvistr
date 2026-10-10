@@ -33,8 +33,8 @@ test("/sak sender ikke før svarene er gyldige", async ({ page }) => {
   await expect(mangler).toContainText("Kjøpet");
 });
 
-test("Enyaq-saken gir vurderingen med vedtaket under skjemaet", async ({ page }) => {
-  test.setTimeout(120_000);
+// Fills in Enyaq's F1 (heat pump) and sends it; one defect is enough to see the assessment.
+async function enyaqF1(page: Page) {
   await page.goto("/sak");
   const k = enyaq.del1_kjopet;
   await dato(page, "Når kjøpte du bilen?", k.kjopsdato);
@@ -85,11 +85,28 @@ test("Enyaq-saken gir vurderingen med vedtaket under skjemaet", async ({ page })
   await page.getByRole("checkbox", { name: /Opplysningene jeg har gitt/ }).check();
   await page.getByRole("checkbox", { name: /ikke er juridisk rådgivning/ }).check();
   await page.getByRole("button", { name: "Se vurderingen og brevet" }).click();
-
   await expect(page.getByRole("heading", { name: "Vurderingen" })).toBeVisible({ timeout: 60_000 });
+}
+
+test("Enyaq-saken gir vurderingen med vedtaket under skjemaet", async ({ page }) => {
+  test.setTimeout(120_000);
+  await enyaqF1(page);
   const feil1 = page.getByRole("article").filter({ hasText: "Feil 1" });
   await expect(feil1).toContainText("Sterk");
   await expect(feil1.getByRole("link", { name: "vedtak 22/2952" })).toBeVisible();
+  // The practice paragraph is written on request (a model call), so this test stops at the button.
+  await expect(page.getByRole("button", { name: "Skriv praksisavsnittet" })).toBeVisible();
+});
+
+// Calls the model (about 0,35 USD): MED_MODELL=1 npx playwright test -g praksisavsnittet --project desktop
+test("praksisavsnittet skrives fra vedtaket og står under overskriften", async ({ page }) => {
+  test.skip(!process.env.MED_MODELL, "kaller modellen; sett MED_MODELL=1");
+  test.setTimeout(300_000);
+  await enyaqF1(page);
+  await page.getByRole("button", { name: "Skriv praksisavsnittet" }).click();
+  const brevet = page.getByRole("article").filter({ hasText: "Praksis fra Forbrukerklageutvalget" });
+  await expect(brevet).toContainText("Forbrukerklageutvalget har i vedtak", { timeout: 240_000 });
+  await expect(brevet).toContainText("Vedtaket gjelder et kjøp før forbrukerkjøpsloven ble endret 1. januar 2024");
 });
 
 test("forsiden lenker til /sak, og /vurdering finnes ikke", async ({ page }) => {

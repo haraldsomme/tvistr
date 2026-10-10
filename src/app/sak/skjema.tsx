@@ -7,7 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
 import { HVOR_STO_DET, KATEGORIER, MAKS_FEIL, RAPPORT_TOM, SKJEMA_VERSJON, validerSkjema, type Skjema, type SkjemaFeil } from "@/lib/skjema/skjema";
-import { type FeilSvar, type SakSvar, sendSak } from "./actions";
+import { type FeilSvar, type PraksisUt, type SakSvar, sendSak, skrivPraksisFor } from "./actions";
 import { Forhandlervelger } from "./forhandler";
 
 type Valgliste<T extends string> = readonly (readonly [T, string])[];
@@ -509,10 +509,58 @@ function Brukerresultat({ svar }: { svar: Extract<SakSvar, { ok: true }> }) {
   );
 }
 
+// The letter's practice section, written on request from the decisions behind the assessment: the model
+// reads them and the verifier keeps only what their full text supports (docs/praksis.md).
+function Brevet({ skjema, svar }: { skjema: Skjema; svar: Extract<SakSvar, { ok: true }> }) {
+  const [praksis, setPraksis] = useState<PraksisUt | null>(null);
+  const [skriver, start] = useTransition();
+  if (svar.stopp) return null;
+  return (
+    <article className="flex flex-col gap-4 rounded border border-[#dcd8cf] bg-white px-6 py-8 shadow-[0_18px_40px_-24px_rgba(23,38,61,.35)] md:px-10">
+      <span className={ETIKETT}>Brevet</span>
+      <h2 className="m-0 font-brev text-[20px] font-semibold">Praksis fra Forbrukerklageutvalget</h2>
+      {!praksis?.ok ? (
+        <>
+          {svar.valgt_til_brev.length ? (
+            <button
+              type="button"
+              disabled={skriver}
+              onClick={() => start(async () => setPraksis(await skrivPraksisFor(skjema)))}
+              className="self-start rounded bg-[#1f3a5f] px-4 py-2 text-[14px] font-medium text-white disabled:opacity-60"
+            >
+              {skriver ? "Leser vedtakene …" : "Skriv praksisavsnittet"}
+            </button>
+          ) : (
+            <p className={MERKNAD}>Brevet har ingen praksisdel for disse feilene. Det bygger på loven og dokumentasjonen.</p>
+          )}
+          {praksis && !praksis.ok && (
+            <p role="alert" className={MERKNAD}>
+              {praksis.melding}
+            </p>
+          )}
+        </>
+      ) : praksis.avsnitt.length ? (
+        <>
+          {praksis.avsnitt.map((a) => (
+            <p key={a.feil_id} className="m-0 font-brev text-[16px] leading-[1.7] text-[#17263d]">
+              {a.avsnitt}
+            </p>
+          ))}
+          {praksis.lovendring && <p className="m-0 font-brev text-[16px] leading-[1.7] text-[#17263d]">{praksis.lovendring}</p>}
+        </>
+      ) : (
+        <p className={MERKNAD}>Vi kunne ikke belegge et avsnitt om vedtakene med vedtaksteksten, så brevet viser ikke til et enkeltvedtak. Det bygger på loven og dokumentasjonen.</p>
+      )}
+    </article>
+  );
+}
+
 // The one form (decided 2026-10-10): the assessment and the letter are built on this page.
 export function Sakskjema() {
   const [s, setS] = useState<Skjema>(TOMT);
   const [brukersvar, setBrukersvar] = useState<SakSvar | null>(null);
+  // The form as sent: the letter is written from what was assessed, not from later edits.
+  const [sendt, setSendt] = useState<Skjema | null>(null);
   const [forsokt, setForsokt] = useState(false);
   const [idag] = useState(() => new Date().toISOString().slice(0, 10));
   const [venter, start] = useTransition();
@@ -554,7 +602,10 @@ export function Sakskjema() {
             // The buyer's form is only sent when it passes validation; the server checks again.
             setForsokt(true);
             if (validerSkjema(skjema, idag).length) return;
-            start(async () => setBrukersvar(await sendSak(skjema)));
+            start(async () => {
+              setBrukersvar(await sendSak(skjema));
+              setSendt(skjema);
+            });
           }}
         >
           <header className="flex flex-col gap-3">
@@ -767,6 +818,7 @@ export function Sakskjema() {
         {brukersvar?.ok && (
           <section aria-live="polite" className="flex flex-col gap-6">
             <Brukerresultat svar={brukersvar} />
+            {sendt && <Brevet key={JSON.stringify(sendt)} skjema={sendt} svar={brukersvar} />}
           </section>
         )}
       </div>

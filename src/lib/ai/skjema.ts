@@ -125,7 +125,7 @@ export type Tolkning = {
 // Strict schemas allow at most 16 union-typed fields, so only numbers and booleans are
 // nullable. Strings and dates use "" and optional enums use "ukjent" for "not stated";
 // `fraModell` turns those back into null.
-const nullbar = (skjema: Record<string, unknown>, description: string) => ({
+export const nullbar = (skjema: Record<string, unknown>, description: string) => ({
   anyOf: [skjema, { type: "null" }],
   description,
 });
@@ -145,7 +145,7 @@ const enumListe = (verdier: readonly string[], description: string) => ({
 });
 const strListe = (description: string) => ({ type: "array", items: { type: "string" }, description });
 
-function objekt(properties: Record<string, unknown>) {
+export function objekt(properties: Record<string, unknown>) {
   return { type: "object", properties, required: Object.keys(properties), additionalProperties: false };
 }
 

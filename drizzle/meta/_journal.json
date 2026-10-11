@@ -78,6 +78,27 @@
       "when": 1791575779673,
       "tag": "0010_pass2_sanksjon",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791657910910,
+      "tag": "0011_feilvurdering",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791659902723,
+      "tag": "0012_som_den_er",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791660429068,
+      "tag": "0013_niva_prisavslag",
+      "breakpoints": true
     }
   ]
 }

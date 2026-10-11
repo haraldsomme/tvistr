@@ -1,0 +1,1 @@
+ALTER TABLE "vedtak" ADD COLUMN "som_den_er" boolean;

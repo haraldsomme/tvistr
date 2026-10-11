@@ -15,7 +15,7 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import type { VerifisertBegrunnelse, VerifisertBevis, VerifisertFeil, VerifisertOpplysning } from "../lib/analyse/verifiser";
+import type { Lagret as Feilvurdering } from "../lib/feilvurdering/skjema";
 
 export const kildeArkivEnum = pgEnum("kilde_arkiv", ["hist", "prod", "wp"]);
 export const dokumentStatusEnum = pgEnum("dokument_status", [
@@ -160,8 +160,34 @@ export const vedtak = pgTable(
     qaStatus: qaStatusEnum("qa_status").notNull().default("ukontrollert"),
     qaKommentar: text("qa_kommentar"),
     qaTidspunkt: timestamp("qa_tidspunkt", { withTimezone: true }),
+
+    // The agents' assessment per claimed defect (src/lib/feilvurdering), with the quotes checked
+    // against fulltekst_renset. The columns below it are derived from it at import.
+    feilvurdering: jsonb("feilvurdering").$type<Feilvurdering>(),
+    feilvurderingVersjon: text("feilvurdering_versjon"),
+    feilvurderingTidspunkt: timestamp("feilvurdering_tidspunkt", { withTimezone: true }),
+    feilvurderingKontroll: text("feilvurdering_kontroll").array(),
+    // Main categories (src/lib/feil/kategorier.ts) the committee gave medhold for, and the
+    // subcategories as "hoved.under".
+    godtatteKategorier: text("godtatte_kategorier").array(),
+    godtatteUnderkategorier: text("godtatte_underkategorier").array(),
+    // The same defects with their time level (1–3), as "hoved:n" and "hoved.under:n", so a filter on
+    // category and level hits the same defect.
+    godtatteNiva: text("godtatte_niva").array(),
+    sanksjoner: text("sanksjoner").array(),
+    // tilkjent_prisavslag_nok as a share of kjopesum_nok, when the buyer got a price reduction.
+    prisavslagProsent: doublePrecision("prisavslag_prosent"),
+    rettingsforsok: integer("rettingsforsok"),
+    // From the full text (feilvurdering); tolk's `forbehold` sometimes files equivalent wording under «annet».
+    somDenEr: boolean("som_den_er"),
+    dagerTilFeil: integer("dager_til_feil"),
+    // From the purchase date; tolk's `lovversjon` is nearly always «ukjent».
+    lovversjonAvledet: lovversjonEnum("lovversjon_avledet"),
   },
   (t) => [
+    index("vedtak_godtatte_kategorier_idx").using("gin", t.godtatteKategorier),
+    index("vedtak_godtatte_underkategorier_idx").using("gin", t.godtatteUnderkategorier),
+    index("vedtak_godtatte_niva_idx").using("gin", t.godtatteNiva),
     index("vedtak_utfall_idx").on(t.utfall),
     index("vedtak_vedtaksdato_idx").on(t.vedtaksdato),
     index("vedtak_selger_orgnr_idx").on(t.selgerOrgnr),
@@ -189,8 +215,8 @@ export const kildesak = pgTable(
   (t) => [unique("kildesak_arkiv_id_uq").on(t.kildeArkiv, t.eksternId), index("kildesak_status_idx").on(t.status)],
 );
 
-// Pass 2 (docs/pass2-design.md § 5): one row per decision with the agents' facts and the derived
-// filter columns. Re-running pass 2 replaces the row; the raw answers stay in data/pass2/ut/.
+// Pass 2: one row per decision with the agents' facts and the derived filter columns. The code that
+// filled it was removed 2026-10-10 (last on branch pass2, 9cc4dc9); the tables are kept as data.
 export const vedtakAnalyse = pgTable(
   "vedtak_analyse",
   {
@@ -220,10 +246,10 @@ export const vedtakAnalyse = pgTable(
     sanksjon: text("sanksjon"),
     bevisUtoverParegnelig: boolean("bevis_utover_paregnelig").notNull(),
     paragraferMedLedd: text("paragrafer_med_ledd").array().notNull(),
-    feil: jsonb("feil").$type<VerifisertFeil[]>().notNull(),
-    opplysninger: jsonb("opplysninger").$type<VerifisertOpplysning[]>().notNull(),
-    bevis: jsonb("bevis").$type<VerifisertBevis[]>().notNull(),
-    begrunnelseSitater: jsonb("begrunnelse_sitater").$type<VerifisertBegrunnelse[]>().notNull(),
+    feil: jsonb("feil").$type<unknown[]>().notNull(),
+    opplysninger: jsonb("opplysninger").$type<unknown[]>().notNull(),
+    bevis: jsonb("bevis").$type<unknown[]>().notNull(),
+    begrunnelseSitater: jsonb("begrunnelse_sitater").$type<unknown[]>().notNull(),
     usikkerhet: text("usikkerhet"),
     kontrollArsaker: text("kontroll_arsaker").array().notNull().default(sql`'{}'::text[]`),
     qaStatus: qaStatusEnum("qa_status").notNull().default("ukontrollert"),

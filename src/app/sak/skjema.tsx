@@ -1,160 +1,139 @@
 "use client";
 
+// Steps 1 to 3 of the buyer's form, ported from the mockup (ReklamasjonSkjema.dc.html): the same
+// markup, inline styles and animations. The keyframes and the hover/active rules the mockup set with
+// style-hover/style-active live in globals.css under `.rk`.
+import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { useState, useTransition } from "react";
+import { type CSSProperties, useEffect, useRef, useState, useTransition } from "react";
 import { nb } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { Kjoretoy } from "@/lib/kjoretoy/vegvesen";
-import { HVOR_STO_DET, KATEGORIER, MAKS_FEIL, RAPPORT_TOM, SKJEMA_VERSJON, validerSkjema, type Skjema, type SkjemaFeil } from "@/lib/skjema/skjema";
-import { type FeilSvar, type PraksisUt, type SakSvar, sendSak, skrivPraksisFor } from "./actions";
-import { Forhandlervelger } from "./forhandler";
+import { type Kjoretoy, normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
+import { type Feilvalg, HOVEDKATEGORIER, type Tidsvalg, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
+import { type Telling, tellVedtak } from "./actions";
 
-type Valgliste<T extends string> = readonly (readonly [T, string])[];
-type Kontakt = Skjema["del6_kontakt_med_selger"];
+const A = "oklch(0.47 0.12 255)",
+  AS = "oklch(0.965 0.018 255)",
+  LINE = "#e2e3e0",
+  INK = "#16181a";
+const SANS = "var(--font-instrument), system-ui, sans-serif";
+const MONO = "var(--font-jbmono), monospace";
+const STEPS = ["Kjøretøy", "Feilen", "Detaljer", "Krav"];
 
-const JA_NEI: Valgliste<"ja" | "nei"> = [
-  ["ja", "Ja"],
-  ["nei", "Nei"],
-];
-const RAPPORTSVAR: Valgliste<"ja" | "nei" | "star_ikke"> = [...JA_NEI, ["star_ikke", "Står ikke"]];
-// Spec 16a–16d (docs/skjema.md).
-const RAPPORT_SPORSMAL = [
-  ["hva", "Står det hvilken del som er feil?"],
-  ["hvorfor", "Står det hvorfor den sviktet (årsak)?"],
-  ["var_der_ved_overtakelse", "Står det at feilen sannsynligvis var der da du overtok bilen?"],
-  ["mer_enn_normal_slitasje", "Står det at feilen er mer enn normal slitasje for alder og kjørelengde?"],
-  ["kostnad", "Står det hva reparasjonen koster?"],
+// The answers below are collected but not yet compared with the decisions. Their ids follow the
+// fields they will be matched against: vedtak.som_den_er, bevisgrunnlag (sakkyndig_dokumentasjon,
+// selgers_opplysning), sanksjoner and rettingsforsok.
+const SOM_DEN_ER = [
+  { id: "ja", navn: "Ja" },
+  { id: "nei", navn: "Nei" },
+  { id: "vet_ikke", navn: "Vet ikke" },
 ] as const;
-const SELGERS_SVAR: Valgliste<NonNullable<Kontakt["selgers_svar"]>> = [
-  ["ikke_svart", "Ikke svart"],
-  ["avvist", "Avvist"],
-  ["tilbudt_reparasjon", "Tilbudt reparasjon"],
-  ["tilbudt_delvis", "Tilbudt noe, men ikke alt"],
-  ["enige_om_noe", "Vi ble enige om noe"],
+type SomDenEr = (typeof SOM_DEN_ER)[number]["id"];
+const KILDE = [
+  { id: "skriftlig", navn: "Ja, skriftlig" },
+  { id: "muntlig", navn: "Ja, muntlig" },
+  { id: "nei", navn: "Nei" },
+] as const;
+type Kilde = (typeof KILDE)[number]["id"];
+// Per main category: a free-text line, whether a workshop examined it, and whether the seller said
+// anything about it before the sale.
+type Detalj = { beskrivelse?: string; verksted?: Kilde; opplysning?: Kilde };
+type Krav = "retting" | "prisavslag" | "heving";
+const KRAV: { id: Krav; navn: string; merke?: string; tekst: string }[] = [
+  { id: "retting", navn: "Retting", merke: "Vanligst", tekst: "Forhandleren utbedrer feilen uten kostnad for deg. Dette er normalt første steg." },
+  { id: "prisavslag", navn: "Prisavslag", tekst: "Du beholder bilen og får kjøpesummen redusert tilsvarende mangelen." },
+  { id: "heving", navn: "Heving", tekst: "Kjøpet omgjøres, og kjøpesummen tilbakebetales. Forutsetter at mangelen ikke er uvesentlig." },
 ];
+const RETTINGSFORSOK = [
+  { id: 0, navn: "Nei" },
+  { id: 1, navn: "1 gang" },
+  { id: 2, navn: "2 ganger" },
+  { id: 3, navn: "3 eller flere" },
+] as const;
+const UTLEGG_FORSLAG = ["Tauing", "Feilsøking", "Leiebil", "Verkstedregning"];
+type Utlegg = { beskrivelse: string; belop: string };
 
-const nyFeil = (id: string): SkjemaFeil => ({
-  id,
-  kategori: "motor",
-  en_setning: "",
-  dato_oppdaget: "",
-  kan_bilen_brukes: "ja",
-  selger_sa_noe: "nei",
-  hvor_sto_det: [],
-  avskrift_selger: null,
-  svar_pa_direkte_sporsmal: false,
-  verksted_sett_pa: "nei",
-  verksted_navn_dato: null,
-  rapport_sier: RAPPORT_TOM,
-  kostnad_kr: null,
-  kostnad_over_pris_bekreftet: false,
-  avskrift_verksted: null,
-});
+// Digits with a space every third place: 84210 → «84 210».
+const tall = (s: string) => s.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const kunSifre = (s: string, maks: number) => s.replace(/\D/g, "").replace(/^0+/, "").slice(0, maks);
 
-// An empty form: the buyer and the confirmations are asked, not filled in.
-const TOMT: Skjema = {
-  _meta: { skjema_versjon: SKJEMA_VERSJON, registrert: "" },
-  del1_kjopet: { selgertype: "forhandler", kjopsdato: "", pris_kr: 0, km_ved_kjop: 0, aarsmodell: 0, merke_modell_valgfritt: null },
-  del2_selger: { firmanavn_oppgitt: null, bronnoysund_treff: null, treff_bekreftet: false, som_den_er_i_kontrakt: "vet_ikke" },
-  del3_feil: [nyFeil("F1")],
-  km_na: 0,
-  del6_kontakt_med_selger: {
-    tatt_opp_med_selger: "nei",
-    dato_forste_gang: null,
-    selgers_svar: null,
-    avtale_inngatt: "nei",
-    avtale_beskrivelse: null,
-    avtale_gjelder_feil: [],
-    selger_la_frem_dokumentasjon: "nei",
-    selger_dokumentasjon_kort: null,
-  },
-  del7_onske_og_kontakt: { onsket_losning: "reparasjon", kjoper: { navn: "", adresse: "", epost: "" } },
-  bekreftelser: { opplysningene_er_riktige: false, lest_at_brevet_ikke_er_juridisk_radgivning: false },
+const pop = (i: number) => `rkPop 560ms cubic-bezier(.22,1,.36,1) ${70 + i * 45}ms backwards`;
+const datoTekst = (d: string) =>
+  new Date(`${d}T12:00:00`).toLocaleDateString("nb-NO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+const KNAPP: CSSProperties = {
+  all: "unset",
+  boxSizing: "border-box",
+  cursor: "pointer",
+};
+const OVERLINE: CSSProperties = {
+  font: `600 11px ${MONO}`,
+  letterSpacing: ".08em",
+  textTransform: "uppercase",
+  color: A,
+};
+const H1: CSSProperties = {
+  margin: 0,
+  fontSize: 28,
+  lineHeight: 1.15,
+  fontWeight: 600,
+  letterSpacing: "-0.02em",
+  textWrap: "pretty",
+};
+const INGRESS: CSSProperties = {
+  margin: 0,
+  fontSize: 15,
+  lineHeight: 1.5,
+  color: "#5f6468",
+  textWrap: "pretty",
 };
 
-// Validation paths in the buyer's words: «del3_feil[1].en_setning» → «Feil 2».
-function delnavn(felt: string): string {
-  const feil = /^del3_feil\[(\d+)\]/.exec(felt);
-  if (feil) return `Feil ${Number(feil[1]) + 1}`;
-  if (felt.startsWith("del1_kjopet")) return "Kjøpet";
-  if (felt.startsWith("del2_selger")) return "Selger";
-  if (felt === "km_na" || felt.startsWith("del6")) return "Kontakt med selger";
-  if (felt.startsWith("del7")) return "Ønske og kontakt";
-  if (felt.startsWith("bekreftelser")) return "Bekreftelser";
-  return "Skjemaet";
-}
-
-// Hidden answers are kept while the user toggles; the engine gets what the form would send (spec § 3–4).
-function tilMotor(s: Skjema, registrert: string): Skjema {
-  const k = s.del6_kontakt_med_selger;
-  const tattOpp = k.tatt_opp_med_selger !== "nei";
-  const svar = tattOpp ? k.selgers_svar : null;
-  const avtale = svar === "tilbudt_delvis" || svar === "enige_om_noe" ? k.avtale_inngatt : "nei";
-  const dok = svar === "avvist" ? k.selger_la_frem_dokumentasjon : "nei";
-  return {
-    ...s,
-    _meta: { skjema_versjon: SKJEMA_VERSJON, registrert },
-    del3_feil: s.del3_feil.map((f, i) => {
-      const skriftlig = f.selger_sa_noe === "ja_skriftlig";
-      const hvor = skriftlig ? f.hvor_sto_det : [];
-      const rapport = f.verksted_sett_pa === "ja_skriftlig";
-      const r = rapport ? f.rapport_sier : RAPPORT_TOM;
-      return {
-        ...f,
-        id: `F${i + 1}`,
-        hvor_sto_det: hvor,
-        avskrift_selger: skriftlig ? f.avskrift_selger : null,
-        svar_pa_direkte_sporsmal: hvor.includes("sms_epost_chat") && f.svar_pa_direkte_sporsmal,
-        verksted_navn_dato: rapport ? f.verksted_navn_dato : null,
-        rapport_sier: r,
-        kostnad_kr: r.kostnad === "ja" ? f.kostnad_kr : null,
-        // Only a cost above the price can be confirmed; a corrected amount drops the confirmation.
-        kostnad_over_pris_bekreftet: r.kostnad === "ja" && (f.kostnad_kr ?? 0) > s.del1_kjopet.pris_kr && f.kostnad_over_pris_bekreftet,
-        avskrift_verksted: rapport ? f.avskrift_verksted : null,
-      };
-    }),
-    del6_kontakt_med_selger: {
-      tatt_opp_med_selger: k.tatt_opp_med_selger,
-      dato_forste_gang: tattOpp ? k.dato_forste_gang : null,
-      selgers_svar: svar,
-      avtale_inngatt: avtale,
-      avtale_beskrivelse: avtale === "ja" ? k.avtale_beskrivelse : null,
-      avtale_gjelder_feil: avtale === "ja" ? k.avtale_gjelder_feil.filter((id) => Number(id.slice(1)) <= s.del3_feil.length) : [],
-      selger_la_frem_dokumentasjon: dok,
-      selger_dokumentasjon_kort: dok === "ja" ? k.selger_dokumentasjon_kort : null,
-    },
-  };
-}
-
-const ETIKETT = "text-[13px] font-medium text-[#3d4757]";
-const INPUT = "rounded border border-[#dcd8cf] bg-white px-3 py-2 text-[15px] text-[#17263d] outline-none focus:border-[#1f3a5f]";
-const KORT = "flex flex-col gap-4 rounded border border-[#dcd8cf] bg-white/60 p-5";
-const MERKNAD = "m-0 rounded bg-[#ecebe7] px-3 py-2 text-[13px] text-[#3d4757]";
-
-function Felt({ navn, children }: { navn: string; children: React.ReactNode }) {
+function Hake() {
   return (
-    <label className="relative flex flex-col gap-1.5">
-      <span className={ETIKETT}>{navn}</span>
-      {children}
-    </label>
+    <svg width="12" height="12" viewBox="0 0 12 12" style={{ animation: "rkCheck 320ms cubic-bezier(.34,1.56,.64,1) both" }}>
+      <path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
-function Valg<T extends string>({ navn, verdi, valg, onChange }: { navn: string; verdi: T | null | undefined; valg: Valgliste<T>; onChange: (v: T) => void }) {
+const chip = (sel: boolean): CSSProperties => ({
+  ...KNAPP,
+  padding: "9px 15px",
+  borderRadius: 999,
+  border: `1.5px solid ${sel ? A : LINE}`,
+  background: sel ? A : "#fff",
+  color: sel ? "#fff" : INK,
+  fontSize: 14,
+  fontWeight: 500,
+  transition: "all .2s",
+});
+
+// A question answered with one chip.
+function Chipvalg<T extends string | number>({
+  sporsmal,
+  etikett,
+  valg,
+  valgt,
+  velg,
+}: {
+  sporsmal: string;
+  etikett?: string;
+  valg: readonly { id: T; navn: string }[];
+  valgt: T | null | undefined;
+  velg: (id: T) => void;
+}) {
   return (
-    <div role="group" aria-label={navn} className="flex flex-col gap-1.5">
-      <span className={ETIKETT}>{navn}</span>
-      <div className="flex flex-wrap gap-1.5">
-        {valg.map(([v, tekst]) => (
-          <button
-            key={v}
-            type="button"
-            aria-pressed={verdi === v}
-            onClick={() => onChange(v)}
-            className="rounded border border-[#dcd8cf] bg-white px-3 py-1.5 text-[14px] aria-pressed:border-[#1f3a5f] aria-pressed:bg-[#1f3a5f] aria-pressed:text-white"
-          >
-            {tekst}
+    <div role="group" aria-label={etikett ?? sporsmal} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <span style={{ fontSize: 14, fontWeight: 600, textWrap: "pretty" }}>{sporsmal}</span>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {valg.map((t) => (
+          <button key={t.id} type="button" aria-pressed={valgt === t.id} onClick={() => velg(t.id)} className="rk-chip" style={chip(valgt === t.id)}>
+            {t.navn}
           </button>
         ))}
       </div>
@@ -162,668 +141,1048 @@ function Valg<T extends string>({ navn, verdi, valg, onChange }: { navn: string;
   );
 }
 
-function Tall({ navn, verdi, onChange, paakrevd }: { navn: string; verdi: number | null; onChange: (v: number | null) => void; paakrevd?: boolean }) {
+function Radiomerke({ valgt }: { valgt: boolean }) {
   return (
-    <Felt navn={navn}>
-      <input
-        type="number"
-        inputMode="numeric"
-        min={0}
-        required={paakrevd}
-        className={INPUT}
-        value={verdi ? verdi : ""}
-        onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-      />
-    </Felt>
+    <span
+      style={{
+        width: 18,
+        height: 18,
+        flex: "none",
+        borderRadius: "50%",
+        border: `1.5px solid ${valgt ? A : "#b4b8bc"}`,
+        display: "grid",
+        placeItems: "center",
+        transition: "border-color .2s",
+      }}
+    >
+      {valgt && <span style={{ width: 10, height: 10, borderRadius: "50%", background: A, animation: "rkCheck 300ms cubic-bezier(.34,1.56,.64,1) both" }} />}
+    </span>
   );
 }
 
-const tilIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const kort = (sel: boolean, anim: string): CSSProperties => ({
+  ...KNAPP,
+  borderRadius: 11,
+  border: `1.5px solid ${sel ? A : LINE}`,
+  background: sel ? AS : "#fff",
+  transition: "border-color .2s,background .2s,transform .15s,box-shadow .2s",
+  animation: anim,
+});
 
-function Dato({ navn, verdi, onChange, paakrevd }: { navn: string; verdi: string | null; onChange: (v: string) => void; paakrevd?: boolean }) {
-  const [apen, setApen] = useState(false);
-  const dato = verdi ? new Date(`${verdi}T00:00:00`) : undefined;
+// A number with a unit after it, shown with thousands spaces; the value is kept as digits only.
+function Tallfelt({ etikett, hjelp, enhet, verdi, sett, maks }: { etikett: string; hjelp?: string; enhet: string; verdi: string; sett: (v: string) => void; maks: number }) {
   return (
-    <Felt navn={navn}>
-      <Popover open={apen} onOpenChange={setApen}>
-        <PopoverTrigger asChild>
-          <button type="button" className={`${INPUT} flex items-center justify-between gap-2 text-left`}>
-            {dato ? dato.toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" }) : <span className="text-[#8a8577]">Velg dato</span>}
-            <CalendarIcon className="size-4 opacity-60" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            locale={nb}
-            captionLayout="dropdown"
-            startMonth={new Date(2000, 0)}
-            endMonth={new Date(new Date().getFullYear() + 1, 11)}
-            selected={dato}
-            defaultMonth={dato}
-            onSelect={(d) => {
-              if (d) onChange(tilIso(d));
-              setApen(false);
-            }}
-          />
-        </PopoverContent>
-      </Popover>
-      {paakrevd && <input tabIndex={-1} aria-hidden required value={verdi ?? ""} onChange={() => {}} className="pointer-events-none absolute h-0 w-0 opacity-0" />}
-    </Felt>
+    <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, fontWeight: 600 }}>
+      <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        {etikett}
+        {hjelp && <span style={{ fontSize: 13, fontWeight: 400, color: "#5f6468" }}>{hjelp}</span>}
+      </span>
+      <span
+        className="rk-felt"
+        style={{ display: "flex", alignItems: "center", height: 50, border: `1.5px solid ${LINE}`, borderRadius: 10, background: "#fff", overflow: "hidden", boxSizing: "border-box" }}
+      >
+        <input
+          inputMode="numeric"
+          autoComplete="off"
+          value={tall(verdi)}
+          onChange={(e) => sett(kunSifre(e.target.value, maks))}
+          style={{ flex: 1, minWidth: 0, border: "none", outline: "none", padding: "0 4px 0 14px", font: `500 16px ${MONO}`, color: INK, background: "transparent" }}
+        />
+        <span style={{ padding: "0 14px 0 4px", fontSize: 14, fontWeight: 400, color: "#5f6468" }}>{enhet}</span>
+      </span>
+    </label>
   );
 }
 
-function Tekst({ navn, verdi, onChange, rader = 2, paakrevd }: { navn: string; verdi: string | null; onChange: (v: string | null) => void; rader?: number; paakrevd?: boolean }) {
+// fkjl. § 27: the absolute deadline, shown where a date or a choice puts it in doubt.
+function Fristvarsel({ children }: { children: React.ReactNode }) {
   return (
-    <Felt navn={navn}>
-      <textarea required={paakrevd} rows={rader} className={INPUT} value={verdi ?? ""} onChange={(e) => onChange(e.target.value || null)} />
-    </Felt>
+    <div role="note" style={{ background: "oklch(0.96 0.04 75)", borderRadius: 12, padding: "16px 18px", display: "flex", gap: 14, animation: pop(0) }}>
+      <span aria-hidden="true" style={{ font: `600 15px ${MONO}`, color: "oklch(0.5 0.13 60)", lineHeight: 1.4 }}>
+        §
+      </span>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, lineHeight: 1.5, color: "#2c3033", textWrap: "pretty" }}>
+        <span>
+          Fristen for å reklamere er to år etter overtakelsen, eller fem år for deler som er ment å vare vesentlig lenger. Reklamasjonen må fremsettes innen rimelig tid
+          etter at feilen ble oppdaget (forbrukerkjøpsloven § 27).
+        </span>
+        <span style={{ fontWeight: 600 }}>{children}</span>
+      </div>
+    </div>
   );
 }
 
-// Looked up first in Statens vegvesen (/api/kjoretoy); `funnet` fills in what the registry knows.
-// It sits inside the form, so Enter looks the vehicle up instead of submitting.
-function Regnr({ funnet }: { funnet: (k: Kjoretoy, eierFra: string | null) => void }) {
+export function Skjema() {
+  const [step, setStep] = useState(0);
+  const [dir, setDir] = useState(1);
+  const [w, setW] = useState(1200);
   const [regnr, setRegnr] = useState("");
-  const [henter, setHenter] = useState(false);
-  const [melding, setMelding] = useState<{ ok: boolean; tekst: string } | null>(null);
+  const [fetching, setFetching] = useState(false);
+  const [car, setCar] = useState<{
+    k: Kjoretoy;
+    eierFra: string | null;
+  } | null>(null);
+  const [oppslagFeil, setOppslagFeil] = useState<string | null>(null);
+  // Suggested from the day the car was registered on its current owner; the buyer can change it.
+  const [kjopsdato, setKjopsdato] = useState("");
+  const [kalenderApen, setKalenderApen] = useState(false);
+  // Touch screens get the phone's own date picker; a mouse gets the calendar.
+  const [beroring, setBeroring] = useState(false);
+  const [valg, setValg] = useState<Feilvalg>({});
+  const [tid, setTid] = useState<Partial<Tidsvalg>>({});
+  const [km, setKm] = useState("");
+  const [kjopesum, setKjopesum] = useState("");
+  const [somDenEr, setSomDenEr] = useState<SomDenEr | null>(null);
+  const [detaljer, setDetaljer] = useState<Record<string, Detalj>>({});
+  // The open card in step 3; undefined means the first unanswered one.
+  const [apent, setApent] = useState<string | null | undefined>(undefined);
+  const [krav, setKrav] = useState<Krav | null>(null);
+  const [forsok, setForsok] = useState<number | null>(null);
+  const [kreverUtlegg, setKreverUtlegg] = useState(false);
+  const [utlegg, setUtlegg] = useState<Utlegg[]>([]);
+  const [telling, setTelling] = useState<Telling | null>(null);
+  const [teller, startTelling] = useTransition();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const nesteKort = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  async function hent() {
-    if (!regnr.trim() || henter) return;
-    setHenter(true);
-    setMelding(null);
+  useEffect(() => {
+    if (!rootRef.current || !window.ResizeObserver) return;
+    const ro = new ResizeObserver((e) => setW(e[0].contentRect.width));
+    ro.observe(rootRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => () => clearTimeout(nesteKort.current), []);
+
+  useEffect(() => setBeroring(window.matchMedia("(pointer: coarse)").matches), []);
+
+  const isDesktop = w >= 820;
+  // The same rule the lookup uses, so the button only works for a number the server accepts.
+  const gyldig = normaliserRegnr(regnr) !== null;
+  const go = (n: number) => {
+    setDir(n >= step ? 1 : -1);
+    setStep(n);
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  };
+
+  async function fetchCar() {
+    if (!gyldig || fetching) return;
+    setFetching(true);
+    setCar(null);
+    setOppslagFeil(null);
     try {
       const res = await fetch(`/api/kjoretoy?${new URLSearchParams({ regnr })}`);
-      const json = (await res.json()) as { kjoretoy?: Kjoretoy; eierFra?: string | null; feil?: string };
+      const json = (await res.json()) as {
+        kjoretoy?: Kjoretoy;
+        eierFra?: string | null;
+        feil?: string;
+      };
       if (!json.kjoretoy) throw new Error(json.feil ?? "Noe gikk galt. Prøv igjen.");
-      const k = json.kjoretoy;
-      funnet(k, json.eierFra ?? null);
-      setMelding({
-        ok: true,
-        tekst: [
-          k.regnr,
-          `${k.merke} ${k.modell}`,
-          k.ar && `første gang registrert ${k.ar}`,
-          json.eierFra && `på nåværende eier siden ${json.eierFra}`,
-          k.bruktimportert && "bruktimportert",
-        ]
-          .filter(Boolean)
-          .join(" · "),
-      });
+      setCar({ k: json.kjoretoy, eierFra: json.eierFra ?? null });
+      setKjopsdato(json.eierFra ?? "");
+      setTelling(null);
     } catch (e) {
-      setMelding({ ok: false, tekst: e instanceof Error && !(e instanceof TypeError) ? e.message : "Noe gikk galt. Prøv igjen." });
+      setOppslagFeil(e instanceof Error && !(e instanceof TypeError) ? e.message : "Noe gikk galt. Prøv igjen.");
     } finally {
-      setHenter(false);
+      setFetching(false);
     }
   }
 
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Felt navn="Registreringsnummer">
-        <div className="flex gap-2">
-          <input
-            className={`${INPUT} min-w-0 flex-1 font-kode uppercase tracking-[.06em]`}
-            value={regnr}
-            onChange={(e) => setRegnr(e.target.value.toUpperCase())}
-            onKeyDown={(e) => {
-              if (e.key !== "Enter") return;
-              e.preventDefault();
-              void hent();
-            }}
-            autoComplete="off"
-            spellCheck={false}
-            maxLength={8}
-            placeholder="AB 12345"
-          />
-          <button
-            type="button"
-            onClick={() => void hent()}
-            disabled={!regnr.trim() || henter}
-            className="rounded border border-[#1f3a5f] px-4 py-2 text-[14px] font-medium text-[#1f3a5f] disabled:opacity-50"
-          >
-            {henter ? "Henter …" : "Hent bilen"}
-          </button>
-        </div>
-      </Felt>
-      {melding && (
-        <p role={melding.ok ? "status" : "alert"} className={`m-0 text-[13px] ${melding.ok ? "text-[#1f5a2e]" : "text-[#a3372b]"}`}>
-          {melding.ok ? `${melding.tekst}. Merke, årsmodell og kjøpsdato er fylt inn under.` : melding.tekst}
-        </p>
-      )}
-    </div>
-  );
-}
+  // A count belongs to the choices it was made for; any change clears it.
+  const endreValg = (f: (v: Feilvalg) => Feilvalg) => {
+    setValg(f);
+    setTelling(null);
+  };
+  const toggleCat = (id: string) => endreValg((v) => (id in v ? Object.fromEntries(Object.entries(v).filter(([k]) => k !== id)) : { ...v, [id]: [] }));
+  const toggleSub = (h: string, u: string) =>
+    endreValg((v) => ({
+      ...v,
+      [h]: v[h].includes(u) ? v[h].filter((x) => x !== u) : [...v[h], u],
+    }));
 
-// 16f: a repair dearer than the car is a rescission case or a typo (52 000 for 520 000 kr). The buyer
-// confirms it or corrects one of the amounts; the letter never states an unconfirmed share over 100 %.
-function KostnadOverPris({ kostnad, pris, bekreftet, endre }: { kostnad: number; pris: number; bekreftet: boolean; endre: (p: Partial<SkjemaFeil>) => void }) {
-  const kr = (n: number) => `${n.toLocaleString("nb-NO")} kr`;
-  return (
-    <div role="alertdialog" aria-label="Kontroller beløpene" className="flex flex-col gap-3 rounded border border-[#d9b98a] bg-[#fbf3e6] p-4 text-[14px] text-[#3d4757]">
-      <p className="m-0">
-        Reparasjonen koster <strong>{kr(kostnad)}</strong>, mer enn de <strong>{kr(pris)}</strong> du betalte for bilen. Stemmer begge beløpene? Sjekk at kjøpesummen ikke mangler et siffer.
-      </p>
-      {bekreftet ? (
-        <p className="m-0 font-medium text-[#1f5a2e]">✓ Du har bekreftet beløpene.</p>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => endre({ kostnad_over_pris_bekreftet: true })} className="rounded bg-[#17263d] px-3 py-2 font-semibold text-[#f6f4ef]">
-            Ja, beløpene stemmer
-          </button>
-          <span className="self-center text-[13px]">Hvis ikke: rett kostnaden her eller kjøpesummen under «Kjøpet».</span>
-        </div>
-      )}
-    </div>
-  );
-}
+  const valgte = HOVEDKATEGORIER.filter((h) => h.id in valg);
+  // A card is answered when it says when the defect showed itself, whether a workshop examined it
+  // and whether the seller said anything about it. The description and subcategories are optional.
+  const besvarteMed = (id: string, t: Partial<Tidsvalg>, d: Record<string, Detalj>) => [t[id], d[id]?.verksted, d[id]?.opplysning].filter(Boolean).length;
+  const ferdig = (id: string) => besvarteMed(id, tid, detaljer) === 3;
+  const apenId = apent === undefined ? (valgte.find((h) => !ferdig(h.id))?.id ?? null) : apent;
 
-function Feilskjema({ f, nr, pris, endre, fjern }: { f: SkjemaFeil; nr: number; pris: number; endre: (p: Partial<SkjemaFeil>) => void; fjern?: () => void }) {
-  return (
-    <div className={KORT}>
-      <div className="flex items-center justify-between">
-        <h3 className="m-0 text-[16px] font-semibold">Feil F{nr}</h3>
-        {fjern && (
-          <button type="button" onClick={fjern} className="text-[13px] text-[#8a3b2e] underline">
-            Fjern
-          </button>
-        )}
-      </div>
-      <Felt navn="Hva slags feil er det?">
-        <select className={INPUT} value={f.kategori} onChange={(e) => endre({ kategori: e.target.value as SkjemaFeil["kategori"] })}>
-          {KATEGORIER.map((k) => (
-            <option key={k.nokkel} value={k.nokkel}>
-              {k.navn}
-            </option>
-          ))}
-        </select>
-      </Felt>
-      <Tekst navn="Beskriv feilen med èn setning" verdi={f.en_setning} onChange={(v) => endre({ en_setning: v ?? "" })} paakrevd />
-      <Dato navn="Når oppdaget du feilen?" verdi={f.dato_oppdaget} onChange={(v) => endre({ dato_oppdaget: v })} paakrevd />
-      <Valg
-        navn="Kan bilen brukes?"
-        verdi={f.kan_bilen_brukes}
-        valg={[
-          ["ja", "Ja"],
-          ["ja_begrenset", "Ja, men begrenset"],
-          ["nei", "Nei"],
-        ]}
-        onChange={(v) => endre({ kan_bilen_brukes: v })}
-      />
+  // When an answer completes a card, the next unanswered one opens, as in the mockup.
+  function besvar(id: string, nyTid: Partial<Tidsvalg>, nyeDetaljer: Record<string, Detalj>) {
+    const varFerdig = ferdig(id);
+    setTid(nyTid);
+    setDetaljer(nyeDetaljer);
+    if (varFerdig || besvarteMed(id, nyTid, nyeDetaljer) < 3) return;
+    clearTimeout(nesteKort.current);
+    nesteKort.current = setTimeout(() => {
+      const i = valgte.findIndex((h) => h.id === id);
+      const rekke = [...valgte.slice(i + 1), ...valgte.slice(0, i)];
+      setApent(rekke.find((h) => besvarteMed(h.id, nyTid, nyeDetaljer) < 3)?.id ?? null);
+    }, 420);
+  }
+  const settTid = (id: string, t: VisteSegValg) => {
+    setTelling(null);
+    besvar(id, { ...tid, [id]: t }, detaljer);
+  };
+  const settDetalj = (id: string, endring: Detalj) => besvar(id, tid, { ...detaljer, [id]: { ...detaljer[id], ...endring } });
+  const settUtlegg = (i: number, endring: Partial<Utlegg>) => setUtlegg((u) => u.map((x, j) => (j === i ? { ...x, ...endring } : x)));
 
-      <Valg
-        navn="Sa eller skrev selger noe om dette før kjøpet?"
-        verdi={f.selger_sa_noe}
-        valg={[
-          ["nei", "Nei"],
-          ["ja_skriftlig", "Ja, skriftlig"],
-          ["ja_muntlig", "Ja, muntlig"],
-        ]}
-        onChange={(v) => endre({ selger_sa_noe: v })}
-      />
-      {f.selger_sa_noe === "ja_muntlig" && (
-        <p className={MERKNAD}>Muntlige løfter er vanskelige å bevise og teller sjelden alene. Vi tar det med i beskrivelsen, men bygger ikke kravet på det.</p>
+  const carName = car ? `${car.k.merke} ${car.k.modell}` : "";
+  const beskrevet = valgte.filter((h) => ferdig(h.id)).length;
+  const idag = new Date().toISOString().slice(0, 10);
+  const datoOk = /^\d{4}-\d{2}-\d{2}$/.test(kjopsdato) && kjopsdato <= idag;
+  const aarSiden = (n: number) => `${Number(idag.slice(0, 4)) - n}${idag.slice(4)}`;
+  const utleggSum = utlegg.reduce((s, x) => s + (Number(x.belop) || 0), 0);
+  const utleggOk = !kreverUtlegg || (utlegg.length > 0 && utlegg.every((x) => x.beskrivelse.trim() && Number(x.belop) > 0));
+  const valid = [
+    !!car && !fetching && datoOk && Number(km) > 0 && Number(kjopesum) > 0 && !!somDenEr,
+    valgte.length > 0,
+    valgte.length > 0 && beskrevet === valgte.length,
+    !!krav && forsok !== null && utleggOk,
+  ][step];
+  const ok = valid && !teller;
+  const subs = [
+    car ? [carName, car.k.regnr, km && `${tall(km)} km`].filter(Boolean).join(" · ") : "",
+    valgte.map((h) => h.navn).join(", "),
+    "",
+    krav ? `${KRAV.find((k) => k.id === krav)?.navn}${kreverUtlegg ? " + utlegg" : ""}` : "",
+  ];
+  const lagBrev = () => startTelling(async () => setTelling(await tellVedtak(valg, tid, kjopsdato)));
+
+  const carRows = car
+    ? [
+        {
+          k: "Første gang registrert",
+          v: car.k.ar ? String(car.k.ar) : "Ukjent",
+        },
+        ...(car.eierFra ? [{ k: "Sist registrert", v: datoTekst(car.eierFra) }] : []),
+        ...(car.k.bruktimportert !== undefined ? [{ k: "Bruktimportert", v: car.k.bruktimportert ? "Ja" : "Nei" }] : []),
+      ]
+    : [];
+  const stepAnim = `${dir > 0 ? "rkIn" : "rkBack"} 460ms cubic-bezier(.22,1,.36,1) both`;
+
+  return (
+    <div
+      ref={rootRef}
+      className="rk"
+      style={{ width: "100%", flex: 1, minHeight: 0, display: "flex", background: "#f6f6f4", fontFamily: SANS, color: INK, overflow: "hidden", WebkitFontSmoothing: "antialiased" }}
+    >
+      {isDesktop && (
+        <aside
+          style={{
+            width: 290,
+            flex: "none",
+            background: "#fff",
+            borderRight: `1px solid ${LINE}`,
+            display: "flex",
+            flexDirection: "column",
+            padding: "32px 24px",
+            boxSizing: "border-box",
+            gap: 40,
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.01em" }}>Reklamasjon</div>
+            <div style={{ fontSize: 13, color: "#5f6468" }}>Kjøp av bruktbil fra forhandler</div>
+          </div>
+          <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {STEPS.map((t, i) => {
+              const done = i < step,
+                cur = i === step;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => done && go(i)}
+                  style={{
+                    ...KNAPP,
+                    display: "flex",
+                    gap: 14,
+                    alignItems: "flex-start",
+                    padding: "10px 10px",
+                    borderRadius: 10,
+                    cursor: done ? "pointer" : "default",
+                    background: cur ? "#f3f3f0" : "transparent",
+                    transition: "background .25s",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 26,
+                      height: 26,
+                      flex: "none",
+                      borderRadius: "50%",
+                      display: "grid",
+                      placeItems: "center",
+                      font: `600 12px ${MONO}`,
+                      background: done ? A : "#fff",
+                      border: `1.5px solid ${done ? A : cur ? INK : LINE}`,
+                      color: cur ? INK : "#8a8f93",
+                      transition: "all .3s",
+                    }}
+                  >
+                    {done ? <Hake /> : i + 1}
+                  </span>
+                  <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, paddingTop: 3 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: done || cur ? INK : "#8a8f93" }}>{t}</span>
+                    {done && subs[i] && (
+                      <span style={{ fontSize: 12.5, color: "#5f6468", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 190 }}>{subs[i]}</span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
       )}
-      {f.selger_sa_noe === "ja_skriftlig" && (
-        <div className="flex flex-col gap-4 border-l-2 border-[#dcd8cf] pl-4">
-          <div role="group" aria-label="Hvor sto det?" className="flex flex-col gap-1.5">
-            <span className={ETIKETT}>Hvor sto det?</span>
-            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-              {HVOR_STO_DET.map((h) => (
-                <label key={h.nokkel} className="flex items-center gap-2 text-[14px]">
-                  <input
-                    type="checkbox"
-                    checked={f.hvor_sto_det.includes(h.nokkel)}
-                    onChange={(e) => endre({ hvor_sto_det: e.target.checked ? [...f.hvor_sto_det, h.nokkel] : f.hvor_sto_det.filter((x) => x !== h.nokkel) })}
-                  />
-                  {h.navn}
-                </label>
+
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        {!isDesktop && (
+          <div style={{ background: "#fff", borderBottom: `1px solid ${LINE}`, padding: "14px 20px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 16, fontWeight: 700 }}>Reklamasjon</span>
+              <span style={{ font: `500 12px ${MONO}`, color: "#5f6468" }}>{`${step + 1} / ${STEPS.length} · ${STEPS[step]}`}</span>
+            </div>
+            <div style={{ display: "flex", gap: 4 }}>
+              {STEPS.map((t, i) => (
+                <span key={t} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? A : LINE, transition: "background .45s cubic-bezier(.22,1,.36,1)" }} />
               ))}
             </div>
           </div>
-          <Tekst navn="Skriv av det som sto, så nøyaktig du kan" verdi={f.avskrift_selger} onChange={(v) => endre({ avskrift_selger: v })} rader={3} />
-          {f.hvor_sto_det.includes("sms_epost_chat") && (
-            <Valg
-              navn="Var dette svar på et spørsmål du stilte selger?"
-              verdi={f.svar_pa_direkte_sporsmal ? "ja" : "nei"}
-              valg={JA_NEI}
-              onChange={(v) => endre({ svar_pa_direkte_sporsmal: v === "ja" })}
-            />
-          )}
-        </div>
-      )}
+        )}
 
-      <Valg
-        navn="Har et verksted sett på feilen?"
-        verdi={f.verksted_sett_pa}
-        valg={[
-          ["nei", "Nei"],
-          ["ja_skriftlig", "Ja, skriftlig"],
-          ["ja_muntlig", "Ja, muntlig"],
-        ]}
-        onChange={(v) => endre({ verksted_sett_pa: v })}
-      />
-      {f.verksted_sett_pa === "ja_skriftlig" && (
-        <div className="flex flex-col gap-4 border-l-2 border-[#dcd8cf] pl-4">
-          <Felt navn="Hvilket verksted, og når?">
-            <input className={INPUT} value={f.verksted_navn_dato ?? ""} onChange={(e) => endre({ verksted_navn_dato: e.target.value || null })} />
-          </Felt>
-          {RAPPORT_SPORSMAL.map(([k, t]) => (
-            <Valg key={k} navn={t} verdi={f.rapport_sier[k]} valg={RAPPORTSVAR} onChange={(v) => endre({ rapport_sier: { ...f.rapport_sier, [k]: v } })} />
-          ))}
-          {f.rapport_sier.kostnad === "ja" && <Tall navn="Hvor mye? (kr)" verdi={f.kostnad_kr} onChange={(v) => endre({ kostnad_kr: v, kostnad_over_pris_bekreftet: false })} />}
-          {f.rapport_sier.kostnad === "ja" && f.kostnad_kr != null && pris > 0 && f.kostnad_kr > pris && (
-            <KostnadOverPris kostnad={f.kostnad_kr} pris={pris} bekreftet={f.kostnad_over_pris_bekreftet} endre={endre} />
-          )}
-          <Tekst navn="Verkstedet skriver at …" verdi={f.avskrift_verksted} onChange={(v) => endre({ avskrift_verksted: v })} rader={3} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Merke({ children, mork }: { children: React.ReactNode; mork?: boolean }) {
-  return <span className={`rounded px-2 py-0.5 text-[12px] font-medium ${mork ? "bg-[#1f3a5f] text-white" : "bg-[#ecebe7] text-[#3d4757]"}`}>{children}</span>;
-}
-
-const STYRKE: Record<string, string> = { sterk: "Sterk", middels: "Middels", svak: "Svak" };
-const INGEN_SPOR: Record<string, string> = {
-  muntlig_opplysning: "Selgers løfte var muntlig, og det er vanskelig å bevise.",
-  rapport_mangler: "Det mangler skriftlig dokumentasjon fra et verksted av hva som er feil.",
-  utenfor_frist: "Feilen viste seg etter fristen der loven legger til grunn at den var der ved kjøpet, og rapporten sier ikke at den går ut over normal slitasje.",
-};
-// The committee's reasons in lost cases (pass 2), as the buyer reads them.
-const TAPSGRUNN: Record<string, string> = {
-  paregnelig_slitasje: "påregnelig slitasje",
-  ikke_dokumentert: "feilen var ikke dokumentert",
-  ikke_sannsynliggjort_ved_levering: "ikke vist at feilen var der ved leveringen",
-  kjent_eller_opplyst: "feilen var kjent eller opplyst ved kjøpet",
-  synlig_ved_besiktigelse: "feilen var synlig ved besiktigelse",
-  oppstatt_etter_levering: "feilen oppsto etter leveringen",
-  forbehold: "forbehold i kontrakten",
-};
-const LENKE = "font-medium text-[#1f3a5f] underline";
-const TEKST = "m-0 text-[14px] leading-[1.6] text-[#3d4757]";
-
-// What similar cases lost on, for deciding whether to order a report: never the strength, never the letter.
-function Tapte({ tapte }: { tapte: NonNullable<FeilSvar["tapte"]> }) {
-  const grunner = Object.entries(tapte.fordeling)
-    .filter(([g]) => TAPSGRUNN[g])
-    .sort((a, b) => b[1] - a[1]);
-  if (!grunner.length) return null;
-  return (
-    <p className="m-0 text-[13px] leading-[1.6] text-[#5b6472]">
-      Lignende saker har tapt på: {grunner.map(([g, n]) => `${TAPSGRUNN[g]} ${n}`).join(", ")}. De nyeste:{" "}
-      {tapte.nyeste.map((v, i) => (
-        <span key={v.saksnummer}>
-          {i > 0 && " og "}
-          <a href={v.kilde_url} target="_blank" rel="noreferrer" className="text-[#1f3a5f] underline">
-            {v.saksnummer}
-          </a>
-        </span>
-      ))}
-      .
-    </p>
-  );
-}
-
-// What the buyer sees: the strength of each defect and why. The letter's practice paragraph is written
-// on request, from the decisions behind this assessment.
-function Brukerresultat({ svar }: { svar: Extract<SakSvar, { ok: true }> }) {
-  if (svar.stopp) return <p className={MERKNAD}>Kjøp fra privatperson dekkes ikke av tjenesten ennå.</p>;
-  return (
-    <>
-      <h2 className="m-0 font-brev text-[26px] font-semibold">Vurderingen</h2>
-      {svar.feil.map((f, i) => (
-        <article key={f.feil_id} className={KORT}>
-          <header className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="m-0 text-[16px] font-semibold">Feil {i + 1}</h3>
-            {f.styrke && <Merke mork={f.styrke === "sterk"}>{STYRKE[f.styrke]}</Merke>}
-          </header>
-          {f.forlik ? (
-            <p className={TEKST}>Dere har inngått en avtale om denne feilen, så den tas ikke med i brevet.</p>
-          ) : f.vedtak ? (
-            <p className={TEKST}>
-              Forbrukerklageutvalget har gitt medhold i en sak om samme type feil som {f.vedtak_svakhet ? "på ett punkt var sterkere enn din, men ikke på de andre" : "ikke var sterkere enn din"}:{" "}
-              <a href={f.vedtak.kilde_url} target="_blank" rel="noreferrer" className={LENKE}>
-                vedtak {f.vedtak.saksnummer}
-              </a>
-              {f.flere_vedtak > 0 && ` (og ${f.flere_vedtak} til)`}.
-            </p>
-          ) : f.styrke_grunn === "ingen_spor" ? (
-            <p className={TEKST}>{(f.ingen_spor_arsak && INGEN_SPOR[f.ingen_spor_arsak]) ?? "Saken mangler dokumentasjon brevet kan bygge på."}</p>
-          ) : (
-            <>
-              <p className={TEKST}>Vi fant ikke et vedtak om samme type feil som saken din er minst like sterk som. Brevet bygger på loven og dokumentasjonen din.</p>
-              {f.tapte && <Tapte tapte={f.tapte} />}
-            </>
-          )}
-          {f.reklamasjon_over_to_mnd && (
-            <p className="m-0 text-[14px] leading-[1.6] text-[#8a3b12]">
-              {f.tatt_opp
-                ? "Du tok opp feilen med selger mer enn to måneder etter at du oppdaget den."
-                : "Du har ikke tatt opp feilen med selger ennå, og det er mer enn to måneder siden du oppdaget den."}{" "}
-              Loven krever at du gjør det innen rimelig tid, og to måneder regnes alltid som tidsnok (forbrukerkjøpsloven § 27). Senere enn det kan selger avvise kravet, og saken er
-              derfor høyst middels.
-            </p>
-          )}
-        </article>
-      ))}
-    </>
-  );
-}
-
-// The letter's practice section, written on request from the decisions behind the assessment: the model
-// reads them and the verifier keeps only what their full text supports (docs/praksis.md).
-function Brevet({ skjema, svar }: { skjema: Skjema; svar: Extract<SakSvar, { ok: true }> }) {
-  const [praksis, setPraksis] = useState<PraksisUt | null>(null);
-  const [skriver, start] = useTransition();
-  if (svar.stopp) return null;
-  return (
-    <article className="flex flex-col gap-4 rounded border border-[#dcd8cf] bg-white px-6 py-8 shadow-[0_18px_40px_-24px_rgba(23,38,61,.35)] md:px-10">
-      <span className={ETIKETT}>Brevet</span>
-      <h2 className="m-0 font-brev text-[20px] font-semibold">Praksis fra Forbrukerklageutvalget</h2>
-      {!praksis?.ok ? (
-        <>
-          {svar.feil.some((f) => f.styrke && f.styrke !== "svak") ? (
-            <button
-              type="button"
-              disabled={skriver}
-              onClick={() => start(async () => setPraksis(await skrivPraksisFor(skjema)))}
-              className="self-start rounded bg-[#1f3a5f] px-4 py-2 text-[14px] font-medium text-white disabled:opacity-60"
-            >
-              {skriver ? "Leser vedtakene …" : "Skriv praksisavsnittet"}
-            </button>
-          ) : (
-            <p className={MERKNAD}>Brevet har ingen praksisdel for disse feilene. Det bygger på loven og dokumentasjonen.</p>
-          )}
-          {praksis && !praksis.ok && (
-            <p role="alert" className={MERKNAD}>
-              {praksis.melding}
-            </p>
-          )}
-        </>
-      ) : praksis.avsnitt.length ? (
-        <>
-          {praksis.avsnitt.map((a) => (
-            <p key={a.feil_id} className="m-0 font-brev text-[16px] leading-[1.7] text-[#17263d]">
-              {a.avsnitt}
-            </p>
-          ))}
-          {praksis.lovendring && <p className="m-0 font-brev text-[16px] leading-[1.7] text-[#17263d]">{praksis.lovendring}</p>}
-        </>
-      ) : (
-        <p className={MERKNAD}>Vi kunne ikke belegge et avsnitt om vedtakene med vedtaksteksten, så brevet viser ikke til et enkeltvedtak. Det bygger på loven og dokumentasjonen.</p>
-      )}
-    </article>
-  );
-}
-
-// The one form (decided 2026-10-10): the assessment and the letter are built on this page.
-export function Sakskjema() {
-  const [s, setS] = useState<Skjema>(TOMT);
-  const [brukersvar, setBrukersvar] = useState<SakSvar | null>(null);
-  // The form as sent: the letter is written from what was assessed, not from later edits.
-  const [sendt, setSendt] = useState<Skjema | null>(null);
-  const [forsokt, setForsokt] = useState(false);
-  const [idag] = useState(() => new Date().toISOString().slice(0, 10));
-  const [venter, start] = useTransition();
-
-  type Del = "del1_kjopet" | "del2_selger" | "del6_kontakt_med_selger" | "del7_onske_og_kontakt";
-  const del =
-    <K extends Del>(k: K) =>
-    (p: Partial<Skjema[K]>) =>
-      setS((x) => ({ ...x, [k]: { ...x[k], ...p } }));
-  const k1 = del("del1_kjopet");
-  const k6 = del("del6_kontakt_med_selger");
-  const kontakt = s.del6_kontakt_med_selger;
-  const privat = s.del1_kjopet.selgertype === "privat";
-
-  // The registry has no model year, only the first registration; the current owner's registration
-  // day is the suggested purchase date. Everything stays editable.
-  const fraVegvesen = (k: Kjoretoy, eierFra: string | null) =>
-    k1({
-      merke_modell_valgfritt: `${k.merke} ${k.modell}`.slice(0, 60),
-      ...(k.ar ? { aarsmodell: k.ar } : {}),
-      ...(eierFra ? { kjopsdato: eierFra } : {}),
-    });
-  const endreFeil = (i: number) => (p: Partial<SkjemaFeil>) => setS((x) => ({ ...x, del3_feil: x.del3_feil.map((f, j) => (j === i ? { ...f, ...p } : f)) }));
-  // Render must be deterministic (hydration); the real timestamp is set on submit.
-  const sendes = tilMotor(s, `${idag}T00:00:00.000Z`);
-  const valideringsfeil = validerSkjema(sendes, idag);
-
-  return (
-    <div className="min-h-screen bg-[#f6f4ef] font-ui text-[#17263d]">
-      {/* minmax(0, 1fr): without it the single mobile column grows with its content (464 px in a 412 px screen). */}
-      <div className="mx-auto grid max-w-[720px] grid-cols-[minmax(0,1fr)] gap-8 px-4 py-8 lg:px-8">
-        <form
-          className="flex flex-col gap-6"
-          // The buyer gets the whole list of what is missing, not the browser's one field at a time.
-          noValidate
-          onSubmit={(e) => {
-            e.preventDefault();
-            const skjema = tilMotor(s, new Date().toISOString());
-            // The buyer's form is only sent when it passes validation; the server checks again.
-            setForsokt(true);
-            if (validerSkjema(skjema, idag).length) return;
-            start(async () => {
-              setBrukersvar(await sendSak(skjema));
-              setSendt(skjema);
-            });
-          }}
-        >
-          <header className="flex flex-col gap-3">
-            <h1 className="m-0 font-brev text-[30px] font-semibold">Reklamasjon på bruktbil</h1>
-            <p className="m-0 text-[14px] text-[#5b6472]">Svar på spørsmålene om kjøpet og feilen. Du får en vurdering av saken og brevet under skjemaet.</p>
-          </header>
-
-          <section className={KORT}>
-            <h2 className="m-0 text-[18px] font-semibold">Bilen</h2>
-            <Regnr funnet={fraVegvesen} />
-          </section>
-
-          <section className={KORT}>
-            <h2 className="m-0 text-[18px] font-semibold">Kjøpet</h2>
-            <Valg
-              navn="Kjøpte du bilen av et firma (forhandler) eller en privatperson?"
-              verdi={s.del1_kjopet.selgertype}
-              valg={[
-                ["forhandler", "Forhandler"],
-                ["privat", "Privatperson"],
-              ]}
-              onChange={(v) => k1({ selgertype: v })}
-            />
-            {privat && <p className={MERKNAD}>Kjøpsloven gjelder, og tjenesten dekker foreløpig bare kjøp fra forhandler. Motoren stopper her.</p>}
-            <div className="grid grid-cols-2 gap-4">
-              <Dato navn="Når kjøpte du bilen?" verdi={s.del1_kjopet.kjopsdato} onChange={(v) => k1({ kjopsdato: v })} paakrevd />
-              <Tall navn="Hva betalte du? (kr)" verdi={s.del1_kjopet.pris_kr} onChange={(v) => k1({ pris_kr: v ?? 0 })} paakrevd />
-              <Tall navn="Kilometerstand ved kjøp" verdi={s.del1_kjopet.km_ved_kjop} onChange={(v) => k1({ km_ved_kjop: v ?? 0 })} paakrevd />
-              <Tall navn="Årsmodell" verdi={s.del1_kjopet.aarsmodell} onChange={(v) => k1({ aarsmodell: v ?? 0 })} paakrevd />
-            </div>
-            <Felt navn="Merke og modell (valgfritt)">
-              <input className={INPUT} value={s.del1_kjopet.merke_modell_valgfritt ?? ""} onChange={(e) => k1({ merke_modell_valgfritt: e.target.value || null })} />
-            </Felt>
-          </section>
-
-          {!privat && (
-            <>
-              <section className={KORT}>
-                <h2 className="m-0 text-[18px] font-semibold">Selger</h2>
-                <Forhandlervelger
-                  navn={s.del2_selger.firmanavn_oppgitt ?? ""}
-                  treff={s.del2_selger.treff_bekreftet ? s.del2_selger.bronnoysund_treff : null}
-                  onChange={(v) => del("del2_selger")(v)}
-                  inputClass={INPUT}
-                  labelClass={ETIKETT}
-                />
-                <Valg
-                  navn="Sto det «som den er», «som forevist» eller lignende i kontrakten?"
-                  verdi={s.del2_selger.som_den_er_i_kontrakt}
-                  valg={[...JA_NEI, ["vet_ikke", "Vet ikke"]]}
-                  onChange={(v) => del("del2_selger")({ som_den_er_i_kontrakt: v })}
-                />
-              </section>
-
-              <section className="flex flex-col gap-4">
-                <h2 className="m-0 text-[18px] font-semibold">Feil</h2>
-                {s.del3_feil.map((f, i) => (
-                  <Feilskjema
-                    key={i}
-                    f={f}
-                    nr={i + 1}
-                    pris={s.del1_kjopet.pris_kr}
-                    endre={endreFeil(i)}
-                    fjern={s.del3_feil.length > 1 ? () => setS((x) => ({ ...x, del3_feil: x.del3_feil.filter((_, j) => j !== i) })) : undefined}
-                  />
-                ))}
-                {s.del3_feil.length < MAKS_FEIL && (
-                  <button
-                    type="button"
-                    onClick={() => setS((x) => ({ ...x, del3_feil: [...x.del3_feil, nyFeil(`F${x.del3_feil.length + 1}`)] }))}
-                    className="self-start rounded border border-[#1f3a5f] px-4 py-2 text-[14px] font-medium text-[#1f3a5f]"
-                  >
-                    Legg til feil
-                  </button>
-                )}
-              </section>
-
-              <section className={KORT}>
-                <h2 className="m-0 text-[18px] font-semibold">Kontakt med selger</h2>
-                <Tall navn="Hva er kilometerstanden nå?" verdi={s.km_na} onChange={(v) => setS((x) => ({ ...x, km_na: v ?? 0 }))} paakrevd />
-                <Valg
-                  navn="Har du tatt dette opp med selger?"
-                  verdi={kontakt.tatt_opp_med_selger}
-                  valg={[
-                    ["nei", "Nei"],
-                    ["ja_muntlig", "Ja, muntlig"],
-                    ["ja_skriftlig", "Ja, skriftlig"],
-                  ]}
-                  onChange={(v) => k6({ tatt_opp_med_selger: v })}
-                />
-                {kontakt.tatt_opp_med_selger !== "nei" && (
-                  <div className="flex flex-col gap-4 border-l-2 border-[#dcd8cf] pl-4">
-                    <Dato navn="Når tok du det opp første gang?" verdi={kontakt.dato_forste_gang} onChange={(v) => k6({ dato_forste_gang: v || null })} paakrevd />
-                    <Valg navn="Hva svarte selger?" verdi={kontakt.selgers_svar} valg={SELGERS_SVAR} onChange={(v) => k6({ selgers_svar: v })} />
-                    {(kontakt.selgers_svar === "tilbudt_delvis" || kontakt.selgers_svar === "enige_om_noe") && (
-                      <>
-                        <Valg navn="Har dere inngått en avtale eller et forlik?" verdi={kontakt.avtale_inngatt} valg={JA_NEI} onChange={(v) => k6({ avtale_inngatt: v })} />
-                        {kontakt.avtale_inngatt === "ja" && (
-                          <>
-                            <Tekst navn="Avtalen går ut på at …" verdi={kontakt.avtale_beskrivelse} onChange={(v) => k6({ avtale_beskrivelse: v })} />
-                            <div role="group" aria-label="Hvilke av feilene gjelder avtalen?" className="flex flex-col gap-1.5">
-                              <span className={ETIKETT}>Hvilke av feilene gjelder avtalen?</span>
-                              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                                {s.del3_feil.map((_, i) => {
-                                  const id = `F${i + 1}`;
-                                  const valgt = kontakt.avtale_gjelder_feil.includes(id);
-                                  return (
-                                    <label key={id} className="flex items-center gap-2 text-[14px]">
-                                      <input
-                                        type="checkbox"
-                                        checked={valgt}
-                                        onChange={() => k6({ avtale_gjelder_feil: valgt ? kontakt.avtale_gjelder_feil.filter((x) => x !== id) : [...kontakt.avtale_gjelder_feil, id].sort() })}
-                                      />
-                                      {id}
-                                    </label>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </>
-                    )}
-                    {kontakt.selgers_svar === "avvist" && (
-                      <>
-                        <Valg
-                          navn="La selger frem dokumentasjon (rapport, verkstedhistorikk)?"
-                          verdi={kontakt.selger_la_frem_dokumentasjon}
-                          valg={JA_NEI}
-                          onChange={(v) => k6({ selger_la_frem_dokumentasjon: v })}
+        <div ref={scrollRef} style={{ flex: 1, overflow: "auto", overflowX: "hidden" }}>
+          <div style={{ maxWidth: 680, margin: "0 auto", padding: isDesktop ? "56px 40px 64px" : "28px 20px 40px", boxSizing: "border-box" }}>
+            {step === 0 && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 36 }}>
+                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <span style={OVERLINE}>Steg 1 av {STEPS.length} · Kjøretøy</span>
+                  <h1 style={H1}>Hvilken bil gjelder reklamasjonen?</h1>
+                  <p style={INGRESS}>Oppgi registreringsnummeret. Kjøretøyopplysningene hentes automatisk fra Statens vegvesen.</p>
+                </header>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, animation: pop(2) }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "stretch",
+                        border: `2px solid ${INK}`,
+                        borderRadius: 8,
+                        overflow: "hidden",
+                        background: "#fff",
+                        height: 58,
+                        width: 230,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 28,
+                          flex: "none",
+                          background: "oklch(0.42 0.15 262)",
+                          color: "#fff",
+                          display: "flex",
+                          alignItems: "flex-end",
+                          justifyContent: "center",
+                          paddingBottom: 7,
+                          boxSizing: "border-box",
+                          font: `700 12px ${SANS}`,
+                        }}
+                      >
+                        N
+                      </div>
+                      <input
+                        value={regnr}
+                        onChange={(e) => setRegnr(e.target.value.toUpperCase().replace(/[^A-ZÆØÅ0-9 -]/g, ""))}
+                        onKeyDown={(e) => e.key === "Enter" && void fetchCar()}
+                        placeholder="AB 12345"
+                        maxLength={8}
+                        aria-label="Registreringsnummer"
+                        autoComplete="off"
+                        spellCheck={false}
+                        style={{
+                          border: "none",
+                          outline: "none",
+                          minWidth: 0,
+                          width: "100%",
+                          padding: "0 14px",
+                          font: `600 25px ${MONO}`,
+                          letterSpacing: ".06em",
+                          textTransform: "uppercase",
+                          color: INK,
+                          background: "transparent",
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void fetchCar()}
+                      disabled={!gyldig || fetching}
+                      style={{
+                        ...KNAPP,
+                        cursor: gyldig && !fetching ? "pointer" : "not-allowed",
+                        height: 58,
+                        padding: "0 22px",
+                        borderRadius: 10,
+                        background: gyldig ? INK : "#9a9ea2",
+                        color: "#fff",
+                        fontSize: 15,
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        transition: "background .2s",
+                      }}
+                    >
+                      {fetching && (
+                        <span
+                          style={{
+                            width: 14,
+                            height: 14,
+                            borderRadius: "50%",
+                            border: "2px solid rgba(255,255,255,.35)",
+                            borderTopColor: "#fff",
+                            animation: "rkSpin .7s linear infinite",
+                          }}
                         />
-                        {kontakt.selger_la_frem_dokumentasjon === "ja" && (
-                          <Tekst navn="Hva slags?" verdi={kontakt.selger_dokumentasjon_kort} onChange={(v) => k6({ selger_dokumentasjon_kort: v })} />
-                        )}
-                      </>
-                    )}
+                      )}
+                      {fetching ? "Henter …" : car ? "Hent på nytt" : "Hent opplysninger"}
+                    </button>
+                  </div>
+                  {oppslagFeil && (
+                    <p role="alert" style={{ margin: 0, fontSize: 14, color: "#a3372b" }}>
+                      {oppslagFeil}
+                    </p>
+                  )}
+                </div>
+
+                {fetching && (
+                  <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: 22, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <span style={{ height: 18, width: "55%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out infinite" }} />
+                    <span style={{ height: 12, width: "35%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out .15s infinite" }} />
+                    <span style={{ height: 12, width: "70%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out .3s infinite" }} />
                   </div>
                 )}
-              </section>
 
-              <section className={KORT}>
-                <h2 className="m-0 text-[18px] font-semibold">Ønske</h2>
-                <Valg
-                  navn="Hva ønsker du?"
-                  verdi={s.del7_onske_og_kontakt.onsket_losning}
-                  valg={[
-                    ["reparasjon", "Reparasjon"],
-                    ["prisavslag", "Prisavslag"],
-                    ["angre_kjopet", "Angre kjøpet"],
-                  ]}
-                  onChange={(v) => del("del7_onske_og_kontakt")({ onsket_losning: v })}
-                />
-                {s.del7_onske_og_kontakt.onsket_losning === "angre_kjopet" && (
-                  <p className={MERKNAD}>Å gå fra kjøpet krever at feilen er vesentlig. Brevet vil kreve det, men også ta forbehold om prisavslag.</p>
+                {car && !fetching && (
+                  <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, overflow: "hidden", animation: pop(0) }}>
+                    <div style={{ padding: "20px 22px", display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start", borderBottom: "1px solid #eeeeeb" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>{carName}</span>
+                        <span style={{ fontSize: 14, color: "#5f6468" }}>{[car.k.regnr, car.k.ar].filter(Boolean).join(" · ")}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCar(null);
+                          setRegnr("");
+                        }}
+                        style={{ all: "unset", cursor: "pointer", fontSize: 13, fontWeight: 600, color: A, whiteSpace: "nowrap" }}
+                      >
+                        Feil bil?
+                      </button>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))" }}>
+                      {carRows.map((c, i) => (
+                        <div key={c.k} style={{ padding: "14px 22px", display: "flex", flexDirection: "column", gap: 3, animation: pop(i + 1) }}>
+                          <span style={{ fontSize: 12, color: "#5f6468" }}>{c.k}</span>
+                          <span style={{ fontSize: 14.5, fontWeight: 500 }}>{c.v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-                {(["navn", "adresse", "epost"] as const).map((k) => (
-                      <Felt key={k} navn={{ navn: "Navnet ditt", adresse: "Adressen din (avsender i brevet)", epost: "E-postadressen din" }[k]}>
-                        <input
-                          className={INPUT}
-                          type={k === "epost" ? "email" : "text"}
-                          autoComplete={{ navn: "name", adresse: "street-address", epost: "email" }[k]}
-                          value={s.del7_onske_og_kontakt.kjoper[k]}
-                          onChange={(e) => del("del7_onske_og_kontakt")({ kjoper: { ...s.del7_onske_og_kontakt.kjoper, [k]: e.target.value } })}
-                        />
-                      </Felt>
-                    ))}
-              </section>
 
-                <section className={KORT}>
-                  <h2 className="m-0 text-[18px] font-semibold">Bekreft</h2>
-                  {(
-                    [
-                      ["opplysningene_er_riktige", "Opplysningene jeg har gitt, er riktige så langt jeg vet."],
-                      ["lest_at_brevet_ikke_er_juridisk_radgivning", "Jeg har lest at brevet ikke er juridisk rådgivning."],
-                    ] as const
-                  ).map(([k, tekst]) => (
-                    <label key={k} className="flex items-start gap-3 text-[15px]">
-                      <input type="checkbox" className="mt-1" checked={s.bekreftelser[k]} onChange={(e) => setS((x) => ({ ...x, bekreftelser: { ...x.bekreftelser, [k]: e.target.checked } }))} />
-                      {tekst}
-                    </label>
+                {car && !fetching && (
+                  <section style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(4) }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Når kjøpte du bilen?</h2>
+                      <p style={{ margin: 0, fontSize: 14, color: "#5f6468" }}>
+                        {car.eierFra ? "Foreslått ut fra når bilen sist ble omregistrert. Endre hvis det ikke stemmer." : "Vi fant ikke datoen i motorvognregisteret. Fyll inn selv."}
+                      </p>
+                    </div>
+                    {beroring ? (
+                      <input
+                        type="date"
+                        aria-label="Kjøpsdato"
+                        value={kjopsdato}
+                        max={idag}
+                        onChange={(e) => {
+                          setKjopsdato(e.target.value);
+                          setTelling(null);
+                        }}
+                        className="rk-input"
+                        style={{
+                          height: 50,
+                          width: 220,
+                          border: `1.5px solid ${LINE}`,
+                          borderRadius: 10,
+                          padding: "0 14px",
+                          font: `16px ${SANS}`,
+                          color: INK,
+                          outline: "none",
+                          background: "#fff",
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    ) : (
+                      <Popover open={kalenderApen} onOpenChange={setKalenderApen}>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label="Kjøpsdato"
+                            className="rk-input"
+                            style={{
+                              ...KNAPP,
+                              height: 50,
+                              width: 220,
+                              border: `1.5px solid ${kalenderApen ? A : LINE}`,
+                              borderRadius: 10,
+                              padding: "0 14px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 10,
+                              font: `16px ${SANS}`,
+                              color: kjopsdato ? INK : "#8a8f93",
+                              background: "#fff",
+                            }}
+                          >
+                            {kjopsdato ? datoTekst(kjopsdato) : "Velg dato"}
+                            <CalendarIcon aria-hidden size={18} color="#5f6468" />
+                          </button>
+                        </PopoverTrigger>
+                        {/* The form's accent, not the site's navy, for the selected day and focus ring. */}
+                        <PopoverContent align="start" className="w-auto overflow-hidden p-0" style={{ "--primary": A, "--ring": A, fontFamily: SANS } as CSSProperties}>
+                          <Calendar
+                            className="[--cell-size:--spacing(9)]"
+                            mode="single"
+                            locale={nb}
+                            captionLayout="dropdown"
+                            selected={kjopsdato ? new Date(`${kjopsdato}T12:00:00`) : undefined}
+                            defaultMonth={kjopsdato ? new Date(`${kjopsdato}T12:00:00`) : undefined}
+                            startMonth={new Date(Number(idag.slice(0, 4)) - 20, 0)}
+                            endMonth={new Date()}
+                            disabled={{ after: new Date() }}
+                            onSelect={(d) => {
+                              if (!d) return;
+                              setKjopsdato(format(d, "yyyy-MM-dd"));
+                              setTelling(null);
+                              setKalenderApen(false);
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                    {datoOk && kjopsdato < aarSiden(5) ? (
+                      <Fristvarsel>Du kjøpte bilen for mer enn fem år siden. Da kan fristen for å reklamere ha gått ut, også for deler som er ment å vare vesentlig lenger.</Fristvarsel>
+                    ) : datoOk && kjopsdato < aarSiden(2) ? (
+                      <Fristvarsel>Du kjøpte bilen for mer enn to år siden. Da kan fristen for å reklamere ha gått ut, med mindre delen er ment å vare vesentlig lenger.</Fristvarsel>
+                    ) : null}
+                  </section>
+                )}
+
+                {car && !fetching && (
+                  <section style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(6) }}>
+                    <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Om kjøpet</h2>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 12 }}>
+                      <Tallfelt etikett="Kilometerstand ved kjøp" hjelp="Står i kjøpekontrakten." enhet="km" verdi={km} sett={setKm} maks={7} />
+                      <Tallfelt etikett="Kjøpesum" hjelp="Det du betalte for bilen." enhet="kr" verdi={kjopesum} sett={setKjopesum} maks={8} />
+                    </div>
+                  </section>
+                )}
+
+                {car && !fetching && (
+                  <section style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(8) }}>
+                    <h2 id="som-den-er" style={{ margin: 0, fontSize: 17, fontWeight: 600, textWrap: "pretty" }}>
+                      Sto det «som den er», «som forevist» eller lignende i kontrakten eller annonsen?
+                    </h2>
+                    <div role="radiogroup" aria-labelledby="som-den-er" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 10 }}>
+                      {SOM_DEN_ER.map((o, i) => (
+                        <button
+                          key={o.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={somDenEr === o.id}
+                          onClick={() => setSomDenEr(o.id)}
+                          className="rk-kat"
+                          style={{ ...kort(somDenEr === o.id, pop(9 + i)), display: "flex", alignItems: "center", gap: 12, padding: "15px 16px" }}
+                        >
+                          <Radiomerke valgt={somDenEr === o.id} />
+                          <span style={{ fontSize: 15, fontWeight: 500 }}>{o.navn}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
+            )}
+
+            {step === 1 && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 36 }}>
+                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <span style={OVERLINE}>Steg 2 av {STEPS.length} · Feilen</span>
+                  <h1 style={H1}>Hva er galt med bilen?</h1>
+                  <p style={INGRESS}>Velg ett eller flere områder. Du beskriver dem nærmere i neste steg.</p>
+                </header>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 10 }}>
+                  {HOVEDKATEGORIER.map((o, i) => {
+                    const sel = o.id in valg;
+                    return (
+                      <button
+                        key={o.id}
+                        type="button"
+                        aria-pressed={sel}
+                        onClick={() => toggleCat(o.id)}
+                        className="rk-kat"
+                        style={{
+                          ...KNAPP,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 18,
+                          padding: "14px 14px 16px",
+                          borderRadius: 12,
+                          border: `1.5px solid ${sel ? A : LINE}`,
+                          background: sel ? AS : "#fff",
+                          transition: "border-color .2s,background .2s,transform .15s,box-shadow .2s",
+                          animation: pop(i),
+                        }}
+                      >
+                        <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ font: `500 11px ${MONO}`, color: "#8a8f93" }}>{o.kode}</span>
+                          <span
+                            style={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: 5,
+                              border: `1.5px solid ${sel ? A : "#b4b8bc"}`,
+                              background: sel ? A : "#fff",
+                              display: "grid",
+                              placeItems: "center",
+                              transition: "all .2s",
+                            }}
+                          >
+                            {sel && <Hake />}
+                          </span>
+                        </span>
+                        <span style={{ fontSize: 15, fontWeight: 600 }}>{o.navn}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 32 }}>
+                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <span style={OVERLINE}>Steg 3 av {STEPS.length} · Detaljer</span>
+                  <h1 style={H1}>Beskriv feilene</h1>
+                  <p style={INGRESS}>
+                    Tiden regnes fra overtakelsen. {beskrevet} av {valgte.length} områder er besvart.
+                  </p>
+                </header>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {valgte.map((h, i) => {
+                    const d = detaljer[h.id] ?? {};
+                    const besvart = besvarteMed(h.id, tid, detaljer);
+                    const done = besvart === 3;
+                    const open = apenId === h.id;
+                    const sammendrag = [
+                      d.beskrivelse?.trim(),
+                      ...h.under.filter((u) => valg[h.id].includes(u.id)).map((u) => u.navn),
+                      VISTE_SEG_VALG.find((t) => t.id === tid[h.id])?.navn,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ");
+                    return (
+                      <div
+                        key={h.id}
+                        style={{
+                          background: "#fff",
+                          border: `1.5px solid ${open ? A : LINE}`,
+                          borderRadius: 14,
+                          overflow: "hidden",
+                          boxShadow: open ? "0 8px 28px rgba(20,30,50,.08)" : "none",
+                          transition: "border-color .25s,box-shadow .25s",
+                          animation: pop(i),
+                        }}
+                      >
+                        <button
+                          type="button"
+                          aria-expanded={open}
+                          onClick={() => setApent(open ? null : h.id)}
+                          style={{ ...KNAPP, width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px" }}
+                        >
+                          <span
+                            style={{
+                              width: 28,
+                              height: 28,
+                              flex: "none",
+                              borderRadius: "50%",
+                              display: "grid",
+                              placeItems: "center",
+                              font: `600 12px ${MONO}`,
+                              background: done ? A : "#fff",
+                              border: `1.5px solid ${done ? A : open ? INK : LINE}`,
+                              color: open ? INK : "#8a8f93",
+                              transition: "all .3s",
+                            }}
+                          >
+                            {done ? <Hake /> : i + 1}
+                          </span>
+                          <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+                            <span style={{ fontSize: 16, fontWeight: 600 }}>{h.navn}</span>
+                            {!open && sammendrag && (
+                              <span style={{ fontSize: 13.5, color: "#5f6468", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sammendrag}</span>
+                            )}
+                          </span>
+                          {!open && <span style={{ fontSize: 13, fontWeight: 600, color: done ? A : "#8a8f93", whiteSpace: "nowrap" }}>{done ? "Endre" : `${besvart} av 3`}</span>}
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 14 14"
+                            aria-hidden="true"
+                            style={{ flex: "none", transform: `rotate(${open ? 180 : 0}deg)`, transition: "transform .3s cubic-bezier(.22,1,.36,1)" }}
+                          >
+                            <path d="M3.5 5.5L7 9l3.5-3.5" fill="none" stroke="#5f6468" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                        {open && (
+                          <div style={{ padding: isDesktop ? "4px 18px 22px 60px" : "4px 18px 22px", display: "flex", flexDirection: "column", gap: 22 }}>
+                            <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, fontWeight: 600, animation: pop(0) }}>
+                              <span>
+                                Hva er feil? <span style={{ fontWeight: 400, color: "#5f6468" }}>(valgfritt)</span>
+                              </span>
+                              <input
+                                value={d.beskrivelse ?? ""}
+                                onChange={(e) => {
+                                  const beskrivelse = e.target.value;
+                                  setDetaljer((v) => ({ ...v, [h.id]: { ...v[h.id], beskrivelse } }));
+                                }}
+                                placeholder="Feilen er at …"
+                                maxLength={200}
+                                className="rk-input"
+                                style={{
+                                  height: 48,
+                                  border: `1.5px solid ${LINE}`,
+                                  borderRadius: 10,
+                                  padding: "0 14px",
+                                  font: `400 15px ${SANS}`,
+                                  color: INK,
+                                  outline: "none",
+                                  background: "#fff",
+                                }}
+                              />
+                            </label>
+                            {h.under.length > 0 && (
+                              <div style={{ display: "flex", flexDirection: "column", gap: 10, animation: pop(1) }}>
+                                <span style={{ fontSize: 14, fontWeight: 600 }}>Hva gjelder feilen?</span>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                                  {h.under.map((u) => {
+                                    const sel = valg[h.id].includes(u.id);
+                                    return (
+                                      <button key={u.id} type="button" aria-pressed={sel} onClick={() => toggleSub(h.id, u.id)} className="rk-chip" style={chip(sel)}>
+                                        {u.navn}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            <div style={{ animation: pop(2) }}>
+                              <Chipvalg
+                                sporsmal="Når viste feilen seg?"
+                                etikett={`Når viste ${h.navn} seg?`}
+                                valg={VISTE_SEG_VALG}
+                                valgt={tid[h.id]}
+                                velg={(t) => settTid(h.id, t)}
+                              />
+                            </div>
+                            <div style={{ animation: pop(3) }}>
+                              <Chipvalg
+                                sporsmal="Har et verksted undersøkt feilen?"
+                                etikett={`Har et verksted undersøkt ${h.navn}?`}
+                                valg={KILDE}
+                                valgt={d.verksted}
+                                velg={(k) => settDetalj(h.id, { verksted: k })}
+                              />
+                            </div>
+                            <div style={{ animation: pop(4) }}>
+                              <Chipvalg
+                                sporsmal="Skrev eller sa selger noe om dette før kjøpet, for eksempel i annonse, kontrakt eller melding?"
+                                etikett={`Skrev eller sa selger noe om ${h.navn} før kjøpet?`}
+                                valg={KILDE}
+                                valgt={d.opplysning}
+                                velg={(k) => settDetalj(h.id, { opplysning: k })}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {valgte.some((h) => tid[h.id] === "over_24_mnd") && (
+                  <Fristvarsel>En eller flere feil viste seg mer enn to år etter overtakelsen. Reklamasjon for disse kan være for sent fremsatt, med mindre delen er ment å vare vesentlig lenger.</Fristvarsel>
+                )}
+              </div>
+            )}
+
+            {step === 3 && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 36 }}>
+                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <span style={OVERLINE}>Steg 4 av {STEPS.length} · Krav</span>
+                  <h1 style={H1}>Hva krever du av forhandleren?</h1>
+                  <p style={INGRESS}>Rettighetene ved mangel følger av forbrukerkjøpsloven. Velg det kravet som best beskriver ønsket løsning.</p>
+                </header>
+                <div role="radiogroup" aria-label="Krav" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(250px,1fr))", gap: 10 }}>
+                  {KRAV.map((o, i) => (
+                    <button
+                      key={o.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={krav === o.id}
+                      onClick={() => setKrav(o.id)}
+                      className="rk-kat"
+                      style={{ ...kort(krav === o.id, pop(i)), borderRadius: 12, display: "flex", flexDirection: "column", gap: 10, padding: 18 }}
+                    >
+                      <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <Radiomerke valgt={krav === o.id} />
+                        <span style={{ fontSize: 16, fontWeight: 600, flex: 1 }}>{o.navn}</span>
+                        {o.merke && (
+                          <span
+                            style={{
+                              font: `600 10.5px ${MONO}`,
+                              letterSpacing: ".05em",
+                              textTransform: "uppercase",
+                              color: A,
+                              background: "oklch(0.94 0.03 255)",
+                              padding: "3px 7px",
+                              borderRadius: 5,
+                            }}
+                          >
+                            {o.merke}
+                          </span>
+                        )}
+                      </span>
+                      <span style={{ fontSize: 14, lineHeight: 1.5, color: "#5f6468", paddingLeft: 30, textWrap: "pretty" }}>{o.tekst}</span>
+                    </button>
                   ))}
-                </section>
-            </>
-          )}
+                </div>
 
-          {valideringsfeil.length > 0 && forsokt && (
-            <div role="alert" className="rounded border border-[#e8c9a0] bg-[#fbf3e8] px-4 py-3 text-[13px] text-[#7a4a12]">
-              <p className="m-0 font-medium">Noen svar mangler eller må rettes:</p>
-              <ul className="m-0 mt-1 pl-4">
-                {valideringsfeil.map((v, i) => (
-                  <li key={i}>
-                    {delnavn(v.felt)}: {v.melding}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+                <div style={{ animation: pop(3) }}>
+                  <Chipvalg sporsmal="Har selger forsøkt å reparere feilene?" valg={RETTINGSFORSOK} valgt={forsok} velg={setForsok} />
+                </div>
 
-          {brukersvar && !brukersvar.ok && (
-            <p role="alert" className="m-0 rounded bg-[#f6dcd7] px-4 py-3 text-[14px] text-[#8a3b2e]">
-              {"melding" in brukersvar ? brukersvar.melding : `Svarene ble ikke godtatt: ${brukersvar.feil.map((v) => `${delnavn(v.felt)}: ${v.melding}`).join("; ")}`}
-            </p>
-          )}
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={kreverUtlegg}
+                  onClick={() => setKreverUtlegg(!kreverUtlegg)}
+                  style={{ ...kort(kreverUtlegg, pop(5)), borderRadius: 12, display: "flex", alignItems: "flex-start", gap: 14, padding: "16px 18px" }}
+                >
+                  <span
+                    style={{
+                      width: 18,
+                      height: 18,
+                      flex: "none",
+                      marginTop: 1,
+                      borderRadius: 5,
+                      border: `1.5px solid ${kreverUtlegg ? A : "#b4b8bc"}`,
+                      background: kreverUtlegg ? A : "#fff",
+                      display: "grid",
+                      placeItems: "center",
+                      transition: "all .2s",
+                    }}
+                  >
+                    {kreverUtlegg && <Hake />}
+                  </span>
+                  <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <span style={{ fontSize: 15, fontWeight: 600 }}>Jeg krever i tillegg erstatning for utlegg</span>
+                    <span style={{ fontSize: 14, color: "#5f6468", lineHeight: 1.5 }}>For eksempel tauing, feilsøking eller leiebil.</span>
+                  </span>
+                </button>
 
-          <button type="submit" disabled={venter} className="sticky bottom-4 z-10 rounded bg-[#1f3a5f] px-5 py-3 text-[16px] font-semibold text-white shadow-lg disabled:opacity-60">
-            {venter ? "Vurderer …" : "Se vurderingen og brevet"}
-          </button>
-        </form>
+                {kreverUtlegg && (
+                  <section style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: -16, animation: pop(0) }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Legg til utlegg</h2>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {UTLEGG_FORSLAG.map((l, i) => (
+                          <button
+                            key={l}
+                            type="button"
+                            onClick={() => setUtlegg((u) => [...u, { beskrivelse: l, belop: "" }])}
+                            className="rk-chip rk-forslag"
+                            style={{ ...chip(false), display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", animation: pop(i) }}
+                          >
+                            <span style={{ color: A, fontWeight: 600 }}>+</span>
+                            {l}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {utlegg.length > 0 && (
+                      <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, overflow: "hidden" }}>
+                        {utlegg.map((x, i) => (
+                          <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "10px 12px", borderTop: i ? "1px solid #eeeeeb" : "none", animation: pop(0) }}>
+                            <input
+                              value={x.beskrivelse}
+                              onChange={(e) => settUtlegg(i, { beskrivelse: e.target.value })}
+                              placeholder="Beskrivelse"
+                              aria-label="Beskrivelse av utlegget"
+                              maxLength={100}
+                              className="rk-input"
+                              style={{
+                                flex: 1,
+                                minWidth: 0,
+                                height: 44,
+                                border: `1.5px solid ${LINE}`,
+                                borderRadius: 9,
+                                padding: "0 12px",
+                                font: `15px ${SANS}`,
+                                color: INK,
+                                outline: "none",
+                                background: "#fff",
+                              }}
+                            />
+                            <span
+                              className="rk-felt"
+                              style={{ display: "flex", alignItems: "center", width: 128, flex: "none", height: 44, border: `1.5px solid ${LINE}`, borderRadius: 9, background: "#fff", overflow: "hidden", boxSizing: "border-box" }}
+                            >
+                              <input
+                                value={tall(x.belop)}
+                                onChange={(e) => settUtlegg(i, { belop: kunSifre(e.target.value, 7) })}
+                                inputMode="numeric"
+                                placeholder="0"
+                                aria-label="Beløp"
+                                style={{ flex: 1, minWidth: 0, border: "none", outline: "none", padding: "0 4px 0 12px", font: `500 15px ${MONO}`, textAlign: "right", color: INK, background: "transparent" }}
+                              />
+                              <span style={{ padding: "0 12px 0 4px", fontSize: 13, color: "#5f6468" }}>kr</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setUtlegg((u) => u.filter((_, j) => j !== i))}
+                              aria-label="Fjern"
+                              className="rk-tilbake"
+                              style={{ ...KNAPP, width: 32, height: 32, flex: "none", borderRadius: 8, display: "grid", placeItems: "center", color: "#8a8f93", fontSize: 18 }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", background: "#f8f8f6", borderTop: "1px solid #eeeeeb" }}>
+                          <button
+                            type="button"
+                            onClick={() => setUtlegg((u) => [...u, { beskrivelse: "", belop: "" }])}
+                            style={{ ...KNAPP, fontSize: 14, fontWeight: 600, color: A }}
+                          >
+                            + Legg til annet utlegg
+                          </button>
+                          <span style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
+                            <span style={{ fontSize: 13, color: "#5f6468" }}>Sum</span>
+                            <span style={{ font: `600 16px ${MONO}` }}>{tall(String(utleggSum))} kr</span>
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    <div role="note" style={{ background: "#eef0f1", borderRadius: 12, padding: "14px 16px", display: "flex", gap: 12, fontSize: 14, lineHeight: 1.5, color: "#2c3033" }}>
+                      <span aria-hidden="true" style={{ font: `600 14px ${MONO}`, color: A }}>
+                        !
+                      </span>
+                      <span style={{ textWrap: "pretty" }}>Husk å legge ved kopi av fakturaer og kvitteringer når du sender brevet. Vedleggene listes opp i brevet.</span>
+                    </div>
+                  </section>
+                )}
 
-        {brukersvar?.ok && (
-          <section aria-live="polite" className="flex flex-col gap-6">
-            <Brukerresultat svar={brukersvar} />
-            {sendt && <Brevet key={JSON.stringify(sendt)} skjema={sendt} svar={brukersvar} />}
-          </section>
-        )}
+                {telling && (
+                  <section aria-live="polite" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, overflow: "hidden", animation: pop(0) }}>
+                    {telling.ok ? (
+                      <>
+                        <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 4, borderBottom: "1px solid #eeeeeb" }}>
+                          <span style={{ font: `600 11px ${MONO}`, letterSpacing: ".08em", textTransform: "uppercase", color: "#5f6468" }}>Vedtak med medhold</span>
+                          <span style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em" }}>{telling.totalt.toLocaleString("nb-NO")}</span>
+                          <span style={{ fontSize: 14, color: "#5f6468", lineHeight: 1.5, textWrap: "pretty" }}>
+                            Kjøp fra forhandler etter forbrukerkjøpsloven der utvalget godtok samme type feil som mangel, og feilen viste seg på et rettslig sammenlignbart tidspunkt.
+                          </span>
+                        </div>
+                        {telling.kategorier.map((k, i) => (
+                          <div
+                            key={k.id}
+                            style={{
+                              padding: "12px 22px",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              gap: 16,
+                              borderTop: i ? "1px solid #eeeeeb" : "none",
+                              animation: pop(i + 1),
+                            }}
+                          >
+                            <span style={{ fontSize: 14.5 }}>{k.navn}{k.antall !== null && !k.under && valg[k.id]?.length ? <span style={{ color: "#5f6468" }}> (hele kategorien)</span> : null}</span>
+                            <span style={{ fontSize: 14.5, fontWeight: 500, color: k.antall === null ? "#5f6468" : INK, whiteSpace: "nowrap" }}>
+                              {k.antall !== null ? k.antall.toLocaleString("nb-NO") : "Sammenlignes ikke"}
+                            </span>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <p role="alert" style={{ margin: 0, padding: "18px 22px", fontSize: 14, color: "#a3372b" }}>
+                        {telling.melding}
+                      </p>
+                    )}
+                  </section>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ background: "#fff", borderTop: `1px solid ${LINE}`, padding: "14px 20px" }}>
+          <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between" }}>
+            <button
+              type="button"
+              onClick={() => step > 0 && go(step - 1)}
+              className="rk-tilbake"
+              style={{
+                ...KNAPP,
+                height: 50,
+                padding: "0 18px",
+                borderRadius: 10,
+                fontSize: 15,
+                fontWeight: 600,
+                color: INK,
+                opacity: step === 0 ? 0 : 1,
+                transition: "opacity .2s,background .2s",
+              }}
+            >
+              Tilbake
+            </button>
+            <button
+              type="button"
+              onClick={() => ok && (step === STEPS.length - 1 ? lagBrev() : go(step + 1))}
+              className="rk-neste"
+              style={{
+                ...KNAPP,
+                height: 50,
+                padding: "0 26px",
+                borderRadius: 10,
+                fontSize: 15,
+                fontWeight: 600,
+                color: "#fff",
+                background: ok ? A : "#c4c7ca",
+                cursor: ok ? "pointer" : "not-allowed",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: isDesktop ? "0 0 auto" : "1",
+                transition: "background .25s,transform .15s",
+              }}
+            >
+              {step < STEPS.length - 1 ? "Fortsett" : teller ? "Teller …" : "Lag brev"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

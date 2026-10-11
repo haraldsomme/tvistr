@@ -112,3 +112,23 @@
     transform: translateX(340%);
   }
 }
+
+/* /sak: the mockup's keyframes, and its style-hover/style-active rules (important, as the mockup's
+   runtime made them, so they win over the inline styles). */
+@keyframes rkIn { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes rkBack { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@keyframes rkPop { 0% { opacity: 0; transform: translateY(14px) scale(.97); } 60% { opacity: 1; transform: translateY(-2px) scale(1.004); } 100% { opacity: 1; transform: none; } }
+@keyframes rkCheck { 0% { transform: scale(0); } 70% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes rkSpin { to { transform: rotate(360deg); } }
+@keyframes rkShimmer { 0% { opacity: .45; } 50% { opacity: 1; } 100% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) {
+  .rk, .rk * { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+}
+.rk-kat:hover { box-shadow: 0 4px 14px rgba(20, 30, 50, .07) !important; }
+.rk-kat:active { transform: scale(.98) !important; }
+.rk-chip:active { transform: scale(.96) !important; }
+.rk-neste:active { transform: scale(.98) !important; }
+.rk-tilbake:hover { background: #f1f1ee !important; }
+.rk-input:focus { border-color: oklch(0.47 0.12 255) !important; box-shadow: 0 0 0 4px oklch(0.965 0.018 255) !important; }
+.rk-felt:focus-within { border-color: oklch(0.47 0.12 255) !important; box-shadow: 0 0 0 4px oklch(0.965 0.018 255) !important; }
+.rk-forslag:hover { border-color: oklch(0.47 0.12 255) !important; }

@@ -14,6 +14,7 @@ npm run db:migrate
 | --- | --- |
 | `DATABASE_URL` | Neon Postgres (pooled). `DATABASE_URL_UNPOOLED` brukes av `drizzle-kit` hvis satt. |
 | `ANTHROPIC_API_KEY` | Klassifisering og tolking med `claude-sonnet-5-5`. |
+| `VEGVESEN_API_KEY` | Kjøretøyoppslag på regnr (`/api/kjoretoy`). |
 | `CONTACT_EMAIL` | Valgfri. Legges i User-Agent (`TvistrBot/0.1 (+https://tvistr.no; e-post)`). |
 
 ## Kjøring, i denne rekkefølgen
@@ -22,10 +23,10 @@ npm run db:migrate
 npm run hent                     # last ned vedtak (alle arkiv) til data/raw/
 npm run klassifiser              # gjelder saken kjøp av brukt kjøretøy?
 npm run tolk                     # strukturert uttrekk til tabellen vedtak
-npm run rapport                  # skriv docs/datagrunnlag.md
-npm run revurder -- --skriv      # revurder kontrollflagg (sitater, beløp) fra lagrede data, uten API-kall
-npm run personvern               # ny, uavhengig personvernkontroll av lagret tekst (API)
-npm run revisjon                 # automatisk revisjon av uttrukne felt, tilfeldig utvalg (API, ikke menneskelig QA)
+npm run feilvurdering:hent -- --mangler   # inn-filer for agentene (data/feilvurdering/inn/)
+# kjør workflowen scripts/workflows/feilvurdering.js i Claude Code med id-listen fra data/feilvurdering/lister/
+npm run feilvurdering:importer   # kontroller svarene og skriv feilvurdering + søkekolonner til vedtak
+npm run feilvurdering:mal        # sammenlign med pass 2 der begge finnes
 ```
 
 Nyttige valg:
@@ -77,6 +78,8 @@ Maks én forespørsel annethvert sekund (hele prosessen), stadig lengre pauser v
 | `src/lib/validering.ts` | Kontroller etter tolking (beløp, datoer, sitater) → `trenger_kontroll` |
 | `src/lib/normalisering.ts` | Merke, firmanavn, org.nr. og paragrafer på fast form |
 | `src/lib/brreg.ts`, `src/lib/kjoretoy/vegvesen.ts`, `src/app/api/{firma,kjoretoy}` | Oppslag mot Brreg og Statens vegvesen |
-| `scripts/` | `hent`, `klassifiser`, `tolk`, `rapport`, `revurder`, `personvernkontroll`, `revisjon`, `rett-paragrafer`, `migrer`, `backup`, `restore` |
+| `scripts/` | `hent`, `klassifiser`, `tolk`, `feilvurdering-*`, `migrer`, `backup`, `restore`; `workflows/feilvurdering.js` |
+| `src/lib/feilvurdering/` | Instruks, kontroll og utledning for feilvurderingen (agentene leser fulltekst) |
+| `src/app/sak/`, `src/lib/feil/kategorier.ts` | Skjemaet: bilen fra regnr, feilvalg (hoved- og underkategori) og telling av vedtak med medhold |
 
-Typesjekk: `npm run typecheck`.
+Typesjekk: `npm run typecheck`. Tester: `npm test`.

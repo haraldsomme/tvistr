@@ -16,7 +16,7 @@ export type Forslag = {
   bransje: string | null;
   status: "konkurs" | "avvikling" | null;
   adresse: Adresse | null; // where mail goes
-  forretningsadresse: string | null; // one line, as the form stores it (docs/skjema.md)
+  forretningsadresse: string | null; // one line, as the old form stored it (docs/gammelt-skjema.md)
 };
 
 type BrregAdresse = { adresse?: string[]; postnummer?: string; poststed?: string; kommune?: string };

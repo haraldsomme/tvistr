@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { Sakskjema } from "./skjema";
+import { Topp } from "@/app/topp";
+import { Skjema } from "./skjema";
 
 export const metadata: Metadata = { title: "Ny sak – tvistr" };
 
-// The practice paragraph reads decisions with a model (actions.ts skrivPraksisFor): up to a minute per
-// defect, and the general mode may follow the specific one.
-export const maxDuration = 300;
-
-// The buyer's form (docs/skjema.md), with the assessment and the letter under it.
+// Step 1: the car from the registration number. Step 2: the defects. «Lag brev» counts matching
+// decisions with medhold; the letter itself is built later.
 export default function Page() {
-  return <Sakskjema />;
+  return (
+    <div className="flex h-dvh flex-col">
+      <Topp />
+      <Skjema />
+    </div>
+  );
 }

@@ -13,7 +13,7 @@ Inneholder ett rad per vedtak fra Forbrukertvistutvalget/Forbrukerklageutvalget 
 **Felt i grove trekk:** selger (`selger_type`, `selger_navn`, `selger_navn_norm`, `selger_orgnr`, `verksted_navn`), kjøretøy (`kjoretoytype`, `merke` normalisert, `modell`, `arsmodell`, `drivstoff`, `km_ved_kjop`, `kjopesum_nok`, `alder_ved_kjop`), tidslinje (`kjopsdato`, `forste_reklamasjon_dato`, `dager_til_reklamasjon`), avtale (`forbehold[]`), feil (`feiltyper[]`, `utbedringskostnad_nok`), bevis (`bevistyper[]`), krav (`kravtyper[]`, `prinsipalt_krav`, `krevd_*_nok`), sakens art (`mangelsgrunnlag[]`, `tvistetema[]`), utfall (`utfall`, `tilkjent_*_nok`, `enstemmig`, `dissens`), jus (`lov`, `paragrafer[]` som `fkjl § 16` / `kjl § 17` / `forsinkelsesrentelov § 2`), innhold (`sammendrag`, `utvalgets_nokkelmomenter[]`, `fulltekst_renset`), sporbarhet (`sitater` JSON, `konfidens`, `trenger_kontroll`, `kontroll_arsaker[]`, `qa_status`).
 
 **Bruk**
-- Statistikk og «lignende saker»: filtrer på `kjoretoytype`, `feiltyper`, `selger_type`, `forbehold`, `bevistyper`, `krevd_totalt_nok`. Medhold = `utfall in ('medhold','delvis_medhold')`. Se `src/lib/data/statistikk.ts` (inkl. Wilson-intervall for små grupper); `npm run rapport` skriver `docs/datagrunnlag.md`.
+- Statistikk og «lignende saker»: filtrer på `kjoretoytype`, `feiltyper`, `selger_type`, `forbehold`, `bevistyper`, `krevd_totalt_nok`. Medhold = `utfall in ('medhold','delvis_medhold')`. `docs/datagrunnlag.md` er en øyeblikksrapport over dataene (skriptet som laget den er fjernet).
 - Forhandleroppslag: `selger_orgnr` hvis satt, ellers `selger_navn_norm` (org.nr. står sjelden i vedtakene).
 - Hvilke lover/paragrafer som brukes i lignende saker: tell `paragrafer` og `lov` for samme feiltype.
 - Vis sitater fra `sitater` og lenke til `kilde_url` når tall eller utfall presenteres for en bruker.
@@ -24,6 +24,19 @@ Inneholder ett rad per vedtak fra Forbrukertvistutvalget/Forbrukerklageutvalget 
 - `trenger_kontroll = true` (cirka 10 %) betyr at et felt bør dobbeltsjekkes; se `kontroll_arsaker`. Få rader er manuelt kontrollert (`qa_status`); automatisk revisjon står i `docs/datagrunnlag.md`.
 - Tekstfeltene er renset: klager = `[KLAGER]`, alle andre personer = `[PERSON]`, plassholdere for adresse/regnr/telefon. **Ikke lagre eller vis rå PDF-tekst, navn, adresser eller regnummer**; rå PDF-er ligger bare i `data/raw/` (git-ignorert).
 
-**Spor A/B/C** (skriftlig opplysning / formodningsfrist / sakkyndig dokumentasjon) er definert i `docs/spor.md`. De er bevismessige og ikke det samme som `mangelsgrunnlag`. Hva dataene dekker og hva som venter på pass 2: `docs/vedtakssammenligning-datasjekk.md`.
+**Pass 2-tabellene** (`vedtak_analyse`, `vedtak_feil`, viewet `vedtak_feil_sok`) og `brevsak` står i databasen, men koden som brukte dem er fjernet (siste versjon: grenen `pass2`, commit `9cc4dc9`). Pass 2 dekker 994 vedtak og kan brukes som fasit.
 
-**Vedlikehold:** `README.md` beskriver kjøringsrekkefølge (`hent` → `klassifiser` → `tolk` → `rapport`) og sikkerhetskopi (`npm run db:backup`). Ta kopi før `tolk --på-nytt`. Endres prompt eller skjema i `src/lib/ai/`, øk versjonen i `src/lib/ai/prompter.ts`.
+## Løsningen nå (startet på nytt 2026-10-10)
+
+Bygges opp gradvis. Det som finnes:
+- **`/sak`** (`src/app/sak/`): steg 1 er bilen fra regnr (Statens vegvesen), steg 2 er feilvalg. «Lag brev» teller vedtak med medhold. Utseende og overganger følger mockupen `ReklamasjonSkjema.dc.html`. Det gamle skjemaet er beskrevet i `docs/gammelt-skjema.md`.
+- **Feilkategoriene** (`src/lib/feil/kategorier.ts`): 13 hovedkategorier med underkategorier. Brukeren kan velge flere av begge. Hovedkategoriene er gruppert etter selgers typiske forsvar (teknisk feil med slitasjeforsvar, eller feil opplysning). Tellingen oversetter hovedkategori til `vedtak.feiltyper`. Underkategori snevrer ikke inn ennå, og noen kategorier (utstyr, garanti, «vet ikke ennå») kan ikke telles. - **Feilvurderingen** (`src/lib/feilvurdering/`, kolonner på `vedtak`, migrasjon 0011): Claude Code-agenter leser fulltekst og vurderer hver påberopt feil. De gir kategori og underkategori, utfall (`medhold`/`avvist`/`ikke_vurdert`), avslagsgrunn eller bevisgrunnlag, når feilen viste seg, og ett ordrett sitat. De gir også sanksjoner og antall rettingsforsøk. Per feil gir agentene også når den viste seg (`viste_seg` i perioder) og om utvalget brukte formodningsregelen (`formodning`). Per vedtak gir de `som_den_er` (forbeholdet sto i kontrakten eller annonsen). Importen kontrollerer sitatene mot fulltekst og avleder resten:
+  - `godtatte_kategorier`, `godtatte_underkategorier` (`hoved.under`)
+  - `tidsniva` per feil: 1 innenfor presumsjonsperioden, 2 utenfor men innenfor reklamasjonsfristen, 3 fra 22 måneder. Nivået regnes etter lovversjonen i hver sak.
+  - `godtatte_niva` (`hoved:n`, `hoved.under:n`), slik at kategori og nivå gjelder samme feil
+  - `prisavslag_prosent`, `dager_til_feil` og `lovversjon_avledet`
+
+  Agentene henter ut fakta, og koden trekker konklusjonene. Endres instruks eller svarformat, økes `FEILVURDERING_VERSJON`.
+- **Filtrene dette gir:** kategori og eventuelt underkategori, bare feil med medhold, tidsnivå, bilprofil (`alder_ved_kjop`, `km_ved_kjop`, `kjopesum_nok` fra tolk, i intervaller), «som den er» og sanksjon (`sanksjoner`, med prisavslag i prosent). Sanksjonen gjelder hele vedtaket, ikke den enkelte feilen.
+
+**Vedlikehold:** `README.md` beskriver kjøringsrekkefølge (`hent` → `klassifiser` → `tolk`) og sikkerhetskopi (`npm run db:backup`). Ta kopi før `tolk --på-nytt`. Endres prompt eller skjema i `src/lib/ai/`, øk versjonen i `src/lib/ai/prompter.ts`.

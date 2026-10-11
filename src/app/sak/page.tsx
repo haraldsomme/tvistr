@@ -4,8 +4,8 @@ import { Skjema } from "./skjema";
 
 export const metadata: Metadata = { title: "Ny sak – tvistr" };
 
-// Step 1: the car from the registration number. Step 2: the defects. «Lag brev» counts matching
-// decisions with medhold; the letter itself is built later.
+// The buyer's form: car, defects, details, claim. «Lag brev» ranks the decisions with medhold and
+// step 5 shows the best ones; the letter itself is built later.
 export default function Page() {
   return (
     <div className="flex h-dvh flex-col">

@@ -1,79 +1,51 @@
-import type { AvledetFeil, Tidsniva } from "@/lib/feilvurdering/skjema";
+import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
+import { komponenttype } from "@/lib/feil/kategorier";
+import { type RettsligPoeng, rettsligePoeng } from "./rett";
+import type { Brukersak, Kandidat, Kategorisvar } from "./typer";
 import { VEKTER, type Vekter } from "./vekter";
 
-// Ranks decisions with medhold by how closely they match the user's case, without an LLM and the
-// same way every time. A decision qualifies through one accepted defect in one of the user's main
-// categories; category, subcategory, time and basis are compared on that same defect.
-//
-// Order: the user's subcategory first, then the time filter, then points. A defect must be at the user's time level or
-// stricter for the buyer (a higher level); one level milder is let through for the user's
-// subcategory, and any level when fewer than `minTreff` decisions pass. A buyer who won on worse
-// terms (later defect, older car, more km, «som den er») makes the user's case as strong or stronger,
-// so that counts in part; better terms count nothing. A defect the committee weighed on its own goes
-// before one judged together with others or not disputed. Matches below `terskel` of their maximum
-// are left out.
+// Picks the decisions with medhold a model chooses the letter's precedent from (docs/vedtaksvalg.md,
+// phase 1). Each accepted defect is placed on the highest step it reaches against the buyer's case;
+// the decision takes its best defect's step. Within a step, points decide. The steps:
+//   1  same subcategory, time level known and the same or later, car not milder on both km and age
+//   2  same subcategory, time level unknown or one milder, same profile rule
+//   3  another subcategory of the same kind of part (kategorier.ts), time level the same or later
+//   4  same main category
+//   5  no comparable defect, but the decision settled one of the buyer's legal points (rett.ts)
+// Steps 1–4 need a quote. For the kind «opplysning» time and profile do not count: the defect
+// existed at delivery. A win on a warranty counts only for a complaint about the warranty.
 
-export type Krav = "retting" | "prisavslag" | "heving";
-
-export type Brukersak = {
-  // «Vet ikke ennå» is left out before ranking; it cannot be compared. `opplysning`: the seller said
-  // or wrote something about the defect before the sale. `verksted`: a workshop has examined it.
-  kategorier: { hoved: string; under: string[]; niva: Tidsniva; opplysning: boolean | null; verksted: boolean | null }[];
-  km: number | null;
-  alder: number | null;
-  somDenEr: boolean | null;
-  krav: Krav | null;
-};
-
-export type Kandidat = {
-  id: number;
-  vedtaksdato: string | null;
-  km: number | null;
-  alder: number | null;
-  somDenEr: boolean | null;
-  sanksjoner: string[] | null;
-  // vedtak.mangelsgrunnlag and vedtak.paragrafer, to tell a concealed fact from a false statement and
-  // to find wins on a warranty.
-  mangelsgrunnlag: string[] | null;
-  paragrafer: string[] | null;
-  feil: AvledetFeil[];
-};
-
-export const KRITERIER = ["underkategori", "tidsniva", "km", "alder", "som_den_er", "krav", "egen_vurdering", "grunnlag"] as const;
-export type Kriterium = (typeof KRITERIER)[number];
+export type Kriterium = "underkategori" | "tidsniva" | "km" | "alder" | "som_den_er" | "krav" | "egen_vurdering" | "grunnlag";
 // `strengere`/`mildere`: the decision was harder/easier for the buyer than the user's case.
 // `delvis`: the decision granted the claim, but on more defects than this one. `ukjent`: the decision
-// lacks the value. `ikke_oppgitt`: the user did, and it is left out of the maximum.
+// lacks the value. `ikke_oppgitt`: the user did (or there is no defect to compare), and it is left
+// out of the maximum.
 export type Treff = "likt" | "strengere" | "mildere" | "delvis" | "ulikt" | "ukjent" | "ikke_oppgitt";
+export type Trinn = 1 | 2 | 3 | 4 | 5;
 
 export type Rangert = {
   id: number;
+  trinn: Trinn;
+  // The defect the decision is compared on, and the buyer's category it is compared with; null on step 5.
+  feil: AvledetFeil | null;
+  hoved: string | null;
+  rett: RettsligPoeng[];
   poengsum: number;
   maks: number;
-  feil: AvledetFeil;
-  // The defect is at the user's time level or stricter (or the level is unknown); `nesten`: one milder.
-  tidOk: boolean;
-  nesten: boolean;
   treff: Record<Kriterium, Treff>;
 };
 
 export type Rangering = {
-  rangert: Rangert[];
-  // Decisions that pass the time filter (all of them when it is dropped); `rangert` may hold more.
-  antall: number;
-  // Decisions per main category that pass the time filter; one matching two categories counts in both.
-  perKategori: Record<string, number>;
-  svaktGrunnlag: boolean;
-  // The time filter was dropped, or the list holds defects at a milder time level.
-  utenTidsfilter: boolean;
+  kandidater: Rangert[];
+  // Decisions per step before the list is cut to `kandidater`.
+  perTrinn: Record<Trinn, number>;
 };
 
 type Vurdert = { treff: Treff; poeng: number; maks: number };
 
 const IKKE_OPPGITT: Vurdert = { treff: "ikke_oppgitt", poeng: 0, maks: 0 };
 const ukjent = (maks: number): Vurdert => ({ treff: "ukjent", poeng: 0, maks });
-
-const intervall = (x: number, grenser: readonly number[]) => grenser.filter((g) => x >= g).length;
+const intervall = (x: number | null, grenser: readonly number[]) => (x === null ? null : grenser.filter((g) => x >= g).length);
 
 // Higher is harder for the buyer (later defect, more km, older car). Null in the decision is unknown,
 // null from the user leaves the criterion out.
@@ -93,7 +65,7 @@ function ja(likt: boolean | null, poeng: number): Vurdert {
 // What the committee rested the defect on, against what the user has. A win on the seller's statement
 // or an expert report is easier than the user's case when the user has neither. A concealed fact
 // (§ 16 b) needs no statement, so the seller's silence matches it.
-function grunnlag(k: Kandidat, f: AvledetFeil, kat: Brukersak["kategorier"][number], poeng: number): Vurdert {
+function grunnlag(k: Kandidat, f: AvledetFeil, kat: Kategorisvar, poeng: number): Vurdert {
   const likt: Vurdert = { treff: "likt", poeng, maks: poeng };
   const har = (x: boolean | null): Vurdert => (x === null ? IKKE_OPPGITT : x ? likt : { treff: "mildere", poeng: 0, maks: poeng });
   switch (f.bevisgrunnlag) {
@@ -117,17 +89,17 @@ const IKKE_DROFTET = new Set(["erkjent_av_selger", "uomtvistet"]);
 // Won on a warranty (fkjl § 18 a, named in the quote), not on a defect at delivery.
 const paGaranti = (k: Kandidat, f: AvledetFeil) => !!k.paragrafer?.includes("fkjl § 18a") && /garanti/i.test(f.sitat ?? "");
 
-function vurder(k: Kandidat, f: AvledetFeil, sak: Brukersak, v: Vekter): Rangert {
-  const kat = sak.kategorier.find((x) => x.hoved === f.hovedkategori)!;
-  const iv = (x: number | null, g: readonly number[]) => (x === null ? null : intervall(x, g));
+// Points for the decision, and for the defect when there is one to compare.
+function vurder(k: Kandidat, f: AvledetFeil | null, kat: Kategorisvar | null, sak: Brukersak, v: Vekter): Pick<Rangert, "poengsum" | "maks" | "treff"> {
   // «Som den er» is harder for the buyer; as numbers, true > false.
   const sde = (x: boolean | null) => (x === null ? null : Number(x));
   const flereFeil = k.feil.filter((x) => x.utfall === "medhold").length > 1;
   const vurdert: Record<Kriterium, Vurdert> = {
-    underkategori: !kat.under.length ? IKKE_OPPGITT : ja(f.underkategori === null ? null : kat.under.includes(f.underkategori), v.underkategori.likt),
-    tidsniva: retning(kat.niva, f.tidsniva, v.tidsniva),
-    km: retning(iv(sak.km, v.kmGrenser), iv(k.km, v.kmGrenser), v.km),
-    alder: retning(iv(sak.alder, v.alderGrenser), iv(k.alder, v.alderGrenser), v.alder),
+    underkategori:
+      !f || !kat?.under.length ? IKKE_OPPGITT : ja(f.underkategori === null ? null : kat.under.includes(f.underkategori), v.underkategori.likt),
+    tidsniva: !f || !kat ? IKKE_OPPGITT : retning(kat.niva, f.tidsniva, v.tidsniva),
+    km: retning(intervall(sak.km, v.kmGrenser), intervall(k.km, v.kmGrenser), v.km),
+    alder: retning(intervall(sak.alder, v.alderGrenser), intervall(k.alder, v.alderGrenser), v.alder),
     som_den_er: retning(sde(sak.somDenEr), sde(k.somDenEr), v.som_den_er),
     // What the committee granted, not what the buyer claimed; in part when other defects shared it.
     krav:
@@ -141,63 +113,79 @@ function vurder(k: Kandidat, f: AvledetFeil, sak: Brukersak, v: Vekter): Rangert
               ? { treff: "delvis", poeng: v.krav.naer, maks: v.krav.likt }
               : { treff: "likt", poeng: v.krav.likt, maks: v.krav.likt },
     // The committee weighed this defect itself: not together with others, not admitted or undisputed.
-    egen_vurdering: ja(!f.samlet && !IKKE_DROFTET.has(f.bevisgrunnlag ?? ""), v.egen_vurdering.likt),
-    grunnlag: grunnlag(k, f, kat, v.grunnlag.likt),
+    egen_vurdering: !f ? IKKE_OPPGITT : ja(!f.samlet && !IKKE_DROFTET.has(f.bevisgrunnlag ?? ""), v.egen_vurdering.likt),
+    grunnlag: !f || !kat ? IKKE_OPPGITT : grunnlag(k, f, kat, v.grunnlag.likt),
   };
   const verdier = Object.values(vurdert);
   return {
-    id: k.id,
     poengsum: verdier.reduce((s, x) => s + x.poeng, 0),
     maks: verdier.reduce((s, x) => s + x.maks, 0),
-    feil: f,
-    tidOk: f.tidsniva === null || f.tidsniva >= kat.niva,
-    nesten: f.tidsniva === kat.niva - 1,
-    treff: Object.fromEntries(KRITERIER.map((n) => [n, vurdert[n].treff])) as Record<Kriterium, Treff>,
+    treff: Object.fromEntries(Object.entries(vurdert).map(([n, x]) => [n, x.treff])) as Record<Kriterium, Treff>,
   };
 }
 
-const tidLikt = (r: Rangert) => r.treff.tidsniva === "likt";
+// Not easier for the buyer on both km and age.
+function profilOk(k: Kandidat, sak: Brukersak, v: Vekter): boolean {
+  const mild = (b: number | null, x: number | null) => b !== null && x !== null && x < b;
+  return !(mild(intervall(sak.km, v.kmGrenser), intervall(k.km, v.kmGrenser)) && mild(intervall(sak.alder, v.alderGrenser), intervall(k.alder, v.alderGrenser)));
+}
 
-export function ranger(kandidater: Kandidat[], sak: Brukersak, v: Vekter = VEKTER): Rangering {
-  const sterk = (r: Rangert) => r.poengsum >= v.terskel * r.maks;
-  const underLikt = (r: Rangert) => r.treff.underkategori === "likt";
-  const egen = (r: Rangert) => r.treff.egen_vurdering === "likt";
-  // May be shown: strong enough, and passes the time filter or is one level milder in the user's subcategory.
-  const vises = (r: Rangert, fallback: boolean) => sterk(r) && (r.tidOk || fallback || (underLikt(r) && r.nesten));
-  // Subcategory, the time filter, the committee's own assessment, points, the user's own level.
-  const bedre = (a: Rangert, b: Rangert) =>
-    Number(underLikt(b)) - Number(underLikt(a)) ||
-    Number(b.tidOk) - Number(a.tidOk) ||
-    Number(egen(b)) - Number(egen(a)) ||
-    b.poengsum - a.poengsum ||
-    Number(tidLikt(b)) - Number(tidLikt(a));
+// The step one accepted defect reaches against one of the buyer's categories; null when none.
+export function trinnFor(k: Kandidat, f: AvledetFeil, kat: Kategorisvar, sak: Brukersak, v: Vekter = VEKTER): Trinn | null {
+  if (!f.sitat) return null;
+  const type = komponenttype(f.hovedkategori, f.underkategori);
+  const opplysning = type === "opplysning";
+  const profil = opplysning || profilOk(k, sak, v);
+  const sammeUnder = f.hovedkategori === kat.hoved && f.underkategori !== null && kat.under.includes(f.underkategori);
+  if (sammeUnder && profil && (opplysning || (f.tidsniva !== null && f.tidsniva >= kat.niva))) return 1;
+  if (sammeUnder && profil && (f.tidsniva === null || f.tidsniva === kat.niva - 1)) return 2;
+  const tidOk = opplysning || f.tidsniva === null || f.tidsniva >= kat.niva;
+  const typer = new Set(kat.under.length ? kat.under.map((u) => komponenttype(kat.hoved, u)) : [komponenttype(kat.hoved, null)]);
+  if (!sammeUnder && type && typer.has(type) && tidOk) return 3;
+  if (f.hovedkategori === kat.hoved) return 4;
+  return null;
+}
 
-  // Every accepted defect in the user's categories, scored; the best one that may be shown stands
-  // for the decision.
-  const alle = kandidater.flatMap((k) => {
-    // A win on a warranty counts only for a complaint about the warranty.
-    const feil = k.feil.filter((f) => f.utfall === "medhold" && sak.kategorier.some((x) => x.hoved === f.hovedkategori) && (f.hovedkategori === "garanti" || !paGaranti(k, f)));
-    if (!feil.length) return [];
-    return [{ vurdert: feil.map((f) => vurder(k, f, sak, v)) }];
-  });
+function plasser(k: Kandidat, sak: Brukersak, v: Vekter): Rangert | null {
+  const rett = rettsligePoeng(k, sak);
+  let best: Rangert | null = null;
+  for (const kat of sak.kategorier)
+    for (const f of k.feil) {
+      if (f.utfall !== "medhold" || (kat.hoved !== "garanti" && paGaranti(k, f))) continue;
+      const trinn = trinnFor(k, f, kat, sak, v);
+      if (trinn === null) continue;
+      const r: Rangert = { id: k.id, trinn, feil: f, hoved: kat.hoved, rett, ...vurder(k, f, kat, sak, v) };
+      if (!best || r.trinn < best.trinn || (r.trinn === best.trinn && r.poengsum > best.poengsum)) best = r;
+    }
+  if (best) return best;
+  return rett.length ? { id: k.id, trinn: 5, feil: null, hoved: null, rett, ...vurder(k, null, null, sak, v) } : null;
+}
 
-  const passer = alle.filter((x) => x.vurdert.some((r) => r.tidOk));
-  const fallback = passer.length < v.minTreff;
-  const perKategori: Record<string, number> = Object.fromEntries(sak.kategorier.map((x) => [x.hoved, 0]));
-  for (const x of fallback ? alle : passer)
-    for (const h of new Set(x.vurdert.filter((r) => fallback || r.tidOk).map((r) => r.feil.hovedkategori))) perKategori[h]++;
+// One decision published twice («FKU-2025-55355» and «FKU-2025-55355-2») counts once.
+const sakskode = (k: Kandidat) => k.saksnummer?.replace(/^(FKU-\d{4}-\d+)-\d+$/, "$1") ?? `id:${k.id}`;
 
-  const dato = new Map(kandidater.map((k) => [k.id, k.vedtaksdato ?? ""]));
-  const rangert = alle
-    .flatMap((x) => {
-      const synlige = x.vurdert.filter((r) => vises(r, fallback));
-      return synlige.length ? [synlige.reduce((a, b) => (bedre(a, b) > 0 ? b : a))] : [];
-    })
-    .sort((a, b) => bedre(a, b) || dato.get(b.id)!.localeCompare(dato.get(a.id)!) || a.id - b.id);
+export function ranger(alle: Kandidat[], sak: Brukersak, v: Vekter = VEKTER): Rangering {
+  const etterId = new Map(alle.map((k) => [k.id, k]));
+  const dato = (r: Rangert) => etterId.get(r.id)!.vedtaksdato ?? "";
+  const sammeHoved = (r: Rangert) => r.feil !== null && r.feil.hovedkategori === r.hoved;
+  const etterPoeng = (a: Rangert, b: Rangert) =>
+    b.poengsum - a.poengsum || Number(b.treff.tidsniva === "likt") - Number(a.treff.tidsniva === "likt") || dato(b).localeCompare(dato(a)) || a.id - b.id;
 
-  const topp = rangert.slice(0, v.topp);
-  const best = rangert[0];
-  const utenTidsfilter = fallback || topp.some((r) => !r.tidOk);
-  const svaktGrunnlag = utenTidsfilter || rangert.length < v.minTreff || !best || best.poengsum < v.svaktAndel * best.maks;
-  return { rangert, antall: (fallback ? alle : passer).length, perKategori, svaktGrunnlag, utenTidsfilter };
+  const sett = new Set<string>();
+  const plassert = alle
+    .map((k) => plasser(k, sak, v))
+    .filter((r): r is Rangert => r !== null)
+    // Same main category first on step 3; most legal points first on step 5.
+    .sort((a, b) => a.trinn - b.trinn || Number(sammeHoved(b)) - Number(sammeHoved(a)) || b.rett.length - a.rett.length || etterPoeng(a, b))
+    .filter((r) => {
+      const kode = sakskode(etterId.get(r.id)!);
+      return !sett.has(kode) && !!sett.add(kode);
+    });
+
+  const sammenlignbare = plassert.filter((r) => r.trinn <= 4).slice(0, v.sammenlignbare);
+  const valgt = new Set(sammenlignbare.map((r) => r.id));
+  const rettslige = plassert.filter((r) => !valgt.has(r.id) && r.rett.length).sort((a, b) => b.rett.length - a.rett.length || etterPoeng(a, b));
+  const perTrinn: Record<Trinn, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const r of plassert) perTrinn[r.trinn]++;
+  return { kandidater: [...sammenlignbare, ...rettslige.slice(0, v.kandidater - sammenlignbare.length)], perTrinn };
 }

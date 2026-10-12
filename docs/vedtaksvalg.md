@@ -1,6 +1,6 @@
 # Valg av sammenligningsvedtak
 
-Hvordan brevet alltid får ett vedtak å bygge på, og hvordan det brukes uten å si noe usant. Beskrivelsen bygger på testene 2026-10-11 (se nederst). Status: ikke implementert; dagens kode (`src/lib/matching/`) dekker bare fase 1 delvis.
+Hvordan brevet alltid får ett vedtak å bygge på, og hvordan det brukes uten å si noe usant. Beskrivelsen bygger på testene 2026-10-11 (se nederst). Status: bygget (fase 1 i `src/lib/matching/`, fase 2 og 3 i `src/lib/vedtaksvalg/`, steg 5 i `src/app/sak/`).
 
 ## Prinsipper
 
@@ -27,7 +27,7 @@ Hver feil med medhold i et vedtak plasseres på det beste trinnet den oppfyller 
 | 4 | Samme hovedkategori. |
 | 5 | Et av kjøperens rettslige poeng (se under), uansett kategori. |
 
-Trinn 1–4 krever at feilen har et sitat. For komponenttypen *opplysning* regnes tidsnivå og profil som oppfylt: feilen fantes ved overtakelsen. Har kjøperen bare valgt hovedkategori, starter stigen på trinn 3 hvis alle underkategoriene har samme komponenttype, ellers på trinn 4. «Vet ikke ennå» starter på trinn 5.
+Trinn 1–4 krever at feilen har et sitat. For komponenttypen *opplysning* regnes tidsnivå og profil som oppfylt: feilen fantes ved overtakelsen. Har kjøperen bare valgt hovedkategori, starter stigen på trinn 3 hvis alle underkategoriene har samme komponenttype, ellers på trinn 4. «Vet ikke ennå» har ingen komponenttype, men sammenlignes på symptomet: samme symptom gir trinn 1–2, ellers trinn 4 og 5.
 
 **Komponenttype** per underkategori, i `src/lib/feil/kategorier.ts`:
 - slitedel: clutch, bremser, demping, hjullager, startbatteri, dekk, eksos, registerreim, rust

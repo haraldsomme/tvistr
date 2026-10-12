@@ -1,8 +1,8 @@
 // The points and limits behind the ranking of similar decisions (ranger.ts). Change them here only.
 export const VEKTER = {
-  // Points for a match. `naer`: the decision was harder for the buyer than the user's case (a later
-  // defect, more km, an older car, «som den er»), or (krav) granted the claim on more defects than
-  // this one. Easier for the buyer, or missing in the decision, gives 0, never less.
+  // Points for a match within a step. `naer`: the decision was harder for the buyer than the user's
+  // case (a later defect, more km, an older car, «som den er»), or (krav) granted the claim on more
+  // defects than this one. Easier for the buyer, or missing in the decision, gives 0, never less.
   underkategori: { likt: 4 },
   tidsniva: { likt: 4, naer: 1 },
   km: { likt: 3, naer: 1 },
@@ -18,14 +18,10 @@ export const VEKTER = {
   // Interval lower bounds: km under 100 000, 100–200 000, over 200 000; age under 5, 5–10, over 10.
   kmGrenser: [100_000, 200_001],
   alderGrenser: [5, 11],
-  // A match below this share of its maximum is not shown: fewer decisions, or none, rather than weak
-  // ones (undisputed, one of many, a far easier case).
-  terskel: 0.4,
-  // Fewer decisions than this with the time filter, and it is dropped.
-  minTreff: 3,
-  // The best score below this share of its maximum is a weak basis.
-  svaktAndel: 7 / 16,
-  topp: 5,
+  // The candidates the model chooses from: at most `sammenlignbare` from steps 1–4, the rest from
+  // step 5 (legal points), always at least `kandidater − sammenlignbare` of those.
+  kandidater: 30,
+  sammenlignbare: 25,
 };
 
 export type Vekter = typeof VEKTER;

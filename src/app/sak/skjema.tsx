@@ -12,8 +12,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Kjoretoy, normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
 import { type Feilvalg, HOVEDKATEGORIER, type Tidsvalg, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
-import { KRITERIER, type Kriterium, type Treff } from "@/lib/matching/ranger";
-import { type Funn, finnVedtak, type Toppvedtak } from "./actions";
+import type { Bruk } from "@/lib/vedtaksvalg/instruks";
+import { type Funn, finnVedtak } from "./actions";
 
 const A = "oklch(0.47 0.12 255)",
   AS = "oklch(0.965 0.018 255)",
@@ -214,125 +214,14 @@ function Fristvarsel({ children }: { children: React.ReactNode }) {
   );
 }
 
-const TREFF: Record<Treff, { tekst: string; farge: string; bakgrunn: string }> = {
-  likt: { tekst: "likt", farge: "oklch(0.42 0.1 150)", bakgrunn: "oklch(0.95 0.04 150)" },
-  strengere: { tekst: "vedtaket strengere", farge: A, bakgrunn: AS },
-  mildere: { tekst: "vedtaket mildere", farge: "#a3372b", bakgrunn: "#f8ebe9" },
-  delvis: { tekst: "gitt, sammen med andre feil", farge: A, bakgrunn: AS },
-  ulikt: { tekst: "ulikt", farge: "#a3372b", bakgrunn: "#f8ebe9" },
-  ukjent: { tekst: "ukjent i vedtaket", farge: "#5f6468", bakgrunn: "#eef0f1" },
-  ikke_oppgitt: { tekst: "ikke oppgitt", farge: "#8a8f93", bakgrunn: "#f6f6f4" },
+// What the chosen decision may carry in the letter (src/lib/vedtaksvalg/instruks.ts).
+const BRUK_TEKST: Record<Bruk, string> = {
+  samme_feil: "samme feil, også tidspunktet",
+  samme_feil_uten_tidspunkt: "samme feil, uten tidspunktet",
+  overforbar: "overført fra en lignende del",
+  opplysningssvikt: "samme type opplysningssvikt",
+  rettslig_poeng: "bare et rettslig poeng",
 };
-const KRITERIE_NAVN: Record<Kriterium, string> = {
-  underkategori: "Underkategori",
-  tidsniva: "Tidspunkt",
-  km: "Km",
-  alder: "Alder",
-  som_den_er: "Som den er",
-  krav: "Krav",
-  egen_vurdering: "Egen vurdering",
-  grunnlag: "Grunnlag",
-};
-// What the committee rested the defect on (feil.bevisgrunnlag).
-const BEVIS: Record<string, string> = {
-  selgers_opplysning: "selgers opplysning",
-  sakkyndig_dokumentasjon: "sakkyndig rapport",
-  formodning_ikke_motbevist: "formodningsregelen",
-  utvalgets_skjonn: "utvalgets skjønn",
-  erkjent_av_selger: "selger erkjente",
-  uomtvistet: "uomtvistet",
-};
-const TIDSNIVA = { 1: "innenfor presumsjonsperioden", 2: "etter presumsjonsperioden", 3: "fra 22 måneder" } as const;
-
-// One ranked decision, with what is needed to judge by eye whether it matches.
-function Vedtakskort({ v, plass, anim }: { v: Toppvedtak; plass: number; anim: string }) {
-  const h = HOVEDKATEGORIER.find((x) => x.id === v.feil.hovedkategori);
-  const u = h?.under.find((x) => x.id === v.feil.underkategori);
-  const rader = [
-    { k: "Bil", v: [v.merke, v.modell, v.arsmodell].filter(Boolean).join(" ") || "Ukjent" },
-    { k: "Km ved kjøp", v: v.km !== null ? `${tall(String(v.km))} km` : "Ukjent" },
-    { k: "Alder ved kjøp", v: v.alder !== null ? `${v.alder} år` : "Ukjent" },
-    { k: "Kjøpesum", v: v.kjopesum !== null ? `${tall(String(v.kjopesum))} kr` : "Ukjent" },
-    { k: "Som den er", v: v.somDenEr === null ? "Ukjent" : v.somDenEr ? "Ja" : "Nei" },
-    {
-      k: "Utvalget ga",
-      v: v.sanksjoner?.length ? v.sanksjoner.join(", ") + (v.prisavslagProsent !== null ? ` (prisavslag ${v.prisavslagProsent.toLocaleString("nb-NO")} %)` : "") : "Ukjent",
-    },
-  ];
-  return (
-    <article style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 16, animation: anim }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
-        <span style={{ display: "flex", flexWrap: "wrap", gap: "2px 10px", alignItems: "baseline", minWidth: 0 }}>
-          <span style={{ font: `600 13px ${MONO}`, color: A }}>#{plass}</span>
-          <span style={{ fontSize: 15, fontWeight: 600 }}>{v.saksnummer ?? `Vedtak ${v.id}`}</span>
-          {v.vedtaksdato && <span style={{ fontSize: 13, color: "#5f6468" }}>{datoTekst(v.vedtaksdato)}</span>}
-        </span>
-        <span style={{ font: `600 14px ${MONO}`, whiteSpace: "nowrap" }}>
-          {v.poengsum} / {v.maks}
-        </span>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <span style={{ fontSize: 15, fontWeight: 600 }}>
-          {h?.navn ?? v.feil.hovedkategori}
-          {u ? ` › ${u.navn}` : v.feil.underkategori ? ` › ${v.feil.underkategori}` : ""}
-          <span style={{ fontWeight: 400, color: "#5f6468" }}> · {v.feil.tidsniva ? TIDSNIVA[v.feil.tidsniva] : "ukjent tidspunkt"}</span>
-        </span>
-        {v.feil.sitat && (
-          <blockquote style={{ margin: 0, padding: "2px 0 2px 14px", borderLeft: `3px solid ${LINE}`, fontSize: 14, lineHeight: 1.55, color: "#2c3033", textWrap: "pretty" }}>
-            «{v.feil.sitat}»
-          </blockquote>
-        )}
-      </div>
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {KRITERIER.map((k) => {
-          const t = TREFF[v.treff[k]];
-          return (
-            <span key={k} style={{ fontSize: 12.5, padding: "4px 9px", borderRadius: 999, color: t.farge, background: t.bakgrunn, whiteSpace: "nowrap" }}>
-              {k === "egen_vurdering"
-                ? v.feil.samlet
-                  ? "Vurdert samlet med andre feil"
-                  : v.treff.egen_vurdering === "likt"
-                    ? "Vurdert for seg"
-                    : "Ikke drøftet av utvalget"
-                : k === "grunnlag"
-                  ? `Grunnlag: ${BEVIS[v.feil.bevisgrunnlag ?? ""] ?? "ukjent"} (${t.tekst})`
-                  : `${KRITERIE_NAVN[k]}: ${t.tekst}`}
-            </span>
-          );
-        })}
-      </div>
-
-      <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: "10px 16px" }}>
-        {rader.map((r) => (
-          <div key={r.k} style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-            <dt style={{ fontSize: 12.5, color: "#5f6468" }}>{r.k}</dt>
-            <dd style={{ margin: 0, fontSize: 14, fontWeight: 500, overflowWrap: "anywhere" }}>{r.v}</dd>
-          </div>
-        ))}
-      </dl>
-
-      {(v.sammendrag || !!v.nokkelmomenter?.length) && (
-        <details style={{ fontSize: 14, lineHeight: 1.55, color: "#2c3033" }}>
-          <summary style={{ cursor: "pointer", fontWeight: 600, color: INK }}>Sammendrag</summary>
-          {v.sammendrag && <p style={{ margin: "10px 0 0", textWrap: "pretty" }}>{v.sammendrag}</p>}
-          {!!v.nokkelmomenter?.length && (
-            <ul style={{ margin: "10px 0 0", paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 }}>
-              {v.nokkelmomenter.map((m, i) => (
-                <li key={i}>{m}</li>
-              ))}
-            </ul>
-          )}
-        </details>
-      )}
-
-      <a href={v.kildeUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, fontWeight: 600, color: A, alignSelf: "flex-start" }}>
-        Les vedtaket
-      </a>
-    </article>
-  );
-}
 
 export function Skjema() {
   const [step, setStep] = useState(0);
@@ -475,8 +364,7 @@ export function Skjema() {
   ];
   const lagBrev = () =>
     startSok(async () => {
-      const kilder = Object.fromEntries(Object.entries(detaljer).map(([id, d]) => [id, { opplysning: d.opplysning, verksted: d.verksted }]));
-      const f = await finnVedtak({ valg, tid, kjopsdato, km: Number(km), ar: car?.k.ar ?? null, somDenEr, krav, detaljer: kilder });
+      const f = await finnVedtak({ valg, tid, kjopsdato, km: Number(km), ar: car?.k.ar ?? null, somDenEr, krav, forsok, detaljer });
       setFunn(f);
       if (f.ok) go(BREV);
     });
@@ -1227,6 +1115,12 @@ export function Skjema() {
                   </section>
                 )}
 
+                {soker && (
+                  <p role="status" style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: "#5f6468", textWrap: "pretty", animation: pop(0) }}>
+                    Leter i vedtakene og skriver avsnittet. Det tar gjerne et minutt.
+                  </p>
+                )}
+
                 {funn && !funn.ok && (
                   <p role="alert" style={{ margin: 0, padding: "18px 22px", fontSize: 14, color: "#a3372b", background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14 }}>
                     {funn.melding}
@@ -1239,43 +1133,29 @@ export function Skjema() {
               <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
                 <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
-                  <h1 style={H1}>Vedtakene brevet bygger på</h1>
-                  <p style={INGRESS}>
-                    {funn.topp.length
-                      ? `${funn.topp.length === 1 ? "Vedtaket" : `De ${funn.topp.length} vedtakene`} som ligner mest på saken din, rangert etter hvor godt de passer. Hver rad under poengene viser hva som er likt og ulikt.`
-                      : "Ingen vedtak ligner nok på saken din til å bygge et brev på."}
-                  </p>
+                  <h1 style={H1}>Henvisning til praksis</h1>
+                  <p style={INGRESS}>Avsnittet brevet bruker for å vise til en lignende sak der kjøperen fikk medhold i Forbrukerklageutvalget.</p>
                 </header>
 
-                <section aria-live="polite" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, overflow: "hidden", animation: pop(0) }}>
-                  <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 4, borderBottom: "1px solid #eeeeeb" }}>
-                    <span style={{ font: `600 11px ${MONO}`, letterSpacing: ".08em", textTransform: "uppercase", color: "#5f6468" }}>Vedtak med medhold</span>
-                    <span style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em" }}>{funn.totalt.toLocaleString("nb-NO")}</span>
-                    <span style={{ fontSize: 14, color: "#5f6468", lineHeight: 1.5, textWrap: "pretty" }}>
-                      {funn.utenTidsfilter
-                        ? "Kjøp fra forhandler etter forbrukerkjøpsloven der utvalget godtok samme type feil som mangel. Det var for få vedtak der feilen viste seg på samme eller et senere tidspunkt, så tidspunktet gir bare poeng her."
-                        : "Kjøp fra forhandler etter forbrukerkjøpsloven der utvalget godtok samme type feil som mangel, og feilen viste seg på samme tidspunkt som din eller senere."}
-                    </span>
-                  </div>
-                  {funn.kategorier.map((k, i) => (
-                    <div key={k.id} style={{ padding: "12px 22px", display: "flex", justifyContent: "space-between", gap: 16, borderTop: i ? "1px solid #eeeeeb" : "none", animation: pop(i + 1) }}>
-                      <span style={{ fontSize: 14.5 }}>{k.navn}</span>
-                      <span style={{ fontSize: 14.5, fontWeight: 500, color: k.antall === null ? "#5f6468" : INK, whiteSpace: "nowrap" }}>
-                        {k.antall !== null ? k.antall.toLocaleString("nb-NO") : "Sammenlignes ikke"}
-                      </span>
-                    </div>
+                <article aria-live="polite" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "28px 32px" : "22px 20px", display: "flex", flexDirection: "column", gap: 14, animation: pop(0) }}>
+                  {funn.avsnitt.split(/\n\s*\n/).map((a, i) => (
+                    <p key={i} style={{ margin: 0, fontSize: 16, lineHeight: 1.65, color: INK, textWrap: "pretty" }}>
+                      {a}
+                    </p>
                   ))}
+                  <a href={funn.vedtak.kildeUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, fontWeight: 600, color: A, alignSelf: "flex-start" }}>
+                    Les vedtaket{funn.vedtak.saksnummer ? ` ${funn.vedtak.saksnummer}` : ""}
+                    {funn.vedtak.vedtaksdato ? ` (${datoTekst(funn.vedtak.vedtaksdato)})` : ""}
+                  </a>
+                </article>
+
+                <section role="note" style={{ background: "#eef0f1", borderRadius: 12, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8, fontSize: 14, lineHeight: 1.5, color: "#2c3033", animation: pop(1) }}>
+                  <span style={{ font: `600 11px ${MONO}`, letterSpacing: ".08em", textTransform: "uppercase", color: "#5f6468" }}>Til kontroll</span>
+                  <span style={{ textWrap: "pretty" }}>
+                    Vedtaket brukes for {BRUK_TEKST[funn.bruk]}. Valgt blant {funn.antallKandidater} vedtak.
+                  </span>
+                  {funn.forbehold && <span style={{ textWrap: "pretty" }}>Forbehold: {funn.forbehold}</span>}
                 </section>
-
-                {funn.svaktGrunnlag && (
-                  <div role="note" style={{ background: "oklch(0.96 0.04 75)", borderRadius: 12, padding: "14px 16px", fontSize: 14, lineHeight: 1.5, color: "#2c3033", textWrap: "pretty", animation: pop(1) }}>
-                    Svakt grunnlag: få vedtak passer, det beste ligner lite på saken din, eller noen viste seg tidligere enn din feil.
-                  </div>
-                )}
-
-                {funn.topp.map((v, i) => (
-                  <Vedtakskort key={v.id} v={v} plass={i + 1} anim={pop(i + 2)} />
-                ))}
               </div>
             )}
           </div>

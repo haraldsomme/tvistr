@@ -158,6 +158,42 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
 ];
 
+// What kind of part a subcategory is. The committee reasons alike about parts of one kind (wear
+// parts, expensive main parts, safety systems), so a decision about one may be carried over to
+// another of the same kind (src/lib/matching/ranger.ts, step 3). «Vet ikke ennå» names symptoms,
+// not parts, and has no kind.
+export const KOMPONENTTYPER = {
+  slitedel: ["drivlinje.clutch", "understell.bremser", "understell.demping", "understell.hjullager", "elektrisk.startbatteri", "utstyr.dekk", "motor.eksos", "motor.registerreim", "karosseri.rust"],
+  forbrenning: ["motor.turbo", "drivlinje.girkasse", "drivlinje.firehjul", "motor.drivstoff", "motor.olje", "motor.kjoling", "motor.utslipp", "motor.annet_motor"],
+  hoyvolt: ["hoyvolt.kapasitet", "hoyvolt.lading", "hoyvolt.hybrid"],
+  sikkerhet: ["elektrisk.sikkerhet", "understell.styring"],
+  klima: ["klima.ac", "klima.varme", "klima.parkeringsvarmer"],
+  karosseri: ["karosseri.lakk", "karosseri.ruter", "fukt.fukt", "fukt.lukt", "fukt.interior"],
+  elektronikk: ["elektrisk.infotainment", "elektrisk.lys", "elektrisk.annet_el"],
+  // Decided on what the seller said or kept back, not on what wear the buyer must expect.
+  opplysning: [
+    ...["skade", "km", "bruk", "import", "ombygging", "eu", "pant"].map((u) => `historikk.${u}`),
+    "service.service",
+    "service.servicehefte",
+    "utstyr.utstyr",
+    "utstyr.nokler",
+    "utstyr.utstyrsniva",
+    "garanti",
+  ],
+} as const;
+export type Komponenttype = keyof typeof KOMPONENTTYPER;
+const TYPE_AV = new Map(Object.entries(KOMPONENTTYPER).flatMap(([t, ider]) => ider.map((i) => [i, t as Komponenttype] as const)));
+
+// The kind of a subcategory, or of a main category whose subcategories all share one kind.
+export function komponenttype(hoved: string, under: string | null): Komponenttype | null {
+  if (under) return TYPE_AV.get(`${hoved}.${under}`) ?? null;
+  const h = HOVEDKATEGORIER.find((x) => x.id === hoved);
+  if (!h) return null;
+  if (!h.under.length) return TYPE_AV.get(hoved) ?? null;
+  const typer = new Set(h.under.map((u) => TYPE_AV.get(`${hoved}.${u.id}`)));
+  return typer.size === 1 ? ([...typer][0] ?? null) : null;
+}
+
 // What the buyer ticked: main category id → subcategory ids (possibly none).
 export type Feilvalg = Record<string, string[]>;
 

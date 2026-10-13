@@ -1,5 +1,6 @@
 // Conclusions drawn in code from the agents' facts and the decision's dates. The law version rule is
 // pass 2's (branch pass2, src/lib/analyse/avled.ts).
+import { lovversjon } from "@/lib/brev/paragrafer";
 import type { Feil, Lagret, Svar, Tidsniva, VisteSeg } from "./skjema";
 
 export type Lovversjon = "før_2024" | "etter_2024" | "ukjent";
@@ -7,7 +8,7 @@ export type Datoer = { kjopsdato: string | null; overtakelsesdato: string | null
 
 export function avledLovversjon(v: Datoer): Lovversjon {
   const d = v.kjopsdato ?? v.overtakelsesdato;
-  if (d) return d < "2024-01-01" ? "før_2024" : "etter_2024";
+  if (d) return lovversjon(d);
   // Cases take months to reach a decision, so a decision before mid-2024 means a purchase before 2024.
   if (v.vedtaksdato && v.vedtaksdato < "2024-06-01") return "før_2024";
   return "ukjent";

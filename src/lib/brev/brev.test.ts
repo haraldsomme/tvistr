@@ -54,7 +54,7 @@ describe("dokumentet", () => {
     const tekst = somTekst(brev);
     for (const a of brev.avsnitt) for (const b of a.blokker) if ("setninger" in b) expect(tekst).toContain(b.setninger.map((s) => s.tekst).join(" "));
     expect(tekst.startsWith("Kari Testesen\nTestveien 1\n0150 Oslo\n\nOslo, 13. oktober 2026\n\nTestbil AS")).toBe(true);
-    expect(tekst.endsWith("Vedlegg:\n– Rapport fra Nordre Bil og Verksted AS av 2. juni 2025\n– Kvitteringer for utlegg\n– Tidligere reklamasjon")).toBe(true);
+    expect(tekst.endsWith("Vedlegg:\n– Rapport fra Nordre Bil og Verksted AS av 10. april 2025\n– Kvitteringer for utlegg\n– Tidligere reklamasjon")).toBe(true);
   });
 
   it("utelater vedlegg når det ikke finnes noen", () => {

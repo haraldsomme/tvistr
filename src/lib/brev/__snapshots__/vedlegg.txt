@@ -30,38 +30,38 @@ Kvitteringer for utlegg
 Tidligere reklamasjon
 
 ## {"rapporter":"en","opplysning":"skriftlig","utlegg":false,"kontakt":"ingen"} (+1 like)
-Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Rapport fra Nordre Bil og Verksted AS av 10. juni 2024
 Annonse/kjøpekontrakt
 
 ## {"rapporter":"en","opplysning":"skriftlig","utlegg":false,"kontakt":"skriftlig, annet"}
-Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Rapport fra Nordre Bil og Verksted AS av 10. juni 2024
 Annonse/kjøpekontrakt
 Tidligere reklamasjon
 
 ## {"rapporter":"en","opplysning":"skriftlig","utlegg":true,"kontakt":"ingen"} (+1 like)
-Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Rapport fra Nordre Bil og Verksted AS av 10. juni 2024
 Annonse/kjøpekontrakt
 Kvitteringer for utlegg
 
 ## {"rapporter":"en","opplysning":"skriftlig","utlegg":true,"kontakt":"skriftlig, annet"}
-Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Rapport fra Nordre Bil og Verksted AS av 10. juni 2024
 Annonse/kjøpekontrakt
 Kvitteringer for utlegg
 Tidligere reklamasjon
 
 ## {"rapporter":"en","opplysning":"muntlig","utlegg":false,"kontakt":"ingen"} (+3 like)
-Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Rapport fra Nordre Bil og Verksted AS av 10. juni 2024
 
 ## {"rapporter":"en","opplysning":"muntlig","utlegg":false,"kontakt":"skriftlig, annet"} (+1 like)
-Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Rapport fra Nordre Bil og Verksted AS av 10. juni 2024
 Tidligere reklamasjon
 
 ## {"rapporter":"en","opplysning":"muntlig","utlegg":true,"kontakt":"ingen"} (+3 like)
-Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Rapport fra Nordre Bil og Verksted AS av 10. juni 2024
 Kvitteringer for utlegg
 
 ## {"rapporter":"en","opplysning":"muntlig","utlegg":true,"kontakt":"skriftlig, annet"} (+1 like)
-Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Rapport fra Nordre Bil og Verksted AS av 10. juni 2024
 Kvitteringer for utlegg
 Tidligere reklamasjon
 

@@ -8,6 +8,8 @@ import { writeFileSync } from "node:fs";
 import { inArray, sql } from "drizzle-orm";
 import { db } from "../src/db";
 import { vedtak } from "../src/db/schema";
+import { TID_MND } from "../src/lib/brev/testsak";
+import { plussManeder } from "../src/lib/brev/tidslinje";
 import { HOVEDKATEGORIER, type VisteSegValg } from "../src/lib/feil/kategorier";
 import type { AvledetFeil } from "../src/lib/feilvurdering/skjema";
 import { GRUNNFILTER } from "../src/lib/matching/grunnfilter";
@@ -78,7 +80,8 @@ async function main() {
       somDenEr: x.p.somDenEr,
       krav: x.krav,
       forsok: 0,
-      feil: [{ hoved: x.hoved, under: x.under ? [x.under] : [], tid: x.tid, beskrivelse: null, opplysning: null, verksted: "skriftlig" }],
+            // The defect is discovered within the interval the bench names (TID_MND), so the time level is as before.
+      feil: [{ hoved: x.hoved, under: x.under ? [x.under] : [], oppdaget: plussManeder(x.dato, TID_MND[x.tid]), beskrivelse: null, opplysning: null, verksted: "skriftlig" }],
     });
     const { kandidater } = ranger(alle, sak);
     const navn = `${x.hoved}.${x.under ?? "-"} ${x.tid} ${x.dato.slice(0, 4)} ${x.krav} ${x.p.alder} år`;

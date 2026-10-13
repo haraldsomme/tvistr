@@ -1,6 +1,5 @@
 // Numbers, dates and lists as the letter writes them. Every template goes through here, so the
 // same figure always looks the same.
-import type { VisteSegValg } from "@/lib/feil/kategorier";
 
 const NB = new Intl.NumberFormat("nb-NO");
 const MANEDER = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
@@ -9,6 +8,14 @@ const MANEDER = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "a
 export const tall = (n: number) => NB.format(n);
 export const kr = (n: number) => `kr ${tall(n)}`;
 export const km = (n: number) => `${tall(n)} km`;
+
+// «2026-05-12» → «mai 2026», for a day that is only approximate.
+export function maaned(iso: string): string {
+  return dato(iso).replace(/^\d+\. /, "");
+}
+
+// «den 12. mai 2026», or «i mai 2026» when the day is only approximate.
+export const naar = (iso: string, omtrentlig: boolean) => (omtrentlig ? `i ${maaned(iso)}` : `den ${dato(iso)}`);
 
 // «2026-05-12» → «12. mai 2026»
 export function dato(iso: string): string {
@@ -29,17 +36,5 @@ export const smaa = (s: string) => (/^[A-ZÆØÅ]{2}/.test(s) ? s : s.charAt(0).
 // Brreg and the registry write place names in capitals: «OSLO» → «Oslo». Mixed case is left alone.
 export const sted = (s: string) => (s === s.toUpperCase() ? s.toLowerCase().replace(/(^|[\s\-.(])(\p{L})/gu, (_, a, b) => a + b.toUpperCase()) : s);
 
-// What the buyer chose for «when did the defect show itself», as it reads after «viste seg».
-export const TIDSFRASE: Record<VisteSegValg, string> = {
-  innen_6_mnd: "innen seks måneder etter overtakelsen",
-  "6_til_24_mnd": "mellom seks måneder og to år etter overtakelsen",
-  over_24_mnd: "mer enn to år etter overtakelsen",
-};
-
 export const FORSOK: Record<number, string> = { 1: "én gang", 2: "to ganger", 3: "tre eller flere ganger" };
 export const FORSOK_ANTALL: Record<number, string> = { 1: "ett forsøk", 2: "to forsøk", 3: "tre eller flere forsøk" };
-
-// 2024-05-01 + 2 years → 2026-05-01
-export function leggTilAar(iso: string, aar: number): string {
-  return `${Number(iso.slice(0, 4)) + aar}${iso.slice(4)}`;
-}

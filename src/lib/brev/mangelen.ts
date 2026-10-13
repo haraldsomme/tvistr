@@ -1,4 +1,4 @@
-import { dato, FORSOK, TIDSFRASE } from "./format";
+import { dato, FORSOK, naar } from "./format";
 import { feilnavn, ledd } from "./feiltype";
 import { forsokAv, RAPPORT_PUNKTER, VERKSTED_HVEM } from "./rapport";
 import type { Brevsak, Setning } from "./typer";
@@ -7,7 +7,7 @@ import type { Brevsak, Setning } from "./typer";
 export function mangelen(s: Brevsak): Setning[][] {
   const blokker = s.feil.map((f, i): Setning[] => {
     const k = `skjema:feil[${i}]`;
-    const ut: Setning[] = [{ tekst: `${feilnavn(f)}: Feilen viste seg ${TIDSFRASE[f.tid]}.`, kilde: `${k}.tid` }];
+    const ut: Setning[] = [{ tekst: `${feilnavn(f)}: Feilen viste seg ${naar(f.oppdaget, f.omtrentlig)}.`, kilde: `${k}.oppdaget` }];
     // The buyer's own words, unchanged.
     if (f.beskrivelse) ut.push({ tekst: `«${f.beskrivelse}»`, kilde: `${k}.beskrivelse` });
     if (f.verksted === "muntlig") ut.push({ tekst: "Feilen er undersøkt av verksted.", kilde: `${k}.verksted` });

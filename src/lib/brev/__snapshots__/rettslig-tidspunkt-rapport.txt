@@ -1,4 +1,4 @@
-26 ulike tekster over lov(2) × feilsett(2) × tid(3) × punkter(4)
+28 ulike tekster over lov(2) × feilsett(2) × tid(3) × punkter(4)
 
 ## {"lov":"før_2024","feilsett":"teknisk","tid":"innen_6_mnd","punkter":["bekrefter"]} (+1 like)
 Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
@@ -7,13 +7,17 @@ Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 1
 Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
 
-## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","punkter":["bekrefter"]} (+3 like)
+## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","punkter":["bekrefter"]} (+5 like)
 Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
-## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","punkter":["til_stede"]} (+3 like)
+## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","punkter":["til_stede"]} (+1 like)
 Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
-Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2025.
+Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2024.
+
+## {"lov":"før_2024","feilsett":"teknisk","tid":"over_24_mnd","punkter":["til_stede"]} (+1 like)
+Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. desember 2025.
 
 ## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","punkter":["bekrefter"]}
 For turbo: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
@@ -23,7 +27,7 @@ For lys: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vur
 ## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","punkter":["til_stede"]}
 For turbo: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For lys: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
-For lys: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2025.
+For lys: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. desember 2025.
 
 ## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","punkter":["ikke_slitasje"]}
 For turbo: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
@@ -35,17 +39,17 @@ For lys: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vur
 For turbo: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
 For lys: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
-For lys: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2025.
+For lys: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. desember 2025.
 
 ## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","punkter":["bekrefter"]} (+1 like)
 For lys: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 For turbo: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
-## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","punkter":["til_stede"]} (+1 like)
+## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","punkter":["til_stede"]}
 For lys: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
-For turbo: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2025.
+For turbo: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2024.
 
 ## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","punkter":["ikke_slitasje"]} (+1 like)
 For lys: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
@@ -53,11 +57,22 @@ For lys: Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler 
 For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 For turbo: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
-## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","punkter":["til_stede","ikke_slitasje"]} (+1 like)
+## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","punkter":["til_stede","ikke_slitasje"]}
 For lys: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For lys: Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
 For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
-For turbo: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2025.
+For turbo: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2024.
+
+## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","punkter":["til_stede"]}
+For lys: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
+For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+For turbo: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. desember 2025.
+
+## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","punkter":["til_stede","ikke_slitasje"]}
+For lys: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
+For lys: Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
+For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+For turbo: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. desember 2025.
 
 ## {"lov":"etter_2024","feilsett":"teknisk","tid":"innen_6_mnd","punkter":["bekrefter"]} (+3 like)
 Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
@@ -66,35 +81,31 @@ Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet
 Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
 
-## {"lov":"etter_2024","feilsett":"teknisk","tid":"over_24_mnd","punkter":["bekrefter"]} (+1 like)
-Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
-
 ## {"lov":"etter_2024","feilsett":"teknisk","tid":"over_24_mnd","punkter":["til_stede"]} (+1 like)
-Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2025.
+Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 10. oktober 2026.
 
 ## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","punkter":["bekrefter"]}
 For turbo: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
-For lys: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+For lys: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 For lys: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
 ## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","punkter":["til_stede"]}
 For turbo: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
-For lys: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-For lys: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2025.
+For lys: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+For lys: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 10. oktober 2026.
 
 ## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","punkter":["ikke_slitasje"]}
 For turbo: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
-For lys: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+For lys: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 For lys: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
 ## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","punkter":["til_stede","ikke_slitasje"]}
 For turbo: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
-For lys: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-For lys: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2025.
+For lys: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+For lys: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 10. oktober 2026.
 
 ## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","punkter":["bekrefter"]} (+1 like)
 Mangelene viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
@@ -105,22 +116,22 @@ Verkstedets vurdering av at feilene ikke skyldes normal slitasje, taler i samme 
 
 ## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","punkter":["bekrefter"]}
 For lys: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
-For turbo: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 For turbo: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
 ## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","punkter":["til_stede"]}
 For lys: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
-For turbo: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-For turbo: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2025.
+For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+For turbo: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 10. oktober 2026.
 
 ## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","punkter":["ikke_slitasje"]}
 For lys: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For lys: Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
-For turbo: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 For turbo: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
 ## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","punkter":["til_stede","ikke_slitasje"]}
 For lys: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For lys: Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
-For turbo: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-For turbo: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 2. juni 2025.
+For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+For turbo: Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 10. oktober 2026.

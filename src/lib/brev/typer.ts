@@ -1,5 +1,4 @@
 import type { Adresse } from "@/lib/brreg";
-import type { VisteSegValg } from "@/lib/feil/kategorier";
 import type { Krav } from "@/lib/matching/typer";
 import type { Vippsprofil } from "@/lib/vipps/profil";
 import type { Kilde } from "@/lib/vedtaksvalg/kjoper";
@@ -16,7 +15,10 @@ export type Setning = { tekst: string; kilde: string; lenke?: string };
 export type Brevfeil = {
   hoved: string;
   under: string[];
-  tid: VisteSegValg;
+  // The day the buyer first noticed the defect, and whether that day is only approximate. Everything
+  // the law turns on is worked out from it (tidslinje.ts).
+  oppdaget: string;
+  omtrentlig: boolean;
   // The buyer's own words, up to 200 characters.
   beskrivelse: string | null;
   // Did the seller write or say anything about this before the sale?

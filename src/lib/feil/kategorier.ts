@@ -1,6 +1,5 @@
 // The buyer's defect choices: 13 main categories, each with subcategories the buyer can tick. The
 // same ids are what the feilvurdering agents file each accepted defect under (src/lib/feilvurdering).
-import type { Tidsniva } from "@/lib/feilvurdering/skjema";
 
 export type Underkategori = { id: string; navn: string };
 export type Hovedkategori = {
@@ -235,33 +234,12 @@ export function rensFeilvalg(valg: unknown): Feilvalg {
   return ut;
 }
 
-// When the buyer says the defect showed itself, per main category. The decisions carry a time level
-// per accepted defect (src/lib/feilvurdering/avled.ts); brukerNiva puts the buyer on the same scale.
+// The three intervals the buyer used to choose from. The form now asks for the day the defect was
+// discovered (src/lib/brev/tidslinje.ts works out the time level from it); the intervals remain only
+// as the words the choice of decision reads (kjoper.ts), so its input is the same as before.
 export const VISTE_SEG_VALG = [
   { id: "innen_6_mnd", navn: "Innen 6 måneder" },
   { id: "6_til_24_mnd", navn: "Mellom 6 måneder og 2 år" },
   { id: "over_24_mnd", navn: "Mer enn 2 år" },
 ] as const;
 export type VisteSegValg = (typeof VISTE_SEG_VALG)[number]["id"];
-
-// Main category id → when it showed itself.
-export type Tidsvalg = Record<string, VisteSegValg>;
-
-export function rensTidsvalg(tid: unknown): Partial<Tidsvalg> {
-  if (!tid || typeof tid !== "object") return {};
-  const ut: Partial<Tidsvalg> = {};
-  for (const [k, v] of Object.entries(tid)) {
-    const t = VISTE_SEG_VALG.find((x) => x.id === v);
-    if (t) ut[k] = t.id;
-  }
-  return ut;
-}
-
-// The presumption period is six months for purchases before 2024 and two years after. Without a
-// purchase date the 2024 law is assumed: a buyer complaining now has nearly always bought since.
-// The decisions' «near the deadline» (from 22 months) is not asked; past two years is level 3.
-export function brukerNiva(valg: VisteSegValg, kjopsdato: string | null): Tidsniva {
-  if (valg === "innen_6_mnd") return 1;
-  if (valg === "over_24_mnd") return 3;
-  return kjopsdato && kjopsdato < "2024-01-01" ? 2 : 1;
-}

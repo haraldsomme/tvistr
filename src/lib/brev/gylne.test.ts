@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { BREVDATO, SAKER, tilBrevsak } from "../../../scripts/simulerte-saker";
 import praksis from "./__fixtures__/praksis.json";
 import { alleSetninger, byggBrev, somTekst } from "./brev";
+import { tidsnivaFor, vurderTidslinje } from "./tidslinje";
 import type { Brevsak } from "./typer";
 
 // The twelve simulated cases (scripts/simulerte-saker.ts) as complete letters, one golden file each.
@@ -29,6 +30,21 @@ describe("de tolv simulerte sakene", () => {
         expect(!!f.rapport, `${x.navn}: rapport`).toBe(f.verksted === "skriftlig");
         if (f.rapport) expect(f.rapport.dato > x.kjopsdato && f.rapport.dato <= BREVDATO, `${x.navn}: rapportdato`).toBe(true);
       }
+    }
+  });
+
+  it("har en tidslinje uten stopp og uten advarsler, og samme tidsnivå som før datoene", () => {
+    for (const x of SAKER) {
+      const v = vurderTidslinje({
+        kjop: x.kjopsdato,
+        feil: x.feil.map((f, i) => ({ id: `${i}`, oppdaget: f.oppdaget, omtrentlig: !!f.omtrentlig, ...(f.rapport && { rapport: f.rapport.dato }) })),
+        ...(x.kontakt && { reklamert: x.kontakt.dato }),
+        idag: BREVDATO,
+      });
+      expect(v.stopp, x.navn).toEqual([]);
+      expect(v.advarsler, x.navn).toEqual([]);
+      // The level each defect had when the form asked for an interval.
+      expect(x.feil.map((f) => tidsnivaFor(x.kjopsdato, f.oppdaget).tidsnivaa), x.navn).toEqual(x.feil.map((f) => f.niva));
     }
   });
 

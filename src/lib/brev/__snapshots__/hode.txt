@@ -11,7 +11,7 @@ Testbil AS
 Verkstedveien 2
 0585 Oslo
 --
-REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2025
+REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2024
 
 ## {"kjoper":"full","selgerAdresse":false}
 Kari Testesen
@@ -22,7 +22,7 @@ Oslo, 13. oktober 2026
 --
 Testbil AS
 --
-REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2025
+REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2024
 
 ## {"kjoper":"uten_adresse","selgerAdresse":true} (+1 like)
 Kari Testesen
@@ -33,7 +33,7 @@ Testbil AS
 Verkstedveien 2
 0585 Oslo
 --
-REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2025
+REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2024
 
 ## {"kjoper":"uten_adresse","selgerAdresse":false} (+1 like)
 Kari Testesen
@@ -42,7 +42,7 @@ Kari Testesen
 --
 Testbil AS
 --
-REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2025
+REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2024
 
 ## {"kjoper":"ingen","selgerAdresse":true}
 
@@ -53,7 +53,7 @@ Testbil AS
 Verkstedveien 2
 0585 Oslo
 --
-REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2025
+REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2024
 
 ## {"kjoper":"ingen","selgerAdresse":false}
 
@@ -62,4 +62,4 @@ REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2025
 --
 Testbil AS
 --
-REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2025
+REKLAMASJON – Volkswagen Golf, reg.nr. AB12345, kjøpt 10. mars 2024

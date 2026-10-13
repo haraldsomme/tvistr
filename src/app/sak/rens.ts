@@ -4,11 +4,13 @@
 import { orgnrFra } from "@/lib/brreg";
 import { MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, type Rapport, rensKonklusjon, SELGER_SVAR, VERKSTED_HVEM } from "@/lib/brev/rapport";
 import type { Brevfeil, Kilde, Kontakt, SomDenEr } from "@/lib/brev/typer";
-import { type Feilvalg, HOVEDKATEGORIER, type Hovedkategori, rensFeilvalg, rensTidsvalg, type Tidsvalg } from "@/lib/feil/kategorier";
+import { erDato, type Vurdering, vurderTidslinje } from "@/lib/brev/tidslinje";
+import { type Feilvalg, HOVEDKATEGORIER, type Hovedkategori, rensFeilvalg } from "@/lib/feil/kategorier";
 import { normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
 import type { Krav } from "@/lib/matching/typer";
 
-export const gyldigDato = (v: unknown): string | null => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+// A real day written as YYYY-MM-DD («2025-02-30» is not one).
+export const gyldigDato = (v: unknown): string | null => (erDato(v) ? v : null);
 export const heltall = (v: unknown, min: number, maks: number): number | null => (typeof v === "number" && Number.isInteger(v) && v >= min && v <= maks ? v : null);
 export const tekst = (v: unknown, maks: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, maks) : null);
 
@@ -19,7 +21,6 @@ const kildeAv = (v: unknown) => KILDER.find((k) => k === v) ?? null;
 
 // Today in Norway, so a letter written late in the evening is dated that day.
 export const idagOslo = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Oslo" }).format(new Date());
-const femArSiden = () => `${Number(idagOslo().slice(0, 4)) - 5}${idagOslo().slice(4)}`;
 
 // A written report: who, the name, the date (after the purchase, not in the future), at least one tick,
 // the conclusion cleaned (rensKonklusjon) and the estimate, which has a place only with the tick for it.
@@ -55,8 +56,7 @@ export type Vedtakssvar = {
   // In the order the buyer chose them, for the letter.
   rekkefolge: string[];
   rent: Feilvalg;
-  tider: Partial<Tidsvalg>;
-  kjopsdato: string | null;
+  kjopsdato: string;
   km: number | null;
   ar: number | null;
   somDenEr: SomDenEr | null;
@@ -64,7 +64,9 @@ export type Vedtakssvar = {
   // 0 when the buyer has not complained before, the number of repairs when they have, null when not given.
   forsok: number | null;
   kontakt: Kontakt | null;
-  detaljer: Record<string, { beskrivelse: string | null; opplysning: Kilde | null; verksted: Kilde | null; rapport: Rapport | null }>;
+  detaljer: Record<string, { oppdaget: string; omtrentlig: boolean; beskrivelse: string | null; opplysning: Kilde | null; verksted: Kilde | null; rapport: Rapport | null }>;
+  // The timeline judged (tidslinje.ts): no stops, possibly warnings, and the time level per defect.
+  tidslinje: Vurdering;
 };
 
 type Resultat<T> = { ok: true; svar: T } | { ok: false; melding: string };
@@ -74,16 +76,18 @@ export function rensVedtakssvar(s: Record<string, unknown>): Resultat<Vedtakssva
   const rent = rensFeilvalg(s.valg);
   const valgte = HOVEDKATEGORIER.filter((h) => h.id in rent);
   if (!valgte.length) return { ok: false, melding: "Velg minst én feil." };
-  const tider = rensTidsvalg(s.tid);
-  if (valgte.some((h) => !tider[h.id])) return { ok: false, melding: "Velg når hver feil viste seg." };
   const dato = gyldigDato(s.kjopsdato);
-  if (dato && dato < femArSiden()) return { ok: false, melding: "Det er mer enn fem år siden kjøpet. Da er fristen for å reklamere ute (forbrukerkjøpsloven § 27)." };
+  if (!dato) return { ok: false, melding: "Velg kjøpsdatoen." };
 
   const d = (s.detaljer && typeof s.detaljer === "object" ? s.detaljer : {}) as Record<string, Record<string, unknown> | undefined>;
   const detaljer: Vedtakssvar["detaljer"] = {};
   for (const h of valgte) {
     const verksted = kildeAv(d[h.id]?.verksted);
+    const oppdaget = gyldigDato(d[h.id]?.oppdaget);
+    if (!oppdaget) return { ok: false, melding: "Velg når du oppdaget hver feil." };
     detaljer[h.id] = {
+      oppdaget,
+      omtrentlig: d[h.id]?.omtrentlig === true,
       beskrivelse: tekst(d[h.id]?.beskrivelse, 200),
       opplysning: kildeAv(d[h.id]?.opplysning),
       verksted,
@@ -94,6 +98,16 @@ export function rensVedtakssvar(s: Record<string, unknown>): Resultat<Vedtakssva
   const kontakt = rensKontakt(s.kontakt, dato);
   if (kontakt && "ugyldig" in kontakt) return { ok: false, melding: "Fyll ut kontakten med selger: dato etter kjøpet, hvordan, rettingsforsøk og hva selger svarte." };
 
+  // The order of the dates, judged by the same function as the form. What is impossible stops here,
+  // whatever the browser allowed.
+  const tidslinje = vurderTidslinje({
+    kjop: dato,
+    feil: valgte.map((h) => ({ id: h.id, oppdaget: detaljer[h.id].oppdaget, omtrentlig: detaljer[h.id].omtrentlig, ...(detaljer[h.id].rapport && { rapport: detaljer[h.id].rapport!.dato }) })),
+    ...(kontakt?.kontakt && { reklamert: kontakt.kontakt.dato }),
+    idag: idagOslo(),
+  });
+  if (tidslinje.stopp.length) return { ok: false, melding: tidslinje.stopp[0].melding };
+
   const valgtRekkefolge = s.valg && typeof s.valg === "object" ? Object.keys(s.valg) : [];
   return {
     ok: true,
@@ -101,7 +115,6 @@ export function rensVedtakssvar(s: Record<string, unknown>): Resultat<Vedtakssva
       valgte,
       rekkefolge: [...valgtRekkefolge.filter((k) => k in rent), ...valgte.map((h) => h.id).filter((k) => !valgtRekkefolge.includes(k))],
       rent,
-      tider,
       kjopsdato: dato,
       km: heltall(s.km, 1, 1_500_000),
       ar: heltall(s.ar, 1950, 2100),
@@ -111,6 +124,7 @@ export function rensVedtakssvar(s: Record<string, unknown>): Resultat<Vedtakssva
       forsok: kontakt ? (kontakt.kontakt?.forsok ?? 0) : null,
       kontakt: kontakt?.kontakt ?? null,
       detaljer,
+      tidslinje,
     },
   };
 }
@@ -136,15 +150,13 @@ export function rensBrevsvar(s: Record<string, unknown>): Resultat<Brevsvar> {
   const { kjopsdato, km, somDenEr, krav, forsok, kontakt } = v.svar;
   const kjopesum = heltall(s.kjopesum, 1, 99_999_999);
   if (!kjopsdato || !km || !kjopesum || !somDenEr || !krav || forsok === null) return { ok: false, melding: "Fyll ut kjøpet og kravet før du lager brevet." };
-  if (kjopsdato > idagOslo()) return { ok: false, melding: "Kjøpsdatoen kan ikke være i fremtiden." };
 
   const feil: Brevfeil[] = [];
   for (const id of v.svar.rekkefolge) {
     const d = v.svar.detaljer[id];
-    const tid = v.svar.tider[id];
-    if (!d.opplysning || !d.verksted || !tid) return { ok: false, melding: "Svar på alle spørsmålene om hver feil." };
+    if (!d.opplysning || !d.verksted) return { ok: false, melding: "Svar på alle spørsmålene om hver feil." };
     if (d.verksted === "skriftlig" && !d.rapport) return { ok: false, melding: "Fyll ut rapporten fra verkstedet for hver feil som er undersøkt skriftlig." };
-    feil.push({ hoved: id, under: v.svar.rent[id], tid, beskrivelse: d.beskrivelse, opplysning: d.opplysning, verksted: d.verksted, rapport: d.rapport });
+    feil.push({ hoved: id, under: v.svar.rent[id], oppdaget: d.oppdaget, omtrentlig: d.omtrentlig, beskrivelse: d.beskrivelse, opplysning: d.opplysning, verksted: d.verksted, rapport: d.rapport });
   }
 
   const b = (s.bil && typeof s.bil === "object" ? s.bil : {}) as Record<string, unknown>;

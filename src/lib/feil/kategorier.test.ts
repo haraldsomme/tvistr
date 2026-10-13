@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BESTEMT_FORM, bestemtForm, brukerNiva, HOVEDKATEGORIER, KOMPONENTTYPER, komponenttype, rensFeilvalg, rensTidsvalg } from "./kategorier";
+import { BESTEMT_FORM, bestemtForm, HOVEDKATEGORIER, KOMPONENTTYPER, komponenttype, rensFeilvalg } from "./kategorier";
 
 describe("HOVEDKATEGORIER", () => {
   it("har unike id-er og koder, og unike underkategorier per hovedkategori", () => {
@@ -25,21 +25,6 @@ describe("rensFeilvalg", () => {
     expect(rensFeilvalg(null)).toEqual({});
     expect(rensFeilvalg("motor")).toEqual({});
     expect(rensFeilvalg({ motor: "turbo" })).toEqual({});
-  });
-});
-
-describe("tidsvalg", () => {
-  it("setter brukeren på samme nivå som vedtakene, etter lovversjon", () => {
-    expect(brukerNiva("innen_6_mnd", "2022-05-01")).toBe(1);
-    expect(brukerNiva("6_til_24_mnd", "2023-12-31")).toBe(2);
-    expect(brukerNiva("6_til_24_mnd", "2024-01-01")).toBe(1);
-    expect(brukerNiva("6_til_24_mnd", null)).toBe(1);
-    expect(brukerNiva("over_24_mnd", "2025-01-01")).toBe(3);
-  });
-
-  it("rensTidsvalg dropper ukjente verdier", () => {
-    expect(rensTidsvalg({ motor: "innen_6_mnd", rust: "0-2", x: 5 })).toEqual({ motor: "innen_6_mnd" });
-    expect(rensTidsvalg(null)).toEqual({});
   });
 });
 

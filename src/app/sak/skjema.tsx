@@ -15,7 +15,8 @@ import { type Linje, somTekst, tilDokument } from "@/lib/brev/brev";
 import { MAKS_KONKLUSJON, MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, type RapportPunkt, SELGER_SVAR, type SelgerSvar, VERKSTED_HVEM, type VerkstedHvem } from "@/lib/brev/rapport";
 import type { Brev } from "@/lib/brev/typer";
 import { type Kjoretoy, normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
-import { type Feilvalg, HOVEDKATEGORIER, rensFeilvalg, rensTidsvalg, type Tidsvalg, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
+import { erDato, type Merknad, type Vurdering, vurderTidslinje } from "@/lib/brev/tidslinje";
+import { type Feilvalg, HOVEDKATEGORIER, rensFeilvalg } from "@/lib/feil/kategorier";
 import { type BrevResultat, byggBrevet, type Funn, finnVedtak } from "./actions";
 
 const A = "oklch(0.47 0.12 255)",
@@ -45,7 +46,9 @@ type RapportSkjema = { hvem?: VerkstedHvem; navn: string; dato: string; punkter:
 const TOM_RAPPORT: RapportSkjema = { navn: "", dato: "", punkter: [], konklusjon: "", overslag: "" };
 // Per main category: a free-text line, whether a workshop examined it, and whether the seller said
 // anything about it before the sale. With a written workshop assessment: the report.
-type Detalj = { beskrivelse?: string; verksted?: Kilde; opplysning?: Kilde; rapport?: RapportSkjema };
+// The day the defect was discovered, whether it is approximate, and whether the buyer has checked an
+// approximate day near a deadline.
+type Detalj = { oppdaget?: string; omtrentlig?: boolean; bekreftet?: boolean; beskrivelse?: string; verksted?: Kilde; opplysning?: Kilde; rapport?: RapportSkjema };
 type Krav = "retting" | "prisavslag" | "heving";
 const KRAV: { id: Krav; navn: string; merke?: string; tekst: string }[] = [
   { id: "retting", navn: "Retting", merke: "Vanligst", tekst: "Forhandleren utbedrer feilen uten kostnad for deg. Dette er normalt første steg." },
@@ -205,6 +208,25 @@ function Avkrysning({ valgt, velg, children }: { valgt: boolean; velg: () => voi
       </span>
       <span style={{ fontSize: 14.5, lineHeight: 1.45, textWrap: "pretty" }}>{children}</span>
     </button>
+  );
+}
+
+// The messages at a field: what stops in red, what only warns in amber.
+function Merknader({ stopp = [], advarsler = [] }: { stopp?: { melding: string }[]; advarsler?: { melding: string }[] }) {
+  if (!stopp.length && !advarsler.length) return null;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {stopp.map((m) => (
+        <span key={m.melding} role="alert" style={{ fontSize: 13, color: "#a3372b", lineHeight: 1.45 }}>
+          {m.melding}
+        </span>
+      ))}
+      {advarsler.map((m) => (
+        <span key={m.melding} role="note" data-advarsel style={{ fontSize: 13, color: "#5c3d0a", background: "oklch(0.96 0.04 75)", borderRadius: 8, padding: "8px 10px", lineHeight: 1.45 }}>
+          {m.melding}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -406,48 +428,73 @@ function Selgervalg({ valgt, velg }: { valgt: Selger | null; velg: (s: Selger | 
   );
 }
 
-// The letter as the buyer sees it: the same lines as «Kopier tekst» and the Word file (tilDokument).
-// A hidden block, before payment, is drawn as grey bars the length of the text it stands for.
+// The letter as the buyer sees it: the same lines as «Kopier tekst» and the Word file (tilDokument),
+// set as an A4 sheet with the Word file's margins and a serif text face. A hidden block, before
+// payment, is drawn as grey bars the length of the text it stands for.
+const BREV_FONT = "var(--font-brev)";
 function Brevvisning({ brev, bred }: { brev: Brev; bred: boolean }) {
   const grupper = tilDokument(brev);
-  const brevside: CSSProperties = { margin: 0, fontSize: 15.5, lineHeight: 1.65, color: INK, textWrap: "pretty" };
+  const tekst: CSSProperties = { margin: 0, fontFamily: BREV_FONT, fontSize: "11.5pt", lineHeight: 1.5, color: "#111", textWrap: "pretty" };
   const [forste, andre, ...resten] = grupper;
   // Sender top left and place and date top right, when both are there.
   const harDato = andre?.[0]?.stil === "stedDato";
   const toppRad = forste?.[0]?.stil === "adresse" && harDato;
   const rest = toppRad ? resten : grupper.slice(forste?.[0]?.stil === "stedDato" ? 1 : 0);
-  const linjer = (g: Linje[]) => g.map((l, i) => <span key={i} style={{ display: "block" }}>{l.tekst}</span>);
+  const linjer = (g: Linje[]) =>
+    g.map((l, i) => (
+      <span key={i} style={{ display: "block", ...(l.stil === "vedleggOverskrift" && { fontWeight: 700 }), ...(l.stil === "hilsen" && i > 0 && { marginTop: "26pt" }) }}>
+        {l.tekst}
+      </span>
+    ));
   return (
-    <article aria-label="Reklamasjonsbrev" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: bred ? "36px 44px" : "24px 20px", display: "flex", flexDirection: "column", gap: 18, animation: pop(0) }}>
+    <article
+      aria-label="Reklamasjonsbrev"
+      style={{
+        boxSizing: "border-box",
+        width: "210mm",
+        maxWidth: "100%",
+        minHeight: bred ? "297mm" : undefined,
+        margin: "0 auto",
+        padding: bred ? "20mm 23mm 25mm" : "28px 22px 40px",
+        background: "#fff",
+        border: "1px solid #e4e4e0",
+        boxShadow: "0 1px 2px rgba(20, 30, 50, .05), 0 14px 36px rgba(20, 30, 50, .10)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "12pt",
+        animation: pop(0),
+      }}
+    >
       {toppRad ? (
-        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "4px 24px", ...brevside, fontSize: 14.5 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: "6pt 24pt", ...tekst, marginBottom: "18pt" }}>
           <div>{linjer(forste)}</div>
           <div style={{ textAlign: "right" }}>{linjer(andre)}</div>
         </div>
       ) : (
-        grupper[0]?.[0]?.stil === "stedDato" && <div style={{ ...brevside, fontSize: 14.5, textAlign: "right" }}>{linjer(grupper[0])}</div>
+        grupper[0]?.[0]?.stil === "stedDato" && <div style={{ ...tekst, textAlign: "right", marginBottom: "18pt" }}>{linjer(grupper[0])}</div>
       )}
       {rest.map((g, i) => {
         const stil = g[0].stil;
         if (g[0].skjult !== undefined) {
           const antall = Math.max(1, Math.round(g[0].skjult / 90));
           return (
-            <div key={i} aria-hidden="true" data-skjult style={{ display: "flex", flexDirection: "column", gap: 8, filter: "blur(2.5px)", userSelect: "none" }}>
+            <div key={i} aria-hidden="true" data-skjult style={{ display: "flex", flexDirection: "column", gap: "7pt", padding: "2pt 0", filter: "blur(2.5px)", userSelect: "none" }}>
               {Array.from({ length: antall }, (_, j) => (
-                <span key={j} style={{ height: 12, width: j === antall - 1 ? `${55 + ((i * 17) % 35)}%` : "100%", borderRadius: 4, background: "#dcdedb" }} />
+                <span key={j} style={{ height: "8.5pt", width: j === antall - 1 ? `${55 + ((i * 17) % 35)}%` : "100%", borderRadius: 2, background: "#dedfdb" }} />
               ))}
             </div>
           );
         }
-        if (stil === "overskrift") return <h2 key={i} style={{ ...brevside, fontWeight: 700, margin: "6px 0 -8px" }}>{g[0].tekst}</h2>;
-        if (stil === "tittel") return <h1 key={i} style={{ ...brevside, fontWeight: 700, fontSize: 17, letterSpacing: "-0.005em" }}>{g[0].tekst}</h1>;
-        if (stil === "adresse") return <div key={i} style={brevside}>{linjer(g)}</div>;
-        if (stil === "hilsen" || stil === "vedleggOverskrift") return <div key={i} style={{ ...brevside, ...(stil === "vedleggOverskrift" && { fontSize: 14.5 }) }}>{linjer(g)}</div>;
+        if (stil === "overskrift") return <h2 key={i} style={{ ...tekst, fontWeight: 700, margin: "10pt 0 -5pt" }}>{g[0].tekst}</h2>;
+        if (stil === "tittel") return <h1 key={i} style={{ ...tekst, fontWeight: 700, fontSize: "13pt", margin: "18pt 0 2pt" }}>{g[0].tekst}</h1>;
+        if (stil === "adresse") return <div key={i} style={{ ...tekst, marginBottom: "6pt" }}>{linjer(g)}</div>;
+        if (stil === "hilsen") return <div key={i} style={{ ...tekst, marginTop: "14pt" }}>{linjer(g)}</div>;
+        if (stil === "vedleggOverskrift") return <div key={i} style={{ ...tekst, marginTop: "20pt" }}>{linjer(g)}</div>;
         return (
-          <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <p style={brevside}>{g[0].tekst}</p>
+          <div key={i} style={{ display: "flex", flexDirection: "column", gap: "3pt" }}>
+            <p style={tekst}>{g[0].tekst}</p>
             {g[0].lenke && (
-              <a href={g[0].lenke} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, fontWeight: 600, color: A, alignSelf: "flex-start" }}>
+              <a href={g[0].lenke} target="_blank" rel="noopener noreferrer" style={{ ...tekst, fontSize: "10pt", color: A, textDecoration: "underline", textUnderlineOffset: 3, alignSelf: "flex-start" }}>
                 Les vedtaket
               </a>
             )}
@@ -467,7 +514,6 @@ type Lagret = {
   car: Bil | null;
   kjopsdato: string;
   valg: Feilvalg;
-  tid: Partial<Tidsvalg>;
   km: string;
   kjopesum: string;
   somDenEr: SomDenEr | null;
@@ -482,7 +528,9 @@ type Lagret = {
   forsok: number | null;
   selgerSvar: SelgerSvar | null;
 };
-const LAGRINGSNOKKEL = "tvistr:sak";
+// v2: the defects carry the day they were discovered instead of an interval. Answers saved with the
+// interval are left behind, and the form starts again.
+const LAGRINGSNOKKEL = "tvistr:sak:v2";
 // The Vipps order id, kept so that a reload after payment finds the paid letter again (docs/brev.md).
 const ORDRENOKKEL = "tvistr:ordre";
 const lesOrdreId = () => {
@@ -520,6 +568,9 @@ function lesLagret(): Lagret | null {
     const detaljer: Record<string, Detalj> = {};
     for (const [id, d] of Object.entries((r.detaljer && typeof r.detaljer === "object" ? r.detaljer : {}) as Record<string, Record<string, unknown>>)) {
       detaljer[id] = {
+        ...(typeof d?.oppdaget === "string" && { oppdaget: d.oppdaget.slice(0, 10) }),
+        ...(d?.omtrentlig === true && { omtrentlig: true }),
+        ...(d?.bekreftet === true && { bekreftet: true }),
         ...(typeof d?.beskrivelse === "string" && { beskrivelse: d.beskrivelse.slice(0, 200) }),
         ...(KILDE.some((k) => k.id === d?.verksted) && { verksted: d.verksted as Kilde }),
         ...(KILDE.some((k) => k.id === d?.opplysning) && { opplysning: d.opplysning as Kilde }),
@@ -533,7 +584,6 @@ function lesLagret(): Lagret | null {
       car: bil && typeof bil === "object" && bil.k && typeof bil.k.merke === "string" && typeof bil.k.modell === "string" ? { k: bil.k, eierFra: typeof bil.eierFra === "string" ? bil.eierFra : null } : null,
       kjopsdato: streng(r.kjopsdato, 10),
       valg: rensFeilvalg(r.valg),
-      tid: rensTidsvalg(r.tid),
       km: streng(r.km, 7).replace(/\D/g, ""),
       kjopesum: streng(r.kjopesum, 8).replace(/\D/g, ""),
       somDenEr: SOM_DEN_ER.find((o) => o.id === r.somDenEr)?.id ?? null,
@@ -575,7 +625,6 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   // Suggested from the day the car was registered on its current owner; the buyer can change it.
   const [kjopsdato, setKjopsdato] = useState(start?.kjopsdato ?? "");
   const [valg, setValg] = useState<Feilvalg>(start?.valg ?? {});
-  const [tid, setTid] = useState<Partial<Tidsvalg>>(start?.tid ?? {});
   const [km, setKm] = useState(start?.km ?? "");
   const [kjopesum, setKjopesum] = useState(start?.kjopesum ?? "");
   const [somDenEr, setSomDenEr] = useState<SomDenEr | null>(start?.somDenEr ?? null);
@@ -611,11 +660,11 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
 
   useEffect(() => {
     if (!lagre) return;
-    const l: Lagret = { step: Math.min(step, BREV - 1), regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar };
+    const l: Lagret = { step: Math.min(step, BREV - 1), regnr, car, kjopsdato, valg, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar };
     try {
       sessionStorage.setItem(LAGRINGSNOKKEL, JSON.stringify(l));
     } catch {}
-  }, [lagre, step, regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar]);
+  }, [lagre, step, regnr, car, kjopsdato, valg, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar]);
 
   const isDesktop = w >= 820;
   // The same rule the lookup uses, so the button only works for a number the server accepts.
@@ -679,32 +728,59 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   // A report is complete with who examined, the workshop's name, a date and at least one tick. The
   // conclusion and the estimate are optional.
   const rapportOk = (r?: RapportSkjema) => !!r?.hvem && !!r.navn.trim() && etterKjop(r.dato) && r.punkter.length > 0;
-  // A card is answered when it says when the defect showed itself, whether a workshop examined it
+  // The timeline judged as the server will judge it (tidslinje.ts): what stops, what warns, and the
+  // time level of each defect.
+  const vurder = (d: Record<string, Detalj>): Vurdering =>
+    vurderTidslinje({
+      kjop: kjopsdato,
+      feil: valgte.map((h) => ({
+        id: h.id,
+        oppdaget: d[h.id]?.oppdaget ?? "",
+        omtrentlig: !!d[h.id]?.omtrentlig,
+        ...(d[h.id]?.verksted === "skriftlig" && erDato(d[h.id]?.rapport?.dato) && { rapport: d[h.id]!.rapport!.dato }),
+      })),
+      ...(reklamert === "ja" && erDato(reklamertDato) && { reklamert: reklamertDato }),
+      idag,
+    });
+  const tidslinje = vurder(detaljer);
+  // The messages for one field (and one defect), each once.
+  const merk = (v: Vurdering, felt: Merknad["felt"], feilId?: string) => {
+    const her = (m: Merknad) => m.felt === felt && (feilId === undefined || m.feilId === feilId);
+    const unike = (xs: Merknad[]) => xs.filter((m, i) => xs.findIndex((x) => x.melding === m.melding) === i);
+    return { stopp: unike(v.stopp.filter(her)), advarsler: unike(v.advarsler.filter(her)) };
+  };
+  // A card is answered when it says when the defect was discovered, whether a workshop examined it
   // and whether the seller said anything about it. The description and subcategories are optional.
-  // A written workshop assessment is not answered before its report is.
-  const besvarteMed = (id: string, t: Partial<Tidsvalg>, d: Record<string, Detalj>) => [t[id], d[id]?.verksted, d[id]?.opplysning].filter(Boolean).length;
-  const ferdigMed = (id: string, t: Partial<Tidsvalg>, d: Record<string, Detalj>) => besvarteMed(id, t, d) === 3 && (d[id]?.verksted !== "skriftlig" || rapportOk(d[id]?.rapport));
-  const ferdig = (id: string) => ferdigMed(id, tid, detaljer);
+  // A written workshop assessment is not answered before its report is, no date of the card may stop,
+  // and an approximate day near a deadline must be confirmed.
+  const besvarteMed = (id: string, d: Record<string, Detalj>) => [erDato(d[id]?.oppdaget), d[id]?.verksted, d[id]?.opplysning].filter(Boolean).length;
+  const ferdigMed = (id: string, d: Record<string, Detalj>) => {
+    const v = vurder(d);
+    const her = (m: Merknad) => m.feilId === id;
+    return (
+      besvarteMed(id, d) === 3 &&
+      !v.stopp.some(her) &&
+      (d[id]?.verksted !== "skriftlig" || rapportOk(d[id]?.rapport)) &&
+      (!v.advarsler.some((m) => her(m) && m.bekreft) || !!d[id]?.bekreftet)
+    );
+  };
+  const ferdig = (id: string) => ferdigMed(id, detaljer);
   const apenId = apent === undefined ? (valgte.find((h) => !ferdig(h.id))?.id ?? null) : apent;
 
   // When an answer completes a card, the next unanswered one opens, as in the mockup.
-  function besvar(id: string, nyTid: Partial<Tidsvalg>, nyeDetaljer: Record<string, Detalj>) {
+  function besvar(id: string, nyeDetaljer: Record<string, Detalj>) {
     const varFerdig = ferdig(id);
-    setTid(nyTid);
+    setFunn(null);
     setDetaljer(nyeDetaljer);
-    if (varFerdig || !ferdigMed(id, nyTid, nyeDetaljer)) return;
+    if (varFerdig || !ferdigMed(id, nyeDetaljer)) return;
     clearTimeout(nesteKort.current);
     nesteKort.current = setTimeout(() => {
       const i = valgte.findIndex((h) => h.id === id);
       const rekke = [...valgte.slice(i + 1), ...valgte.slice(0, i)];
-      setApent(rekke.find((h) => !ferdigMed(h.id, nyTid, nyeDetaljer))?.id ?? null);
+      setApent(rekke.find((h) => !ferdigMed(h.id, nyeDetaljer))?.id ?? null);
     }, 420);
   }
-  const settTid = (id: string, t: VisteSegValg) => {
-    setFunn(null);
-    besvar(id, { ...tid, [id]: t }, detaljer);
-  };
-  const settDetalj = (id: string, endring: Detalj) => besvar(id, tid, { ...detaljer, [id]: { ...detaljer[id], ...endring } });
+  const settDetalj = (id: string, endring: Detalj) => besvar(id, { ...detaljer, [id]: { ...detaljer[id], ...endring } });
   // «No» clears the rest: without a complaint there are no repairs and no answer to give.
   const velgReklamert = (r: Reklamert) => {
     setReklamert(r);
@@ -728,13 +804,15 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
 
   const carName = car ? `${car.k.merke} ${car.k.modell}` : "";
   const beskrevet = valgte.filter((h) => ferdig(h.id)).length;
-  const datoOk = /^\d{4}-\d{2}-\d{2}$/.test(kjopsdato) && kjopsdato <= idag;
+  // A purchase date the timeline stops on (in the future, or more than five years ago) cannot be used.
+  const datoOk = erDato(kjopsdato) && !tidslinje.stopp.some((m) => m.felt === "kjopsdato");
   const aarSiden = (n: number) => `${Number(idag.slice(0, 4)) - n}${idag.slice(4)}`;
   const utleggSum = utlegg.reduce((s, x) => s + (Number(x.belop) || 0), 0);
   const utleggOk = !kreverUtlegg || (utlegg.length > 0 && utlegg.every((x) => x.beskrivelse.trim() && Number(x.belop) > 0));
   // Contact with the seller: «no» is the letter being the complaint. «Yes» needs the date, how, the
   // repairs and the answer, so the answers cannot contradict each other (repairs without a complaint).
-  const kontaktOk = reklamert === "nei" || (reklamert === "ja" && etterKjop(reklamertDato) && !!reklamertForm && forsok !== null && !!selgerSvar);
+  const kontaktOk =
+    reklamert === "nei" || (reklamert === "ja" && etterKjop(reklamertDato) && !tidslinje.stopp.some((m) => m.felt === "reklamert") && !!reklamertForm && forsok !== null && !!selgerSvar);
   const valid = [
     !!car && !fetching && datoOk && Number(km) > 0 && Number(kjopesum) > 0 && !!somDenEr,
     valgte.length > 0,
@@ -760,7 +838,6 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
     startSok(async () => {
       const svar = {
         valg,
-        tid,
         kjopsdato,
         km: Number(km),
         kjopesum: Number(kjopesum),
@@ -904,7 +981,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
         )}
 
         <div ref={scrollRef} style={{ flex: 1, overflow: "auto", overflowX: "hidden" }}>
-          <div style={{ maxWidth: 680, margin: "0 auto", padding: isDesktop ? "56px 40px 64px" : "28px 20px 40px", boxSizing: "border-box" }}>
+          <div style={{ maxWidth: 880, margin: "0 auto", padding: isDesktop ? "56px 40px 64px" : "28px 20px 40px", boxSizing: "border-box" }}>
             {step === 0 && (
               <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 36 }}>
                 <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1172,7 +1249,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {valgte.map((h, i) => {
                     const d = detaljer[h.id] ?? {};
-                    const besvart = besvarteMed(h.id, tid, detaljer);
+                    const besvart = besvarteMed(h.id, detaljer);
                     const done = ferdig(h.id);
                     const open = apenId === h.id;
                     const r = d.rapport ?? TOM_RAPPORT;
@@ -1185,7 +1262,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                     const sammendrag = [
                       d.beskrivelse?.trim(),
                       ...h.under.filter((u) => valg[h.id].includes(u.id)).map((u) => u.navn),
-                      VISTE_SEG_VALG.find((t) => t.id === tid[h.id])?.navn,
+                      d.oppdaget && erDato(d.oppdaget) ? `Oppdaget ${d.omtrentlig ? "omtrent " : ""}${datoTekst(d.oppdaget)}` : null,
                     ]
                       .filter(Boolean)
                       .join(" · ");
@@ -1284,14 +1361,25 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                                 </div>
                               </div>
                             )}
-                            <div style={{ animation: pop(2) }}>
-                              <Chipvalg
-                                sporsmal="Når viste feilen seg?"
-                                etikett={`Når viste ${h.navn} seg?`}
-                                valg={VISTE_SEG_VALG}
-                                valgt={tid[h.id]}
-                                velg={(t) => settTid(h.id, t)}
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8, animation: pop(2) }}>
+                              <span style={{ fontSize: 14, fontWeight: 600 }}>Når oppdaget du feilen?</span>
+                              <span style={{ fontSize: 13, color: "#5f6468", lineHeight: 1.5 }}>Dagen du først merket feilen. Vet du ikke dagen, velg omtrent og kryss av for omtrentlig.</span>
+                              <Datovelger
+                                etikett={`Når oppdaget du ${h.navn}?`}
+                                verdi={d.oppdaget ?? ""}
+                                min={kjopsdato ? dagEtter(kjopsdato) : undefined}
+                                maks={idag}
+                                sett={(dato) => settDetalj(h.id, { oppdaget: dato, bekreftet: false })}
                               />
+                              <Avkrysning valgt={!!d.omtrentlig} velg={() => settDetalj(h.id, { omtrentlig: !d.omtrentlig, bekreftet: false })}>
+                                Datoen er omtrentlig
+                              </Avkrysning>
+                              <Merknader {...merk(tidslinje, "oppdaget", h.id)} />
+                              {tidslinje.advarsler.some((m) => m.feilId === h.id && m.bekreft) && (
+                                <Avkrysning valgt={!!d.bekreftet} velg={() => settDetalj(h.id, { bekreftet: !d.bekreftet })}>
+                                  Jeg har sjekket datoen, og den stemmer
+                                </Avkrysning>
+                              )}
                             </div>
                             <div style={{ animation: pop(3) }}>
                               <Chipvalg
@@ -1327,11 +1415,9 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                   <span style={{ fontSize: 14, fontWeight: 600 }}>Dato for rapporten</span>
                                   <Datovelger etikett={`Dato for rapporten om ${h.navn}`} verdi={r.dato} min={kjopsdato ? dagEtter(kjopsdato) : undefined} maks={idag} sett={(dato) => settRapport(h.id, { dato })} />
-                                  {r.dato && !etterKjop(r.dato) && (
-                                    <span role="alert" style={{ fontSize: 13, color: "#a3372b" }}>
-                                      Datoen må ligge etter kjøpsdatoen og ikke i fremtiden.
-                                    </span>
-                                  )}
+                                  <Merknader
+                                    {...(r.dato && !etterKjop(r.dato) ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk(tidslinje, "rapport", h.id))}
+                                  />
                                 </div>
                                 <div role="group" aria-label={`Hva sier rapporten om ${h.navn}?`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                   <span style={{ fontSize: 14, fontWeight: 600 }}>Hva sier rapporten?</span>
@@ -1384,7 +1470,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                     );
                   })}
                 </div>
-                {valgte.some((h) => tid[h.id] === "over_24_mnd") && (
+                {tidslinje.avledet.some((a) => a.tidsnivaa === 3) && (
                   <Fristvarsel>En eller flere feil viste seg mer enn to år etter overtakelsen. Reklamasjon for disse kan være for sent fremsatt, med mindre delen er ment å vare vesentlig lenger.</Fristvarsel>
                 )}
               </div>
@@ -1446,11 +1532,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         <span style={{ fontSize: 14, fontWeight: 600 }}>Når reklamerte du første gang?</span>
                         <Datovelger etikett="Dato for første reklamasjon" verdi={reklamertDato} min={kjopsdato ? dagEtter(kjopsdato) : undefined} maks={idag} sett={setReklamertDato} />
-                        {reklamertDato && !etterKjop(reklamertDato) && (
-                          <span role="alert" style={{ fontSize: 13, color: "#a3372b" }}>
-                            Datoen må ligge etter kjøpsdatoen og ikke i fremtiden.
-                          </span>
-                        )}
+                        <Merknader {...(reklamertDato && !etterKjop(reklamertDato) ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk(tidslinje, "reklamert"))} />
                       </div>
                       <Chipvalg sporsmal="Hvordan?" etikett="Hvordan reklamerte du?" valg={HVORDAN} valgt={reklamertForm} velg={setReklamertForm} />
                       <Chipvalg sporsmal="Har selger forsøkt å rette feilen?" valg={RETTINGSFORSOK} valgt={forsok} velg={setForsok} />
@@ -1656,7 +1738,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                 <Brevvisning brev={brevet.brev} bred={isDesktop} />
 
                 {!brevet.fullt && (
-                  <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "24px 28px" : "20px", display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "24px 28px" : "20px", display: "flex", flexDirection: "column", gap: 12, width: "210mm", maxWidth: "100%", margin: "0 auto", boxSizing: "border-box" }}>
                     <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Få hele brevet</h2>
                     <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: "#5f6468" }}>
                       Hele brevet har mangel, rettslig vurdering, krav og frist for svar, ferdig utfylt med dine opplysninger. Du får det etter betaling med Vipps.
@@ -1672,7 +1754,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
         </div>
 
         <div style={{ background: "#fff", borderTop: `1px solid ${LINE}`, padding: "14px 20px" }}>
-          <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ maxWidth: 880, margin: "0 auto", display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between" }}>
             <button
               type="button"
               onClick={() => step > 0 && go(step - 1)}

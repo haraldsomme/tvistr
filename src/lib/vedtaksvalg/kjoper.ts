@@ -1,13 +1,14 @@
-import { brukerNiva, HOVEDKATEGORIER, komponenttype, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
+import { HOVEDKATEGORIER, komponenttype, VISTE_SEG_VALG } from "@/lib/feil/kategorier";
 import { lovversjon } from "@/lib/brev/paragrafer";
 import { RAPPORT_PUNKTER, type RapportPunkt } from "@/lib/brev/rapport";
+import { tidsnivaFor } from "@/lib/brev/tidslinje";
 import type { Brukersak, Krav } from "@/lib/matching/typer";
 
 export type Kilde = "skriftlig" | "muntlig" | "nei";
 
 // The buyer's answers from the form, already cleaned.
 export type Svar = {
-  kjopsdato: string | null;
+  kjopsdato: string;
   km: number | null;
   // The year the car was first registered.
   ar: number | null;
@@ -17,7 +18,8 @@ export type Svar = {
   feil: {
     hoved: string;
     under: string[];
-    tid: VisteSegValg;
+    // The day the defect was discovered. The time level is worked out from it (tidslinje.ts).
+    oppdaget: string;
     beskrivelse: string | null;
     opplysning: Kilde | null;
     verksted: Kilde | null;
@@ -61,10 +63,11 @@ const fra2024 = (kjopsdato: string | null) => lovversjon(kjopsdato) === "etter_2
 
 // The ranking's view and the model's view of the same answers.
 export function byggSaken(s: Svar): { sak: Brukersak; kjoper: Kjoper } {
-  const kjopsar = s.kjopsdato ? Number(s.kjopsdato.slice(0, 4)) : new Date().getFullYear();
+  const kjopsar = Number(s.kjopsdato.slice(0, 4));
+  const tider = s.feil.map((f) => tidsnivaFor(s.kjopsdato, f.oppdaget));
   const ja = (k: Kilde | null) => (k === null ? null : k !== "nei");
   const sak: Brukersak = {
-    kategorier: s.feil.map((f) => ({ hoved: f.hoved, under: f.under, niva: brukerNiva(f.tid, s.kjopsdato), opplysning: ja(f.opplysning), verksted: ja(f.verksted) })),
+    kategorier: s.feil.map((f, i) => ({ hoved: f.hoved, under: f.under, niva: tider[i].tidsnivaa, opplysning: ja(f.opplysning), verksted: ja(f.verksted) })),
     km: s.km,
     alder: s.ar === null ? null : Math.max(0, kjopsar - s.ar),
     somDenEr: s.somDenEr === null ? null : s.somDenEr === "ja",
@@ -86,9 +89,10 @@ export function byggSaken(s: Svar): { sak: Brukersak; kjoper: Kjoper } {
         kategori: `${h.id} (${h.navn})`,
         underkategorier: f.under.map((u) => `${h.id}.${u} (${h.under.find((x) => x.id === u)!.navn})`),
         beskrivelse: f.beskrivelse,
-        viste_seg: VISTE_SEG_VALG.find((t) => t.id === f.tid)!.navn,
+        // In the words of the interval the buyer used to choose, so the model reads what it read before.
+        viste_seg: VISTE_SEG_VALG.find((t) => t.id === tider[i].intervall)!.navn,
         formodningsregelen_gjelder: komponenttype(f.hoved, f.under[0] ?? null) === "opplysning" ? null : sak.kategorier[i].niva === 1,
-        ...(f.tid === "over_24_mnd" && {
+        ...(tider[i].intervall === "over_24_mnd" && {
           reklamasjonsfrist:
             "Feilen viste seg mer enn to år etter kjøpet. Etter fkjl. § 27 er fristen da fem år, men bare for deler som er ment å vare vesentlig lenger enn to år; kjøperen må også vise at feilen fantes ved levering.",
         }),

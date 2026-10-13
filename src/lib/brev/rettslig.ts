@@ -1,7 +1,7 @@
-import { brukerNiva } from "@/lib/feil/kategorier";
-import { dato, leggTilAar, liste, smaa, TIDSFRASE } from "./format";
+import { dato, liste, naar, smaa } from "./format";
 import { feilnavn, form, ledd } from "./feiltype";
 import { harPunkt } from "./rapport";
+import { plussManeder, tidsnivaFor } from "./tidslinje";
 import { jf, type Lovversjon, LOVORD, lovkilde, lovRef, lovversjon, parRef, type Poeng } from "./paragrafer";
 import type { Brevfeil, Brevsak, Setning } from "./typer";
 
@@ -69,12 +69,12 @@ export function mangel(s: Brevsak): Setning[] {
 
   // No claim of a defect before the cause is known: the letter only gives notice.
   const vet = alle.filter((l) => l.type === "vet_ikke");
-  for (const tid of unike(vet.map((l) => l.feil.tid))) {
-    const dem = vet.filter((l) => l.feil.tid === tid);
+  for (const tid of unike(vet.map((l) => naar(l.feil.oppdaget, l.feil.omtrentlig)))) {
+    const dem = vet.filter((l) => naar(l.feil.oppdaget, l.feil.omtrentlig) === tid);
     const reklamasjon = s.kontakt ? `jeg reklamerte på denne ${s.kontakt.form} den ${dato(s.kontakt.dato)}` : "jeg reklamerer herved på denne";
     ut.push({
-      tekst: `Bilen har en funksjonssvikt som viste seg ${TIDSFRASE[tid]}, og ${reklamasjon}${henv("reklamasjon")}.`,
-      kilde: kilde(v, `${idx(dem)}.tid${s.kontakt ? "; skjema:kontakt" : ""}`, "reklamasjon"),
+      tekst: `Bilen har en funksjonssvikt som viste seg ${tid}, og ${reklamasjon}${henv("reklamasjon")}.`,
+      kilde: kilde(v, `${idx(dem)}.oppdaget${s.kontakt ? "; skjema:kontakt" : ""}`, "reklamasjon"),
     });
   }
   return ut;
@@ -88,8 +88,9 @@ export function tidspunkt(s: Brevsak): Setning[] {
   const tek = unike(ledd(s.feil).filter((l) => l.type === "teknisk").map((l) => l.feil));
   if (!tek.length) return [];
   const i = (f: Brevfeil) => s.feil.indexOf(f);
-  const med = (fs: Brevfeil[]) => `skjema:feil[${fs.map(i).join(",")}].tid`;
-  const innenFristen = (f: Brevfeil) => brukerNiva(f.tid, s.kjopsdato) === 1;
+  const med = (fs: Brevfeil[]) => `skjema:feil[${fs.map(i).join(",")}].oppdaget`;
+  // The time level is worked out from the day the defect was discovered (tidslinje.ts).
+  const innenFristen = (f: Brevfeil) => tidsnivaFor(s.kjopsdato, f.oppdaget, v).tidsnivaa === 1;
   const gjelder = tek.filter(innenFristen);
   const utenfor = tek.filter((f) => !innenFristen(f));
   // With defects in both groups each sentence says which defects it is about.
@@ -118,7 +119,7 @@ export function tidspunkt(s: Brevsak): Setning[] {
   if (utenfor.length) {
     // The notice is dated by the earlier one if the buyer has given notice before, otherwise by this letter.
     const sendt = s.kontakt?.dato ?? s.dato;
-    const poeng = sendt <= leggTilAar(s.kjopsdato, 2) ? "reklamasjon_2ar" : sendt <= leggTilAar(s.kjopsdato, 5) ? "reklamasjon_5ar" : null;
+    const poeng = sendt <= plussManeder(s.kjopsdato, 24) ? "reklamasjon_2ar" : sendt <= plussManeder(s.kjopsdato, 60) ? "reklamasjon_5ar" : null;
     // Past five years there is nothing to say: the form and the server turn such a case away.
     if (poeng)
       ut.push({

@@ -70,7 +70,7 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
   const s = (inn && typeof inn === "object" ? inn : {}) as Record<string, unknown>;
   const rens = rensVedtakssvar(s);
   if (!rens.ok) return { ok: false, melding: rens.melding };
-  const { valgte, rent, tider, kjopsdato, km, ar, somDenEr, krav, forsok, detaljer } = rens.svar;
+  const { valgte, rent, kjopsdato, km, ar, somDenEr, krav, forsok, detaljer } = rens.svar;
 
   // «Vet ikke ennå» is compared on the symptom, like any other category.
   const { sak, kjoper } = byggSaken({
@@ -83,7 +83,7 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
     feil: valgte.map((h) => ({
       hoved: h.id,
       under: rent[h.id],
-      tid: tider[h.id]!,
+      oppdaget: detaljer[h.id].oppdaget,
       beskrivelse: detaljer[h.id].beskrivelse,
       opplysning: detaljer[h.id].opplysning,
       verksted: detaljer[h.id].verksted,

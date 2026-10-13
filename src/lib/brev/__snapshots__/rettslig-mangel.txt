@@ -1,4 +1,4 @@
-21 ulike tekster over lov(2) × somDenEr(3) × feilsett(8) × opplysning(3) × kontakt(2)
+22 ulike tekster over lov(2) × somDenEr(3) × feilsett(8) × opplysning(3) × kontakt(2)
 
 ## {"lov":"før_2024","somDenEr":"ja","feilsett":"teknisk","opplysning":"skriftlig","kontakt":false} (+11 like)
 Selv om bilen ble solgt «som den er», har den en mangel, fordi den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a.
@@ -12,11 +12,11 @@ Dere har forsømt å opplyse om serviceheftet, som dere burde kjenne til og som 
 ## {"lov":"før_2024","somDenEr":"ja","feilsett":"garanti","opplysning":"skriftlig","kontakt":false} (+35 like)
 Bilen ble ikke levert med den garantien som ble avtalt, jf. forbrukerkjøpsloven § 15 og § 18 a.
 
-## {"lov":"før_2024","somDenEr":"ja","feilsett":"vet_ikke","opplysning":"skriftlig","kontakt":false} (+17 like)
-Bilen har en funksjonssvikt som viste seg innen seks måneder etter overtakelsen, og jeg reklamerer herved på denne, jf. forbrukerkjøpsloven § 27 første ledd.
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"vet_ikke","opplysning":"skriftlig","kontakt":false} (+8 like)
+Bilen har en funksjonssvikt som viste seg den 2. juli 2023, og jeg reklamerer herved på denne, jf. forbrukerkjøpsloven § 27 første ledd.
 
 ## {"lov":"før_2024","somDenEr":"ja","feilsett":"vet_ikke","opplysning":"skriftlig","kontakt":true} (+8 like)
-Bilen har en funksjonssvikt som viste seg innen seks måneder etter overtakelsen, og jeg reklamerte på denne skriftlig den 1. september 2023, jf. forbrukerkjøpsloven § 27 første ledd.
+Bilen har en funksjonssvikt som viste seg den 2. juli 2023, og jeg reklamerte på denne skriftlig den 1. september 2023, jf. forbrukerkjøpsloven § 27 første ledd.
 
 ## {"lov":"før_2024","somDenEr":"ja","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","kontakt":false} (+3 like)
 Selv om bilen ble solgt «som den er», har den en mangel, fordi den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a.
@@ -64,8 +64,11 @@ Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdb
 Forbeholdet om at bilen ble solgt «som den er», er ikke et avtalt unntak etter forbrukerkjøpsloven § 15 annet ledd.
 Unntaket fra kravene i § 15 tredje og fjerde ledd forutsetter at jeg ved inngåelsen av avtalen ble spesielt opplyst om at en bestemt egenskap ved tingen ville avvike fra disse kravene, og uttrykkelig og særskilt aksepterte dette avviket.
 
+## {"lov":"etter_2024","somDenEr":"ja","feilsett":"vet_ikke","opplysning":"skriftlig","kontakt":false} (+8 like)
+Bilen har en funksjonssvikt som viste seg den 10. mai 2024, og jeg reklamerer herved på denne, jf. forbrukerkjøpsloven § 27 første ledd.
+
 ## {"lov":"etter_2024","somDenEr":"ja","feilsett":"vet_ikke","opplysning":"skriftlig","kontakt":true} (+8 like)
-Bilen har en funksjonssvikt som viste seg innen seks måneder etter overtakelsen, og jeg reklamerte på denne skriftlig den 1. juni 2025, jf. forbrukerkjøpsloven § 27 første ledd.
+Bilen har en funksjonssvikt som viste seg den 10. mai 2024, og jeg reklamerte på denne skriftlig den 1. juni 2024, jf. forbrukerkjøpsloven § 27 første ledd.
 
 ## {"lov":"etter_2024","somDenEr":"ja","feilsett":"teknisk_og_opplysning","opplysning":"nei","kontakt":false} (+1 like)
 Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.

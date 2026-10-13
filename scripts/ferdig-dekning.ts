@@ -6,7 +6,9 @@
 import { sql } from "drizzle-orm";
 import { db } from "../src/db";
 import { vedtak } from "../src/db/schema";
-import { brukerNiva, HOVEDKATEGORIER, type VisteSegValg } from "../src/lib/feil/kategorier";
+import { TID_MND } from "../src/lib/brev/testsak";
+import { plussManeder, tidsnivaFor } from "../src/lib/brev/tidslinje";
+import { HOVEDKATEGORIER, type VisteSegValg } from "../src/lib/feil/kategorier";
 import type { AvledetFeil } from "../src/lib/feilvurdering/skjema";
 import { GRUNNFILTER } from "../src/lib/matching/grunnfilter";
 import { ranger } from "../src/lib/matching/ranger";
@@ -51,7 +53,7 @@ async function main() {
       for (const [tid, dato] of TIDER)
         for (const p of PROFILER)
           for (const krav of KRAV) {
-            const sak: Brukersak = { kategorier: [{ hoved: h.id, under: under ? [under] : [], niva: brukerNiva(tid, dato), opplysning: null, verksted: true }], km: p.km, alder: p.alder, somDenEr: p.somDenEr, krav, forsok: 0 };
+            const sak: Brukersak = { kategorier: [{ hoved: h.id, under: under ? [under] : [], niva: tidsnivaFor(dato, plussManeder(dato, TID_MND[tid])).tidsnivaa, opplysning: null, verksted: true }], km: p.km, alder: p.alder, somDenEr: p.somDenEr, krav, forsok: 0 };
             const r = ranger(alle, sak).kandidater[0];
             if (r) telling[r.niva]++;
             else {

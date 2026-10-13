@@ -3,20 +3,21 @@ import { idagOslo, rensBrevsvar, rensVedtakssvar } from "./rens";
 
 const idag = idagOslo();
 const aarSiden = (n: number) => `${Number(idag.slice(0, 4)) - n}${idag.slice(4)}`;
-// A day after the purchase (a year ago) and not in the future: six months ago.
-const halvtAar = () => {
+// n months ago. The purchase is a year ago, the defects are discovered eight and seven months ago, and
+// the report and the complaint come six months ago, after both.
+const mndSiden = (n: number) => {
   const d = new Date(`${idag}T12:00:00Z`);
-  d.setUTCMonth(d.getUTCMonth() - 6);
+  d.setUTCMonth(d.getUTCMonth() - n);
   return d.toISOString().slice(0, 10);
 };
+const halvtAar = () => mndSiden(6);
 
 const RAPPORT = { hvem: "uavhengig", navn: "  Nordre Verksted AS ", dato: halvtAar(), punkter: ["arsak", "bekrefter", "finnes_ikke"], konklusjon: "  Turbo «defekt»,\nmå skiftes  ", overslag: 12_000 };
 const SVAR = {
   valg: { elektrisk: ["lys"], motor: ["turbo", "finnes_ikke"] },
-  tid: { motor: "innen_6_mnd", elektrisk: "6_til_24_mnd" },
   detaljer: {
-    motor: { beskrivelse: "  Mistet kraft  ", opplysning: "nei", verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["arsak", "bekrefter", "overslag"] } },
-    elektrisk: { opplysning: "muntlig", verksted: "nei" },
+    motor: { oppdaget: mndSiden(7), beskrivelse: "  Mistet kraft  ", opplysning: "nei", verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["arsak", "bekrefter", "overslag"] } },
+    elektrisk: { oppdaget: mndSiden(8), omtrentlig: true, opplysning: "muntlig", verksted: "nei" },
   },
   kjopsdato: aarSiden(1),
   km: 120_000,
@@ -43,9 +44,9 @@ describe("rensVedtakssvar", () => {
     expect(r.svar.detaljer.motor.beskrivelse).toBe("Mistet kraft");
   });
 
-  it("avviser tom feilvalg, manglende tid og kjøp eldre enn fem år", () => {
+  it("avviser tom feilvalg, manglende oppdagelsesdato og kjøp eldre enn fem år", () => {
     expect(rensVedtakssvar({ ...SVAR, valg: {} })).toEqual({ ok: false, melding: "Velg minst én feil." });
-    expect(rensVedtakssvar({ ...SVAR, tid: { motor: "innen_6_mnd" } })).toEqual({ ok: false, melding: "Velg når hver feil viste seg." });
+    expect(rensVedtakssvar({ ...SVAR, detaljer: { ...SVAR.detaljer, motor: { ...SVAR.detaljer.motor, oppdaget: undefined } } })).toEqual({ ok: false, melding: "Velg når du oppdaget hver feil." });
     const r = rensVedtakssvar({ ...SVAR, kjopsdato: aarSiden(6) });
     expect(r.ok).toBe(false);
   });
@@ -112,7 +113,7 @@ describe("rensBrevsvar", () => {
   });
 
   it("krever svar på verksted og selgers opplysning for hver feil", () => {
-    const r = rensBrevsvar(med({ detaljer: { motor: { verksted: "nei" }, elektrisk: { opplysning: "nei", verksted: "nei" } } }));
+    const r = rensBrevsvar(med({ detaljer: { motor: { oppdaget: mndSiden(7), verksted: "nei" }, elektrisk: { oppdaget: mndSiden(8), opplysning: "nei", verksted: "nei" } } }));
     expect(r.ok).toBe(false);
   });
 
@@ -120,6 +121,14 @@ describe("rensBrevsvar", () => {
     const ok = rensBrevsvar(med({ utlegg: [{ beskrivelse: " Tauing ", belop: 1200 }] }));
     expect(ok.ok && ok.svar.utlegg).toEqual([{ beskrivelse: "Tauing", belop: 1200 }]);
     for (const utlegg of [[{ beskrivelse: "", belop: 100 }], [{ beskrivelse: "Tauing", belop: 0 }], [{ beskrivelse: "Tauing", belop: "100" }]]) expect(rensBrevsvar(med({ utlegg })).ok).toBe(false);
+  });
+
+  it("tar med oppdagelsesdatoen og om den er omtrentlig", () => {
+    const r = rensBrevsvar(SVAR);
+    expect(r.ok && r.svar.feil.map((f) => [f.hoved, f.oppdaget, f.omtrentlig])).toEqual([
+      ["elektrisk", mndSiden(8), true],
+      ["motor", mndSiden(7), false],
+    ]);
   });
 
   it("tåler søppel", () => {
@@ -169,5 +178,34 @@ describe("verkstedrapport", () => {
   it("legger ingen rapport til en feil som ikke er undersøkt skriftlig", () => {
     expect(rapport(medMotor({ verksted: "muntlig" }))).toBeNull();
     expect(rapport(medMotor({ verksted: "nei" }))).toBeNull();
+  });
+});
+
+describe("tidslinjen på serveren", () => {
+  // Every order the form makes impossible is turned away here too, with the same message.
+  const motor = (endring: Record<string, unknown>) => ({ ...SVAR.detaljer.motor, ...endring });
+  const TILFELLER: [string, Record<string, unknown>, RegExp][] = [
+    ["kjøpsdato i fremtiden", { kjopsdato: "2999-01-01" }, /fremtiden/],
+    ["kjøp mer enn fem år tilbake", { kjopsdato: aarSiden(6) }, /fem år/],
+    ["feilen oppdaget før kjøpet", { detaljer: { ...SVAR.detaljer, motor: motor({ oppdaget: aarSiden(2) }) } }, /før du overtok bilen/],
+    ["feilen oppdaget samme dag som kjøpet", { detaljer: { ...SVAR.detaljer, motor: motor({ oppdaget: aarSiden(1) }) } }, /før du overtok bilen/],
+    ["feilen oppdaget i fremtiden", { detaljer: { ...SVAR.detaljer, motor: motor({ oppdaget: "2999-01-01" }) } }, /fremtiden/],
+    ["en dag som ikke finnes", { detaljer: { ...SVAR.detaljer, motor: motor({ oppdaget: "2025-02-30" }) } }, /oppdaget hver feil/],
+    ["rapport før feilen ble oppdaget", { detaljer: { ...SVAR.detaljer, motor: motor({ rapport: { ...SVAR.detaljer.motor.rapport, dato: mndSiden(9) } }) } }, /Rapporten kan ikke være datert før/],
+    ["reklamert før den første feilen", { kontakt: { reklamert: true, dato: mndSiden(10), form: "skriftlig", forsok: 0, svar: "annet" } }, /før den første feilen/],
+  ];
+  for (const [navn, endring, melding] of TILFELLER)
+    it(`avviser ${navn}`, () => {
+      const r = rensBrevsvar({ ...SVAR, ...endring });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.melding).toMatch(melding);
+      // The decision search turns it away too, before any ranking.
+      expect(rensVedtakssvar({ ...SVAR, ...endring }).ok).toBe(false);
+    });
+
+  it("slipper gjennom en sak med advarsler, men ingen stopp", () => {
+    const r = rensVedtakssvar({ ...SVAR, kontakt: { reklamert: true, dato: idag, form: "skriftlig", forsok: 0, svar: "annet" } });
+    expect(r.ok && r.svar.tidslinje.stopp).toEqual([]);
+    expect(r.ok && r.svar.tidslinje.advarsler.map((m) => m.regel)).toContain("reklamasjon_sen");
   });
 });

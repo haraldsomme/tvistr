@@ -150,7 +150,7 @@ describe("avsnitt 3: rettslig vurdering", () => {
 
   it("har ingen bevissetning uten rapport", () => {
     const t = tekst(tidspunkt(lagSak("etter_2024", { feil: FEILSETT.teknisk("over_24_mnd", "nei", "muntlig") })));
-    expect(t).toBe("Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.");
+    expect(t).toBe("Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.");
   });
 
   it("praksis er vedtaksavsnittet uendret, og utelates uten vedtak", () => {

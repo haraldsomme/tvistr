@@ -16,6 +16,8 @@ import { RAPPORT_PUNKTER, type Rapport, type RapportPunkt, SELGER_SVAR, VERKSTED
 import type { Brevfeil, Brevsak } from "../src/lib/brev/typer";
 import { HOVEDKATEGORIER, VISTE_SEG_VALG } from "../src/lib/feil/kategorier";
 import type { Krav } from "../src/lib/matching/typer";
+import { TID_MND } from "../src/lib/brev/testsak";
+import { plussDager, plussManeder } from "../src/lib/brev/tidslinje";
 import { BREVDATO, SELGERE } from "./simulerte-saker";
 import { STUB_PROFIL } from "../src/lib/vipps/profil";
 
@@ -35,13 +37,8 @@ const PUNKTER: RapportPunkt[][] = [["bekrefter"], ["bekrefter", "arsak"], ["bekr
 const KONKLUSJONER = ["Feilen er bekreftet og må utbedres.", "Skaden skyldes slitasje som har utviklet seg over tid, og komponenten må skiftes."];
 const VERKSTEDER = ["Nordre Bil og Verksted AS", "Sentrum Servicesenter AS", "Fjordbyen Autoservice AS"];
 
-// 2025-03-10 + 10 months, but never later than the day of the letter.
-function plussManeder(iso: string, m: number): string {
-  const d = new Date(`${iso}T12:00:00Z`);
-  d.setUTCMonth(d.getUTCMonth() + m);
-  const s = d.toISOString().slice(0, 10);
-  return s > BREVDATO ? BREVDATO : s;
-}
+// A date, but never later than the day of the letter.
+const senest = (iso: string) => (iso > BREVDATO ? BREVDATO : iso);
 
 function lesSak(seksjon: string, i: number): Brevsak {
   const felt = (re: RegExp, hva: string) => {
@@ -69,11 +66,14 @@ function lesSak(seksjon: string, i: number): Brevsak {
 
   // The cases of the measurement have no description, and a workshop has put its assessment in writing:
   // a report that varies with the section number.
+  // The section names the interval the buyer chose; the defect is discovered within it, and the report
+  // and the complaint follow within days.
+  const oppdaget = senest(plussManeder(kjopsdato, TID_MND[tid.id]));
   const punkter = PUNKTER[i % PUNKTER.length];
   const rapport: Rapport = {
     hvem: VERKSTED_HVEM[i % VERKSTED_HVEM.length].id,
     navn: VERKSTEDER[i % VERKSTEDER.length],
-    dato: plussManeder(kjopsdato, tid.id === "innen_6_mnd" ? 3 : tid.id === "6_til_24_mnd" ? 11 : 31),
+    dato: senest(plussDager(oppdaget, 7)),
     punkter,
     konklusjon: i % 2 === 0 ? KONKLUSJONER[(i / 2) % KONKLUSJONER.length] : null,
     overslag: punkter.includes("overslag") ? 15_000 + i * 2_500 : null,
@@ -81,7 +81,8 @@ function lesSak(seksjon: string, i: number): Brevsak {
   const feil: Brevfeil[] = Object.entries(under).map(([hoved, u]) => ({
     hoved,
     under: u,
-    tid: tid.id,
+    oppdaget,
+    omtrentlig: false,
     beskrivelse: null,
     opplysning: (u.length ? u : [null]).every((x) => feiltype(hoved, x) === "opplysning" || feiltype(hoved, x) === "garanti") && i % 2 === 0 ? "skriftlig" : "nei",
     verksted: "skriftlig",
@@ -102,7 +103,7 @@ function lesSak(seksjon: string, i: number): Brevsak {
     krav,
     utlegg: i % 4 === 1 ? [{ beskrivelse: "Tauing", belop: 1_800 }] : [],
     // A complaint to the seller in every third section, answered in each of the four ways in turn.
-    kontakt: i % 3 === 0 ? { dato: plussManeder(kjopsdato, tid.id === "innen_6_mnd" ? 2 : tid.id === "6_til_24_mnd" ? 10 : 30), form: i % 2 === 0 ? "skriftlig" : "muntlig", forsok: 0, svar: SELGER_SVAR[(i / 3) % SELGER_SVAR.length].id } : null,
+    kontakt: i % 3 === 0 ? { dato: senest(plussDager(oppdaget, 10)), form: i % 2 === 0 ? "skriftlig" : "muntlig", forsok: 0, svar: SELGER_SVAR[(i / 3) % SELGER_SVAR.length].id } : null,
     praksis: { avsnitt, kildeUrl: url, saksnummer: /^FKU-/.test(saksnr) ? null : saksnr },
   };
 }

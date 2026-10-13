@@ -8,7 +8,7 @@ const svar = (s: Partial<Svar> = {}): Svar => ({
   somDenEr: "nei",
   krav: "prisavslag",
   forsok: 0,
-  feil: [{ hoved: "motor", under: ["turbo"], tid: "6_til_24_mnd", beskrivelse: null, opplysning: "nei", verksted: "skriftlig" }],
+  feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2025-01-01", beskrivelse: null, opplysning: "nei", verksted: "skriftlig" }],
   ...s,
 });
 
@@ -18,7 +18,7 @@ describe("byggSaken", () => {
     expect([etter.formodningsfrist, etter.feil[0].formodningsregelen_gjelder]).toEqual(["2 år", true]);
     const for2024 = byggSaken(svar({ kjopsdato: "2023-05-01" })).kjoper;
     expect([for2024.formodningsfrist, for2024.feil[0].formodningsregelen_gjelder]).toEqual(["6 måneder", false]);
-    const sent = byggSaken(svar({ feil: [{ ...svar().feil[0], tid: "over_24_mnd" }] })).kjoper;
+    const sent = byggSaken(svar({ feil: [{ ...svar().feil[0], oppdaget: "2026-07-01" }] })).kjoper;
     expect(sent.feil[0].formodningsregelen_gjelder).toBe(false);
     expect(sent.feil[0].reklamasjonsfrist).toMatch(/§ 27/);
     expect(etter.feil[0].reklamasjonsfrist).toBeUndefined();

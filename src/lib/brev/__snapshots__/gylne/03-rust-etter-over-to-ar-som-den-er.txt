@@ -1,0 +1,37 @@
+Kari Testesen
+
+13. oktober 2026
+
+Vestlandsbil AS
+
+REKLAMASJON – Toyota Corolla, reg.nr. XY 10003, kjøpt 20. januar 2023
+
+1. Sakens bakgrunn
+
+Jeg viser til kjøp av Toyota Corolla, første gang registrert i 2008, reg.nr. XY 10003, fra Vestlandsbil AS (org.nr. 999 999 997) den 20. januar 2023. Kjøpesummen var kr 45 000. Bilen hadde gått 245 000 km ved overtakelsen. Bilen ble solgt «som den er».
+
+2. Mangelen
+
+Rust: Feilen viste seg mer enn to år etter overtakelsen. «Gjennomrust i bærende deler ble funnet på EU-kontroll. Bilen ble underkjent.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+
+3. Rettslig vurdering
+
+Selv om bilen ble solgt «som den er», har den en mangel, fordi den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a.
+
+Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum. Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
+
+Det vises til Forbrukerklageutvalgets vedtak i sak 19/245 av 20.5.2019. Saken gjaldt rust på ramme og kassebunn på en 2002-modell Nissan King Cab Navara (pickup) 2,5td som hadde gått 272 000 km ved kjøpet, solgt «som den er». Utvalget uttalte: «Utvalget finner det sannsynliggjort at rustskadene på bilen i all hovedsak var til stede på leveringstidspunktet.» Utvalget uttalte videre: «Innklagde annonserte bilen både som fri for rust på rammen samt i meget god stand, og til tross for bilens høye alder og kjørelengde var det etter utvalgets syn derfor ikke påregnelig for klageren med alvorlige korrosjonsskader på bærende elementer.» Kjøperen fikk medhold i krav om heving og erstatning.
+
+4. Krav
+
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 22 000. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+
+5. Frist for tilbakemelding
+
+Jeg ber om skriftlig svar til kari.testesen@example.com innen 14 dager fra dette brevets dato. Uten svar, eller ved avslag, vil saken bli brakt inn for Forbrukerklageutvalget.
+
+Med vennlig hilsen
+Kari Testesen
+
+Vedlegg:
+– Verkstedets skriftlige vurdering

@@ -337,7 +337,7 @@ function Selgervalg({ valgt, velg }: { valgt: Selger | null; velg: (s: Selger | 
         value={q}
         onChange={(e) => setQ(e.target.value.slice(0, 80))}
         placeholder="Navn eller organisasjonsnummer"
-        aria-label="Selger"
+        aria-label="Søk etter selgeren"
         autoComplete="off"
         className="rk-input"
         style={{ height: 50, border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "0 14px", font: `16px ${SANS}`, color: INK, outline: "none", background: "#fff", boxSizing: "border-box" }}

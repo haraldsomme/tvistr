@@ -114,3 +114,15 @@ Brevet er ren kode: maler fylt med felt fra skjemaet, Vipps-profilen (stub i den
 - malene i `src/lib/brev/`
 - paragraftabellen
 - vedtaksavsnittet (`src/lib/vedtaksvalg/`)
+
+## Resultat for hele brevet (2026-10-13)
+
+| # | Kriterium | Resultat |
+|---|---|---|
+| 1 | Komplette brev | **Grønt.** 12 av 12 gylne brev bygges uten tomme felt, og alle tolv er lest (`src/lib/brev/__snapshots__/gylne/`). To brev hadde en tidligere reklamasjon datert før feilen viste seg; det var feil i testsakene, ikke i malene, og er rettet. |
+| 2 | Sporbarhet | **Grønt.** Over 15 000 brev (alle kombinasjoner av lovversjon, «som den er», åtte feilsett, tid, selger sa noe, verksted, krav, rettingsforsøk og tillegg) har en kilde på hver setning, ingen tomme felt og ingen forsterkere. |
+| 3 | Paragrafer | **Grønt.** Begge tabellene er fylt og kontrollert mot Lovdata, lovvedtaket og Prop. 49 LS. Ingen poeng er et gap (se `brev.md`). |
+| 4 | Skjema og visning | **Grønt.** `scripts/ferdig-brevskjema.mjs` ved 1280 og 390 piksler: selgersøk mot Enhetsregisteret, tidligere reklamasjon, overslag, forhåndsvisning (skjult tekst finnes ikke i DOM-en) og hele brevet, «Kopier tekst» og Word-nedlasting. Ingen konsollfeil og ingen horisontal scroll. |
+| 5 | Word-eksport | **Delvis.** Teksten i `word/document.xml` er lik `somTekst` i tre tester, og `textutil` leser filen nettleseren lastet ned. At filen åpner i Word er ikke målt av meg: åpne `~/Downloads/tvistr-brev-eksempel.docx`. |
+
+Kjent og ikke kriterium: Vipps-integrasjonen, og funnene som er ført som gap i `brev.md`.

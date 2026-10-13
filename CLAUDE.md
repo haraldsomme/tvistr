@@ -29,7 +29,7 @@ Inneholder ett rad per vedtak fra Forbrukertvistutvalget/Forbrukerklageutvalget 
 ## Løsningen nå (startet på nytt 2026-10-10)
 
 Bygges opp gradvis. Det som finnes:
-- **`/sak`** (`src/app/sak/`): steg 1 er bilen fra regnr (Statens vegvesen), steg 2 er feilvalg, steg 3 detaljer og tidspunkt per feil, steg 4 krav. «Lag brev» finner vedtaket brevet skal vise til (`finnVedtak` i `actions.ts`) og går til steg 5, som viser avsnittet og lenken til vedtaket. Utseende og overganger følger mockupen `ReklamasjonSkjema.dc.html`. Det gamle skjemaet er beskrevet i `docs/gammelt-skjema.md`.
+- **`/sak`** (`src/app/sak/`): steg 1 er bilen fra regnr (Statens vegvesen), steg 2 er feilvalg, steg 3 detaljer og tidspunkt per feil, steg 4 krav. «Lag brev» finner vedtaket brevet skal vise til (`finnVedtak` i `actions.ts`), bygger hele brevet (`byggBrevet`) og går til steg 5, som viser det. Steg 4 spør også om selger (søk i Enhetsregisteret), tidligere reklamasjon og kostnadsoverslag. Utseende og overganger følger mockupen `ReklamasjonSkjema.dc.html`. Det gamle skjemaet er beskrevet i `docs/gammelt-skjema.md`.
 - **Feilkategoriene** (`src/lib/feil/kategorier.ts`): 13 hovedkategorier med underkategorier. Brukeren kan velge flere av begge. Hver underkategori har en komponenttype (`KOMPONENTTYPER`); typen «opplysning» (historikk, service, utstyr, garanti) gjelder det selgeren sa eller lovet, der bilprofil og formodningsregel ikke teller. «Vet ikke ennå» er symptomer og sammenlignes på symptomet.
 - **Feilvurderingen** (`src/lib/feilvurdering/`, kolonner på `vedtak`, migrasjon 0011): Claude Code-agenter leser fulltekst og vurderer hver påberopt feil. De gir kategori og underkategori, utfall (`medhold`/`avvist`/`ikke_vurdert`), avslagsgrunn eller bevisgrunnlag, når feilen viste seg, og ett ordrett sitat. De gir også sanksjoner og antall rettingsforsøk. Per feil gir agentene også når den viste seg (`viste_seg` i perioder) og om utvalget brukte formodningsregelen (`formodning`). Per vedtak gir de `som_den_er` (forbeholdet sto i kontrakten eller annonsen). Importen kontrollerer sitatene mot fulltekst og avleder resten:
   - `godtatte_kategorier`, `godtatte_underkategorier` (`hoved.under`)
@@ -49,5 +49,11 @@ Bygges opp gradvis. Det som finnes:
   - Valget (`src/lib/vedtaksvalg/valg.ts`): Sonnet svarer bare med vedtak og sitat-id-er. Holder ikke svaret, brukes rangeringens førstevalg. Endres instruksen, økes `VEDTAKSVALG_VERSJON`.
   - Malen (`mal.ts`): avsnittet bygges bare av felt og ordrette sitater. Uten kandidater blir det lovsetningen «Kravet bygger på lovens vilkår.».
   - Målinger: `npm run ferdig:dekning`, `ferdig:stikkprove`, `ferdig:brevlop`, `simuler`.
+
+- **Brevet** (`src/lib/brev/`, `docs/brev.md` beskriver det): hele reklamasjonsbrevet bygges av maler fylt med felt fra skjemaet, Vipps-profilen (stub i `src/lib/vipps/profil.ts`), Enhetsregisteret og lovteksten. Ingen modell skriver noe i brevet, og hver setning har en `kilde` som en test sjekker.
+  - Paragrafene (`paragrafer.ts`) har én tabell per lovversjon (før og etter 1.1.2024), kontrollert mot lovvedtaket og Prop. 49 LS. Malene ber om et poeng og aldri om et nummer. «Som den er» er § 17 før 2024 og § 15 annet ledd etter.
+  - Brevet er en `Brev`-struktur; skjermen, «Kopier tekst» og Word-filen (`docx.ts`) bygges alle av `tilDokument`. Uten betaling sendes bare avsnitt 1 og vedtaksavsnittet til nettleseren (`forhandsvisning`); i utvikling viser `TVISTR_HELT_BREV_UTEN_BETALING=1` hele brevet.
+  - Tester: `npm test` (snapshot-filer per avsnitt og tolv gylne brev i `src/lib/brev/__snapshots__/`). `npm run brev:praksis` og `brev:jurist` bruker databasen og modellen.
+  - Endres en mal, kjør testene og les de gylne brevene på nytt. Vipps-integrasjonen er ikke bygget (se «Vipps» i `docs/brev.md`).
 
 **Vedlikehold:** `README.md` beskriver kjøringsrekkefølge (`hent` → `klassifiser` → `tolk`) og sikkerhetskopi (`npm run db:backup`). Ta kopi før `tolk --på-nytt`. Endres prompt eller skjema i `src/lib/ai/`, øk versjonen i `src/lib/ai/prompter.ts`.

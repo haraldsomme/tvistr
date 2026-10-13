@@ -27,7 +27,9 @@
     "ferdig:stikkprove": "tsx --env-file=.env.local scripts/ferdig-stikkprove.ts",
     "ferdig:dekning": "tsx --env-file=.env.local scripts/ferdig-dekning.ts",
     "ferdig:simulert": "tsx --env-file=.env.local scripts/ferdig-simulert.ts",
-    "ferdig:brevlop": "tsx --env-file=.env.local scripts/ferdig-brevlop.ts"
+    "ferdig:brevlop": "tsx --env-file=.env.local scripts/ferdig-brevlop.ts",
+    "brev:praksis": "tsx --env-file=.env.local scripts/brev-praksis.ts",
+    "brev:jurist": "tsx scripts/brev-jurist.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

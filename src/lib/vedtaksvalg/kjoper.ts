@@ -1,4 +1,5 @@
 import { brukerNiva, HOVEDKATEGORIER, komponenttype, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
+import { lovversjon } from "@/lib/brev/paragrafer";
 import type { Brukersak, Krav } from "@/lib/matching/typer";
 
 export type Kilde = "skriftlig" | "muntlig" | "nei";
@@ -43,7 +44,7 @@ export type Kjoper = {
 
 // The presumption (fkjl. § 18 annet ledd) covers six months for purchases before 2024 and two years
 // after. Without a purchase date the 2024 law is assumed, as in brukerNiva.
-const fra2024 = (kjopsdato: string | null) => !kjopsdato || kjopsdato >= "2024-01-01";
+const fra2024 = (kjopsdato: string | null) => lovversjon(kjopsdato) === "etter_2024";
 
 // The ranking's view and the model's view of the same answers.
 export function byggSaken(s: Svar): { sak: Brukersak; kjoper: Kjoper } {

@@ -1,3 +1,5 @@
+import { liste } from "@/lib/brev/format";
+
 // The paragraph that cites the decision, filled from fields and verified quotes only. Nothing about
 // the decision is written in free prose, so it cannot claim what the decision did not say.
 
@@ -28,7 +30,6 @@ export const MIN_KM_ANDEL = 0.9;
 export const visSaksnummer = (s: string | null) => s?.replace(/^FKU-\d{4}-(\d+)(?:-\d+)?$/, "$1") ?? null;
 export const visDato = (iso: string | null) => (iso && /^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${Number(iso.slice(8))}.${Number(iso.slice(5, 7))}.${iso.slice(0, 4)}` : null);
 const visKm = (km: number) => new Intl.NumberFormat("nb-NO").format(km);
-const liste = (deler: string[]) => (deler.length < 2 ? (deler[0] ?? "") : `${deler.slice(0, -1).join(", ")} og ${deler.at(-1)}`);
 const sitert = (s: string) => `«${s}»${/[.!?]$/.test(s) ? "" : "."}`;
 
 function henvisning(v: Malvedtak): string {

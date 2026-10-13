@@ -1,0 +1,66 @@
+16 ulike tekster over verksted(3) × opplysning(3) × utlegg(2) × tidligere(3)
+
+## {"verksted":"skriftlig","opplysning":"skriftlig","utlegg":false,"tidligere":null} (+1 like)
+Verkstedets skriftlige vurdering
+Annonse/kjøpekontrakt
+
+## {"verksted":"skriftlig","opplysning":"skriftlig","utlegg":false,"tidligere":"skriftlig"}
+Verkstedets skriftlige vurdering
+Annonse/kjøpekontrakt
+Tidligere reklamasjon
+
+## {"verksted":"skriftlig","opplysning":"skriftlig","utlegg":true,"tidligere":null} (+1 like)
+Verkstedets skriftlige vurdering
+Annonse/kjøpekontrakt
+Kvitteringer for utlegg
+
+## {"verksted":"skriftlig","opplysning":"skriftlig","utlegg":true,"tidligere":"skriftlig"}
+Verkstedets skriftlige vurdering
+Annonse/kjøpekontrakt
+Kvitteringer for utlegg
+Tidligere reklamasjon
+
+## {"verksted":"skriftlig","opplysning":"muntlig","utlegg":false,"tidligere":null} (+3 like)
+Verkstedets skriftlige vurdering
+
+## {"verksted":"skriftlig","opplysning":"muntlig","utlegg":false,"tidligere":"skriftlig"} (+1 like)
+Verkstedets skriftlige vurdering
+Tidligere reklamasjon
+
+## {"verksted":"skriftlig","opplysning":"muntlig","utlegg":true,"tidligere":null} (+3 like)
+Verkstedets skriftlige vurdering
+Kvitteringer for utlegg
+
+## {"verksted":"skriftlig","opplysning":"muntlig","utlegg":true,"tidligere":"skriftlig"} (+1 like)
+Verkstedets skriftlige vurdering
+Kvitteringer for utlegg
+Tidligere reklamasjon
+
+## {"verksted":"muntlig","opplysning":"skriftlig","utlegg":false,"tidligere":null} (+3 like)
+Annonse/kjøpekontrakt
+
+## {"verksted":"muntlig","opplysning":"skriftlig","utlegg":false,"tidligere":"skriftlig"} (+1 like)
+Annonse/kjøpekontrakt
+Tidligere reklamasjon
+
+## {"verksted":"muntlig","opplysning":"skriftlig","utlegg":true,"tidligere":null} (+3 like)
+Annonse/kjøpekontrakt
+Kvitteringer for utlegg
+
+## {"verksted":"muntlig","opplysning":"skriftlig","utlegg":true,"tidligere":"skriftlig"} (+1 like)
+Annonse/kjøpekontrakt
+Kvitteringer for utlegg
+Tidligere reklamasjon
+
+## {"verksted":"muntlig","opplysning":"muntlig","utlegg":false,"tidligere":null} (+7 like)
+(ingen)
+
+## {"verksted":"muntlig","opplysning":"muntlig","utlegg":false,"tidligere":"skriftlig"} (+3 like)
+Tidligere reklamasjon
+
+## {"verksted":"muntlig","opplysning":"muntlig","utlegg":true,"tidligere":null} (+7 like)
+Kvitteringer for utlegg
+
+## {"verksted":"muntlig","opplysning":"muntlig","utlegg":true,"tidligere":"skriftlig"} (+3 like)
+Kvitteringer for utlegg
+Tidligere reklamasjon

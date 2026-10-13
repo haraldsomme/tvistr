@@ -1,0 +1,74 @@
+19 ulike tekster over lov(2) × somDenEr(3) × feilsett(8) × opplysning(3)
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"teknisk","opplysning":"skriftlig"} (+5 like)
+Selv om bilen ble solgt «som den er», har den en mangel, fordi den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a.
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"opplysning","opplysning":"skriftlig"} (+11 like)
+Bilen svarer ikke til de opplysningene dere ga om serviceheftet, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"opplysning","opplysning":"nei"} (+5 like)
+Dere har forsømt å opplyse om serviceheftet, som dere burde kjenne til og som jeg hadde grunn til å regne med å få, jf. forbrukerkjøpsloven § 16 første ledd bokstav b.
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"garanti","opplysning":"skriftlig"} (+17 like)
+Bilen ble ikke levert med den garantien som ble avtalt, jf. forbrukerkjøpsloven § 15 og § 18 a.
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"vet_ikke","opplysning":"skriftlig"} (+17 like)
+Bilen har en funksjonssvikt som viste seg innen seks måneder etter overtakelsen, og jeg reklamerer herved på denne, jf. forbrukerkjøpsloven § 27 første ledd.
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig"} (+1 like)
+Selv om bilen ble solgt «som den er», har den en mangel, fordi den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a.
+Bilen svarer ikke til de opplysningene dere ga om kilometerstanden, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"teknisk_og_opplysning","opplysning":"nei"}
+Selv om bilen ble solgt «som den er», har den en mangel, fordi den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a.
+Dere har forsømt å opplyse om kilometerstanden, som dere burde kjenne til og som jeg hadde grunn til å regne med å få, jf. § 16 første ledd bokstav b.
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"utstyr_blandet","opplysning":"skriftlig"} (+1 like)
+Selv om bilen ble solgt «som den er», har den en mangel, fordi den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a.
+Bilen svarer ikke til de opplysningene dere ga om nøklene og tilbehøret, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"utstyr_blandet","opplysning":"nei"}
+Selv om bilen ble solgt «som den er», har den en mangel, fordi den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a.
+Dere har forsømt å opplyse om nøklene og tilbehøret, som dere burde kjenne til og som jeg hadde grunn til å regne med å få, jf. § 16 første ledd bokstav b.
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"uten_underkategori","opplysning":"skriftlig"} (+11 like)
+Bilen svarer ikke til de opplysningene dere ga om bilens historikk, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.
+
+## {"lov":"før_2024","somDenEr":"ja","feilsett":"uten_underkategori","opplysning":"nei"} (+5 like)
+Dere har forsømt å opplyse om bilens historikk, som dere burde kjenne til og som jeg hadde grunn til å regne med å få, jf. forbrukerkjøpsloven § 16 første ledd bokstav b.
+
+## {"lov":"før_2024","somDenEr":"nei","feilsett":"teknisk","opplysning":"skriftlig"} (+27 like)
+Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
+
+## {"lov":"før_2024","somDenEr":"nei","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig"} (+9 like)
+Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
+Bilen svarer ikke til de opplysningene dere ga om kilometerstanden, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.
+
+## {"lov":"før_2024","somDenEr":"nei","feilsett":"teknisk_og_opplysning","opplysning":"nei"} (+3 like)
+Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
+Dere har forsømt å opplyse om kilometerstanden, som dere burde kjenne til og som jeg hadde grunn til å regne med å få, jf. § 16 første ledd bokstav b.
+
+## {"lov":"før_2024","somDenEr":"nei","feilsett":"utstyr_blandet","opplysning":"skriftlig"} (+9 like)
+Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
+Bilen svarer ikke til de opplysningene dere ga om nøklene og tilbehøret, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.
+
+## {"lov":"før_2024","somDenEr":"nei","feilsett":"utstyr_blandet","opplysning":"nei"} (+3 like)
+Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
+Dere har forsømt å opplyse om nøklene og tilbehøret, som dere burde kjenne til og som jeg hadde grunn til å regne med å få, jf. § 16 første ledd bokstav b.
+
+## {"lov":"etter_2024","somDenEr":"ja","feilsett":"teknisk","opplysning":"nei"} (+1 like)
+Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
+Forbeholdet om at bilen ble solgt «som den er», er ikke et avtalt unntak etter forbrukerkjøpsloven § 15 annet ledd.
+Unntaket fra kravene i § 15 tredje og fjerde ledd forutsetter at jeg ved inngåelsen av avtalen ble spesielt opplyst om at en bestemt egenskap ved tingen ville avvike fra disse kravene, og uttrykkelig og særskilt aksepterte dette avviket.
+
+## {"lov":"etter_2024","somDenEr":"ja","feilsett":"teknisk_og_opplysning","opplysning":"nei"}
+Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
+Forbeholdet om at bilen ble solgt «som den er», er ikke et avtalt unntak etter forbrukerkjøpsloven § 15 annet ledd.
+Unntaket fra kravene i § 15 tredje og fjerde ledd forutsetter at jeg ved inngåelsen av avtalen ble spesielt opplyst om at en bestemt egenskap ved tingen ville avvike fra disse kravene, og uttrykkelig og særskilt aksepterte dette avviket.
+Dere har forsømt å opplyse om kilometerstanden, som dere burde kjenne til og som jeg hadde grunn til å regne med å få, jf. § 16 første ledd bokstav b.
+
+## {"lov":"etter_2024","somDenEr":"ja","feilsett":"utstyr_blandet","opplysning":"nei"}
+Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
+Forbeholdet om at bilen ble solgt «som den er», er ikke et avtalt unntak etter forbrukerkjøpsloven § 15 annet ledd.
+Unntaket fra kravene i § 15 tredje og fjerde ledd forutsetter at jeg ved inngåelsen av avtalen ble spesielt opplyst om at en bestemt egenskap ved tingen ville avvike fra disse kravene, og uttrykkelig og særskilt aksepterte dette avviket.
+Dere har forsømt å opplyse om nøklene og tilbehøret, som dere burde kjenne til og som jeg hadde grunn til å regne med å få, jf. § 16 første ledd bokstav b.

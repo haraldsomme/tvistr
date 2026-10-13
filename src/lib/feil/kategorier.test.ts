@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brukerNiva, HOVEDKATEGORIER, KOMPONENTTYPER, komponenttype, rensFeilvalg, rensTidsvalg } from "./kategorier";
+import { BESTEMT_FORM, bestemtForm, brukerNiva, HOVEDKATEGORIER, KOMPONENTTYPER, komponenttype, rensFeilvalg, rensTidsvalg } from "./kategorier";
 
 describe("HOVEDKATEGORIER", () => {
   it("har unike id-er og koder, og unike underkategorier per hovedkategori", () => {
@@ -57,5 +57,29 @@ describe("komponenttype", () => {
     expect(komponenttype("garanti", null)).toBe("opplysning");
     expect(komponenttype("motor", null)).toBeNull();
     expect(komponenttype("vet_ikke", null)).toBeNull();
+  });
+});
+
+describe("BESTEMT_FORM", () => {
+  it("har en form for hver opplysningsunderkategori", () => {
+    for (const id of KOMPONENTTYPER.opplysning) expect(BESTEMT_FORM[id], id).toBeTruthy();
+  });
+
+  it("har en form for hver hovedkategori med opplysninger når ingen underkategori er valgt", () => {
+    for (const h of ["historikk", "service", "utstyr", "garanti"]) expect(bestemtForm(h, null), h).toBeTruthy();
+  });
+
+  it("har ingen form for tekniske feil", () => {
+    expect(bestemtForm("motor", "turbo")).toBeNull();
+    expect(bestemtForm("motor", null)).toBeNull();
+  });
+
+  it("har bare nøkler som finnes i kategoriene", () => {
+    for (const k of Object.keys(BESTEMT_FORM)) {
+      const [hoved, under] = k.split(".");
+      const h = HOVEDKATEGORIER.find((x) => x.id === hoved);
+      expect(h, k).toBeTruthy();
+      if (under) expect(h!.under.some((u) => u.id === under), k).toBe(true);
+    }
   });
 });

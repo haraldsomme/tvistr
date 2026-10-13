@@ -1,0 +1,50 @@
+12 ulike tekster over feilsett(3) × forsok(4)
+
+## {"feilsett":"teknisk","forsok":0}
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+
+## {"feilsett":"teknisk","forsok":1}
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Dere har forsøkt å rette feilen én gang uten at det har lykkes.
+
+## {"feilsett":"teknisk","forsok":2}
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Dere har forsøkt å rette feilen to ganger uten at det har lykkes.
+
+## {"feilsett":"teknisk","forsok":3}
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Dere har forsøkt å rette feilen tre eller flere ganger uten at det har lykkes.
+
+## {"feilsett":"to_tekniske_ulik_tid","forsok":0}
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Lys: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+
+## {"feilsett":"to_tekniske_ulik_tid","forsok":1}
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Lys: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Dere har forsøkt å rette feilene én gang uten at det har lykkes.
+
+## {"feilsett":"to_tekniske_ulik_tid","forsok":2}
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Lys: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Dere har forsøkt å rette feilene to ganger uten at det har lykkes.
+
+## {"feilsett":"to_tekniske_ulik_tid","forsok":3}
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Lys: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Dere har forsøkt å rette feilene tre eller flere ganger uten at det har lykkes.
+
+## {"feilsett":"utstyr_blandet","forsok":0}
+Dekk og felger; nøkler og tilbehør: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+
+## {"feilsett":"utstyr_blandet","forsok":1}
+Dekk og felger; nøkler og tilbehør: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Dere har forsøkt å rette feilen én gang uten at det har lykkes.
+
+## {"feilsett":"utstyr_blandet","forsok":2}
+Dekk og felger; nøkler og tilbehør: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Dere har forsøkt å rette feilen to ganger uten at det har lykkes.
+
+## {"feilsett":"utstyr_blandet","forsok":3}
+Dekk og felger; nøkler og tilbehør: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
+Dere har forsøkt å rette feilen tre eller flere ganger uten at det har lykkes.

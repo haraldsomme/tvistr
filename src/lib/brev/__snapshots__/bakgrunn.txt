@@ -1,0 +1,1435 @@
+198 ulike tekster over somDenEr(3) × tidligere(3) × feilsett(8) × opplysning(3) × forsteRegistrert(2)
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":2016} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":null} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":null,"feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":2016} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":null} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":2016} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":null} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"ja","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":2016} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":null} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":null,"feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":2016} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":null} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":2016} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":null} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"nei","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":2016} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":null} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":null,"feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":2016} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":null} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":"skriftlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte skriftlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":2016} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"teknisk","opplysning":"skriftlig","forsteRegistrert":null} (+13 like)
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om serviceheftet.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"garanti","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"garanti","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om garantien.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"teknisk_og_opplysning","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om kilometerstanden.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"utstyr_blandet","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om nøklene og tilbehøret.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"skriftlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere skriftlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":2016}
+Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2016, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.
+
+## {"somDenEr":"vet_ikke","tidligere":"muntlig","feilsett":"uten_underkategori","opplysning":"muntlig","forsteRegistrert":null}
+Jeg viser til kjøp av Volkswagen Golf, reg.nr. AB12345, fra Testbil AS (org.nr. 999 999 999) den 10. mars 2025.
+Kjøpesummen var kr 185 000.
+Bilen hadde gått 142 000 km ved overtakelsen.
+Jeg reklamerte muntlig til dere den 1. juni 2025.
+Før kjøpet opplyste dere muntlig om bilens historikk.

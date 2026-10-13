@@ -1,14 +1,16 @@
-// Walks steps 3, 4 and 5 of /sak at 1280 and 390 px against a running dev server (criterion 4 in
-// docs/ferdigkriterier.md): the workshop report and «Samme rapport som forrige feil» in step 3, contact
-// with the seller and the seller search against Brreg in step 4, then the letter. With
-// TVISTR_HELT_BREV_UTEN_BETALING=1 it also takes «Kopier tekst» and the Word download. It saves
-// screenshots, the downloaded .docx files and rapport.json in the folder given.
+// Walks steps 3, 4 and 5 of /sak at 1280 and 390 px against a running dev server (docs/ferdigkriterier.md):
+//   - step 3: the discovery date, a report dated before the discovery (stops), then the report filled
+//     in, and «Samme rapport som forrige feil»
+//   - step 4: contact with the seller, a complaint more than two months after a discovery (warns here,
+//     on the defect's card in step 3 and in the summary), and the seller search against Brreg
+//   - step 5: the summary with its warnings, «Endre» back to the field, then the letter, and with
+//     TVISTR_HELT_BREV_UTEN_BETALING=1 also «Kopier tekst» and the Word download
+// It saves screenshots, the downloaded .docx files and rapport.json in the folder given.
 //
 //   npm run dev                      (with TVISTR_HELT_BREV_UTEN_BETALING=1 in .env.local for the whole letter)
 //   node scripts/ferdig-brevskjema.mjs <utmappe>
 //
-// The case is put in sessionStorage, so the walk starts at step 3. Without the variable the same walk
-// shows the preview, with the rest of the letter hidden.
+// The dates are chosen for October 2026: the calendar opens on the current month.
 import { chromium } from "playwright-core";
 import { writeFileSync } from "node:fs";
 
@@ -16,13 +18,11 @@ const UT = process.argv[2];
 const SAK = {
   step: 2, regnr: "AB12345",
   car: { k: { regnr: "AB 12345", merke: "Volkswagen", modell: "Golf", ar: 2016, bruktimportert: false }, eierFra: "2025-03-10" },
-  kjopsdato: "2025-03-10", valg: { motor: ["turbo"], historikk: ["km"] },
-  tid: { motor: "6_til_24_mnd", historikk: "innen_6_mnd" }, km: "142000", kjopesum: "185000", somDenEr: "ja",
-  detaljer: { motor: { beskrivelse: "Bilen mistet kraft etter tre uker.", opplysning: "nei" }, historikk: { opplysning: "skriftlig", verksted: "nei" } },
+  kjopsdato: "2025-03-10", valg: { motor: ["turbo"], historikk: ["km"] }, km: "142000", kjopesum: "185000", somDenEr: "ja",
+  detaljer: { motor: { beskrivelse: "Bilen mistet kraft etter tre uker.", opplysning: "nei" }, historikk: { oppdaget: "2026-06-20", opplysning: "skriftlig", verksted: "nei" } },
   krav: null, forsok: null, kreverUtlegg: false, utlegg: [], selger: null, reklamert: null, reklamertDato: "", reklamertForm: null, selgerSvar: null,
 };
-// A day after the purchase and before today, as the calendar names it in October 2026.
-const DAG = { iso: "2026-10-01", kalender: "torsdag 1. oktober 2026" };
+const DAG = { "2026-10-01": "torsdag 1. oktober 2026", "2026-10-02": "fredag 2. oktober 2026" };
 
 const browser = await chromium.launch();
 const rapport = {};
@@ -33,73 +33,101 @@ for (const [navn, vp, mobil] of [["desktop", { width: 1280, height: 900 }, false
   const feil = [];
   page.on("console", (m) => m.type() === "error" && feil.push(m.text()));
   page.on("pageerror", (e) => feil.push(String(e)));
-  const velgDato = async (etikett) => {
-    if (mobil) await page.getByLabel(etikett).fill(DAG.iso);
+  const velgDato = async (etikett, iso) => {
+    if (mobil) await page.getByLabel(etikett).fill(iso);
     else {
       await page.getByLabel(etikett).click();
-      await page.getByRole("button", { name: DAG.kalender }).click();
+      await page.getByRole("button", { name: DAG[iso] }).click();
     }
   };
   const fortsett = page.getByRole("button", { name: "Fortsett" });
   const farge = (k) => k.evaluate((b) => getComputedStyle(b).backgroundColor);
+  const GRAA = "rgb(196, 199, 202)";
 
   await page.goto("http://localhost:3000/sak");
-  await page.evaluate((s) => sessionStorage.setItem("tvistr:sak", JSON.stringify(s)), SAK);
+  await page.evaluate((s) => sessionStorage.setItem("tvistr:sak:v2", JSON.stringify(s)), SAK);
   await page.reload();
   await page.waitForSelector("text=Beskriv feilene");
 
-  // Step 3: a written assessment asks for the report, and the card is not done before it is.
-  r.fortsettFoerRapport = await farge(fortsett);
+  // Step 3: the discovery date, then a report dated before it, which stops.
+  r.intervallspørsmåletErBorte = (await page.getByText("Når viste feilen seg?").count()) === 0;
+  await velgDato("Når oppdaget du Motor og eksos?", "2026-10-02");
   await page.getByRole("group", { name: "Har et verksted undersøkt Motor og eksos?" }).getByRole("button", { name: "Ja, skriftlig" }).click();
-  await page.waitForSelector("text=Rapporten fra verkstedet");
-  r.rapportSkjemaSynlig = true;
-  r.kortetErIkkeFerdig = await page.getByText("Mangler rapport").first().isVisible().catch(() => false);
   await page.getByRole("group", { name: "Hvem undersøkte Motor og eksos?" }).getByRole("button", { name: "Merkeverksted" }).click();
   await page.getByLabel("Verkstedets navn").fill("Volkswagen Senter Nord");
-  await velgDato("Dato for rapporten om Motor og eksos");
-  for (const t of [/bekrefter feilen/, /angir årsaken/, /ikke er normal slitasje/, /inneholder kostnadsoverslag/]) await page.getByRole("checkbox", { name: t }).click();
+  for (const t of [/bekrefter feilen/, /inneholder kostnadsoverslag/]) await page.getByRole("checkbox", { name: t }).click();
   await page.locator("label", { hasText: "Kostnadsoverslag for utbedring" }).locator("input").fill("38000");
-  await page.locator("textarea").fill('Turbolader "defekt" og må skiftes. Ikke normal slitasje.');
-  await page.screenshot({ path: `${UT}/${navn}-steg3-rapport.png` });
+  await velgDato("Dato for rapporten om Motor og eksos", "2026-10-01");
+  r.stoppRapportFørOppdaget = await page.getByText("Rapporten kan ikke være datert før du oppdaget feilen.").isVisible();
+  r.fortsettVedStopp = await farge(fortsett);
+  await page.screenshot({ path: `${UT}/${navn}-steg3-stopp.png` });
+  await velgDato("Dato for rapporten om Motor og eksos", "2026-10-02");
+  r.stoppBorteEtterRetting = (await page.getByText("Rapporten kan ikke være datert før du oppdaget feilen.").count()) === 0;
+  await page.getByRole("group", { name: "Skrev eller sa selger noe om Motor og eksos før kjøpet?" }).getByRole("button", { name: "Nei" }).click();
 
   // The second defect: the same report, ticked again for this defect.
   await page.locator("button[aria-expanded]", { hasText: "Bilens historikk" }).click();
   await page.getByRole("group", { name: "Har et verksted undersøkt Bilens historikk?" }).getByRole("button", { name: "Ja, skriftlig" }).click();
   await page.getByRole("button", { name: "Samme rapport som forrige feil" }).click();
   r.kopiertNavn = await page.getByLabel("Verkstedets navn").inputValue();
-  r.kopiertAvkrysninger = await page.getByRole("checkbox", { checked: true }).count();
   await page.getByRole("checkbox", { name: /bekrefter feilen/ }).click();
   await page.waitForTimeout(600);
-  await page.screenshot({ path: `${UT}/${navn}-steg3-kopi.png` });
   r.fortsettEtterRapport = await farge(fortsett);
   await fortsett.click();
 
-  // Step 4: «Nei» leaves no questions about repairs; «Ja» asks for all four answers.
+  // Step 4: contact with the seller, complained on 2 October, more than three months after 20 June.
   await page.waitForSelector("text=Hva krever du av forhandleren?");
   await page.getByRole("radio", { name: /Prisavslag/ }).click();
-  const lagBrev = page.getByRole("button", { name: "Lag brev" });
-  await page.getByRole("group", { name: "Har du reklamert til selger?" }).getByRole("button", { name: "Nei" }).click();
-  r.rettingsforsokVisesVedNei = await page.getByText("Har selger forsøkt å rette feilen?").count();
   await page.getByRole("group", { name: "Har du reklamert til selger?" }).getByRole("button", { name: "Ja", exact: true }).click();
-  await velgDato("Dato for første reklamasjon");
+  await velgDato("Dato for første reklamasjon", "2026-10-02");
   await page.getByRole("group", { name: "Hvordan reklamerte du?" }).getByRole("button", { name: "Skriftlig" }).click();
-  await page.getByRole("group", { name: "Har selger forsøkt å rette feilen?" }).getByRole("button", { name: "1 gang" }).click();
+  await page.getByRole("group", { name: "Har selger forsøkt å rette feilen?" }).getByRole("button", { name: "Nei" }).click();
+  await page.getByRole("group", { name: "Hva svarte selger?" }).getByRole("button", { name: "Avviste kravet" }).click();
+  const SEN = "Du reklamerer mer enn to måneder etter at feilen ble oppdaget.";
+  r.advarselISteg4 = await page.locator("#felt-kontakt").getByText(SEN).isVisible();
   await page.getByRole("textbox", { name: "Søk etter selgeren" }).fill("equinor");
   await page.waitForSelector("[role=option]", { timeout: 8000 });
   await page.locator("[role=option]").first().click();
-  r.knappUtenSelgersSvar = await farge(lagBrev);
-  await page.getByRole("group", { name: "Hva svarte selger?" }).getByRole("button", { name: "Avviste kravet" }).click();
-  await page.waitForTimeout(500);
-  r.knappMedAlt = await farge(lagBrev);
   await page.screenshot({ path: `${UT}/${navn}-steg4.png` });
+
+  // The warning on the defect's card in step 3.
+  await page.getByRole("button", { name: "Tilbake" }).click();
+  await page.waitForSelector("text=Beskriv feilene");
+  // The card may still be open from before; open it only if it is closed.
+  const kort = page.locator("button[aria-expanded]", { hasText: "Bilens historikk" });
+  if ((await kort.getAttribute("aria-expanded")) !== "true") await kort.click();
+  r.advarselISteg3 = await page.locator("#felt-feil-historikk").getByText(SEN).isVisible();
+  await fortsett.click();
+  await page.waitForSelector("text=Hva krever du av forhandleren?");
+
+  // Step 5: the summary with the warnings; «Endre» goes back to the field.
+  const seOver = page.getByRole("button", { name: "Se over" });
+  r.seOverKlar = (await farge(seOver)) !== GRAA;
+  await seOver.click();
+  await page.waitForSelector("text=Se over opplysningene");
+  r.advarslerISteg5 = await page.locator("[data-advarsler] strong").innerText();
+  r.radene = await page.locator('table[aria-label="Opplysningene i brevet"] th').allInnerTexts();
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: `${UT}/${navn}-steg5-oppsummering.png`, fullPage: true });
+  await page.locator("[data-advarsler]").getByRole("button", { name: "Endre" }).first().click();
+  await page.waitForTimeout(900);
+  r.endreGårTilSteg = await page.locator("h1").first().innerText();
+  r.feltetErISyne = await page.evaluate(() => {
+    const e = document.getElementById("felt-kontakt") ?? document.getElementById("felt-feil-historikk");
+    const b = e?.getBoundingClientRect();
+    return !!b && b.top < innerHeight && b.bottom > 0;
+  });
   r.horisontalScroll = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
 
-  await lagBrev.click();
+  // Back to the summary, then the letter.
+  await page.getByRole("button", { name: "Se over" }).click();
+  await page.waitForSelector("text=Se over opplysningene");
+  await page.getByRole("button", { name: "Opplysningene stemmer, gå til betaling" }).click();
   await page.waitForSelector('article[aria-label="Reklamasjonsbrev"]', { timeout: 60000 });
   r.tittel = await page.locator("h1").first().innerText();
   r.brevTekst = await page.locator('article[aria-label="Reklamasjonsbrev"]').innerText();
-  // The estimate typed in step 3 is in the claim, and the report is one enclosure for both defects.
-  r.overslagILetter = r.brevTekst.includes("38\u00a0000 ifølge verkstedets overslag");
+  r.oppdagetIBrevet = r.brevTekst.includes("Feilen viste seg den 2. oktober 2026.");
+  r.overslagIBrevet = r.brevTekst.includes("38 000 ifølge verkstedets overslag");
   r.rapportVedlegg = (r.brevTekst.match(/– Rapport fra/g) ?? []).length;
   r.bredde = await page.evaluate(() => ({ scrollW: document.documentElement.scrollWidth, innerW: innerWidth }));
   await page.waitForTimeout(1200);
@@ -108,7 +136,6 @@ for (const [navn, vp, mobil] of [["desktop", { width: 1280, height: 900 }, false
   if (r.tittel === "Ditt reklamasjonsbrev") {
     await page.getByRole("button", { name: "Kopier tekst" }).click();
     r.kopiert = await page.getByRole("button", { name: "Kopiert" }).waitFor({ timeout: 3000 }).then(() => true, () => false);
-    r.utklipp = await page.evaluate(() => navigator.clipboard.readText());
     const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Last ned som Word" }).click()]);
     r.docxNavn = dl.suggestedFilename();
     await dl.saveAs(`${UT}/${navn}-brev.docx`);
@@ -118,4 +145,4 @@ for (const [navn, vp, mobil] of [["desktop", { width: 1280, height: 900 }, false
 }
 await browser.close();
 writeFileSync(`${UT}/rapport.json`, JSON.stringify(rapport, null, 1));
-console.log(JSON.stringify(Object.fromEntries(Object.entries(rapport).map(([k, v]) => [k, { ...v, brevTekst: v.brevTekst?.length + " tegn", utklipp: v.utklipp?.length + " tegn" }])), null, 1));
+console.log(JSON.stringify(Object.fromEntries(Object.entries(rapport).map(([k, v]) => [k, { ...v, brevTekst: v.brevTekst?.length + " tegn" }])), null, 1));

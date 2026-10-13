@@ -112,7 +112,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Toyota Avensis, første gang registrert i 2021, reg.nr. ZA 20002, fra Bruktbilhuset Nord AS (org.nr. 999 999 998) den 1. juni 2024. Kjøpesummen var kr 77 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+> Jeg viser til kjøp av Toyota Avensis, første gang registrert i 2021, reg.nr. ZA 20002, fra Bruktbilhuset Nord AS (org.nr. 999 999 980) den 1. juni 2024. Kjøpesummen var kr 77 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
 >
 > 2. Mangelen
 >
@@ -170,7 +170,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Skoda Octavia, første gang registrert i 2021, reg.nr. ZA 20003, fra Vestlandsbil AS (org.nr. 999 999 997) den 1. juni 2024. Kjøpesummen var kr 94 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Før kjøpet opplyste dere skriftlig om ombyggingen og tuningen.
+> Jeg viser til kjøp av Skoda Octavia, første gang registrert i 2021, reg.nr. ZA 20003, fra Vestlandsbil AS (org.nr. 999 999 972) den 1. juni 2024. Kjøpesummen var kr 94 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Før kjøpet opplyste dere skriftlig om ombyggingen og tuningen.
 >
 > 2. Mangelen
 >
@@ -283,7 +283,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Ford Focus, første gang registrert i 2008, reg.nr. ZA 20005, fra Bruktbilhuset Nord AS (org.nr. 999 999 998) den 1. mars 2023. Kjøpesummen var kr 128 000. Bilen hadde gått 260 000 km ved overtakelsen. Bilen ble solgt «som den er».
+> Jeg viser til kjøp av Ford Focus, første gang registrert i 2008, reg.nr. ZA 20005, fra Bruktbilhuset Nord AS (org.nr. 999 999 980) den 1. mars 2023. Kjøpesummen var kr 128 000. Bilen hadde gått 260 000 km ved overtakelsen. Bilen ble solgt «som den er».
 >
 > 2. Mangelen
 >
@@ -340,7 +340,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Audi A4, første gang registrert i 2020, reg.nr. ZA 20006, fra Vestlandsbil AS (org.nr. 999 999 997) den 1. mars 2023. Kjøpesummen var kr 145 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+> Jeg viser til kjøp av Audi A4, første gang registrert i 2020, reg.nr. ZA 20006, fra Vestlandsbil AS (org.nr. 999 999 972) den 1. mars 2023. Kjøpesummen var kr 145 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
 >
 > 2. Mangelen
 >
@@ -458,7 +458,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Opel Astra, første gang registrert i 2021, reg.nr. ZA 20008, fra Bruktbilhuset Nord AS (org.nr. 999 999 998) den 1. juni 2024. Kjøpesummen var kr 179 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+> Jeg viser til kjøp av Opel Astra, første gang registrert i 2021, reg.nr. ZA 20008, fra Bruktbilhuset Nord AS (org.nr. 999 999 980) den 1. juni 2024. Kjøpesummen var kr 179 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
 >
 > 2. Mangelen
 >
@@ -515,7 +515,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Kia Ceed, første gang registrert i 2019, reg.nr. ZA 20009, fra Vestlandsbil AS (org.nr. 999 999 997) den 1. januar 2022. Kjøpesummen var kr 196 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+> Jeg viser til kjøp av Kia Ceed, første gang registrert i 2019, reg.nr. ZA 20009, fra Vestlandsbil AS (org.nr. 999 999 972) den 1. januar 2022. Kjøpesummen var kr 196 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
 >
 > 2. Mangelen
 >
@@ -634,7 +634,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2009, reg.nr. ZA 20011, fra Bruktbilhuset Nord AS (org.nr. 999 999 998) den 1. juni 2024. Kjøpesummen var kr 230 000. Bilen hadde gått 260 000 km ved overtakelsen. Bilen ble solgt «som den er». Før kjøpet opplyste dere skriftlig om serviceheftet.
+> Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2009, reg.nr. ZA 20011, fra Bruktbilhuset Nord AS (org.nr. 999 999 980) den 1. juni 2024. Kjøpesummen var kr 230 000. Bilen hadde gått 260 000 km ved overtakelsen. Bilen ble solgt «som den er». Før kjøpet opplyste dere skriftlig om serviceheftet.
 >
 > 2. Mangelen
 >
@@ -688,7 +688,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Toyota Avensis, første gang registrert i 2019, reg.nr. ZA 20012, fra Vestlandsbil AS (org.nr. 999 999 997) den 1. januar 2022. Kjøpesummen var kr 247 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+> Jeg viser til kjøp av Toyota Avensis, første gang registrert i 2019, reg.nr. ZA 20012, fra Vestlandsbil AS (org.nr. 999 999 972) den 1. januar 2022. Kjøpesummen var kr 247 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
 >
 > 2. Mangelen
 >
@@ -805,7 +805,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Volvo V70, første gang registrert i 2016, reg.nr. ZA 20014, fra Bruktbilhuset Nord AS (org.nr. 999 999 998) den 1. juni 2024. Kjøpesummen var kr 91 000. Bilen hadde gått 150 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+> Jeg viser til kjøp av Volvo V70, første gang registrert i 2016, reg.nr. ZA 20014, fra Bruktbilhuset Nord AS (org.nr. 999 999 980) den 1. juni 2024. Kjøpesummen var kr 91 000. Bilen hadde gått 150 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
 >
 > 2. Mangelen
 >
@@ -863,7 +863,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Ford Focus, første gang registrert i 2020, reg.nr. ZA 20015, fra Vestlandsbil AS (org.nr. 999 999 997) den 1. mars 2023. Kjøpesummen var kr 108 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+> Jeg viser til kjøp av Ford Focus, første gang registrert i 2020, reg.nr. ZA 20015, fra Vestlandsbil AS (org.nr. 999 999 972) den 1. mars 2023. Kjøpesummen var kr 108 000. Bilen hadde gått 40 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
 >
 > 2. Mangelen
 >

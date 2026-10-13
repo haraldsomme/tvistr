@@ -2,7 +2,9 @@
 
 Beskriver skjemaet slik det er nå: hva det spør om, hva som valideres og hva som skjer med svarene. Koden ligger i `src/app/sak/` (`skjema.tsx`, `actions.ts`) og `src/lib/feil/kategorier.ts`. Det gamle skjemaet står i `gammelt-skjema.md`.
 
-Skjemaet har fem steg: **Kjøretøy → Feilen → Detaljer → Krav → Brev**. «Lag brev» i steg 4 kaller `finnVedtak` (vedtaket brevet viser til) og deretter `byggBrevet` (hele brevet, se `brev.md`), og går til steg 5, som viser brevet.
+Skjemaet har fem steg: **Kjøretøy → Feilen → Detaljer → Krav → Brev**. «Se over» i steg 4 går til steg 5, som først viser en oppsummering med advarslene. «Opplysningene stemmer, gå til betaling» kaller `finnVedtak` (vedtaket brevet viser til) og deretter `byggBrevet` (hele brevet, se `brev.md`).
+
+Alle svar vurderes ved hver endring av de samme to funksjonene som serveren bruker: `tidslinje.ts` (datoene) og `riktighet.ts` (resten). Reglene og meldingene står i `riktighet.md`. Stopp vises i rødt ved feltet og hindrer «Fortsett»; advarsler vises i gult og hindrer ikke.
 
 ## Steg 1: Kjøretøy
 
@@ -41,16 +43,17 @@ Hver underkategori har en komponenttype (`KOMPONENTTYPER`). Typen «opplysning»
 
 ## Steg 3: Detaljer
 
-Ett kort per valgt hovedkategori. Et kort er besvart når de tre spørsmålene har svar, og når verkstedet har undersøkt feilen skriftlig, når rapporten også er fylt ut. Neste ubesvarte kort åpnes automatisk, men ikke mens kjøperen skriver i rapporten.
+Ett kort per valgt hovedkategori. Et kort er besvart når de tre spørsmålene har svar, når ingen dato eller tekst på kortet stopper, og når verkstedet har undersøkt feilen skriftlig, når rapporten også er fylt ut. Neste ubesvarte kort åpnes automatisk, men ikke mens kjøperen skriver i rapporten.
 
 | Spørsmål | Svar | Krav |
 |---|---|---|
-| Når viste feilen seg? | Innen 6 måneder / Mellom 6 måneder og 2 år / Mer enn 2 år (regnet fra overtakelsen) | Må besvares |
+| Når oppdaget du feilen? | Dato. Velgeren går fra dagen etter kjøpet til i dag. Hjelpetekst: «Dagen du først merket feilen. Vet du ikke dagen, velg omtrent og kryss av for omtrentlig.» | Må besvares |
+| Datoen er omtrentlig | Avkrysning | Valgfri. Ligger en omtrentlig dato innen 14 dager fra en frist i loven, må kjøperen krysse av for «Jeg har sjekket datoen, og den stemmer». |
 | Har et verksted undersøkt feilen? | Ja, skriftlig / Ja, muntlig / Nei | Må besvares |
 | Skrev eller sa selger noe om dette før kjøpet (annonse, kontrakt, melding)? | Ja, skriftlig / Ja, muntlig / Nei | Må besvares |
-| Beskrivelse | Fritekst, maks 200 tegn | Valgfri |
+| Beskrivelse | Fritekst, maks 200 tegn. Linjeskift og doble anførselstegn fjernes; lenker og tekst med bare tall stopper. | Valgfri |
 
-Hvis en feil viste seg mer enn to år etter overtakelsen, vises fristvarsel.
+Tidsnivå, formodning og frister regnes fra datoen (`tidslinje.ts`). Tidligere var spørsmålet tre intervaller; datoen gir samme tidsnivå som intervallet den ligger i. Hvis en feil viste seg mer enn to år etter overtakelsen, vises fristvarsel, og advarsler om sen reklamasjon eller en dato nær en frist vises på kortet.
 
 ### Rapport fra verkstedet
 
@@ -97,7 +100,9 @@ Under utlegg vises en påminnelse om å legge ved fakturaer og kvitteringer. Sel
 
 ## Steg 5: Brev
 
-Ingen input. Siden venter mens `finnVedtak` og `byggBrevet` kjører, og viser deretter brevet slik det vil se ut på papir (`Brevvisning` i `skjema.tsx`).
+Først en oppsummering i tabellform, ikke brevet: bil, kjøpsdato, km, kjøpesum, «som den er», hver feil med dato og rapport, reklamasjon, krav, utlegg og selger. Hver rad har «Endre», som går tilbake til feltet. Advarslene står øverst med antall («Brevet har {n} advarsler, {k} av dem om datoer. Se over før du betaler.»), hver med «Endre». Knappen heter «Opplysningene stemmer, gå til betaling».
+
+Deretter venter siden mens `finnVedtak` og `byggBrevet` kjører, og viser brevet slik det vil se ut på papir (`Brevvisning` i `skjema.tsx`).
 - **Før betaling:** forhåndsvisning med hode, avsnitt 1 og vedtaksavsnittet. Resten er grå felt, og teksten under dem sendes aldri til nettleseren. Under står en Vipps-knapp som ikke virker ennå.
 - **Etter betaling** (i utvikling: `TVISTR_HELT_BREV_UTEN_BETALING=1`): hele brevet, med «Kopier tekst» og «Last ned som Word».
 - Hvis ingen kandidat passer, brukes ingen praksis i brevet. Ved feil vises «Vi fikk ikke laget brevet» med «Prøv igjen».
@@ -130,10 +135,10 @@ Ingen input. Siden venter mens `finnVedtak` og `byggBrevet` kjører, og viser de
 ## Lagring
 
 - Ingenting lagres i databasen. Det finnes ingen saksrad eller bruker, og vegvesen-oppslaget lagres ikke.
-- Svarene, inkludert valgt selger, kontakten med selger og rapportene, ligger i `sessionStorage` (nøkkel `tvistr:sak`), så en reload eller tilbake-knappen beholder dem. Brevet og vedtaket lagres ikke, og siden åpner aldri på steg 5.
+- Svarene, inkludert valgt selger, kontakten med selger og rapportene, ligger i `sessionStorage` (nøkkel `tvistr:sak:v2`; svar lagret med det gamle intervallet under `tvistr:sak` brukes ikke, og skjemaet starter på nytt), så en reload eller tilbake-knappen beholder dem. Brevet og vedtaket lagres ikke, og siden åpner aldri på steg 5.
 - Ordre-id fra Vipps skal lagres i `sessionStorage` (`tvistr:ordre`) slik at en omlasting etter betaling finner brevet igjen. Det gjør Vipps-oppgaven; skjemaet leser nøkkelen og sender den med.
 - Serveren lagrer ingenting om brevet. Selgerens navn og adresse hentes fra Enhetsregisteret ved hvert brev, og kjøperen hentes fra Vipps-profilen.
-- Serveren begrenser antall forsøk per IP: 20 per minutt for «Lag brev» (både `finnVedtak` og `byggBrevet`), 10 per minutt for vegvesen-oppslag og 60 for selgersøket. Grensene er slått av mens vi tester (`src/lib/rategrense.ts`).
+- Serveren begrenser antall forsøk per IP: 20 per minutt for brevet (både `finnVedtak` og `byggBrevet`), 10 per minutt for vegvesen-oppslag og 60 for selgersøket. Grensene er slått av mens vi tester (`src/lib/rategrense.ts`).
 
 ## Ikke dekket av skjemaet ennå
 

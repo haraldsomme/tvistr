@@ -171,3 +171,19 @@ Utvidelsen av steg 3 og 4 og brevet (`docs/skjema.md`, `docs/brev.md`) er ferdig
 Kjent før bygging, og ikke et kriterium:
 - Kilometerstand fra vegvesenet finnes ikke i API-et for tekniske kjøretøyopplysninger («Du får ikke kjøretøyets kilometerstand i tjenesten»). Reglene om km mot siste EU-kontroll kan ikke bygges.
 - Slettede foretak kan ikke velges (Brreg svarer 410), så regelen om «slettet» kan ikke slå til; «konkurs» og «under avvikling» kan.
+
+## Resultat for tidslinjen og riktighet (2026-10-13)
+
+| Kriterium | Resultat |
+|---|---|
+| Tidslinje 1: intervallet borte | **Grønt.** Steg 3 spør om datoen feilen ble oppdaget (Playwright: spørsmålet «Når viste feilen seg?» finnes ikke). Tidsnivå regnes bare fra datoer (`tidsnivaFor`); intervallordene brukes bare som tekst til modellen. |
+| Tidslinje 2: stopp kan ikke omgås | **Grønt.** Datovelgerne går fra dagen etter kjøpet til i dag; rapport før oppdaget stopper i skjemaet («Fortsett» grå i Playwright); serveren avviser alle åtte stopp-tilfellene i `rens.test.ts`. |
+| Tidslinje 3: de 12 gylne | **Grønt.** Ingen stopp, ingen advarsler, og samme tidsnivå per feil som med intervallet (`gylne.test.ts`). En test sjekker også at datoen gir samme nivå som det gamle intervallet for hver tredje dag over fem år, fra seks kjøpsdatoer. |
+| Tidslinje 4: dekningen | **Grønt.** `ferdig:dekning`: A 1 932, B 300, lovsetning 0 (likt). `ferdig:brevlop` (100 saker): A 86, B 14 (likt). |
+| Riktighet 1: tabelltest per regel | **Grønt.** 28 tester i `riktighet.test.ts` (stopp, advarsler, grenser, begge lovversjoner). |
+| Riktighet 2: serveren avviser | **Grønt.** Åtte stopp-tilfeller i `rens.test.ts`; `finnVedtak` avviser før modellkallet. |
+| Riktighet 3: invariantene | **Grønt** på 12 gylne og 200 genererte saker, og en test viser at de fanger plantede brudd. Sidetallet er et anslag. |
+| Riktighet 4: oppsummeringen | **Grønt** ved 1280 og 390 piksler: advarslene står øverst med antall (også i steg 3 og 4), og «Endre» går til riktig steg med feltet i syne. |
+| Riktighet 5: ingen stopp på de 12 | **Grønt.** |
+
+Ikke bygget, se `riktighet.md`: reglene om kilometerstand (vegvesenets API har ikke km), og «slettet» foretak (kan ikke velges).

@@ -2,8 +2,9 @@
 // field is checked here before it is used: ids against the known lists, numbers against a range,
 // text trimmed and cut. Shared by the decision search (finnVedtak) and the letter (byggBrevet).
 import { orgnrFra } from "@/lib/brreg";
-import { MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, type Rapport, rensKonklusjon, SELGER_SVAR, VERKSTED_HVEM } from "@/lib/brev/rapport";
+import { MAKS_BESKRIVELSE, MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, type Rapport, rensFritekst, rensKonklusjon, SELGER_SVAR, VERKSTED_HVEM } from "@/lib/brev/rapport";
 import type { Brevfeil, Kilde, Kontakt, SomDenEr } from "@/lib/brev/typer";
+import { type Riktighetssak, vurderRiktighet } from "@/lib/brev/riktighet";
 import { erDato, type Vurdering, vurderTidslinje } from "@/lib/brev/tidslinje";
 import { type Feilvalg, HOVEDKATEGORIER, type Hovedkategori, rensFeilvalg } from "@/lib/feil/kategorier";
 import { normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
@@ -88,7 +89,7 @@ export function rensVedtakssvar(s: Record<string, unknown>): Resultat<Vedtakssva
     detaljer[h.id] = {
       oppdaget,
       omtrentlig: d[h.id]?.omtrentlig === true,
-      beskrivelse: tekst(d[h.id]?.beskrivelse, 200),
+      beskrivelse: rensFritekst(d[h.id]?.beskrivelse, MAKS_BESKRIVELSE),
       opplysning: kildeAv(d[h.id]?.opplysning),
       verksted,
       // A report belongs to an answer «ja, skriftlig» and to nothing else.
@@ -178,8 +179,34 @@ export function rensBrevsvar(s: Record<string, unknown>): Resultat<Brevsvar> {
     }
   }
 
+  const bil = { regnr, merke, modell, forsteRegistrert: heltall(b.ar, 1900, 2100) };
+  // The rules besides the dates (riktighet.ts). What stops in the form stops here too; the seller's
+  // status and industry are only known once the register has answered, so those warnings are judged
+  // in byggBrevet.
+  const riktighet = vurderRiktighet(riktighetssak({ kjopsdato, kjopesum, somDenEr, krav, kontakt, bil, feil, utlegg }, { orgnr, status: null, naeringskode: null }));
+  if (riktighet.stopp.length) return { ok: false, melding: riktighet.stopp[0].melding };
+
   return {
     ok: true,
-    svar: { vedtak: v.svar, feil, kjopsdato, km, kjopesum, somDenEr, krav, kontakt, bil: { regnr, merke, modell, forsteRegistrert: heltall(b.ar, 1900, 2100) }, selgerOrgnr: orgnr, utlegg },
+    svar: { vedtak: v.svar, feil, kjopsdato, km, kjopesum, somDenEr, krav, kontakt, bil, selgerOrgnr: orgnr, utlegg },
+  };
+}
+
+// The case as the correctness rules read it.
+export function riktighetssak(
+  r: Pick<Brevsvar, "kjopsdato" | "kjopesum" | "somDenEr" | "krav" | "kontakt" | "bil" | "feil" | "utlegg">,
+  selger: Riktighetssak["selger"],
+): Riktighetssak {
+  return {
+    kjopsdato: r.kjopsdato,
+    kjopesum: r.kjopesum,
+    forsteRegistrert: r.bil.forsteRegistrert,
+    somDenEr: r.somDenEr,
+    krav: r.krav,
+    forsok: r.kontakt?.forsok ?? 0,
+    svar: r.kontakt?.svar ?? null,
+    feil: r.feil.map((f) => ({ hoved: f.hoved, under: f.under, opplysning: f.opplysning, verksted: f.verksted, rapport: f.rapport, beskrivelse: f.beskrivelse, konklusjon: f.rapport?.konklusjon ?? null })),
+    utlegg: r.utlegg,
+    selger,
   };
 }

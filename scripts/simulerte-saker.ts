@@ -38,8 +38,8 @@ export type Sim = {
 
 export const SELGERE = [
   { navn: "Testbil AS", orgnr: "999999999", adresse: { linjer: ["Verkstedveien 2"], postnummer: "0585", poststed: "Oslo" } },
-  { navn: "Bruktbilhuset Nord AS", orgnr: "999999998", adresse: { linjer: ["Industrivegen 14"], postnummer: "9014", poststed: "Tromsø" } },
-  { navn: "Vestlandsbil AS", orgnr: "999999997", adresse: null },
+  { navn: "Bruktbilhuset Nord AS", orgnr: "999999980", adresse: { linjer: ["Industrivegen 14"], postnummer: "9014", poststed: "Tromsø" } },
+  { navn: "Vestlandsbil AS", orgnr: "999999972", adresse: null },
 ] as const;
 
 export const SAKER: Sim[] = [
@@ -57,7 +57,7 @@ export const SAKER: Sim[] = [
       rapport: { hvem: "selgers", navn: "Vestlandsbil AS verksted", dato: "2025-09-10", punkter: ["bekrefter", "til_stede", "frarader", "overslag"], konklusjon: null, overslag: 22_000 } }],
     kjopesum: 45_000, bil: { regnr: "XY 10003", merke: "Toyota", modell: "Corolla" }, selger: 2, kontakt: { dato: "2025-09-15", form: "muntlig", svar: "annet" }, kjoper: "uten_adresse" },
   { navn: "Servicehefte lovet i annonsen", kjopsdato: "2025-06-14", km: 160_000, ar: 2015, somDenEr: "nei", krav: "prisavslag", forsok: 0,
-    feil: [{ hoved: "service", under: ["servicehefte"], oppdaget: "2025-08-20", niva: 1, beskrivelse: "Annonsen sa «full servicehistorikk», men det mangler service for fire år.", opplysning: "skriftlig", verksted: "nei" }],
+    feil: [{ hoved: "service", under: ["servicehefte"], oppdaget: "2025-08-20", niva: 1, beskrivelse: "Annonsen lovet full servicehistorikk, men det mangler service for fire år.", opplysning: "skriftlig", verksted: "nei" }],
     kjopesum: 119_000, bil: { regnr: "XY 10004", merke: "Ford", modell: "Focus" }, selger: 0, kontakt: { dato: "2025-09-02", form: "muntlig", svar: "ikke_svart" }, kjoper: "uten_adresse_og_epost" },
   { navn: "Tilbakestilt kilometerstand", kjopsdato: "2024-09-01", km: 120_000, ar: 2014, somDenEr: "nei", krav: "heving", forsok: 0,
     feil: [{ hoved: "historikk", under: ["km"], oppdaget: "2025-03-15", niva: 1, beskrivelse: "Vegvesenets historikk viser 60 000 km mer enn telleren og kontrakten.", opplysning: "skriftlig", verksted: "nei" }],

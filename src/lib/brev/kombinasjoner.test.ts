@@ -4,7 +4,7 @@ import { bakgrunn } from "./bakgrunn";
 import { alleSetninger, byggBrev, somTekst } from "./brev";
 import { frist } from "./frist";
 import { avsender, mottaker, stedDato, tittel } from "./hode";
-import { krav } from "./krav";
+import { krav, krav as krav_ } from "./krav";
 import { mangelen } from "./mangelen";
 import { RAPPORT_PUNKTER, type Rapport, type RapportPunkt, type SelgerSvar, VERKSTED_HVEM } from "./rapport";
 import { mangel, praksis, tidspunkt } from "./rettslig";
@@ -196,6 +196,37 @@ describe("avsnitt 4: krav", () => {
     expect(t("annet", "heving")).toContain("Dersom dere ønsker å rette");
     expect(t("avviste", "prisavslag")).toContain("Dersom dere ønsker å rette");
     expect(t("avviste", "prisavslag")).not.toContain("retting ikke vil bli tilbudt");
+  });
+});
+
+describe("kjent feil og «vet ikke» i samme brev", () => {
+  const blandet = (krav: "retting" | "prisavslag" | "heving") =>
+    tekst(krav_(lagSak("etter_2024", { krav, kontakt: lagKontakt("etter_2024", { svar: "avviste" }), feil: [...FEILSETT.teknisk("innen_6_mnd", "nei", "nei"), ...FEILSETT.vet_ikke("innen_6_mnd", "nei", "nei")] })));
+  it("krever prisavslag for den kjente feilen og retting av den ukjente", () => {
+    const t = blandet("prisavslag");
+    expect(t).toContain("På dette grunnlaget krever jeg prisavslag, jf. § 31.");
+    expect(t).toContain("For varsellampe krever jeg at årsaken undersøkes og at feilen rettes uten kostnad for meg, jf. §§ 29 og 30.");
+    expect(t).toContain("Dersom dere ønsker å rette mangelen selv");
+  });
+  it("hever kjøpet uten et eget krav for den ukjente", () => {
+    const t = blandet("heving");
+    expect(t).toContain("Mangelen er ikke uvesentlig");
+    expect(t).not.toContain("For varsellampe");
+  });
+  it("krever retting av alle med ett krav", () => {
+    expect(blandet("retting")).toContain("krever jeg at mangelene rettes");
+    expect(blandet("retting")).not.toContain("For varsellampe");
+  });
+});
+
+describe("vedtakets lovversjon", () => {
+  const med = (lov: "før_2024" | "etter_2024", vedtak: "før_2024" | "etter_2024" | "ukjent" | undefined) => tekst(praksis(lagSak(lov, { praksis: { ...lagSak(lov).praksis!, lovversjon: vedtak } })));
+  it("sier fra når vedtaket gjaldt den andre lovversjonen", () => {
+    expect(med("etter_2024", "før_2024")).toContain("Vedtaket ble avgjort etter loven slik den lød før 1.1.2024.");
+    expect(med("før_2024", "etter_2024")).toContain("Vedtaket ble avgjort etter loven slik den lyder fra 1.1.2024.");
+  });
+  it("sier ingenting når versjonen er den samme eller ukjent", () => {
+    for (const [l, v] of [["etter_2024", "etter_2024"], ["før_2024", "før_2024"], ["etter_2024", "ukjent"], ["etter_2024", undefined]] as const) expect(med(l, v)).not.toContain("Vedtaket ble avgjort");
   });
 });
 

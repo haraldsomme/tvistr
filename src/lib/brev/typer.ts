@@ -58,7 +58,8 @@ export type Brevsak = {
   kontakt: Kontakt | null;
   // The paragraph citing the decision (finnVedtak). null when there was no candidate and the letter
   // rests on the law.
-  praksis: { avsnitt: string; kildeUrl: string; saksnummer: string | null } | null;
+  // `lovversjon` is the law the decision applied (vedtak.lovversjon_avledet).
+  praksis: { avsnitt: string; kildeUrl: string; saksnummer: string | null; lovversjon?: "før_2024" | "etter_2024" | "ukjent" } | null;
 };
 
 // A block of the letter: sentences that run together. `forhandsvis` keeps it in the preview.

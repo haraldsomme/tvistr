@@ -149,5 +149,17 @@ export function tidspunkt(s: Brevsak): Setning[] {
 
 // Praksis: the paragraph citing the decision, unchanged. Without a decision there is nothing to say;
 // the law sentence «Kravet bygger på lovens vilkår» is not needed when the rest of the section stands.
-export const praksis = (s: Brevsak): Setning[] =>
-  s.praksis ? [{ tekst: s.praksis.avsnitt, kilde: `vedtak:${s.praksis.saksnummer ?? s.praksis.kildeUrl}`, lenke: s.praksis.kildeUrl }] : [];
+// When the decision applied the other version of the law than the buyer's purchase, the letter says so.
+export function praksis(s: Brevsak): Setning[] {
+  if (!s.praksis) return [];
+  const p = s.praksis;
+  const kilde = `vedtak:${p.saksnummer ?? p.kildeUrl}`;
+  const ut: Setning[] = [{ tekst: p.avsnitt, kilde, lenke: p.kildeUrl }];
+  const kjopers = lovversjon(s.kjopsdato);
+  if (p.lovversjon && p.lovversjon !== "ukjent" && p.lovversjon !== kjopers)
+    ut.push({
+      tekst: p.lovversjon === "før_2024" ? "Vedtaket ble avgjort etter loven slik den lød før 1.1.2024." : "Vedtaket ble avgjort etter loven slik den lyder fra 1.1.2024.",
+      kilde: `${kilde}.lovversjon; skjema:kjopsdato`,
+    });
+  return ut;
+}

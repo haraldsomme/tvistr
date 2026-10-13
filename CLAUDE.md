@@ -54,6 +54,9 @@ Bygges opp gradvis. Det som finnes:
   - Paragrafene (`paragrafer.ts`) har én tabell per lovversjon (før og etter 1.1.2024), kontrollert mot lovvedtaket og Prop. 49 LS. Malene ber om et poeng og aldri om et nummer. «Som den er» er § 17 før 2024 og § 15 annet ledd etter.
   - Brevet er en `Brev`-struktur; skjermen, «Kopier tekst» og Word-filen (`docx.ts`) bygges alle av `tilDokument`. Uten betaling sendes bare avsnitt 1 og vedtaksavsnittet til nettleseren (`forhandsvisning`); i utvikling viser `TVISTR_HELT_BREV_UTEN_BETALING=1` hele brevet.
   - Rapport og kontakt (`rapport.ts`): hver avkrysning i rapporten er én fast setning, og det som ikke er krysset av gir ingen setning. Kontakt = nei betyr at brevet er reklamasjonen, rettingsforsøk 0 og ingen svar. Serveren (`rens.ts`) gjør rettingsforsøk uten reklamasjon umulig. Rapporten er kjøperens påstand og kontrolleres ikke.
+  - Tidslinjen (`tidslinje.ts`): kjøperen oppgir datoen hver feil ble oppdaget, og tidsnivå, formodning og frister regnes av koden fra datoene. Rekkefølgen kjøp → oppdaget → rapport → reklamasjon → brev vurderes der: umulig stopper, usannsynlig advarer.
+  - Riktighet (`riktighet.ts`, `docs/riktighet.md`): alle andre regler (motstrid mellom svar, kjøpesum, selger, fritekst). Skjemaet, serveren (`rens.ts`) og testene bruker de samme to funksjonene, og steg 5 viser en oppsummering med advarslene før betaling. Invariantene testes på hvert brev (`brev.invarianter.test.ts`).
+  - Vedtaksavsnittet signeres av serveren (`src/app/sak/signatur.ts`, `TVISTR_SIGNATURNOKKEL` i produksjon), så brevet bygges aldri av tekst fra nettleseren.
   - Tester: `npm test` (snapshot-filer per avsnitt og tolv gylne brev i `src/lib/brev/__snapshots__/`). `npm run brev:praksis` og `brev:jurist` bruker databasen og modellen.
   - Endres en mal, kjør testene og les de gylne brevene på nytt. Vipps-integrasjonen er ikke bygget (se «Vipps» i `docs/brev.md`).
 

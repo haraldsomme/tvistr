@@ -17,7 +17,10 @@ import { lagGrense } from "@/lib/rategrense";
 import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
 import { hentProfil } from "@/lib/vipps/profil";
 import { LOVSETNING, UTVALG_I_TEKSTEN, type Vedtaksdetaljer, velgVedtak } from "@/lib/vedtaksvalg/valg";
-import { idagOslo, rensBrevsvar, rensVedtakssvar } from "./rens";
+import { vurderRiktighet } from "@/lib/brev/riktighet";
+import { lovversjon } from "@/lib/brev/paragrafer";
+import { idagOslo, rensBrevsvar, riktighetssak } from "./rens";
+import { signer, sjekkSignatur } from "./signatur";
 
 // The paragraph the letter cites its precedent with, and the decision it rests on.
 export type Funn =
@@ -26,9 +29,11 @@ export type Funn =
       avsnitt: string;
       // Null when there was no candidate and the letter rests on the law (LOVSETNING).
       niva: Niva | null;
-      vedtak: { saksnummer: string | null; vedtaksdato: string | null; kildeUrl: string } | null;
+      vedtak: { saksnummer: string | null; vedtaksdato: string | null; kildeUrl: string; lovversjon: "før_2024" | "etter_2024" | "ukjent" } | null;
       antallKandidater: number;
       perNiva: Record<Niva, number>;
+      // The server's signature on the paragraph, the level and the decision (signatur.ts).
+      signatur: string;
     }
   | { ok: false; melding: string };
 
@@ -68,9 +73,10 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "ukjent";
   if (forMange(ip)) return { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
   const s = (inn && typeof inn === "object" ? inn : {}) as Record<string, unknown>;
-  const rens = rensVedtakssvar(s);
+  // The whole case is checked before the search, so a case the letter would stop costs no model call.
+  const rens = rensBrevsvar(s);
   if (!rens.ok) return { ok: false, melding: rens.melding };
-  const { valgte, rent, kjopsdato, km, ar, somDenEr, krav, forsok, detaljer } = rens.svar;
+  const { valgte, rent, kjopsdato, km, ar, somDenEr, krav, forsok, detaljer } = rens.svar.vedtak;
 
   // «Vet ikke ennå» is compared on the symptom, like any other category.
   const { sak, kjoper } = byggSaken({
@@ -96,7 +102,7 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
     const { kandidater, perNiva } = ranger(alle, sak);
     if (!kandidater.length) {
       console.info("vedtaksvalg: ingen kandidat, lovsetning");
-      return { ok: true, avsnitt: LOVSETNING, niva: null, vedtak: null, antallKandidater: 0, perNiva };
+      return { ok: true, avsnitt: LOVSETNING, niva: null, vedtak: null, antallKandidater: 0, perNiva, signatur: signer({ avsnitt: LOVSETNING, niva: null, vedtak: null }) };
     }
     const detaljrader = await db
       .select({
@@ -106,10 +112,12 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
         merke: vedtak.merke,
         modell: vedtak.modell,
         arsmodell: vedtak.arsmodell,
+        lovversjon: vedtak.lovversjonAvledet,
       })
       .from(vedtak)
       .where(inArray(vedtak.id, kandidater.map((r) => r.id)));
-    const vedtakDetaljer = new Map<number, Vedtaksdetaljer>(detaljrader.map(({ id, ...d }) => [id, d]));
+    const vedtakDetaljer = new Map<number, Vedtaksdetaljer>(detaljrader.map((d) => [d.id, { kildeUrl: d.kildeUrl, utvalg: d.utvalg, merke: d.merke, modell: d.modell, arsmodell: d.arsmodell }]));
+    const lovversjoner = new Map(detaljrader.map((d) => [d.id, d.lovversjon ?? "ukjent"]));
     const etterId = new Map(alle.map((k) => [k.id, k]));
 
     const svar = await velgVedtak({ kjoper, sak, kandidater, alle: etterId, detaljer: vedtakDetaljer });
@@ -129,14 +137,12 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
       `vedtaksvalg: ${valgt.saksnummer} (nivå ${svar.niva}${svar.fulgt ? "" : ", rangeringens førstevalg"}), ${svar.forbruk.tokensInn} inn / ${svar.forbruk.tokensUt} ut, $${svar.forbruk.kostnadUsd.toFixed(3)}`,
       kontroll,
     );
-    return {
-      ok: true,
+    const funnet = {
       avsnitt: svar.avsnitt,
       niva: svar.niva,
-      vedtak: { saksnummer: valgt.saksnummer, vedtaksdato: valgt.vedtaksdato, kildeUrl: vedtakDetaljer.get(valgt.id)!.kildeUrl },
-      antallKandidater: kandidater.length,
-      perNiva,
+      vedtak: { saksnummer: valgt.saksnummer, vedtaksdato: valgt.vedtaksdato, kildeUrl: vedtakDetaljer.get(valgt.id)!.kildeUrl, lovversjon: lovversjoner.get(valgt.id)! },
     };
+    return { ok: true, ...funnet, antallKandidater: kandidater.length, perNiva, signatur: signer(funnet) };
   } catch (e) {
     console.error("vedtaksvalget feilet", e);
     if (e instanceof AvvistAvModellError) return { ok: false, melding: "Saken kunne ikke behandles automatisk. Prøv igjen, eller beskriv feilen på en annen måte." };
@@ -148,18 +154,14 @@ export type BrevResultat = { ok: true; brev: Brev; fullt: boolean } | { ok: fals
 
 const forMangeBrev = lagGrense({ antall: 20, vinduMs: 60_000 });
 
-// What finnVedtak gave the browser, checked again: it comes back from outside. A changed paragraph
-// only changes the sender's own letter, but a link must be an ordinary web address.
-function rensPraksis(f: unknown): Brevsak["praksis"] {
+// What finnVedtak gave the browser, taken back only with the server's signature on it, so the paragraph
+// in the letter is the one the server wrote. undefined: not signed by this server.
+function rensPraksis(f: unknown): Brevsak["praksis"] | undefined {
   const x = (f && typeof f === "object" ? f : {}) as Record<string, unknown>;
-  const v = (x.vedtak && typeof x.vedtak === "object" ? x.vedtak : null) as Record<string, unknown> | null;
-  if (x.ok !== true || x.niva === null || !v || typeof x.avsnitt !== "string" || typeof v.kildeUrl !== "string") return null;
-  try {
-    if (new URL(v.kildeUrl).protocol !== "https:") return null;
-  } catch {
-    return null;
-  }
-  return { avsnitt: x.avsnitt.trim().slice(0, 3000), kildeUrl: v.kildeUrl.slice(0, 500), saksnummer: typeof v.saksnummer === "string" ? v.saksnummer.slice(0, 40) : null };
+  if (x.ok !== true || !sjekkSignatur({ avsnitt: x.avsnitt, niva: x.niva, vedtak: x.vedtak }, x.signatur)) return undefined;
+  const v = x.vedtak as { saksnummer: string | null; kildeUrl: string; lovversjon: "før_2024" | "etter_2024" | "ukjent" } | null;
+  if (x.niva === null || !v) return null;
+  return { avsnitt: x.avsnitt as string, kildeUrl: v.kildeUrl, saksnummer: v.saksnummer, lovversjon: v.lovversjon };
 }
 
 // The whole letter once the buyer has paid, otherwise the preview: the background and the paragraph
@@ -177,6 +179,9 @@ export async function byggBrevet(inn: unknown): Promise<BrevResultat> {
   const forslag = await hentForhandler(r.selgerOrgnr);
   if (!forslag) return { ok: false, melding: "Vi fikk ikke hentet selgeren fra Enhetsregisteret. Prøv igjen, eller velg selgeren på nytt." };
 
+  const praksis = rensPraksis(o.funn);
+  if (praksis === undefined) return { ok: false, melding: "Vi kunne ikke bekrefte vedtaket brevet viser til. Lag brevet på nytt." };
+
   const kjoper = await hentProfil(typeof o.ordreId === "string" ? o.ordreId.slice(0, 100) : null);
   const brev = byggBrev({
     dato: idagOslo(),
@@ -191,7 +196,24 @@ export async function byggBrevet(inn: unknown): Promise<BrevResultat> {
     krav: r.krav,
     utlegg: r.utlegg,
     kontakt: r.kontakt,
-    praksis: rensPraksis(o.funn),
+    praksis,
   });
+
+  // One line per letter for the operator, without personal data: which law, which time levels, which
+  // decision, and which rules gave warnings, to see which rules are hit often and whether any is too strict.
+  const riktighet = vurderRiktighet(riktighetssak(r, { orgnr: forslag.orgnr, status: forslag.status, naeringskode: forslag.naeringskode }));
+  const regler = [...r.vedtak.tidslinje.advarsler, ...riktighet.advarsler].map((m) => m.regel);
+  console.info(
+    "brev",
+    JSON.stringify({
+      lovversjon: lovversjon(r.kjopsdato),
+      tidsniva: r.vedtak.tidslinje.avledet.map((a) => a.tidsnivaa),
+      niva: (o.funn as { niva?: unknown }).niva ?? null,
+      vedtak: praksis?.saksnummer ?? null,
+      advarsler: regler.length,
+      regler,
+      fullt: !!kjoper,
+    }),
+  );
   return { ok: true, brev: kjoper ? brev : forhandsvisning(brev), fullt: !!kjoper };
 }

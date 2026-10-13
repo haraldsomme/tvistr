@@ -59,24 +59,28 @@ export type Rapport = {
   overslag: number | null;
 };
 
-// Only trim, the maximum length and double quotation marks (the letter puts «» round it). Line breaks
-// become spaces, since the conclusion stands in one paragraph.
-export function rensKonklusjon(s: unknown): string | null {
+// The buyer's own words the letter quotes (the description and the report's conclusion): only trim,
+// the maximum length and double quotation marks (the letter puts «» round it). Line breaks become
+// spaces, since the text stands in one paragraph.
+export function rensFritekst(s: unknown, maks: number): string | null {
   if (typeof s !== "string") return null;
   const t = s
     .replace(/[\r\n]+/g, " ")
     .replace(/["“”„«»]/g, "")
+    .replace(/ {2,}/g, " ")
     .trim()
-    .slice(0, MAKS_KONKLUSJON)
+    .slice(0, maks)
     .trim();
   return t || null;
 }
+export const MAKS_BESKRIVELSE = 200;
+export const rensKonklusjon = (s: unknown) => rensFritekst(s, MAKS_KONKLUSJON);
 
-export const harPunkt = (r: Rapport | null, p: RapportPunkt) => !!r?.punkter.includes(p);
+export const harPunkt = (r: Pick<Rapport, "punkter"> | null, p: RapportPunkt) => !!r?.punkter.includes(p);
 
 // A report copied to several defects (same workshop and date) is one report in the enclosures and in
 // the sum of the estimates.
-const nokkel = (r: Rapport) => `${r.navn}|${r.dato}`;
+const nokkel = (r: Pick<Rapport, "navn" | "dato">) => `${r.navn}|${r.dato}`;
 
 // The distinct reports of the case, with the defects each covers.
 export function rapporter(s: Pick<Brevsak, "feil">): { rapport: Rapport; feil: Brevfeil[] }[] {
@@ -93,7 +97,7 @@ export function rapporter(s: Pick<Brevsak, "feil">): { rapport: Rapport; feil: B
 
 // The estimates of the defects, added up. One estimate per defect, also when a report covers several
 // (then the buyer has given the figure for each), and only when the report has the tick.
-export function overslagSum(s: Pick<Brevsak, "feil">): { sum: number; antallRapporter: number } | null {
+export function overslagSum(s: { feil: { rapport: Pick<Rapport, "navn" | "dato" | "punkter" | "overslag"> | null }[] }): { sum: number; antallRapporter: number } | null {
   const poster = s.feil.filter((f) => f.rapport && harPunkt(f.rapport, "overslag") && f.rapport.overslag);
   if (!poster.length) return null;
   return { sum: poster.reduce((t, f) => t + f.rapport!.overslag!, 0), antallRapporter: new Set(poster.map((f) => nokkel(f.rapport!))).size };

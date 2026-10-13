@@ -1,4 +1,5 @@
-import { FORSOK_ANTALL, kr } from "./format";
+import { feilnavn } from "./feiltype";
+import { FORSOK_ANTALL, kr, liste, smaa } from "./format";
 import { jf, lovkilde, lovversjon, type Poeng } from "./paragrafer";
 import { forsokAv, harPunkt, overslagSum } from "./rapport";
 import type { Brevsak, Setning } from "./typer";
@@ -6,7 +7,13 @@ import type { Brevsak, Setning } from "./typer";
 // 4. Krav: one of retting, prisavslag or heving, then damages for expenses if the buyer claims them.
 export function krav(s: Brevsak): Setning[][] {
   const v = lovversjon(s.kjopsdato);
-  const flere = s.feil.length > 1;
+  // A symptom without a known cause can only be examined and repaired. With known defects beside it the
+  // claim is for the known ones, and the symptom gets its own demand (under prisavslag) or is left to
+  // the cancellation (heving), which returns the whole car.
+  const kjente = s.feil.filter((f) => f.hoved !== "vet_ikke");
+  const ukjente = s.feil.filter((f) => f.hoved === "vet_ikke");
+  const blandet = kjente.length > 0 && ukjente.length > 0 && s.krav !== "retting";
+  const flere = (blandet ? kjente : s.feil).length > 1;
   const mangelen = flere ? "mangelene" : "mangelen";
   const lov = (p: Poeng) => `skjema:krav; ${lovkilde(v, p)}`;
   const hoved: Setning[] = [];
@@ -48,6 +55,12 @@ export function krav(s: Brevsak): Setning[][] {
       });
     hoved.push({ tekst: `Jeg krever kjøpesummen på ${kr(s.kjopesum)} tilbakebetalt, mot at bilen stilles til deres disposisjon.`, kilde: "skjema:kjopesum" });
   }
+
+  if (blandet && s.krav === "prisavslag")
+    hoved.push({
+      tekst: `For ${liste(ukjente.map((f) => smaa(feilnavn(f))))} krever jeg at årsaken undersøkes og at feilen rettes uten kostnad for meg${jf(v, "retting")}.`,
+      kilde: `${ukjente.map((f) => `skjema:feil[${s.feil.indexOf(f)}].hoved`).join("; ")}; ${lovkilde(v, "retting")}`,
+    });
 
   // The seller may offer to repair even when the buyer asks for a reduction or to cancel (the repair
   // rules in §§ 29–30), unless repairs have already been tried, or the seller has turned the complaint

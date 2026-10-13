@@ -14,6 +14,8 @@ export type Forslag = {
   navn: string;
   kommune: string | null;
   bransje: string | null;
+  // The industry code (SN2007), e.g. «45.111» for the sale of cars.
+  naeringskode: string | null;
   status: "konkurs" | "avvikling" | null;
   adresse: Adresse | null; // where mail goes
   forretningsadresse: string | null; // one line, as the old form stored it (docs/gammelt-skjema.md)
@@ -25,7 +27,7 @@ type BrregEnhet = {
   organisasjonsnummer: string;
   navn: string;
   organisasjonsform?: { kode: string };
-  naeringskode1?: { beskrivelse: string };
+  naeringskode1?: { kode?: string; beskrivelse: string };
   forretningsadresse?: BrregAdresse;
   postadresse?: BrregAdresse;
   konkurs?: boolean;
@@ -36,6 +38,15 @@ type BrregEnhet = {
 export function orgnrFra(s: string): string | null {
   const r = s.replace(/\s/g, "");
   return /^\d{9}$/.test(r) ? r : null;
+}
+
+// The check digit of an organisation number (modulus 11, weights 3 2 7 6 5 4 3 2). A number whose
+// remainder would give 10 is never issued.
+export function gyldigOrgnr(orgnr: string): boolean {
+  if (!/^\d{9}$/.test(orgnr)) return false;
+  const sum = [3, 2, 7, 6, 5, 4, 3, 2].reduce((t, v, i) => t + v * Number(orgnr[i]), 0);
+  const k = (11 - (sum % 11)) % 11;
+  return k !== 10 && k === Number(orgnr[8]);
 }
 
 // Mail goes to the postal address when the company has registered one, otherwise to the business address.
@@ -57,6 +68,7 @@ const tilForslag = (e: BrregEnhet): Forslag => ({
   navn: e.navn,
   kommune: e.forretningsadresse?.kommune ?? null,
   bransje: e.naeringskode1?.beskrivelse ?? null,
+  naeringskode: e.naeringskode1?.kode ?? null,
   status: e.konkurs ? "konkurs" : e.underAvvikling ? "avvikling" : null,
   adresse: adresseFra(e),
   forretningsadresse: enLinje(e.forretningsadresse),

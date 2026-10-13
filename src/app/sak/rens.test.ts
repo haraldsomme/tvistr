@@ -209,3 +209,29 @@ describe("tidslinjen på serveren", () => {
     expect(r.ok && r.svar.tidslinje.advarsler.map((m) => m.regel)).toContain("reklamasjon_sen");
   });
 });
+
+describe("riktighet på serveren", () => {
+  // Every stop in riktighet.ts is turned away here too, whatever the browser allowed.
+  const D = SVAR.detaljer;
+  const TILFELLER: [string, Record<string, unknown>, RegExp][] = [
+    ["garanti uten at selger sa noe", { valg: { garanti: [] }, detaljer: { garanti: { oppdaget: mndSiden(7), opplysning: "nei", verksted: "nei" } } }, /garanti må være lovet/],
+    ["bare «vet ikke» og prisavslag", { valg: { vet_ikke: ["lyd"] }, detaljer: { vet_ikke: { oppdaget: mndSiden(7), opplysning: "nei", verksted: "nei" } } }, /bare kreve at feilen undersøkes/],
+    ["kjøpesum under 5 000 kr", { kjopesum: 4_999 }, /mellom 5 000 og 3 000 000/],
+    ["kjøpesum over 3 000 000 kr", { kjopesum: 3_000_001 }, /mellom 5 000 og 3 000 000/],
+    ["første registrering etter kjøpet", { bil: { ...SVAR.bil, ar: Number(idag.slice(0, 4)) + 1 } }, /registrert etter kjøpsdatoen/],
+    ["organisasjonsnummer med feil kontrollsiffer", { selgerOrgnr: "999999998" }, /ikke gyldig/],
+    ["lenke i beskrivelsen", { detaljer: { ...D, motor: { ...D.motor, beskrivelse: "Se https://bilforum.no/tråd" } } }, /Legg ved dokumentet/],
+    ["bare tall i konklusjonen", { detaljer: { ...D, motor: { ...D.motor, rapport: { ...D.motor.rapport, konklusjon: "123 456" } } } }, /Skriv med ord/],
+  ];
+  for (const [navn, endring, melding] of TILFELLER)
+    it(`avviser ${navn}`, () => {
+      const r = rensBrevsvar({ ...SVAR, ...endring });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.melding).toMatch(melding);
+    });
+
+  it("renser beskrivelsen som konklusjonen: linjeskift og doble anførselstegn", () => {
+    const r = rensBrevsvar({ ...SVAR, detaljer: { ...D, motor: { ...D.motor, beskrivelse: ' Mistet "kraft"\nog  stoppet ' } } });
+    expect(r.ok && r.svar.feil.find((f) => f.hoved === "motor")!.beskrivelse).toBe("Mistet kraft og stoppet");
+  });
+});

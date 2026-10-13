@@ -8,9 +8,10 @@ Koden ligger i `src/lib/brev/`, én fil per avsnitt. Malfunksjonene er rene og t
 
 ## Flyt
 
-1. «Lag brev» kaller `finnVedtak` (`src/app/sak/actions.ts`), som finner vedtaksavsnittet.
+1. «Opplysningene stemmer, gå til betaling» i steg 5 kaller `finnVedtak` (`src/app/sak/actions.ts`). Den renser og vurderer hele saken (en sak som stopper, koster ikke et modellkall), finner vedtaksavsnittet og signerer det (`signatur.ts`).
 2. Deretter kaller den `byggBrevet` med svarene og avsnittet. Serveren:
-   - renser svarene (`src/app/sak/rens.ts`),
+   - renser svarene og kjører alle stopp-regler på nytt (`src/app/sak/rens.ts`, `docs/riktighet.md`),
+   - godtar bare et vedtaksavsnitt med serverens egen signatur,
    - henter selgerens navn og adresse fra Enhetsregisteret på nytt (nettleseren oppgir bare org.nr.),
    - henter kjøperen fra Vipps-profilen (`src/lib/vipps/profil.ts`),
    - bygger brevet (`byggBrev`).
@@ -53,9 +54,9 @@ Brevet er i første person og formelt, uten forsterkere («klart», «åpenbart�
 |---|---|
 | Hode | Kjøper og selger har adresse eller ikke. Mangler kjøperens poststed, står bare datoen til høyre. Før betaling er avsenderen tom. |
 | 1. Bakgrunn | «Som den er» ja / nei / vet ikke. Kontakt med selger: reklamasjon skriftlig / muntlig, og selgers svar (se under). Selger sa noe om en opplysningsfeil (skriftlig / muntlig). Første registreringsår kjent eller ikke. |
-| 2. Mangelen | Per feil: tidspunkt, beskrivelse (kjøperens egne ord, uendret), verksted (muntlig gir én setning, skriftlig gir rapportavsnittet, se under), «vet ikke ennå», og for tekniske feil «selger sa ingenting». Til slutt rettingsforsøk (1, 2, 3 eller flere). |
+| 2. Mangelen | Per feil: når feilen viste seg (dato, «Feilen viste seg den 12. mai 2026» eller «i mai 2026» når datoen er omtrentlig), beskrivelse (kjøperens egne ord, uendret), verksted (muntlig gir én setning, skriftlig gir rapportavsnittet, se under), «vet ikke ennå», og for tekniske feil «selger sa ingenting». Til slutt rettingsforsøk (1, 2, 3 eller flere). |
 | 3. Mangel | Per type feil: teknisk, opplysning der selger sa noe, opplysning der selger ikke sa noe, garanti, vet ikke. Like typer slås sammen til én setning. «Som den er» etter lovversjon (se under). |
-| 3. Tidspunkt | Bare tekniske feil. Formodningen gjelder (§ 18 annet ledd; to år fra 2024, ellers seks måneder), eller reklamasjonen er i tide (§ 27: to år eller fem år, regnet fra tidligere reklamasjon om den finnes, ellers fra brevets dato). Er feilene delt mellom de to, sier hver setning hvilke feil den gjelder. Rapporten legges til som bevis (se under). |
+| 3. Tidspunkt | Bare tekniske feil. Tidsnivået regnes fra datoen feilen ble oppdaget (`tidslinje.ts`). Formodningen gjelder (§ 18 annet ledd; to år fra 2024, ellers seks måneder), eller reklamasjonen er i tide (§ 27: to år eller fem år, regnet fra tidligere reklamasjon om den finnes, ellers fra brevets dato). Er feilene delt mellom de to, sier hver setning hvilke feil den gjelder. Rapporten legges til som bevis (se under). |
 | 3. Praksis | Vedtaksavsnittet uendret. Uten kandidat (lovsetningen) utelates underavsnittet. |
 | 4. Krav | Retting (med hast når verkstedet fraråder bruk), prisavslag (med verkstedenes overslag, summert) eller heving (med rettingsforsøk, og at retting ikke vil bli tilbudt når selger avviste eller ikke svarte). Erstatning for utlegg. Selgerens rett til å rette, når kravet er prisavslag eller heving uten rettingsforsøk, men ikke ved heving etter at selger avviste eller ikke svarte. |
 | 5. Frist | E-post om Vipps har den, ellers telefon. |
@@ -180,6 +181,15 @@ Gjort der planteksten ville påstått mer enn feltene vet, eller ikke fulgte lov
 - Overslaget hører til avkrysningen: uten «inneholder kostnadsoverslag» forkastes tallet.
 - Ved to feil i samme rapport legger kjøperen inn overslaget per feil. Brevet summerer tallene feil for feil, så oppgir kjøperen rapportens totalbeløp på begge, telles det to ganger.
 
+## Tidslinjen og riktighet
+
+Datoene og rekkefølgen mellom dem vurderes av `tidslinje.ts`, resten av `riktighet.ts`. Reglene, meldingene og invariantene som testes på hvert brev står i `docs/riktighet.md`. For brevets tekst betyr det:
+- Avsnitt 2 sier når hver feil viste seg som en dato, og avsnitt 3 bruker tidsnivået regnet fra den.
+- **Kjent feil og «vet ikke» sammen:**
+  - Ved prisavslag gjelder kravet den kjente feilen, og for symptomet står: «For {symptom} krever jeg at årsaken undersøkes og at feilen rettes uten kostnad for meg, jf. §§ 29 og 30.»
+  - Ved heving gjelder kravet den kjente feilen, og symptomet er bare beskrevet. Hevingen omfatter hele bilen, så et krav om retting ved siden av ville stride mot den.
+- Gjaldt vedtaket den andre lovversjonen, står det etter vedtaksavsnittet: «Vedtaket ble avgjort etter loven slik den lød før 1.1.2024.» (eller «… lyder fra 1.1.2024»).
+
 ## Kjente gap
 
 - **§ 27 for feil som viste seg etter to år.** Brevet sier «innen fristen på fem år», men ikke at delen er ment å vare vesentlig lenger enn to år (§ 27 annet ledd annet punktum), og ikke noe om «innen rimelig tid» etter at feilen ble oppdaget (§ 27 første ledd). Skjemaet spør ikke om noen av dem.
@@ -187,7 +197,7 @@ Gjort der planteksten ville påstått mer enn feltene vet, eller ikke fulgte lov
 - **Prisavslag «tilsvarende utbedringskostnaden».** Etter § 31 settes prisavslaget ut fra forholdet mellom verdien med og uten mangelen, ikke utbedringskostnaden. Setningen er slik planen ba om, men bør vurderes av jurist.
 - **Flere feil i én setning.** En mangelsetning som slår sammen flere feil av samme type nevner ikke hvilke (avsnitt 2 gjør det).
 - **Gammel § 17.** Ordlyden før 2024 står slik Prop. 49 LS gjengir den, siden Lovdata bare viser gjeldende lov.
-- **Vedtaksavsnittet kommer tilbake fra nettleseren** til `byggBrevet`. Det renses (maks lengde, bare https-lenke), men en bruker kan endre teksten i sitt eget brev.
+- **Vedtaksavsnittet går via nettleseren** fra `finnVedtak` til `byggBrevet`, men er signert av serveren (`signatur.ts`), så en endret tekst avvises. I produksjon må `TVISTR_SIGNATURNOKKEL` være satt; uten den lager hver serverinstans sin egen nøkkel.
 - **Enkeltpersonforetak finnes ikke i selgersøket** (`src/lib/brreg.ts` utelater dem med vilje). Privat selger støttes ikke.
 - **Beskrivelsen** (kjøperens egne ord) renses bare for blanke og lengde (200 tegn).
 - **Rapporten er kjøperens påstand.** Brevet gjengir avkrysningene og konklusjonen som kjøperen har oppgitt, og kontrollerer ikke at rapporten sier det. Skjemaet ber kjøperen krysse av bare for det rapporten sier. Konklusjonen kan inneholde hva som helst (opp til 300 tegn), og er unntatt forsterkerlisten.

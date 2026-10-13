@@ -58,12 +58,16 @@ Strengere for kjøperen gir delpoeng, mildere gir 0. På nivå B sorteres det f�
   - kategori og beskrivelse
   - når feilen viste seg, og lovversjonen
   - km, alder, «som den er», kravet og antall rettingsforsøk
+  - om et verksted har undersøkt feilen, og hvis det finnes en skriftlig rapport, hva den sier (`rapport_sier`, fra avkrysningene i skjemaet)
 - **Hver kandidat:**
   - nivå
   - feilen (A) eller de rettslige poengene (B)
   - bil, km, alder og «som den er»
   - sanksjonen for feilen alene (A)
+  - hva utvalget bygde på for feilen (`bevisgrunnlag`, A): verksted, EU-kontroll, annonse og så videre
   - de verifiserte sitatene med id
+
+Har kjøperen en skriftlig verkstedrapport, ber instruksen modellen foretrekke blant like gode vedtak det der `bevisgrunnlag` viser at utvalget la vekt på sakkyndig dokumentasjon. Malen for avsnittet er den samme. Instruksen er `vedtaksvalg-v10` (økt fra v9 for dette).
 
 **Modellen svarer bare** med `vedtak_id` og id-ene til 1–2 sitater (A) eller 1 sitat (B). Den skriver ingen tekst.
 

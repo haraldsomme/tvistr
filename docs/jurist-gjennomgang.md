@@ -13,13 +13,15 @@ Nivå A er et vedtak om samme feil. Nivå B er et vedtak om en annen feil, brukt
 
 ## Hele brevet
 
-Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run brev:jurist`). Kjøper, selger, bil, pris, tidligere reklamasjon, kostnadsoverslag og utlegg er diktet opp og varierer fra seksjon til seksjon; feil, tidspunkt, kjøpsdato, bil og krav er de samme som i kjøperens svar. Vedtaksavsnittet er det samme som over.
+Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run brev:jurist`). Kjøper, selger, bil, pris, kontakt med selger (tidligere reklamasjon og selgers svar), verkstedrapport og utlegg er diktet opp og varierer fra seksjon til seksjon; feil, tidspunkt, kjøpsdato, bil og krav er de samme som i kjøperens svar. Alle 15 har en verkstedrapport med ulike avkrysninger, og hver tredje har en tidligere reklamasjon med selgers svar (avviste, har ikke svart, tilbød retting, annet). Vedtaksavsnittet er det samme som over.
 
 **Les resten av brevet mot kjøperens svar og loven, og noter under «Merknad»:**
 - Står det noe i brevet som ikke følger av kjøperens svar?
 - Stemmer paragrafhenvisningene med loven som gjaldt kjøpet (før eller etter 1.1.2024)?
 - Er noe formulert som en forsterker, en innrømmelse til selgeren eller et rettslig standpunkt brevet ikke bør ta?
 - Er rekkefølgen mangel, tidspunkt og praksis i avsnitt 3 til å følge?
+- Gjengir avsnitt 2 bare det kjøperen har krysset av for rapporten, og er konklusjonen gjengitt ordrett? Stemmer det med avsnitt 3 at rapporten brukes som bevis bare når den sier at feilen forelå ved leveringen?
+- Er setningene om selgers svar (avviste, ikke svart) og om at retting ikke vil bli tilbudt riktig brukt i kravet?
 
 ## 1. 17/970 (nivå A)
 
@@ -50,11 +52,11 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2008, reg.nr. ZA 20001, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 60 000. Bilen hadde gått 260 000 km ved overtakelsen. Bilen ble solgt «som den er». Jeg reklamerte skriftlig til dere den 1. januar 2024.
+> Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2008, reg.nr. ZA 20001, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 60 000. Bilen hadde gått 260 000 km ved overtakelsen. Bilen ble solgt «som den er». Jeg reklamerte skriftlig til dere den 1. januar 2024. Dere avviste reklamasjonen.
 >
 > 2. Mangelen
 >
-> Motor og eksos: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> Motor og eksos: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 1. februar 2024. Verkstedet bekrefter feilen. Rapporten konkluderer: «Feilen er bekreftet og må utbedres.» Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
@@ -66,7 +68,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 4. Krav
 >
-> På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Jeg krever kjøpesummen på kr 60 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+> På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 60 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 >
 > 5. Frist for tilbakemelding
 >
@@ -76,7 +78,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Nordre Bil og Verksted AS av 1. februar 2024
 > – Tidligere reklamasjon
 
 **Merknad:**
@@ -114,7 +116,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> Lys: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> Lys: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av Sentrum Servicesenter AS (deres eget verksted) den 1. september 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
@@ -138,7 +140,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Sentrum Servicesenter AS av 1. september 2024
 > – Kvitteringer for utlegg
 
 **Merknad:**
@@ -172,7 +174,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> Ombygging og tuning: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+> Ombygging og tuning: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Fjordbyen Autoservice AS (merkeverksted) den 1. mai 2025. Verkstedet bekrefter feilen. Verkstedet legger til grunn at feilen har utviklet seg over tid og forelå ved leveringen. Rapporten konkluderer: «Skaden skyldes slitasje som har utviklet seg over tid, og komponenten må skiftes.» Rapporten følger vedlagt.
 >
 > 3. Rettslig vurdering
 >
@@ -182,7 +184,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 4. Krav
 >
-> På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 20 000. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+> På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 >
 > 5. Frist for tilbakemelding
 >
@@ -192,7 +194,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Fjordbyen Autoservice AS av 1. mai 2025
 > – Annonse/kjøpekontrakt
 
 **Merknad:**
@@ -224,11 +226,11 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Volvo V70, første gang registrert i 2015, reg.nr. ZA 20004, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 111 000. Bilen hadde gått 150 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Jeg reklamerte muntlig til dere den 1. januar 2024.
+> Jeg viser til kjøp av Volvo V70, første gang registrert i 2015, reg.nr. ZA 20004, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 111 000. Bilen hadde gått 150 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Jeg reklamerte muntlig til dere den 1. januar 2024. Jeg har ikke fått svar.
 >
 > 2. Mangelen
 >
-> Nødmodus: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
+> Nødmodus: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 1. februar 2024. Verkstedet bekrefter feilen. Verkstedet vurderer feilen som unormal for bilens alder og kjørelengde. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 >
 > 3. Rettslig vurdering
 >
@@ -238,7 +240,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 4. Krav
 >
-> På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+> På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 22 500 ifølge verkstedets overslag. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 >
 > 5. Frist for tilbakemelding
 >
@@ -248,7 +250,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Nordre Bil og Verksted AS av 1. februar 2024
 
 **Merknad:**
 
@@ -285,7 +287,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> Støtdempere og hjuloppheng: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> Støtdempere og hjuloppheng: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Sentrum Servicesenter AS (deres eget verksted) den 1. februar 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Verkstedet fraråder bruk av bilen før feilen er utbedret. Rapporten konkluderer: «Feilen er bekreftet og må utbedres.» Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
@@ -297,7 +299,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 4. Krav
 >
-> På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
+> På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30. Bilen kan etter verkstedets vurdering ikke brukes før feilen er rettet, og jeg ber om at rettingen prioriteres.
 >
 > 5. Frist for tilbakemelding
 >
@@ -307,7 +309,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Sentrum Servicesenter AS av 1. februar 2024
 
 **Merknad:**
 
@@ -342,19 +344,19 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> Kapasitet og rekkevidde: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> Kapasitet og rekkevidde: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Fjordbyen Autoservice AS (merkeverksted) den 1. februar 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Verkstedet legger til grunn at feilen har utviklet seg over tid og forelå ved leveringen. Verkstedet vurderer feilen som unormal for bilens alder og kjørelengde. Verkstedet fraråder bruk av bilen før feilen er utbedret. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
 > Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
 >
-> Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum. Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
+> Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum. Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 1. februar 2024.
 >
 > Det vises til Forbrukerklageutvalgets vedtak i sak 21/4277 av 20.10.2021. Saken gjaldt batterikapasitet på en Nissan Leaf 2017-modell som hadde gått 39 400 km ved kjøpet, solgt «som den er». Utvalget uttalte: «Etter utvalgets vurdering er det ingenting ved annonseringen, kjøpesummen eller forholdene forøvrig som tilsier at klageren måtte regne med at bilen hadde lavere batterikapasitet enn en tilsvarende bil med 30 kW batteripakke normalt har.» Utvalget uttalte videre: «På denne bakgrunnen finner utvalget det sannsynliggjort at batterikapasiteten på klagerens bil ligger lavere enn det klageren med rimelighet kunne forvente.» Bilen i foreliggende sak var ikke solgt «som den er».
 >
 > 4. Krav
 >
-> På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
+> På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30. Bilen kan etter verkstedets vurdering ikke brukes før feilen er rettet, og jeg ber om at rettingen prioriteres.
 >
 > I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 800. Til sammen kr 1 800. Kvitteringer vedlegges.
 >
@@ -366,7 +368,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Fjordbyen Autoservice AS av 1. februar 2024
 > – Kvitteringer for utlegg
 
 **Merknad:**
@@ -398,23 +400,23 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av BMW 320d, første gang registrert i 2007, reg.nr. ZA 20007, fra Testbil AS (org.nr. 999 999 999) den 1. januar 2022. Kjøpesummen var kr 162 000. Bilen hadde gått 260 000 km ved overtakelsen. Bilen ble solgt «som den er». Jeg reklamerte skriftlig til dere den 1. juli 2024.
+> Jeg viser til kjøp av BMW 320d, første gang registrert i 2007, reg.nr. ZA 20007, fra Testbil AS (org.nr. 999 999 999) den 1. januar 2022. Kjøpesummen var kr 162 000. Bilen hadde gått 260 000 km ved overtakelsen. Bilen ble solgt «som den er». Jeg reklamerte skriftlig til dere den 1. juli 2024. Dere tilbød retting, men den er ikke gjennomført.
 >
 > 2. Mangelen
 >
-> Turbo: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> Turbo: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 1. august 2024. Verkstedet har fastslått årsaken. Verkstedet legger til grunn at feilen har utviklet seg over tid og forelå ved leveringen. Verkstedet vurderer feilen som unormal for bilens alder og kjørelengde. Rapporten konkluderer: «Skaden skyldes slitasje som har utviklet seg over tid, og komponenten må skiftes.» Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
 > Selv om bilen ble solgt «som den er», har den en mangel, fordi den er i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers, jf. forbrukerkjøpsloven § 17 første ledd bokstav a.
 >
-> Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum. Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
+> Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum. Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 1. august 2024.
 >
 > Det vises til Forbrukertvistutvalgets vedtak i sak 16/59 av 31.3.2016. Saken gjaldt turbo på en Toyota Rav 4 2004-modell som hadde gått 272 000 km ved kjøpet, solgt «som den er». Utvalget uttalte: «Utvalget finner det på bakgrunn av verkstednotaen fra Toyota Orkanger datert 5.6.2015 godtgjort at årsaken til turbohavariet var til stede på kjøpstidspunktet.» Utvalget uttalte videre: «Uavhengig av dette, mener utvalget at bilen også må anses å ha vært i dårligere stand enn hva klageren hadde grunn til å forvente ut i fra beskrivelsen gitt av den i salgsannonsen.» Kjøperen fikk medhold i krav om heving og erstatning.
 >
 > 4. Krav
 >
-> På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 30 000. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+> På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 >
 > 5. Frist for tilbakemelding
 >
@@ -424,7 +426,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Nordre Bil og Verksted AS av 1. august 2024
 > – Tidligere reklamasjon
 
 **Merknad:**
@@ -460,7 +462,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> Seter og interiør: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> Seter og interiør: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av Sentrum Servicesenter AS (deres eget verksted) den 1. september 2024. Verkstedet bekrefter feilen. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
@@ -482,7 +484,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Sentrum Servicesenter AS av 1. september 2024
 
 **Merknad:**
 
@@ -517,7 +519,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> Firehjulstrekk, drivaksler, differensial: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> Firehjulstrekk, drivaksler, differensial: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av Fjordbyen Autoservice AS (merkeverksted) den 1. august 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten konkluderer: «Feilen er bekreftet og må utbedres.» Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
@@ -529,7 +531,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 4. Krav
 >
-> På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 35 000. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+> På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 >
 > 5. Frist for tilbakemelding
 >
@@ -539,7 +541,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Fjordbyen Autoservice AS av 1. august 2024
 
 **Merknad:**
 
@@ -576,7 +578,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> Girkasse: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> Girkasse: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 1. september 2024. Verkstedet bekrefter feilen. Verkstedet legger til grunn at feilen har utviklet seg over tid og forelå ved leveringen. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
@@ -600,7 +602,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Nordre Bil og Verksted AS av 1. september 2024
 > – Kvitteringer for utlegg
 
 **Merknad:**
@@ -636,7 +638,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> Servicehefte mangler: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+> Servicehefte mangler: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av Sentrum Servicesenter AS (deres eget verksted) den 1. september 2024. Verkstedet bekrefter feilen. Verkstedet vurderer feilen som unormal for bilens alder og kjørelengde. Rapporten konkluderer: «Skaden skyldes slitasje som har utviklet seg over tid, og komponenten må skiftes.» Rapporten følger vedlagt.
 >
 > 3. Rettslig vurdering
 >
@@ -656,7 +658,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Sentrum Servicesenter AS av 1. september 2024
 > – Annonse/kjøpekontrakt
 
 **Merknad:**
@@ -690,7 +692,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> Lyd: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
+> Lyd: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av Fjordbyen Autoservice AS (merkeverksted) den 1. august 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Verkstedet fraråder bruk av bilen før feilen er utbedret. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 >
 > 3. Rettslig vurdering
 >
@@ -710,7 +712,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Fjordbyen Autoservice AS av 1. august 2024
 
 **Merknad:**
 
@@ -743,23 +745,23 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Skoda Octavia, første gang registrert i 2015, reg.nr. ZA 20013, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 74 000. Bilen hadde gått 150 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Jeg reklamerte skriftlig til dere den 1. januar 2024.
+> Jeg viser til kjøp av Skoda Octavia, første gang registrert i 2015, reg.nr. ZA 20013, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 74 000. Bilen hadde gått 150 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Jeg reklamerte skriftlig til dere den 1. januar 2024. Dere avviste reklamasjonen.
 >
 > 2. Mangelen
 >
-> Varmepumpe og varmeapparat: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> Varmepumpe og varmeapparat: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 1. februar 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Verkstedet legger til grunn at feilen har utviklet seg over tid og forelå ved leveringen. Verkstedet vurderer feilen som unormal for bilens alder og kjørelengde. Verkstedet fraråder bruk av bilen før feilen er utbedret. Rapporten konkluderer: «Feilen er bekreftet og må utbedres.» Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
 > Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
 >
-> Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum. Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
+> Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum. Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av 1. februar 2024.
 >
 > Det vises til Forbrukerklageutvalgets vedtak i sak 17/884 av 18.12.2017. Saken gjaldt bakre varmeapparat, rør og slange på en 2006-modell Chevrolet Van Explorer som hadde gått 131 450 km ved kjøpet, solgt «som den er». Utvalget uttalte: «På bakgrunn av den sakkyndige uttalelsen fra Topp Auto AS legger utvalget til grunn at det fortsatt foreligger en feil på varmeapparatet bak i bilen.» Utvalget uttalte videre: «Utvalget har kommet til at rust på understellet til bilen, feil i varmeapparatet, feil på hengerkontakt og feil på hovedlamper gjør at bilen er i dårligere stand enn kjøperen hadde rimelig grunn til å forvente, og utgjør følgelig mangler ved bilen etter fkjl. § 17.» Bilen i foreliggende sak var yngre (8 mot 10 år) og var ikke solgt «som den er».
 >
 > 4. Krav
 >
-> På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
+> På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30. Bilen kan etter verkstedets vurdering ikke brukes før feilen er rettet, og jeg ber om at rettingen prioriteres.
 >
 > 5. Frist for tilbakemelding
 >
@@ -769,7 +771,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Nordre Bil og Verksted AS av 1. februar 2024
 > – Tidligere reklamasjon
 
 **Merknad:**
@@ -807,13 +809,13 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> EGR, partikkelfilter, AdBlue: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> EGR, partikkelfilter, AdBlue: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av Sentrum Servicesenter AS (deres eget verksted) den 1. september 2024. Verkstedet har fastslått årsaken. Verkstedet legger til grunn at feilen har utviklet seg over tid og forelå ved leveringen. Verkstedet vurderer feilen som unormal for bilens alder og kjørelengde. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
 > Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
 >
-> Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
+> Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet. Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
 >
 > Det vises til Forbrukertvistutvalgets vedtak i sak 15/1748 av 22.2.2016. Saken gjaldt dieselpartikkelfilter og temperaturføler på en Honda CR-V Executive 2007-modell som hadde gått 132 000 km ved kjøpet. Utvalget uttalte: «Utvalget finner det sannsynliggjort at feilen med dieselpartikkelfilteret (DPF) var til stede på leveringstidspunktet.» Utvalget uttalte videre: «Etter utvalgets oppfatning kan ikke en slik feil ved en vesentlig komponent som DPF anses påregnelig, sett hen til bilens alder, kjørelengde og pris samt fraværet av et «as is»-forbehold.» Kjøperen fikk medhold i krav om erstatning.
 >
@@ -831,7 +833,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Sentrum Servicesenter AS av 1. september 2024
 > – Kvitteringer for utlegg
 
 **Merknad:**
@@ -865,7 +867,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 2. Mangelen
 >
-> Lading og ladeutstyr: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+> Lading og ladeutstyr: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Fjordbyen Autoservice AS (merkeverksted) den 1. februar 2024. Verkstedet bekrefter feilen. Rapporten konkluderer: «Skaden skyldes slitasje som har utviklet seg over tid, og komponenten må skiftes.» Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
 > 3. Rettslig vurdering
 >
@@ -887,6 +889,6 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > Kari Testesen
 >
 > Vedlegg:
-> – Verkstedets skriftlige vurdering
+> – Rapport fra Fjordbyen Autoservice AS av 1. februar 2024
 
 **Merknad:**

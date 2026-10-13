@@ -1,193 +1,298 @@
-52 ulike tekster over krav(3) × forsok(4) × overslag(2) × utlegg(3) × feilsett(2)
+81 ulike tekster over krav(3) × svar(5) × forsok(3) × overslag(5) × utlegg(3)
 
-## {"krav":"retting","forsok":0,"overslag":null,"utlegg":"ingen","feilsett":"teknisk"} (+7 like)
+## {"krav":"retting","svar":"ingen","forsok":0,"overslag":"ingen","utlegg":"ingen"} (+44 like)
 På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
 
-## {"krav":"retting","forsok":0,"overslag":null,"utlegg":"ingen","feilsett":"to_tekniske_ulik_tid"} (+7 like)
-På dette grunnlaget krever jeg at mangelene rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
-
-## {"krav":"retting","forsok":0,"overslag":null,"utlegg":"ett","feilsett":"teknisk"} (+7 like)
+## {"krav":"retting","svar":"ingen","forsok":0,"overslag":"ingen","utlegg":"ett"} (+44 like)
 På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
 
-## {"krav":"retting","forsok":0,"overslag":null,"utlegg":"ett","feilsett":"to_tekniske_ulik_tid"} (+7 like)
-På dette grunnlaget krever jeg at mangelene rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
-
-## {"krav":"retting","forsok":0,"overslag":null,"utlegg":"to","feilsett":"teknisk"} (+7 like)
+## {"krav":"retting","svar":"ingen","forsok":0,"overslag":"ingen","utlegg":"to"} (+44 like)
 På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"retting","forsok":0,"overslag":null,"utlegg":"to","feilsett":"to_tekniske_ulik_tid"} (+7 like)
+## {"krav":"retting","svar":"ingen","forsok":0,"overslag":"to rapporter","utlegg":"ingen"} (+14 like)
+På dette grunnlaget krever jeg at mangelene rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
+
+## {"krav":"retting","svar":"ingen","forsok":0,"overslag":"to rapporter","utlegg":"ett"} (+14 like)
+På dette grunnlaget krever jeg at mangelene rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"retting","svar":"ingen","forsok":0,"overslag":"to rapporter","utlegg":"to"} (+14 like)
 På dette grunnlaget krever jeg at mangelene rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"prisavslag","forsok":0,"overslag":null,"utlegg":"ingen","feilsett":"teknisk"}
+## {"krav":"retting","svar":"ingen","forsok":0,"overslag":"fraråder","utlegg":"ingen"} (+14 like)
+På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30. Bilen kan etter verkstedets vurdering ikke brukes før feilen er rettet, og jeg ber om at rettingen prioriteres.
+
+## {"krav":"retting","svar":"ingen","forsok":0,"overslag":"fraråder","utlegg":"ett"} (+14 like)
+På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30. Bilen kan etter verkstedets vurdering ikke brukes før feilen er rettet, og jeg ber om at rettingen prioriteres.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"retting","svar":"ingen","forsok":0,"overslag":"fraråder","utlegg":"to"} (+14 like)
+På dette grunnlaget krever jeg at mangelen rettes uten kostnad for meg og innen rimelig tid, jf. §§ 29 og 30. Bilen kan etter verkstedets vurdering ikke brukes før feilen er rettet, og jeg ber om at rettingen prioriteres.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"prisavslag","svar":"ingen","forsok":0,"overslag":"ingen","utlegg":"ingen"} (+20 like)
 På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 
-## {"krav":"prisavslag","forsok":0,"overslag":null,"utlegg":"ingen","feilsett":"to_tekniske_ulik_tid"}
-På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
-
-## {"krav":"prisavslag","forsok":0,"overslag":null,"utlegg":"ett","feilsett":"teknisk"}
+## {"krav":"prisavslag","svar":"ingen","forsok":0,"overslag":"ingen","utlegg":"ett"} (+20 like)
 På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
 
-## {"krav":"prisavslag","forsok":0,"overslag":null,"utlegg":"ett","feilsett":"to_tekniske_ulik_tid"}
-På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
-
-## {"krav":"prisavslag","forsok":0,"overslag":null,"utlegg":"to","feilsett":"teknisk"}
+## {"krav":"prisavslag","svar":"ingen","forsok":0,"overslag":"ingen","utlegg":"to"} (+20 like)
 På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"prisavslag","forsok":0,"overslag":null,"utlegg":"to","feilsett":"to_tekniske_ulik_tid"}
-På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+## {"krav":"prisavslag","svar":"ingen","forsok":0,"overslag":"ett","utlegg":"ingen"} (+6 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 38 000 ifølge verkstedets overslag. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 
-## {"krav":"prisavslag","forsok":0,"overslag":12500,"utlegg":"ingen","feilsett":"teknisk"}
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
-
-## {"krav":"prisavslag","forsok":0,"overslag":12500,"utlegg":"ingen","feilsett":"to_tekniske_ulik_tid"}
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
-
-## {"krav":"prisavslag","forsok":0,"overslag":12500,"utlegg":"ett","feilsett":"teknisk"}
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+## {"krav":"prisavslag","svar":"ingen","forsok":0,"overslag":"ett","utlegg":"ett"} (+6 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 38 000 ifølge verkstedets overslag. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
 
-## {"krav":"prisavslag","forsok":0,"overslag":12500,"utlegg":"ett","feilsett":"to_tekniske_ulik_tid"}
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
-
-## {"krav":"prisavslag","forsok":0,"overslag":12500,"utlegg":"to","feilsett":"teknisk"}
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+## {"krav":"prisavslag","svar":"ingen","forsok":0,"overslag":"ett","utlegg":"to"} (+6 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 38 000 ifølge verkstedets overslag. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"prisavslag","forsok":0,"overslag":12500,"utlegg":"to","feilsett":"to_tekniske_ulik_tid"}
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+## {"krav":"prisavslag","svar":"ingen","forsok":0,"overslag":"to rapporter","utlegg":"ingen"} (+6 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 42 500 ifølge verkstedenes overslag. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+
+## {"krav":"prisavslag","svar":"ingen","forsok":0,"overslag":"to rapporter","utlegg":"ett"} (+6 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 42 500 ifølge verkstedenes overslag. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"prisavslag","svar":"ingen","forsok":0,"overslag":"to rapporter","utlegg":"to"} (+6 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 42 500 ifølge verkstedenes overslag. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"prisavslag","forsok":1,"overslag":null,"utlegg":"ingen","feilsett":"teknisk"} (+5 like)
+## {"krav":"prisavslag","svar":"avviste","forsok":1,"overslag":"ingen","utlegg":"ingen"} (+23 like)
 På dette grunnlaget krever jeg prisavslag, jf. § 31.
 
-## {"krav":"prisavslag","forsok":1,"overslag":null,"utlegg":"ett","feilsett":"teknisk"} (+2 like)
+## {"krav":"prisavslag","svar":"avviste","forsok":1,"overslag":"ingen","utlegg":"ett"} (+23 like)
 På dette grunnlaget krever jeg prisavslag, jf. § 31.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
 
-## {"krav":"prisavslag","forsok":1,"overslag":null,"utlegg":"ett","feilsett":"to_tekniske_ulik_tid"} (+2 like)
-På dette grunnlaget krever jeg prisavslag, jf. § 31.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
-
-## {"krav":"prisavslag","forsok":1,"overslag":null,"utlegg":"to","feilsett":"teknisk"} (+2 like)
+## {"krav":"prisavslag","svar":"avviste","forsok":1,"overslag":"ingen","utlegg":"to"} (+23 like)
 På dette grunnlaget krever jeg prisavslag, jf. § 31.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"prisavslag","forsok":1,"overslag":null,"utlegg":"to","feilsett":"to_tekniske_ulik_tid"} (+2 like)
-På dette grunnlaget krever jeg prisavslag, jf. § 31.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+## {"krav":"prisavslag","svar":"avviste","forsok":1,"overslag":"ett","utlegg":"ingen"} (+7 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 38 000 ifølge verkstedets overslag.
 
-## {"krav":"prisavslag","forsok":1,"overslag":12500,"utlegg":"ingen","feilsett":"teknisk"} (+5 like)
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500.
-
-## {"krav":"prisavslag","forsok":1,"overslag":12500,"utlegg":"ett","feilsett":"teknisk"} (+2 like)
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500.
+## {"krav":"prisavslag","svar":"avviste","forsok":1,"overslag":"ett","utlegg":"ett"} (+7 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 38 000 ifølge verkstedets overslag.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
 
-## {"krav":"prisavslag","forsok":1,"overslag":12500,"utlegg":"ett","feilsett":"to_tekniske_ulik_tid"} (+2 like)
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
-
-## {"krav":"prisavslag","forsok":1,"overslag":12500,"utlegg":"to","feilsett":"teknisk"} (+2 like)
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500.
+## {"krav":"prisavslag","svar":"avviste","forsok":1,"overslag":"ett","utlegg":"to"} (+7 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 38 000 ifølge verkstedets overslag.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"prisavslag","forsok":1,"overslag":12500,"utlegg":"to","feilsett":"to_tekniske_ulik_tid"} (+2 like)
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 12 500.
+## {"krav":"prisavslag","svar":"avviste","forsok":1,"overslag":"to rapporter","utlegg":"ingen"} (+7 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 42 500 ifølge verkstedenes overslag.
+
+## {"krav":"prisavslag","svar":"avviste","forsok":1,"overslag":"to rapporter","utlegg":"ett"} (+7 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 42 500 ifølge verkstedenes overslag.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"prisavslag","svar":"avviste","forsok":1,"overslag":"to rapporter","utlegg":"to"} (+7 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 42 500 ifølge verkstedenes overslag.
 I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"heving","forsok":0,"overslag":null,"utlegg":"ingen","feilsett":"teknisk"} (+1 like)
+## {"krav":"heving","svar":"ingen","forsok":0,"overslag":"ingen","utlegg":"ingen"} (+19 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 
-## {"krav":"heving","forsok":0,"overslag":null,"utlegg":"ingen","feilsett":"to_tekniske_ulik_tid"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
-
-## {"krav":"heving","forsok":0,"overslag":null,"utlegg":"ett","feilsett":"teknisk"} (+1 like)
+## {"krav":"heving","svar":"ingen","forsok":0,"overslag":"ingen","utlegg":"ett"} (+19 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
 
-## {"krav":"heving","forsok":0,"overslag":null,"utlegg":"ett","feilsett":"to_tekniske_ulik_tid"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
-
-## {"krav":"heving","forsok":0,"overslag":null,"utlegg":"to","feilsett":"teknisk"} (+1 like)
+## {"krav":"heving","svar":"ingen","forsok":0,"overslag":"ingen","utlegg":"to"} (+19 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"heving","forsok":0,"overslag":null,"utlegg":"to","feilsett":"to_tekniske_ulik_tid"} (+1 like)
+## {"krav":"heving","svar":"ingen","forsok":0,"overslag":"to rapporter","utlegg":"ingen"} (+4 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+
+## {"krav":"heving","svar":"ingen","forsok":0,"overslag":"to rapporter","utlegg":"ett"} (+4 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ingen","forsok":0,"overslag":"to rapporter","utlegg":"to"} (+4 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"heving","forsok":1,"overslag":null,"utlegg":"ingen","feilsett":"teknisk"} (+1 like)
+## {"krav":"heving","svar":"avviste","forsok":0,"overslag":"ingen","utlegg":"ingen"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"avviste","forsok":0,"overslag":"ingen","utlegg":"ett"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":0,"overslag":"ingen","utlegg":"to"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":0,"overslag":"to rapporter","utlegg":"ingen"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"avviste","forsok":0,"overslag":"to rapporter","utlegg":"ett"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":0,"overslag":"to rapporter","utlegg":"to"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":1,"overslag":"ingen","utlegg":"ingen"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter ett forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"avviste","forsok":1,"overslag":"ingen","utlegg":"ett"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter ett forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":1,"overslag":"ingen","utlegg":"to"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter ett forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":1,"overslag":"to rapporter","utlegg":"ingen"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"avviste","forsok":1,"overslag":"to rapporter","utlegg":"ett"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":1,"overslag":"to rapporter","utlegg":"to"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":3,"overslag":"ingen","utlegg":"ingen"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"avviste","forsok":3,"overslag":"ingen","utlegg":"ett"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":3,"overslag":"ingen","utlegg":"to"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":3,"overslag":"to rapporter","utlegg":"ingen"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter tre eller flere forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"avviste","forsok":3,"overslag":"to rapporter","utlegg":"ett"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter tre eller flere forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"avviste","forsok":3,"overslag":"to rapporter","utlegg":"to"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter tre eller flere forsøk. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":0,"overslag":"ingen","utlegg":"ingen"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":0,"overslag":"ingen","utlegg":"ett"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":0,"overslag":"ingen","utlegg":"to"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":0,"overslag":"to rapporter","utlegg":"ingen"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":0,"overslag":"to rapporter","utlegg":"ett"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":0,"overslag":"to rapporter","utlegg":"to"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":1,"overslag":"ingen","utlegg":"ingen"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter ett forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":1,"overslag":"ingen","utlegg":"ett"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter ett forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":1,"overslag":"ingen","utlegg":"to"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter ett forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":1,"overslag":"to rapporter","utlegg":"ingen"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":1,"overslag":"to rapporter","utlegg":"ett"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":1,"overslag":"to rapporter","utlegg":"to"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":3,"overslag":"ingen","utlegg":"ingen"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":3,"overslag":"ingen","utlegg":"ett"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":3,"overslag":"ingen","utlegg":"to"} (+3 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":3,"overslag":"to rapporter","utlegg":"ingen"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter tre eller flere forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":3,"overslag":"to rapporter","utlegg":"ett"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter tre eller flere forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"ikke_svart","forsok":3,"overslag":"to rapporter","utlegg":"to"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter tre eller flere forsøk. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"tilbod_retting","forsok":1,"overslag":"ingen","utlegg":"ingen"} (+7 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter ett forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 
-## {"krav":"heving","forsok":1,"overslag":null,"utlegg":"ingen","feilsett":"to_tekniske_ulik_tid"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
-
-## {"krav":"heving","forsok":1,"overslag":null,"utlegg":"ett","feilsett":"teknisk"} (+1 like)
+## {"krav":"heving","svar":"tilbod_retting","forsok":1,"overslag":"ingen","utlegg":"ett"} (+7 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter ett forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
 
-## {"krav":"heving","forsok":1,"overslag":null,"utlegg":"ett","feilsett":"to_tekniske_ulik_tid"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
-
-## {"krav":"heving","forsok":1,"overslag":null,"utlegg":"to","feilsett":"teknisk"} (+1 like)
+## {"krav":"heving","svar":"tilbod_retting","forsok":1,"overslag":"ingen","utlegg":"to"} (+7 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter ett forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"heving","forsok":1,"overslag":null,"utlegg":"to","feilsett":"to_tekniske_ulik_tid"} (+1 like)
+## {"krav":"heving","svar":"tilbod_retting","forsok":1,"overslag":"to rapporter","utlegg":"ingen"} (+1 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"krav":"heving","svar":"tilbod_retting","forsok":1,"overslag":"to rapporter","utlegg":"ett"} (+1 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"tilbod_retting","forsok":1,"overslag":"to rapporter","utlegg":"to"} (+1 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter ett forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
 
-## {"krav":"heving","forsok":2,"overslag":null,"utlegg":"ingen","feilsett":"teknisk"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter to forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
-
-## {"krav":"heving","forsok":2,"overslag":null,"utlegg":"ingen","feilsett":"to_tekniske_ulik_tid"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter to forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
-
-## {"krav":"heving","forsok":2,"overslag":null,"utlegg":"ett","feilsett":"teknisk"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter to forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
-I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
-
-## {"krav":"heving","forsok":2,"overslag":null,"utlegg":"ett","feilsett":"to_tekniske_ulik_tid"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter to forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
-
-## {"krav":"heving","forsok":2,"overslag":null,"utlegg":"to","feilsett":"teknisk"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter to forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
-I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
-
-## {"krav":"heving","forsok":2,"overslag":null,"utlegg":"to","feilsett":"to_tekniske_ulik_tid"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter to forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
-I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
-
-## {"krav":"heving","forsok":3,"overslag":null,"utlegg":"ingen","feilsett":"teknisk"} (+1 like)
+## {"krav":"heving","svar":"tilbod_retting","forsok":3,"overslag":"ingen","utlegg":"ingen"} (+7 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 
-## {"krav":"heving","forsok":3,"overslag":null,"utlegg":"ingen","feilsett":"to_tekniske_ulik_tid"} (+1 like)
+## {"krav":"heving","svar":"tilbod_retting","forsok":3,"overslag":"ingen","utlegg":"ett"} (+7 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"tilbod_retting","forsok":3,"overslag":"ingen","utlegg":"to"} (+7 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
+
+## {"krav":"heving","svar":"tilbod_retting","forsok":3,"overslag":"to rapporter","utlegg":"ingen"} (+1 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter tre eller flere forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 
-## {"krav":"heving","forsok":3,"overslag":null,"utlegg":"ett","feilsett":"teknisk"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
-I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
-
-## {"krav":"heving","forsok":3,"overslag":null,"utlegg":"ett","feilsett":"to_tekniske_ulik_tid"} (+1 like)
+## {"krav":"heving","svar":"tilbod_retting","forsok":3,"overslag":"to rapporter","utlegg":"ett"} (+1 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter tre eller flere forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200. Til sammen kr 1 200. Kvitteringer vedlegges.
 
-## {"krav":"heving","forsok":3,"overslag":null,"utlegg":"to","feilsett":"teknisk"} (+1 like)
-På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter tre eller flere forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
-I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.
-
-## {"krav":"heving","forsok":3,"overslag":null,"utlegg":"to","feilsett":"to_tekniske_ulik_tid"} (+1 like)
+## {"krav":"heving","svar":"tilbod_retting","forsok":3,"overslag":"to rapporter","utlegg":"to"} (+1 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige, og dere har ikke lykkes med å rette dem etter tre eller flere forsøk. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 I tillegg krever jeg erstatning for utlegg som følge av mangelene, jf. § 33: Tauing kr 1 200; Leiebil kr 3 000. Til sammen kr 4 200. Kvitteringer vedlegges.

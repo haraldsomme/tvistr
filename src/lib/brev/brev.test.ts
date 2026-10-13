@@ -1,15 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { byggBrev, forhandsvisning, somTekst, tilDokument } from "./brev";
-import { FEILSETT, lagSak } from "./testsak";
+import { FEILSETT, kontakt, lagSak } from "./testsak";
 
 const sak = (kjoper: Parameters<typeof lagSak>[1] = {}) =>
   lagSak("etter_2024", {
     somDenEr: "ja",
     krav: "heving",
-    forsok: 2,
-    overslag: 12_500,
     utlegg: [{ beskrivelse: "Tauing", belop: 1200 }],
-    tidligere: { dato: "2025-06-01", form: "skriftlig" },
+    kontakt: kontakt("etter_2024", { forsok: 2, svar: "annet" }),
     feil: FEILSETT.teknisk("6_til_24_mnd", "nei", "skriftlig", "Bilen mistet kraft etter tre uker."),
     ...kjoper,
   });
@@ -56,11 +54,11 @@ describe("dokumentet", () => {
     const tekst = somTekst(brev);
     for (const a of brev.avsnitt) for (const b of a.blokker) if ("setninger" in b) expect(tekst).toContain(b.setninger.map((s) => s.tekst).join(" "));
     expect(tekst.startsWith("Kari Testesen\nTestveien 1\n0150 Oslo\n\nOslo, 13. oktober 2026\n\nTestbil AS")).toBe(true);
-    expect(tekst.endsWith("Vedlegg:\n– Verkstedets skriftlige vurdering\n– Kvitteringer for utlegg\n– Tidligere reklamasjon")).toBe(true);
+    expect(tekst.endsWith("Vedlegg:\n– Rapport fra Nordre Bil og Verksted AS av 2. juni 2025\n– Kvitteringer for utlegg\n– Tidligere reklamasjon")).toBe(true);
   });
 
   it("utelater vedlegg når det ikke finnes noen", () => {
-    const brev = byggBrev(sak({ utlegg: [], tidligere: null, feil: FEILSETT.teknisk("innen_6_mnd", "nei", "nei") }));
+    const brev = byggBrev(sak({ utlegg: [], kontakt: null, feil: FEILSETT.teknisk("innen_6_mnd", "nei", "nei") }));
     expect(brev.vedlegg).toBeNull();
     expect(somTekst(brev)).not.toContain("Vedlegg");
   });

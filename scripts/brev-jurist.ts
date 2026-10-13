@@ -2,8 +2,8 @@
 // citing the decision that is already there. The case (defect, when it showed itself, purchase date,
 // car, claim), the decision's paragraph and its link are read from the section itself, so the letter
 // and the paragraph the jurist has read are the same. The seller, the buyer, the price, the earlier
-// notice, the estimate and the expenses are fictitious and vary by section number, so the branches
-// of the templates are all seen. No database and no model call.
+// notice, the workshop report and the expenses are fictitious and vary by section number, so the
+// branches of the templates are all seen. No database and no model call.
 //
 //   npm run brev:jurist
 //
@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { byggBrev, somTekst } from "../src/lib/brev/brev";
 import { feiltype } from "../src/lib/brev/feiltype";
+import { RAPPORT_PUNKTER, type Rapport, type RapportPunkt, SELGER_SVAR, VERKSTED_HVEM } from "../src/lib/brev/rapport";
 import type { Brevfeil, Brevsak } from "../src/lib/brev/typer";
 import { HOVEDKATEGORIER, VISTE_SEG_VALG } from "../src/lib/feil/kategorier";
 import type { Krav } from "../src/lib/matching/typer";
@@ -28,6 +29,11 @@ const PROFILER = [
   { navn: STUB_PROFIL.navn, telefon: STUB_PROFIL.telefon, epost: STUB_PROFIL.epost },
   { navn: STUB_PROFIL.navn, telefon: STUB_PROFIL.telefon },
 ];
+
+// The ticks of the report by section number: each tick alone, some together, and all.
+const PUNKTER: RapportPunkt[][] = [["bekrefter"], ["bekrefter", "arsak"], ["bekrefter", "til_stede"], ["bekrefter", "ikke_slitasje", "overslag"], ["bekrefter", "arsak", "frarader"], RAPPORT_PUNKTER.map((p) => p.id), ["arsak", "til_stede", "ikke_slitasje"]];
+const KONKLUSJONER = ["Feilen er bekreftet og må utbedres.", "Skaden skyldes slitasje som har utviklet seg over tid, og komponenten må skiftes."];
+const VERKSTEDER = ["Nordre Bil og Verksted AS", "Sentrum Servicesenter AS", "Fjordbyen Autoservice AS"];
 
 // 2025-03-10 + 10 months, but never later than the day of the letter.
 function plussManeder(iso: string, m: number): string {
@@ -61,7 +67,17 @@ function lesSak(seksjon: string, i: number): Brevsak {
   const krav = felt(/^- Krav: (retting|prisavslag|heving)/m, "krav")[1] as Krav;
   const avsnitt = felt(/\*\*Avsnittet i brevet:\*\*\n((?:>.*\n?)+)/, "avsnitt")[1].replace(/^> ?/gm, "").trim();
 
-  // The cases of the measurement have no description, and a workshop has put its assessment in writing.
+  // The cases of the measurement have no description, and a workshop has put its assessment in writing:
+  // a report that varies with the section number.
+  const punkter = PUNKTER[i % PUNKTER.length];
+  const rapport: Rapport = {
+    hvem: VERKSTED_HVEM[i % VERKSTED_HVEM.length].id,
+    navn: VERKSTEDER[i % VERKSTEDER.length],
+    dato: plussManeder(kjopsdato, tid.id === "innen_6_mnd" ? 3 : tid.id === "6_til_24_mnd" ? 11 : 31),
+    punkter,
+    konklusjon: i % 2 === 0 ? KONKLUSJONER[(i / 2) % KONKLUSJONER.length] : null,
+    overslag: punkter.includes("overslag") ? 15_000 + i * 2_500 : null,
+  };
   const feil: Brevfeil[] = Object.entries(under).map(([hoved, u]) => ({
     hoved,
     under: u,
@@ -69,6 +85,7 @@ function lesSak(seksjon: string, i: number): Brevsak {
     beskrivelse: null,
     opplysning: (u.length ? u : [null]).every((x) => feiltype(hoved, x) === "opplysning" || feiltype(hoved, x) === "garanti") && i % 2 === 0 ? "skriftlig" : "nei",
     verksted: "skriftlig",
+    rapport,
   }));
   const selger = SELGERE[i % SELGERE.length];
   const [merke, modell] = BILER[i % BILER.length];
@@ -83,10 +100,9 @@ function lesSak(seksjon: string, i: number): Brevsak {
     somDenEr: bilen[3] as "ja" | "nei",
     feil,
     krav,
-    forsok: 0,
     utlegg: i % 4 === 1 ? [{ beskrivelse: "Tauing", belop: 1_800 }] : [],
-    overslag: i % 2 === 0 ? 15_000 + i * 2_500 : null,
-    tidligere: i % 3 === 0 ? { dato: plussManeder(kjopsdato, tid.id === "innen_6_mnd" ? 2 : tid.id === "6_til_24_mnd" ? 10 : 30), form: i % 2 === 0 ? "skriftlig" : "muntlig" } : null,
+    // A complaint to the seller in every third section, answered in each of the four ways in turn.
+    kontakt: i % 3 === 0 ? { dato: plussManeder(kjopsdato, tid.id === "innen_6_mnd" ? 2 : tid.id === "6_til_24_mnd" ? 10 : 30), form: i % 2 === 0 ? "skriftlig" : "muntlig", forsok: 0, svar: SELGER_SVAR[(i / 3) % SELGER_SVAR.length].id } : null,
     praksis: { avsnitt, kildeUrl: url, saksnummer: /^FKU-/.test(saksnr) ? null : saksnr },
   };
 }

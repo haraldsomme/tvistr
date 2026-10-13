@@ -3,12 +3,19 @@ import { idagOslo, rensBrevsvar, rensVedtakssvar } from "./rens";
 
 const idag = idagOslo();
 const aarSiden = (n: number) => `${Number(idag.slice(0, 4)) - n}${idag.slice(4)}`;
+// A day after the purchase (a year ago) and not in the future: six months ago.
+const halvtAar = () => {
+  const d = new Date(`${idag}T12:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() - 6);
+  return d.toISOString().slice(0, 10);
+};
 
+const RAPPORT = { hvem: "uavhengig", navn: "  Nordre Verksted AS ", dato: halvtAar(), punkter: ["arsak", "bekrefter", "finnes_ikke"], konklusjon: "  Turbo «defekt»,\nmå skiftes  ", overslag: 12_000 };
 const SVAR = {
   valg: { elektrisk: ["lys"], motor: ["turbo", "finnes_ikke"] },
   tid: { motor: "innen_6_mnd", elektrisk: "6_til_24_mnd" },
   detaljer: {
-    motor: { beskrivelse: "  Mistet kraft  ", opplysning: "nei", verksted: "skriftlig" },
+    motor: { beskrivelse: "  Mistet kraft  ", opplysning: "nei", verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["arsak", "bekrefter", "overslag"] } },
     elektrisk: { opplysning: "muntlig", verksted: "nei" },
   },
   kjopsdato: aarSiden(1),
@@ -17,14 +24,14 @@ const SVAR = {
   ar: 2016,
   somDenEr: "ja",
   krav: "prisavslag",
-  forsok: 1,
+  kontakt: { reklamert: false },
   bil: { regnr: "AB 12345", merke: "Volkswagen", modell: "Golf", ar: 2016 },
   selgerOrgnr: "999 999 999",
-  tidligere: null,
-  overslag: 12_000,
   utlegg: [],
 };
 const med = (endring: Record<string, unknown>) => ({ ...SVAR, ...endring });
+const medMotor = (endring: Record<string, unknown>) => med({ detaljer: { ...SVAR.detaljer, motor: { ...SVAR.detaljer.motor, ...endring } } });
+const medRapport = (endring: Record<string, unknown>) => medMotor({ rapport: { ...SVAR.detaljer.motor.rapport, ...endring } });
 
 describe("rensVedtakssvar", () => {
   it("beholder kategoriene i kategoriorden for rangeringen og kjøperens rekkefølge for brevet", () => {
@@ -44,14 +51,51 @@ describe("rensVedtakssvar", () => {
   });
 });
 
+describe("kontakt med selger", () => {
+  const kontakt = (k: Record<string, unknown>) => {
+    const r = rensVedtakssvar({ ...SVAR, kontakt: k });
+    return r.ok ? { forsok: r.svar.forsok, kontakt: r.svar.kontakt } : r.melding;
+  };
+
+  it("gir ingen kontakt og null rettingsforsøk når kjøperen ikke har reklamert, hva nettleseren enn sender", () => {
+    expect(kontakt({ reklamert: false })).toEqual({ forsok: 0, kontakt: null });
+    expect(kontakt({ reklamert: false, forsok: 3, svar: "avviste", dato: halvtAar(), form: "skriftlig" })).toEqual({ forsok: 0, kontakt: null });
+  });
+
+  it("gir rettingsforsøket fra kontakten når kjøperen har reklamert", () => {
+    expect(kontakt({ reklamert: true, dato: halvtAar(), form: "muntlig", forsok: 2, svar: "tilbod_retting" })).toEqual({ forsok: 2, kontakt: { dato: halvtAar(), form: "muntlig", forsok: 2, svar: "tilbod_retting" } });
+  });
+
+  it("er uten forsøk og kontakt når feltet ikke er sendt", () => {
+    const r = rensVedtakssvar({ ...SVAR, kontakt: undefined });
+    expect(r.ok && [r.svar.forsok, r.svar.kontakt]).toEqual([null, null]);
+  });
+
+  it("kan ikke gi rettingsforsøk uten reklamasjon", () => {
+    // Everything that would make «reklamert: ja» valid is needed; anything less is turned away.
+    const ok = { reklamert: true, dato: halvtAar(), form: "skriftlig", forsok: 1, svar: "annet" };
+    for (const feil of [{ reklamert: undefined }, { dato: undefined }, { dato: "i går" }, { form: "epost" }, { forsok: 4 }, { forsok: null }, { svar: "kanskje" }, { svar: undefined }]) {
+      expect(typeof kontakt({ ...ok, ...feil }), JSON.stringify(feil)).toBe("string");
+    }
+  });
+
+  it("krever en dato etter kjøpsdatoen og ikke i fremtiden", () => {
+    const k = (dato: string) => ({ reklamert: true, dato, form: "skriftlig", forsok: 0, svar: "annet" });
+    expect(typeof kontakt(k(aarSiden(1)))).toBe("string");
+    expect(typeof kontakt(k(aarSiden(2)))).toBe("string");
+    expect(typeof kontakt(k("2999-01-01"))).toBe("string");
+    expect(typeof kontakt(k(idag))).toBe("object");
+  });
+});
+
 describe("rensBrevsvar", () => {
   it("renser et fullt svar", () => {
     const r = rensBrevsvar(SVAR);
     if (!r.ok) throw new Error(r.melding);
     expect(r.svar.feil.map((f) => f.hoved)).toEqual(["elektrisk", "motor"]);
     expect(r.svar.selgerOrgnr).toBe("999999999");
-    expect(r.svar.overslag).toBe(12_000);
     expect(r.svar.somDenEr).toBe("ja");
+    expect(r.svar.kontakt).toBeNull();
   });
 
   it("godtar «vet ikke» for «som den er»", () => {
@@ -60,7 +104,7 @@ describe("rensBrevsvar", () => {
   });
 
   it("avviser manglende felt og gir en melding", () => {
-    for (const endring of [{ kjopesum: 0 }, { km: null }, { krav: "noe" }, { bil: {} }, { bil: { regnr: "!", merke: "A", modell: "B" } }, { selgerOrgnr: "123" }, { selgerOrgnr: undefined }, { kjopsdato: "i går" }]) {
+    for (const endring of [{ kjopesum: 0 }, { km: null }, { krav: "noe" }, { kontakt: undefined }, { bil: {} }, { bil: { regnr: "!", merke: "A", modell: "B" } }, { selgerOrgnr: "123" }, { selgerOrgnr: undefined }, { kjopsdato: "i går" }]) {
       const r = rensBrevsvar(med(endring));
       expect(r.ok, JSON.stringify(endring)).toBe(false);
       if (!r.ok) expect(r.melding).toBeTruthy();
@@ -72,17 +116,6 @@ describe("rensBrevsvar", () => {
     expect(r.ok).toBe(false);
   });
 
-  it("tar bare med kostnadsoverslaget når et verksted har skrevet en vurdering", () => {
-    const uten = rensBrevsvar(med({ detaljer: { motor: { opplysning: "nei", verksted: "muntlig" }, elektrisk: { opplysning: "nei", verksted: "nei" } } }));
-    expect(uten.ok && uten.svar.overslag).toBeNull();
-  });
-
-  it("sjekker datoen for tidligere reklamasjon mot kjøpsdato og i dag", () => {
-    const ok = rensBrevsvar(med({ tidligere: { dato: aarSiden(0), form: "skriftlig" } }));
-    expect(ok.ok && ok.svar.tidligere).toEqual({ dato: aarSiden(0), form: "skriftlig" });
-    for (const tidligere of [{ dato: aarSiden(3), form: "skriftlig" }, { dato: "2999-01-01", form: "muntlig" }, { dato: aarSiden(0), form: "epost" }]) expect(rensBrevsvar(med({ tidligere })).ok).toBe(false);
-  });
-
   it("renser utlegg og avviser linjer uten beskrivelse eller beløp", () => {
     const ok = rensBrevsvar(med({ utlegg: [{ beskrivelse: " Tauing ", belop: 1200 }] }));
     expect(ok.ok && ok.svar.utlegg).toEqual([{ beskrivelse: "Tauing", belop: 1200 }]);
@@ -92,5 +125,49 @@ describe("rensBrevsvar", () => {
   it("tåler søppel", () => {
     expect(rensBrevsvar({}).ok).toBe(false);
     expect(rensBrevsvar({ valg: "motor", detaljer: 5 }).ok).toBe(false);
+  });
+});
+
+describe("verkstedrapport", () => {
+  const rapport = (r: Record<string, unknown>) => {
+    const x = rensBrevsvar(r);
+    return x.ok ? x.svar.feil.find((f) => f.hoved === "motor")!.rapport : x.melding;
+  };
+
+  it("renser rapporten: navn trimmet, avkrysningene i fast rekkefølge, ukjente droppet", () => {
+    const r = rapport(SVAR);
+    expect(r).toMatchObject({ hvem: "uavhengig", navn: "Nordre Verksted AS", dato: halvtAar(), punkter: ["bekrefter", "arsak", "overslag"], overslag: 12_000 });
+  });
+
+  it("renser konklusjonen bare for trim, lengde og doble anførselstegn", () => {
+    expect(rapport(SVAR)).toMatchObject({ konklusjon: "Turbo defekt, må skiftes" });
+    expect(rapport(medRapport({ konklusjon: "x".repeat(400) }))).toMatchObject({ konklusjon: "x".repeat(300) });
+    expect(rapport(medRapport({ konklusjon: "  " }))).toMatchObject({ konklusjon: null });
+    // Single quotes and the rest stay as written.
+    expect(rapport(medRapport({ konklusjon: "Girkassen er 'utslitt' (ca. 38 000 kr)" }))).toMatchObject({ konklusjon: "Girkassen er 'utslitt' (ca. 38 000 kr)" });
+  });
+
+  it("bruker kostnadsoverslaget bare med avkrysningen for det", () => {
+    expect(rapport(medRapport({ punkter: ["bekrefter"], overslag: 12_000 }))).toMatchObject({ overslag: null });
+    expect(rapport(medRapport({ punkter: ["overslag"], overslag: 12_000 }))).toMatchObject({ overslag: 12_000 });
+    expect(rapport(medRapport({ punkter: ["overslag"], overslag: null }))).toMatchObject({ overslag: null });
+    expect(rapport(medRapport({ punkter: ["overslag"], overslag: "12000" }))).toMatchObject({ overslag: null });
+  });
+
+  it("avviser en rapport som mangler noe, og gir en melding", () => {
+    for (const endring of [{ hvem: "noen" }, { navn: " " }, { navn: undefined }, { dato: undefined }, { dato: "2999-01-01" }, { dato: aarSiden(1) }, { dato: aarSiden(3) }, { punkter: [] }, { punkter: ["finnes_ikke"] }]) {
+      const r = rapport(medRapport(endring));
+      expect(typeof r, JSON.stringify(endring)).toBe("string");
+    }
+    expect(rapport(medMotor({ rapport: undefined }))).toMatch(/rapporten/i);
+  });
+
+  it("kutter navnet ved 60 tegn", () => {
+    expect(rapport(medRapport({ navn: "A".repeat(80) }))).toMatchObject({ navn: "A".repeat(60) });
+  });
+
+  it("legger ingen rapport til en feil som ikke er undersøkt skriftlig", () => {
+    expect(rapport(medMotor({ verksted: "muntlig" }))).toBeNull();
+    expect(rapport(medMotor({ verksted: "nei" }))).toBeNull();
   });
 });

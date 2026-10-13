@@ -1,5 +1,6 @@
 import { brukerNiva, HOVEDKATEGORIER, komponenttype, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
 import { lovversjon } from "@/lib/brev/paragrafer";
+import { RAPPORT_PUNKTER, type RapportPunkt } from "@/lib/brev/rapport";
 import type { Brukersak, Krav } from "@/lib/matching/typer";
 
 export type Kilde = "skriftlig" | "muntlig" | "nei";
@@ -13,7 +14,16 @@ export type Svar = {
   somDenEr: "ja" | "nei" | null;
   krav: Krav | null;
   forsok: number | null;
-  feil: { hoved: string; under: string[]; tid: VisteSegValg; beskrivelse: string | null; opplysning: Kilde | null; verksted: Kilde | null }[];
+  feil: {
+    hoved: string;
+    under: string[];
+    tid: VisteSegValg;
+    beskrivelse: string | null;
+    opplysning: Kilde | null;
+    verksted: Kilde | null;
+    // What the workshop's written report says, as the buyer ticked it (null without a report).
+    rapport?: { punkter: readonly RapportPunkt[] } | null;
+  }[];
 };
 
 // The buyer's case as the model reads it: the answers in words, and the legal facts the code can
@@ -39,6 +49,9 @@ export type Kjoper = {
     reklamasjonsfrist?: string;
     selger_sa_noe: Kilde | null;
     verksted_undersokt: Kilde | null;
+    // What the written report says, so a decision with expert documentation can be preferred. Only
+    // with a report.
+    rapport_sier: string[] | null;
   }[];
 };
 
@@ -81,6 +94,7 @@ export function byggSaken(s: Svar): { sak: Brukersak; kjoper: Kjoper } {
         }),
         selger_sa_noe: f.opplysning,
         verksted_undersokt: f.verksted,
+        rapport_sier: f.rapport ? RAPPORT_PUNKTER.filter((p) => f.rapport!.punkter.includes(p.id)).map((p) => p.modell) : null,
       };
     }),
   };

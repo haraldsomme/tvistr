@@ -1,10 +1,10 @@
 90 ulike tekster over feilsett(4) × tid(3) × opplysning(3) × verksted(3) × beskrivelse(2)
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+1 like)
-Turbo: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Turbo: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
-Turbo: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Turbo: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+1 like)
 Turbo: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted.
@@ -19,10 +19,10 @@ Turbo: Feilen viste seg innen seks måneder etter overtakelsen.
 Turbo: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":null}
-Turbo: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+Turbo: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."}
-Turbo: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+Turbo: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"nei","verksted":"muntlig","beskrivelse":null}
 Turbo: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
@@ -37,10 +37,10 @@ Turbo: Feilen viste seg innen seks måneder etter overtakelsen. Dere ga ingen op
 Turbo: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+1 like)
-Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
-Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+1 like)
 Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted.
@@ -55,10 +55,10 @@ Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen.
 Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":null}
-Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."}
-Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"nei","verksted":"muntlig","beskrivelse":null}
 Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
@@ -73,10 +73,10 @@ Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Dere 
 Turbo: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+1 like)
-Turbo: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Turbo: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
-Turbo: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Turbo: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+1 like)
 Turbo: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted.
@@ -91,10 +91,10 @@ Turbo: Feilen viste seg mer enn to år etter overtakelsen.
 Turbo: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":null}
-Turbo: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+Turbo: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."}
-Turbo: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+Turbo: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"nei","verksted":"muntlig","beskrivelse":null}
 Turbo: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
@@ -109,10 +109,10 @@ Turbo: Feilen viste seg mer enn to år etter overtakelsen. Dere ga ingen opplysn
 Turbo: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Servicehefte mangler: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Servicehefte mangler: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
 Servicehefte mangler: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted.
@@ -127,10 +127,10 @@ Servicehefte mangler: Feilen viste seg innen seks måneder etter overtakelsen.
 Servicehefte mangler: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Servicehefte mangler: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Servicehefte mangler: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
 Servicehefte mangler: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted.
@@ -145,10 +145,10 @@ Servicehefte mangler: Feilen viste seg mellom seks måneder og to år etter over
 Servicehefte mangler: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Servicehefte mangler: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Servicehefte mangler: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
 Servicehefte mangler: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted.
@@ -163,10 +163,10 @@ Servicehefte mangler: Feilen viste seg mer enn to år etter overtakelsen.
 Servicehefte mangler: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Garanti ikke som lovet: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Garanti ikke som lovet: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Garanti ikke som lovet: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Garanti ikke som lovet: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
 Garanti ikke som lovet: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted.
@@ -181,10 +181,10 @@ Garanti ikke som lovet: Feilen viste seg innen seks måneder etter overtakelsen.
 Garanti ikke som lovet: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Garanti ikke som lovet: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Garanti ikke som lovet: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Garanti ikke som lovet: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Garanti ikke som lovet: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
 Garanti ikke som lovet: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted.
@@ -199,10 +199,10 @@ Garanti ikke som lovet: Feilen viste seg mellom seks måneder og to år etter ov
 Garanti ikke som lovet: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Garanti ikke som lovet: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Garanti ikke som lovet: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Garanti ikke som lovet: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Garanti ikke som lovet: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
 Garanti ikke som lovet: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted.
@@ -217,10 +217,10 @@ Garanti ikke som lovet: Feilen viste seg mer enn to år etter overtakelsen.
 Garanti ikke som lovet: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"vet_ikke","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Varsellampe: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
+Varsellampe: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Varsellampe: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
+Varsellampe: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
 Varsellampe: Feilen viste seg innen seks måneder etter overtakelsen. Feilen er undersøkt av verksted. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
@@ -235,10 +235,10 @@ Varsellampe: Feilen viste seg innen seks måneder etter overtakelsen. Årsaken e
 Varsellampe: Feilen viste seg innen seks måneder etter overtakelsen. «Bilen mistet kraft etter tre uker.» Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Varsellampe: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
+Varsellampe: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Varsellampe: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
+Varsellampe: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
 Varsellampe: Feilen viste seg mellom seks måneder og to år etter overtakelsen. Feilen er undersøkt av verksted. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
@@ -253,10 +253,10 @@ Varsellampe: Feilen viste seg mellom seks måneder og to år etter overtakelsen.
 Varsellampe: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Varsellampe: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
+Varsellampe: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Varsellampe: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
+Varsellampe: Feilen viste seg mer enn to år etter overtakelsen. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 2. juni 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
 Varsellampe: Feilen viste seg mer enn to år etter overtakelsen. Feilen er undersøkt av verksted. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.

@@ -2,10 +2,17 @@
 // product over axes. Every name and number here is fictitious.
 import { STUB_PROFIL } from "@/lib/vipps/profil";
 import type { VisteSegValg } from "@/lib/feil/kategorier";
-import type { Brevfeil, Brevsak, Kilde } from "./typer";
+import type { Rapport } from "./rapport";
+import type { Brevfeil, Brevsak, Kilde, Kontakt } from "./typer";
 
 export const KJOPSDATO = { før_2024: "2023-05-02", etter_2024: "2025-03-10" } as const;
-export const TIDLIGERE_DATO = { før_2024: "2023-09-01", etter_2024: "2025-06-01" } as const;
+// The date of an earlier complaint, after the first six months for a defect «6–24 måneder».
+export const KONTAKT_DATO = { før_2024: "2023-09-01", etter_2024: "2025-06-01" } as const;
+
+export const kontakt = (lov: Lov, o: Partial<Kontakt> = {}): Kontakt => ({ dato: KONTAKT_DATO[lov], form: "skriftlig", forsok: 0, svar: "annet", ...o });
+
+// A report that covers whatever the test is about. The date is after both purchase dates.
+export const RAPPORT: Rapport = { hvem: "uavhengig", navn: "Nordre Bil og Verksted AS", dato: "2025-06-02", punkter: ["bekrefter", "arsak"], konklusjon: null, overslag: null };
 
 export const PRAKSIS = {
   avsnitt: "Det vises til Forbrukerklageutvalgets vedtak i sak 22/2868 av 22.3.2023. Saken gjaldt turbo på en Ford S-Max som hadde gått 106 500 km ved kjøpet. Utvalget uttalte: «Det foreligger en mangel.»",
@@ -24,20 +31,20 @@ export const BASE: Brevsak = {
   somDenEr: "nei",
   feil: [],
   krav: "prisavslag",
-  forsok: 0,
   utlegg: [],
-  overslag: null,
-  tidligere: null,
+  kontakt: null,
   praksis: PRAKSIS,
 };
 
-export const feil = (hoved: string, under: string[], tid: VisteSegValg, opplysning: Kilde, verksted: Kilde, beskrivelse: string | null = null): Brevfeil => ({
+// A written workshop assessment comes with a report; give `rapport` to change it.
+export const feil = (hoved: string, under: string[], tid: VisteSegValg, opplysning: Kilde, verksted: Kilde, beskrivelse: string | null = null, rapport?: Rapport | null): Brevfeil => ({
   hoved,
   under,
   tid,
   beskrivelse,
   opplysning,
   verksted,
+  rapport: rapport === undefined ? (verksted === "skriftlig" ? RAPPORT : null) : rapport,
 });
 
 // The defect sets the templates branch on: one of each kind, two of different time, mixed kinds, and

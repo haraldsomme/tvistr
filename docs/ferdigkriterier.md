@@ -126,3 +126,23 @@ Brevet er ren kode: maler fylt med felt fra skjemaet, Vipps-profilen (stub i den
 | 5 | Word-eksport | **Delvis.** Teksten i `word/document.xml` er lik `somTekst` i tre tester, og `textutil` leser filen nettleseren lastet ned. At filen åpner i Word er ikke målt av meg: åpne `~/Downloads/tvistr-brev-eksempel.docx`. |
 
 Kjent og ikke kriterium: Vipps-integrasjonen, og funnene som er ført som gap i `brev.md`.
+
+---
+
+# Ferdigkriterier: kontakt med selger og verkstedrapport
+
+Utvidelsen av steg 3 og 4 og brevet (`docs/skjema.md`, `docs/brev.md`) er ferdig når disse er grønne. De ble satt før bygging.
+
+1. **De 12 simulerte sakene** gir komplette brev. Minst fire har rapport med ulike avkrysninger, og minst to har reklamert = ja med avvist eller ikke svart (testet i `gylne.test.ts`). De gylne filene er oppdatert og lest.
+2. **Sporbarhet:** hver ny setning har en kilde (avkrysningen eller feltet), over 31 000 brev.
+3. **Skjemaet kan ikke lagre motstridende svar:** rettingsforsøk uten reklamasjon og rapportdato før kjøp avvises både i skjemaet og på serveren (`rens.test.ts`).
+4. **Desktop og mobil**, inkludert «Samme rapport som forrige feil» (`scripts/ferdig-brevskjema.mjs`).
+
+## Resultat (2026-10-13)
+
+| # | Resultat |
+|---|---|
+| 1 | **Grønt.** Sju av tolv saker har rapport (alle seks avkrysninger, alle tre verkstedtyper, med og uten konklusjon og overslag). Seks har reklamert = ja: avviste (to), ikke svart (én), tilbød retting (to) og annet (én), og tre av dem med rettingsforsøk (1, 2 og 2). Alle tolv er lest. |
+| 2 | **Grønt.** Kombinasjonstestene over avkrysninger, verkstedtype, konklusjon, kontakt og krav, og over 31 000 brev, har kilde på hver setning, ingen tomme felt og ingen forsterkere (konklusjonen og beskrivelsen unntatt). |
+| 3 | **Grønt.** Serveren setter rettingsforsøk til 0 uten reklamasjon, avviser rapporter uten hvem, navn, dato etter kjøp eller minst én avkrysning, og droppet overslag uten avkrysning. Skjemaet viser ikke forsøksspørsmålet ved «Nei». |
+| 4 | **Grønt** ved 1280 og 390 piksler: rapporten kreves før «Fortsett», kopien nullstiller avkrysningene, «Lag brev» er grått til alle svar er gitt, brevet har overslaget og én vedleggslinje for rapporten. Ingen konsollfeil, ingen horisontal scroll. Kjøringen avslørte at overslaget gikk som tekst og ble forkastet av serveren; rettet. |

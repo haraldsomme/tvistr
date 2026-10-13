@@ -10,7 +10,7 @@ import type { Kjoper } from "./kjoper";
 import { avsnittA, avsnittB, type Malvedtak } from "./mal";
 
 // Bump when the instruction or the answer changes.
-export const VEDTAKSVALG_VERSJON = "vedtaksvalg-v9";
+export const VEDTAKSVALG_VERSJON = "vedtaksvalg-v10";
 
 // The fields of a candidate beside those the ranking uses.
 export type Vedtaksdetaljer = {
@@ -58,6 +58,7 @@ Kandidatene er sortert etter systemets poeng.
 - Nivå B er vedtak som avgjorde et rettslig spørsmål i kjøperens sak (\`rettslige_poeng\`), uten å være om samme feil.
 
 Velg et vedtak på nivå A hvis det finnes et. Blant dem: velg det der feilen ligner kjøperens beskrivelse mest (samme del, samme slags svikt), og deretter det der bilen ligner (alder, km, «som den er»).
+Har kjøperen en skriftlig verkstedrapport (\`rapport_sier\` på feilen), foretrekk blant like gode vedtak det der \`bevisgrunnlag\` viser at utvalget la vekt på sakkyndig dokumentasjon (verksted, EU-kontroll).
 På nivå B: velg vedtaket der et sitat uttrykker det rettslige poenget tydeligst.
 
 Sitatene: oppgi id-ene til 1 eller 2 sitater fra det valgte vedtaket på nivå A, og til 1 sitat på nivå B. Velg setninger der utvalget sier hvorfor feilen var en mangel, eller uttrykker det rettslige poenget. Ikke velg setninger som bare gjengir fakta eller hva en part har forklart, eller som taler mot kjøperen.`;
@@ -99,6 +100,9 @@ function kandidattekst(r: Rangert, k: Kandidat, d: Vedtaksdetaljer | undefined, 
     // What the committee granted for this defect alone, not for the decision as a whole. On level B it
     // stands with each quote about a defect; a legal point's sentence has none.
     utvalget_ga: r.feil ? (avgjorendeFor(k.avgjorende, r.feil)?.sanksjoner ?? []) : null,
+    // What the committee rested its conclusion on for this defect (a workshop report, an inspection,
+    // the ad and so on), so a buyer's written report can be matched with a decision that weighed one.
+    bevisgrunnlag: r.feil ? (avgjorendeFor(k.avgjorende, r.feil)?.bevis ?? []) : null,
     sitater: sitater.map((s) =>
       kompakt({
         id: s.id,

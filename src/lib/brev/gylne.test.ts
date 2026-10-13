@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SAKER, tilBrevsak } from "../../../scripts/simulerte-saker";
+import { BREVDATO, SAKER, tilBrevsak } from "../../../scripts/simulerte-saker";
 import praksis from "./__fixtures__/praksis.json";
 import { alleSetninger, byggBrev, somTekst } from "./brev";
 import type { Brevsak } from "./typer";
@@ -20,6 +20,26 @@ const slug = (s: string) =>
 const FORBUDT = /\b(klart|åpenbart|utvilsomt)\b|jeg er klar over|jeg mener/i;
 
 describe("de tolv simulerte sakene", () => {
+  it("har svar som ikke er i strid med hverandre", () => {
+    for (const x of SAKER) {
+      // Repairs need a complaint, a complaint comes after the purchase, a report follows a written answer.
+      expect(x.forsok === 0 || !!x.kontakt, `${x.navn}: rettingsforsøk uten reklamasjon`).toBe(true);
+      if (x.kontakt) expect(x.kontakt.dato > x.kjopsdato && x.kontakt.dato <= BREVDATO, `${x.navn}: kontaktdato`).toBe(true);
+      for (const f of x.feil) {
+        expect(!!f.rapport, `${x.navn}: rapport`).toBe(f.verksted === "skriftlig");
+        if (f.rapport) expect(f.rapport.dato > x.kjopsdato && f.rapport.dato <= BREVDATO, `${x.navn}: rapportdato`).toBe(true);
+      }
+    }
+  });
+
+  it("dekker rapportene og kontakten bredt nok", () => {
+    const rapporter = SAKER.flatMap((x) => x.feil.flatMap((f) => (f.rapport ? [f.rapport] : [])));
+    expect(rapporter.length).toBeGreaterThanOrEqual(4);
+    expect(new Set(rapporter.map((r) => r.punkter.join())).size).toBeGreaterThanOrEqual(4);
+    expect(new Set(rapporter.map((r) => r.hvem)).size).toBe(3);
+    expect(SAKER.filter((x) => x.kontakt && ["avviste", "ikke_svart"].includes(x.kontakt.svar)).length).toBeGreaterThanOrEqual(2);
+  });
+
   it("har et vedtaksavsnitt hver i fixturen", () => {
     expect(Object.keys(praksis).sort()).toEqual(SAKER.map((x) => x.navn).sort());
   });

@@ -12,11 +12,11 @@ REKLAMASJON – Nissan Leaf, reg.nr. XY 10006, kjøpt 15. november 2024
 
 1. Sakens bakgrunn
 
-Jeg viser til kjøp av Nissan Leaf, første gang registrert i 2019, reg.nr. XY 10006, fra Testbil AS (org.nr. 999 999 999) den 15. november 2024. Kjøpesummen var kr 189 000. Bilen hadde gått 70 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er».
+Jeg viser til kjøp av Nissan Leaf, første gang registrert i 2019, reg.nr. XY 10006, fra Testbil AS (org.nr. 999 999 999) den 15. november 2024. Kjøpesummen var kr 189 000. Bilen hadde gått 70 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Jeg reklamerte muntlig til dere den 15. april 2025.
 
 2. Mangelen
 
-Kapasitet og rekkevidde: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Rekkevidden har falt til halvparten. Batteritest viser 68 % helse.» Feilen er undersøkt av verksted, og verkstedets skriftlige vurdering følger vedlagt.
+Kapasitet og rekkevidde: Feilen viste seg mellom seks måneder og to år etter overtakelsen. «Rekkevidden har falt til halvparten. Batteritest viser 68 % helse.» Feilen er undersøkt av Nissan Forhandler Nord (merkeverksted) den 20. mai 2025. Verkstedet bekrefter feilen. Verkstedet vurderer feilen som unormal for bilens alder og kjørelengde. Rapporten konkluderer: «Batteriets kapasitet er 68 % av nytt, som er lavere enn forventet for bilens alder.» Rapporten følger vedlagt.
 
 Dere har forsøkt å rette feilen én gang uten at det har lykkes.
 
@@ -24,13 +24,13 @@ Dere har forsøkt å rette feilen én gang uten at det har lykkes.
 
 Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
 
-Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
+Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet. Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.
 
-Det vises til Forbrukerklageutvalgets vedtak i sak 23/16392 av 14.8.2024. Saken gjaldt hovedbatteri på en Tesla Model S 2014-modell som hadde gått 157 300 km ved kjøpet. Utvalget uttalte: «Innklagde har ikke fremlagt dokumentasjon som tilsier at skaden er oppstått senere som følge av årsaker som ikke har sammenheng med tilstanden på leveringstidspunktet.» Kjøperen fikk medhold i krav om heving. Bilen i foreliggende sak var yngre (5 mot 8 år) og hadde gått kortere (70 000 mot 157 300 km).
+Det vises til Forbrukerklageutvalgets vedtak i sak 23/16392 av 14.8.2024. Saken gjaldt hovedbatteri på en Tesla Model S 2014-modell som hadde gått 157 300 km ved kjøpet. Utvalget uttalte: «Innklagde har ikke fremlagt dokumentasjon som tilsier at skaden er oppstått senere som følge av årsaker som ikke har sammenheng med tilstanden på leveringstidspunktet.» Utvalget uttalte videre: «Utbedringskostnadene er estimert til mer enn en tredjedel av kjøpesummen.» Kjøperen fikk medhold i krav om heving. Bilen i foreliggende sak var yngre (5 mot 8 år) og hadde gått kortere (70 000 mot 157 300 km).
 
 4. Krav
 
-På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 55 000.
+På dette grunnlaget krever jeg prisavslag, jf. § 31, tilsvarende utbedringskostnaden på kr 55 000 ifølge verkstedets overslag.
 
 5. Frist for tilbakemelding
 
@@ -40,4 +40,4 @@ Med vennlig hilsen
 Kari Testesen
 
 Vedlegg:
-– Verkstedets skriftlige vurdering
+– Rapport fra Nissan Forhandler Nord av 20. mai 2025

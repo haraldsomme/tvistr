@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
 import { byggBrev, tilDokument } from "./brev";
 import { tilDocxBuffer } from "./docx";
-import { FEILSETT, lagSak } from "./testsak";
+import { FEILSETT, kontakt, lagSak } from "./testsak";
 
 const xml = (s: string) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
 
@@ -18,10 +18,9 @@ describe("Word-eksport", () => {
     lagSak("etter_2024", {
       somDenEr: "ja",
       krav: "heving",
-      forsok: 2,
-      tidligere: { dato: "2025-06-01", form: "skriftlig" },
+      kontakt: kontakt("etter_2024", { forsok: 2, svar: "avviste" }),
       utlegg: [{ beskrivelse: "Tauing & leiebil", belop: 4200 }],
-      feil: [...FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig", "Bilen mistet «kraft» <etter> tre uker."), ...FEILSETT.opplysning("innen_6_mnd", "skriftlig", "nei")],
+      feil: [...FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig", "Bilen mistet «kraft» <etter> tre uker.").map((f) => ({ ...f, rapport: { ...f.rapport!, konklusjon: "Turbo & <lader> er defekt", punkter: ["bekrefter", "frarader", "overslag"] as never[], overslag: 38_000 } })), ...FEILSETT.opplysning("innen_6_mnd", "skriftlig", "nei")],
     }),
   );
 

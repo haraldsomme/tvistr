@@ -6,9 +6,10 @@ import { frist } from "./frist";
 import { avsender, mottaker, stedDato, tittel } from "./hode";
 import { krav } from "./krav";
 import { mangelen } from "./mangelen";
+import { RAPPORT_PUNKTER, type Rapport, type RapportPunkt, type SelgerSvar, VERKSTED_HVEM } from "./rapport";
 import { mangel, praksis, tidspunkt } from "./rettslig";
-import { FEILSETT, FEILSETT_ENKLE, KJOPSDATO, lagSak, produkt, samle, TIDLIGERE_DATO, type Lov } from "./testsak";
-import type { Brevsak, Setning } from "./typer";
+import { FEILSETT, FEILSETT_ENKLE, kontakt as lagKontakt, KJOPSDATO, lagSak, type Lov, produkt, RAPPORT, samle } from "./testsak";
+import type { Brevfeil, Kontakt, Setning } from "./typer";
 import { vedlegg } from "./vedlegg";
 
 // One snapshot file per paragraph: the distinct texts over the axes the paragraph reads (see samle).
@@ -17,10 +18,26 @@ const SOM_DEN_ER = ["ja", "nei", "vet_ikke"] as const;
 const TID = ["innen_6_mnd", "6_til_24_mnd", "over_24_mnd"] as const;
 const KILDE = ["skriftlig", "muntlig", "nei"] as const;
 const FEILNAVN = Object.keys(FEILSETT) as (keyof typeof FEILSETT)[];
+const ALLE_PUNKTER = RAPPORT_PUNKTER.map((p) => p.id);
+const KONKLUSJON = "Girkassen er utslitt og må skiftes.";
 
 const tekst = (xs: Setning[][] | Setning[]) => (xs as (Setning | Setning[])[]).map((x) => (Array.isArray(x) ? x.map((y) => y.tekst).join(" ") : x.tekst)).join("\n");
 const snapshot = (navn: string) => `./__snapshots__/${navn}.txt`;
-const tidligere = (lov: Lov, ja: boolean): Brevsak["tidligere"] => (ja ? { dato: TIDLIGERE_DATO[lov], form: "skriftlig" } : null);
+
+// The buyer's contact with the seller, by name: «ingen» is no earlier complaint (the letter is the complaint).
+const KONTAKT_NAVN = ["ingen", "skriftlig, annet", "muntlig, avviste", "skriftlig, ikke svart", "skriftlig, tilbød retting", "skriftlig, tilbød og 1 forsøk"] as const;
+type KontaktNavn = (typeof KONTAKT_NAVN)[number];
+function kontaktAv(lov: Lov, navn: KontaktNavn): Kontakt | null {
+  const svar: Record<string, SelgerSvar> = { annet: "annet", avviste: "avviste", "ikke svart": "ikke_svart", "tilbød retting": "tilbod_retting", "tilbød og 1 forsøk": "tilbod_retting" };
+  if (navn === "ingen") return null;
+  const [form, s] = navn.split(", ") as ["skriftlig" | "muntlig", string];
+  return lagKontakt(lov, { form, svar: svar[s], forsok: s === "tilbød og 1 forsøk" ? 1 : 0 });
+}
+
+// The same defects with a report each: `punkter` and the like change the report, the rest stays.
+const rapport = (r: Partial<Rapport> = {}): Rapport => ({ ...RAPPORT, ...r });
+const medRapport = (fs: Brevfeil[], r: Rapport): Brevfeil[] => fs.map((f) => ({ ...f, verksted: "skriftlig", rapport: r }));
+const lys = (fs: Brevfeil[]): Brevfeil[] => fs.map((f) => ({ ...f, hoved: "elektrisk", under: ["lys"] }));
 
 describe("hode", () => {
   const profiler: Record<string, Vippsprofil | null> = {
@@ -40,12 +57,8 @@ describe("hode", () => {
 
 describe("avsnitt 1: bakgrunn", () => {
   it("gir samme tekst som sist for hver kombinasjon", async () => {
-    const ut = samle(
-      { somDenEr: SOM_DEN_ER, tidligere: [null, "skriftlig", "muntlig"] as const, feilsett: FEILNAVN, opplysning: KILDE, forsteRegistrert: [2016, null] },
-      (v) =>
-        tekst(
-          bakgrunn(lagSak("etter_2024", { somDenEr: v.somDenEr, tidligere: v.tidligere ? { dato: TIDLIGERE_DATO.etter_2024, form: v.tidligere } : null, bil: { ...lagSak("etter_2024").bil, forsteRegistrert: v.forsteRegistrert }, feil: FEILSETT[v.feilsett]("innen_6_mnd", v.opplysning, "nei") })),
-        ),
+    const ut = samle({ somDenEr: SOM_DEN_ER, kontakt: KONTAKT_NAVN, feilsett: FEILNAVN, opplysning: KILDE, forsteRegistrert: [2016, null] }, (v) =>
+      tekst(bakgrunn(lagSak("etter_2024", { somDenEr: v.somDenEr, kontakt: kontaktAv("etter_2024", v.kontakt), bil: { ...lagSak("etter_2024").bil, forsteRegistrert: v.forsteRegistrert }, feil: FEILSETT[v.feilsett]("innen_6_mnd", v.opplysning, "nei") }))),
     );
     await expect(ut).toMatchFileSnapshot(snapshot("bakgrunn"));
   });
@@ -61,25 +74,83 @@ describe("avsnitt 2: mangelen", () => {
 
   it("gir samme tekst som sist for rettingsforsøk og flere feil", async () => {
     const ut = samle({ feilsett: ["teknisk", "to_tekniske_ulik_tid", "utstyr_blandet"] as const, forsok: [0, 1, 2, 3] }, (v) =>
-      tekst(mangelen(lagSak("etter_2024", { forsok: v.forsok, feil: FEILSETT[v.feilsett]("6_til_24_mnd", "nei", "muntlig") }))),
+      tekst(mangelen(lagSak("etter_2024", { kontakt: v.forsok ? lagKontakt("etter_2024", { forsok: v.forsok }) : null, feil: FEILSETT[v.feilsett]("6_til_24_mnd", "nei", "muntlig") }))),
     );
     await expect(ut).toMatchFileSnapshot(snapshot("mangelen-forsok"));
+  });
+
+  it("gir samme tekst som sist for hver avkrysning i rapporten", async () => {
+    const punkter: RapportPunkt[][] = [...ALLE_PUNKTER.map((p) => [p]), ALLE_PUNKTER, [...ALLE_PUNKTER].reverse()];
+    const ut = samle({ punkter, konklusjon: [null, KONKLUSJON], hvem: VERKSTED_HVEM.map((h) => h.id) }, (v) =>
+      tekst(mangelen(lagSak("etter_2024", { feil: medRapport(FEILSETT.teknisk("6_til_24_mnd", "nei", "skriftlig"), rapport({ punkter: v.punkter, konklusjon: v.konklusjon, hvem: v.hvem })) }))),
+    );
+    await expect(ut).toMatchFileSnapshot(snapshot("mangelen-rapport"));
+  });
+
+  it("gir ett rapportavsnitt per feil, med hver sin rapport", () => {
+    const feil = [
+      ...medRapport(FEILSETT.teknisk("6_til_24_mnd", "nei", "skriftlig"), rapport({ navn: "Verksted A", dato: "2025-05-01", punkter: ["bekrefter"] })),
+      ...medRapport(lys(FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig")), rapport({ navn: "Verksted B", dato: "2025-06-01", punkter: ["arsak"] })),
+    ];
+    const t = tekst(mangelen(lagSak("etter_2024", { feil })));
+    expect(t).toContain("Feilen er undersøkt av Verksted A (uavhengig verksted) den 1. mai 2025. Verkstedet bekrefter feilen. Rapporten følger vedlagt.");
+    expect(t).toContain("Feilen er undersøkt av Verksted B (uavhengig verksted) den 1. juni 2025. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.");
+  });
+
+  it("gjengir konklusjonen ordrett, i ytre «»", () => {
+    const t = tekst(mangelen(lagSak("etter_2024", { feil: medRapport(FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig"), rapport({ konklusjon: "Turbo «defekt», skal skiftes (ca. 38 000 kr)" })) })));
+    expect(t).toContain("Rapporten konkluderer: «Turbo «defekt», skal skiftes (ca. 38 000 kr)». Rapporten følger vedlagt.");
+  });
+
+  it("setter ikke punktum etter en konklusjon som allerede slutter på tegnsetting", () => {
+    const t = (k: string) => tekst(mangelen(lagSak("etter_2024", { feil: medRapport(FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig"), rapport({ konklusjon: k })) })));
+    expect(t("Må skiftes.")).toContain("Rapporten konkluderer: «Må skiftes.» Rapporten følger vedlagt.");
+    expect(t("Må skiftes!")).toContain("«Må skiftes!» Rapporten");
+    expect(t("Må skiftes")).toContain("«Må skiftes». Rapporten");
+  });
+
+  it("skriver «deres eget verksted» for selgers verksted og ingen setning om uavhengighet", () => {
+    const t = tekst(mangelen(lagSak("etter_2024", { feil: medRapport(FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig"), rapport({ hvem: "selgers", punkter: ["bekrefter"] })) })));
+    expect(t).toContain("(deres eget verksted)");
+    expect(t).not.toMatch(/uavhengig/);
+    expect(t).toContain("Verkstedet bekrefter feilen.");
   });
 });
 
 describe("avsnitt 3: rettslig vurdering", () => {
   it("mangel gir samme tekst som sist for hver kombinasjon", async () => {
-    const ut = samle({ lov: LOV, somDenEr: SOM_DEN_ER, feilsett: FEILNAVN, opplysning: KILDE }, (v) =>
-      tekst(mangel(lagSak(v.lov, { somDenEr: v.somDenEr, feil: FEILSETT[v.feilsett]("innen_6_mnd", v.opplysning, "nei") }))),
+    const ut = samle({ lov: LOV, somDenEr: SOM_DEN_ER, feilsett: FEILNAVN, opplysning: KILDE, kontakt: [false, true] }, (v) =>
+      tekst(mangel(lagSak(v.lov, { somDenEr: v.somDenEr, kontakt: v.kontakt ? lagKontakt(v.lov) : null, feil: FEILSETT[v.feilsett]("innen_6_mnd", v.opplysning, "nei") }))),
     );
     await expect(ut).toMatchFileSnapshot(snapshot("rettslig-mangel"));
   });
 
   it("tidspunkt gir samme tekst som sist for hver kombinasjon", async () => {
-    const ut = samle({ lov: LOV, feilsett: ["teknisk", "to_tekniske_ulik_tid", "teknisk_og_opplysning", "opplysning", "vet_ikke"] as const, tid: TID, verksted: KILDE, tidligere: [false, true] }, (v) =>
-      tekst(tidspunkt(lagSak(v.lov, { tidligere: tidligere(v.lov, v.tidligere), feil: FEILSETT[v.feilsett](v.tid, "nei", v.verksted) }))),
+    const ut = samle({ lov: LOV, feilsett: ["teknisk", "to_tekniske_ulik_tid", "teknisk_og_opplysning", "opplysning", "vet_ikke"] as const, tid: TID, verksted: KILDE, kontakt: [false, true] }, (v) =>
+      tekst(tidspunkt(lagSak(v.lov, { kontakt: v.kontakt ? lagKontakt(v.lov) : null, feil: FEILSETT[v.feilsett](v.tid, "nei", v.verksted) }))),
     );
     await expect(ut).toMatchFileSnapshot(snapshot("rettslig-tidspunkt"));
+  });
+
+  it("tidspunkt gir samme tekst som sist for rapportens avkrysninger", async () => {
+    const punkter: RapportPunkt[][] = [["bekrefter"], ["til_stede"], ["ikke_slitasje"], ["til_stede", "ikke_slitasje"]];
+    const ut = samle({ lov: LOV, feilsett: ["teknisk", "to_tekniske_ulik_tid"] as const, tid: TID, punkter }, (v) =>
+      tekst(tidspunkt(lagSak(v.lov, { feil: medRapport(FEILSETT[v.feilsett](v.tid, "nei", "skriftlig"), rapport({ punkter: v.punkter })) }))),
+    );
+    await expect(ut).toMatchFileSnapshot(snapshot("rettslig-tidspunkt-rapport"));
+  });
+
+  it("siterer rapportene med dato når to rapporter sier at feilen forelå ved leveringen", () => {
+    const feil = [
+      ...medRapport(FEILSETT.teknisk("over_24_mnd", "nei", "skriftlig"), rapport({ dato: "2025-05-01", punkter: ["til_stede"] })),
+      ...medRapport(lys(FEILSETT.teknisk("over_24_mnd", "nei", "skriftlig")), rapport({ dato: "2025-06-01", punkter: ["til_stede"] })),
+    ];
+    expect(tekst(tidspunkt(lagSak("etter_2024", { feil })))).toContain("Verkstedene legger til grunn at feilene forelå ved leveringen, jf. rapportene av 1. mai 2025 og 1. juni 2025.");
+  });
+
+  it("har ingen bevissetning uten rapport", () => {
+    const t = tekst(tidspunkt(lagSak("etter_2024", { feil: FEILSETT.teknisk("over_24_mnd", "nei", "muntlig") })));
+    expect(t).toBe("Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.");
   });
 
   it("praksis er vedtaksavsnittet uendret, og utelates uten vedtak", () => {
@@ -90,12 +161,41 @@ describe("avsnitt 3: rettslig vurdering", () => {
 });
 
 describe("avsnitt 4: krav", () => {
+  const SVAR = ["ingen", "avviste", "ikke_svart", "tilbod_retting", "annet"] as const;
+  const OVERSLAG = ["ingen", "ett", "to rapporter", "uten avkrysning", "fraråder"] as const;
+  function feilMedOverslag(o: (typeof OVERSLAG)[number]): Brevfeil[] {
+    const f = FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig");
+    if (o === "ingen") return FEILSETT.teknisk("innen_6_mnd", "nei", "nei");
+    if (o === "ett") return medRapport(f, rapport({ punkter: ["overslag"], overslag: 38_000 }));
+    if (o === "uten avkrysning") return medRapport(f, rapport({ punkter: ["bekrefter"], overslag: 38_000 }));
+    if (o === "fraråder") return medRapport(f, rapport({ punkter: ["frarader"] }));
+    return [...medRapport(f, rapport({ navn: "Verksted A", punkter: ["overslag"], overslag: 38_000 })), ...medRapport(lys(f), rapport({ navn: "Verksted B", punkter: ["overslag"], overslag: 4_500 }))];
+  }
+
   it("gir samme tekst som sist for hver kombinasjon", async () => {
     const utlegg = { ingen: [], ett: [{ beskrivelse: "Tauing", belop: 1200 }], to: [{ beskrivelse: "Tauing.", belop: 1200 }, { beskrivelse: "Leiebil", belop: 3000 }] };
-    const ut = samle({ krav: ["retting", "prisavslag", "heving"] as const, forsok: [0, 1, 2, 3], overslag: [null, 12_500], utlegg: Object.keys(utlegg) as (keyof typeof utlegg)[], feilsett: ["teknisk", "to_tekniske_ulik_tid"] as const }, (v) =>
-      tekst(krav(lagSak("etter_2024", { krav: v.krav, forsok: v.forsok, overslag: v.overslag, utlegg: utlegg[v.utlegg], feil: FEILSETT[v.feilsett]("innen_6_mnd", "nei", "nei") }))),
+    const ut = samle({ krav: ["retting", "prisavslag", "heving"] as const, svar: SVAR, forsok: [0, 1, 3], overslag: OVERSLAG, utlegg: Object.keys(utlegg) as (keyof typeof utlegg)[] }, (v) =>
+      tekst(krav(lagSak("etter_2024", { krav: v.krav, kontakt: v.svar === "ingen" ? null : lagKontakt("etter_2024", { svar: v.svar, forsok: v.forsok }), utlegg: utlegg[v.utlegg], feil: feilMedOverslag(v.overslag) }))),
     );
     await expect(ut).toMatchFileSnapshot(snapshot("krav"));
+  });
+
+  it("summerer overslagene over feilene, og bruker dem bare med avkrysningen", () => {
+    const t = (o: (typeof OVERSLAG)[number]) => tekst(krav(lagSak("etter_2024", { krav: "prisavslag", feil: feilMedOverslag(o) })));
+    expect(t("to rapporter")).toContain("tilsvarende utbedringskostnaden på kr 42\u00a0500 ifølge verkstedenes overslag.");
+    expect(t("ett")).toContain("tilsvarende utbedringskostnaden på kr 38\u00a0000 ifølge verkstedets overslag.");
+    expect(t("uten avkrysning")).not.toContain("utbedringskostnaden");
+    expect(t("ingen")).not.toContain("utbedringskostnaden");
+  });
+
+  it("legger til at retting ikke vil bli tilbudt, og utelater selgers rett til å rette, bare ved heving", () => {
+    const t = (k: (typeof SVAR)[number], kr: "heving" | "prisavslag") => tekst(krav(lagSak("etter_2024", { krav: kr, kontakt: lagKontakt("etter_2024", { svar: k as SelgerSvar }), feil: FEILSETT.teknisk("innen_6_mnd", "nei", "nei") })));
+    expect(t("avviste", "heving")).toContain("Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt.");
+    expect(t("ikke_svart", "heving")).toContain("Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt.");
+    expect(t("avviste", "heving")).not.toContain("Dersom dere ønsker å rette");
+    expect(t("annet", "heving")).toContain("Dersom dere ønsker å rette");
+    expect(t("avviste", "prisavslag")).toContain("Dersom dere ønsker å rette");
+    expect(t("avviste", "prisavslag")).not.toContain("retting ikke vil bli tilbudt");
   });
 });
 
@@ -107,8 +207,16 @@ describe("avsnitt 5: frist og vedlegg", () => {
   });
 
   it("vedlegg gir samme tekst som sist for hver kombinasjon", async () => {
-    const ut = samle({ verksted: KILDE, opplysning: KILDE, utlegg: [false, true], tidligere: [null, "skriftlig", "muntlig"] as const }, (v) =>
-      tekst(vedlegg(lagSak("etter_2024", { feil: FEILSETT.teknisk("innen_6_mnd", v.opplysning, v.verksted), utlegg: v.utlegg ? [{ beskrivelse: "Tauing", belop: 1200 }] : [], tidligere: v.tidligere ? { dato: TIDLIGERE_DATO.etter_2024, form: v.tidligere } : null }))) || "(ingen)",
+    const RAPPORTER = ["ingen", "en", "to ulike", "samme på to feil"] as const;
+    const feilFor = (r: (typeof RAPPORTER)[number], o: (typeof KILDE)[number]): Brevfeil[] => {
+      const a = FEILSETT.teknisk("innen_6_mnd", o, "skriftlig");
+      if (r === "ingen") return FEILSETT.teknisk("innen_6_mnd", o, "muntlig");
+      if (r === "en") return a;
+      if (r === "to ulike") return [...medRapport(a, rapport({ navn: "Verksted A", dato: "2025-05-01" })), ...medRapport(lys(a), rapport({ navn: "Verksted B", dato: "2025-06-01" }))];
+      return medRapport([...a, ...lys(a)], rapport({ navn: "Verksted A", dato: "2025-05-01" }));
+    };
+    const ut = samle({ rapporter: RAPPORTER, opplysning: KILDE, utlegg: [false, true], kontakt: ["ingen", "skriftlig, annet", "muntlig, annet"] as const }, (v) =>
+      tekst(vedlegg(lagSak("etter_2024", { feil: feilFor(v.rapporter, v.opplysning), utlegg: v.utlegg ? [{ beskrivelse: "Tauing", belop: 1200 }] : [], kontakt: kontaktAv("etter_2024", v.kontakt as KontaktNavn) }))) || "(ingen)",
     );
     await expect(ut).toMatchFileSnapshot(snapshot("vedlegg"));
   });
@@ -118,8 +226,8 @@ describe("avsnitt 5: frist og vedlegg", () => {
 describe("alle brev", () => {
   const FORBUDT = /\b(klart|åpenbart|utvilsomt)\b|jeg er klar over|jeg mener/i;
   const UGYLDIG = /undefined|\bnull\b|NaN|\[object|\{|\}|\s{2,}/;
-  // The buyer's own words and the decision's quotes are not ours to word.
-  const egne = (x: Setning) => x.kilde.startsWith("vedtak:") || x.kilde.endsWith(".beskrivelse");
+  // The buyer's own words (description, conclusion) and the decision's quotes are not ours to word.
+  const egne = (x: Setning) => x.kilde.startsWith("vedtak:") || x.kilde.endsWith(".beskrivelse") || x.kilde.endsWith(".konklusjon");
 
   const brev = produkt({
     lov: LOV,
@@ -129,7 +237,7 @@ describe("alle brev", () => {
     opplysning: KILDE,
     verksted: KILDE,
     krav: ["retting", "prisavslag", "heving"] as const,
-    forsok: [0, 2],
+    kontakt: ["ingen", "skriftlig, annet", "muntlig, avviste", "skriftlig, tilbød og 1 forsøk"] as const,
     tillegg: [false, true],
   }).map((v) => ({
     v,
@@ -137,10 +245,10 @@ describe("alle brev", () => {
       lagSak(v.lov, {
         somDenEr: v.somDenEr,
         krav: v.krav,
-        forsok: v.forsok,
-        feil: FEILSETT[v.feilsett](v.tid, v.opplysning, v.verksted, v.tillegg ? "Bilen mistet kraft etter tre uker." : null),
-        tidligere: tidligere(v.lov, v.tillegg),
-        overslag: v.tillegg ? 12_500 : null,
+        kontakt: kontaktAv(v.lov, v.kontakt),
+        feil: FEILSETT[v.feilsett](v.tid, v.opplysning, v.verksted, v.tillegg ? "Bilen mistet kraft etter tre uker." : null).map((f) =>
+          f.rapport && v.tillegg ? { ...f, rapport: { ...f.rapport, punkter: ALLE_PUNKTER, konklusjon: KONKLUSJON, overslag: 12_500 } } : f,
+        ),
         utlegg: v.tillegg ? [{ beskrivelse: "Tauing", belop: 1200 }] : [],
         praksis: v.tillegg ? lagSak(v.lov).praksis : null,
       }),
@@ -184,6 +292,15 @@ describe("alle brev", () => {
     });
     expect(dupler.slice(0, 5)).toEqual([]);
   });
+
+  it("har bare én rapportlinje i vedlegget når feilene har samme rapport", () => {
+    // The sets with one defect have one report when the answer is «skriftlig», and none otherwise.
+    for (const { v, brev: b } of brev) {
+      if (!["teknisk", "opplysning", "garanti", "vet_ikke"].includes(v.feilsett)) continue;
+      const linjer = b.vedlegg?.punkter.filter((p) => p.tekst.startsWith("Rapport fra")) ?? [];
+      expect(linjer.length, JSON.stringify(v)).toBe(v.verksted === "skriftlig" ? 1 : 0);
+    }
+  });
 });
 
 describe("kjøpt før og etter 2024", () => {
@@ -215,6 +332,30 @@ describe("kjøpt før og etter 2024", () => {
     const f = FEILSETT.teknisk("6_til_24_mnd", "nei", "nei");
     expect(somTekst(byggBrev(lagSak("etter_2024", { feil: f })))).toContain("formodes etter § 18 annet ledd");
     expect(somTekst(byggBrev(lagSak("før_2024", { feil: f })))).not.toContain("formodes");
+  });
+});
+
+describe("hele brevet med rapport", () => {
+  it("setter ikke noe i brevet av det som ikke er krysset av", () => {
+    const f = medRapport(FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig"), rapport({ punkter: ["bekrefter"], konklusjon: null }));
+    const t = somTekst(byggBrev(lagSak("etter_2024", { feil: f })));
+    expect(t).toContain("Verkstedet bekrefter feilen.");
+    for (const ord of ["fastslått årsaken", "utviklet seg over tid", "unormal for bilens alder", "fraråder", "konkluderer", "slitasje"]) expect(t, ord).not.toContain(ord);
+  });
+
+  it("gir to rapportavsnitt og summert overslag for to feil med hver sin rapport", () => {
+    const a = medRapport(FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig"), rapport({ navn: "Verksted A", dato: "2025-05-01", punkter: ["overslag"], overslag: 38_000 }));
+    const b = medRapport(lys(FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig")), rapport({ navn: "Verksted B", dato: "2025-06-01", punkter: ["overslag"], overslag: 4_500 }));
+    const t = somTekst(byggBrev(lagSak("etter_2024", { feil: [...a, ...b] })));
+    expect(t.match(/Rapporten følger vedlagt\./g)).toHaveLength(2);
+    expect(t).toContain("kr 42\u00a0500 ifølge verkstedenes overslag");
+    expect(t).toContain("– Rapport fra Verksted A av 1. mai 2025\n– Rapport fra Verksted B av 1. juni 2025");
+  });
+
+  it("har bare én vedleggslinje når samme rapport gjelder to feil", () => {
+    const a = FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig");
+    const t = somTekst(byggBrev(lagSak("etter_2024", { feil: medRapport([...a, ...lys(a)], rapport()) })));
+    expect(t.match(/– Rapport fra/g)).toHaveLength(1);
   });
 });
 

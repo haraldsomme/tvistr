@@ -1,66 +1,146 @@
-16 ulike tekster over verksted(3) × opplysning(3) × utlegg(2) × tidligere(3)
+32 ulike tekster over rapporter(4) × opplysning(3) × utlegg(2) × kontakt(3)
 
-## {"verksted":"skriftlig","opplysning":"skriftlig","utlegg":false,"tidligere":null} (+1 like)
-Verkstedets skriftlige vurdering
+## {"rapporter":"ingen","opplysning":"skriftlig","utlegg":false,"kontakt":"ingen"} (+1 like)
 Annonse/kjøpekontrakt
 
-## {"verksted":"skriftlig","opplysning":"skriftlig","utlegg":false,"tidligere":"skriftlig"}
-Verkstedets skriftlige vurdering
+## {"rapporter":"ingen","opplysning":"skriftlig","utlegg":false,"kontakt":"skriftlig, annet"}
 Annonse/kjøpekontrakt
 Tidligere reklamasjon
 
-## {"verksted":"skriftlig","opplysning":"skriftlig","utlegg":true,"tidligere":null} (+1 like)
-Verkstedets skriftlige vurdering
+## {"rapporter":"ingen","opplysning":"skriftlig","utlegg":true,"kontakt":"ingen"} (+1 like)
 Annonse/kjøpekontrakt
 Kvitteringer for utlegg
 
-## {"verksted":"skriftlig","opplysning":"skriftlig","utlegg":true,"tidligere":"skriftlig"}
-Verkstedets skriftlige vurdering
+## {"rapporter":"ingen","opplysning":"skriftlig","utlegg":true,"kontakt":"skriftlig, annet"}
 Annonse/kjøpekontrakt
 Kvitteringer for utlegg
 Tidligere reklamasjon
 
-## {"verksted":"skriftlig","opplysning":"muntlig","utlegg":false,"tidligere":null} (+3 like)
-Verkstedets skriftlige vurdering
-
-## {"verksted":"skriftlig","opplysning":"muntlig","utlegg":false,"tidligere":"skriftlig"} (+1 like)
-Verkstedets skriftlige vurdering
-Tidligere reklamasjon
-
-## {"verksted":"skriftlig","opplysning":"muntlig","utlegg":true,"tidligere":null} (+3 like)
-Verkstedets skriftlige vurdering
-Kvitteringer for utlegg
-
-## {"verksted":"skriftlig","opplysning":"muntlig","utlegg":true,"tidligere":"skriftlig"} (+1 like)
-Verkstedets skriftlige vurdering
-Kvitteringer for utlegg
-Tidligere reklamasjon
-
-## {"verksted":"muntlig","opplysning":"skriftlig","utlegg":false,"tidligere":null} (+3 like)
-Annonse/kjøpekontrakt
-
-## {"verksted":"muntlig","opplysning":"skriftlig","utlegg":false,"tidligere":"skriftlig"} (+1 like)
-Annonse/kjøpekontrakt
-Tidligere reklamasjon
-
-## {"verksted":"muntlig","opplysning":"skriftlig","utlegg":true,"tidligere":null} (+3 like)
-Annonse/kjøpekontrakt
-Kvitteringer for utlegg
-
-## {"verksted":"muntlig","opplysning":"skriftlig","utlegg":true,"tidligere":"skriftlig"} (+1 like)
-Annonse/kjøpekontrakt
-Kvitteringer for utlegg
-Tidligere reklamasjon
-
-## {"verksted":"muntlig","opplysning":"muntlig","utlegg":false,"tidligere":null} (+7 like)
+## {"rapporter":"ingen","opplysning":"muntlig","utlegg":false,"kontakt":"ingen"} (+3 like)
 (ingen)
 
-## {"verksted":"muntlig","opplysning":"muntlig","utlegg":false,"tidligere":"skriftlig"} (+3 like)
+## {"rapporter":"ingen","opplysning":"muntlig","utlegg":false,"kontakt":"skriftlig, annet"} (+1 like)
 Tidligere reklamasjon
 
-## {"verksted":"muntlig","opplysning":"muntlig","utlegg":true,"tidligere":null} (+7 like)
+## {"rapporter":"ingen","opplysning":"muntlig","utlegg":true,"kontakt":"ingen"} (+3 like)
 Kvitteringer for utlegg
 
-## {"verksted":"muntlig","opplysning":"muntlig","utlegg":true,"tidligere":"skriftlig"} (+3 like)
+## {"rapporter":"ingen","opplysning":"muntlig","utlegg":true,"kontakt":"skriftlig, annet"} (+1 like)
+Kvitteringer for utlegg
+Tidligere reklamasjon
+
+## {"rapporter":"en","opplysning":"skriftlig","utlegg":false,"kontakt":"ingen"} (+1 like)
+Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Annonse/kjøpekontrakt
+
+## {"rapporter":"en","opplysning":"skriftlig","utlegg":false,"kontakt":"skriftlig, annet"}
+Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Annonse/kjøpekontrakt
+Tidligere reklamasjon
+
+## {"rapporter":"en","opplysning":"skriftlig","utlegg":true,"kontakt":"ingen"} (+1 like)
+Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Annonse/kjøpekontrakt
+Kvitteringer for utlegg
+
+## {"rapporter":"en","opplysning":"skriftlig","utlegg":true,"kontakt":"skriftlig, annet"}
+Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Annonse/kjøpekontrakt
+Kvitteringer for utlegg
+Tidligere reklamasjon
+
+## {"rapporter":"en","opplysning":"muntlig","utlegg":false,"kontakt":"ingen"} (+3 like)
+Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+
+## {"rapporter":"en","opplysning":"muntlig","utlegg":false,"kontakt":"skriftlig, annet"} (+1 like)
+Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Tidligere reklamasjon
+
+## {"rapporter":"en","opplysning":"muntlig","utlegg":true,"kontakt":"ingen"} (+3 like)
+Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Kvitteringer for utlegg
+
+## {"rapporter":"en","opplysning":"muntlig","utlegg":true,"kontakt":"skriftlig, annet"} (+1 like)
+Rapport fra Nordre Bil og Verksted AS av 2. juni 2025
+Kvitteringer for utlegg
+Tidligere reklamasjon
+
+## {"rapporter":"to ulike","opplysning":"skriftlig","utlegg":false,"kontakt":"ingen"} (+1 like)
+Rapport fra Verksted A av 1. mai 2025
+Rapport fra Verksted B av 1. juni 2025
+Annonse/kjøpekontrakt
+
+## {"rapporter":"to ulike","opplysning":"skriftlig","utlegg":false,"kontakt":"skriftlig, annet"}
+Rapport fra Verksted A av 1. mai 2025
+Rapport fra Verksted B av 1. juni 2025
+Annonse/kjøpekontrakt
+Tidligere reklamasjon
+
+## {"rapporter":"to ulike","opplysning":"skriftlig","utlegg":true,"kontakt":"ingen"} (+1 like)
+Rapport fra Verksted A av 1. mai 2025
+Rapport fra Verksted B av 1. juni 2025
+Annonse/kjøpekontrakt
+Kvitteringer for utlegg
+
+## {"rapporter":"to ulike","opplysning":"skriftlig","utlegg":true,"kontakt":"skriftlig, annet"}
+Rapport fra Verksted A av 1. mai 2025
+Rapport fra Verksted B av 1. juni 2025
+Annonse/kjøpekontrakt
+Kvitteringer for utlegg
+Tidligere reklamasjon
+
+## {"rapporter":"to ulike","opplysning":"muntlig","utlegg":false,"kontakt":"ingen"} (+3 like)
+Rapport fra Verksted A av 1. mai 2025
+Rapport fra Verksted B av 1. juni 2025
+
+## {"rapporter":"to ulike","opplysning":"muntlig","utlegg":false,"kontakt":"skriftlig, annet"} (+1 like)
+Rapport fra Verksted A av 1. mai 2025
+Rapport fra Verksted B av 1. juni 2025
+Tidligere reklamasjon
+
+## {"rapporter":"to ulike","opplysning":"muntlig","utlegg":true,"kontakt":"ingen"} (+3 like)
+Rapport fra Verksted A av 1. mai 2025
+Rapport fra Verksted B av 1. juni 2025
+Kvitteringer for utlegg
+
+## {"rapporter":"to ulike","opplysning":"muntlig","utlegg":true,"kontakt":"skriftlig, annet"} (+1 like)
+Rapport fra Verksted A av 1. mai 2025
+Rapport fra Verksted B av 1. juni 2025
+Kvitteringer for utlegg
+Tidligere reklamasjon
+
+## {"rapporter":"samme på to feil","opplysning":"skriftlig","utlegg":false,"kontakt":"ingen"} (+1 like)
+Rapport fra Verksted A av 1. mai 2025
+Annonse/kjøpekontrakt
+
+## {"rapporter":"samme på to feil","opplysning":"skriftlig","utlegg":false,"kontakt":"skriftlig, annet"}
+Rapport fra Verksted A av 1. mai 2025
+Annonse/kjøpekontrakt
+Tidligere reklamasjon
+
+## {"rapporter":"samme på to feil","opplysning":"skriftlig","utlegg":true,"kontakt":"ingen"} (+1 like)
+Rapport fra Verksted A av 1. mai 2025
+Annonse/kjøpekontrakt
+Kvitteringer for utlegg
+
+## {"rapporter":"samme på to feil","opplysning":"skriftlig","utlegg":true,"kontakt":"skriftlig, annet"}
+Rapport fra Verksted A av 1. mai 2025
+Annonse/kjøpekontrakt
+Kvitteringer for utlegg
+Tidligere reklamasjon
+
+## {"rapporter":"samme på to feil","opplysning":"muntlig","utlegg":false,"kontakt":"ingen"} (+3 like)
+Rapport fra Verksted A av 1. mai 2025
+
+## {"rapporter":"samme på to feil","opplysning":"muntlig","utlegg":false,"kontakt":"skriftlig, annet"} (+1 like)
+Rapport fra Verksted A av 1. mai 2025
+Tidligere reklamasjon
+
+## {"rapporter":"samme på to feil","opplysning":"muntlig","utlegg":true,"kontakt":"ingen"} (+3 like)
+Rapport fra Verksted A av 1. mai 2025
+Kvitteringer for utlegg
+
+## {"rapporter":"samme på to feil","opplysning":"muntlig","utlegg":true,"kontakt":"skriftlig, annet"} (+1 like)
+Rapport fra Verksted A av 1. mai 2025
 Kvitteringer for utlegg
 Tidligere reklamasjon

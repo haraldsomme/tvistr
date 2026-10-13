@@ -3,6 +3,7 @@ import type { VisteSegValg } from "@/lib/feil/kategorier";
 import type { Krav } from "@/lib/matching/typer";
 import type { Vippsprofil } from "@/lib/vipps/profil";
 import type { Kilde } from "@/lib/vedtaksvalg/kjoper";
+import type { Rapport, SelgerSvar } from "./rapport";
 
 export type { Kilde };
 export type SomDenEr = "ja" | "nei" | "vet_ikke";
@@ -21,6 +22,17 @@ export type Brevfeil = {
   // Did the seller write or say anything about this before the sale?
   opplysning: Kilde;
   verksted: Kilde;
+  // What a workshop has put in writing about this defect: with verksted = skriftlig, otherwise null.
+  rapport: Rapport | null;
+};
+
+// The buyer has complained to the seller before this letter. Without this the letter is the complaint.
+export type Kontakt = {
+  dato: string;
+  form: "skriftlig" | "muntlig";
+  // How many times the seller has tried to repair the defect: 0 to 3 (3 is «three or more»).
+  forsok: number;
+  svar: SelgerSvar;
 };
 
 export type Selger = { navn: string; orgnr: string; adresse: Adresse | null };
@@ -40,10 +52,8 @@ export type Brevsak = {
   somDenEr: SomDenEr;
   feil: Brevfeil[];
   krav: Krav;
-  forsok: number;
   utlegg: { beskrivelse: string; belop: number }[];
-  overslag: number | null;
-  tidligere: { dato: string; form: "skriftlig" | "muntlig" } | null;
+  kontakt: Kontakt | null;
   // The paragraph citing the decision (finnVedtak). null when there was no candidate and the letter
   // rests on the law.
   praksis: { avsnitt: string; kildeUrl: string; saksnummer: string | null } | null;

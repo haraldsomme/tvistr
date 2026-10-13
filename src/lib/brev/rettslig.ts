@@ -1,6 +1,7 @@
 import { brukerNiva } from "@/lib/feil/kategorier";
 import { dato, leggTilAar, liste, smaa, TIDSFRASE } from "./format";
 import { feilnavn, form, ledd } from "./feiltype";
+import { harPunkt } from "./rapport";
 import { jf, type Lovversjon, LOVORD, lovkilde, lovRef, lovversjon, parRef, type Poeng } from "./paragrafer";
 import type { Brevfeil, Brevsak, Setning } from "./typer";
 
@@ -70,10 +71,10 @@ export function mangel(s: Brevsak): Setning[] {
   const vet = alle.filter((l) => l.type === "vet_ikke");
   for (const tid of unike(vet.map((l) => l.feil.tid))) {
     const dem = vet.filter((l) => l.feil.tid === tid);
-    const reklamasjon = s.tidligere ? `jeg reklamerte på denne ${s.tidligere.form} den ${dato(s.tidligere.dato)}` : "jeg reklamerer herved på denne";
+    const reklamasjon = s.kontakt ? `jeg reklamerte på denne ${s.kontakt.form} den ${dato(s.kontakt.dato)}` : "jeg reklamerer herved på denne";
     ut.push({
       tekst: `Bilen har en funksjonssvikt som viste seg ${TIDSFRASE[tid]}, og ${reklamasjon}${henv("reklamasjon")}.`,
-      kilde: kilde(v, `${idx(dem)}.tid${s.tidligere ? "; skjema:tidligere" : ""}`, "reklamasjon"),
+      kilde: kilde(v, `${idx(dem)}.tid${s.kontakt ? "; skjema:kontakt" : ""}`, "reklamasjon"),
     });
   }
   return ut;
@@ -96,26 +97,50 @@ export function tidspunkt(s: Brevsak): Setning[] {
   const mangelen = (fs: Brevfeil[]) => (fs.length > 1 ? "Mangelene" : "Mangelen");
   const ut: Setning[] = [];
 
-  if (gjelder.length)
+  // A sentence about some of the defects says which when the others are treated differently.
+  const omFeil = (fs: Brevfeil[], hele: Brevfeil[]) => (gjelder.length && utenfor.length) || fs.length < hele.length ? `For ${liste(fs.map((f) => smaa(feilnavn(f))))}: ` : "";
+  const rapportKilde = (fs: Brevfeil[], felt: string) => fs.map((f) => `skjema:feil[${i(f)}].rapport.${felt}`).join("; ");
+
+  if (gjelder.length) {
     ut.push({
       tekst: `${prefiks(gjelder)}${mangelen(gjelder)} viste seg innen ${v === "etter_2024" ? "to år" : "seks måneder"} etter overtakelsen og formodes etter ${parRef(v, "formodning")} å ha eksistert ved leveringen, med mindre dere beviser noe annet.`,
       kilde: kilde(v, `${med(gjelder)}; skjema:kjopsdato`, "formodning"),
     });
+    // The workshop's assessment that it is not normal wear points the same way as the presumption.
+    const slitasje = gjelder.filter((f) => harPunkt(f.rapport, "ikke_slitasje"));
+    if (slitasje.length)
+      ut.push({
+        tekst: `${omFeil(slitasje, gjelder)}Verkstedets vurdering av at ${slitasje.length > 1 ? "feilene" : "feilen"} ikke skyldes normal slitasje, taler i samme retning.`,
+        kilde: rapportKilde(slitasje, "punkter.ikke_slitasje"),
+      });
+  }
 
   if (utenfor.length) {
     // The notice is dated by the earlier one if the buyer has given notice before, otherwise by this letter.
-    const sendt = s.tidligere?.dato ?? s.dato;
+    const sendt = s.kontakt?.dato ?? s.dato;
     const poeng = sendt <= leggTilAar(s.kjopsdato, 2) ? "reklamasjon_2ar" : sendt <= leggTilAar(s.kjopsdato, 5) ? "reklamasjon_5ar" : null;
     // Past five years there is nothing to say: the form and the server turn such a case away.
     if (poeng)
       ut.push({
         tekst: `${prefiks(utenfor)}Reklamasjonen er fremsatt innen ${poeng === "reklamasjon_2ar" ? "to år" : "fristen på fem år"} etter at bilen ble levert${jf(v, poeng)}.`,
-        kilde: kilde(v, `skjema:kjopsdato; ${s.tidligere ? "skjema:tidligere" : "fast:dato"}`, poeng),
+        kilde: kilde(v, `skjema:kjopsdato; ${s.kontakt ? "skjema:kontakt" : "fast:dato"}`, poeng),
       });
-    if (utenfor.some((f) => f.verksted === "skriftlig"))
+    // The proof of what the defect was at delivery. The report that says so is cited by its date;
+    // a report that does not is only referred to as documentation; no report, no sentence.
+    const medRapport = utenfor.filter((f) => f.rapport);
+    const tilStede = medRapport.filter((f) => harPunkt(f.rapport, "til_stede"));
+    const uten = medRapport.filter((f) => !harPunkt(f.rapport, "til_stede"));
+    if (tilStede.length) {
+      const datoer = unike(tilStede.map((f) => dato(f.rapport!.dato)));
       ut.push({
-        tekst: `${poeng ? "" : prefiks(utenfor)}Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.`,
-        kilde: `${med(utenfor.filter((f) => f.verksted === "skriftlig"))}`.replace(".tid", ".verksted"),
+        tekst: `${omFeil(tilStede, utenfor)}${datoer.length > 1 ? "Verkstedene" : "Verkstedet"} legger til grunn at ${tilStede.length > 1 ? "feilene" : "feilen"} forelå ved leveringen, jf. ${datoer.length > 1 ? "rapportene" : "rapporten"} av ${liste(datoer)}.`,
+        kilde: [rapportKilde(tilStede, "punkter.til_stede"), rapportKilde(tilStede, "dato")].join("; "),
+      });
+    }
+    if (uten.length)
+      ut.push({
+        tekst: `${omFeil(uten, utenfor)}Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.`,
+        kilde: rapportKilde(uten, "dato"),
       });
   }
   return ut;

@@ -24,6 +24,13 @@ describe("byggSaken", () => {
     expect(etter.feil[0].reklamasjonsfrist).toBeUndefined();
   });
 
+  it("gir modellen det rapporten sier, i rapportens rekkefølge, og ingenting uten rapport", () => {
+    const med = byggSaken(svar({ feil: [{ ...svar().feil[0], rapport: { punkter: ["overslag", "bekrefter", "ikke_slitasje"] } }] })).kjoper;
+    expect(med.feil[0].rapport_sier).toEqual(["bekrefter feilen", "sier at feilen ikke er normal slitasje", "har kostnadsoverslag"]);
+    expect(med.feil[0].verksted_undersokt).toBe("skriftlig");
+    expect(byggSaken(svar()).kjoper.feil[0].rapport_sier).toBeNull();
+  });
+
   it("lar formodningsregelen være uten betydning for feil i det selgeren sa eller lovet", () => {
     const service = byggSaken(svar({ feil: [{ ...svar().feil[0], hoved: "service", under: ["servicehefte"] }] })).kjoper;
     expect(service.feil[0].formodningsregelen_gjelder).toBeNull();

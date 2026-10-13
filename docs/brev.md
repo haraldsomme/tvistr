@@ -52,14 +52,49 @@ Brevet er i første person og formelt, uten forsterkere («klart», «åpenbart�
 | Avsnitt | Hva som avgjør teksten |
 |---|---|
 | Hode | Kjøper og selger har adresse eller ikke. Mangler kjøperens poststed, står bare datoen til høyre. Før betaling er avsenderen tom. |
-| 1. Bakgrunn | «Som den er» ja / nei / vet ikke. Tidligere reklamasjon (skriftlig / muntlig). Selger sa noe om en opplysningsfeil (skriftlig / muntlig). Første registreringsår kjent eller ikke. |
-| 2. Mangelen | Per feil: tidspunkt, beskrivelse (kjøperens egne ord, uendret), verksted (skriftlig / muntlig / nei), «vet ikke ennå», og for tekniske feil «selger sa ingenting». Til slutt rettingsforsøk (1, 2, 3 eller flere). |
+| 1. Bakgrunn | «Som den er» ja / nei / vet ikke. Kontakt med selger: reklamasjon skriftlig / muntlig, og selgers svar (se under). Selger sa noe om en opplysningsfeil (skriftlig / muntlig). Første registreringsår kjent eller ikke. |
+| 2. Mangelen | Per feil: tidspunkt, beskrivelse (kjøperens egne ord, uendret), verksted (muntlig gir én setning, skriftlig gir rapportavsnittet, se under), «vet ikke ennå», og for tekniske feil «selger sa ingenting». Til slutt rettingsforsøk (1, 2, 3 eller flere). |
 | 3. Mangel | Per type feil: teknisk, opplysning der selger sa noe, opplysning der selger ikke sa noe, garanti, vet ikke. Like typer slås sammen til én setning. «Som den er» etter lovversjon (se under). |
-| 3. Tidspunkt | Bare tekniske feil. Formodningen gjelder (§ 18 annet ledd; to år fra 2024, ellers seks måneder), eller reklamasjonen er i tide (§ 27: to år eller fem år, regnet fra tidligere reklamasjon om den finnes, ellers fra brevets dato). Er feilene delt mellom de to, sier hver setning hvilke feil den gjelder. |
+| 3. Tidspunkt | Bare tekniske feil. Formodningen gjelder (§ 18 annet ledd; to år fra 2024, ellers seks måneder), eller reklamasjonen er i tide (§ 27: to år eller fem år, regnet fra tidligere reklamasjon om den finnes, ellers fra brevets dato). Er feilene delt mellom de to, sier hver setning hvilke feil den gjelder. Rapporten legges til som bevis (se under). |
 | 3. Praksis | Vedtaksavsnittet uendret. Uten kandidat (lovsetningen) utelates underavsnittet. |
-| 4. Krav | Retting, prisavslag (med overslag om det finnes) eller heving (med rettingsforsøk om det finnes). Erstatning for utlegg. Selgerens rett til å rette, når kravet er prisavslag eller heving uten rettingsforsøk. |
+| 4. Krav | Retting (med hast når verkstedet fraråder bruk), prisavslag (med verkstedenes overslag, summert) eller heving (med rettingsforsøk, og at retting ikke vil bli tilbudt når selger avviste eller ikke svarte). Erstatning for utlegg. Selgerens rett til å rette, når kravet er prisavslag eller heving uten rettingsforsøk, men ikke ved heving etter at selger avviste eller ikke svarte. |
 | 5. Frist | E-post om Vipps har den, ellers telefon. |
-| Vedlegg | Verkstedets skriftlige vurdering, annonse/kjøpekontrakt (selger sa noe skriftlig), kvitteringer, tidligere reklamasjon (skriftlig). Utelates når listen er tom. |
+| Vedlegg | Én linje per rapport («Rapport fra {verksted} av {dato}»; samme verksted og dato er én linje), annonse/kjøpekontrakt (selger sa noe skriftlig), kvitteringer, tidligere reklamasjon (skriftlig). Utelates når listen er tom. |
+
+### Kontakt med selger
+
+Har ikke kjøperen reklamert, er brevet reklamasjonen: ingen setning om tidligere kontakt, rettingsforsøk 0, og «reklamerer herved» for symptomer uten kjent årsak. Har kjøperen reklamert (`kontakt` på `Brevsak`), står «Jeg reklamerte {skriftlig / muntlig} til dere den {dato}.» og:
+
+| Selgers svar | Avsnitt 1 | Avsnitt 4 |
+|---|---|---|
+| Avviste kravet | «Dere avviste reklamasjonen.» | Ved heving: «Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt.» Selgerens rett til å rette utelates. |
+| Har ikke svart | «Jeg har ikke fått svar.» | Ved heving: «Dere har ikke besvart reklamasjonen, og …» som over. |
+| Tilbød retting | «Dere tilbød retting, men den er ikke gjennomført.» Bare når selger ikke har forsøkt å rette. | – |
+| Annet | Ingen setning | – |
+
+Selger har forsøkt å rette (1, 2 eller 3 eller flere ganger) gir «Dere har forsøkt å rette feilen … uten at det har lykkes.» under «Mangelen», og i kravet om heving «og dere har ikke lykkes med å rette den etter {antall} forsøk». Reklamasjonsdatoen brukes også til å regne ut om reklamasjonen er i tide (§ 27).
+
+### Verkstedrapport
+
+Når verkstedet har undersøkt en feil skriftlig, har feilen en `rapport` (`src/lib/brev/rapport.ts`). Hver avkrysning gir én fast setning, i denne rekkefølgen, og det som ikke er krysset av, gir ingen setning:
+
+| Avkrysning | Setning |
+|---|---|
+| Bekrefter feilen | Verkstedet bekrefter feilen. |
+| Angir årsaken | Verkstedet har fastslått årsaken. |
+| Til stede ved levering | Verkstedet legger til grunn at feilen har utviklet seg over tid og forelå ved leveringen. |
+| Ikke normal slitasje | Verkstedet vurderer feilen som unormal for bilens alder og kjørelengde. |
+| Fraråder bruk | Verkstedet fraråder bruk av bilen før feilen er utbedret. |
+| Kostnadsoverslag | Ingen setning, tallet brukes i avsnitt 4. |
+
+I avsnitt 2: «Feilen er undersøkt av {navn} ({uavhengig verksted / merkeverksted / deres eget verksted}) den {dato}.», setningene over, «Rapporten konkluderer: «{konklusjon}».» (ordrett, uten ekstra punktum når konklusjonen slutter på tegnsetting) og «Rapporten følger vedlagt.»
+
+Rapporten brukes også i andre avsnitt:
+- **Avsnitt 3, formodningen gjelder:** er «ikke normal slitasje» krysset av, legges til «Verkstedets vurdering av at feilen ikke skyldes normal slitasje, taler i samme retning.»
+- **Avsnitt 3, formodningen gjelder ikke:** er «til stede ved levering» krysset av, står «Verkstedet legger til grunn at feilen forelå ved leveringen, jf. rapporten av {dato}.» (flertall med flere rapporter). Ellers «Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.» Uten rapport står ingen bevissetning.
+- **Avsnitt 4, prisavslag:** overslagene fra rapportene med avkrysningen «inneholder kostnadsoverslag» summeres: «… tilsvarende utbedringskostnaden på kr {sum} ifølge verkstedets overslag.» (verkstedenes ved flere rapporter). Et tall uten avkrysningen brukes ikke, fordi det da ikke er verkstedets tall.
+- **Avsnitt 4, retting:** fraråder rapporten bruk: «Bilen kan etter verkstedets vurdering ikke brukes før feilen er rettet, og jeg ber om at rettingen prioriteres.»
+- **Vedtaksvalget:** avkrysningene går til modellen som `rapport_sier`, og kandidatene viser `bevisgrunnlag`, så den kan foretrekke et vedtak der utvalget la vekt på sakkyndig dokumentasjon.
 
 ### «Som den er»
 
@@ -101,7 +136,9 @@ Ordlyden i vilkårene hentes fra `LOVORD`, med kilde ved hver frase.
 | Kjøpers navn, adresse, telefon, e-post | Vipps-profilen (stub: `STUB_PROFIL`) |
 | Selgers navn, org.nr., postadresse | Enhetsregisteret, hentet på nytt på serveren fra org.nr. |
 | Merke, modell, regnr, første registreringsår | Statens vegvesen, via skjemaet |
-| Kjøpsdato, km, kjøpesum, «som den er», feil, tid, verksted, selger sa noe, beskrivelse, krav, forsøk, utlegg, overslag, tidligere reklamasjon | Skjemaet |
+| Kjøpsdato, km, kjøpesum, «som den er», feil, tid, verksted, selger sa noe, beskrivelse, krav, utlegg | Skjemaet |
+| Rapporten (hvem, navn, dato, avkrysninger, konklusjon, overslag) | Skjemaet, steg 3, kjøperens sitat fra rapporten |
+| Kontakt med selger (dato, hvordan, rettingsforsøk, selgers svar) | Skjemaet, steg 4 |
 | Dato for brevet | Serveren, norsk tid |
 | Vedtaksavsnittet | `finnVedtak` |
 
@@ -138,6 +175,10 @@ Gjort der planteksten ville påstått mer enn feltene vet, eller ikke fulgte lov
 - Flere underkategorier under én feil skrives «Turbo og kjøling og topplokk», eller med semikolon når et navn selv har «og» i seg («Dekk og felger; nøkler og tilbehør»).
 - «Utstyr», «service» og «historikk» uten underkategori regnes som opplysning om hva selgeren sa (ikke som en teknisk feil), og «garanti» som garanti.
 - Kopiert tekst og Word-fil er laget fra samme linjeliste som skjermen, med «–» foran hvert vedlegg.
+- Rapporten har bare avkrysningene i listen over; ingen tekst om hva en rapport «vanligvis» sier. Konklusjonen er kjøperens ord og er unntatt fra ordlisten mot forsterkere, på samme måte som beskrivelsen.
+- Rapport og kontakt er gyldige bare hvis datoen ligger etter kjøpsdatoen (strengt) og ikke i fremtiden. Skjemaet og serveren sjekker begge.
+- Overslaget hører til avkrysningen: uten «inneholder kostnadsoverslag» forkastes tallet.
+- Ved to feil i samme rapport legger kjøperen inn overslaget per feil. Brevet summerer tallene feil for feil, så oppgir kjøperen rapportens totalbeløp på begge, telles det to ganger.
 
 ## Kjente gap
 
@@ -149,6 +190,9 @@ Gjort der planteksten ville påstått mer enn feltene vet, eller ikke fulgte lov
 - **Vedtaksavsnittet kommer tilbake fra nettleseren** til `byggBrevet`. Det renses (maks lengde, bare https-lenke), men en bruker kan endre teksten i sitt eget brev.
 - **Enkeltpersonforetak finnes ikke i selgersøket** (`src/lib/brreg.ts` utelater dem med vilje). Privat selger støttes ikke.
 - **Beskrivelsen** (kjøperens egne ord) renses bare for blanke og lengde (200 tegn).
+- **Rapporten er kjøperens påstand.** Brevet gjengir avkrysningene og konklusjonen som kjøperen har oppgitt, og kontrollerer ikke at rapporten sier det. Skjemaet ber kjøperen krysse av bare for det rapporten sier. Konklusjonen kan inneholde hva som helst (opp til 300 tegn), og er unntatt forsterkerlisten.
+- **Selger tilbød retting og har forsøkt å rette** gir ingen egen setning om tilbudet (forsøkene står under «Mangelen»).
+- **Ingen kontroll mot selgers svar:** «annet» gir ingen setning, og brevet sier ikke hva selger svarte utover de tre valgene.
 - **Rategrensene er slått av** (`GRENSER_PA` i `src/lib/rategrense.ts`) til nettstedet er offentlig.
 
 ## Måling

@@ -87,6 +87,7 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
       beskrivelse: detaljer[h.id].beskrivelse,
       opplysning: detaljer[h.id].opplysning,
       verksted: detaljer[h.id].verksted,
+      rapport: detaljer[h.id].rapport,
     })),
   });
 
@@ -188,10 +189,8 @@ export async function byggBrevet(inn: unknown): Promise<BrevResultat> {
     somDenEr: r.somDenEr,
     feil: r.feil,
     krav: r.krav,
-    forsok: r.forsok,
     utlegg: r.utlegg,
-    overslag: r.overslag,
-    tidligere: r.tidligere,
+    kontakt: r.kontakt,
     praksis: rensPraksis(o.funn),
   });
   return { ok: true, brev: kjoper ? brev : forhandsvisning(brev), fullt: !!kjoper };

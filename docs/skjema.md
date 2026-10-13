@@ -41,7 +41,7 @@ Hver underkategori har en komponenttype (`KOMPONENTTYPER`). Typen «opplysning»
 
 ## Steg 3: Detaljer
 
-Ett kort per valgt hovedkategori. Et kort er besvart når de tre spørsmålene har svar. Neste ubesvarte kort åpnes automatisk.
+Ett kort per valgt hovedkategori. Et kort er besvart når de tre spørsmålene har svar, og når verkstedet har undersøkt feilen skriftlig, når rapporten også er fylt ut. Neste ubesvarte kort åpnes automatisk, men ikke mens kjøperen skriver i rapporten.
 
 | Spørsmål | Svar | Krav |
 |---|---|---|
@@ -52,16 +52,46 @@ Ett kort per valgt hovedkategori. Et kort er besvart når de tre spørsmålene h
 
 Hvis en feil viste seg mer enn to år etter overtakelsen, vises fristvarsel.
 
+### Rapport fra verkstedet
+
+Svarer kjøperen «Ja, skriftlig» på verkstedspørsmålet, utvides kortet med rapporten. Den er kjøperens sitat fra et dokument, på samme måte som vedtakssitatene er sitater fra vedtaket.
+
+| Felt | Svar | Krav |
+|---|---|---|
+| Hvem undersøkte bilen? | Uavhengig verksted / Selgers eget verksted / Merkeverksted | Påkrevd |
+| Verkstedets navn | Tekst, maks 60 tegn | Påkrevd |
+| Dato for rapporten | Dato | Påkrevd, etter kjøpsdatoen og ikke i fremtiden |
+| Hva sier rapporten? | Avkrysning, flere mulig (se under) | Minst én |
+| Kostnadsoverslag for utbedring | Tall i kr. Vises bare når «inneholder kostnadsoverslag» er krysset av. | Valgfritt |
+| Rapportens konklusjon, ordrett | Tekst, maks 300 tegn | Valgfritt |
+
+Avkrysningene (teksten i skjemaet, og setningen i brevet, `src/lib/brev/rapport.ts`): rapporten bekrefter feilen, angir årsaken, sier at feilen har utviklet seg over tid og var til stede ved levering, sier at feilen ikke er normal slitasje, fraråder bruk av bilen, og inneholder kostnadsoverslag. Det som ikke er krysset av, gir ingen setning. Hjelpetekst: «Kryss bare av det rapporten faktisk sier. Forhandleren kan be om å få se den.»
+
+«Samme rapport som forrige feil» står på kortet når en tidligere feil har en utfylt rapport. Den kopierer hvem, navn og dato, og nullstiller avkrysningene, konklusjonen og overslaget, så kjøperen krysser av på nytt for denne feilen. Samme verksted og dato er én rapport i vedleggslisten.
+
+Konklusjonen renses bare for trim, lengde (300 tegn) og doble anførselstegn; linjeskift blir mellomrom. Brevet setter «» rundt den.
+
 ## Steg 4: Krav
 
 | Felt | Svar | Krav |
 |---|---|---|
 | Hva krever du? | Retting / Prisavslag / Heving | Må velges |
-| Har selger forsøkt å reparere feilene? | Nei / 1 gang / 2 ganger / 3 eller flere | Må besvares |
-| Kostnadsoverslag for utbedring | Tall i kr, maks 7 sifre. Vises bare når et verksted har undersøkt minst én feil skriftlig. | Valgfritt |
 | Erstatning for utlegg | På/av. Når på: linjer med beskrivelse (maks 100 tegn) og beløp (kr). Forslag: tauing, feilsøking, leiebil, verkstedregning. | Når på: minst én linje, og hver linje må ha både beskrivelse og beløp > 0 |
-| Har du allerede reklamert til selger? | Nei / Ja, skriftlig / Ja, muntlig. Ved ja: dato. | Må besvares. Datoen må ligge mellom kjøpsdatoen og i dag. |
 | Hvem kjøpte du bilen av? | Søk på navn eller org.nr. i Enhetsregisteret (`/api/firma`, åpent oppslag uten nøkkel). Brukeren velger ett treff. | Må velges |
+
+### Kontakt med selger
+
+Én blokk i stedet for to spørsmål, slik at svarene ikke kan stride mot hverandre: har selger forsøkt å rette, har kjøperen nødvendigvis reklamert.
+
+| Spørsmål | Svar | Vises når |
+|---|---|---|
+| Har du reklamert til selger? | Ja / Nei | Alltid |
+| Når reklamerte du første gang? | Dato, etter kjøpsdatoen og ikke i fremtiden | Ja |
+| Hvordan? | Skriftlig / Muntlig | Ja |
+| Har selger forsøkt å rette feilen? | Nei / 1 gang / 2 ganger / 3 eller flere | Ja |
+| Hva svarte selger? | Avviste kravet / Har ikke svart / Tilbød retting / Annet | Ja |
+
+Svarer kjøperen «Nei», er brevet selve reklamasjonen: de andre svarene tømmes, rettingsforsøk er 0 og selgers svar er ingen. Serveren gjør det samme uansett hva nettleseren sender (`rensKontakt` i `rens.ts`), så rettingsforsøk uten reklamasjon er umulig. Svarene brukes i brevet (avsnitt 1, 3 og 4, se `brev.md`).
 
 Under utlegg vises en påminnelse om å legge ved fakturaer og kvitteringer. Selgersøket finner aksjeselskaper og lignende, ikke enkeltpersonforetak (`src/lib/brreg.ts`). Bare det valgte treffet (navn, org.nr., kommune, status) beholdes i skjemaet; brevet adresseres fra registeret på nytt på serveren.
 
@@ -74,7 +104,7 @@ Ingen input. Siden venter mens `finnVedtak` og `byggBrevet` kjører, og viser de
 
 ## Hva som skjer med svarene
 
-`finnVedtak` får: feilvalg, tidsvalg per feil, kjøpsdato, km, første registreringsår, «som den er», krav, rettingsforsøk og detaljer per feil (beskrivelse, verksted, selgers opplysning). Svarene renses mot de kjente id-ene før bruk (`src/app/sak/rens.ts`).
+`finnVedtak` får: feilvalg, tidsvalg per feil, kjøpsdato, km, første registreringsår, «som den er», krav, kontakten med selger (rettingsforsøk, og 0 uten reklamasjon) og detaljer per feil (beskrivelse, verksted, selgers opplysning, og hva en skriftlig verkstedrapport sier). Svarene renses mot de kjente id-ene før bruk (`src/app/sak/rens.ts`).
 
 | Svar | Rangering (`src/lib/matching/`) | Sonnet-kallet (`kjoper.ts`) |
 |---|---|---|
@@ -87,18 +117,20 @@ Ingen input. Siden venter mens `finnVedtak` og `byggBrevet` kjører, og viser de
 | Verksted undersøkt | Ja, når utvalget la vekt på sakkyndig dokumentasjon | Ja |
 | Selger sa noe | Ja, når utvalget la vekt på selgers opplysning | Ja |
 | Rettingsforsøk | Ja, i vurderingen av rettslige poeng (to eller flere forsøk) | Ja |
+| Hva verkstedrapporten sier (avkrysningene) | Nei | Ja, som `rapport_sier` per feil, så modellen kan foretrekke et vedtak der utvalget la vekt på sakkyndig dokumentasjon |
 | Beskrivelse (fritekst) | Nei | Ja |
 | **Kjøpesum** | **Nei** | **Nei** |
-| **Utlegg og overslag** | **Nei** | **Nei** |
+| **Utlegg** | **Nei** | **Nei** |
+| **Rapportens navn, dato, hvem og konklusjon, og overslaget** | **Nei** | **Nei** |
 | **Regnr, merke, modell** | **Nei, bare registreringsåret** | **Nei** |
-| **Selger og tidligere reklamasjon** | **Nei** | **Nei** |
+| **Selger, når kjøperen reklamerte og hva selger svarte** | **Nei** | **Nei** |
 
-`byggBrevet` får i tillegg til dette det som bare brevet bruker: kjøpesum, utlegg, kostnadsoverslag, regnr, merke, modell, selgerens org.nr., tidligere reklamasjon, og vedtaksavsnittet fra `finnVedtak`. Hvilke setninger hvert svar gir, står i `brev.md`. Vedtaksvalget ser fortsatt ikke kjøpesum, utlegg, overslag, selger eller tidligere reklamasjon.
+`byggBrevet` får i tillegg til dette det som bare brevet bruker: kjøpesum, utlegg, hele rapporten per feil, regnr, merke, modell, selgerens org.nr., hele kontakten med selger, og vedtaksavsnittet fra `finnVedtak`. Hvilke setninger hvert svar gir, står i `brev.md`. Vedtaksvalget ser fortsatt ikke kjøpesum, utlegg, rapportens navn, dato eller konklusjon, overslag, selger eller kontakten utover antall rettingsforsøk.
 
 ## Lagring
 
 - Ingenting lagres i databasen. Det finnes ingen saksrad eller bruker, og vegvesen-oppslaget lagres ikke.
-- Svarene, inkludert valgt selger, tidligere reklamasjon og overslag, ligger i `sessionStorage` (nøkkel `tvistr:sak`), så en reload eller tilbake-knappen beholder dem. Brevet og vedtaket lagres ikke, og siden åpner aldri på steg 5.
+- Svarene, inkludert valgt selger, kontakten med selger og rapportene, ligger i `sessionStorage` (nøkkel `tvistr:sak`), så en reload eller tilbake-knappen beholder dem. Brevet og vedtaket lagres ikke, og siden åpner aldri på steg 5.
 - Ordre-id fra Vipps skal lagres i `sessionStorage` (`tvistr:ordre`) slik at en omlasting etter betaling finner brevet igjen. Det gjør Vipps-oppgaven; skjemaet leser nøkkelen og sender den med.
 - Serveren lagrer ingenting om brevet. Selgerens navn og adresse hentes fra Enhetsregisteret ved hvert brev, og kjøperen hentes fra Vipps-profilen.
 - Serveren begrenser antall forsøk per IP: 20 per minutt for «Lag brev» (både `finnVedtak` og `byggBrevet`), 10 per minutt for vegvesen-oppslag og 60 for selgersøket. Grensene er slått av mens vi tester (`src/lib/rategrense.ts`).

@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Forslag, tittel as tittelNavn } from "@/lib/brreg";
 import { type Linje, somTekst, tilDokument } from "@/lib/brev/brev";
+import { MAKS_KONKLUSJON, MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, type RapportPunkt, SELGER_SVAR, type SelgerSvar, VERKSTED_HVEM, type VerkstedHvem } from "@/lib/brev/rapport";
 import type { Brev } from "@/lib/brev/typer";
 import { type Kjoretoy, normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
 import { type Feilvalg, HOVEDKATEGORIER, rensFeilvalg, rensTidsvalg, type Tidsvalg, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
@@ -39,9 +40,12 @@ const KILDE = [
   { id: "nei", navn: "Nei" },
 ] as const;
 type Kilde = (typeof KILDE)[number]["id"];
+// What the buyer fills in about a written workshop report (a field is text as typed; the server cleans it).
+type RapportSkjema = { hvem?: VerkstedHvem; navn: string; dato: string; punkter: RapportPunkt[]; konklusjon: string; overslag: string };
+const TOM_RAPPORT: RapportSkjema = { navn: "", dato: "", punkter: [], konklusjon: "", overslag: "" };
 // Per main category: a free-text line, whether a workshop examined it, and whether the seller said
-// anything about it before the sale.
-type Detalj = { beskrivelse?: string; verksted?: Kilde; opplysning?: Kilde };
+// anything about it before the sale. With a written workshop assessment: the report.
+type Detalj = { beskrivelse?: string; verksted?: Kilde; opplysning?: Kilde; rapport?: RapportSkjema };
 type Krav = "retting" | "prisavslag" | "heving";
 const KRAV: { id: Krav; navn: string; merke?: string; tekst: string }[] = [
   { id: "retting", navn: "Retting", merke: "Vanligst", tekst: "Forhandleren utbedrer feilen uten kostnad for deg. Dette er normalt første steg." },
@@ -54,12 +58,17 @@ const RETTINGSFORSOK = [
   { id: 2, navn: "2 ganger" },
   { id: 3, navn: "3 eller flere" },
 ] as const;
-const TIDLIGERE = [
+// «Kontakt med selger»: has the buyer complained before, and how.
+const JA_NEI = [
+  { id: "ja", navn: "Ja" },
   { id: "nei", navn: "Nei" },
-  { id: "skriftlig", navn: "Ja, skriftlig" },
-  { id: "muntlig", navn: "Ja, muntlig" },
 ] as const;
-type Tidligere = (typeof TIDLIGERE)[number]["id"];
+type Reklamert = (typeof JA_NEI)[number]["id"];
+const HVORDAN = [
+  { id: "skriftlig", navn: "Skriftlig" },
+  { id: "muntlig", navn: "Muntlig" },
+] as const;
+type Hvordan = (typeof HVORDAN)[number]["id"];
 const UTLEGG_FORSLAG = ["Tauing", "Feilsøking", "Leiebil", "Verkstedregning"];
 type Utlegg = { beskrivelse: string; belop: string };
 
@@ -177,6 +186,27 @@ const kort = (sel: boolean, anim: string): CSSProperties => ({
   transition: "border-color .2s,background .2s,transform .15s,box-shadow .2s",
   animation: anim,
 });
+
+// A tick: one thing the report says. Looks like the checkbox for expenses in step 4.
+function Avkrysning({ valgt, velg, children }: { valgt: boolean; velg: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={valgt}
+      onClick={velg}
+      className="rk-kat"
+      style={{ ...kort(valgt, "none"), borderRadius: 10, display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", textAlign: "left", width: "100%" }}
+    >
+      <span
+        style={{ width: 18, height: 18, flex: "none", marginTop: 1, borderRadius: 5, border: `1.5px solid ${valgt ? A : "#b4b8bc"}`, background: valgt ? A : "#fff", display: "grid", placeItems: "center", transition: "all .2s" }}
+      >
+        {valgt && <Hake />}
+      </span>
+      <span style={{ fontSize: 14.5, lineHeight: 1.45, textWrap: "pretty" }}>{children}</span>
+    </button>
+  );
+}
 
 // A number with a unit after it, shown with thousands spaces; the value is kept as digits only.
 function Tallfelt({ etikett, hjelp, enhet, verdi, sett, maks }: { etikett: string; hjelp?: string; enhet: string; verdi: string; sett: (v: string) => void; maks: number }) {
@@ -443,13 +473,14 @@ type Lagret = {
   somDenEr: SomDenEr | null;
   detaljer: Record<string, Detalj>;
   krav: Krav | null;
-  forsok: number | null;
   kreverUtlegg: boolean;
   utlegg: Utlegg[];
   selger: Selger | null;
-  tidligere: Tidligere | null;
-  tidligereDato: string;
-  overslag: string;
+  reklamert: Reklamert | null;
+  reklamertDato: string;
+  reklamertForm: Hvordan | null;
+  forsok: number | null;
+  selgerSvar: SelgerSvar | null;
 };
 const LAGRINGSNOKKEL = "tvistr:sak";
 // The Vipps order id, kept so that a reload after payment finds the paid letter again (docs/brev.md).
@@ -470,6 +501,17 @@ function lesSelger(v: unknown): Selger | null {
   return { orgnr: r.orgnr, navn: r.navn.slice(0, 120), kommune: typeof r.kommune === "string" ? r.kommune.slice(0, 80) : null, status: r.status === "konkurs" || r.status === "avvikling" ? r.status : null };
 }
 
+function lesRapport(r: Record<string, unknown>): RapportSkjema {
+  return {
+    hvem: VERKSTED_HVEM.find((h) => h.id === r.hvem)?.id,
+    navn: streng(r.navn, MAKS_VERKSTEDNAVN),
+    dato: streng(r.dato, 10),
+    punkter: Array.isArray(r.punkter) ? RAPPORT_PUNKTER.filter((p) => (r.punkter as unknown[]).includes(p.id)).map((p) => p.id) : [],
+    konklusjon: streng(r.konklusjon, MAKS_KONKLUSJON),
+    overslag: streng(r.overslag, 7).replace(/\D/g, ""),
+  };
+}
+
 function lesLagret(): Lagret | null {
   try {
     const r = JSON.parse(sessionStorage.getItem(LAGRINGSNOKKEL) ?? "null") as Record<string, unknown> | null;
@@ -481,6 +523,7 @@ function lesLagret(): Lagret | null {
         ...(typeof d?.beskrivelse === "string" && { beskrivelse: d.beskrivelse.slice(0, 200) }),
         ...(KILDE.some((k) => k.id === d?.verksted) && { verksted: d.verksted as Kilde }),
         ...(KILDE.some((k) => k.id === d?.opplysning) && { opplysning: d.opplysning as Kilde }),
+        ...(d?.rapport && typeof d.rapport === "object" ? { rapport: lesRapport(d.rapport as Record<string, unknown>) } : {}),
       };
     }
     return {
@@ -496,12 +539,13 @@ function lesLagret(): Lagret | null {
       somDenEr: SOM_DEN_ER.find((o) => o.id === r.somDenEr)?.id ?? null,
       detaljer,
       krav: KRAV.find((k) => k.id === r.krav)?.id ?? null,
+      reklamert: JA_NEI.find((o) => o.id === r.reklamert)?.id ?? null,
+      reklamertDato: streng(r.reklamertDato, 10),
+      reklamertForm: HVORDAN.find((o) => o.id === r.reklamertForm)?.id ?? null,
       forsok: RETTINGSFORSOK.find((o) => o.id === r.forsok)?.id ?? null,
+      selgerSvar: SELGER_SVAR.find((o) => o.id === r.selgerSvar)?.id ?? null,
       kreverUtlegg: r.kreverUtlegg === true,
       selger: lesSelger(r.selger),
-      tidligere: TIDLIGERE.find((o) => o.id === r.tidligere)?.id ?? null,
-      tidligereDato: streng(r.tidligereDato, 10),
-      overslag: streng(r.overslag, 7).replace(/\D/g, ""),
       utlegg: Array.isArray(r.utlegg) ? r.utlegg.slice(0, 20).map((u: Record<string, unknown>) => ({ beskrivelse: streng(u?.beskrivelse, 200), belop: streng(u?.belop, 8).replace(/\D/g, "") })) : [],
     };
   } catch {
@@ -539,13 +583,14 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   // The open card in step 3; undefined means the first unanswered one.
   const [apent, setApent] = useState<string | null | undefined>(undefined);
   const [krav, setKrav] = useState<Krav | null>(start?.krav ?? null);
+  const [reklamert, setReklamert] = useState<Reklamert | null>(start?.reklamert ?? null);
+  const [reklamertDato, setReklamertDato] = useState(start?.reklamertDato ?? "");
+  const [reklamertForm, setReklamertForm] = useState<Hvordan | null>(start?.reklamertForm ?? null);
   const [forsok, setForsok] = useState<number | null>(start?.forsok ?? null);
+  const [selgerSvar, setSelgerSvar] = useState<SelgerSvar | null>(start?.selgerSvar ?? null);
   const [kreverUtlegg, setKreverUtlegg] = useState(start?.kreverUtlegg ?? false);
   const [utlegg, setUtlegg] = useState<Utlegg[]>(start?.utlegg ?? []);
   const [selger, setSelger] = useState<Selger | null>(start?.selger ?? null);
-  const [tidligere, setTidligere] = useState<Tidligere | null>(start?.tidligere ?? null);
-  const [tidligereDato, setTidligereDato] = useState(start?.tidligereDato ?? "");
-  const [overslag, setOverslag] = useState(start?.overslag ?? "");
   const [funn, setFunn] = useState<Funn | null>(null);
   const [brevet, setBrevet] = useState<BrevResultat | null>(null);
   const [kopiert, setKopiert] = useState(false);
@@ -566,11 +611,11 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
 
   useEffect(() => {
     if (!lagre) return;
-    const l: Lagret = { step: Math.min(step, BREV - 1), regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, forsok, kreverUtlegg, utlegg, selger, tidligere, tidligereDato, overslag };
+    const l: Lagret = { step: Math.min(step, BREV - 1), regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar };
     try {
       sessionStorage.setItem(LAGRINGSNOKKEL, JSON.stringify(l));
     } catch {}
-  }, [lagre, step, regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, forsok, kreverUtlegg, utlegg, selger, tidligere, tidligereDato, overslag]);
+  }, [lagre, step, regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar]);
 
   const isDesktop = w >= 820;
   // The same rule the lookup uses, so the button only works for a number the server accepts.
@@ -623,10 +668,23 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
     }));
 
   const valgte = HOVEDKATEGORIER.filter((h) => h.id in valg);
+  const idag = new Date().toISOString().slice(0, 10);
+  // A complaint or a report comes after the purchase and not in the future.
+  const dagEtter = (iso: string) => {
+    const d = new Date(`${iso}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10);
+  };
+  const etterKjop = (dato: string) => /^\d{4}-\d{2}-\d{2}$/.test(dato) && /^\d{4}-\d{2}-\d{2}$/.test(kjopsdato) && dato > kjopsdato && dato <= idag;
+  // A report is complete with who examined, the workshop's name, a date and at least one tick. The
+  // conclusion and the estimate are optional.
+  const rapportOk = (r?: RapportSkjema) => !!r?.hvem && !!r.navn.trim() && etterKjop(r.dato) && r.punkter.length > 0;
   // A card is answered when it says when the defect showed itself, whether a workshop examined it
   // and whether the seller said anything about it. The description and subcategories are optional.
+  // A written workshop assessment is not answered before its report is.
   const besvarteMed = (id: string, t: Partial<Tidsvalg>, d: Record<string, Detalj>) => [t[id], d[id]?.verksted, d[id]?.opplysning].filter(Boolean).length;
-  const ferdig = (id: string) => besvarteMed(id, tid, detaljer) === 3;
+  const ferdigMed = (id: string, t: Partial<Tidsvalg>, d: Record<string, Detalj>) => besvarteMed(id, t, d) === 3 && (d[id]?.verksted !== "skriftlig" || rapportOk(d[id]?.rapport));
+  const ferdig = (id: string) => ferdigMed(id, tid, detaljer);
   const apenId = apent === undefined ? (valgte.find((h) => !ferdig(h.id))?.id ?? null) : apent;
 
   // When an answer completes a card, the next unanswered one opens, as in the mockup.
@@ -634,12 +692,12 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
     const varFerdig = ferdig(id);
     setTid(nyTid);
     setDetaljer(nyeDetaljer);
-    if (varFerdig || besvarteMed(id, nyTid, nyeDetaljer) < 3) return;
+    if (varFerdig || !ferdigMed(id, nyTid, nyeDetaljer)) return;
     clearTimeout(nesteKort.current);
     nesteKort.current = setTimeout(() => {
       const i = valgte.findIndex((h) => h.id === id);
       const rekke = [...valgte.slice(i + 1), ...valgte.slice(0, i)];
-      setApent(rekke.find((h) => besvarteMed(h.id, nyTid, nyeDetaljer) < 3)?.id ?? null);
+      setApent(rekke.find((h) => !ferdigMed(h.id, nyTid, nyeDetaljer))?.id ?? null);
     }, 420);
   }
   const settTid = (id: string, t: VisteSegValg) => {
@@ -647,25 +705,41 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
     besvar(id, { ...tid, [id]: t }, detaljer);
   };
   const settDetalj = (id: string, endring: Detalj) => besvar(id, tid, { ...detaljer, [id]: { ...detaljer[id], ...endring } });
+  // «No» clears the rest: without a complaint there are no repairs and no answer to give.
+  const velgReklamert = (r: Reklamert) => {
+    setReklamert(r);
+    if (r === "nei") {
+      setReklamertDato("");
+      setReklamertForm(null);
+      setForsok(null);
+      setSelgerSvar(null);
+    }
+  };
+  // Typing in the report must not move on to the next card, so the card is held open.
+  const settRapport = (id: string, endring: Partial<RapportSkjema>) => {
+    setFunn(null);
+    setApent(id);
+    setDetaljer((v) => ({ ...v, [id]: { ...v[id], rapport: { ...(v[id]?.rapport ?? TOM_RAPPORT), ...endring } } }));
+  };
+  // The same report for this defect as for the one before: the workshop, the date and who. What the
+  // report says about this defect is ticked again.
+  const kopierRapport = (id: string, fra: RapportSkjema) => settRapport(id, { hvem: fra.hvem, navn: fra.navn, dato: fra.dato, punkter: [], konklusjon: "", overslag: "" });
   const settUtlegg = (i: number, endring: Partial<Utlegg>) => setUtlegg((u) => u.map((x, j) => (j === i ? { ...x, ...endring } : x)));
 
   const carName = car ? `${car.k.merke} ${car.k.modell}` : "";
   const beskrevet = valgte.filter((h) => ferdig(h.id)).length;
-  const idag = new Date().toISOString().slice(0, 10);
   const datoOk = /^\d{4}-\d{2}-\d{2}$/.test(kjopsdato) && kjopsdato <= idag;
   const aarSiden = (n: number) => `${Number(idag.slice(0, 4)) - n}${idag.slice(4)}`;
   const utleggSum = utlegg.reduce((s, x) => s + (Number(x.belop) || 0), 0);
   const utleggOk = !kreverUtlegg || (utlegg.length > 0 && utlegg.every((x) => x.beskrivelse.trim() && Number(x.belop) > 0));
-  // The date of an earlier notice lies between the purchase and today.
-  const tidligereDatoOk = /^\d{4}-\d{2}-\d{2}$/.test(tidligereDato) && tidligereDato >= kjopsdato && tidligereDato <= idag;
-  const tidligereOk = tidligere === "nei" || (tidligere !== null && tidligereDatoOk);
-  // A cost estimate has a place when a workshop has put its assessment in writing.
-  const skriftligVerksted = valgte.some((h) => detaljer[h.id]?.verksted === "skriftlig");
+  // Contact with the seller: «no» is the letter being the complaint. «Yes» needs the date, how, the
+  // repairs and the answer, so the answers cannot contradict each other (repairs without a complaint).
+  const kontaktOk = reklamert === "nei" || (reklamert === "ja" && etterKjop(reklamertDato) && !!reklamertForm && forsok !== null && !!selgerSvar);
   const valid = [
     !!car && !fetching && datoOk && Number(km) > 0 && Number(kjopesum) > 0 && !!somDenEr,
     valgte.length > 0,
     valgte.length > 0 && beskrevet === valgte.length,
-    !!krav && forsok !== null && utleggOk && !!selger && tidligereOk,
+    !!krav && kontaktOk && utleggOk && !!selger,
   ][step];
   const ok = valid && !soker;
   const subs = [
@@ -693,12 +767,11 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
         ar: car?.k.ar ?? null,
         somDenEr,
         krav,
-        forsok,
-        detaljer,
+        // The estimate is typed as text in the form; the server wants a number.
+        detaljer: Object.fromEntries(Object.entries(detaljer).map(([id, d]) => [id, d.rapport ? { ...d, rapport: { ...d.rapport, overslag: d.rapport.overslag ? Number(d.rapport.overslag) : null } } : d])),
         bil: car && { regnr: car.k.regnr, merke: car.k.merke, modell: car.k.modell, ar: car.k.ar },
         selgerOrgnr: selger?.orgnr ?? null,
-        tidligere: tidligere && tidligere !== "nei" ? { form: tidligere, dato: tidligereDato } : null,
-        overslag: skriftligVerksted && overslag ? Number(overslag) : null,
+        kontakt: reklamert === "ja" ? { reklamert: true, dato: reklamertDato, form: reklamertForm, forsok, svar: selgerSvar } : { reklamert: false },
         utlegg: kreverUtlegg ? utlegg.map((u) => ({ beskrivelse: u.beskrivelse, belop: Number(u.belop) })) : [],
       };
       const f = await finnVedtak(svar);
@@ -1100,8 +1173,15 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                   {valgte.map((h, i) => {
                     const d = detaljer[h.id] ?? {};
                     const besvart = besvarteMed(h.id, tid, detaljer);
-                    const done = besvart === 3;
+                    const done = ferdig(h.id);
                     const open = apenId === h.id;
+                    const r = d.rapport ?? TOM_RAPPORT;
+                    // A report already filled in for an earlier defect, to copy.
+                    const forrige = valgte
+                      .slice(0, i)
+                      .reverse()
+                      .map((x) => detaljer[x.id]?.rapport)
+                      .find((x) => x?.hvem && x.navn.trim() && x.dato);
                     const sammendrag = [
                       d.beskrivelse?.trim(),
                       ...h.under.filter((u) => valg[h.id].includes(u.id)).map((u) => u.navn),
@@ -1151,7 +1231,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                               <span style={{ fontSize: 13.5, color: "#5f6468", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sammendrag}</span>
                             )}
                           </span>
-                          {!open && <span style={{ fontSize: 13, fontWeight: 600, color: done ? A : "#8a8f93", whiteSpace: "nowrap" }}>{done ? "Endre" : `${besvart} av 3`}</span>}
+                          {!open && <span style={{ fontSize: 13, fontWeight: 600, color: done ? A : "#8a8f93", whiteSpace: "nowrap" }}>{done ? "Endre" : besvart === 3 ? "Mangler rapport" : `${besvart} av 3`}</span>}
                           <svg
                             width="14"
                             height="14"
@@ -1222,6 +1302,73 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                                 velg={(k) => settDetalj(h.id, { verksted: k })}
                               />
                             </div>
+                            {d.verksted === "skriftlig" && (
+                              <fieldset
+                                style={{ margin: 0, minWidth: 0, border: `1px solid ${LINE}`, borderRadius: 12, padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 20, background: "#fafaf8", animation: pop(0) }}
+                              >
+                                <legend style={{ padding: "0 6px", fontSize: 14, fontWeight: 600 }}>Rapporten fra verkstedet</legend>
+                                {forrige && (
+                                  <button type="button" onClick={() => kopierRapport(h.id, forrige)} className="rk-chip" style={{ ...chip(false), alignSelf: "flex-start" }}>
+                                    Samme rapport som forrige feil
+                                  </button>
+                                )}
+                                <Chipvalg sporsmal="Hvem undersøkte bilen?" etikett={`Hvem undersøkte ${h.navn}?`} valg={VERKSTED_HVEM} valgt={r.hvem} velg={(x) => settRapport(h.id, { hvem: x })} />
+                                <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, fontWeight: 600 }}>
+                                  Verkstedets navn
+                                  <input
+                                    value={r.navn}
+                                    onChange={(e) => settRapport(h.id, { navn: e.target.value })}
+                                    maxLength={MAKS_VERKSTEDNAVN}
+                                    autoComplete="off"
+                                    className="rk-input"
+                                    style={{ height: 48, border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "0 14px", font: `400 15px ${SANS}`, color: INK, outline: "none", background: "#fff" }}
+                                  />
+                                </label>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                  <span style={{ fontSize: 14, fontWeight: 600 }}>Dato for rapporten</span>
+                                  <Datovelger etikett={`Dato for rapporten om ${h.navn}`} verdi={r.dato} min={kjopsdato ? dagEtter(kjopsdato) : undefined} maks={idag} sett={(dato) => settRapport(h.id, { dato })} />
+                                  {r.dato && !etterKjop(r.dato) && (
+                                    <span role="alert" style={{ fontSize: 13, color: "#a3372b" }}>
+                                      Datoen må ligge etter kjøpsdatoen og ikke i fremtiden.
+                                    </span>
+                                  )}
+                                </div>
+                                <div role="group" aria-label={`Hva sier rapporten om ${h.navn}?`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                  <span style={{ fontSize: 14, fontWeight: 600 }}>Hva sier rapporten?</span>
+                                  <span style={{ fontSize: 13.5, color: "#5f6468", lineHeight: 1.5 }}>Kryss bare av det rapporten faktisk sier. Forhandleren kan be om å få se den.</span>
+                                  {RAPPORT_PUNKTER.map((p) => (
+                                    <Avkrysning
+                                      key={p.id}
+                                      valgt={r.punkter.includes(p.id)}
+                                      velg={() => settRapport(h.id, { punkter: r.punkter.includes(p.id) ? r.punkter.filter((x) => x !== p.id) : [...r.punkter, p.id] })}
+                                    >
+                                      {p.skjema}
+                                    </Avkrysning>
+                                  ))}
+                                </div>
+                                {r.punkter.includes("overslag") && (
+                                  <div style={{ maxWidth: 320 }}>
+                                    <Tallfelt etikett="Kostnadsoverslag for utbedring" hjelp="Beløpet rapporten oppgir. Valgfritt." enhet="kr" verdi={r.overslag} sett={(overslag) => settRapport(h.id, { overslag })} maks={7} />
+                                  </div>
+                                )}
+                                <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, fontWeight: 600 }}>
+                                  <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                    <span>
+                                      Rapportens konklusjon, ordrett <span style={{ fontWeight: 400, color: "#5f6468" }}>(valgfritt)</span>
+                                    </span>
+                                    <span style={{ fontSize: 13, fontWeight: 400, color: "#5f6468" }}>Skriv av rapportens konklusjon ordrett, gjerne én til tre setninger.</span>
+                                  </span>
+                                  <textarea
+                                    value={r.konklusjon}
+                                    onChange={(e) => settRapport(h.id, { konklusjon: e.target.value })}
+                                    maxLength={MAKS_KONKLUSJON}
+                                    rows={4}
+                                    className="rk-input"
+                                    style={{ border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "12px 14px", font: `400 15px/1.5 ${SANS}`, color: INK, outline: "none", background: "#fff", resize: "vertical" }}
+                                  />
+                                </label>
+                              </fieldset>
+                            )}
                             <div style={{ animation: pop(4) }}>
                               <Chipvalg
                                 sporsmal="Skrev eller sa selger noe om dette før kjøpet, for eksempel i annonse, kontrakt eller melding?"
@@ -1285,17 +1432,32 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                   ))}
                 </div>
 
-                <div style={{ animation: pop(3) }}>
-                  <Chipvalg sporsmal="Har selger forsøkt å reparere feilene?" valg={RETTINGSFORSOK} valgt={forsok} velg={setForsok} />
-                </div>
-
-                {skriftligVerksted && (
-                  <div style={{ animation: pop(4) }}>
-                    <div style={{ maxWidth: 320 }}>
-                      <Tallfelt etikett="Kostnadsoverslag for utbedring" hjelp="Fra verkstedets skriftlige vurdering. Valgfritt." enhet="kr" verdi={overslag} sett={setOverslag} maks={7} />
-                    </div>
+                <section aria-labelledby="kontakt-med-selger" style={{ display: "flex", flexDirection: "column", gap: 18, animation: pop(3) }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <h2 id="kontakt-med-selger" style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>
+                      Kontakt med selger
+                    </h2>
+                    <p style={{ margin: 0, fontSize: 14, color: "#5f6468" }}>Har du reklamert til selger før du skriver dette brevet? Svarene kommer med i brevet.</p>
                   </div>
-                )}
+                  <Chipvalg sporsmal="Har du reklamert til selger?" valg={JA_NEI} valgt={reklamert} velg={velgReklamert} />
+                  {reklamert === "nei" && <p style={{ margin: 0, fontSize: 14, color: "#5f6468", animation: pop(0) }}>Da er dette brevet selve reklamasjonen.</p>}
+                  {reklamert === "ja" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 18, animation: pop(0) }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>Når reklamerte du første gang?</span>
+                        <Datovelger etikett="Dato for første reklamasjon" verdi={reklamertDato} min={kjopsdato ? dagEtter(kjopsdato) : undefined} maks={idag} sett={setReklamertDato} />
+                        {reklamertDato && !etterKjop(reklamertDato) && (
+                          <span role="alert" style={{ fontSize: 13, color: "#a3372b" }}>
+                            Datoen må ligge etter kjøpsdatoen og ikke i fremtiden.
+                          </span>
+                        )}
+                      </div>
+                      <Chipvalg sporsmal="Hvordan?" etikett="Hvordan reklamerte du?" valg={HVORDAN} valgt={reklamertForm} velg={setReklamertForm} />
+                      <Chipvalg sporsmal="Har selger forsøkt å rette feilen?" valg={RETTINGSFORSOK} valgt={forsok} velg={setForsok} />
+                      <Chipvalg sporsmal="Hva svarte selger?" valg={SELGER_SVAR} valgt={selgerSvar} velg={setSelgerSvar} />
+                    </div>
+                  )}
+                </section>
 
                 <button
                   type="button"
@@ -1417,21 +1579,6 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                     </div>
                   </section>
                 )}
-
-                <section style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(6) }}>
-                  <Chipvalg sporsmal="Har du allerede reklamert til selger?" valg={TIDLIGERE} valgt={tidligere} velg={setTidligere} />
-                  {tidligere && tidligere !== "nei" && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8, animation: pop(0) }}>
-                      <span style={{ fontSize: 14, fontWeight: 600 }}>Når reklamerte du?</span>
-                      <Datovelger etikett="Dato for tidligere reklamasjon" verdi={tidligereDato} min={kjopsdato} maks={idag} sett={setTidligereDato} />
-                      {tidligereDato && !tidligereDatoOk && (
-                        <span role="alert" style={{ fontSize: 13, color: "#a3372b" }}>
-                          Datoen må ligge mellom kjøpsdatoen og i dag.
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </section>
 
                 <section style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(7) }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>

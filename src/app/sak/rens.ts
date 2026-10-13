@@ -169,7 +169,7 @@ export function rensBrevsvar(s: Record<string, unknown>): Resultat<Brevsvar> {
   if (!regnr || !normaliserRegnr(regnr) || !merke || !modell) return { ok: false, melding: "Bilen mangler. Gå tilbake til første steg." };
 
   const orgnr = typeof s.selgerOrgnr === "string" ? orgnrFra(s.selgerOrgnr) : null;
-  if (!orgnr) return { ok: false, melding: "Velg selgeren i steg 4." };
+  if (!orgnr) return { ok: false, melding: "Velg selgeren i steg 1." };
 
   const utlegg: Brevsvar["utlegg"] = [];
   if (Array.isArray(s.utlegg)) {

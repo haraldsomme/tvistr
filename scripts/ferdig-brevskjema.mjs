@@ -1,8 +1,9 @@
-// Walks steps 3, 4 and 5 of /sak at 1280 and 390 px against a running dev server (docs/ferdigkriterier.md):
+// Walks /sak at 1280 and 390 px against a running dev server (docs/ferdigkriterier.md):
+//   - step 1: the seller search against Brreg, required before «Fortsett»
 //   - step 3: the discovery date, a report dated before the discovery (stops), then the report filled
 //     in, and «Samme rapport som forrige feil»
-//   - step 4: contact with the seller, a complaint more than two months after a discovery (warns here,
-//     on the defect's card in step 3 and in the summary), and the seller search against Brreg
+//   - step 4: contact with the seller, and a complaint more than two months after a discovery (warns
+//     here, on the defect's card in step 3 and in the summary)
 //   - step 5: the summary with its warnings, «Endre» back to the field, then the letter, and with
 //     TVISTR_HELT_BREV_UTEN_BETALING=1 also «Kopier tekst» and the Word download
 // It saves screenshots, the downloaded .docx files and rapport.json in the folder given.
@@ -10,13 +11,14 @@
 //   npm run dev                      (with TVISTR_HELT_BREV_UTEN_BETALING=1 in .env.local for the whole letter)
 //   node scripts/ferdig-brevskjema.mjs <utmappe>
 //
-// The dates are chosen for October 2026: the calendar opens on the current month.
+// The case is put in sessionStorage and the walk starts at step 1. The dates are chosen for October
+// 2026: the calendar opens on the current month.
 import { chromium } from "playwright-core";
 import { writeFileSync } from "node:fs";
 
 const UT = process.argv[2];
 const SAK = {
-  step: 2, regnr: "AB12345",
+  step: 0, regnr: "AB12345",
   car: { k: { regnr: "AB 12345", merke: "Volkswagen", modell: "Golf", ar: 2016, bruktimportert: false }, eierFra: "2025-03-10" },
   kjopsdato: "2025-03-10", valg: { motor: ["turbo"], historikk: ["km"] }, km: "142000", kjopesum: "185000", somDenEr: "ja",
   detaljer: { motor: { beskrivelse: "Bilen mistet kraft etter tre uker.", opplysning: "nei" }, historikk: { oppdaget: "2026-06-20", opplysning: "skriftlig", verksted: "nei" } },
@@ -47,6 +49,19 @@ for (const [navn, vp, mobil] of [["desktop", { width: 1280, height: 900 }, false
   await page.goto("http://localhost:3000/sak");
   await page.evaluate((s) => sessionStorage.setItem("tvistr:sak:v2", JSON.stringify(s)), SAK);
   await page.reload();
+
+  // Step 1: the seller is chosen with the purchase, and «Fortsett» waits for it.
+  await page.waitForSelector("text=Hvem kjøpte du bilen av?");
+  r.fortsettUtenSelger = await farge(fortsett);
+  await page.getByRole("textbox", { name: "Søk etter selgeren" }).fill("equinor");
+  await page.waitForSelector("[role=option]", { timeout: 8000 });
+  await page.locator("[role=option]").first().click();
+  r.fortsettMedSelger = await farge(fortsett);
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: `${UT}/${navn}-steg1-selger.png` });
+  await fortsett.click();
+  await page.waitForSelector("text=Hva er galt med bilen?");
+  await fortsett.click();
   await page.waitForSelector("text=Beskriv feilene");
 
   // Step 3: the discovery date, then a report dated before it, which stops.
@@ -91,9 +106,6 @@ for (const [navn, vp, mobil] of [["desktop", { width: 1280, height: 900 }, false
   r.forsøkSkjultEtterBytte = (await page.getByText("Hvor mange ganger?").count()) === 0;
   const SEN = "Du reklamerer mer enn to måneder etter at feilen ble oppdaget.";
   r.advarselISteg4 = await page.locator("#felt-kontakt").getByText(SEN).isVisible();
-  await page.getByRole("textbox", { name: "Søk etter selgeren" }).fill("equinor");
-  await page.waitForSelector("[role=option]", { timeout: 8000 });
-  await page.locator("[role=option]").first().click();
   await page.screenshot({ path: `${UT}/${navn}-steg4.png` });
 
   // The warning on the defect's card in step 3.

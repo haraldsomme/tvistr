@@ -859,10 +859,10 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   const kontaktOk =
     reklamert === "nei" || (reklamert === "ja" && etterKjop(reklamertDato) && !tidslinje.stopp.some((m) => m.felt === "reklamert") && !!reklamertForm && !!selgerSvar && (selgerSvar !== "forsokt" || (forsok ?? 0) > 0));
   const valid = [
-    !!car && !fetching && datoOk && Number(km) > 0 && Number(kjopesum) > 0 && !!somDenEr && !riktighet.stopp.some((m) => ["kjopesum", "kjopsdato"].includes(m.felt)),
+    !!car && !fetching && datoOk && Number(km) > 0 && Number(kjopesum) > 0 && !!somDenEr && !!selger && !riktighet.stopp.some((m) => ["kjopesum", "kjopsdato", "selger"].includes(m.felt)),
     valgte.length > 0,
     valgte.length > 0 && beskrevet === valgte.length,
-    !!krav && kontaktOk && utleggOk && !!selger && !riktighet.stopp.length,
+    !!krav && kontaktOk && utleggOk && !riktighet.stopp.length,
   ][step];
   const ok = valid && !soker;
   const subs = [
@@ -873,7 +873,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
     "",
   ];
   // Where a field is: its step, the element to scroll to, and the defect card to open.
-  const STEG_FOR: Record<string, number> = { kjopsdato: 0, kjopesum: 0, somDenEr: 0, oppdaget: 2, rapport: 2, opplysning: 2, beskrivelse: 2, konklusjon: 2, kategori: 3, krav: 3, reklamert: 3, utlegg: 3, selger: 3 };
+  const STEG_FOR: Record<string, number> = { kjopsdato: 0, kjopesum: 0, somDenEr: 0, oppdaget: 2, rapport: 2, opplysning: 2, beskrivelse: 2, konklusjon: 2, kategori: 3, krav: 3, reklamert: 3, utlegg: 3, selger: 0 };
   const gaaTil = (felt: string, feilId?: string) => {
     const steg = STEG_FOR[felt] ?? 0;
     go(steg);
@@ -1212,6 +1212,17 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                       <Tallfelt etikett="Kjøpesum" hjelp="Det du betalte for bilen." enhet="kr" verdi={kjopesum} sett={setKjopesum} maks={8} />
                     </div>
                     <Merknader {...merkR("kjopesum")} />
+                  </section>
+                )}
+
+                {car && !fetching && (
+                  <section id="felt-selger" style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(7) }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Hvem kjøpte du bilen av?</h2>
+                      <p style={{ margin: 0, fontSize: 14, color: "#5f6468" }}>Søk på navnet eller org.nr. fra kjøpekontrakten. Brevet adresseres til selgeren slik Enhetsregisteret oppgir den.</p>
+                    </div>
+                    <Selgervalg valgt={selger} velg={setSelger} />
+                    <Merknader {...merkR("selger")} />
                   </section>
                 )}
 
@@ -1734,15 +1745,6 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                 )}
 
                 <Merknader {...merkR("utlegg")} />
-
-                <section id="felt-selger" style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(7) }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Hvem kjøpte du bilen av?</h2>
-                    <p style={{ margin: 0, fontSize: 14, color: "#5f6468" }}>Søk på navnet eller org.nr. fra kjøpekontrakten. Brevet adresseres til selgeren slik Enhetsregisteret oppgir den.</p>
-                  </div>
-                  <Selgervalg valgt={selger} velg={setSelger} />
-                  <Merknader {...merkR("selger")} />
-                </section>
               </div>
             )}
 

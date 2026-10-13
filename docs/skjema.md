@@ -15,7 +15,10 @@ Alle svar vurderes ved hver endring av de samme to funksjonene som serveren bruk
 | Kjøpsdato | dato | Foreslås fra «sist registrert» hos vegvesenet. Brukeren kan endre den. | Gyldig dato, ikke i fremtiden |
 | Kilometerstand ved kjøp | tall, maks 7 sifre | Brukeren | > 0 |
 | Kjøpesum | tall, maks 8 sifre (kr) | Brukeren | > 0 |
+| Hvem kjøpte du bilen av? | Søk på navn eller org.nr. i Enhetsregisteret (`/api/firma`, åpent oppslag uten nøkkel). Brukeren velger ett treff. Står under kjøpesummen. | Brreg | Må velges. Organisasjonsnummeret kontrolleres med modulus 11; konkurs, avvikling og annen næring enn bilhandel gir advarsel ved feltet. |
 | Selges bilen «som den er»? | Ja / Nei / Vet ikke | Brukeren | Må besvares |
+
+Selgersøket finner aksjeselskaper og lignende, ikke enkeltpersonforetak (`src/lib/brreg.ts`). Bare det valgte treffet (navn, org.nr., kommune, status, næringskode) beholdes i skjemaet; brevet adresseres fra registeret på nytt på serveren.
 
 Fristvarsel (forbrukerkjøpsloven § 27) vises når kjøpsdatoen er mer enn to år tilbake, og et strengere varsel ved mer enn fem år. Serveren avviser kjøp eldre enn fem år.
 
@@ -80,7 +83,6 @@ Konklusjonen renses bare for trim, lengde (300 tegn) og doble anførselstegn; li
 |---|---|---|
 | Hva krever du? | Retting / Prisavslag / Heving | Må velges |
 | Erstatning for utlegg | På/av. Når på: linjer med beskrivelse (maks 100 tegn) og beløp (kr). Forslag: tauing, feilsøking, leiebil, verkstedregning. | Når på: minst én linje, og hver linje må ha både beskrivelse og beløp > 0 |
-| Hvem kjøpte du bilen av? | Søk på navn eller org.nr. i Enhetsregisteret (`/api/firma`, åpent oppslag uten nøkkel). Brukeren velger ett treff. | Må velges |
 
 ### Kontakt med selger
 
@@ -96,7 +98,7 @@ Konklusjonen renses bare for trim, lengde (300 tegn) og doble anførselstegn; li
 
 Svarer kjøperen «Nei», er brevet selve reklamasjonen: de andre svarene tømmes, rettingsforsøk er 0 og selgers svar er ingen. Rettingsforsøk er 0 for alle svar unntatt «Forsøkt å rette», som krever 1 til 3. Serveren gjør det samme uansett hva nettleseren sender (`rensKontakt` i `rens.ts`), så rettingsforsøk uten reklamasjon, eller sammen med «ikke svart» eller «tilbudt retting», er umulig. Svarene brukes i brevet (avsnitt 1, 3 og 4, se `brev.md`).
 
-Under utlegg vises en påminnelse om å legge ved fakturaer og kvitteringer. Selgersøket finner aksjeselskaper og lignende, ikke enkeltpersonforetak (`src/lib/brreg.ts`). Bare det valgte treffet (navn, org.nr., kommune, status) beholdes i skjemaet; brevet adresseres fra registeret på nytt på serveren.
+Under utlegg vises en påminnelse om å legge ved fakturaer og kvitteringer.
 
 ## Steg 5: Brev
 

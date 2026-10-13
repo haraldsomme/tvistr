@@ -1,32 +1,31 @@
+import type { Lagret as Avgjorende } from "@/lib/avgjorende/skjema";
 import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import { komponenttype } from "@/lib/feil/kategorier";
 import { type RettsligPoeng, rettsligePoeng } from "./rett";
 import type { Brukersak, Kandidat, Kategorisvar } from "./typer";
 import { VEKTER, type Vekter } from "./vekter";
 
-// Picks the decisions with medhold a model chooses the letter's precedent from (docs/vedtaksvalg.md,
-// phase 1). Each accepted defect is placed on the highest step it reaches against the buyer's case;
-// the decision takes its best defect's step. Within a step, points decide. The steps:
-//   1  same subcategory, time level known and the same or later, car not milder on both km and age
-//   2  same subcategory, time level unknown or one milder, same profile rule
-//   3  another subcategory of the same kind of part (kategorier.ts), time level the same or later
-//   4  same main category
-//   5  no comparable defect, but the decision settled one of the buyer's legal points (rett.ts)
-// Steps 1–4 need a quote. For the kind «opplysning» time and profile do not count: the defect
+// Picks the decisions the letter can cite (docs/vedtaksvalg.md). Two levels:
+//   A  the same defect: same subcategory, judged by the committee on its own (not together with
+//      other defects), at least two quotes from the committee's assessment, and the car in the
+//      decision not easier for the buyer on km, age or «som den er»
+//   B  any decision that settled one of the buyer's legal points (rett.ts), with a quote
+// Points sort within a level. For the kind «opplysning» the car's profile does not count: the defect
 // existed at delivery. A win on a warranty counts only for a complaint about the warranty.
-
 export type Kriterium = "underkategori" | "tidsniva" | "km" | "alder" | "som_den_er" | "krav" | "egen_vurdering" | "grunnlag";
 // `strengere`/`mildere`: the decision was harder/easier for the buyer than the user's case.
 // `delvis`: the decision granted the claim, but on more defects than this one. `ukjent`: the decision
 // lacks the value. `ikke_oppgitt`: the user did (or there is no defect to compare), and it is left
 // out of the maximum.
 export type Treff = "likt" | "strengere" | "mildere" | "delvis" | "ulikt" | "ukjent" | "ikke_oppgitt";
-export type Trinn = 1 | 2 | 3 | 4 | 5;
+export type Niva = "A" | "B";
+// Quotes a level-A decision needs for its defect.
+export const MIN_SITATER_A = 2;
 
 export type Rangert = {
   id: number;
-  trinn: Trinn;
-  // The defect the decision is compared on, and the buyer's category it is compared with; null on step 5.
+  niva: Niva;
+  // The defect the decision is compared on, and the buyer's category it is compared with; null on level B.
   feil: AvledetFeil | null;
   hoved: string | null;
   rett: RettsligPoeng[];
@@ -37,8 +36,8 @@ export type Rangert = {
 
 export type Rangering = {
   kandidater: Rangert[];
-  // Decisions per step before the list is cut to `kandidater`.
-  perTrinn: Record<Trinn, number>;
+  // Decisions per level before the list is cut to `kandidater`.
+  perNiva: Record<Niva, number>;
 };
 
 type Vurdert = { treff: Treff; poeng: number; maks: number };
@@ -124,68 +123,82 @@ function vurder(k: Kandidat, f: AvledetFeil | null, kat: Kategorisvar | null, sa
   };
 }
 
-// Not easier for the buyer on both km and age.
+// The car in the decision is not easier for the buyer on km, age or «som den er». Unknown is not easier.
 function profilOk(k: Kandidat, sak: Brukersak, v: Vekter): boolean {
   const mild = (b: number | null, x: number | null) => b !== null && x !== null && x < b;
-  return !(mild(intervall(sak.km, v.kmGrenser), intervall(k.km, v.kmGrenser)) && mild(intervall(sak.alder, v.alderGrenser), intervall(k.alder, v.alderGrenser)));
+  if (mild(intervall(sak.km, v.kmGrenser), intervall(k.km, v.kmGrenser))) return false;
+  if (mild(intervall(sak.alder, v.alderGrenser), intervall(k.alder, v.alderGrenser))) return false;
+  return !(sak.somDenEr === true && k.somDenEr !== true);
 }
 
-// The step one accepted defect reaches against one of the buyer's categories; null when none.
-export function trinnFor(k: Kandidat, f: AvledetFeil, kat: Kategorisvar, sak: Brukersak, v: Vekter = VEKTER): Trinn | null {
-  if (!f.sitat) return null;
-  const type = komponenttype(f.hovedkategori, f.underkategori);
-  const opplysning = type === "opplysning";
-  const profil = opplysning || profilOk(k, sak, v);
-  const sammeUnder = f.hovedkategori === kat.hoved && f.underkategori !== null && kat.under.includes(f.underkategori);
-  if (sammeUnder && profil && (opplysning || (f.tidsniva !== null && f.tidsniva >= kat.niva))) return 1;
-  if (sammeUnder && profil && (f.tidsniva === null || f.tidsniva === kat.niva - 1)) return 2;
-  const tidOk = opplysning || f.tidsniva === null || f.tidsniva >= kat.niva;
-  const typer = new Set(kat.under.length ? kat.under.map((u) => komponenttype(kat.hoved, u)) : [komponenttype(kat.hoved, null)]);
-  if (!sammeUnder && type && typer.has(type) && tidOk) return 3;
-  if (f.hovedkategori === kat.hoved) return 4;
-  return null;
+// The same defect as the buyer's: the same subcategory, or the same main category when the buyer
+// chose no subcategory or there are none to choose from (the warranty).
+export function sammeFeil(f: AvledetFeil, kat: Kategorisvar): boolean {
+  if (f.hovedkategori !== kat.hoved) return false;
+  if (!kat.under.length) return true;
+  return f.underkategori !== null && kat.under.includes(f.underkategori);
+}
+
+// What the committee rested an accepted defect on, from the extraction.
+export const avgjorendeFor = (a: Avgjorende | null, f: AvledetFeil) => a?.feil.find((x) => x.id === f.id) ?? null;
+
+// Whether an accepted defect makes the decision level A against one of the buyer's categories.
+export function nivaA(k: Kandidat, f: AvledetFeil, kat: Kategorisvar, sak: Brukersak, v: Vekter = VEKTER): boolean {
+  if (f.utfall !== "medhold" || !sammeFeil(f, kat)) return false;
+  if (kat.hoved !== "garanti" && paGaranti(k, f)) return false;
+  const a = avgjorendeFor(k.avgjorende, f);
+  if (!a || a.sitater.length < MIN_SITATER_A || f.samlet || a.samlet_med.length) return false;
+  // From v4: the assessment names this defect and found it a defect on its own.
+  if (a.nevnt_i_vurderingen === false || a.vurdert_for_seg === false) return false;
+  return komponenttype(f.hovedkategori, f.underkategori) === "opplysning" || profilOk(k, sak, v);
+}
+
+// The buyer's legal points the decision settled. From v4 each needs the committee's own sentence for it.
+export function rettFor(k: Kandidat, sak: Brukersak): RettsligPoeng[] {
+  const rett = rettsligePoeng(k, sak);
+  const sitert = k.avgjorende?.rettslige_sitater;
+  return sitert ? rett.filter((p) => sitert.some((s) => s.poeng === p)) : rett;
 }
 
 function plasser(k: Kandidat, sak: Brukersak, v: Vekter): Rangert | null {
-  const rett = rettsligePoeng(k, sak);
+  const rett = rettFor(k, sak);
   let best: Rangert | null = null;
   for (const kat of sak.kategorier)
     for (const f of k.feil) {
-      if (f.utfall !== "medhold" || (kat.hoved !== "garanti" && paGaranti(k, f))) continue;
-      const trinn = trinnFor(k, f, kat, sak, v);
-      if (trinn === null) continue;
-      const r: Rangert = { id: k.id, trinn, feil: f, hoved: kat.hoved, rett, ...vurder(k, f, kat, sak, v) };
-      if (!best || r.trinn < best.trinn || (r.trinn === best.trinn && r.poengsum > best.poengsum)) best = r;
+      if (!nivaA(k, f, kat, sak, v)) continue;
+      const r: Rangert = { id: k.id, niva: "A", feil: f, hoved: kat.hoved, rett, ...vurder(k, f, kat, sak, v) };
+      if (!best || r.poengsum > best.poengsum) best = r;
     }
   if (best) return best;
-  return rett.length ? { id: k.id, trinn: 5, feil: null, hoved: null, rett, ...vurder(k, null, null, sak, v) } : null;
+  const harSitat = !!k.avgjorende?.rettslige_sitater?.length || !!k.avgjorende?.feil.some((a) => a.sitater.length);
+  return rett.length && harSitat ? { id: k.id, niva: "B", feil: null, hoved: null, rett, ...vurder(k, null, null, sak, v) } : null;
 }
 
 // One decision published twice («FKU-2025-55355» and «FKU-2025-55355-2») counts once.
 const sakskode = (k: Kandidat) => k.saksnummer?.replace(/^(FKU-\d{4}-\d+)-\d+$/, "$1") ?? `id:${k.id}`;
 
+// Level A first, then B; within A by points, within B by the number of the buyer's legal points hit.
 export function ranger(alle: Kandidat[], sak: Brukersak, v: Vekter = VEKTER): Rangering {
   const etterId = new Map(alle.map((k) => [k.id, k]));
   const dato = (r: Rangert) => etterId.get(r.id)!.vedtaksdato ?? "";
-  const sammeHoved = (r: Rangert) => r.feil !== null && r.feil.hovedkategori === r.hoved;
-  const etterPoeng = (a: Rangert, b: Rangert) =>
-    b.poengsum - a.poengsum || Number(b.treff.tidsniva === "likt") - Number(a.treff.tidsniva === "likt") || dato(b).localeCompare(dato(a)) || a.id - b.id;
-
   const sett = new Set<string>();
   const plassert = alle
     .map((k) => plasser(k, sak, v))
     .filter((r): r is Rangert => r !== null)
-    // Same main category first on step 3; most legal points first on step 5.
-    .sort((a, b) => a.trinn - b.trinn || Number(sammeHoved(b)) - Number(sammeHoved(a)) || b.rett.length - a.rett.length || etterPoeng(a, b))
+    .sort(
+      (a, b) =>
+        a.niva.localeCompare(b.niva) ||
+        (a.niva === "B" ? b.rett.length - a.rett.length : 0) ||
+        b.poengsum - a.poengsum ||
+        Number(b.treff.tidsniva === "likt") - Number(a.treff.tidsniva === "likt") ||
+        dato(b).localeCompare(dato(a)) ||
+        a.id - b.id,
+    )
     .filter((r) => {
       const kode = sakskode(etterId.get(r.id)!);
       return !sett.has(kode) && !!sett.add(kode);
     });
-
-  const sammenlignbare = plassert.filter((r) => r.trinn <= 4).slice(0, v.sammenlignbare);
-  const valgt = new Set(sammenlignbare.map((r) => r.id));
-  const rettslige = plassert.filter((r) => !valgt.has(r.id) && r.rett.length).sort((a, b) => b.rett.length - a.rett.length || etterPoeng(a, b));
-  const perTrinn: Record<Trinn, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  for (const r of plassert) perTrinn[r.trinn]++;
-  return { kandidater: [...sammenlignbare, ...rettslige.slice(0, v.kandidater - sammenlignbare.length)], perTrinn };
+  const perNiva: Record<Niva, number> = { A: 0, B: 0 };
+  for (const r of plassert) perNiva[r.niva]++;
+  return { kandidater: plassert.slice(0, v.kandidater), perNiva };
 }

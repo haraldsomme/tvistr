@@ -15,6 +15,7 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type { Lagret as Avgjorende } from "../lib/avgjorende/skjema";
 import type { Lagret as Feilvurdering } from "../lib/feilvurdering/skjema";
 
 export const kildeArkivEnum = pgEnum("kilde_arkiv", ["hist", "prod", "wp"]);
@@ -183,6 +184,13 @@ export const vedtak = pgTable(
     dagerTilFeil: integer("dager_til_feil"),
     // From the purchase date; tolk's `lovversjon` is nearly always «ukjent».
     lovversjonAvledet: lovversjonEnum("lovversjon_avledet"),
+
+    // What the committee rested each accepted defect on (src/lib/avgjorende), read by the letter so
+    // it need not read the full text. Defect ids are the feilvurdering's.
+    avgjorende: jsonb("avgjorende").$type<Avgjorende>(),
+    avgjorendeVersjon: text("avgjorende_versjon"),
+    avgjorendeTidspunkt: timestamp("avgjorende_tidspunkt", { withTimezone: true }),
+    avgjorendeKontroll: text("avgjorende_kontroll").array(),
   },
   (t) => [
     index("vedtak_godtatte_kategorier_idx").using("gin", t.godtatteKategorier),
@@ -336,6 +344,25 @@ export const vedtakFeilSok = pgView("vedtak_feil_sok", {
   lovversjon: lovversjonEnum("lovversjon").notNull(),
   ikkeMangelssak: boolean("ikke_mangelssak").notNull(),
 }).existing();
+
+// What the safety net in the letter's choice of decision found against the full text
+// (src/lib/vedtaksvalg/funn.ts): a defect not named or not judged on its own (`samlet` is set on it),
+// or a quote that is not the committee's standpoint (the quote is removed). The imports apply the
+// findings that are not undone, so a re-import does not bring the error back.
+export const kontrollfunn = pgTable("kontrollfunn", {
+  id: serial("id").primaryKey(),
+  vedtakId: integer("vedtak_id")
+    .notNull()
+    .references(() => vedtak.id),
+  feilId: text("feil_id"),
+  // "nevnt" | "for_seg" | "sitat"
+  sporsmal: text("sporsmal").notNull(),
+  sitat: text("sitat"),
+  begrunnelse: text("begrunnelse"),
+  tidspunkt: timestamp("tidspunkt", { withTimezone: true }).notNull().defaultNow(),
+  // Set to undo the finding; the imports then leave it out.
+  angret: timestamp("angret", { withTimezone: true }),
+});
 
 export type Kildedokument = typeof kildedokument.$inferSelect;
 export type Vedtak = typeof vedtak.$inferSelect;

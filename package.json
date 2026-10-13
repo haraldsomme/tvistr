@@ -18,7 +18,16 @@
     "db:restore": "tsx --env-file=.env.local scripts/restore.ts",
     "feilvurdering:hent": "tsx --env-file=.env.local scripts/feilvurdering-hent.ts",
     "feilvurdering:importer": "tsx --env-file=.env.local scripts/feilvurdering-importer.ts",
-    "feilvurdering:mal": "tsx --env-file=.env.local scripts/feilvurdering-mal.ts"
+    "feilvurdering:mal": "tsx --env-file=.env.local scripts/feilvurdering-mal.ts",
+    "avgjorende:hent": "tsx --env-file=.env.local scripts/avgjorende-hent.ts",
+    "avgjorende:importer": "tsx --env-file=.env.local scripts/avgjorende-importer.ts",
+    "standpunkt:hent": "tsx --env-file=.env.local scripts/standpunkt-hent.ts",
+    "rettslig:hent": "tsx --env-file=.env.local scripts/rettslig-hent.ts",
+    "simuler": "tsx --env-file=.env.local scripts/simuler.ts",
+    "ferdig:stikkprove": "tsx --env-file=.env.local scripts/ferdig-stikkprove.ts",
+    "ferdig:dekning": "tsx --env-file=.env.local scripts/ferdig-dekning.ts",
+    "ferdig:simulert": "tsx --env-file=.env.local scripts/ferdig-simulert.ts",
+    "ferdig:brevlop": "tsx --env-file=.env.local scripts/ferdig-brevlop.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

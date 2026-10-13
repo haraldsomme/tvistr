@@ -12,7 +12,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Kjoretoy, normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
 import { type Feilvalg, HOVEDKATEGORIER, type Tidsvalg, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
-import type { Bruk } from "@/lib/vedtaksvalg/instruks";
 import { type Funn, finnVedtak } from "./actions";
 
 const A = "oklch(0.47 0.12 255)",
@@ -215,13 +214,6 @@ function Fristvarsel({ children }: { children: React.ReactNode }) {
 }
 
 // What the chosen decision may carry in the letter (src/lib/vedtaksvalg/instruks.ts).
-const BRUK_TEKST: Record<Bruk, string> = {
-  samme_feil: "samme feil, også tidspunktet",
-  samme_feil_uten_tidspunkt: "samme feil, uten tidspunktet",
-  overforbar: "overført fra en lignende del",
-  opplysningssvikt: "samme type opplysningssvikt",
-  rettslig_poeng: "bare et rettslig poeng",
-};
 
 export function Skjema() {
   const [step, setStep] = useState(0);
@@ -256,6 +248,7 @@ export function Skjema() {
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const nesteKort = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const foresporsel = useRef(0);
 
   useEffect(() => {
     if (!rootRef.current || !window.ResizeObserver) return;
@@ -275,7 +268,10 @@ export function Skjema() {
     setDir(n >= step ? 1 : -1);
     setStep(n);
     // The decisions belong to the answers they were found for; leaving step 5 lets them change.
-    if (n < BREV) setFunn(null);
+    if (n < BREV) {
+      setFunn(null);
+      foresporsel.current++;
+    }
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   };
 
@@ -362,12 +358,17 @@ export function Skjema() {
     krav ? `${KRAV.find((k) => k.id === krav)?.navn}${kreverUtlegg ? " + utlegg" : ""}` : "",
     "",
   ];
-  const lagBrev = () =>
+  // Step 5 opens at once and waits for the answer. Leaving step 5 (or asking again) makes an
+  // answer that is still on its way stale.
+  const lagBrev = () => {
+    const mitt = ++foresporsel.current;
+    setFunn(null);
+    if (step !== BREV) go(BREV);
     startSok(async () => {
       const f = await finnVedtak({ valg, tid, kjopsdato, km: Number(km), ar: car?.k.ar ?? null, somDenEr, krav, forsok, detaljer });
-      setFunn(f);
-      if (f.ok) go(BREV);
+      if (mitt === foresporsel.current) setFunn(f);
     });
+  };
 
   const carRows = car
     ? [
@@ -1114,18 +1115,46 @@ export function Skjema() {
                     </div>
                   </section>
                 )}
+              </div>
+            )}
 
-                {soker && (
-                  <p role="status" style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: "#5f6468", textWrap: "pretty", animation: pop(0) }}>
-                    Leter i vedtakene og skriver avsnittet. Det tar gjerne et minutt.
-                  </p>
-                )}
+            {step === BREV && !funn && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
+                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
+                  <h1 style={H1}>Vent mens vi skriver og kontrollerer brevet</h1>
+                  <p style={INGRESS}>Vi leter i vedtakene fra Forbrukerklageutvalget og velger det som passer best for saken din. Det tar noen sekunder.</p>
+                </header>
+                <div role="status" aria-label="Vent mens vi skriver og kontrollerer brevet" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "28px 32px" : "22px 20px", display: "flex", flexDirection: "column", gap: 12, animation: pop(0) }}>
+                  <span
+                    aria-hidden="true"
+                    style={{ width: 22, height: 22, boxSizing: "border-box", borderRadius: "50%", border: `2px solid ${AS}`, borderTopColor: A, animation: "rkSpin .7s linear infinite", marginBottom: 6 }}
+                  />
+                  <span aria-hidden="true" style={{ height: 14, width: "92%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out infinite" }} />
+                  <span aria-hidden="true" style={{ height: 14, width: "78%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out .15s infinite" }} />
+                  <span aria-hidden="true" style={{ height: 14, width: "85%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out .3s infinite" }} />
+                </div>
+              </div>
+            )}
 
-                {funn && !funn.ok && (
-                  <p role="alert" style={{ margin: 0, padding: "18px 22px", fontSize: 14, color: "#a3372b", background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14 }}>
-                    {funn.melding}
-                  </p>
-                )}
+            {step === BREV && funn && !funn.ok && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 20 }}>
+                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
+                  <h1 style={H1}>Vi fikk ikke laget brevet</h1>
+                </header>
+                <p role="alert" style={{ margin: 0, padding: "18px 22px", fontSize: 14, color: "#a3372b", background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14 }}>
+                  {funn.melding}
+                </p>
+                <button
+                  type="button"
+                  onClick={lagBrev}
+                  disabled={soker}
+                  className="rk-neste"
+                  style={{ ...KNAPP, height: 50, padding: "0 26px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: "#fff", background: A, alignSelf: "flex-start" }}
+                >
+                  Prøv igjen
+                </button>
               </div>
             )}
 
@@ -1143,19 +1172,13 @@ export function Skjema() {
                       {a}
                     </p>
                   ))}
-                  <a href={funn.vedtak.kildeUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, fontWeight: 600, color: A, alignSelf: "flex-start" }}>
-                    Les vedtaket{funn.vedtak.saksnummer ? ` ${funn.vedtak.saksnummer}` : ""}
-                    {funn.vedtak.vedtaksdato ? ` (${datoTekst(funn.vedtak.vedtaksdato)})` : ""}
-                  </a>
+                  {funn.vedtak && (
+                    <a href={funn.vedtak.kildeUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, fontWeight: 600, color: A, alignSelf: "flex-start" }}>
+                      Les vedtaket{funn.vedtak.saksnummer ? ` ${funn.vedtak.saksnummer}` : ""}
+                      {funn.vedtak.vedtaksdato ? ` (${datoTekst(funn.vedtak.vedtaksdato)})` : ""}
+                    </a>
+                  )}
                 </article>
-
-                <section role="note" style={{ background: "#eef0f1", borderRadius: 12, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8, fontSize: 14, lineHeight: 1.5, color: "#2c3033", animation: pop(1) }}>
-                  <span style={{ font: `600 11px ${MONO}`, letterSpacing: ".08em", textTransform: "uppercase", color: "#5f6468" }}>Til kontroll</span>
-                  <span style={{ textWrap: "pretty" }}>
-                    Vedtaket brukes for {BRUK_TEKST[funn.bruk]}. Valgt blant {funn.antallKandidater} vedtak.
-                  </span>
-                  {funn.forbehold && <span style={{ textWrap: "pretty" }}>Forbehold: {funn.forbehold}</span>}
-                </section>
               </div>
             )}
           </div>
@@ -1203,7 +1226,7 @@ export function Skjema() {
                   transition: "background .25s,transform .15s",
                 }}
               >
-                {step < BREV - 1 ? "Fortsett" : soker ? "Lager …" : "Lag brev"}
+                {step < BREV - 1 ? "Fortsett" : "Lag brev"}
               </button>
             )}
           </div>

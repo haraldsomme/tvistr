@@ -1,3 +1,4 @@
+import type { Lagret as Avgjorende } from "@/lib/avgjorende/skjema";
 import type { AvledetFeil, Tidsniva } from "@/lib/feilvurdering/skjema";
 
 export type Krav = "retting" | "prisavslag" | "heving";
@@ -16,7 +17,7 @@ export type Brukersak = {
 };
 
 // A decision with medhold as the ranking needs it; `feil` holds every assessed defect, also the
-// rejected ones.
+// rejected ones. `avgjorende`: what the committee rested each accepted defect on, when extracted.
 export type Kandidat = {
   id: number;
   saksnummer: string | null;
@@ -29,4 +30,5 @@ export type Kandidat = {
   paragrafer: string[] | null;
   tvistetema: string[] | null;
   feil: AvledetFeil[];
+  avgjorende: Avgjorende | null;
 };

@@ -1,138 +1,139 @@
-# Valg av sammenligningsvedtak
+# Vedtaksvalget: avsnittet som viser til et vedtak
 
-Hvordan brevet alltid får ett vedtak å bygge på, og hvordan det brukes uten å si noe usant. Beskrivelsen bygger på testene 2026-10-11 (se nederst). Status: bygget (fase 1 i `src/lib/matching/`, fase 2 og 3 i `src/lib/vedtaksvalg/`, steg 5 i `src/app/sak/`).
+Hvert klagebrev viser til ett vedtak fra Forbrukerklageutvalget (eller Forbrukertvistutvalget) der kjøperen fikk medhold. Avsnittet bygges av en mal. Alt som står om vedtaket, er enten et felt fra databasen eller et ordrett sitat fra utvalgets egen vurdering. Det finnes ingen fri prosa om vedtaket, så det er ingenting å ta feil av utover feltene.
 
-## Prinsipper
+Brevløpet har tre ledd:
+1. rangering i kode
+2. ett Sonnet-kall som velger
+3. malen
 
-1. **Alltid ett vedtak.** Så lenge kjøperen kan reklamere (kjøpt av forhandler, innenfor 5 år), får brevet alltid ett vedtak med medhold. Det som trappes ned er *hva vedtaket får bære*, ikke om det er med.
-2. **Koden velger kandidatene, modellen velger vedtaket.** Rangeringen er deterministisk og gir 30 kandidater i trinnrekkefølge. Claude velger ett av dem og bestemmer bruksnivået. Koden kontrollerer svaret.
-3. **Ingen fulltekst i produksjon.** Modellen ser bare uttrukne felt og sammendrag. Sitater kan bare tas fra `sitat`-feltene, som allerede er kontrollert ordrett mot fullteksten.
-4. **Bruksnivået er en garanti, ikke en likhetsgrad.** Brevet påstår aldri mer enn nivået gir dekning for. Et vedtak om en annen feil kan derfor aldri bli presentert som «samme feil».
+Det har ingen kontroll per brev og ingen reserve. Finnes det ingen kandidat, brukes lovsetningen. Kvaliteten sikres i dataene, ved datavasker kjørt én gang (se under). Kravene og målingene står i `docs/ferdigkriterier.md`.
 
-## Fase 1: Kandidater (kode, `src/lib/matching/`)
+## 1. Rangering (`src/lib/matching/`, kode)
 
-### Grunnfilter
-Som i dag: `utfall in (medhold, delvis_medhold)`, personbil/varebil, forbrukerkjøpsloven, forhandler, `sanksjoner` ikke tom. I tillegg:
-- Seire på garanti (fkjl § 18 a i `paragrafer` og «garanti» i feilens sitat) tas bare med når kjøperen klager på garanti.
-- Er kjøpsdatoen mer enn 5 år tilbake, stoppes søket med en melding om fristen (§ 27). Ingen vedtak velges.
+**Grunnsettet** (`grunnfilter.ts`) er vedtak med:
+- medhold eller delvis medhold
+- personbil eller varebil
+- forbrukerkjøpsloven
+- forhandler som selger
+- en sanksjon tilkjent
 
-### Stigen
-Hver feil med medhold i et vedtak plasseres på det beste trinnet den oppfyller mot kjøperens sak. Vedtaket får sin beste feils trinn.
+I tillegg gjelder:
+- Seire på garanti telles bare når kjøperen klager på garantien.
+- Samme sak publisert to ganger telles én gang.
+- Er det mer enn fem år siden kjøpet, gis ingen kandidater (§ 27).
 
-| Trinn | Vilkår |
+**To nivåer:**
+- **A, samme feil.** Feilen har samme underkategori som kjøperens. Har kjøperen bare valgt hovedkategori, eller har kategorien ingen underkategorier, holder samme hovedkategori. I tillegg må alle disse vilkårene være oppfylt:
+  - utvalgets vurdering nevner feilen og fant at den alene var en mangel: ikke `samlet`, `samlet_med` tom, `nevnt_i_vurderingen` og `vurdert_for_seg` ikke nei
+  - minst to verifiserte sitater om feilen
+  - bilen i vedtaket er ikke mildere enn kjøperens på km, alder eller «som den er» (intervaller i `vekter.ts`); for feil i det selgeren sa eller lovet, teller ikke bilprofilen
+- **B, rettslig poeng.** Vedtaket avgjorde et av kjøperens rettslige poeng (`rett.ts`), og utvalgets egen setning om akkurat det poenget finnes i `rettslige_sitater`. Poengene og når de er aktuelle:
+
+  | Poeng | Aktuelt når |
+  |---|---|
+  | formodningsregelen | feilen viste seg innen fristen |
+  | «som den er» fritar ikke | bilen ble solgt «som den er» |
+  | feil etter to år, § 27 | feilen viste seg etter to år |
+  | uriktig eller tilbakeholdt opplysning | etter kjøperens svar om hva selgeren sa |
+  | tapt eller pålagt retting | etter antall rettingsforsøk eller kravet |
+  | heving | kravet er heving |
+  | prisavslag | kravet er prisavslag |
+
+**Sortering:** nivå A kommer foran B. Innenfor et nivå sorteres det på poeng (`vekter.ts`):
+- underkategori
+- tidsnivå
+- km og alder
+- «som den er»
+- krav
+- om utvalget vurderte feilen selv
+- grunnlaget utvalget bygde på
+
+Strengere for kjøperen gir delpoeng, mildere gir 0. På nivå B sorteres det først etter hvor mange av kjøperens poeng vedtaket treffer. De ti beste går videre.
+
+## 2. Valget (`src/lib/vedtaksvalg/valg.ts`, ett Sonnet-kall)
+
+**Modellen får:**
+- **Kjøperens svar** fra `kjoper.ts`:
+  - kategori og beskrivelse
+  - når feilen viste seg, og lovversjonen
+  - km, alder, «som den er», kravet og antall rettingsforsøk
+- **Hver kandidat:**
+  - nivå
+  - feilen (A) eller de rettslige poengene (B)
+  - bil, km, alder og «som den er»
+  - sanksjonen for feilen alene (A)
+  - de verifiserte sitatene med id
+
+**Modellen svarer bare** med `vedtak_id` og id-ene til 1–2 sitater (A) eller 1 sitat (B). Den skriver ingen tekst.
+
+**Hvis svaret ikke holder** (ukjent vedtak, eller sitat-id-er vedtaket ikke har), brukes rangeringens førstevalg med de første sitatene. Det samme skjer om kallet feiler. Ingenting prøves på nytt.
+
+## 3. Malen (`src/lib/vedtaksvalg/mal.ts`, kode)
+
+**Nivå A:**
+> Det vises til {utvalg}s vedtak i sak {nr} av {dato}. Saken gjaldt {komponent} på {bil} som hadde gått {km} km ved kjøpet[, solgt «som den er»]. Utvalget uttalte: «{sitat 1}» [Utvalget uttalte videre: «{sitat 2}»] [Kjøperen fikk medhold i krav om {sanksjon for feilen alene}.] [{sammenligning}]
+
+**Nivå B:**
+> Det vises til {utvalg}s vedtak i sak {nr} av {dato}, som gjaldt {komponent}. Utvalget uttalte: «{sitat}»
+
+**Lovsetningen**, når det ikke finnes noen kandidat:
+> Kravet bygger på lovens vilkår.
+
+**Regler i malen:**
+- **Utvalget:** navnet slik vedtaket selv bruker det, på bokmål.
+- **Saksnummer:** slik vedtaket skriver det («sak 117158», ikke arkivets «FKU-2026-117158»).
+- **Dato:** står bare når møtedatoen i databasen og datoen i signaturen er like (`signaturdato`). Ellers utelates den.
+- **Bil:** slik vedtaket selv skriver den (`avgjorende.bil`, kontrollert mot teksten), ellers merke, modell og årsmodell fra databasen.
+- **Km:** utelates når saken gjaldt kilometerstanden, fordi tallet da er det omstridte.
+- **Sammenligningssetningen:** regnes ut av koden og tar bare med det som går i kjøperens favør:
+  - yngre med minst 2 år
+  - minst 10 % kortere kjørt
+  - ikke solgt «som den er» når vedtakets bil var det
+
+  Går ingen akse i kjøperens favør, utelates setningen.
+
+## Datagrunnlaget og datavaskene
+
+Avsnittet bygger på `vedtak.avgjorende` (`src/lib/avgjorende/`). Claude Code-agenter (Opus) har lest hvert vedtak i grunnsettet med saksfremstilling og utvalgets vurdering adskilt. Importen gjør dette:
+- forkaster sitater som ikke står ordrett i utvalgets vurdering, eller som har utelatelser
+- setter «vurdert for seg» til nei når feilen er vurdert samlet med andre
+- leser signaturdatoen
+
+**Datavasker kjørt én gang**, hver med pilot og dommer først:
+
+| Vask | Hva | Resultat |
+|---|---|---|
+| `avgjorende-v5` | hele uttrekket: per feil nevnt, vurdert for seg, sanksjon og sitater; per vedtak bil, forbehold og rettslige sitater | 1 268 vedtak |
+| standpunkt (`standpunkt.md`) | er hvert sitat utvalgets eget standpunkt? | 1 402 av 7 514 forkastet |
+| rettslig (`rettslig.md`) | uttrykker hvert rettslige sitat akkurat sitt poeng? | 299 av 1 976 forkastet; piloten 95 av 95 enig med dommer |
+
+Svarene ligger i `data/avgjorende/` og brukes ved hver import. Funn som logges i `kontrollfunn`, kan gjennomgås og angres med `angret`; importene legger inn de funnene som ikke er angret. Ingenting i brevløpet skriver til databasen.
+
+**Rekkefølge ved ny kjøring:**
+1. `npm run avgjorende:hent`
+2. arbeidsflyten `scripts/workflows/avgjorende.js`
+3. `npm run standpunkt:hent` og `scripts/workflows/standpunkt.js`
+4. `npm run rettslig:hent` og `scripts/workflows/rettslig.js`
+5. `npm run avgjorende:importer`
+
+## Hvorfor det ikke er kontroll per brev
+
+En kontroll per brev ble prøvd: et Sonnet-kall med fulltekst etter at avsnittet var bygget, med tilbakeskriving av funnene. Målt mot en dommer med fulltekst var 64 % av stoppene falske. Kontrollen stilte de samme spørsmålene som datavasken allerede hadde svart på, men med en svakere modell, og den gjorde dataene dårligere. Det eneste spørsmålet den svarte riktig på hver gang, om et rettslig sitat gjaldt riktig poeng, ble gjort om til datavasken «rettslig».
+
+## Målt (oktober 2026)
+
+| Måling | Resultat |
 |---|---|
-| 1 | Samme underkategori. Tidsnivå kjent og likt eller strengere. Bilen ikke mildere på både km og alder. |
-| 2 | Samme underkategori. Tidsnivå ukjent eller ett nivå mildere. Samme krav til profil. |
-| 3 | Annen underkategori, men samme komponenttype (se under). Tidsnivå likt eller strengere, eller ukjent. |
-| 4 | Samme hovedkategori. |
-| 5 | Et av kjøperens rettslige poeng (se under), uansett kategori. |
+| Stikkprøve, 50 vedtak med to dommere | 98,7 % riktige felt; 0 sitater utenfor utvalgets vurdering |
+| Dekning, 2 232 kombinasjoner | 100 % (A 1 932, B 300) |
+| De 12 simulerte sakene | alle felt i avsnittene stemmer |
+| 100 tilfeldige kjøpersaker | A 86, B 14, lovsetning 0; $0,011 per brev, median 5 s |
 
-Trinn 1–4 krever at feilen har et sitat. For komponenttypen *opplysning* regnes tidsnivå og profil som oppfylt: feilen fantes ved overtakelsen. Har kjøperen bare valgt hovedkategori, starter stigen på trinn 3 hvis alle underkategoriene har samme komponenttype, ellers på trinn 4. «Vet ikke ennå» har ingen komponenttype, men sammenlignes på symptomet: samme symptom gir trinn 1–2, ellers trinn 4 og 5.
+## Kjente gap
 
-**Komponenttype** per underkategori, i `src/lib/feil/kategorier.ts`:
-- slitedel: clutch, bremser, demping, hjullager, startbatteri, dekk, eksos, registerreim, rust
-- forbrenning og drivlinje: turbo, girkasse, firehjul, drivstoff, olje, kjoling, utslipp, annet_motor
-- høyvolt: kapasitet, lading, hybrid
-- sikkerhet: sikkerhet, styring
-- klima: ac, varme, parkeringsvarmer
-- karosseri og interiør: lakk, ruter, fukt, lukt, interior
-- elektronikk: infotainment, lys, annet_el
-- opplysning: hele historikk, service, servicehefte, utstyr, nokler, utstyrsniva, garanti
-
-**Rettslige poeng** (trinn 5), avledet fra kjøperens svar og vedtakets felt:
-
-| Poeng | Kjøperen … | Vedtaket har … |
-|---|---|---|
-| Formodningsregelen, § 18 annet ledd | tidsnivå 1 | en feil med medhold og `formodning = anvendt` |
-| «Som den er» fritar ikke, § 17 | svarte ja | `som_den_er` og «fkjl § 17» i `paragrafer` |
-| Feil etter to år, § 27 | tidsnivå 3 | en feil med medhold på tidsnivå 3, ikke `samlet` |
-| Uriktig opplysning, § 16 c | sier selger sa noe | `feil_opplysninger` i `mangelsgrunnlag` |
-| Tilbakeholdt opplysning, § 16 b | sier selger ikke sa noe | `tilbakeholdt_opplysning` i `mangelsgrunnlag` |
-| Selger har tapt retten til retting, § 30 | 2 eller flere rettingsforsøk | `retting_forsok` i `tvistetema` og heving eller prisavslag i `sanksjoner` |
-| Selger pålegges retting | krever retting | retting i `sanksjoner` |
-| Heving | krever heving | heving i `sanksjoner` og `heving_vesentlig` i `tvistetema` |
-| Prisavslag | krever prisavslag | prisavslag i `sanksjoner` og `prisavslag_storrelse` i `tvistetema` |
-
-### Poeng
-Innenfor et trinn sorterer dagens poengsum (`vekter.ts`), uendret:
-- på feilen: underkategori 4, tidsnivå 4 (strengere 1), egen vurdering 4 (ikke `samlet`, ikke erkjent eller uomtvistet), grunnlag 4 (`bevisgrunnlag` mot det kjøperen har)
-- på vedtaket: km 3 (strengere 1), alder 2 (strengere 1), «som den er» 2 (strengere 1), krav i `sanksjoner` 2 (delvis 1)
-- ukjent gir 0, mildere gir 0; det kjøperen ikke har oppgitt trekkes fra maks
-
-På trinn 5 sorteres først etter antall av kjøperens poeng vedtaket treffer.
-
-### Kandidatlisten
-30 vedtak: inntil 25 fra trinn 1–4 i trinnrekkefølge, og alltid minst 5 fra trinn 5. Samme sak (saksnummer med `-2`-suffiks) tas med én gang. Listen er aldri tom innenfor 5 år; dette er kontrollert over alle 60 264 svarkombinasjoner.
-
-## Fase 2: Valget (Claude API)
-
-Ett kall per sak, rundt 20 000 tokens inn.
-
-### Kjøperens sak
-`kategori`, `underkategori` (kjøperens valg er fasit for hva feilen gjelder), `beskrivelse` (fritekst fra steg 3), `tidsniva`, `kjopsdato` (lovversjon), `km`, `alder`, `som_den_er`, `krav`, `rettingsforsok`, `selger_sa_noe`, `verksted_undersokt`.
-
-### Per kandidat
-- Vedtak: `saksnummer`, `vedtaksdato`, `kilde_url`, `merke`, `modell`, `arsmodell`, `km_ved_kjop`, `alder_ved_kjop`, `kjopesum_nok`, `som_den_er`, `sanksjoner`, `prisavslag_prosent`, `rettingsforsok`, `mangelsgrunnlag` (det klageren påberopte), `tvistetema`, `paragrafer`, `enstemmig`/`dissens`, `utvalgets_nokkelmomenter`, `sammendrag`, `trinn` og poeng.
-- Alle feil med medhold: `hovedkategori.underkategori`, `komponent`, `tidsniva`, `dager_etter_levering`, `viste_seg`, `samlet`, `bevisgrunnlag`, `formodning`, `sitat`.
-- Alle feil som ble avvist: `komponent`, `avslagsgrunn`. Dette var det feltet som manglet mest i testen: et vedtak som godtok dugg i lyktene, men avviste de elektriske feilene som slitasje, ble valgt som elektrisk presedens.
-- Hvilke rettslige poeng vedtaket treffer.
-
-### Instruks til modellen
-- Velg ett vedtak. Sett `bruk` til det høyeste nivået som er sant:
-  1. `samme_feil`: samme komponent eller feil, og tidspunktet i vedtaket er likt eller senere enn kjøperens.
-  2. `samme_feil_uten_tidspunkt`: samme komponent eller feil, men tidspunktet bærer ikke.
-  3. `overforbar`: annen komponent, men utvalgets begrunnelse gjelder like godt for kjøperens komponent, og bilprofilen er ikke mildere.
-  4. `opplysningssvikt`: samme type opplysningssvikt fra selger.
-  5. `rettslig_poeng`: bare et rettslig standpunkt; feilene ligner ikke. Dette nivået finnes alltid, så svaret er aldri «ingen».
-- Kjøperens underkategori er fasit. Vedtak om en annen komponent kan bare brukes som `overforbar` eller `rettslig_poeng`.
-- Sitater bare fra `sitat`-feltene, ordrett. Ingen slutninger fra det som ikke står i feltene eller sammendraget.
-- `verksted_undersokt` betyr at et verksted har sett på bilen, ikke at det finnes en sakkyndig uttalelse.
-- Bilprofil med retning: et vedtak om en eldre og mer kjørt bil styrker kjøperen; en nyere bil svekker.
-- Ikke bruk et vedtak som `samme_feil` eller `overforbar` når mangelen bygde på selgers opplysning eller avtale, og kjøperen sier selger ikke sa noe.
-- Skriv `forbehold` ærlig: «under tvil», avslått heving, flere feil vurdert samlet, dissens, nyere bil, annonse som hevet forventningen.
-
-### Svar
-```json
-{ "vedtak_id": 0, "bruk": "samme_feil", "pastand": "…", "hvorfor_sterkere": "…", "forbehold": "…" }
-```
-
-### Kontroll i kode
-- `vedtak_id` er blant kandidatene.
-- Hvert sitat i `pastand` finnes ordrett i et `sitat`-felt på vedtaket.
-- `bruk` stemmer med strukturen: `samme_feil` og `samme_feil_uten_tidspunkt` krever samme underkategori; `samme_feil` krever kjent tidsnivå likt eller strengere; `rettslig_poeng` krever at vedtaket treffer et av kjøperens poeng.
-- Feiler kontrollen, kjøres kallet én gang til med feilmeldingen. Feiler det igjen, brukes det beste trinn-5-vedtaket med `bruk = rettslig_poeng`.
-
-## Fase 3: Henvisningen i brevet
-
-Henvisningen skrives ut fra `bruk`. Den har alltid: saksnummer, vedtaksdato, bilen (merke, alder, km, og «som den er» hvis det gjaldt), hva utvalget ga, ett ordrett sitat i «», og forbeholdet. `kilde_url` står som kildehenvisning.
-
-| `bruk` | Setningen i brevet | Får ikke stå |
-|---|---|---|
-| samme_feil | «I sak [nr] ([dato]) fikk kjøperen av en [år] år gammel [merke] med [km] km medhold i at [komponent] var en mangel [, selv om bilen var solgt «som den er»]. Utvalget uttalte: «[sitat]». Feilen viste seg [tidspunkt] etter kjøpet. [Kjøperens] sak står minst like sterkt: [hvorfor].» | Ingenting å begrense, men forbeholdet må med. |
-| samme_feil_uten_tidspunkt | Som over, uten setningen om tidspunkt. Tidspunktet argumenteres for seg, på loven (§ 18 annet ledd eller § 27) og på verkstedets funn. | «Tilsvarende tidspunkt», «like lenge etter kjøpet». |
-| overforbar | «I sak [nr] la utvalget til grunn at [vedtakets komponent, presist] på en [bil] var en mangel: «[sitat]». Tilsvarende må gjelde for [kjøperens komponent], som i likhet med [vedtakets komponent] er [komponenttype] med forventet levetid utover bilens alder.» | «Samme feil», «tilsvarende feil». Komponenten i vedtaket navngis alltid. |
-| opplysningssvikt | «Utvalget har i sak [nr] slått fast at [uriktig/tilbakeholdt] opplysning om [forholdet] er en mangel etter fkjl § 16 første ledd [b/c]: «[sitat]». Selgeren i denne saken [hva selger sa eller tiet om].» | Argumenter om påregnelighet eller tidspunkt. |
-| rettslig_poeng | «Utvalget har i sak [nr], som gjaldt [vedtakets feil], lagt til grunn at [rettssetningen]: «[sitat]».» | Enhver sammenligning av feilene. Det skal stå at saken gjaldt en annen feil. |
-
-Faste regler:
-- Krever kjøperen heving, og vedtaket avslo heving, står det i brevet.
-- Var vedtaket avgjort med dissens, står det.
-- Er `forbehold` ikke tomt, bygges det inn i brevet, ikke utelatt.
-- Et sitat som er kuttet midt i en setning i `sitat`-feltet brukes ikke; da brukes et nøkkelmoment som gjengivelse, uten anførselstegn.
-
-## Testene bak beskrivelsen
-
-48 skjemakombinasjoner, overvekt av vanskelige. Velger-agenter valgte ett vedtak, uavhengige dommere med fulltekst dømte om påstanden holder mot en selger med advokat.
-
-| | Fulltekst, topp 10 | Uten fulltekst, topp 30 |
-|---|---|---|
-| Holder | 7 | 5 |
-| Holder med forbehold | 39 | 36 |
-| Feil valg | 1 | 2 |
-| Ingen mulig | 1 | 1 |
-| «Ingen» bekreftet riktig | 0 | 4 |
-| Usanne sitater eller tall | 3 | 0 |
-
-12 av 44 valg uten fulltekst lå på plass 11–30. Manglende fulltekst skadet først og fremst forbeholdene, ikke valget. Det feltet som ville hjulpet mest, avviste feil med avslagsgrunn, finnes allerede og tas med i fase 2.
-
-Felt som ville hjulpet, men som krever ny kjøring av feilvurderingen: hva mangelen bygde på per feil (teknisk stand, annonse, avtale, formodning), om selger svarte i saken, «under tvil»-flagg, og den konkrete opplysningen i annonse eller kontrakt.
+- **Garanti:** nivå B har ikke noe poeng for § 18 a (garanti). En garantisak uten vedtak på nivå A kan få et B-vedtak om et annet spørsmål.
+- **Dato:** 93 vedtak har ulik møtedato og signaturdato og vises uten dato.
+- **Alder ved kjøpet** er regnet fra årsmodell og kan avvike ett år fra det vedtaket sier. Derfor krever sammenligningssetningen minst to års forskjell.
+- **Vedtak uten uttrekk:** 90 vedtak i grunnsettet har ingen feil med medhold i feilvurderingen og har derfor ikke noe uttrekk.
+- **Resten av brevet** finnes ikke ennå. Avsnittet er en illustrasjon; det rettslige argumentet hører hjemme i lovavsnittet.

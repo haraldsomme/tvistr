@@ -16,6 +16,8 @@ import { avled, prisavslagProsent } from "../src/lib/feilvurdering/avled";
 import { FEILVURDERING_VERSJON } from "../src/lib/feilvurdering/skjema";
 import { lesSvar } from "../src/lib/feilvurdering/verifiser";
 import { kjorParallelt } from "../src/lib/parallell";
+import { anvendPaFeilvurdering } from "../src/lib/vedtaksvalg/funn";
+import { gjeldendeFunn } from "../src/lib/vedtaksvalg/funn-db";
 
 const { values: args } = parseArgs({ options: { liste: { type: "string" } } });
 
@@ -66,7 +68,8 @@ async function main() {
     await db
       .update(vedtak)
       .set({
-        feilvurdering: a.lagret,
+        // Defects the safety net found not named or not judged on their own stay `samlet` (src/lib/vedtaksvalg/funn.ts).
+        feilvurdering: anvendPaFeilvurdering(a.lagret, await gjeldendeFunn(id)),
         feilvurderingVersjon: FEILVURDERING_VERSJON,
         feilvurderingTidspunkt: new Date(),
         feilvurderingKontroll: lest.kontroll,

@@ -146,3 +146,28 @@ Utvidelsen av steg 3 og 4 og brevet (`docs/skjema.md`, `docs/brev.md`) er ferdig
 | 2 | **Grønt.** Kombinasjonstestene over avkrysninger, verkstedtype, konklusjon, kontakt og krav, og over 31 000 brev, har kilde på hver setning, ingen tomme felt og ingen forsterkere (konklusjonen og beskrivelsen unntatt). |
 | 3 | **Grønt.** Serveren setter rettingsforsøk til 0 uten reklamasjon, avviser rapporter uten hvem, navn, dato etter kjøp eller minst én avkrysning, og droppet overslag uten avkrysning. Skjemaet viser ikke forsøksspørsmålet ved «Nei». |
 | 4 | **Grønt** ved 1280 og 390 piksler: rapporten kreves før «Fortsett», kopien nullstiller avkrysningene, «Lag brev» er grått til alle svar er gitt, brevet har overslaget og én vedleggslinje for rapporten. Ingen konsollfeil, ingen horisontal scroll. Kjøringen avslørte at overslaget gikk som tekst og ble forkastet av serveren; rettet. |
+
+---
+
+# Ferdigkriterier: tidslinjen
+
+«Når viste feilen seg?» blir en dato per feil, og all inndeling (tidsnivå, formodning, frister) regnes av koden fra datoene i én ren funksjon (`src/lib/brev/tidslinje.ts`). Skjemaet, serveren, brevmalene og testene bruker den samme. Umulige rekkefølger stopper, usannsynlige advarer.
+
+1. Intervallspørsmålet er borte; tidsnivå regnes bare fra datoer.
+2. Alle stopp-regler er umulige å omgå i skjemaet og avvises på serveren (`rens.test.ts`).
+3. De 12 gylne brevene har samme tidsnivå per feil som før, og ingen stopp og ingen advarsler.
+4. Dekningsmålingen gir samme fordeling som før: `ferdig:dekning` (ren rangering) helt lik, og `ferdig:brevlop` (100 saker) samme fordeling på nivå A/B som før (±2).
+
+# Ferdigkriterier: riktighet utover datoene
+
+Én ren funksjon (`src/lib/brev/riktighet.ts`) vurderer hele saken og gir `stopp` og `advarsler`; skjemaet, serveren og testene bruker den samme, og serveren kjører alle stopp-regler på nytt.
+
+1. Tabelltest per regel (stopp og advar), begge lovversjoner.
+2. `rens.test.ts` avviser hvert stopp-tilfelle.
+3. Invariant-testen (`brev.invarianter.test.ts`) er grønn på de 12 gylne brevene og 200 genererte gyldige saker.
+4. Playwright: oppsummeringen i steg 5 viser advarslene, og «Endre» fører tilbake til feltet.
+5. Ingen regel gir stopp på de 12 gylne sakene.
+
+Kjent før bygging, og ikke et kriterium:
+- Kilometerstand fra vegvesenet finnes ikke i API-et for tekniske kjøretøyopplysninger («Du får ikke kjøretøyets kilometerstand i tjenesten»). Reglene om km mot siste EU-kontroll kan ikke bygges.
+- Slettede foretak kan ikke velges (Brreg svarer 410), så regelen om «slettet» kan ikke slå til; «konkurs» og «under avvikling» kan.

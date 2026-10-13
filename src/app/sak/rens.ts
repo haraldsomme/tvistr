@@ -37,7 +37,9 @@ function rensRapport(r: unknown, kjopsdato: string | null): Rapport | null {
 }
 
 // Contact with the seller. `reklamert: false` is the letter being the complaint (no repairs, no answer).
-// Complained before: a date after the purchase and not in the future, how, how many repairs, the answer.
+// Complained before: a date after the purchase and not in the future, how, and what the seller has done.
+// The number of repairs (1 to 3) belongs to «forsokt» only; every other answer is 0 repairs, whatever
+// the browser sends.
 // «invalid» when the buyer says yes and something is missing; null when the field is not there at all.
 function rensKontakt(k: unknown, kjopsdato: string | null): { kontakt: Kontakt | null } | { ugyldig: true } | null {
   if (!k || typeof k !== "object") return null;
@@ -45,8 +47,8 @@ function rensKontakt(k: unknown, kjopsdato: string | null): { kontakt: Kontakt |
   if (x.reklamert === false) return { kontakt: null };
   const dato = gyldigDato(x.dato);
   const form = x.form === "skriftlig" || x.form === "muntlig" ? x.form : null;
-  const forsok = heltall(x.forsok, 0, 3);
   const svar = SELGER_SVAR.find((o) => o.id === x.svar)?.id;
+  const forsok = svar === "forsokt" ? heltall(x.forsok, 1, 3) : 0;
   if (x.reklamert !== true || !dato || !form || forsok === null || !svar || !kjopsdato || dato <= kjopsdato || dato > idagOslo()) return { ugyldig: true };
   return { kontakt: { dato, form, forsok, svar } };
 }
@@ -97,7 +99,7 @@ export function rensVedtakssvar(s: Record<string, unknown>): Resultat<Vedtakssva
     };
   }
   const kontakt = rensKontakt(s.kontakt, dato);
-  if (kontakt && "ugyldig" in kontakt) return { ok: false, melding: "Fyll ut kontakten med selger: dato etter kjøpet, hvordan, rettingsforsøk og hva selger svarte." };
+  if (kontakt && "ugyldig" in kontakt) return { ok: false, melding: "Fyll ut kontakten med selger: dato etter kjøpet, hvordan, og hva selger har gjort (med antall forsøk hvis selger har forsøkt å rette)." };
 
   // The order of the dates, judged by the same function as the form. What is impossible stops here,
   // whatever the browser allowed.

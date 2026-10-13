@@ -51,7 +51,7 @@ Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon 
 | «Som den er», kjøp fra 2024, og selger sa noe om en teknisk feil | advarsel | Hvis selger opplyste om akkurat denne feilen før kjøpet, kan den være unntatt. Sjekk hva som ble sagt. |
 | Utleggene til sammen over kjøpesummen | advarsel | Utleggene er høyere enn kjøpesummen. Sjekk beløpene. |
 | Rapport fra selgers eget verksted med «til stede ved levering» | ingen | Gyldig. Brevet kaller verkstedet «deres eget verksted», aldri uavhengig. |
-| Rettingsforsøk uten reklamasjon | umulig | Spørsmålet vises bare når kjøperen har reklamert, og serveren setter forsøkene til 0 uten reklamasjon. |
+| Rettingsforsøk uten reklamasjon, eller sammen med «ikke svart» eller «tilbudt retting» | umulig | Antall forsøk spørres bare under «Hva har selger gjort? → Forsøkt å rette», og serveren setter forsøkene til 0 for alle andre svar og uten reklamasjon. |
 
 ## Kjøretøy og tall
 

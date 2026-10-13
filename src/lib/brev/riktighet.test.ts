@@ -81,7 +81,7 @@ describe("regler som advarer", () => {
     // «Som den er» before 2024 is the old § 17; heving after a refusal; a large repair; several defects.
     expect(regler(sak({ kjopsdato: "2023-05-02", forsteRegistrert: 2016, somDenEr: "ja", feil: [feil({ opplysning: "muntlig" })] })).advarsler).not.toContain("som_den_er_opplyst");
     expect(regler(sak({ krav: "heving", svar: "ikke_svart" })).advarsler).not.toContain("heving_uten_retting");
-    expect(regler(sak({ krav: "heving", forsok: 1, svar: "annet" })).advarsler).not.toContain("heving_uten_retting");
+    expect(regler(sak({ krav: "heving", forsok: 1, svar: "forsokt" })).advarsler).not.toContain("heving_uten_retting");
     expect(regler(sak({ krav: "heving", svar: "avviste", feil: [feil({ verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["overslag"], overslag: 15_000 } })] })).advarsler).not.toContain("heving_liten_utbedring");
     expect(
       regler(sak({ krav: "heving", svar: "avviste", feil: [feil({ verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["overslag"], overslag: 1_000 } }), feil({ hoved: "elektrisk", under: ["lys"] })] })).advarsler,

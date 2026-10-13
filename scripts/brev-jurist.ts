@@ -103,7 +103,7 @@ function lesSak(seksjon: string, i: number): Brevsak {
     krav,
     utlegg: i % 4 === 1 ? [{ beskrivelse: "Tauing", belop: 1_800 }] : [],
     // A complaint to the seller in every third section, answered in each of the four ways in turn.
-    kontakt: i % 3 === 0 ? { dato: senest(plussDager(oppdaget, 10)), form: i % 2 === 0 ? "skriftlig" : "muntlig", forsok: 0, svar: SELGER_SVAR[(i / 3) % SELGER_SVAR.length].id } : null,
+    kontakt: i % 3 === 0 ? { dato: senest(plussDager(oppdaget, 10)), form: i % 2 === 0 ? "skriftlig" : "muntlig", svar: SELGER_SVAR[(i / 3) % SELGER_SVAR.length].id, forsok: SELGER_SVAR[(i / 3) % SELGER_SVAR.length].id === "forsokt" ? 1 : 0 } : null,
     praksis: { avsnitt, kildeUrl: url, saksnummer: /^FKU-/.test(saksnr) ? null : saksnr },
   };
 }

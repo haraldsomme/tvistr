@@ -763,7 +763,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
           forsteRegistrert: car?.k.ar ?? null,
           somDenEr,
           krav,
-          forsok: reklamert === "ja" ? (forsok ?? 0) : 0,
+          forsok: reklamert === "ja" && selgerSvar === "forsokt" ? (forsok ?? 0) : 0,
           svar: reklamert === "ja" ? selgerSvar : null,
           feil: valgte.map((h) => {
             const x = d[h.id] ?? {};
@@ -857,7 +857,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   // Contact with the seller: «no» is the letter being the complaint. «Yes» needs the date, how, the
   // repairs and the answer, so the answers cannot contradict each other (repairs without a complaint).
   const kontaktOk =
-    reklamert === "nei" || (reklamert === "ja" && etterKjop(reklamertDato) && !tidslinje.stopp.some((m) => m.felt === "reklamert") && !!reklamertForm && forsok !== null && !!selgerSvar);
+    reklamert === "nei" || (reklamert === "ja" && etterKjop(reklamertDato) && !tidslinje.stopp.some((m) => m.felt === "reklamert") && !!reklamertForm && !!selgerSvar && (selgerSvar !== "forsokt" || (forsok ?? 0) > 0));
   const valid = [
     !!car && !fetching && datoOk && Number(km) > 0 && Number(kjopesum) > 0 && !!somDenEr && !riktighet.stopp.some((m) => ["kjopesum", "kjopsdato"].includes(m.felt)),
     valgte.length > 0,
@@ -905,7 +905,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
         detaljer: Object.fromEntries(Object.entries(detaljer).map(([id, d]) => [id, d.rapport ? { ...d, rapport: { ...d.rapport, overslag: d.rapport.overslag ? Number(d.rapport.overslag) : null } } : d])),
         bil: car && { regnr: car.k.regnr, merke: car.k.merke, modell: car.k.modell, ar: car.k.ar },
         selgerOrgnr: selger?.orgnr ?? null,
-        kontakt: reklamert === "ja" ? { reklamert: true, dato: reklamertDato, form: reklamertForm, forsok, svar: selgerSvar } : { reklamert: false },
+        kontakt: reklamert === "ja" ? { reklamert: true, dato: reklamertDato, form: reklamertForm, svar: selgerSvar, forsok: selgerSvar === "forsokt" ? forsok : 0 } : { reklamert: false },
         utlegg: kreverUtlegg ? utlegg.map((u) => ({ beskrivelse: u.beskrivelse, belop: Number(u.belop) })) : [],
       };
       const f = await finnVedtak(svar);
@@ -1602,8 +1602,12 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                         <Merknader {...(reklamertDato && !etterKjop(reklamertDato) ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk(tidslinje, "reklamert"))} />
                       </div>
                       <Chipvalg sporsmal="Hvordan?" etikett="Hvordan reklamerte du?" valg={HVORDAN} valgt={reklamertForm} velg={setReklamertForm} />
-                      <Chipvalg sporsmal="Har selger forsøkt å rette feilen?" valg={RETTINGSFORSOK} valgt={forsok} velg={setForsok} />
-                      <Chipvalg sporsmal="Hva svarte selger?" valg={SELGER_SVAR} valgt={selgerSvar} velg={setSelgerSvar} />
+                      <Chipvalg sporsmal="Hva har selger gjort?" valg={SELGER_SVAR} valgt={selgerSvar} velg={setSelgerSvar} />
+                      {selgerSvar === "forsokt" && (
+                        <div style={{ animation: pop(0) }}>
+                          <Chipvalg sporsmal="Hvor mange ganger?" etikett="Hvor mange ganger har selger forsøkt å rette?" valg={RETTINGSFORSOK.filter((o) => o.id > 0)} valgt={forsok} velg={setForsok} />
+                        </div>
+                      )}
                     </div>
                   )}
                 </section>
@@ -1797,7 +1801,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                         felt: "reklamert",
                         verdi:
                           reklamert === "ja"
-                            ? `${erDato(reklamertDato) ? datoTekst(reklamertDato) : ""}, ${reklamertForm ?? ""}, ${RETTINGSFORSOK.find((o) => o.id === forsok)?.navn.toLowerCase() ?? "–"} rettingsforsøk, selger: ${SELGER_SVAR.find((o) => o.id === selgerSvar)?.navn.toLowerCase() ?? "–"}`
+                            ? `${erDato(reklamertDato) ? datoTekst(reklamertDato) : ""}, ${reklamertForm ?? ""}. Selger: ${SELGER_SVAR.find((o) => o.id === selgerSvar)?.navn.toLowerCase() ?? "–"}${selgerSvar === "forsokt" ? `, ${RETTINGSFORSOK.find((o) => o.id === forsok)?.navn ?? "–"}` : ""}`
                             : "Nei. Dette brevet er reklamasjonen.",
                       },
                       { navn: "Krav", verdi: KRAV.find((k) => k.id === krav)?.navn ?? "", felt: "krav" },

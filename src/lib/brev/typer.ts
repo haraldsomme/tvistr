@@ -32,7 +32,8 @@ export type Brevfeil = {
 export type Kontakt = {
   dato: string;
   form: "skriftlig" | "muntlig";
-  // How many times the seller has tried to repair the defect: 0 to 3 (3 is «three or more»).
+  // How many times the seller has tried to repair the defect: 1 to 3 (3 is «three or more») when the
+  // answer is «forsokt», otherwise 0.
   forsok: number;
   svar: SelgerSvar;
 };

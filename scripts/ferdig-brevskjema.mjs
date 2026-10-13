@@ -81,8 +81,14 @@ for (const [navn, vp, mobil] of [["desktop", { width: 1280, height: 900 }, false
   await page.getByRole("group", { name: "Har du reklamert til selger?" }).getByRole("button", { name: "Ja", exact: true }).click();
   await velgDato("Dato for første reklamasjon", "2026-10-02");
   await page.getByRole("group", { name: "Hvordan reklamerte du?" }).getByRole("button", { name: "Skriftlig" }).click();
-  await page.getByRole("group", { name: "Har selger forsøkt å rette feilen?" }).getByRole("button", { name: "Nei" }).click();
-  await page.getByRole("group", { name: "Hva svarte selger?" }).getByRole("button", { name: "Avviste kravet" }).click();
+  // One question: «1 gang» is asked only when the seller has tried to repair.
+  r.forsøkSkjultFørForsøkt = (await page.getByText("Hvor mange ganger?").count()) === 0;
+  await page.getByRole("group", { name: "Hva har selger gjort?" }).getByRole("button", { name: "Forsøkt å rette" }).click();
+  r.forsøkVistVedForsøkt = await page.getByText("Hvor mange ganger?").isVisible();
+  r.lagBrevUtenAntall = await farge(page.getByRole("button", { name: "Se over" }));
+  await page.getByRole("group", { name: "Hvor mange ganger har selger forsøkt å rette?" }).getByRole("button", { name: "1 gang" }).click();
+  await page.getByRole("group", { name: "Hva har selger gjort?" }).getByRole("button", { name: "Avvist kravet" }).click();
+  r.forsøkSkjultEtterBytte = (await page.getByText("Hvor mange ganger?").count()) === 0;
   const SEN = "Du reklamerer mer enn to måneder etter at feilen ble oppdaget.";
   r.advarselISteg4 = await page.locator("#felt-kontakt").getByText(SEN).isVisible();
   await page.getByRole("textbox", { name: "Søk etter selgeren" }).fill("equinor");

@@ -66,14 +66,15 @@ Brevet er i første person og formelt, uten forsterkere («klart», «åpenbart�
 
 Har ikke kjøperen reklamert, er brevet reklamasjonen: ingen setning om tidligere kontakt, rettingsforsøk 0, og «reklamerer herved» for symptomer uten kjent årsak. Har kjøperen reklamert (`kontakt` på `Brevsak`), står «Jeg reklamerte {skriftlig / muntlig} til dere den {dato}.» og:
 
-| Selgers svar | Avsnitt 1 | Avsnitt 4 |
-|---|---|---|
-| Avviste kravet | «Dere avviste reklamasjonen.» | Ved heving: «Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt.» Selgerens rett til å rette utelates. |
-| Har ikke svart | «Jeg har ikke fått svar.» | Ved heving: «Dere har ikke besvart reklamasjonen, og …» som over. |
-| Tilbød retting | «Dere tilbød retting, men den er ikke gjennomført.» Bare når selger ikke har forsøkt å rette. | – |
-| Annet | Ingen setning | – |
+| Hva selger har gjort | Brevet |
+|---|---|
+| Ikke svart | Avsnitt 1: «Jeg har ikke fått svar.» Avsnitt 4 ved heving: «Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt.» Selgerens rett til å rette utelates. |
+| Avvist kravet | Avsnitt 1: «Dere avviste reklamasjonen.» Avsnitt 4 ved heving: «Dere har avvist reklamasjonen, og …» som over. |
+| Tilbudt retting, ikke gjennomført | Avsnitt 1: «Dere tilbød retting, men den er ikke gjennomført.» |
+| Forsøkt å rette (1, 2 eller 3 eller flere ganger) | Avsnitt 2: «Dere har forsøkt å rette feilen … uten at det har lykkes.» Avsnitt 4 ved heving: «og dere har ikke lykkes med å rette den etter {antall} forsøk». Selgerens rett til å rette utelates. |
+| Annet | Ingen setning |
 
-Selger har forsøkt å rette (1, 2 eller 3 eller flere ganger) gir «Dere har forsøkt å rette feilen … uten at det har lykkes.» under «Mangelen», og i kravet om heving «og dere har ikke lykkes med å rette den etter {antall} forsøk». Reklamasjonsdatoen brukes også til å regne ut om reklamasjonen er i tide (§ 27).
+Forsøk telles bare under «Forsøkt å rette», så svar og forsøk kan ikke stride mot hverandre. En selger som først forsøkte å rette og så avviste videre krav, registreres som «Forsøkt å rette». Reklamasjonsdatoen brukes også til å regne ut om reklamasjonen er i tide (§ 27).
 
 ### Verkstedrapport
 

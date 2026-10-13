@@ -19,11 +19,11 @@ export function bakgrunn(s: Brevsak): Setning[] {
   const k = s.kontakt;
   if (k) {
     ut.push({ tekst: `Jeg reklamerte ${k.form} til dere den ${dato(k.dato)}.`, kilde: "skjema:kontakt" });
-    // What the seller answered. «Annet» gives no sentence, and an offer to repair only when no repair
-    // has been tried (otherwise «Dere har forsøkt å rette» under «Mangelen» says it).
+    // What the seller has done. «Annet» gives no sentence, and the repairs tried are told under
+    // «Mangelen» («Dere har forsøkt å rette feilen …»).
     if (k.svar === "avviste") ut.push({ tekst: "Dere avviste reklamasjonen.", kilde: "skjema:kontakt.svar" });
     if (k.svar === "ikke_svart") ut.push({ tekst: "Jeg har ikke fått svar.", kilde: "skjema:kontakt.svar" });
-    if (k.svar === "tilbod_retting" && k.forsok === 0) ut.push({ tekst: "Dere tilbød retting, men den er ikke gjennomført.", kilde: "skjema:kontakt.svar; skjema:kontakt.forsok" });
+    if (k.svar === "tilbod_retting") ut.push({ tekst: "Dere tilbød retting, men den er ikke gjennomført.", kilde: "skjema:kontakt.svar" });
   }
 
   // What the seller said, for the defects about what the seller said or promised. For a technical

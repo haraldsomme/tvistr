@@ -25,6 +25,8 @@ describe("de tolv simulerte sakene", () => {
     for (const x of SAKER) {
       // Repairs need a complaint, a complaint comes after the purchase, a report follows a written answer.
       expect(x.forsok === 0 || !!x.kontakt, `${x.navn}: rettingsforsøk uten reklamasjon`).toBe(true);
+      // Repairs are counted only under «Forsøkt å rette».
+      expect(x.forsok > 0, `${x.navn}: forsøk og svar`).toBe(x.kontakt?.svar === "forsokt");
       if (x.kontakt) expect(x.kontakt.dato > x.kjopsdato && x.kontakt.dato <= BREVDATO, `${x.navn}: kontaktdato`).toBe(true);
       for (const f of x.feil) {
         expect(!!f.rapport, `${x.navn}: rapport`).toBe(f.verksted === "skriftlig");

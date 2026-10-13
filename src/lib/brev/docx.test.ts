@@ -18,7 +18,7 @@ describe("Word-eksport", () => {
     lagSak("etter_2024", {
       somDenEr: "ja",
       krav: "heving",
-      kontakt: kontakt("etter_2024", { forsok: 2, svar: "avviste" }),
+      kontakt: kontakt("etter_2024", { forsok: 2, svar: "forsokt" }),
       utlegg: [{ beskrivelse: "Tauing & leiebil", belop: 4200 }],
       feil: [...FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig", "Bilen mistet «kraft» <etter> tre uker.").map((f) => ({ ...f, rapport: { ...f.rapport!, konklusjon: "Turbo & <lader> er defekt", punkter: ["bekrefter", "frarader", "overslag"] as never[], overslag: 38_000 } })), ...FEILSETT.opplysning("innen_6_mnd", "skriftlig", "nei")],
     }),

@@ -7,7 +7,7 @@ const sak = (kjoper: Parameters<typeof lagSak>[1] = {}) =>
     somDenEr: "ja",
     krav: "heving",
     utlegg: [{ beskrivelse: "Tauing", belop: 1200 }],
-    kontakt: kontakt("etter_2024", { forsok: 2, svar: "annet" }),
+    kontakt: kontakt("etter_2024", { forsok: 2, svar: "forsokt" }),
     feil: FEILSETT.teknisk("6_til_24_mnd", "nei", "skriftlig", "Bilen mistet kraft etter tre uker."),
     ...kjoper,
   });

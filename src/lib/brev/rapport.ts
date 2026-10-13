@@ -3,11 +3,14 @@
 // one fixed sentence in the letter, and what is not ticked gives no sentence.
 import type { Brevsak, Brevfeil } from "./typer";
 
-// Step 4, «Kontakt med selger»: what the seller answered to the complaint.
+// Step 4, «Kontakt med selger»: what the seller has done since the complaint. One answer, so the
+// number of repairs and the answer cannot contradict each other: repairs are counted only under
+// «Forsøkt å rette», and every other answer means none.
 export const SELGER_SVAR = [
-  { id: "avviste", navn: "Avviste kravet" },
-  { id: "ikke_svart", navn: "Har ikke svart" },
-  { id: "tilbod_retting", navn: "Tilbød retting" },
+  { id: "ikke_svart", navn: "Ikke svart" },
+  { id: "avviste", navn: "Avvist kravet" },
+  { id: "tilbod_retting", navn: "Tilbudt retting, ikke gjennomført" },
+  { id: "forsokt", navn: "Forsøkt å rette" },
   { id: "annet", navn: "Annet" },
 ] as const;
 export type SelgerSvar = (typeof SELGER_SVAR)[number]["id"];

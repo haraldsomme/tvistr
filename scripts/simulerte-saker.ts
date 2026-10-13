@@ -28,8 +28,8 @@ export type Sim = {
   kjopesum: number;
   bil: { regnr: string; merke: string; modell: string };
   selger: 0 | 1 | 2;
-  // Complained to the seller before: when, how and what the seller answered. `forsok` above is then
-  // how many repairs the seller has tried; it is 0 without this.
+  // Complained to the seller before: when, how and what the seller has done. `forsok` above is the
+  // number of repairs, above 0 only with the answer «forsokt».
   kontakt?: { dato: string; form: "skriftlig" | "muntlig"; svar: SelgerSvar };
   utlegg?: { beskrivelse: string; belop: number }[];
   // The buyer's Vipps profile: complete, without address, or without address and e-mail.
@@ -50,7 +50,7 @@ export const SAKER: Sim[] = [
   { navn: "Girkasse, kjøpt 2023", kjopsdato: "2023-05-02", km: 188_000, ar: 2012, somDenEr: "ja", krav: "heving", forsok: 2,
     feil: [{ hoved: "drivlinje", under: ["girkasse"], oppdaget: "2024-02-01", niva: 2, beskrivelse: "Automatgirkassen rykker og slipper ved giring. Selger har forsøkt å rette to ganger uten hell.", opplysning: "nei", verksted: "skriftlig",
       rapport: { hvem: "uavhengig", navn: "Girkasseservice AS", dato: "2024-03-05", punkter: ["bekrefter", "arsak", "til_stede"], konklusjon: "Slitasje i koplingspakken som må ha utviklet seg over lang tid.", overslag: null } }],
-    kjopesum: 89_000, bil: { regnr: "XY 10002", merke: "Volvo", modell: "V70" }, selger: 1, kontakt: { dato: "2024-02-14", form: "skriftlig", svar: "tilbod_retting" },
+    kjopesum: 89_000, bil: { regnr: "XY 10002", merke: "Volvo", modell: "V70" }, selger: 1, kontakt: { dato: "2024-02-14", form: "skriftlig", svar: "forsokt" },
     utlegg: [{ beskrivelse: "Tauing", belop: 2_400 }, { beskrivelse: "Leiebil", belop: 6_800 }], kjoper: "full" },
   { navn: "Rust etter over to år, som den er", kjopsdato: "2023-01-20", km: 245_000, ar: 2008, somDenEr: "ja", krav: "prisavslag", forsok: 0,
     feil: [{ hoved: "karosseri", under: ["rust"], oppdaget: "2025-08-25", omtrentlig: true, niva: 3, beskrivelse: "Gjennomrust i bærende deler ble funnet på EU-kontroll. Bilen ble underkjent.", opplysning: "nei", verksted: "skriftlig",
@@ -65,7 +65,7 @@ export const SAKER: Sim[] = [
   { navn: "Elbil med lav batterikapasitet", kjopsdato: "2024-11-15", km: 70_000, ar: 2019, somDenEr: "nei", krav: "prisavslag", forsok: 1,
     feil: [{ hoved: "hoyvolt", under: ["kapasitet"], oppdaget: "2025-05-16", niva: 1, beskrivelse: "Rekkevidden har falt til halvparten. Batteritest viser 68 % helse.", opplysning: "muntlig", verksted: "skriftlig",
       rapport: { hvem: "merke", navn: "Nissan Forhandler Nord", dato: "2025-05-20", punkter: ["bekrefter", "ikke_slitasje", "overslag"], konklusjon: "Batteriets kapasitet er 68 % av nytt, som er lavere enn forventet for bilens alder.", overslag: 55_000 } }],
-    kjopesum: 189_000, bil: { regnr: "XY 10006", merke: "Nissan", modell: "Leaf" }, selger: 0, kontakt: { dato: "2025-06-01", form: "muntlig", svar: "tilbod_retting" }, kjoper: "full" },
+    kjopesum: 189_000, bil: { regnr: "XY 10006", merke: "Nissan", modell: "Leaf" }, selger: 0, kontakt: { dato: "2025-06-01", form: "muntlig", svar: "forsokt" }, kjoper: "full" },
   { navn: "Varsellampe, vet ikke årsak", kjopsdato: "2025-07-01", km: 95_000, ar: 2018, somDenEr: "vet_ikke", krav: "retting", forsok: 0,
     feil: [{ hoved: "vet_ikke", under: ["varsellampe"], oppdaget: "2025-08-20", niva: 1, beskrivelse: "Motorlampen lyser og bilen går ujevnt på tomgang.", opplysning: "nei", verksted: "nei" }],
     kjopesum: 159_000, bil: { regnr: "XY 10007", merke: "Hyundai", modell: "i30" }, selger: 2, kontakt: { dato: "2025-09-10", form: "muntlig", svar: "annet" }, kjoper: "uten_adresse" },
@@ -82,7 +82,7 @@ export const SAKER: Sim[] = [
         rapport: { hvem: "uavhengig", navn: "Motorverkstedet Bergen", dato: "2025-03-01", punkter: ["bekrefter", "arsak"], konklusjon: "Oljeforbruket overstiger produsentens grenseverdi.", overslag: null } },
       { hoved: "elektrisk", under: ["lys"], oppdaget: "2025-01-10", niva: 1, beskrivelse: "Fjernlyset virker ikke.", opplysning: "nei", verksted: "nei" },
     ],
-    kjopesum: 125_000, bil: { regnr: "XY 10010", merke: "BMW", modell: "320d" }, selger: 1, kontakt: { dato: "2025-02-20", form: "skriftlig", svar: "annet" }, utlegg: [{ beskrivelse: "Feilsøking", belop: 3_500 }], kjoper: "full" },
+    kjopesum: 125_000, bil: { regnr: "XY 10010", merke: "BMW", modell: "320d" }, selger: 1, kontakt: { dato: "2025-02-20", form: "skriftlig", svar: "forsokt" }, utlegg: [{ beskrivelse: "Feilsøking", belop: 3_500 }], kjoper: "full" },
   { navn: "Garanti ikke som lovet", kjopsdato: "2025-01-05", km: 60_000, ar: 2020, somDenEr: "nei", krav: "prisavslag", forsok: 0,
     feil: [{ hoved: "garanti", under: [], oppdaget: "2025-03-20", niva: 1, beskrivelse: "Forhandleren lovet 12 måneders bruktbilgaranti, men garantien ble aldri tegnet.", opplysning: "skriftlig", verksted: "nei" }],
     kjopesum: 249_000, bil: { regnr: "XY 10011", merke: "Kia", modell: "Niro" }, selger: 0, kontakt: { dato: "2025-04-07", form: "skriftlig", svar: "avviste" }, kjoper: "uten_adresse_og_epost" },

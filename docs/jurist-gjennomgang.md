@@ -52,7 +52,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2008, reg.nr. ZA 20001, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 60 000. Bilen hadde gått 260 000 km ved overtakelsen. Bilen ble solgt «som den er». Jeg reklamerte skriftlig til dere den 11. mars 2024. Dere avviste reklamasjonen.
+> Jeg viser til kjøp av Volkswagen Golf, første gang registrert i 2008, reg.nr. ZA 20001, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 60 000. Bilen hadde gått 260 000 km ved overtakelsen. Bilen ble solgt «som den er». Jeg reklamerte skriftlig til dere den 11. mars 2024. Jeg har ikke fått svar.
 >
 > 2. Mangelen
 >
@@ -68,7 +68,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 4. Krav
 >
-> På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Dere har avvist reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 60 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+> På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Dere har ikke besvart reklamasjonen, og jeg legger til grunn at retting ikke vil bli tilbudt. Jeg krever kjøpesummen på kr 60 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 >
 > 5. Frist for tilbakemelding
 >
@@ -226,7 +226,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Volvo V70, første gang registrert i 2015, reg.nr. ZA 20004, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 111 000. Bilen hadde gått 150 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Jeg reklamerte muntlig til dere den 11. mars 2024. Jeg har ikke fått svar.
+> Jeg viser til kjøp av Volvo V70, første gang registrert i 2015, reg.nr. ZA 20004, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 111 000. Bilen hadde gått 150 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Jeg reklamerte muntlig til dere den 11. mars 2024. Dere avviste reklamasjonen.
 >
 > 2. Mangelen
 >
@@ -580,6 +580,8 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > Girkasse: Feilen viste seg den 1. august 2024. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 8. august 2024. Verkstedet bekrefter feilen. Verkstedet legger til grunn at feilen har utviklet seg over tid og forelå ved leveringen. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 >
+> Dere har forsøkt å rette feilen én gang uten at det har lykkes.
+>
 > 3. Rettslig vurdering
 >
 > Bilen svarer ikke til det jeg hadde grunn til å forvente når det gjelder holdbarhet og andre egenskaper, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav a, jf. § 15.
@@ -590,7 +592,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 4. Krav
 >
-> På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Jeg krever kjøpesummen på kr 213 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+> På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig, og dere har ikke lykkes med å rette den etter ett forsøk. Jeg krever kjøpesummen på kr 213 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
 >
 > I tillegg krever jeg erstatning for utlegg som følge av mangelen, jf. § 33: Tauing kr 1 800. Til sammen kr 1 800. Kvitteringer vedlegges.
 >
@@ -745,7 +747,7 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 >
 > 1. Sakens bakgrunn
 >
-> Jeg viser til kjøp av Skoda Octavia, første gang registrert i 2015, reg.nr. ZA 20013, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 74 000. Bilen hadde gått 150 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Jeg reklamerte skriftlig til dere den 11. mars 2024. Dere avviste reklamasjonen.
+> Jeg viser til kjøp av Skoda Octavia, første gang registrert i 2015, reg.nr. ZA 20013, fra Testbil AS (org.nr. 999 999 999) den 1. mars 2023. Kjøpesummen var kr 74 000. Bilen hadde gått 150 000 km ved overtakelsen. Det ble ikke tatt forbehold om at bilen ble solgt «som den er». Jeg reklamerte skriftlig til dere den 11. mars 2024.
 >
 > 2. Mangelen
 >

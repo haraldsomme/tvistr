@@ -25,13 +25,13 @@ const tekst = (xs: Setning[][] | Setning[]) => (xs as (Setning | Setning[])[]).m
 const snapshot = (navn: string) => `./__snapshots__/${navn}.txt`;
 
 // The buyer's contact with the seller, by name: «ingen» is no earlier complaint (the letter is the complaint).
-const KONTAKT_NAVN = ["ingen", "skriftlig, annet", "muntlig, avviste", "skriftlig, ikke svart", "skriftlig, tilbød retting", "skriftlig, tilbød og 1 forsøk"] as const;
+const KONTAKT_NAVN = ["ingen", "skriftlig, annet", "muntlig, avviste", "skriftlig, ikke svart", "skriftlig, tilbød retting", "skriftlig, forsøkt 1 gang"] as const;
 type KontaktNavn = (typeof KONTAKT_NAVN)[number];
 function kontaktAv(lov: Lov, navn: KontaktNavn): Kontakt | null {
-  const svar: Record<string, SelgerSvar> = { annet: "annet", avviste: "avviste", "ikke svart": "ikke_svart", "tilbød retting": "tilbod_retting", "tilbød og 1 forsøk": "tilbod_retting" };
+  const svar: Record<string, SelgerSvar> = { annet: "annet", avviste: "avviste", "ikke svart": "ikke_svart", "tilbød retting": "tilbod_retting", "forsøkt 1 gang": "forsokt" };
   if (navn === "ingen") return null;
   const [form, s] = navn.split(", ") as ["skriftlig" | "muntlig", string];
-  return lagKontakt(lov, { form, svar: svar[s], forsok: s === "tilbød og 1 forsøk" ? 1 : 0 });
+  return lagKontakt(lov, { form, svar: svar[s], forsok: s === "forsøkt 1 gang" ? 1 : 0 });
 }
 
 // The same defects with a report each: `punkter` and the like change the report, the rest stays.
@@ -74,7 +74,7 @@ describe("avsnitt 2: mangelen", () => {
 
   it("gir samme tekst som sist for rettingsforsøk og flere feil", async () => {
     const ut = samle({ feilsett: ["teknisk", "to_tekniske_ulik_tid", "utstyr_blandet"] as const, forsok: [0, 1, 2, 3] }, (v) =>
-      tekst(mangelen(lagSak("etter_2024", { kontakt: v.forsok ? lagKontakt("etter_2024", { forsok: v.forsok }) : null, feil: FEILSETT[v.feilsett]("6_til_24_mnd", "nei", "muntlig") }))),
+      tekst(mangelen(lagSak("etter_2024", { kontakt: v.forsok ? lagKontakt("etter_2024", { svar: "forsokt", forsok: v.forsok }) : null, feil: FEILSETT[v.feilsett]("6_til_24_mnd", "nei", "muntlig") }))),
     );
     await expect(ut).toMatchFileSnapshot(snapshot("mangelen-forsok"));
   });
@@ -161,7 +161,7 @@ describe("avsnitt 3: rettslig vurdering", () => {
 });
 
 describe("avsnitt 4: krav", () => {
-  const SVAR = ["ingen", "avviste", "ikke_svart", "tilbod_retting", "annet"] as const;
+  const SVAR = ["ingen", "avviste", "ikke_svart", "tilbod_retting", "forsokt", "annet"] as const;
   const OVERSLAG = ["ingen", "ett", "to rapporter", "uten avkrysning", "fraråder"] as const;
   function feilMedOverslag(o: (typeof OVERSLAG)[number]): Brevfeil[] {
     const f = FEILSETT.teknisk("innen_6_mnd", "nei", "skriftlig");
@@ -174,8 +174,9 @@ describe("avsnitt 4: krav", () => {
 
   it("gir samme tekst som sist for hver kombinasjon", async () => {
     const utlegg = { ingen: [], ett: [{ beskrivelse: "Tauing", belop: 1200 }], to: [{ beskrivelse: "Tauing.", belop: 1200 }, { beskrivelse: "Leiebil", belop: 3000 }] };
-    const ut = samle({ krav: ["retting", "prisavslag", "heving"] as const, svar: SVAR, forsok: [0, 1, 3], overslag: OVERSLAG, utlegg: Object.keys(utlegg) as (keyof typeof utlegg)[] }, (v) =>
-      tekst(krav(lagSak("etter_2024", { krav: v.krav, kontakt: v.svar === "ingen" ? null : lagKontakt("etter_2024", { svar: v.svar, forsok: v.forsok }), utlegg: utlegg[v.utlegg], feil: feilMedOverslag(v.overslag) }))),
+    // Repairs are counted only when the seller has tried; every other answer is none.
+    const ut = samle({ krav: ["retting", "prisavslag", "heving"] as const, svar: SVAR, forsok: [1, 3], overslag: OVERSLAG, utlegg: Object.keys(utlegg) as (keyof typeof utlegg)[] }, (v) =>
+      tekst(krav(lagSak("etter_2024", { krav: v.krav, kontakt: v.svar === "ingen" ? null : lagKontakt("etter_2024", { svar: v.svar, forsok: v.svar === "forsokt" ? v.forsok : 0 }), utlegg: utlegg[v.utlegg], feil: feilMedOverslag(v.overslag) }))),
     );
     await expect(ut).toMatchFileSnapshot(snapshot("krav"));
   });
@@ -268,7 +269,7 @@ describe("alle brev", () => {
     opplysning: KILDE,
     verksted: KILDE,
     krav: ["retting", "prisavslag", "heving"] as const,
-    kontakt: ["ingen", "skriftlig, annet", "muntlig, avviste", "skriftlig, tilbød og 1 forsøk"] as const,
+    kontakt: ["ingen", "skriftlig, annet", "muntlig, avviste", "skriftlig, forsøkt 1 gang"] as const,
     tillegg: [false, true],
   }).map((v) => ({
     v,

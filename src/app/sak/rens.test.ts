@@ -64,7 +64,12 @@ describe("kontakt med selger", () => {
   });
 
   it("gir rettingsforsøket fra kontakten når kjøperen har reklamert", () => {
-    expect(kontakt({ reklamert: true, dato: halvtAar(), form: "muntlig", forsok: 2, svar: "tilbod_retting" })).toEqual({ forsok: 2, kontakt: { dato: halvtAar(), form: "muntlig", forsok: 2, svar: "tilbod_retting" } });
+    expect(kontakt({ reklamert: true, dato: halvtAar(), form: "muntlig", forsok: 2, svar: "forsokt" })).toEqual({ forsok: 2, kontakt: { dato: halvtAar(), form: "muntlig", forsok: 2, svar: "forsokt" } });
+  });
+
+  it("teller forsøk bare når selger har forsøkt å rette, hva nettleseren enn sender", () => {
+    for (const svar of ["ikke_svart", "avviste", "tilbod_retting", "annet"])
+      expect(kontakt({ reklamert: true, dato: halvtAar(), form: "skriftlig", forsok: 2, svar })).toEqual({ forsok: 0, kontakt: { dato: halvtAar(), form: "skriftlig", forsok: 0, svar } });
   });
 
   it("er uten forsøk og kontakt når feltet ikke er sendt", () => {
@@ -74,8 +79,8 @@ describe("kontakt med selger", () => {
 
   it("kan ikke gi rettingsforsøk uten reklamasjon", () => {
     // Everything that would make «reklamert: ja» valid is needed; anything less is turned away.
-    const ok = { reklamert: true, dato: halvtAar(), form: "skriftlig", forsok: 1, svar: "annet" };
-    for (const feil of [{ reklamert: undefined }, { dato: undefined }, { dato: "i går" }, { form: "epost" }, { forsok: 4 }, { forsok: null }, { svar: "kanskje" }, { svar: undefined }]) {
+    const ok = { reklamert: true, dato: halvtAar(), form: "skriftlig", forsok: 1, svar: "forsokt" };
+    for (const feil of [{ reklamert: undefined }, { dato: undefined }, { dato: "i går" }, { form: "epost" }, { forsok: 0 }, { forsok: 4 }, { forsok: null }, { svar: "kanskje" }, { svar: undefined }]) {
       expect(typeof kontakt({ ...ok, ...feil }), JSON.stringify(feil)).toBe("string");
     }
   });

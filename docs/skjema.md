@@ -84,17 +84,17 @@ Konklusjonen renses bare for trim, lengde (300 tegn) og doble anførselstegn; li
 
 ### Kontakt med selger
 
-Én blokk i stedet for to spørsmål, slik at svarene ikke kan stride mot hverandre: har selger forsøkt å rette, har kjøperen nødvendigvis reklamert.
+Én blokk, slik at svarene ikke kan stride mot hverandre. Har selger forsøkt å rette, har kjøperen nødvendigvis reklamert, og selger har verken latt være å svare eller bare tilbudt retting. Derfor er det ett spørsmål om hva selger har gjort, og antall forsøk spørres bare under «Forsøkt å rette».
 
 | Spørsmål | Svar | Vises når |
 |---|---|---|
 | Har du reklamert til selger? | Ja / Nei | Alltid |
 | Når reklamerte du første gang? | Dato, etter kjøpsdatoen og ikke i fremtiden | Ja |
 | Hvordan? | Skriftlig / Muntlig | Ja |
-| Har selger forsøkt å rette feilen? | Nei / 1 gang / 2 ganger / 3 eller flere | Ja |
-| Hva svarte selger? | Avviste kravet / Har ikke svart / Tilbød retting / Annet | Ja |
+| Hva har selger gjort? | Ikke svart / Avvist kravet / Tilbudt retting, ikke gjennomført / Forsøkt å rette / Annet | Ja |
+| Hvor mange ganger? | 1 gang / 2 ganger / 3 eller flere | «Forsøkt å rette» |
 
-Svarer kjøperen «Nei», er brevet selve reklamasjonen: de andre svarene tømmes, rettingsforsøk er 0 og selgers svar er ingen. Serveren gjør det samme uansett hva nettleseren sender (`rensKontakt` i `rens.ts`), så rettingsforsøk uten reklamasjon er umulig. Svarene brukes i brevet (avsnitt 1, 3 og 4, se `brev.md`).
+Svarer kjøperen «Nei», er brevet selve reklamasjonen: de andre svarene tømmes, rettingsforsøk er 0 og selgers svar er ingen. Rettingsforsøk er 0 for alle svar unntatt «Forsøkt å rette», som krever 1 til 3. Serveren gjør det samme uansett hva nettleseren sender (`rensKontakt` i `rens.ts`), så rettingsforsøk uten reklamasjon, eller sammen med «ikke svart» eller «tilbudt retting», er umulig. Svarene brukes i brevet (avsnitt 1, 3 og 4, se `brev.md`).
 
 Under utlegg vises en påminnelse om å legge ved fakturaer og kvitteringer. Selgersøket finner aksjeselskaper og lignende, ikke enkeltpersonforetak (`src/lib/brreg.ts`). Bare det valgte treffet (navn, org.nr., kommune, status) beholdes i skjemaet; brevet adresseres fra registeret på nytt på serveren.
 

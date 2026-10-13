@@ -203,7 +203,7 @@ function generer(frø: number): Brevsak {
     // Only «vet ikke» can only be repaired.
     krav: feil.every((f) => f.hoved === "vet_ikke") ? "retting" : en(["retting", "prisavslag", "heving"] as const),
     utlegg: noen([{ beskrivelse: "Tauing", belop: 1_800 }, { beskrivelse: "Leiebil", belop: 4_500 }], 0, 2),
-    kontakt: r() < 0.5 ? { dato: plussDager(forste, n(0, dagerMellom(forste, idag))), form: en(["skriftlig", "muntlig"] as const), forsok: n(0, 3), svar: en(SELGER_SVAR).id } : null,
+    kontakt: r() < 0.5 ? (({ id }) => ({ dato: plussDager(forste, n(0, dagerMellom(forste, idag))), form: en(["skriftlig", "muntlig"] as const), svar: id, forsok: id === "forsokt" ? n(1, 3) : 0 }))(en(SELGER_SVAR)) : null,
     praksis: r() < 0.9 ? en(PRAKSIS) : null,
   };
 }

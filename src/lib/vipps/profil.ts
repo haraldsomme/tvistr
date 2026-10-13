@@ -26,6 +26,8 @@ export const STUB_PROFIL: Vippsprofil = {
 export const HELT_BREV_UTEN_BETALING = () => process.env.NODE_ENV !== "production" && process.env.TVISTR_HELT_BREV_UTEN_BETALING === "1";
 
 // null until the Vipps integration exists (or outside development): nobody has paid.
-export async function hentProfil(_ordreId: string | null): Promise<Vippsprofil | null> {
+export async function hentProfil(ordreId: string | null): Promise<Vippsprofil | null> {
+  // The real version looks the order up and returns the profile only if the payment is confirmed.
+  void ordreId;
   return HELT_BREV_UTEN_BETALING() ? STUB_PROFIL : null;
 }

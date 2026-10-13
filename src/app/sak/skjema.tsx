@@ -2,17 +2,20 @@
 
 // The buyer's form, ported from the mockup (ReklamasjonSkjema.dc.html): the same
 // markup, inline styles and animations. The keyframes and the hover/active rules the mockup set with
-// style-hover/style-active live in globals.css under `.rk`. «Lag brev» ranks the decisions
-// (src/lib/matching/ranger.ts), and step 5 lists the best ones so the matching can be checked.
+// style-hover/style-active live in globals.css under `.rk`. «Lag brev» finds the decision the letter
+// cites (finnVedtak) and builds the letter (byggBrevet, src/lib/brev/); step 5 shows it.
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { type CSSProperties, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { nb } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { type Forslag, tittel as tittelNavn } from "@/lib/brreg";
+import { type Linje, somTekst, tilDokument } from "@/lib/brev/brev";
+import type { Brev } from "@/lib/brev/typer";
 import { type Kjoretoy, normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
 import { type Feilvalg, HOVEDKATEGORIER, rensFeilvalg, rensTidsvalg, type Tidsvalg, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
-import { type Funn, finnVedtak } from "./actions";
+import { type BrevResultat, byggBrevet, type Funn, finnVedtak } from "./actions";
 
 const A = "oklch(0.47 0.12 255)",
   AS = "oklch(0.965 0.018 255)",
@@ -23,8 +26,7 @@ const MONO = "var(--font-jbmono), monospace";
 const STEPS = ["Kjøretøy", "Feilen", "Detaljer", "Krav", "Brev"];
 const BREV = STEPS.length - 1;
 
-// «Som den er» and the claim are compared with vedtak.som_den_er and sanksjoner. The workshop and
-// seller answers (bevisgrunnlag) and the repair attempts (rettingsforsok) are not compared yet.
+// The answers are compared with the decisions (src/lib/matching/) and put into the letter (src/lib/brev/).
 const SOM_DEN_ER = [
   { id: "ja", navn: "Ja" },
   { id: "nei", navn: "Nei" },
@@ -52,6 +54,12 @@ const RETTINGSFORSOK = [
   { id: 2, navn: "2 ganger" },
   { id: 3, navn: "3 eller flere" },
 ] as const;
+const TIDLIGERE = [
+  { id: "nei", navn: "Nei" },
+  { id: "skriftlig", navn: "Ja, skriftlig" },
+  { id: "muntlig", navn: "Ja, muntlig" },
+] as const;
+type Tidligere = (typeof TIDLIGERE)[number]["id"];
 const UTLEGG_FORSLAG = ["Tauing", "Feilsøking", "Leiebil", "Verkstedregning"];
 type Utlegg = { beskrivelse: string; belop: string };
 
@@ -213,7 +221,212 @@ function Fristvarsel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// What the chosen decision may carry in the letter (src/lib/vedtaksvalg/instruks.ts).
+
+// A date: the phone's own picker on a touch screen, the calendar with a mouse.
+function Datovelger({ etikett, verdi, sett, min, maks }: { etikett: string; verdi: string; sett: (iso: string) => void; min?: string; maks: string }) {
+  const [apen, setApen] = useState(false);
+  const beroring = useSyncExternalStore(
+    () => () => {},
+    () => window.matchMedia("(pointer: coarse)").matches,
+    () => false,
+  );
+  const fra = min ? new Date(`${min}T12:00:00`) : new Date(Number(maks.slice(0, 4)) - 20, 0);
+  const felt: CSSProperties = { height: 50, width: 220, border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "0 14px", font: `16px ${SANS}`, color: INK, outline: "none", background: "#fff", boxSizing: "border-box" };
+  if (beroring)
+    return <input type="date" aria-label={etikett} value={verdi} min={min} max={maks} onChange={(e) => sett(e.target.value)} className="rk-input" style={felt} />;
+  return (
+    <Popover open={apen} onOpenChange={setApen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={etikett}
+          className="rk-input"
+          style={{ ...KNAPP, ...felt, border: `1.5px solid ${apen ? A : LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, color: verdi ? INK : "#8a8f93" }}
+        >
+          {verdi ? datoTekst(verdi) : "Velg dato"}
+          <CalendarIcon aria-hidden size={18} color="#5f6468" />
+        </button>
+      </PopoverTrigger>
+      {/* The form's accent, not the site's navy, for the selected day and focus ring. */}
+      <PopoverContent align="start" className="w-auto overflow-hidden p-0" style={{ "--primary": A, "--ring": A, fontFamily: SANS } as CSSProperties}>
+        <Calendar
+          className="[--cell-size:--spacing(9)]"
+          mode="single"
+          locale={nb}
+          captionLayout="dropdown"
+          selected={verdi ? new Date(`${verdi}T12:00:00`) : undefined}
+          defaultMonth={verdi ? new Date(`${verdi}T12:00:00`) : undefined}
+          startMonth={fra}
+          endMonth={new Date(`${maks}T12:00:00`)}
+          disabled={[{ after: new Date(`${maks}T12:00:00`) }, ...(min ? [{ before: fra }] : [])]}
+          onSelect={(d) => {
+            if (!d) return;
+            sett(format(d, "yyyy-MM-dd"));
+            setApen(false);
+          }}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// The seller, found in the Enhetsregister (Brreg) by name or organisation number through /api/firma.
+// Only the chosen hit is kept; the letter is addressed from the register again on the server.
+type Selger = { orgnr: string; navn: string; kommune: string | null; status: "konkurs" | "avvikling" | null };
+const orgnrTekst = (o: string) => o.replace(/^(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3");
+const STATUS = { konkurs: "Registrert som konkurs", avvikling: "Under avvikling" } as const;
+
+function Selgervalg({ valgt, velg }: { valgt: Selger | null; velg: (s: Selger | null) => void }) {
+  const [q, setQ] = useState("");
+  const [forslag, setForslag] = useState<Forslag[]>([]);
+  const [soker, setSoker] = useState(false);
+  const [feil, setFeil] = useState(false);
+  // The query the list on screen belongs to, so «no hits» is not shown while the next one is on its way.
+  const [sokt, setSokt] = useState("");
+
+  const s = q.trim();
+  useEffect(() => {
+    if (s.length < 3) return;
+    const avbryt = new AbortController();
+    const timer = setTimeout(async () => {
+      setSoker(true);
+      try {
+        const res = await fetch(`/api/firma?${new URLSearchParams({ q: s })}`, { signal: avbryt.signal });
+        const json = (await res.json()) as { forslag?: Forslag[]; feil?: true };
+        if (avbryt.signal.aborted) return;
+        setForslag(json.forslag ?? []);
+        setFeil(!!json.feil);
+        setSokt(s);
+      } catch {
+        if (avbryt.signal.aborted) return;
+        setForslag([]);
+        setFeil(true);
+      } finally {
+        if (!avbryt.signal.aborted) setSoker(false);
+      }
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+      avbryt.abort();
+    };
+  }, [s]);
+  // A query shorter than three letters shows nothing, whatever an earlier one left behind.
+  const treff = s.length >= 3 ? forslag : [];
+
+  if (valgt)
+    return (
+      <div style={{ background: "#fff", border: `1.5px solid ${A}`, borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, animation: pop(0) }}>
+        <span style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, minWidth: 0 }}>
+          <span style={{ fontSize: 15, fontWeight: 600 }}>{valgt.navn}</span>
+          <span style={{ fontSize: 13, color: "#5f6468" }}>
+            Org.nr. {orgnrTekst(valgt.orgnr)}
+            {valgt.kommune ? ` · ${valgt.kommune}` : ""}
+          </span>
+          {valgt.status && <span style={{ fontSize: 13, color: "#a3372b" }}>{STATUS[valgt.status]}</span>}
+        </span>
+        <button type="button" onClick={() => velg(null)} className="rk-tilbake" style={{ ...KNAPP, padding: "8px 12px", borderRadius: 8, fontSize: 14, fontWeight: 600, color: A }}>
+          Endre
+        </button>
+      </div>
+    );
+
+  const trengerSvar = s.length >= 3 && !soker && sokt === s;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value.slice(0, 80))}
+        placeholder="Navn eller organisasjonsnummer"
+        aria-label="Selger"
+        autoComplete="off"
+        className="rk-input"
+        style={{ height: 50, border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "0 14px", font: `16px ${SANS}`, color: INK, outline: "none", background: "#fff", boxSizing: "border-box" }}
+      />
+      {soker && s.length >= 3 && <span role="status" style={{ fontSize: 13, color: "#5f6468" }}>Søker …</span>}
+      {feil && !soker && s.length >= 3 && <span role="alert" style={{ fontSize: 13, color: "#a3372b" }}>Vi fikk ikke kontakt med Enhetsregisteret. Prøv igjen om litt.</span>}
+      {treff.length > 0 && (
+        <div role="listbox" aria-label="Treff i Enhetsregisteret" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, overflow: "hidden" }}>
+          {treff.map((f, i) => (
+            <button
+              key={f.orgnr}
+              type="button"
+              role="option"
+              aria-selected={false}
+              onClick={() => velg({ orgnr: f.orgnr, navn: tittelNavn(f.navn), kommune: f.kommune, status: f.status })}
+              className="rk-kat"
+              style={{ ...KNAPP, width: "100%", display: "flex", flexDirection: "column", gap: 2, padding: "12px 18px", borderTop: i ? "1px solid #eeeeeb" : "none" }}
+            >
+              <span style={{ fontSize: 15, fontWeight: 600 }}>{tittelNavn(f.navn)}</span>
+              <span style={{ fontSize: 13, color: "#5f6468" }}>
+                Org.nr. {orgnrTekst(f.orgnr)}
+                {f.kommune ? ` · ${f.kommune}` : ""}
+                {f.bransje ? ` · ${f.bransje}` : ""}
+              </span>
+              {f.status && <span style={{ fontSize: 13, color: "#a3372b" }}>{STATUS[f.status]}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+      {trengerSvar && !treff.length && !feil && (
+        <span style={{ fontSize: 13, color: "#5f6468", lineHeight: 1.5 }}>
+          Ingen treff. Prøv navnet slik det står i kontrakten, eller organisasjonsnummeret. Vi finner aksjeselskaper og lignende, ikke enkeltpersonforetak.
+        </span>
+      )}
+    </div>
+  );
+}
+
+// The letter as the buyer sees it: the same lines as «Kopier tekst» and the Word file (tilDokument).
+// A hidden block, before payment, is drawn as grey bars the length of the text it stands for.
+function Brevvisning({ brev, bred }: { brev: Brev; bred: boolean }) {
+  const grupper = tilDokument(brev);
+  const brevside: CSSProperties = { margin: 0, fontSize: 15.5, lineHeight: 1.65, color: INK, textWrap: "pretty" };
+  const [forste, andre, ...resten] = grupper;
+  // Sender top left and place and date top right, when both are there.
+  const harDato = andre?.[0]?.stil === "stedDato";
+  const toppRad = forste?.[0]?.stil === "adresse" && harDato;
+  const rest = toppRad ? resten : grupper.slice(forste?.[0]?.stil === "stedDato" ? 1 : 0);
+  const linjer = (g: Linje[]) => g.map((l, i) => <span key={i} style={{ display: "block" }}>{l.tekst}</span>);
+  return (
+    <article aria-label="Reklamasjonsbrev" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: bred ? "36px 44px" : "24px 20px", display: "flex", flexDirection: "column", gap: 18, animation: pop(0) }}>
+      {toppRad ? (
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "4px 24px", ...brevside, fontSize: 14.5 }}>
+          <div>{linjer(forste)}</div>
+          <div style={{ textAlign: "right" }}>{linjer(andre)}</div>
+        </div>
+      ) : (
+        grupper[0]?.[0]?.stil === "stedDato" && <div style={{ ...brevside, fontSize: 14.5, textAlign: "right" }}>{linjer(grupper[0])}</div>
+      )}
+      {rest.map((g, i) => {
+        const stil = g[0].stil;
+        if (g[0].skjult !== undefined) {
+          const antall = Math.max(1, Math.round(g[0].skjult / 90));
+          return (
+            <div key={i} aria-hidden="true" data-skjult style={{ display: "flex", flexDirection: "column", gap: 8, filter: "blur(2.5px)", userSelect: "none" }}>
+              {Array.from({ length: antall }, (_, j) => (
+                <span key={j} style={{ height: 12, width: j === antall - 1 ? `${55 + ((i * 17) % 35)}%` : "100%", borderRadius: 4, background: "#dcdedb" }} />
+              ))}
+            </div>
+          );
+        }
+        if (stil === "overskrift") return <h2 key={i} style={{ ...brevside, fontWeight: 700, margin: "6px 0 -8px" }}>{g[0].tekst}</h2>;
+        if (stil === "tittel") return <h1 key={i} style={{ ...brevside, fontWeight: 700, fontSize: 17, letterSpacing: "-0.005em" }}>{g[0].tekst}</h1>;
+        if (stil === "adresse") return <div key={i} style={brevside}>{linjer(g)}</div>;
+        if (stil === "hilsen" || stil === "vedleggOverskrift") return <div key={i} style={{ ...brevside, ...(stil === "vedleggOverskrift" && { fontSize: 14.5 }) }}>{linjer(g)}</div>;
+        return (
+          <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <p style={brevside}>{g[0].tekst}</p>
+            {g[0].lenke && (
+              <a href={g[0].lenke} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, fontWeight: 600, color: A, alignSelf: "flex-start" }}>
+                Les vedtaket
+              </a>
+            )}
+          </div>
+        );
+      })}
+    </article>
+  );
+}
 
 type Bil = { k: Kjoretoy; eierFra: string | null };
 // Everything the buyer has typed or chosen, kept in sessionStorage so a reload or the browser's back
@@ -233,10 +446,29 @@ type Lagret = {
   forsok: number | null;
   kreverUtlegg: boolean;
   utlegg: Utlegg[];
+  selger: Selger | null;
+  tidligere: Tidligere | null;
+  tidligereDato: string;
+  overslag: string;
 };
 const LAGRINGSNOKKEL = "tvistr:sak";
+// The Vipps order id, kept so that a reload after payment finds the paid letter again (docs/brev.md).
+const ORDRENOKKEL = "tvistr:ordre";
+const lesOrdreId = () => {
+  try {
+    return sessionStorage.getItem(ORDRENOKKEL);
+  } catch {
+    return null;
+  }
+};
 
 const streng = (v: unknown, maks: number) => (typeof v === "string" ? v.slice(0, maks) : "");
+
+function lesSelger(v: unknown): Selger | null {
+  const r = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  if (typeof r.orgnr !== "string" || !/^\d{9}$/.test(r.orgnr) || typeof r.navn !== "string") return null;
+  return { orgnr: r.orgnr, navn: r.navn.slice(0, 120), kommune: typeof r.kommune === "string" ? r.kommune.slice(0, 80) : null, status: r.status === "konkurs" || r.status === "avvikling" ? r.status : null };
+}
 
 function lesLagret(): Lagret | null {
   try {
@@ -266,6 +498,10 @@ function lesLagret(): Lagret | null {
       krav: KRAV.find((k) => k.id === r.krav)?.id ?? null,
       forsok: RETTINGSFORSOK.find((o) => o.id === r.forsok)?.id ?? null,
       kreverUtlegg: r.kreverUtlegg === true,
+      selger: lesSelger(r.selger),
+      tidligere: TIDLIGERE.find((o) => o.id === r.tidligere)?.id ?? null,
+      tidligereDato: streng(r.tidligereDato, 10),
+      overslag: streng(r.overslag, 7).replace(/\D/g, ""),
       utlegg: Array.isArray(r.utlegg) ? r.utlegg.slice(0, 20).map((u: Record<string, unknown>) => ({ beskrivelse: streng(u?.beskrivelse, 200), belop: streng(u?.belop, 8).replace(/\D/g, "") })) : [],
     };
   } catch {
@@ -294,9 +530,6 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   const [oppslagFeil, setOppslagFeil] = useState<string | null>(null);
   // Suggested from the day the car was registered on its current owner; the buyer can change it.
   const [kjopsdato, setKjopsdato] = useState(start?.kjopsdato ?? "");
-  const [kalenderApen, setKalenderApen] = useState(false);
-  // Touch screens get the phone's own date picker; a mouse gets the calendar.
-  const [beroring, setBeroring] = useState(false);
   const [valg, setValg] = useState<Feilvalg>(start?.valg ?? {});
   const [tid, setTid] = useState<Partial<Tidsvalg>>(start?.tid ?? {});
   const [km, setKm] = useState(start?.km ?? "");
@@ -309,7 +542,13 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   const [forsok, setForsok] = useState<number | null>(start?.forsok ?? null);
   const [kreverUtlegg, setKreverUtlegg] = useState(start?.kreverUtlegg ?? false);
   const [utlegg, setUtlegg] = useState<Utlegg[]>(start?.utlegg ?? []);
+  const [selger, setSelger] = useState<Selger | null>(start?.selger ?? null);
+  const [tidligere, setTidligere] = useState<Tidligere | null>(start?.tidligere ?? null);
+  const [tidligereDato, setTidligereDato] = useState(start?.tidligereDato ?? "");
+  const [overslag, setOverslag] = useState(start?.overslag ?? "");
   const [funn, setFunn] = useState<Funn | null>(null);
+  const [brevet, setBrevet] = useState<BrevResultat | null>(null);
+  const [kopiert, setKopiert] = useState(false);
   const [soker, startSok] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -327,13 +566,11 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
 
   useEffect(() => {
     if (!lagre) return;
-    const l: Lagret = { step: Math.min(step, BREV - 1), regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, forsok, kreverUtlegg, utlegg };
+    const l: Lagret = { step: Math.min(step, BREV - 1), regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, forsok, kreverUtlegg, utlegg, selger, tidligere, tidligereDato, overslag };
     try {
       sessionStorage.setItem(LAGRINGSNOKKEL, JSON.stringify(l));
     } catch {}
-  }, [lagre, step, regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, forsok, kreverUtlegg, utlegg]);
-
-  useEffect(() => setBeroring(window.matchMedia("(pointer: coarse)").matches), []);
+  }, [lagre, step, regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, forsok, kreverUtlegg, utlegg, selger, tidligere, tidligereDato, overslag]);
 
   const isDesktop = w >= 820;
   // The same rule the lookup uses, so the button only works for a number the server accepts.
@@ -344,6 +581,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
     // The decisions belong to the answers they were found for; leaving step 5 lets them change.
     if (n < BREV) {
       setFunn(null);
+      setBrevet(null);
       foresporsel.current++;
     }
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
@@ -418,11 +656,16 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   const aarSiden = (n: number) => `${Number(idag.slice(0, 4)) - n}${idag.slice(4)}`;
   const utleggSum = utlegg.reduce((s, x) => s + (Number(x.belop) || 0), 0);
   const utleggOk = !kreverUtlegg || (utlegg.length > 0 && utlegg.every((x) => x.beskrivelse.trim() && Number(x.belop) > 0));
+  // The date of an earlier notice lies between the purchase and today.
+  const tidligereDatoOk = /^\d{4}-\d{2}-\d{2}$/.test(tidligereDato) && tidligereDato >= kjopsdato && tidligereDato <= idag;
+  const tidligereOk = tidligere === "nei" || (tidligere !== null && tidligereDatoOk);
+  // A cost estimate has a place when a workshop has put its assessment in writing.
+  const skriftligVerksted = valgte.some((h) => detaljer[h.id]?.verksted === "skriftlig");
   const valid = [
     !!car && !fetching && datoOk && Number(km) > 0 && Number(kjopesum) > 0 && !!somDenEr,
     valgte.length > 0,
     valgte.length > 0 && beskrevet === valgte.length,
-    !!krav && forsok !== null && utleggOk,
+    !!krav && forsok !== null && utleggOk && !!selger && tidligereOk,
   ][step];
   const ok = valid && !soker;
   const subs = [
@@ -433,16 +676,57 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
     "",
   ];
   // Step 5 opens at once and waits for the answer. Leaving step 5 (or asking again) makes an
-  // answer that is still on its way stale.
+  // answer that is still on its way stale. The decision is found first, then the letter is built
+  // from the answers and the decision's paragraph.
   const lagBrev = () => {
     const mitt = ++foresporsel.current;
     setFunn(null);
+    setBrevet(null);
     if (step !== BREV) go(BREV);
     startSok(async () => {
-      const f = await finnVedtak({ valg, tid, kjopsdato, km: Number(km), ar: car?.k.ar ?? null, somDenEr, krav, forsok, detaljer });
-      if (mitt === foresporsel.current) setFunn(f);
+      const svar = {
+        valg,
+        tid,
+        kjopsdato,
+        km: Number(km),
+        kjopesum: Number(kjopesum),
+        ar: car?.k.ar ?? null,
+        somDenEr,
+        krav,
+        forsok,
+        detaljer,
+        bil: car && { regnr: car.k.regnr, merke: car.k.merke, modell: car.k.modell, ar: car.k.ar },
+        selgerOrgnr: selger?.orgnr ?? null,
+        tidligere: tidligere && tidligere !== "nei" ? { form: tidligere, dato: tidligereDato } : null,
+        overslag: skriftligVerksted && overslag ? Number(overslag) : null,
+        utlegg: kreverUtlegg ? utlegg.map((u) => ({ beskrivelse: u.beskrivelse, belop: Number(u.belop) })) : [],
+      };
+      const f = await finnVedtak(svar);
+      if (mitt !== foresporsel.current) return;
+      setFunn(f);
+      if (!f.ok) return;
+      const b = await byggBrevet({ svar, funn: f, ordreId: lesOrdreId() });
+      if (mitt === foresporsel.current) setBrevet(b);
     });
   };
+
+  async function kopier(b: Brev) {
+    try {
+      await navigator.clipboard.writeText(somTekst(b));
+      setKopiert(true);
+      setTimeout(() => setKopiert(false), 2000);
+    } catch {}
+  }
+
+  async function lastNed(b: Brev) {
+    const { tilDocxBlob } = await import("@/lib/brev/docx");
+    const url = URL.createObjectURL(await tilDocxBlob(b));
+    const lenke = document.createElement("a");
+    lenke.href = url;
+    lenke.download = `reklamasjon-${(car?.k.regnr ?? "bil").replace(/\s/g, "")}.docx`;
+    lenke.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 
   const carRows = car
     ? [
@@ -695,79 +979,15 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                         {car.eierFra ? "Foreslått ut fra når bilen sist ble omregistrert. Endre hvis det ikke stemmer." : "Vi fant ikke datoen i motorvognregisteret. Fyll inn selv."}
                       </p>
                     </div>
-                    {beroring ? (
-                      <input
-                        type="date"
-                        aria-label="Kjøpsdato"
-                        value={kjopsdato}
-                        max={idag}
-                        onChange={(e) => {
-                          setKjopsdato(e.target.value);
-                          setFunn(null);
-                        }}
-                        className="rk-input"
-                        style={{
-                          height: 50,
-                          width: 220,
-                          border: `1.5px solid ${LINE}`,
-                          borderRadius: 10,
-                          padding: "0 14px",
-                          font: `16px ${SANS}`,
-                          color: INK,
-                          outline: "none",
-                          background: "#fff",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    ) : (
-                      <Popover open={kalenderApen} onOpenChange={setKalenderApen}>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            aria-label="Kjøpsdato"
-                            className="rk-input"
-                            style={{
-                              ...KNAPP,
-                              height: 50,
-                              width: 220,
-                              border: `1.5px solid ${kalenderApen ? A : LINE}`,
-                              borderRadius: 10,
-                              padding: "0 14px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: 10,
-                              font: `16px ${SANS}`,
-                              color: kjopsdato ? INK : "#8a8f93",
-                              background: "#fff",
-                            }}
-                          >
-                            {kjopsdato ? datoTekst(kjopsdato) : "Velg dato"}
-                            <CalendarIcon aria-hidden size={18} color="#5f6468" />
-                          </button>
-                        </PopoverTrigger>
-                        {/* The form's accent, not the site's navy, for the selected day and focus ring. */}
-                        <PopoverContent align="start" className="w-auto overflow-hidden p-0" style={{ "--primary": A, "--ring": A, fontFamily: SANS } as CSSProperties}>
-                          <Calendar
-                            className="[--cell-size:--spacing(9)]"
-                            mode="single"
-                            locale={nb}
-                            captionLayout="dropdown"
-                            selected={kjopsdato ? new Date(`${kjopsdato}T12:00:00`) : undefined}
-                            defaultMonth={kjopsdato ? new Date(`${kjopsdato}T12:00:00`) : undefined}
-                            startMonth={new Date(Number(idag.slice(0, 4)) - 20, 0)}
-                            endMonth={new Date()}
-                            disabled={{ after: new Date() }}
-                            onSelect={(d) => {
-                              if (!d) return;
-                              setKjopsdato(format(d, "yyyy-MM-dd"));
-                              setFunn(null);
-                              setKalenderApen(false);
-                            }}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    )}
+                    <Datovelger
+                      etikett="Kjøpsdato"
+                      verdi={kjopsdato}
+                      maks={idag}
+                      sett={(d) => {
+                        setKjopsdato(d);
+                        setFunn(null);
+                      }}
+                    />
                     {datoOk && kjopsdato < aarSiden(5) ? (
                       <Fristvarsel>Du kjøpte bilen for mer enn fem år siden. Da kan fristen for å reklamere ha gått ut, også for deler som er ment å vare vesentlig lenger.</Fristvarsel>
                     ) : datoOk && kjopsdato < aarSiden(2) ? (
@@ -1069,6 +1289,14 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                   <Chipvalg sporsmal="Har selger forsøkt å reparere feilene?" valg={RETTINGSFORSOK} valgt={forsok} velg={setForsok} />
                 </div>
 
+                {skriftligVerksted && (
+                  <div style={{ animation: pop(4) }}>
+                    <div style={{ maxWidth: 320 }}>
+                      <Tallfelt etikett="Kostnadsoverslag for utbedring" hjelp="Fra verkstedets skriftlige vurdering. Valgfritt." enhet="kr" verdi={overslag} sett={setOverslag} maks={7} />
+                    </div>
+                  </div>
+                )}
+
                 <button
                   type="button"
                   role="checkbox"
@@ -1189,17 +1417,40 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                     </div>
                   </section>
                 )}
+
+                <section style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(6) }}>
+                  <Chipvalg sporsmal="Har du allerede reklamert til selger?" valg={TIDLIGERE} valgt={tidligere} velg={setTidligere} />
+                  {tidligere && tidligere !== "nei" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, animation: pop(0) }}>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>Når reklamerte du?</span>
+                      <Datovelger etikett="Dato for tidligere reklamasjon" verdi={tidligereDato} min={kjopsdato} maks={idag} sett={setTidligereDato} />
+                      {tidligereDato && !tidligereDatoOk && (
+                        <span role="alert" style={{ fontSize: 13, color: "#a3372b" }}>
+                          Datoen må ligge mellom kjøpsdatoen og i dag.
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </section>
+
+                <section style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(7) }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Hvem kjøpte du bilen av?</h2>
+                    <p style={{ margin: 0, fontSize: 14, color: "#5f6468" }}>Søk på navnet eller org.nr. fra kjøpekontrakten. Brevet adresseres til selgeren slik Enhetsregisteret oppgir den.</p>
+                  </div>
+                  <Selgervalg valgt={selger} velg={setSelger} />
+                </section>
               </div>
             )}
 
-            {step === BREV && !funn && (
+            {step === BREV && (!funn || (funn.ok && !brevet)) && (
               <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
                 <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
-                  <h1 style={H1}>Vent mens vi finner et sammenlignbart vedtak</h1>
-                  <p style={INGRESS}>Vi leter i vedtakene fra Forbrukerklageutvalget etter en lignende sak der kjøperen fikk medhold. Det tar noen sekunder.</p>
+                  <h1 style={H1}>Vent mens vi lager brevet</h1>
+                  <p style={INGRESS}>Vi leter i vedtakene fra Forbrukerklageutvalget etter en lignende sak der kjøperen fikk medhold, og setter sammen brevet. Det tar noen sekunder.</p>
                 </header>
-                <div role="status" aria-label="Vent mens vi finner et sammenlignbart vedtak" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "28px 32px" : "22px 20px", display: "flex", flexDirection: "column", gap: 12, animation: pop(0) }}>
+                <div role="status" aria-label="Vent mens vi lager brevet" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "28px 32px" : "22px 20px", display: "flex", flexDirection: "column", gap: 12, animation: pop(0) }}>
                   <span
                     aria-hidden="true"
                     style={{ width: 22, height: 22, boxSizing: "border-box", borderRadius: "50%", border: `2px solid ${AS}`, borderTopColor: A, animation: "rkSpin .7s linear infinite", marginBottom: 6 }}
@@ -1211,14 +1462,14 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
               </div>
             )}
 
-            {step === BREV && funn && !funn.ok && (
+            {step === BREV && ((funn && !funn.ok) || (brevet && !brevet.ok)) && (
               <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 20 }}>
                 <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
                   <h1 style={H1}>Vi fikk ikke laget brevet</h1>
                 </header>
                 <p role="alert" style={{ margin: 0, padding: "18px 22px", fontSize: 14, color: "#a3372b", background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14 }}>
-                  {funn.melding}
+                  {funn && !funn.ok ? funn.melding : brevet && !brevet.ok ? brevet.melding : ""}
                 </p>
                 <button
                   type="button"
@@ -1232,27 +1483,42 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
               </div>
             )}
 
-            {step === BREV && funn?.ok && (
-              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
+            {step === BREV && brevet?.ok && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 24 }}>
                 <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
-                  <h1 style={H1}>Henvisning til praksis</h1>
-                  <p style={INGRESS}>Avsnittet brevet bruker for å vise til en lignende sak der kjøperen fikk medhold i Forbrukerklageutvalget.</p>
+                  <h1 style={H1}>{brevet.fullt ? "Ditt reklamasjonsbrev" : "Forhåndsvisning av brevet"}</h1>
+                  <p style={INGRESS}>
+                    {brevet.fullt
+                      ? "Les gjennom brevet før du sender det. Du kan kopiere teksten eller laste det ned som Word-dokument."
+                      : "Dette er sakens bakgrunn og avsnittet som viser til en lignende sak der kjøperen fikk medhold. Resten av brevet er skjult til du har betalt."}
+                  </p>
                 </header>
 
-                <article aria-live="polite" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "28px 32px" : "22px 20px", display: "flex", flexDirection: "column", gap: 14, animation: pop(0) }}>
-                  {funn.avsnitt.split(/\n\s*\n/).map((a, i) => (
-                    <p key={i} style={{ margin: 0, fontSize: 16, lineHeight: 1.65, color: INK, textWrap: "pretty" }}>
-                      {a}
+                {brevet.fullt && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                    <button type="button" onClick={() => kopier(brevet.brev)} className="rk-neste" style={{ ...KNAPP, height: 46, padding: "0 20px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: "#fff", background: A }}>
+                      {kopiert ? "Kopiert" : "Kopier tekst"}
+                    </button>
+                    <button type="button" onClick={() => lastNed(brevet.brev)} className="rk-tilbake" style={{ ...KNAPP, height: 46, padding: "0 20px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: INK, border: `1.5px solid ${LINE}`, background: "#fff" }}>
+                      Last ned som Word
+                    </button>
+                  </div>
+                )}
+
+                <Brevvisning brev={brevet.brev} bred={isDesktop} />
+
+                {!brevet.fullt && (
+                  <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "24px 28px" : "20px", display: "flex", flexDirection: "column", gap: 12 }}>
+                    <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Få hele brevet</h2>
+                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: "#5f6468" }}>
+                      Hele brevet har mangel, rettslig vurdering, krav og frist for svar, ferdig utfylt med dine opplysninger. Du får det etter betaling med Vipps.
                     </p>
-                  ))}
-                  {funn.vedtak && (
-                    <a href={funn.vedtak.kildeUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, fontWeight: 600, color: A, alignSelf: "flex-start" }}>
-                      Les vedtaket{funn.vedtak.saksnummer ? ` ${funn.vedtak.saksnummer}` : ""}
-                      {funn.vedtak.vedtaksdato ? ` (${datoTekst(funn.vedtak.vedtaksdato)})` : ""}
-                    </a>
-                  )}
-                </article>
+                    <button type="button" disabled style={{ ...KNAPP, height: 50, padding: "0 26px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: "#fff", background: "#c4c7ca", cursor: "not-allowed", alignSelf: "flex-start" }}>
+                      Betal med Vipps (kommer)
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

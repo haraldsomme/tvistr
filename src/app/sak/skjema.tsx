@@ -6,12 +6,12 @@
 // (src/lib/matching/ranger.ts), and step 5 lists the best ones so the matching can be checked.
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { type CSSProperties, useEffect, useRef, useState, useTransition } from "react";
+import { type CSSProperties, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { nb } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Kjoretoy, normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
-import { type Feilvalg, HOVEDKATEGORIER, type Tidsvalg, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
+import { type Feilvalg, HOVEDKATEGORIER, rensFeilvalg, rensTidsvalg, type Tidsvalg, VISTE_SEG_VALG, type VisteSegValg } from "@/lib/feil/kategorier";
 import { type Funn, finnVedtak } from "./actions";
 
 const A = "oklch(0.47 0.12 255)",
@@ -215,34 +215,100 @@ function Fristvarsel({ children }: { children: React.ReactNode }) {
 
 // What the chosen decision may carry in the letter (src/lib/vedtaksvalg/instruks.ts).
 
+type Bil = { k: Kjoretoy; eierFra: string | null };
+// Everything the buyer has typed or chosen, kept in sessionStorage so a reload or the browser's back
+// button does not lose it. The result (funn) is not kept: it is found again with «Lag brev».
+type Lagret = {
+  step: number;
+  regnr: string;
+  car: Bil | null;
+  kjopsdato: string;
+  valg: Feilvalg;
+  tid: Partial<Tidsvalg>;
+  km: string;
+  kjopesum: string;
+  somDenEr: SomDenEr | null;
+  detaljer: Record<string, Detalj>;
+  krav: Krav | null;
+  forsok: number | null;
+  kreverUtlegg: boolean;
+  utlegg: Utlegg[];
+};
+const LAGRINGSNOKKEL = "tvistr:sak";
+
+const streng = (v: unknown, maks: number) => (typeof v === "string" ? v.slice(0, maks) : "");
+
+function lesLagret(): Lagret | null {
+  try {
+    const r = JSON.parse(sessionStorage.getItem(LAGRINGSNOKKEL) ?? "null") as Record<string, unknown> | null;
+    if (!r || typeof r !== "object") return null;
+    const bil = r.car as Bil | null;
+    const detaljer: Record<string, Detalj> = {};
+    for (const [id, d] of Object.entries((r.detaljer && typeof r.detaljer === "object" ? r.detaljer : {}) as Record<string, Record<string, unknown>>)) {
+      detaljer[id] = {
+        ...(typeof d?.beskrivelse === "string" && { beskrivelse: d.beskrivelse.slice(0, 200) }),
+        ...(KILDE.some((k) => k.id === d?.verksted) && { verksted: d.verksted as Kilde }),
+        ...(KILDE.some((k) => k.id === d?.opplysning) && { opplysning: d.opplysning as Kilde }),
+      };
+    }
+    return {
+      // The result is not kept, so the page never opens on step 5.
+      step: typeof r.step === "number" && Number.isInteger(r.step) ? Math.min(Math.max(r.step, 0), BREV - 1) : 0,
+      regnr: streng(r.regnr, 8),
+      car: bil && typeof bil === "object" && bil.k && typeof bil.k.merke === "string" && typeof bil.k.modell === "string" ? { k: bil.k, eierFra: typeof bil.eierFra === "string" ? bil.eierFra : null } : null,
+      kjopsdato: streng(r.kjopsdato, 10),
+      valg: rensFeilvalg(r.valg),
+      tid: rensTidsvalg(r.tid),
+      km: streng(r.km, 7).replace(/\D/g, ""),
+      kjopesum: streng(r.kjopesum, 8).replace(/\D/g, ""),
+      somDenEr: SOM_DEN_ER.find((o) => o.id === r.somDenEr)?.id ?? null,
+      detaljer,
+      krav: KRAV.find((k) => k.id === r.krav)?.id ?? null,
+      forsok: RETTINGSFORSOK.find((o) => o.id === r.forsok)?.id ?? null,
+      kreverUtlegg: r.kreverUtlegg === true,
+      utlegg: Array.isArray(r.utlegg) ? r.utlegg.slice(0, 20).map((u: Record<string, unknown>) => ({ beskrivelse: streng(u?.beskrivelse, 200), belop: streng(u?.belop, 8).replace(/\D/g, "") })) : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+// sessionStorage is not there when the server renders. The form is first rendered empty, then
+// remounted with what was saved once the client has taken over.
 export function Skjema() {
-  const [step, setStep] = useState(0);
+  const hydrert = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+  return <SkjemaInnhold key={hydrert ? "klient" : "server"} start={hydrert ? lesLagret() : null} lagre={hydrert} />;
+}
+
+function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean }) {
+  const [step, setStep] = useState(start?.step ?? 0);
   const [dir, setDir] = useState(1);
   const [w, setW] = useState(1200);
-  const [regnr, setRegnr] = useState("");
+  const [regnr, setRegnr] = useState(start?.regnr ?? "");
   const [fetching, setFetching] = useState(false);
-  const [car, setCar] = useState<{
-    k: Kjoretoy;
-    eierFra: string | null;
-  } | null>(null);
+  const [car, setCar] = useState<Bil | null>(start?.car ?? null);
   const [oppslagFeil, setOppslagFeil] = useState<string | null>(null);
   // Suggested from the day the car was registered on its current owner; the buyer can change it.
-  const [kjopsdato, setKjopsdato] = useState("");
+  const [kjopsdato, setKjopsdato] = useState(start?.kjopsdato ?? "");
   const [kalenderApen, setKalenderApen] = useState(false);
   // Touch screens get the phone's own date picker; a mouse gets the calendar.
   const [beroring, setBeroring] = useState(false);
-  const [valg, setValg] = useState<Feilvalg>({});
-  const [tid, setTid] = useState<Partial<Tidsvalg>>({});
-  const [km, setKm] = useState("");
-  const [kjopesum, setKjopesum] = useState("");
-  const [somDenEr, setSomDenEr] = useState<SomDenEr | null>(null);
-  const [detaljer, setDetaljer] = useState<Record<string, Detalj>>({});
+  const [valg, setValg] = useState<Feilvalg>(start?.valg ?? {});
+  const [tid, setTid] = useState<Partial<Tidsvalg>>(start?.tid ?? {});
+  const [km, setKm] = useState(start?.km ?? "");
+  const [kjopesum, setKjopesum] = useState(start?.kjopesum ?? "");
+  const [somDenEr, setSomDenEr] = useState<SomDenEr | null>(start?.somDenEr ?? null);
+  const [detaljer, setDetaljer] = useState<Record<string, Detalj>>(start?.detaljer ?? {});
   // The open card in step 3; undefined means the first unanswered one.
   const [apent, setApent] = useState<string | null | undefined>(undefined);
-  const [krav, setKrav] = useState<Krav | null>(null);
-  const [forsok, setForsok] = useState<number | null>(null);
-  const [kreverUtlegg, setKreverUtlegg] = useState(false);
-  const [utlegg, setUtlegg] = useState<Utlegg[]>([]);
+  const [krav, setKrav] = useState<Krav | null>(start?.krav ?? null);
+  const [forsok, setForsok] = useState<number | null>(start?.forsok ?? null);
+  const [kreverUtlegg, setKreverUtlegg] = useState(start?.kreverUtlegg ?? false);
+  const [utlegg, setUtlegg] = useState<Utlegg[]>(start?.utlegg ?? []);
   const [funn, setFunn] = useState<Funn | null>(null);
   const [soker, startSok] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -258,6 +324,14 @@ export function Skjema() {
   }, []);
 
   useEffect(() => () => clearTimeout(nesteKort.current), []);
+
+  useEffect(() => {
+    if (!lagre) return;
+    const l: Lagret = { step: Math.min(step, BREV - 1), regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, forsok, kreverUtlegg, utlegg };
+    try {
+      sessionStorage.setItem(LAGRINGSNOKKEL, JSON.stringify(l));
+    } catch {}
+  }, [lagre, step, regnr, car, kjopsdato, valg, tid, km, kjopesum, somDenEr, detaljer, krav, forsok, kreverUtlegg, utlegg]);
 
   useEffect(() => setBeroring(window.matchMedia("(pointer: coarse)").matches), []);
 

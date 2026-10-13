@@ -5,15 +5,19 @@ import { inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { vedtak } from "@/db/schema";
 import { AvvistAvModellError } from "@/lib/ai/klient";
-import { HOVEDKATEGORIER, rensFeilvalg, rensTidsvalg } from "@/lib/feil/kategorier";
+import { hentForhandler, tittel } from "@/lib/brreg";
+import { byggBrev, forhandsvisning } from "@/lib/brev/brev";
+import type { Brev, Brevsak } from "@/lib/brev/typer";
 import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import { GRUNNFILTER } from "@/lib/matching/grunnfilter";
 import { type Niva, ranger } from "@/lib/matching/ranger";
-import type { Kandidat, Krav } from "@/lib/matching/typer";
+import type { Kandidat } from "@/lib/matching/typer";
 import { poengtekst } from "@/lib/matching/rett";
 import { lagGrense } from "@/lib/rategrense";
-import { byggSaken, type Kilde } from "@/lib/vedtaksvalg/kjoper";
+import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
+import { hentProfil } from "@/lib/vipps/profil";
 import { LOVSETNING, UTVALG_I_TEKSTEN, type Vedtaksdetaljer, velgVedtak } from "@/lib/vedtaksvalg/valg";
+import { idagOslo, rensBrevsvar, rensVedtakssvar } from "./rens";
 
 // The paragraph the letter cites its precedent with, and the decision it rests on.
 export type Funn =
@@ -58,45 +62,31 @@ function hentAlle(): Promise<Kandidat[]> {
   return alleVedtak;
 }
 
-const gyldigDato = (v: unknown): string | null => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
-const heltall = (v: unknown, min: number, maks: number): number | null => (typeof v === "number" && Number.isInteger(v) && v >= min && v <= maks ? v : null);
-const KRAV: readonly Krav[] = ["retting", "prisavslag", "heving"];
-const KILDER: readonly Kilde[] = ["skriftlig", "muntlig", "nei"];
-const kildeAv = (v: unknown) => KILDER.find((k) => k === v) ?? null;
-const tekst = (v: unknown, maks: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, maks) : null);
-
 // kjopsdato: the day the car was registered on its current owner. ar: the year it was first
 // registered; the decisions' age is from the model year, so the user's age is an approximation.
 export async function finnVedtak(inn: unknown): Promise<Funn> {
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "ukjent";
   if (forMange(ip)) return { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
   const s = (inn && typeof inn === "object" ? inn : {}) as Record<string, unknown>;
-  const rent = rensFeilvalg(s.valg);
-  const valgte = HOVEDKATEGORIER.filter((h) => h.id in rent);
-  if (!valgte.length) return { ok: false, melding: "Velg minst én feil." };
-  const tider = rensTidsvalg(s.tid);
-  if (valgte.some((h) => !tider[h.id])) return { ok: false, melding: "Velg når hver feil viste seg." };
-  const dato = gyldigDato(s.kjopsdato);
-  const femArSiden = new Date(new Date().setFullYear(new Date().getFullYear() - 5)).toISOString().slice(0, 10);
-  if (dato && dato < femArSiden)
-    return { ok: false, melding: "Det er mer enn fem år siden kjøpet. Da er fristen for å reklamere ute (forbrukerkjøpsloven § 27)." };
+  const rens = rensVedtakssvar(s);
+  if (!rens.ok) return { ok: false, melding: rens.melding };
+  const { valgte, rent, tider, kjopsdato, km, ar, somDenEr, krav, forsok, detaljer } = rens.svar;
 
-  const detaljer = (s.detaljer && typeof s.detaljer === "object" ? s.detaljer : {}) as Record<string, Record<string, unknown> | undefined>;
   // «Vet ikke ennå» is compared on the symptom, like any other category.
   const { sak, kjoper } = byggSaken({
-    kjopsdato: dato,
-    km: heltall(s.km, 1, 1_500_000),
-    ar: heltall(s.ar, 1950, 2100),
-    somDenEr: s.somDenEr === "ja" || s.somDenEr === "nei" ? s.somDenEr : null,
-    krav: KRAV.find((k) => k === s.krav) ?? null,
-    forsok: heltall(s.forsok, 0, 3),
+    kjopsdato,
+    km,
+    ar,
+    somDenEr: somDenEr === "vet_ikke" ? null : somDenEr,
+    krav,
+    forsok,
     feil: valgte.map((h) => ({
       hoved: h.id,
       under: rent[h.id],
       tid: tider[h.id]!,
-      beskrivelse: tekst(detaljer[h.id]?.beskrivelse, 200),
-      opplysning: kildeAv(detaljer[h.id]?.opplysning),
-      verksted: kildeAv(detaljer[h.id]?.verksted),
+      beskrivelse: detaljer[h.id].beskrivelse,
+      opplysning: detaljer[h.id].opplysning,
+      verksted: detaljer[h.id].verksted,
     })),
   });
 
@@ -151,4 +141,58 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
     if (e instanceof AvvistAvModellError) return { ok: false, melding: "Saken kunne ikke behandles automatisk. Prøv igjen, eller beskriv feilen på en annen måte." };
     return { ok: false, melding: "Noe gikk galt. Prøv igjen." };
   }
+}
+
+export type BrevResultat = { ok: true; brev: Brev; fullt: boolean } | { ok: false; melding: string };
+
+const forMangeBrev = lagGrense({ antall: 20, vinduMs: 60_000 });
+
+// What finnVedtak gave the browser, checked again: it comes back from outside. A changed paragraph
+// only changes the sender's own letter, but a link must be an ordinary web address.
+function rensPraksis(f: unknown): Brevsak["praksis"] {
+  const x = (f && typeof f === "object" ? f : {}) as Record<string, unknown>;
+  const v = (x.vedtak && typeof x.vedtak === "object" ? x.vedtak : null) as Record<string, unknown> | null;
+  if (x.ok !== true || x.niva === null || !v || typeof x.avsnitt !== "string" || typeof v.kildeUrl !== "string") return null;
+  try {
+    if (new URL(v.kildeUrl).protocol !== "https:") return null;
+  } catch {
+    return null;
+  }
+  return { avsnitt: x.avsnitt.trim().slice(0, 3000), kildeUrl: v.kildeUrl.slice(0, 500), saksnummer: typeof v.saksnummer === "string" ? v.saksnummer.slice(0, 40) : null };
+}
+
+// The whole letter once the buyer has paid, otherwise the preview: the background and the paragraph
+// citing the decision, the rest only as its length. The buyer is fetched here, never taken from the
+// browser, and nothing is stored.
+export async function byggBrevet(inn: unknown): Promise<BrevResultat> {
+  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "ukjent";
+  if (forMangeBrev(ip)) return { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
+  const o = (inn && typeof inn === "object" ? inn : {}) as Record<string, unknown>;
+  const rens = rensBrevsvar((o.svar && typeof o.svar === "object" ? o.svar : {}) as Record<string, unknown>);
+  if (!rens.ok) return { ok: false, melding: rens.melding };
+  const r = rens.svar;
+
+  // The seller's name and address come from the register, not from the browser.
+  const forslag = await hentForhandler(r.selgerOrgnr);
+  if (!forslag) return { ok: false, melding: "Vi fikk ikke hentet selgeren fra Enhetsregisteret. Prøv igjen, eller velg selgeren på nytt." };
+
+  const kjoper = await hentProfil(typeof o.ordreId === "string" ? o.ordreId.slice(0, 100) : null);
+  const brev = byggBrev({
+    dato: idagOslo(),
+    kjoper,
+    selger: { navn: tittel(forslag.navn), orgnr: forslag.orgnr, adresse: forslag.adresse },
+    bil: r.bil,
+    kjopsdato: r.kjopsdato,
+    km: r.km,
+    kjopesum: r.kjopesum,
+    somDenEr: r.somDenEr,
+    feil: r.feil,
+    krav: r.krav,
+    forsok: r.forsok,
+    utlegg: r.utlegg,
+    overslag: r.overslag,
+    tidligere: r.tidligere,
+    praksis: rensPraksis(o.funn),
+  });
+  return { ok: true, brev: kjoper ? brev : forhandsvisning(brev), fullt: !!kjoper };
 }

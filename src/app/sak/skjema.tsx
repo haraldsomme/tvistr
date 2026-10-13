@@ -1122,10 +1122,10 @@ export function Skjema() {
               <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
                 <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
-                  <h1 style={H1}>Vent mens vi skriver og kontrollerer brevet</h1>
-                  <p style={INGRESS}>Vi leter i vedtakene fra Forbrukerklageutvalget og velger det som passer best for saken din. Det tar noen sekunder.</p>
+                  <h1 style={H1}>Vent mens vi finner et sammenlignbart vedtak</h1>
+                  <p style={INGRESS}>Vi leter i vedtakene fra Forbrukerklageutvalget etter en lignende sak der kjøperen fikk medhold. Det tar noen sekunder.</p>
                 </header>
-                <div role="status" aria-label="Vent mens vi skriver og kontrollerer brevet" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "28px 32px" : "22px 20px", display: "flex", flexDirection: "column", gap: 12, animation: pop(0) }}>
+                <div role="status" aria-label="Vent mens vi finner et sammenlignbart vedtak" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "28px 32px" : "22px 20px", display: "flex", flexDirection: "column", gap: 12, animation: pop(0) }}>
                   <span
                     aria-hidden="true"
                     style={{ width: 22, height: 22, boxSizing: "border-box", borderRadius: "50%", border: `2px solid ${AS}`, borderTopColor: A, animation: "rkSpin .7s linear infinite", marginBottom: 6 }}

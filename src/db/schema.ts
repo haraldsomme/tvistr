@@ -364,6 +364,42 @@ export const kontrollfunn = pgTable("kontrollfunn", {
   angret: timestamp("angret", { withTimezone: true }),
 });
 
+// The figures the free assessment (step 4) shows, built once at import (scripts/statistikk.ts), not
+// per request. One row per main category («motor»), per subcategory («motor.turbo») and one for the
+// whole set («alle»). Counted over the decisions the committee made on a dealer sale of a car or van
+// under the consumer purchase act, medhold or not (src/lib/vurdering/statistikk.ts).
+export const statistikkKategori = pgTable("statistikk_kategori", {
+  nokkel: text("nokkel").primaryKey(),
+  // Decisions where the committee assessed a defect in the category, and those where it found for the buyer.
+  antallSaker: integer("antall_saker").notNull(),
+  antallMedhold: integer("antall_medhold").notNull(),
+  // Of the decisions with medhold: what the buyer got for this defect.
+  heving: integer("heving").notNull(),
+  prisavslag: integer("prisavslag").notNull(),
+  retting: integer("retting").notNull(),
+  erstatning: integer("erstatning").notNull(),
+  // Median price reduction as a share of the price, null under ten decisions.
+  prisavslagMedianProsent: doublePrecision("prisavslag_median_prosent"),
+  alderMedian: doublePrecision("alder_median"),
+  kmMedian: doublePrecision("km_median"),
+  bygget: timestamp("bygget", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// The steps of the flow, per session, without personal data: the event, the status of the assessment
+// and the categories chosen, never a registration number or a name (src/app/api/hendelse).
+export const hendelse = pgTable(
+  "hendelse",
+  {
+    id: serial("id").primaryKey(),
+    okt: text("okt").notNull(),
+    hendelse: text("hendelse").notNull(),
+    status: text("status"),
+    kategorier: text("kategorier").array(),
+    tidspunkt: timestamp("tidspunkt", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("hendelse_okt_idx").on(t.okt), index("hendelse_hendelse_idx").on(t.hendelse)],
+);
+
 export type Kildedokument = typeof kildedokument.$inferSelect;
 export type Vedtak = typeof vedtak.$inferSelect;
 export type NyttVedtak = typeof vedtak.$inferInsert;

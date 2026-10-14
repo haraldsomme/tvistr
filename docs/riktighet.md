@@ -7,7 +7,7 @@ Brevet bygges av kjøperens svar (`docs/brev.md`). Det kan bare bli så riktig s
 **Hvor reglene brukes:**
 - **Skjemaet** kaller begge ved hver endring og viser meldingen ved feltet. Stopp er rødt og hindrer «Fortsett». Advarsler er gule og hindrer ikke.
 - **Serveren** (`src/app/sak/rens.ts`) kjører begge på nytt og avviser ved stopp. Klienten kan ikke omgå dem.
-- **Steg 5** viser alle advarslene samlet før betaling, med «Endre» tilbake til feltet.
+- **Steg 7** (forhåndsvisningen) viser alle advarslene samlet før betaling, med «Endre» tilbake til feltet.
 - **Testene** krever ingen stopp på de 12 gylne sakene, og de kjører invariantene på hvert brev.
 
 **Stopp** betyr at svaret er umulig eller i strid med seg selv. **Advarsel** betyr at svaret er mulig, men svekker saken eller bør sjekkes.
@@ -121,9 +121,11 @@ En egen test planter et brudd av hvert slag og ser at invariantene fanger det.
 
 ## Oppsummeringen før betaling
 
-Steg 5 viser først en oppsummering i tabellform, ikke brevet: bil, kjøpsdato, km, kjøpesum, «som den er», hver feil med dato og rapport, reklamasjon, krav, utlegg og selger. Hver rad har «Endre», som fører tilbake til feltet. Advarslene står øverst med antall: «Brevet har {n} advarsler, {k} av dem om datoer. Se over før du betaler.» Knappen heter «Opplysningene stemmer, gå til betaling».
+Steg 7 (forhåndsvisningen) viser advarslene øverst med antall: «Brevet har {n} advarsler, {k} av dem om datoer. Se over før du betaler.», hver med «Endre», som fører tilbake til feltet (steg 2, 3, 5 eller 6). Under forhåndsvisningen står oppsummeringen i tabellform under «Se over opplysningene i brevet»: bil, kjøpsdato, km, kjøpesum, «som den er», hver feil med dato og rapport, reklamasjon, krav, utlegg og selger, med «Endre» per rad. «Lås opp hele brevet» viser skiltet og bilen, siden bilen ikke kan byttes etter kjøpet.
 
-Dette er det eneste steget som fanger det som er mulig, men galt, som feil regnr eller feil selger valgt i søket.
+Dette er stedet som fanger det som er mulig, men galt, som feil regnr eller feil selger valgt i søket.
+
+Vurderingen i steg 4 bruker de samme advarseltekstene som grunner når saken står svakt (`docs/vurdering.md`): `OVER_TO_AAR_FEIL`, og de nye `SOM_DEN_ER_GAMMEL` (steg 2) og slitedel etter seks måneder (steg 3). De to nye er bare advarsler i skjemaet og vurderingen; de er ikke regler i `riktighet.ts` og stopper ingenting.
 
 ## Logg per brev
 

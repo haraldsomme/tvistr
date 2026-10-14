@@ -1,5 +1,6 @@
 import { bakgrunn } from "./bakgrunn";
 import { frist } from "./frist";
+import { forsteSetning } from "@/lib/vedtaksvalg/mal";
 import { avsender, mottaker, stedDato, tittel } from "./hode";
 import { krav } from "./krav";
 import { mangelen } from "./mangelen";
@@ -8,14 +9,14 @@ import type { Avsnitt, Blokk, Brev, Brevsak, Setning } from "./typer";
 import { vedlegg } from "./vedlegg";
 
 const fast = (tekst: string): Setning => ({ tekst, kilde: "fast" });
-const blokk = (setninger: Setning[], forhandsvis?: boolean): Blokk[] => (setninger.length ? [{ setninger, ...(forhandsvis && { forhandsvis }) }] : []);
+const blokk = (setninger: Setning[], forhandsvis?: true | "forste_setning"): Blokk[] => (setninger.length ? [{ setninger, ...(forhandsvis && { forhandsvis }) }] : []);
 
 // The whole letter, built from the answers and nothing else. Every sentence carries its source.
 export function byggBrev(s: Brevsak): Brev {
   const deler: [string, Blokk[]][] = [
     ["Sakens bakgrunn", blokk(bakgrunn(s), true)],
     ["Mangelen", mangelen(s).flatMap((b) => blokk(b))],
-    ["Rettslig vurdering", [...blokk(mangel(s)), ...blokk(tidspunkt(s)), ...blokk(praksis(s), true)]],
+    ["Rettslig vurdering", [...blokk(mangel(s)), ...blokk(tidspunkt(s)), ...blokk(praksis(s), "forste_setning")]],
     ["Krav", krav(s).flatMap((b) => blokk(b))],
     ["Frist for tilbakemelding", blokk(frist(s))],
   ];
@@ -34,14 +35,23 @@ export function byggBrev(s: Brevsak): Brev {
 
 const tegn = (b: Blokk) => ("skjult" in b ? b.skjult : b.setninger.reduce((n, x) => n + x.tekst.length, 0));
 
-// What is shown before payment: the heading, the background and the paragraph citing the decision.
-// The rest is replaced by its length alone, so the hidden text is never sent to the browser.
+const skjul = (n: number): Blokk => ({ skjult: Math.round(n / 10) * 10 });
+
+// What is shown before payment: the heading, the background, and the first sentence of the paragraph
+// citing the decision («Det vises til … sak … av …»), without its quotes or link. The rest is replaced
+// by its length alone, so the hidden text is never sent to the browser.
 export function forhandsvisning(b: Brev): Brev {
   return {
     ...b,
     avsnitt: b.avsnitt.map((a) => ({
       ...a,
-      blokker: a.blokker.map((x): Blokk => ("setninger" in x && x.forhandsvis ? x : { skjult: Math.round(tegn(x) / 10) * 10 })),
+      blokker: a.blokker.flatMap((x): Blokk[] => {
+        if (!("setninger" in x) || !x.forhandsvis) return [skjul(tegn(x))];
+        if (x.forhandsvis === true) return [x];
+        const forste = forsteSetning(x.setninger[0].tekst);
+        const rest = tegn(x) - forste.length;
+        return [...(forste ? [{ setninger: [{ tekst: forste, kilde: x.setninger[0].kilde }] }] : []), ...(rest > 0 ? [skjul(rest)] : [])];
+      }),
     })),
     hilsen: [],
     vedlegg: null,

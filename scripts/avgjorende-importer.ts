@@ -16,6 +16,7 @@ import { lesSvar, signaturdato, utenRettsligPoeng, utenStandpunkt } from "../src
 import { kjorParallelt } from "../src/lib/parallell";
 import { anvendPaAvgjorende } from "../src/lib/vedtaksvalg/funn";
 import { gjeldendeFunn } from "../src/lib/vedtaksvalg/funn-db";
+import { lagreStatistikk } from "../src/lib/vurdering/statistikk-db";
 
 const { values: args } = parseArgs({ options: { liste: { type: "string" } } });
 
@@ -94,6 +95,9 @@ async function main() {
     console.log("Rettet eller nullet:");
     for (const [k, n] of [...kontrollAntall].sort((x, y) => y[1] - x[1])) console.log(`  ${n} × ${k}`);
   }
+  // The assessment's figures are counted from what was just imported (src/lib/vurdering/statistikk.ts).
+  const statistikk = await lagreStatistikk();
+  console.log(`statistikk_kategori: ${statistikk.length} rader`);
   process.exit(0);
 }
 main();

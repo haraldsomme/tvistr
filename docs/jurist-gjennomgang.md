@@ -894,3 +894,508 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 > – Rapport fra Fjordbyen Autoservice AS av 8. mars 2024
 
 **Merknad:**
+
+---
+
+---
+
+# Vurderingen før betaling (de tolv simulerte sakene)
+
+Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sakene (`scripts/simulerte-saker.ts`) per 2026-10-13. Alt er regnet av kode fra svarene og databasen (se `docs/vurdering.md`); ingen modell har skrevet noe. Tallene er fra `statistikk_kategori`, kortene er de tre øverste vedtakene på nivå A fra rangeringen. Statusen er satt av reglene, ikke av en vurdering av saken.
+
+**Les hver skjerm mot kjøperens svar og loven, og noter under «Merknad»:**
+- Stemmer statusen og grunnene med svarene?
+- Er lovlinjene riktige for lovversjonen, og er paragrafene riktige?
+- Lover noe på skjermen mer enn loven og vedtakene gir grunnlag for?
+
+## Turbo kort etter kjøp
+
+**Kjøperens svar:** kjøpt 2025-03-10, 142000 km, første gang registrert 2017, «som den er»: nei; motor.turbo oppdaget 2025-04-01
+
+> # Du kan ha en reklamasjonssak
+>
+> ## Dette sier loven om din sak
+>
+> ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
+> ✓ Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 138 saker om turbo i brukte biler kjøpt fra forhandler. I 54 av dem fikk kjøperen medhold. Kjøperen fikk heving i 7, prisavslag i 7, retting i 1 og erstatning i 26 av sakene med medhold.
+>
+> Saker som ligner din:
+>
+> - Sak 18/437 · 2018: 2008-modell Mazda 5, 149 500 km ved kjøp, «som den er» – erstatning
+> - Sak 16/1587 · 2016: 2007-modell Volkswagen Golf, 112 000 km ved kjøp, «som den er» – erstatning
+> - Sak 21/3494 · 2022: Mitsubishi Outlander 2007-modell, 178 000 km ved kjøp, «som den er» – prisavslag
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven fra 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Girkasse, kjøpt 2023
+
+**Kjøperens svar:** kjøpt 2023-05-02, 188000 km, første gang registrert 2012, «som den er»: ja; drivlinje.girkasse oppdaget 2024-02-01
+
+> # Du kan ha en sak, men den står svakt
+>
+> ## Dette svekker saken
+>
+> ! Bilen ble solgt «som den er» før 2024 og var over 10 år gammel eller hadde gått over 200 000 km. Da skal det mer til før bilen er i dårligere stand enn du med rimelighet kunne forvente.
+>
+> ## Dette sier loven om din sak
+>
+> ✓ Du er innenfor fristen for å reklamere (fem år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd annet punktum]
+> ! Feilen viste seg etter 6 måneder. Da må du selv sannsynliggjøre at feilen var der ved levering, typisk med en verkstedrapport. Brevet legger opp til det. [forbrukerkjøpsloven § 18 annet ledd]
+> ✓ Bilen ble solgt «som den er». Du kan likevel reklamere hvis bilen er i dårligere stand enn du kunne forvente. [forbrukerkjøpsloven § 17 første ledd bokstav a]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjaldt før 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 243 saker om girkasse i brukte biler kjøpt fra forhandler. I 90 av dem fikk kjøperen medhold. Kjøperen fikk heving i 19, prisavslag i 12, retting i 1 og erstatning i 31 av sakene med medhold. Prisavslagene lå typisk på 22 % av kjøpesummen.
+>
+> Saker som ligner din:
+>
+> - Sak 19/202 · 2019: 2006-modell Volvo XC90, 114 000 km ved kjøp, «som den er» – heving
+> - Sak 18/1466 · 2019: 2004-modell Audi RS6 Avant 4.2 V8 Biturbo, 150 100 km ved kjøp, «som den er» – erstatning
+> - Sak 16/736 · 2016: 1989-modell Toyota Corolla, 140 000 km ved kjøp, «som den er» – heving og erstatning
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven før 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Rust etter over to år, som den er
+
+**Kjøperens svar:** kjøpt 2023-01-20, 245000 km, første gang registrert 2008, «som den er»: ja; karosseri.rust oppdaget 2025-08-25
+
+> # Du kan ha en sak, men den står svakt
+>
+> ## Dette svekker saken
+>
+> ! En eller flere feil viste seg mer enn to år etter at du overtok bilen. For biler gjelder som regel en frist på fem år, men for slitedeler kan fristen være to år. Selger kan bruke det.
+> ! Bilen ble solgt «som den er» før 2024 og var over 10 år gammel eller hadde gått over 200 000 km. Da skal det mer til før bilen er i dårligere stand enn du med rimelighet kunne forvente.
+> ! Rust regnes ofte som slitasje, og feilen ble oppdaget mer enn 6 måneder etter kjøpet. Selger kan hevde at feilen skyldes normal slitasje.
+>
+> ## Dette sier loven om din sak
+>
+> ! Fristen kan være ute for slitedeler. [forbrukerkjøpsloven § 27 annet ledd]
+> ! Feilen viste seg etter 6 måneder. Da må du selv sannsynliggjøre at feilen var der ved levering, typisk med en verkstedrapport. Brevet legger opp til det. [forbrukerkjøpsloven § 18 annet ledd]
+> ✓ Bilen ble solgt «som den er». Du kan likevel reklamere hvis bilen er i dårligere stand enn du kunne forvente. [forbrukerkjøpsloven § 17 første ledd bokstav a]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjaldt før 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 299 saker om rust i brukte biler kjøpt fra forhandler. I 130 av dem fikk kjøperen medhold. Kjøperen fikk heving i 36, prisavslag i 31, retting i 6 og erstatning i 31 av sakene med medhold. Prisavslagene lå typisk på 16 % av kjøpesummen.
+>
+> Saker som ligner din:
+>
+> - Sak 16/2365 · 2017: 1979/1992-modell Land Rover Range Rover, 202 000 km ved kjøp, «som den er» – heving
+> - Sak 16/2275 · 2017: 2003-modell Kia Carnival, «som den er» – prisavslag
+> - Sak 21/4604 · 2022: Mitsubishi Outlander 2007-modell, 231 000 km ved kjøp, «som den er» – heving
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven før 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Servicehefte lovet i annonsen
+
+**Kjøperens svar:** kjøpt 2025-06-14, 160000 km, første gang registrert 2015, «som den er»: nei; service.servicehefte oppdaget 2025-08-20
+
+> # Du kan ha en reklamasjonssak
+>
+> ## Dette sier loven om din sak
+>
+> ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 57 saker om manglende servicehefte i brukte biler kjøpt fra forhandler. I 29 av dem fikk kjøperen medhold. Kjøperen fikk prisavslag i 14 og retting i 1 av sakene med medhold. Prisavslagene lå typisk på 7 % av kjøpesummen.
+>
+> Saker som ligner din:
+>
+> - Sak 115321 · 2025: Volkswagen Tiguan 2013-modell, 126 000 km ved kjøp – prisavslag
+> - Sak 15/34 · 2015: 2006-modell Volkswagen Passat, 196 600 km ved kjøp – prisavslag og erstatning
+> - Sak 15/1213 · 2015: 2004-modell Peugeot 807, 132 000 km ved kjøp – prisavslag
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven fra 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Tilbakestilt kilometerstand
+
+**Kjøperens svar:** kjøpt 2024-09-01, 120000 km, første gang registrert 2014, «som den er»: nei; historikk.km oppdaget 2025-03-15
+
+> # Du kan ha en reklamasjonssak
+>
+> ## Dette sier loven om din sak
+>
+> ✓ Du er innenfor fristen for å reklamere (fem år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd annet punktum]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 62 saker om kilometerstand i brukte biler kjøpt fra forhandler. I 26 av dem fikk kjøperen medhold. Kjøperen fikk heving i 13, prisavslag i 6 og erstatning i 3 av sakene med medhold.
+>
+> Saker som ligner din:
+>
+> - Sak 22/7329 · 2023: 2015-modell Tesla Model S – prisavslag
+> - Sak 21/5699 · 2023: Opel Astra Sport, årsmodell 2011 – heving og erstatning
+> - Sak 16/756 · 2016: Ford Focus 2002-modell – heving
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven fra 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Elbil med lav batterikapasitet
+
+**Kjøperens svar:** kjøpt 2024-11-15, 70000 km, første gang registrert 2019, «som den er»: nei; hoyvolt.kapasitet oppdaget 2025-05-16
+
+> # Du kan ha en reklamasjonssak
+>
+> ## Dette sier loven om din sak
+>
+> ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
+> ✓ Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 17 saker om kapasitet og rekkevidde i brukte biler kjøpt fra forhandler. I 4 av dem fikk kjøperen medhold. Kjøperen fikk heving i 1 og prisavslag i 1 av sakene med medhold.
+>
+> Saker som ligner din:
+>
+> - Sak 23/16392 · 2024: Tesla Model S 2014-modell, 157 300 km ved kjøp – heving
+>
+> ✓ Bilen din er yngre og har gått kortere enn i disse sakene.
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven fra 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Varsellampe, vet ikke årsak
+
+**Kjøperens svar:** kjøpt 2025-07-01, 95000 km, første gang registrert 2018, «som den er»: vet_ikke; vet_ikke.varsellampe oppdaget 2025-08-20
+
+> # Du kan ha en reklamasjonssak
+>
+> ## Dette sier loven om din sak
+>
+> ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
+> ✓ Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 38 saker om varsellampe i brukte biler kjøpt fra forhandler. I 11 av dem fikk kjøperen medhold. Kjøperen fikk heving i 3 og erstatning i 2 av sakene med medhold.
+>
+> Saker som ligner din:
+>
+> - Sak 23/3866 · 2023: Volvo V50 2006-modell, 189 000 km ved kjøp, «som den er» – heving og erstatning
+> - Sak 23/11163 · 2024: Volkswagen Touareg 2003-modell, 163 000 km ved kjøp, «som den er» – prisavslag
+> - Sak 15/1909 · 2016: 2003-modell Skoda Octavia, 162 147 km ved kjøp – heving og erstatning
+>
+> ✓ Bilen din er yngre og har gått kortere enn i disse sakene.
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven fra 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Klima, bare hovedkategori
+
+**Kjøperens svar:** kjøpt 2024-04-10, 210000 km, første gang registrert 2011, «som den er»: nei; klima oppdaget 2025-06-01
+
+> # Du kan ha en reklamasjonssak
+>
+> ## Dette sier loven om din sak
+>
+> ✓ Du er innenfor fristen for å reklamere (fem år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd annet punktum]
+> ✓ Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 280 saker om klimaanlegg og varme i brukte biler kjøpt fra forhandler. I 91 av dem fikk kjøperen medhold. Kjøperen fikk prisavslag i 21, retting i 1 og erstatning i 31 av sakene med medhold. Prisavslagene lå typisk på 11 % av kjøpesummen.
+>
+> Saker som ligner din:
+>
+> - Sak 16/1836 · 2017: 2005-modell Volkswagen Golf, 255 000 km ved kjøp – prisavslag
+> - Sak 21/4781 · 2022: 2006 modell Volkswagen Touareg, 215 000 km ved kjøp – erstatning
+> - Sak 17/946 · 2018: 2005-modell Honda FR-V, 211 000 km ved kjøp – prisavslag og erstatning
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven fra 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Bremser på eldre bil
+
+**Kjøperens svar:** kjøpt 2025-02-20, 230000 km, første gang registrert 2009, «som den er»: ja; understell.bremser oppdaget 2025-03-01
+
+> # Du kan ha en reklamasjonssak
+>
+> ## Dette sier loven om din sak
+>
+> ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
+> ✓ Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
+> ✓ Et alminnelig «som den er»-forbehold gjelder ikke lenger etter loven fra 2024. [forbrukerkjøpsloven § 15 annet ledd]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 384 saker om bremser i brukte biler kjøpt fra forhandler. I 95 av dem fikk kjøperen medhold. Kjøperen fikk prisavslag i 5, retting i 1 og erstatning i 18 av sakene med medhold.
+>
+> Saker som ligner din:
+>
+> - Sak 21/3712 · 2021: Chevrolet Suburban 2500 2000-modell, 307 052 km ved kjøp, «som den er» – heving og erstatning
+> - Sak 18/1291 · 2019: 2002-modell DoradoTruckmaster Crew CAB Pick up, 220 000 km ved kjøp, «som den er» – prisavslag
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven fra 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Oljeforbruk og lys, to kategorier
+
+**Kjøperens svar:** kjøpt 2024-08-05, 175000 km, første gang registrert 2013, «som den er»: nei; motor.olje oppdaget 2025-02-10; elektrisk.lys oppdaget 2025-01-10
+
+> # Du kan ha en reklamasjonssak
+>
+> ## Dette sier loven om din sak
+>
+> ✓ Du er innenfor fristen for å reklamere (fem år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd annet punktum]
+> ✓ Feilene viste seg innen 2 år. Da er det selger som må bevise at feilene ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 246 saker om oljeforbruk og oljelekkasje i brukte biler kjøpt fra forhandler. I 83 av dem fikk kjøperen medhold. Kjøperen fikk heving i 20, prisavslag i 6, retting i 3 og erstatning i 28 av sakene med medhold.
+>
+> Utvalget har behandlet 283 saker om lys i brukte biler kjøpt fra forhandler. I 79 av dem fikk kjøperen medhold. Kjøperen fikk prisavslag i 3, retting i 5 og erstatning i 12 av sakene med medhold.
+>
+> Saker som ligner din:
+>
+> - Sak 23/5409 · 2023: Mini Cooper S Countryman ALL4 2011-modell, 143 500 km ved kjøp, «som den er» – heving og erstatning
+> - Sak 19/467 · 2019: 2005-modell Volkswagen Caravelle Kasse, 163 000 km ved kjøp, «som den er» – heving og erstatning
+> - Sak 17/1521 · 2018: 2005-modell BMW, 165 000 km ved kjøp, «som den er» – heving og erstatning
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven fra 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Garanti ikke som lovet
+
+**Kjøperens svar:** kjøpt 2025-01-05, 60000 km, første gang registrert 2020, «som den er»: nei; garanti oppdaget 2025-03-20
+
+> # Du kan ha en reklamasjonssak
+>
+> ## Dette sier loven om din sak
+>
+> ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 59 saker om garanti som ikke var som lovet i brukte biler kjøpt fra forhandler. I 30 av dem fikk kjøperen medhold. Kjøperen fikk prisavslag i 13, retting i 1 og erstatning i 5 av sakene med medhold. Prisavslagene lå typisk på 5 % av kjøpesummen.
+>
+> Saker som ligner din:
+>
+> - Sak 19/761 · 2020: Nissan Leaf 2014-modell, 68 500 km ved kjøp – prisavslag
+> - Sak 22/3299 · 2023: Volkswagen Passat R-line 2016-modell, 60 500 km ved kjøp – erstatning
+> - Sak 21/8836 · 2022: BMW X1 2018-modell, 64 000 km ved kjøp – prisavslag
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven fra 2024, klart til å sende
+> - Henvisning til et vedtak der kjøperen fikk medhold for samme feil, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**
+
+---
+
+## Nødmodus etter over to år
+
+**Kjøperens svar:** kjøpt 2023-03-01, 150000 km, første gang registrert 2017, «som den er»: nei; vet_ikke.nodmodus oppdaget 2025-11-01
+
+> # Du kan ha en sak, men den står svakt
+>
+> ## Dette svekker saken
+>
+> ! En eller flere feil viste seg mer enn to år etter at du overtok bilen. For biler gjelder som regel en frist på fem år, men for slitedeler kan fristen være to år. Selger kan bruke det.
+> ! Vi har ingen vedtak om akkurat denne feilen på en bil som din.
+>
+> ## Dette sier loven om din sak
+>
+> ! Fristen kan være ute for slitedeler. [forbrukerkjøpsloven § 27 annet ledd]
+> ! Feilen viste seg etter 6 måneder. Da må du selv sannsynliggjøre at feilen var der ved levering, typisk med en verkstedrapport. Brevet legger opp til det. [forbrukerkjøpsloven § 18 annet ledd]
+> i Kjøpet følger forbrukerkjøpsloven slik den gjaldt før 2024.
+>
+> ## Lignende saker i Forbrukerklageutvalget
+>
+> Utvalget har behandlet 5 saker om nødmodus i brukte biler kjøpt fra forhandler. I 1 av dem fikk kjøperen medhold. Kjøperen fikk erstatning i 1 av sakene med medhold.
+>
+> § Vi har ingen vedtak om akkurat denne feilen på en bil som din. Brevet vil vise til et vedtak om det rettslige poenget i saken din (feil som viser seg etter to år).
+>
+> ## Dette får du
+>
+> - Reklamasjonsbrev etter forbrukerkjøpsloven før 2024, klart til å sende
+> - Henvisning til et vedtak om feil som viser seg etter to år, med ordrette sitater fra utvalget
+> - Kravet (retting, prisavslag eller heving) formulert med riktig hjemmel
+> - Frist og hva som skjer hvis selger ikke svarer
+> - Word-fil og kopierbar tekst
+>
+> 249 kr. Betal når brevet er klart, ikke nå.
+>
+> Tre korte steg til: dokumentasjon, krav og hvem selger er. Du betaler når du har sett sakens bakgrunn og vedtaket brevet bygger på.
+>
+> Tjenesten gir ikke juridisk rådgivning. Vurderingen bygger på svarene dine og på publiserte vedtak.
+
+**Merknad:**

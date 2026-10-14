@@ -63,8 +63,10 @@ export type Brevsak = {
   praksis: { avsnitt: string; kildeUrl: string; saksnummer: string | null; lovversjon?: "før_2024" | "etter_2024" | "ukjent" } | null;
 };
 
-// A block of the letter: sentences that run together. `forhandsvis` keeps it in the preview.
-export type Blokk = { setninger: Setning[]; forhandsvis?: boolean } | { skjult: number };
+// A block of the letter: sentences that run together. `forhandsvis` keeps it in the preview; with
+// «forste_setning» only the first sentence of its first sentence-group is shown, without its link (the
+// paragraph citing the decision).
+export type Blokk = { setninger: Setning[]; forhandsvis?: true | "forste_setning" } | { skjult: number };
 export type Avsnitt = { nr: number; overskrift: Setning; blokker: Blokk[] };
 
 export type Brev = {

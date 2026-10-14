@@ -1,14 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { signer, sjekkSignatur } from "./signatur";
+import { apne, forsegle } from "./signatur";
 
-describe("signaturen på vedtaksavsnittet", () => {
-  const funn = { avsnitt: "Det vises til …", niva: "A", vedtak: { saksnummer: "22/2868", kildeUrl: "https://example.org/v", lovversjon: "før_2024" } };
-  it("godtar det serveren signerte", () => expect(sjekkSignatur(funn, signer(funn))).toBe(true));
-  it("avviser en endret tekst, et endret vedtak og en manglende signatur", () => {
-    const s = signer(funn);
-    expect(sjekkSignatur({ ...funn, avsnitt: "Det vises til noe annet." }, s)).toBe(false);
-    expect(sjekkSignatur({ ...funn, vedtak: { ...funn.vedtak, kildeUrl: "https://example.org/annet" } }, s)).toBe(false);
-    expect(sjekkSignatur(funn, undefined)).toBe(false);
-    expect(sjekkSignatur(funn, "x")).toBe(false);
+describe("forseglingen av vedtaksavsnittet", () => {
+  const funn = { avsnitt: "Det vises til … Utvalget uttalte: «Feilen var der.»", niva: "A", vedtak: { saksnummer: "22/2868", kildeUrl: "https://example.org/v", lovversjon: "før_2024" } };
+  it("åpner det serveren forseglet", () => expect(apne(forsegle(funn))).toEqual(funn));
+  it("viser verken sitatet eller lenken i det nettleseren får", () => {
+    const s = forsegle(funn);
+    expect(s).not.toMatch(/«|example\.org|Utvalget/);
+    expect(Buffer.from(s, "base64url").toString("latin1")).not.toMatch(/example\.org|Utvalget/);
+  });
+  it("avviser en endret, avkortet eller manglende forsegling", () => {
+    const s = forsegle(funn);
+    const endret = Buffer.from(s, "base64url");
+    endret[endret.length - 1] ^= 1;
+    expect(apne(endret.toString("base64url"))).toBeUndefined();
+    expect(apne(s.slice(0, 20))).toBeUndefined();
+    expect(apne(undefined)).toBeUndefined();
+    expect(apne("x")).toBeUndefined();
   });
 });

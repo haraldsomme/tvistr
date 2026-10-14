@@ -1,532 +1,130 @@
 "use client";
 
-// The buyer's form, ported from the mockup (ReklamasjonSkjema.dc.html): the same
-// markup, inline styles and animations. The keyframes and the hover/active rules the mockup set with
-// style-hover/style-active live in globals.css under `.rk`. «Lag brev» finds the decision the letter
-// cites (finnVedtak) and builds the letter (byggBrevet, src/lib/brev/); step 5 shows it.
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { type CSSProperties, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
-import { nb } from "react-day-picker/locale";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type Forslag, tittel as tittelNavn } from "@/lib/brreg";
-import { type Linje, somTekst, tilDokument } from "@/lib/brev/brev";
-import { MAKS_BESKRIVELSE, MAKS_KONKLUSJON, MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, type RapportPunkt, rensFritekst, rensKonklusjon, SELGER_SVAR, type SelgerSvar, VERKSTED_HVEM, type VerkstedHvem } from "@/lib/brev/rapport";
+// The buyer's form, one flow from the registration number to the letter (docs/skjema.md), as in the
+// mockups («Tvistr onboarding v2»):
+//   1 Bilen → 2 Kjøpet → 3 Feilen → 4 Vurdering (free) → 5 Detaljer → 6 Krav og selger
+//   → 7 Forhåndsvisning (pay) → 8 Brevet
+// Everything the assessment needs comes before it, everything the letter needs besides comes after, so
+// nothing is asked twice. Step 4 is code and database only (vurderSaken); the one model call is in
+// step 7 (finnVedtak), so the preview and the letter rest on the same decision.
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { Logo } from "@/app/logo";
+import { somTekst } from "@/lib/brev/brev";
+import { liste } from "@/lib/brev/format";
+import { MAKS_BESKRIVELSE, MAKS_KONKLUSJON, MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, rensFritekst, rensKonklusjon, SELGER_SVAR, type SelgerSvar, VERKSTED_HVEM } from "@/lib/brev/rapport";
 import { type Riktighet, type Riktighetsmerknad, vurderRiktighet } from "@/lib/brev/riktighet";
 import type { Brev } from "@/lib/brev/typer";
-import { type Kjoretoy, normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
-import { type Lovversjon, lovversjon } from "@/lib/brev/paragrafer";
-import { erDato, fristTekst, type Merknad, OVER_TO_AAR_FEIL, OVER_TO_AAR_KJOP, type Vurdering, vurderTidslinje } from "@/lib/brev/tidslinje";
+import { lovversjon } from "@/lib/brev/paragrafer";
+import { dagerMellom, erDato, type Merknad, OVER_TO_AAR_FEIL, OVER_TO_AAR_KJOP, plussManeder, type Vurdering, vurderTidslinje } from "@/lib/brev/tidslinje";
 import { type Feilvalg, HOVEDKATEGORIER, rensFeilvalg } from "@/lib/feil/kategorier";
+import { type Kjoretoy, normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
+import { maal } from "@/lib/maling";
+import { PRIS } from "@/lib/pris";
+import { fristenErUte, SOM_DEN_ER_GAMMEL, slitedelGrunn, somDenErGammel, type VurderingResultat } from "@/lib/vurdering/vurdering";
 import { type BrevResultat, byggBrevet, type Funn, finnVedtak } from "./actions";
+import {
+  A,
+  AS,
+  Avkrysning,
+  Brevvisning,
+  chip,
+  Chipvalg,
+  Datovelger,
+  datoTekst,
+  type Detalj,
+  Fristvarsel,
+  H1,
+  Hake,
+  HVORDAN,
+  type Hvordan,
+  INGRESS,
+  INK,
+  JA_NEI,
+  KILDE,
+  type Kilde,
+  KNAPP,
+  kort,
+  KRAV,
+  type Krav,
+  kunSifre,
+  LINE,
+  Merknader,
+  MONO,
+  orgnrTekst,
+  OVERLINE,
+  pop,
+  Punkt,
+  Radiomerke,
+  Radiovalg,
+  type RapportSkjema,
+  type Reklamert,
+  RETTINGSFORSOK,
+  SANS,
+  type Selger,
+  Selgervalg,
+  Skilt,
+  SOM_DEN_ER,
+  type SomDenEr,
+  storKnapp,
+  tall,
+  Tallfelt,
+  TOM_RAPPORT,
+  type Utlegg,
+  UTLEGG_FORSLAG,
+  Varsel,
+} from "./deler";
+import { Vurderingsvisning } from "./vurderingsvisning";
+import { vurderSaken } from "./vurdering";
 
-const A = "oklch(0.47 0.12 255)",
-  AS = "oklch(0.965 0.018 255)",
-  LINE = "#e2e3e0",
-  INK = "#16181a";
-const SANS = "var(--font-instrument), system-ui, sans-serif";
-const MONO = "var(--font-jbmono), monospace";
-const STEPS = ["Kjøretøy", "Feilen", "Detaljer", "Krav", "Brev"];
-const BREV = STEPS.length - 1;
+const STEG = ["Bilen", "Kjøpet", "Feilen", "Vurdering", "Detaljer", "Krav og selger", "Forhåndsvisning", "Brevet"] as const;
+const [BILEN, KJOPET, FEILEN, VURDERING, DETALJER, KRAVSTEG, FORHAND, BREVET] = [0, 1, 2, 3, 4, 5, 6, 7];
+// The steps before payment, as the progress counts them («3 / 7»).
+const FOR_BETALING = 7;
 
-// The answers are compared with the decisions (src/lib/matching/) and put into the letter (src/lib/brev/).
-const SOM_DEN_ER = [
-  { id: "ja", navn: "Ja" },
-  { id: "nei", navn: "Nei" },
-  { id: "vet_ikke", navn: "Vet ikke" },
+const STEMMER = [
+  { id: "ja", navn: "Ja, det stemmer" },
+  { id: "nei", navn: "Nei, søk på nytt" },
 ] as const;
-type SomDenEr = (typeof SOM_DEN_ER)[number]["id"];
-const KILDE = [
-  { id: "skriftlig", navn: "Ja, skriftlig" },
-  { id: "muntlig", navn: "Ja, muntlig" },
+// Step 5 asks the workshop question in the mockup's words; the answers are the same three.
+const VERKSTED_VALG: readonly { id: Kilde; navn: string }[] = [
+  { id: "skriftlig", navn: "Ja, og jeg har en rapport" },
+  { id: "muntlig", navn: "Ja, men uten rapport" },
   { id: "nei", navn: "Nei" },
-] as const;
-type Kilde = (typeof KILDE)[number]["id"];
-// What the buyer fills in about a written workshop report (a field is text as typed; the server cleans it).
-type RapportSkjema = { hvem?: VerkstedHvem; navn: string; dato: string; punkter: RapportPunkt[]; konklusjon: string; overslag: string };
-const TOM_RAPPORT: RapportSkjema = { navn: "", dato: "", punkter: [], konklusjon: "", overslag: "" };
-// Per main category: a free-text line, whether a workshop examined it, and whether the seller said
-// anything about it before the sale. With a written workshop assessment: the report.
-// The day the defect was discovered, whether it is approximate, and whether the buyer has checked an
-// approximate day near a deadline.
-type Detalj = { oppdaget?: string; omtrentlig?: boolean; bekreftet?: boolean; beskrivelse?: string; verksted?: Kilde; opplysning?: Kilde; rapport?: RapportSkjema };
-type Krav = "retting" | "prisavslag" | "heving";
-const KRAV: { id: Krav; navn: string; merke?: string; tekst: string }[] = [
-  { id: "retting", navn: "Retting", merke: "Vanligst", tekst: "Forhandleren utbedrer feilen uten kostnad for deg. Dette er normalt første steg." },
-  { id: "prisavslag", navn: "Prisavslag", tekst: "Du beholder bilen og får kjøpesummen redusert tilsvarende mangelen." },
-  { id: "heving", navn: "Heving", tekst: "Kjøpet omgjøres, og kjøpesummen tilbakebetales. Forutsetter at mangelen ikke er uvesentlig." },
 ];
-const RETTINGSFORSOK = [
-  { id: 0, navn: "Nei" },
-  { id: 1, navn: "1 gang" },
-  { id: 2, navn: "2 ganger" },
-  { id: 3, navn: "3 eller flere" },
-] as const;
-// «Kontakt med selger»: has the buyer complained before, and how.
-const JA_NEI = [
-  { id: "ja", navn: "Ja" },
+const OPPLYSNING_VALG: readonly { id: Kilde; navn: string }[] = [
   { id: "nei", navn: "Nei" },
-] as const;
-type Reklamert = (typeof JA_NEI)[number]["id"];
-const HVORDAN = [
   { id: "skriftlig", navn: "Skriftlig" },
   { id: "muntlig", navn: "Muntlig" },
-] as const;
-type Hvordan = (typeof HVORDAN)[number]["id"];
-const UTLEGG_FORSLAG = ["Tauing", "Feilsøking", "Leiebil", "Verkstedregning"];
-type Utlegg = { beskrivelse: string; belop: string };
+];
 
-// Digits with a space every third place: 84210 → «84 210».
-const tall = (s: string) => s.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-const kunSifre = (s: string, maks: number) => s.replace(/\D/g, "").replace(/^0+/, "").slice(0, maks);
-
-const pop = (i: number) => `rkPop 560ms cubic-bezier(.22,1,.36,1) ${70 + i * 45}ms backwards`;
-const datoTekst = (d: string) =>
-  new Date(`${d}T12:00:00`).toLocaleDateString("nb-NO", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
-const KNAPP: CSSProperties = {
-  all: "unset",
-  boxSizing: "border-box",
-  cursor: "pointer",
-};
-const OVERLINE: CSSProperties = {
-  font: `600 11px ${MONO}`,
-  letterSpacing: ".08em",
-  textTransform: "uppercase",
-  color: A,
-};
-const H1: CSSProperties = {
-  margin: 0,
-  fontSize: 28,
-  lineHeight: 1.15,
-  fontWeight: 600,
-  letterSpacing: "-0.02em",
-  textWrap: "pretty",
-};
-const INGRESS: CSSProperties = {
-  margin: 0,
-  fontSize: 15,
-  lineHeight: 1.5,
-  color: "#5f6468",
-  textWrap: "pretty",
-};
-
-function Hake() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" style={{ animation: "rkCheck 320ms cubic-bezier(.34,1.56,.64,1) both" }}>
-      <path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+// «3 måneder og 3 uker etter at du overtok bilen».
+function tidEtter(kjop: string, dato: string): string {
+  let m = 0;
+  while (plussManeder(kjop, m + 1) <= dato) m++;
+  const rest = dagerMellom(plussManeder(kjop, m), dato);
+  const ar = Math.floor(m / 12);
+  const mnd = m % 12;
+  const uker = Math.floor(rest / 7);
+  const deler: string[] = [];
+  if (ar) deler.push(`${ar} år`);
+  if (mnd) deler.push(`${mnd} ${mnd === 1 ? "måned" : "måneder"}`);
+  if (!ar && uker) deler.push(`${uker} ${uker === 1 ? "uke" : "uker"}`);
+  if (!deler.length) deler.push(`${rest} ${rest === 1 ? "dag" : "dager"}`);
+  return `${liste(deler)} etter at du overtok bilen`;
 }
-
-const chip = (sel: boolean): CSSProperties => ({
-  ...KNAPP,
-  padding: "9px 15px",
-  borderRadius: 999,
-  border: `1.5px solid ${sel ? A : LINE}`,
-  background: sel ? A : "#fff",
-  color: sel ? "#fff" : INK,
-  fontSize: 14,
-  fontWeight: 500,
-  transition: "all .2s",
-});
-
-// A question answered with one chip.
-function Chipvalg<T extends string | number>({
-  sporsmal,
-  etikett,
-  valg,
-  valgt,
-  velg,
-}: {
-  sporsmal: string;
-  etikett?: string;
-  valg: readonly { id: T; navn: string }[];
-  valgt: T | null | undefined;
-  velg: (id: T) => void;
-}) {
-  return (
-    <div role="group" aria-label={etikett ?? sporsmal} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <span style={{ fontSize: 14, fontWeight: 600, textWrap: "pretty" }}>{sporsmal}</span>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {valg.map((t) => (
-          <button key={t.id} type="button" aria-pressed={valgt === t.id} onClick={() => velg(t.id)} className="rk-chip" style={chip(valgt === t.id)}>
-            {t.navn}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Radiomerke({ valgt }: { valgt: boolean }) {
-  return (
-    <span
-      style={{
-        width: 18,
-        height: 18,
-        flex: "none",
-        borderRadius: "50%",
-        border: `1.5px solid ${valgt ? A : "#b4b8bc"}`,
-        display: "grid",
-        placeItems: "center",
-        transition: "border-color .2s",
-      }}
-    >
-      {valgt && <span style={{ width: 10, height: 10, borderRadius: "50%", background: A, animation: "rkCheck 300ms cubic-bezier(.34,1.56,.64,1) both" }} />}
-    </span>
-  );
-}
-
-const kort = (sel: boolean, anim: string): CSSProperties => ({
-  ...KNAPP,
-  borderRadius: 11,
-  border: `1.5px solid ${sel ? A : LINE}`,
-  background: sel ? AS : "#fff",
-  transition: "border-color .2s,background .2s,transform .15s,box-shadow .2s",
-  animation: anim,
-});
-
-// A tick: one thing the report says. Looks like the checkbox for expenses in step 4.
-function Avkrysning({ valgt, velg, children }: { valgt: boolean; velg: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={valgt}
-      onClick={velg}
-      className="rk-kat"
-      style={{ ...kort(valgt, "none"), borderRadius: 10, display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", textAlign: "left", width: "100%" }}
-    >
-      <span
-        style={{ width: 18, height: 18, flex: "none", marginTop: 1, borderRadius: 5, border: `1.5px solid ${valgt ? A : "#b4b8bc"}`, background: valgt ? A : "#fff", display: "grid", placeItems: "center", transition: "all .2s" }}
-      >
-        {valgt && <Hake />}
-      </span>
-      <span style={{ fontSize: 14.5, lineHeight: 1.45, textWrap: "pretty" }}>{children}</span>
-    </button>
-  );
-}
-
-// Every notice in the form is one of three kinds, drawn the same way: a tinted box that starts with an icon (! by default, § for the law), 14px text and a bold lead line.
-// stopp (red) blocks the user, advarsel (amber) only warns, info (grey) reminds.
-const VARSEL = {
-  stopp: { bg: "oklch(0.96 0.03 25)", merke: "#a3372b", role: "alert" },
-  advarsel: { bg: "oklch(0.96 0.04 75)", merke: "oklch(0.5 0.13 60)", role: "note" },
-  info: { bg: "#eef0f1", merke: A, role: "note" },
-} as const;
-
-function Varsel({ type, ikon, tittel, children, ...rest }: { type: keyof typeof VARSEL; ikon?: string; tittel?: React.ReactNode; children?: React.ReactNode } & { [k in `data-${string}`]?: boolean }) {
-  const v = VARSEL[type];
-  return (
-    <div role={v.role} {...rest} style={{ background: v.bg, borderRadius: 12, padding: "14px 16px", display: "flex", gap: 12, animation: pop(0) }}>
-      <span aria-hidden="true" style={{ font: `600 15px ${MONO}`, color: v.merke, lineHeight: 1.4, flex: "none", width: 10, textAlign: "center" }}>
-        {ikon ?? "!"}
-      </span>
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 14, lineHeight: 1.5, color: "#2c3033", textWrap: "pretty" }}>
-        {tittel && <strong style={{ fontWeight: 600 }}>{tittel}</strong>}
-        {children}
-      </div>
-    </div>
-  );
-}
-
-// The messages at a field: what stops in red, what only warns in amber.
-function Merknader({ stopp = [], advarsler = [] }: { stopp?: { melding: string }[]; advarsler?: { melding: string }[] }) {
-  if (!stopp.length && !advarsler.length) return null;
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {stopp.map((m) => (
-        <Varsel key={m.melding} type="stopp">
-          {m.melding}
-        </Varsel>
-      ))}
-      {advarsler.map((m) => (
-        <Varsel key={m.melding} type="advarsel" data-advarsel>
-          {m.melding}
-        </Varsel>
-      ))}
-    </div>
-  );
-}
-
-// A number with a unit after it, shown with thousands spaces; the value is kept as digits only.
-function Tallfelt({ etikett, hjelp, enhet, verdi, sett, maks }: { etikett: string; hjelp?: string; enhet: string; verdi: string; sett: (v: string) => void; maks: number }) {
-  return (
-    <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, fontWeight: 600 }}>
-      <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        {etikett}
-        {hjelp && <span style={{ fontSize: 13, fontWeight: 400, color: "#5f6468" }}>{hjelp}</span>}
-      </span>
-      <span
-        className="rk-felt"
-        style={{ display: "flex", alignItems: "center", height: 50, border: `1.5px solid ${LINE}`, borderRadius: 10, background: "#fff", overflow: "hidden", boxSizing: "border-box" }}
-      >
-        <input
-          inputMode="numeric"
-          autoComplete="off"
-          value={tall(verdi)}
-          onChange={(e) => sett(kunSifre(e.target.value, maks))}
-          style={{ flex: 1, minWidth: 0, border: "none", outline: "none", padding: "0 4px 0 14px", font: `500 16px ${MONO}`, color: INK, background: "transparent" }}
-        />
-        <span style={{ padding: "0 14px 0 4px", fontSize: 14, fontWeight: 400, color: "#5f6468" }}>{enhet}</span>
-      </span>
-    </label>
-  );
-}
-
-// fkjl. § 27: the limits for complaining, shown where a date or a choice puts them in doubt.
-function Fristvarsel({ v, children }: { v: Lovversjon; children: React.ReactNode }) {
-  return (
-    <Varsel type="advarsel" ikon="§" tittel={children}>
-      <span>{fristTekst(v)}</span>
-    </Varsel>
-  );
-}
-
-// A date: the phone's own picker on a touch screen, the calendar with a mouse.
-function Datovelger({ etikett, verdi, sett, min, maks }: { etikett: string; verdi: string; sett: (iso: string) => void; min?: string; maks: string }) {
-  const [apen, setApen] = useState(false);
-  const beroring = useSyncExternalStore(
-    () => () => {},
-    () => window.matchMedia("(pointer: coarse)").matches,
-    () => false,
-  );
-  const fra = min ? new Date(`${min}T12:00:00`) : new Date(Number(maks.slice(0, 4)) - 20, 0);
-  const felt: CSSProperties = { height: 50, width: 220, border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "0 14px", font: `16px ${SANS}`, color: INK, outline: "none", background: "#fff", boxSizing: "border-box" };
-  if (beroring)
-    return <input type="date" aria-label={etikett} value={verdi} min={min} max={maks} onChange={(e) => sett(e.target.value)} className="rk-input" style={felt} />;
-  return (
-    <Popover open={apen} onOpenChange={setApen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={etikett}
-          className="rk-input"
-          style={{ ...KNAPP, ...felt, border: `1.5px solid ${apen ? A : LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, color: verdi ? INK : "#8a8f93" }}
-        >
-          {verdi ? datoTekst(verdi) : "Velg dato"}
-          <CalendarIcon aria-hidden size={18} color="#5f6468" />
-        </button>
-      </PopoverTrigger>
-      {/* The form's accent, not the site's navy, for the selected day and focus ring. */}
-      <PopoverContent align="start" className="w-auto overflow-hidden p-0" style={{ "--primary": A, "--ring": A, fontFamily: SANS } as CSSProperties}>
-        <Calendar
-          className="[--cell-size:--spacing(9)]"
-          mode="single"
-          locale={nb}
-          captionLayout="dropdown"
-          selected={verdi ? new Date(`${verdi}T12:00:00`) : undefined}
-          defaultMonth={verdi ? new Date(`${verdi}T12:00:00`) : undefined}
-          startMonth={fra}
-          endMonth={new Date(`${maks}T12:00:00`)}
-          disabled={[{ after: new Date(`${maks}T12:00:00`) }, ...(min ? [{ before: fra }] : [])]}
-          onSelect={(d) => {
-            if (!d) return;
-            sett(format(d, "yyyy-MM-dd"));
-            setApen(false);
-          }}
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-// The seller, found in the Enhetsregister (Brreg) by name or organisation number through /api/firma.
-// Only the chosen hit is kept; the letter is addressed from the register again on the server.
-type Selger = { orgnr: string; navn: string; kommune: string | null; status: "konkurs" | "avvikling" | null; naeringskode: string | null };
-const orgnrTekst = (o: string) => o.replace(/^(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3");
-const STATUS = { konkurs: "Registrert som konkurs", avvikling: "Under avvikling" } as const;
-
-function Selgervalg({ valgt, velg }: { valgt: Selger | null; velg: (s: Selger | null) => void }) {
-  const [q, setQ] = useState("");
-  const [forslag, setForslag] = useState<Forslag[]>([]);
-  const [soker, setSoker] = useState(false);
-  const [feil, setFeil] = useState(false);
-  // The query the list on screen belongs to, so «no hits» is not shown while the next one is on its way.
-  const [sokt, setSokt] = useState("");
-
-  const s = q.trim();
-  useEffect(() => {
-    if (s.length < 3) return;
-    const avbryt = new AbortController();
-    const timer = setTimeout(async () => {
-      setSoker(true);
-      try {
-        const res = await fetch(`/api/firma?${new URLSearchParams({ q: s })}`, { signal: avbryt.signal });
-        const json = (await res.json()) as { forslag?: Forslag[]; feil?: true };
-        if (avbryt.signal.aborted) return;
-        setForslag(json.forslag ?? []);
-        setFeil(!!json.feil);
-        setSokt(s);
-      } catch {
-        if (avbryt.signal.aborted) return;
-        setForslag([]);
-        setFeil(true);
-      } finally {
-        if (!avbryt.signal.aborted) setSoker(false);
-      }
-    }, 300);
-    return () => {
-      clearTimeout(timer);
-      avbryt.abort();
-    };
-  }, [s]);
-  // A query shorter than three letters shows nothing, whatever an earlier one left behind.
-  const treff = s.length >= 3 ? forslag : [];
-
-  if (valgt)
-    return (
-      <div style={{ background: "#fff", border: `1.5px solid ${A}`, borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, animation: pop(0) }}>
-        <span style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: 15, fontWeight: 600 }}>{valgt.navn}</span>
-          <span style={{ fontSize: 13, color: "#5f6468" }}>
-            Org.nr. {orgnrTekst(valgt.orgnr)}
-            {valgt.kommune ? ` · ${valgt.kommune}` : ""}
-          </span>
-          {valgt.status && <span style={{ fontSize: 13, color: "#a3372b" }}>{STATUS[valgt.status]}</span>}
-        </span>
-        <button type="button" onClick={() => velg(null)} className="rk-tilbake" style={{ ...KNAPP, padding: "8px 12px", borderRadius: 8, fontSize: 14, fontWeight: 600, color: A }}>
-          Endre
-        </button>
-      </div>
-    );
-
-  const trengerSvar = s.length >= 3 && !soker && sokt === s;
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value.slice(0, 80))}
-        placeholder="Navn eller organisasjonsnummer"
-        aria-label="Søk etter selgeren"
-        autoComplete="off"
-        className="rk-input"
-        style={{ height: 50, border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "0 14px", font: `16px ${SANS}`, color: INK, outline: "none", background: "#fff", boxSizing: "border-box" }}
-      />
-      {soker && s.length >= 3 && <span role="status" style={{ fontSize: 13, color: "#5f6468" }}>Søker …</span>}
-      {feil && !soker && s.length >= 3 && <Varsel type="stopp">Vi fikk ikke kontakt med Enhetsregisteret. Prøv igjen om litt.</Varsel>}
-      {treff.length > 0 && (
-        <div role="listbox" aria-label="Treff i Enhetsregisteret" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, overflow: "hidden" }}>
-          {treff.map((f, i) => (
-            <button
-              key={f.orgnr}
-              type="button"
-              role="option"
-              aria-selected={false}
-              onClick={() => velg({ orgnr: f.orgnr, navn: tittelNavn(f.navn), kommune: f.kommune, status: f.status, naeringskode: f.naeringskode })}
-              className="rk-kat"
-              style={{ ...KNAPP, width: "100%", display: "flex", flexDirection: "column", gap: 2, padding: "12px 18px", borderTop: i ? "1px solid #eeeeeb" : "none" }}
-            >
-              <span style={{ fontSize: 15, fontWeight: 600 }}>{tittelNavn(f.navn)}</span>
-              <span style={{ fontSize: 13, color: "#5f6468" }}>
-                Org.nr. {orgnrTekst(f.orgnr)}
-                {f.kommune ? ` · ${f.kommune}` : ""}
-                {f.bransje ? ` · ${f.bransje}` : ""}
-              </span>
-              {f.status && <span style={{ fontSize: 13, color: "#a3372b" }}>{STATUS[f.status]}</span>}
-            </button>
-          ))}
-        </div>
-      )}
-      {trengerSvar && !treff.length && !feil && (
-        <span style={{ fontSize: 13, color: "#5f6468", lineHeight: 1.5 }}>
-          Ingen treff. Prøv navnet slik det står i kontrakten, eller organisasjonsnummeret. Vi søker ikke etter enkeltpersonforetak, fordi navnet på dem er et personnavn.
-        </span>
-      )}
-    </div>
-  );
-}
-
-// The letter as the buyer sees it: the same lines as «Kopier tekst» and the Word file (tilDokument),
-// set as an A4 sheet with the Word file's margins and a serif text face. A hidden block, before
-// payment, is drawn as grey bars the length of the text it stands for.
-const BREV_FONT = "var(--font-brev)";
-function Brevvisning({ brev, bred }: { brev: Brev; bred: boolean }) {
-  const grupper = tilDokument(brev);
-  const tekst: CSSProperties = { margin: 0, fontFamily: BREV_FONT, fontSize: "11.5pt", lineHeight: 1.5, color: "#111", textWrap: "pretty" };
-  const [forste, andre, ...resten] = grupper;
-  // Sender top left and place and date top right, when both are there.
-  const harDato = andre?.[0]?.stil === "stedDato";
-  const toppRad = forste?.[0]?.stil === "adresse" && harDato;
-  const rest = toppRad ? resten : grupper.slice(forste?.[0]?.stil === "stedDato" ? 1 : 0);
-  const linjer = (g: Linje[]) =>
-    g.map((l, i) => (
-      <span key={i} style={{ display: "block", ...(l.stil === "vedleggOverskrift" && { fontWeight: 700 }), ...(l.stil === "hilsen" && i > 0 && { marginTop: "26pt" }) }}>
-        {l.tekst}
-      </span>
-    ));
-  return (
-    <article
-      aria-label="Reklamasjonsbrev"
-      style={{
-        boxSizing: "border-box",
-        width: "210mm",
-        maxWidth: "100%",
-        minHeight: bred ? "297mm" : undefined,
-        margin: "0 auto",
-        padding: bred ? "20mm 23mm 25mm" : "28px 22px 40px",
-        background: "#fff",
-        border: "1px solid #e4e4e0",
-        boxShadow: "0 1px 2px rgba(20, 30, 50, .05), 0 14px 36px rgba(20, 30, 50, .10)",
-        display: "flex",
-        flexDirection: "column",
-        gap: "12pt",
-        animation: pop(0),
-      }}
-    >
-      {toppRad ? (
-        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: "6pt 24pt", ...tekst, marginBottom: "18pt" }}>
-          <div>{linjer(forste)}</div>
-          <div style={{ textAlign: "right" }}>{linjer(andre)}</div>
-        </div>
-      ) : (
-        grupper[0]?.[0]?.stil === "stedDato" && <div style={{ ...tekst, textAlign: "right", marginBottom: "18pt" }}>{linjer(grupper[0])}</div>
-      )}
-      {rest.map((g, i) => {
-        const stil = g[0].stil;
-        if (g[0].skjult !== undefined) {
-          const antall = Math.max(1, Math.round(g[0].skjult / 90));
-          return (
-            <div key={i} aria-hidden="true" data-skjult style={{ display: "flex", flexDirection: "column", gap: "7pt", padding: "2pt 0", filter: "blur(2.5px)", userSelect: "none" }}>
-              {Array.from({ length: antall }, (_, j) => (
-                <span key={j} style={{ height: "8.5pt", width: j === antall - 1 ? `${55 + ((i * 17) % 35)}%` : "100%", borderRadius: 2, background: "#dedfdb" }} />
-              ))}
-            </div>
-          );
-        }
-        if (stil === "overskrift") return <h2 key={i} style={{ ...tekst, fontWeight: 700, margin: "10pt 0 -5pt" }}>{g[0].tekst}</h2>;
-        if (stil === "tittel") return <h1 key={i} style={{ ...tekst, fontWeight: 700, fontSize: "13pt", margin: "18pt 0 2pt" }}>{g[0].tekst}</h1>;
-        if (stil === "adresse") return <div key={i} style={{ ...tekst, marginBottom: "6pt" }}>{linjer(g)}</div>;
-        if (stil === "hilsen") return <div key={i} style={{ ...tekst, marginTop: "14pt" }}>{linjer(g)}</div>;
-        if (stil === "vedleggOverskrift") return <div key={i} style={{ ...tekst, marginTop: "20pt" }}>{linjer(g)}</div>;
-        return (
-          <div key={i} style={{ display: "flex", flexDirection: "column", gap: "3pt" }}>
-            <p style={tekst}>{g[0].tekst}</p>
-            {g[0].lenke && (
-              <a href={g[0].lenke} target="_blank" rel="noopener noreferrer" style={{ ...tekst, fontSize: "10pt", color: A, textDecoration: "underline", textUnderlineOffset: 3, alignSelf: "flex-start" }}>
-                Les vedtaket
-              </a>
-            )}
-          </div>
-        );
-      })}
-    </article>
-  );
-}
+const kortDato = (iso: string) => `${iso.slice(8)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 
 type Bil = { k: Kjoretoy; eierFra: string | null };
 // Everything the buyer has typed or chosen, kept in sessionStorage so a reload or the browser's back
-// button does not lose it. The result (funn) is not kept: it is found again with «Lag brev».
+// button does not lose it. The assessment, the decision and the letter are not kept: they are found
+// again from the answers.
 type Lagret = {
   step: number;
+  detaljSide: number;
   regnr: string;
   car: Bil | null;
+  bilBekreftet: "ja" | null;
   kjopsdato: string;
   valg: Feilvalg;
   km: string;
@@ -543,18 +141,33 @@ type Lagret = {
   forsok: number | null;
   selgerSvar: SelgerSvar | null;
 };
-// v2: the defects carry the day they were discovered instead of an interval. Answers saved with the
-// interval are left behind, and the form starts again.
-const LAGRINGSNOKKEL = "tvistr:sak:v2";
-// The Vipps order id, kept so that a reload after payment finds the paid letter again (docs/brev.md).
-const ORDRENOKKEL = "tvistr:ordre";
-const lesOrdreId = () => {
-  try {
-    return sessionStorage.getItem(ORDRENOKKEL);
-  } catch {
-    return null;
-  }
+const TOM: Lagret = {
+  step: 0,
+  detaljSide: 0,
+  regnr: "",
+  car: null,
+  bilBekreftet: null,
+  kjopsdato: "",
+  valg: {},
+  km: "",
+  kjopesum: "",
+  somDenEr: null,
+  detaljer: {},
+  krav: null,
+  kreverUtlegg: false,
+  utlegg: [],
+  selger: null,
+  reklamert: null,
+  reklamertDato: "",
+  reklamertForm: null,
+  forsok: null,
+  selgerSvar: null,
 };
+// v3: the steps of the new flow. Answers saved under v2 had other step numbers and are left behind.
+const LAGRINGSNOKKEL = "tvistr:sak:v3";
+// The Vipps order id, kept so that a reload after payment finds the paid letter again (docs/brev.md).
+// In development the pay button writes one that stands for a confirmed payment.
+const ORDRENOKKEL = "tvistr:ordre";
 
 const streng = (v: unknown, maks: number) => (typeof v === "string" ? v.slice(0, maks) : "");
 
@@ -593,10 +206,12 @@ function lesLagret(): Lagret | null {
       };
     }
     return {
-      // The result is not kept, so the page never opens on step 5.
-      step: typeof r.step === "number" && Number.isInteger(r.step) ? Math.min(Math.max(r.step, 0), BREV - 1) : 0,
+      // The page never opens on the preview or the letter: they are built again.
+      step: typeof r.step === "number" && Number.isInteger(r.step) ? Math.min(Math.max(r.step, 0), KRAVSTEG) : 0,
+      detaljSide: typeof r.detaljSide === "number" && Number.isInteger(r.detaljSide) ? Math.max(r.detaljSide, 0) : 0,
       regnr: streng(r.regnr, 8),
       car: bil && typeof bil === "object" && bil.k && typeof bil.k.merke === "string" && typeof bil.k.modell === "string" ? { k: bil.k, eierFra: typeof bil.eierFra === "string" ? bil.eierFra : null } : null,
+      bilBekreftet: r.bilBekreftet === "ja" ? "ja" : null,
       kjopsdato: streng(r.kjopsdato, 10),
       valg: rensFeilvalg(r.valg),
       km: streng(r.km, 7).replace(/\D/g, ""),
@@ -618,6 +233,49 @@ function lesLagret(): Lagret | null {
   }
 }
 
+// The landing page sends the registration number as ?regnr=. A new number starts a new case and is
+// looked up at once; the number of the case already saved continues it.
+function lesStart(): { lagret: Lagret | null; autoHent: boolean } {
+  const lagret = lesLagret();
+  const fraUrl = new URLSearchParams(window.location.search).get("regnr");
+  const ny = fraUrl ? normaliserRegnr(fraUrl) : null;
+  if (!ny) return { lagret, autoHent: false };
+  const gammel = lagret?.car ? normaliserRegnr(lagret.car.k.regnr) : null;
+  if (gammel === ny) return { lagret, autoHent: false };
+  return { lagret: { ...TOM, regnr: fraUrl!.toUpperCase().replace(/[^A-ZÆØÅ0-9 -]/g, "").slice(0, 8) }, autoHent: true };
+}
+
+// While the server works: the step's heading and a shimmer.
+function Venter({ overline, tittel, tekst, anim, bred }: { overline: string; tittel: string; tekst: string; anim: string; bred: boolean }) {
+  return (
+    <div style={{ animation: anim, display: "flex", flexDirection: "column", gap: 28 }}>
+      <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <span style={OVERLINE}>{overline}</span>
+        <h1 style={H1}>{tittel}</h1>
+        <p style={INGRESS}>{tekst}</p>
+      </header>
+      <div role="status" aria-label={tittel} style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: bred ? "28px 32px" : "22px 20px", display: "flex", flexDirection: "column", gap: 12, animation: pop(0) }}>
+        <span aria-hidden="true" style={{ width: 22, height: 22, boxSizing: "border-box", borderRadius: "50%", border: `2px solid ${AS}`, borderTopColor: A, animation: "rkSpin .7s linear infinite", marginBottom: 6 }} />
+        {["92%", "78%", "85%"].map((b, i) => (
+          <span key={b} aria-hidden="true" style={{ height: 14, width: b, borderRadius: 4, background: "#ecedea", animation: `rkShimmer 1.1s ease-in-out ${i * 0.15}s infinite` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Feilmelding({ tittel, melding, igjen, anim }: { tittel: string; melding: string; igjen: () => void; anim: string }) {
+  return (
+    <div style={{ animation: anim, display: "flex", flexDirection: "column", gap: 20 }}>
+      <h1 style={H1}>{tittel}</h1>
+      <Varsel type="stopp">{melding}</Varsel>
+      <button type="button" onClick={igjen} className="rk-neste" style={{ ...storKnapp("aksent"), alignSelf: "flex-start" }}>
+        Prøv igjen
+      </button>
+    </div>
+  );
+}
+
 // sessionStorage is not there when the server renders. The form is first rendered empty, then
 // remounted with what was saved once the client has taken over.
 export function Skjema() {
@@ -626,37 +284,42 @@ export function Skjema() {
     () => true,
     () => false,
   );
-  return <SkjemaInnhold key={hydrert ? "klient" : "server"} start={hydrert ? lesLagret() : null} lagre={hydrert} />;
+  const start = useMemo(() => (hydrert ? lesStart() : null), [hydrert]);
+  return <SkjemaInnhold key={hydrert ? "klient" : "server"} start={start?.lagret ?? null} autoHent={!!start?.autoHent} lagre={hydrert} />;
 }
 
-function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean }) {
-  const [step, setStep] = useState(start?.step ?? 0);
+function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoHent: boolean; lagre: boolean }) {
+  const s0 = start ?? TOM;
+  const [step, setStep] = useState(s0.step);
+  const [detaljSide, setDetaljSide] = useState(s0.detaljSide);
   const [dir, setDir] = useState(1);
   const [w, setW] = useState(1200);
-  const [regnr, setRegnr] = useState(start?.regnr ?? "");
+  const [regnr, setRegnr] = useState(s0.regnr);
   const [fetching, setFetching] = useState(false);
-  const [car, setCar] = useState<Bil | null>(start?.car ?? null);
+  const [car, setCar] = useState<Bil | null>(s0.car);
+  const [bilBekreftet, setBilBekreftet] = useState<"ja" | null>(s0.bilBekreftet);
   const [oppslagFeil, setOppslagFeil] = useState<string | null>(null);
   // Suggested from the day the car was registered on its current owner; the buyer can change it.
-  const [kjopsdato, setKjopsdato] = useState(start?.kjopsdato ?? "");
-  const [valg, setValg] = useState<Feilvalg>(start?.valg ?? {});
-  const [km, setKm] = useState(start?.km ?? "");
-  const [kjopesum, setKjopesum] = useState(start?.kjopesum ?? "");
-  const [somDenEr, setSomDenEr] = useState<SomDenEr | null>(start?.somDenEr ?? null);
-  const [detaljer, setDetaljer] = useState<Record<string, Detalj>>(start?.detaljer ?? {});
-  // The open card in step 3; undefined means the first unanswered one.
-  const [apent, setApent] = useState<string | null | undefined>(undefined);
-  const [krav, setKrav] = useState<Krav | null>(start?.krav ?? null);
-  const [reklamert, setReklamert] = useState<Reklamert | null>(start?.reklamert ?? null);
-  const [reklamertDato, setReklamertDato] = useState(start?.reklamertDato ?? "");
-  const [reklamertForm, setReklamertForm] = useState<Hvordan | null>(start?.reklamertForm ?? null);
-  const [forsok, setForsok] = useState<number | null>(start?.forsok ?? null);
-  const [selgerSvar, setSelgerSvar] = useState<SelgerSvar | null>(start?.selgerSvar ?? null);
-  const [kreverUtlegg, setKreverUtlegg] = useState(start?.kreverUtlegg ?? false);
-  const [utlegg, setUtlegg] = useState<Utlegg[]>(start?.utlegg ?? []);
-  const [selger, setSelger] = useState<Selger | null>(start?.selger ?? null);
+  const [kjopsdato, setKjopsdato] = useState(s0.kjopsdato);
+  const [valg, setValg] = useState<Feilvalg>(s0.valg);
+  const [km, setKm] = useState(s0.km);
+  const [kjopesum, setKjopesum] = useState(s0.kjopesum);
+  const [somDenEr, setSomDenEr] = useState<SomDenEr | null>(s0.somDenEr);
+  const [detaljer, setDetaljer] = useState<Record<string, Detalj>>(s0.detaljer);
+  const [krav, setKrav] = useState<Krav | null>(s0.krav);
+  const [reklamert, setReklamert] = useState<Reklamert | null>(s0.reklamert);
+  const [reklamertDato, setReklamertDato] = useState(s0.reklamertDato);
+  const [reklamertForm, setReklamertForm] = useState<Hvordan | null>(s0.reklamertForm);
+  const [forsok, setForsok] = useState<number | null>(s0.forsok);
+  const [selgerSvar, setSelgerSvar] = useState<SelgerSvar | null>(s0.selgerSvar);
+  const [kreverUtlegg, setKreverUtlegg] = useState(s0.kreverUtlegg);
+  const [utlegg, setUtlegg] = useState<Utlegg[]>(s0.utlegg);
+  const [selger, setSelger] = useState<Selger | null>(s0.selger);
+  const [vurdering, setVurdering] = useState<VurderingResultat | null>(null);
+  const [vurderingFeil, setVurderingFeil] = useState<string | null>(null);
   const [funn, setFunn] = useState<Funn | null>(null);
-  const [brevet, setBrevet] = useState<BrevResultat | null>(null);
+  const [forhand, setForhand] = useState<BrevResultat | null>(null);
+  const [heltBrev, setHeltBrev] = useState<BrevResultat | null>(null);
   const [kopiert, setKopiert] = useState(false);
   // The field «Endre» in the summary leads back to, scrolled into view once its step is shown.
   const [fokus, setFokus] = useState<string | null>(null);
@@ -669,10 +332,11 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
     return () => clearTimeout(t);
   }, [fokus, step]);
   const [soker, startSok] = useTransition();
+  const [vurderer, startVurdering] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const nesteKort = useRef<ReturnType<typeof setTimeout>>(undefined);
   const foresporsel = useRef(0);
+  const vForesporsel = useRef(0);
 
   useEffect(() => {
     if (!rootRef.current || !window.ResizeObserver) return;
@@ -681,47 +345,128 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
     return () => ro.disconnect();
   }, []);
 
-  useEffect(() => () => clearTimeout(nesteKort.current), []);
-
   useEffect(() => {
     if (!lagre) return;
-    const l: Lagret = { step: Math.min(step, BREV - 1), regnr, car, kjopsdato, valg, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar };
+    const l: Lagret = { step: Math.min(step, KRAVSTEG), detaljSide, regnr, car, bilBekreftet, kjopsdato, valg, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar };
     try {
       sessionStorage.setItem(LAGRINGSNOKKEL, JSON.stringify(l));
     } catch {}
-  }, [lagre, step, regnr, car, kjopsdato, valg, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar]);
+  }, [lagre, step, detaljSide, regnr, car, bilBekreftet, kjopsdato, valg, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar]);
 
   const isDesktop = w >= 820;
+  const idag = new Date().toISOString().slice(0, 10);
+  const valgte = HOVEDKATEGORIER.filter((h) => h.id in valg);
+  // The categories as the measurement keeps them: «motor.turbo», or «motor» without a subcategory.
+  const kategorier = valgte.flatMap((h) => (valg[h.id].length ? valg[h.id].map((u) => `${h.id}.${u}`) : [h.id]));
+  const ute = erDato(kjopsdato) && fristenErUte(kjopsdato, idag);
   // The same rule the lookup uses, so the button only works for a number the server accepts.
   const gyldig = normaliserRegnr(regnr) !== null;
-  const go = (n: number) => {
-    setDir(n >= step ? 1 : -1);
+
+  // What steps 1–3 answered, as the assessment and the decision search read it.
+  const grunnsvar = () => ({ valg, kjopsdato, km: Number(km) || null, ar: car?.k.ar ?? null, somDenEr, detaljer: Object.fromEntries(valgte.map((h) => [h.id, { oppdaget: detaljer[h.id]?.oppdaget, omtrentlig: !!detaljer[h.id]?.omtrentlig }])) });
+  // Everything, for the letter.
+  const brevsvar = () => ({
+    valg,
+    kjopsdato,
+    km: Number(km),
+    kjopesum: Number(kjopesum),
+    ar: car?.k.ar ?? null,
+    somDenEr,
+    krav,
+    // The estimate is typed as text in the form; the server wants a number.
+    detaljer: Object.fromEntries(Object.entries(detaljer).map(([id, d]) => [id, d.rapport ? { ...d, rapport: { ...d.rapport, overslag: d.rapport.overslag ? Number(d.rapport.overslag) : null } } : d])),
+    bil: car && { regnr: car.k.regnr, merke: car.k.merke, modell: car.k.modell, ar: car.k.ar },
+    selgerOrgnr: selger?.orgnr ?? null,
+    kontakt: reklamert === "ja" ? { reklamert: true, dato: reklamertDato, form: reklamertForm, svar: selgerSvar, forsok: selgerSvar === "forsokt" ? forsok : 0 } : { reklamert: false },
+    utlegg: kreverUtlegg ? utlegg.map((u) => ({ beskrivelse: u.beskrivelse, belop: Number(u.belop) })) : [],
+  });
+
+  // The assessment, found again each time step 4 is shown, so it always belongs to the answers.
+  // Past five years it needs nothing from the server.
+  function vurder() {
+    const mitt = ++vForesporsel.current;
+    setVurdering(null);
+    setVurderingFeil(null);
+    if (ute) {
+      maal("vurdering_vist", { status: "ute", kategorier });
+      return;
+    }
+    startVurdering(async () => {
+      const r = await vurderSaken(grunnsvar());
+      if (mitt !== vForesporsel.current) return;
+      if (!r.ok) return setVurderingFeil(r.melding);
+      setVurdering(r.vurdering);
+      maal("vurdering_vist", { status: r.vurdering.status, kategorier });
+    });
+  }
+
+  // Step 7 opens at once and waits for the answer. The decision is found first (the one model call),
+  // then the preview is built from the answers and the decision's paragraph.
+  function lagBrev() {
+    const mitt = ++foresporsel.current;
+    setFunn(null);
+    setForhand(null);
+    setHeltBrev(null);
+    startSok(async () => {
+      const svar = brevsvar();
+      const f = await finnVedtak(svar);
+      if (mitt !== foresporsel.current) return;
+      setFunn(f);
+      if (!f.ok) return;
+      const b = await byggBrevet({ svar, funn: f });
+      if (mitt !== foresporsel.current) return;
+      setForhand(b);
+      if (b.ok) maal("steg7_vist");
+    });
+  }
+
+  // Until Vipps is connected the button only works in development (TVISTR_HELT_BREV_UTEN_BETALING=1),
+  // where an order id stands for a confirmed payment.
+  function betal() {
+    maal("betaling_startet");
+    const ordreId = `utvikling-${crypto.randomUUID()}`;
+    try {
+      sessionStorage.setItem(ORDRENOKKEL, ordreId);
+    } catch {}
+    go(BREVET);
+    const mitt = foresporsel.current;
+    startSok(async () => {
+      const b = await byggBrevet({ svar: brevsvar(), funn, ordreId });
+      if (mitt !== foresporsel.current) return;
+      setHeltBrev(b);
+      if (b.ok && b.fullt) maal("betaling_fullfort");
+    });
+  }
+
+  function go(n: number, side = 0) {
+    setDir(n > step || (n === step && side >= detaljSide) ? 1 : -1);
     setStep(n);
-    // The decisions belong to the answers they were found for; leaving step 5 lets them change.
-    if (n < BREV) {
+    setDetaljSide(side);
+    // The decision and the letter belong to the answers they were made for; going back lets them change.
+    if (n < FORHAND) {
       setFunn(null);
-      setBrevet(null);
+      setForhand(null);
+      setHeltBrev(null);
       foresporsel.current++;
     }
+    if (n === VURDERING) vurder();
+    if (n === FORHAND && step !== BREVET) lagBrev();
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  };
+  }
 
   async function fetchCar() {
     if (!gyldig || fetching) return;
     setFetching(true);
     setCar(null);
+    setBilBekreftet(null);
     setOppslagFeil(null);
     try {
       const res = await fetch(`/api/kjoretoy?${new URLSearchParams({ regnr })}`);
-      const json = (await res.json()) as {
-        kjoretoy?: Kjoretoy;
-        eierFra?: string | null;
-        feil?: string;
-      };
+      const json = (await res.json()) as { kjoretoy?: Kjoretoy; eierFra?: string | null; feil?: string };
       if (!json.kjoretoy) throw new Error(json.feil ?? "Noe gikk galt. Prøv igjen.");
       setCar({ k: json.kjoretoy, eierFra: json.eierFra ?? null });
       setKjopsdato(json.eierFra ?? "");
-      setFunn(null);
+      maal("regnr_ok");
     } catch (e) {
       setOppslagFeil(e instanceof Error && !(e instanceof TypeError) ? e.message : "Noe gikk galt. Prøv igjen.");
     } finally {
@@ -729,20 +474,24 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
     }
   }
 
-  // A result belongs to the choices it was made for; any change clears it.
-  const endreValg = (f: (v: Feilvalg) => Feilvalg) => {
-    setValg(f);
-    setFunn(null);
-  };
-  const toggleCat = (id: string) => endreValg((v) => (id in v ? Object.fromEntries(Object.entries(v).filter(([k]) => k !== id)) : { ...v, [id]: [] }));
-  const toggleSub = (h: string, u: string) =>
-    endreValg((v) => ({
-      ...v,
-      [h]: v[h].includes(u) ? v[h].filter((x) => x !== u) : [...v[h], u],
-    }));
+  // A page restored on step 4 finds its assessment again; the landing page's number is looked up. In a
+  // timeout, so a remount in development's strict mode cancels the first run.
+  useEffect(() => {
+    if (!lagre) return;
+    const t = setTimeout(() => {
+      if (autoHent) {
+        window.history.replaceState(null, "", "/sak");
+        void fetchCar();
+      } else if (step === VURDERING) vurder();
+    });
+    return () => clearTimeout(t);
+    // Once, on the client's first render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lagre]);
 
-  const valgte = HOVEDKATEGORIER.filter((h) => h.id in valg);
-  const idag = new Date().toISOString().slice(0, 10);
+  const toggleCat = (id: string) => setValg((v) => (id in v ? Object.fromEntries(Object.entries(v).filter(([k]) => k !== id)) : { ...v, [id]: [] }));
+  const toggleSub = (h: string, u: string) => setValg((v) => ({ ...v, [h]: v[h].includes(u) ? v[h].filter((x) => x !== u) : [...v[h], u] }));
+
   // A complaint or a report comes after the purchase and not in the future.
   const dagEtter = (iso: string) => {
     const d = new Date(`${iso}T12:00:00Z`);
@@ -753,93 +502,79 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   // A report is complete with who examined, the workshop's name, a date and at least one tick. The
   // conclusion and the estimate are optional.
   const rapportOk = (r?: RapportSkjema) => !!r?.hvem && !!r.navn.trim() && etterKjop(r.dato) && r.punkter.length > 0;
-  // The timeline judged as the server will judge it (tidslinje.ts): what stops, what warns, and the
-  // time level of each defect.
-  const vurder = (d: Record<string, Detalj>): Vurdering =>
-    vurderTidslinje({
-      kjop: kjopsdato,
-      feil: valgte.map((h) => ({
-        id: h.id,
-        oppdaget: d[h.id]?.oppdaget ?? "",
-        omtrentlig: !!d[h.id]?.omtrentlig,
-        ...(d[h.id]?.verksted === "skriftlig" && erDato(d[h.id]?.rapport?.dato) && { rapport: d[h.id]!.rapport!.dato }),
-      })),
-      ...(reklamert === "ja" && erDato(reklamertDato) && { reklamert: reklamertDato }),
-      idag,
-    });
-  const tidslinje = vurder(detaljer);
+  // The timeline judged as the server will judge it (tidslinje.ts).
+  const tidslinje: Vurdering = vurderTidslinje({
+    kjop: kjopsdato,
+    feil: valgte.map((h) => ({
+      id: h.id,
+      oppdaget: detaljer[h.id]?.oppdaget ?? "",
+      omtrentlig: !!detaljer[h.id]?.omtrentlig,
+      ...(detaljer[h.id]?.verksted === "skriftlig" && erDato(detaljer[h.id]?.rapport?.dato) && { rapport: detaljer[h.id]!.rapport!.dato }),
+    })),
+    ...(reklamert === "ja" && erDato(reklamertDato) && { reklamert: reklamertDato }),
+    idag,
+  });
   // The rules besides the dates (riktighet.ts), on the answers as the server will clean them.
-  const riktighetFor = (d: Record<string, Detalj>): Riktighet =>
-    erDato(kjopsdato)
-      ? vurderRiktighet({
-          kjopsdato,
-          kjopesum: kjopesum ? Number(kjopesum) : null,
-          forsteRegistrert: car?.k.ar ?? null,
-          somDenEr,
-          krav,
-          forsok: reklamert === "ja" && selgerSvar === "forsokt" ? (forsok ?? 0) : 0,
-          svar: reklamert === "ja" ? selgerSvar : null,
-          feil: valgte.map((h) => {
-            const x = d[h.id] ?? {};
-            const r = x.verksted === "skriftlig" ? x.rapport : undefined;
-            return {
-              hoved: h.id,
-              under: valg[h.id] ?? [],
-              opplysning: x.opplysning ?? null,
-              verksted: x.verksted ?? null,
-              rapport: r ? { navn: r.navn, dato: r.dato, punkter: r.punkter, overslag: r.overslag ? Number(r.overslag) : null } : null,
-              beskrivelse: rensFritekst(x.beskrivelse, MAKS_BESKRIVELSE),
-              konklusjon: r ? rensKonklusjon(r.konklusjon) : null,
-            };
-          }),
-          utlegg: kreverUtlegg ? utlegg.map((u) => ({ belop: Number(u.belop) || 0 })) : [],
-          selger: selger && { orgnr: selger.orgnr, status: selger.status, naeringskode: selger.naeringskode },
-        })
-      : { stopp: [], advarsler: [] };
-  const riktighet = riktighetFor(detaljer);
+  const riktighet: Riktighet = erDato(kjopsdato)
+    ? vurderRiktighet({
+        kjopsdato,
+        kjopesum: kjopesum ? Number(kjopesum) : null,
+        forsteRegistrert: car?.k.ar ?? null,
+        somDenEr,
+        krav,
+        forsok: reklamert === "ja" && selgerSvar === "forsokt" ? (forsok ?? 0) : 0,
+        svar: reklamert === "ja" ? selgerSvar : null,
+        feil: valgte.map((h) => {
+          const x = detaljer[h.id] ?? {};
+          const r = x.verksted === "skriftlig" ? x.rapport : undefined;
+          return {
+            hoved: h.id,
+            under: valg[h.id] ?? [],
+            opplysning: x.opplysning ?? null,
+            verksted: x.verksted ?? null,
+            rapport: r ? { navn: r.navn, dato: r.dato, punkter: r.punkter, overslag: r.overslag ? Number(r.overslag) : null } : null,
+            beskrivelse: rensFritekst(x.beskrivelse, MAKS_BESKRIVELSE),
+            konklusjon: r ? rensKonklusjon(r.konklusjon) : null,
+          };
+        }),
+        utlegg: kreverUtlegg ? utlegg.map((u) => ({ belop: Number(u.belop) || 0 })) : [],
+        selger: selger && { orgnr: selger.orgnr, status: selger.status, naeringskode: selger.naeringskode },
+      })
+    : { stopp: [], advarsler: [] };
   const merkR = (felt: Riktighetsmerknad["felt"], feilId?: string) => {
     const her = (m: Riktighetsmerknad) => m.felt === felt && (feilId === undefined || m.feilId === feilId);
     return { stopp: riktighet.stopp.filter(her), advarsler: riktighet.advarsler.filter(her) };
   };
   // The messages for one field (and one defect), each once.
-  const merk = (v: Vurdering, felt: Merknad["felt"], feilId?: string) => {
+  const merk = (felt: Merknad["felt"], feilId?: string) => {
     const her = (m: Merknad) => m.felt === felt && (feilId === undefined || m.feilId === feilId);
     const unike = (xs: Merknad[]) => xs.filter((m, i) => xs.findIndex((x) => x.melding === m.melding) === i);
-    return { stopp: unike(v.stopp.filter(her)), advarsler: unike(v.advarsler.filter(her)) };
+    return { stopp: unike(tidslinje.stopp.filter(her)), advarsler: unike(tidslinje.advarsler.filter(her)) };
   };
-  // A card is answered when it says when the defect was discovered, whether a workshop examined it
-  // and whether the seller said anything about it. The description and subcategories are optional.
-  // A written workshop assessment is not answered before its report is, no date of the card may stop,
-  // and an approximate day near a deadline must be confirmed.
-  const besvarteMed = (id: string, d: Record<string, Detalj>) => [erDato(d[id]?.oppdaget), d[id]?.verksted, d[id]?.opplysning].filter(Boolean).length;
-  const ferdigMed = (id: string, d: Record<string, Detalj>) => {
-    const v = vurder(d);
-    const her = (m: { feilId?: string }) => m.feilId === id;
+
+  // Step 3: a defect is done with a valid date that does not stop, and an approximate day near a deadline confirmed.
+  const datoFerdig = (id: string) => {
+    const d = detaljer[id] ?? {};
+    const her = (m: Merknad) => m.feilId === id && m.felt === "oppdaget";
+    return erDato(d.oppdaget) && !tidslinje.stopp.some(her) && (!tidslinje.advarsler.some((m) => her(m) && m.bekreft) || !!d.bekreftet);
+  };
+  // Step 5: a page is done when both questions are answered, a written report is filled in, and nothing
+  // on the page stops.
+  const sideFerdig = (id: string) => {
+    const d = detaljer[id] ?? {};
     return (
-      besvarteMed(id, d) === 3 &&
-      !v.stopp.some(her) &&
-      !riktighetFor(d).stopp.some(her) &&
-      (d[id]?.verksted !== "skriftlig" || rapportOk(d[id]?.rapport)) &&
-      (!v.advarsler.some((m) => her(m) && m.bekreft) || !!d[id]?.bekreftet)
+      !!d.verksted &&
+      !!d.opplysning &&
+      (d.verksted !== "skriftlig" || rapportOk(d.rapport)) &&
+      !riktighet.stopp.some((m) => m.feilId === id) &&
+      !tidslinje.stopp.some((m) => m.feilId === id && m.felt === "rapport")
     );
   };
-  const ferdig = (id: string) => ferdigMed(id, detaljer);
-  const apenId = apent === undefined ? (valgte.find((h) => !ferdig(h.id))?.id ?? null) : apent;
-
-  // When an answer completes a card, the next unanswered one opens, as in the mockup.
-  function besvar(id: string, nyeDetaljer: Record<string, Detalj>) {
-    const varFerdig = ferdig(id);
-    setFunn(null);
-    setDetaljer(nyeDetaljer);
-    if (varFerdig || !ferdigMed(id, nyeDetaljer)) return;
-    clearTimeout(nesteKort.current);
-    nesteKort.current = setTimeout(() => {
-      const i = valgte.findIndex((h) => h.id === id);
-      const rekke = [...valgte.slice(i + 1), ...valgte.slice(0, i)];
-      setApent(rekke.find((h) => !ferdigMed(h.id, nyeDetaljer))?.id ?? null);
-    }, 420);
-  }
-  const settDetalj = (id: string, endring: Detalj) => besvar(id, { ...detaljer, [id]: { ...detaljer[id], ...endring } });
+  const settDetalj = (id: string, endring: Detalj) => setDetaljer((v) => ({ ...v, [id]: { ...v[id], ...endring } }));
+  const settRapport = (id: string, endring: Partial<RapportSkjema>) => setDetaljer((v) => ({ ...v, [id]: { ...v[id], rapport: { ...(v[id]?.rapport ?? TOM_RAPPORT), ...endring } } }));
+  // The same report for this defect as for the one before: the workshop, the date and who. What the
+  // report says about this defect is ticked again.
+  const kopierRapport = (id: string, fra: RapportSkjema) => settRapport(id, { hvem: fra.hvem, navn: fra.navn, dato: fra.dato, punkter: [], konklusjon: "", overslag: "" });
   // «No» clears the rest: without a complaint there are no repairs and no answer to give.
   const velgReklamert = (r: Reklamert) => {
     setReklamert(r);
@@ -850,21 +585,10 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
       setSelgerSvar(null);
     }
   };
-  // Typing in the report must not move on to the next card, so the card is held open.
-  const settRapport = (id: string, endring: Partial<RapportSkjema>) => {
-    setFunn(null);
-    setApent(id);
-    setDetaljer((v) => ({ ...v, [id]: { ...v[id], rapport: { ...(v[id]?.rapport ?? TOM_RAPPORT), ...endring } } }));
-  };
-  // The same report for this defect as for the one before: the workshop, the date and who. What the
-  // report says about this defect is ticked again.
-  const kopierRapport = (id: string, fra: RapportSkjema) => settRapport(id, { hvem: fra.hvem, navn: fra.navn, dato: fra.dato, punkter: [], konklusjon: "", overslag: "" });
   const settUtlegg = (i: number, endring: Partial<Utlegg>) => setUtlegg((u) => u.map((x, j) => (j === i ? { ...x, ...endring } : x)));
 
   const carName = car ? `${car.k.merke} ${car.k.modell}` : "";
-  const beskrevet = valgte.filter((h) => ferdig(h.id)).length;
-  // A purchase date the timeline stops on (in the future, or more than five years ago) cannot be used.
-  const datoOk = erDato(kjopsdato) && !tidslinje.stopp.some((m) => m.felt === "kjopsdato");
+  const kjopStopp = [...tidslinje.stopp.filter((m) => m.felt === "kjopsdato" && m.regel !== "kjop_fem_aar" && m.regel !== "kjop_mangler"), ...merkR("kjopsdato").stopp];
   const aarSiden = (n: number) => `${Number(idag.slice(0, 4)) - n}${idag.slice(4)}`;
   const utleggSum = utlegg.reduce((s, x) => s + (Number(x.belop) || 0), 0);
   const utleggOk = !kreverUtlegg || (utlegg.length > 0 && utlegg.every((x) => x.beskrivelse.trim() && Number(x.belop) > 0));
@@ -872,64 +596,72 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   // repairs and the answer, so the answers cannot contradict each other (repairs without a complaint).
   const kontaktOk =
     reklamert === "nei" || (reklamert === "ja" && etterKjop(reklamertDato) && !tidslinje.stopp.some((m) => m.felt === "reklamert") && !!reklamertForm && !!selgerSvar && (selgerSvar !== "forsokt" || (forsok ?? 0) > 0));
+  const sideFeil = valgte[Math.min(detaljSide, Math.max(valgte.length - 1, 0))];
   const valid = [
-    !!car && !fetching && datoOk && Number(km) > 0 && Number(kjopesum) > 0 && !!somDenEr && !!selger && !riktighet.stopp.some((m) => ["kjopesum", "kjopsdato", "selger"].includes(m.felt)),
-    valgte.length > 0,
-    valgte.length > 0 && beskrevet === valgte.length,
-    !!krav && kontaktOk && utleggOk && !riktighet.stopp.length,
+    !!car && !fetching && bilBekreftet === "ja",
+    erDato(kjopsdato) && !kjopStopp.length && Number(km) > 0 && Number(kjopesum) > 0 && !!somDenEr && !riktighet.stopp.some((m) => m.felt === "kjopesum"),
+    valgte.length > 0 && valgte.every((h) => datoFerdig(h.id)),
+    false,
+    !!sideFeil && sideFerdig(sideFeil.id),
+    !!krav && kontaktOk && utleggOk && !!selger && !riktighet.stopp.length && !tidslinje.stopp.length,
+    false,
+    false,
   ][step];
   const ok = valid && !soker;
+
+  const statusKort = vurdering ? { sak: "Du kan ha en sak", svak: "Saken står svakt", ute: "Fristen er ute" }[vurdering.status] : step >= VURDERING && ute ? "Fristen er ute" : "Gratis";
   const subs = [
-    car ? [carName, car.k.regnr, km && `${tall(km)} km`].filter(Boolean).join(" · ") : "",
+    car ? `${carName} · ${car.k.regnr}` : "",
+    erDato(kjopsdato) ? [kortDato(kjopsdato), kjopesum && `${tall(kjopesum)} kr`].filter(Boolean).join(" · ") : "",
     valgte.map((h) => h.navn).join(", "),
-    "",
-    krav ? `${KRAV.find((k) => k.id === krav)?.navn}${kreverUtlegg ? " + utlegg" : ""}` : "",
+    statusKort,
+    valgte.some((h) => detaljer[h.id]?.verksted === "skriftlig") ? "Verkstedrapport" : "",
+    [KRAV.find((k) => k.id === krav)?.navn, selger?.navn].filter(Boolean).join(" · "),
+    step === BREVET ? `Betalt ${PRIS} kr` : "",
     "",
   ];
-  // Where a field is: its step, the element to scroll to, and the defect card to open.
-  const STEG_FOR: Record<string, number> = { kjopsdato: 0, kjopesum: 0, somDenEr: 0, oppdaget: 2, rapport: 2, opplysning: 2, beskrivelse: 2, konklusjon: 2, kategori: 3, krav: 3, reklamert: 3, utlegg: 3, selger: 0 };
-  const gaaTil = (felt: string, feilId?: string) => {
-    const steg = STEG_FOR[felt] ?? 0;
-    go(steg);
-    if (feilId && steg === 2) setApent(feilId);
-    setFokus(feilId && steg === 2 ? `felt-feil-${feilId}` : felt === "reklamert" ? "felt-kontakt" : felt === "kategori" ? "felt-krav" : `felt-${felt}`);
+  // Where a field is: its step, the page of the defect, and the element to scroll to.
+  const gaaTil = (m: { felt: string; feilId?: string; regel: string }) => {
+    const sideFor = (id?: string) => Math.max(0, valgte.findIndex((h) => h.id === id));
+    if (["kjopsdato", "kjopesum"].includes(m.felt) || (m.felt === "somDenEr" && m.regel !== "som_den_er_opplyst")) {
+      go(KJOPET);
+      return setFokus(`felt-${m.felt}`);
+    }
+    if (m.felt === "oppdaget") {
+      go(FEILEN);
+      return setFokus(`felt-oppdaget-${m.feilId}`);
+    }
+    if (["rapport", "opplysning", "beskrivelse", "konklusjon", "somDenEr"].includes(m.felt)) {
+      const id = m.feilId ?? valgte.find((h) => (detaljer[h.id]?.opplysning ?? "nei") !== "nei")?.id;
+      go(DETALJER, sideFor(id));
+      return setFokus(m.felt === "somDenEr" ? "felt-opplysning" : `felt-${m.felt}`);
+    }
+    go(KRAVSTEG);
+    setFokus(m.felt === "reklamert" ? "felt-kontakt" : m.felt === "kategori" ? "felt-krav" : `felt-${m.felt}`);
   };
   // The warnings of the whole case, each once: the dates' and the rest.
   const alleAdvarsler = [...tidslinje.advarsler, ...riktighet.advarsler].filter((m, i, xs) => xs.findIndex((x) => x.melding === m.melding && x.feilId === m.feilId) === i);
-  const datoadvarsler = alleAdvarsler.filter((m) => ["oppdaget", "rapport", "reklamert", "kjopsdato"].includes(m.felt) && tidslinje.advarsler.includes(m as Merknad)).length;
+  const datoadvarsler = alleAdvarsler.filter((m) => tidslinje.advarsler.includes(m as Merknad)).length;
 
-  // Step 5 opens at once and waits for the answer. Leaving step 5 (or asking again) makes an
-  // answer that is still on its way stale. The decision is found first, then the letter is built
-  // from the answers and the decision's paragraph.
-  const lagBrev = () => {
-    const mitt = ++foresporsel.current;
-    setFunn(null);
-    setBrevet(null);
-    if (step !== BREV) go(BREV);
-    startSok(async () => {
-      const svar = {
-        valg,
-        kjopsdato,
-        km: Number(km),
-        kjopesum: Number(kjopesum),
-        ar: car?.k.ar ?? null,
-        somDenEr,
-        krav,
-        // The estimate is typed as text in the form; the server wants a number.
-        detaljer: Object.fromEntries(Object.entries(detaljer).map(([id, d]) => [id, d.rapport ? { ...d, rapport: { ...d.rapport, overslag: d.rapport.overslag ? Number(d.rapport.overslag) : null } } : d])),
-        bil: car && { regnr: car.k.regnr, merke: car.k.merke, modell: car.k.modell, ar: car.k.ar },
-        selgerOrgnr: selger?.orgnr ?? null,
-        kontakt: reklamert === "ja" ? { reklamert: true, dato: reklamertDato, form: reklamertForm, svar: selgerSvar, forsok: selgerSvar === "forsokt" ? forsok : 0 } : { reklamert: false },
-        utlegg: kreverUtlegg ? utlegg.map((u) => ({ beskrivelse: u.beskrivelse, belop: Number(u.belop) })) : [],
-      };
-      const f = await finnVedtak(svar);
-      if (mitt !== foresporsel.current) return;
-      setFunn(f);
-      if (!f.ok) return;
-      const b = await byggBrevet({ svar, funn: f, ordreId: lesOrdreId() });
-      if (mitt === foresporsel.current) setBrevet(b);
-    });
-  };
+  function neste() {
+    if (!ok) return;
+    if (step === KJOPET) {
+      maal("steg2_ferdig");
+      return go(ute ? VURDERING : FEILEN);
+    }
+    if (step === FEILEN) {
+      maal("steg3_ferdig", { kategorier });
+      return go(VURDERING);
+    }
+    if (step === DETALJER && detaljSide < valgte.length - 1) return go(DETALJER, detaljSide + 1);
+    go(step + 1);
+  }
+  function tilbake() {
+    if (step === DETALJER && detaljSide > 0) return go(DETALJER, detaljSide - 1);
+    if (step === VURDERING && ute) return go(KJOPET);
+    if (step === KRAVSTEG) return go(DETALJER, Math.max(valgte.length - 1, 0));
+    if (step > 0) go(step - 1);
+  }
 
   async function kopier(b: Brev) {
     try {
@@ -940,6 +672,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
   }
 
   async function lastNed(b: Brev) {
+    maal("brev_lastet_ned");
     const { tilDocxBlob } = await import("@/lib/brev/docx");
     const url = URL.createObjectURL(await tilDocxBlob(b));
     const lenke = document.createElement("a");
@@ -951,325 +684,219 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
 
   const carRows = car
     ? [
-        {
-          k: "Første gang registrert",
-          v: car.k.ar ? String(car.k.ar) : "Ukjent",
-        },
+        { k: "Første gang registrert", v: car.k.ar ? String(car.k.ar) : "Ukjent" },
         ...(car.eierFra ? [{ k: "Sist registrert", v: datoTekst(car.eierFra) }] : []),
         ...(car.k.bruktimportert !== undefined ? [{ k: "Bruktimportert", v: car.k.bruktimportert ? "Ja" : "Nei" }] : []),
       ]
     : [];
   const stepAnim = `${dir > 0 ? "rkIn" : "rkBack"} 460ms cubic-bezier(.22,1,.36,1) both`;
+  const overline = (navn: string) => `Steg ${step + 1} av ${FOR_BETALING} · ${navn}`;
+  const H2 = { margin: 0, fontSize: 17, fontWeight: 600 } as const;
+  const visUte = step === VURDERING && ute;
+  const nesteTekst = step === FEILEN ? "Se vurderingen" : step === KRAVSTEG ? "Se brevet" : "Fortsett";
+  const harNeste = [BILEN, KJOPET, FEILEN, DETALJER, KRAVSTEG].includes(step);
+  const toKolonner = isDesktop && (step === FORHAND || step === BREVET);
 
   return (
-    <div
-      ref={rootRef}
-      className="rk"
-      style={{ width: "100%", flex: 1, minHeight: 0, display: "flex", background: "#f6f6f4", fontFamily: SANS, color: INK, overflow: "hidden", WebkitFontSmoothing: "antialiased" }}
-    >
+    <div ref={rootRef} className="rk" style={{ width: "100%", flex: 1, minHeight: 0, display: "flex", background: "#f6f6f4", fontFamily: SANS, color: INK, overflow: "hidden", WebkitFontSmoothing: "antialiased" }}>
       {isDesktop && (
-        <aside
-          style={{
-            width: 290,
-            flex: "none",
-            background: "#fff",
-            borderRight: `1px solid ${LINE}`,
-            display: "flex",
-            flexDirection: "column",
-            padding: "32px 24px",
-            boxSizing: "border-box",
-            gap: 40,
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.01em" }}>Reklamasjon</div>
-            <div style={{ fontSize: 13, color: "#5f6468" }}>Kjøp av bruktbil fra forhandler</div>
+        <aside style={{ width: 290, flex: "none", background: "#fff", borderRight: `1px solid ${LINE}`, display: "flex", flexDirection: "column", padding: "32px 24px", boxSizing: "border-box", gap: 40, overflowY: "auto" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Link href="/" aria-label="Til forsiden" style={{ color: INK, textDecoration: "none" }}>
+              <Logo />
+            </Link>
+            <div style={{ fontSize: 13, color: "#5f6468" }}>Reklamasjon på bruktbil fra forhandler</div>
           </div>
-          <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {STEPS.map((t, i) => {
-              const done = i < step,
+          <nav aria-label="Stegene" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {STEG.map((t, i) => {
+              const done = i < step && !(visUte && i > KJOPET),
                 cur = i === step;
               return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => done && go(i)}
-                  style={{
-                    ...KNAPP,
-                    display: "flex",
-                    gap: 14,
-                    alignItems: "flex-start",
-                    padding: "10px 10px",
-                    borderRadius: 10,
-                    cursor: done ? "pointer" : "default",
-                    background: cur ? "#f3f3f0" : "transparent",
-                    transition: "background .25s",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 26,
-                      height: 26,
-                      flex: "none",
-                      borderRadius: "50%",
-                      display: "grid",
-                      placeItems: "center",
-                      font: `600 12px ${MONO}`,
-                      background: done ? A : "#fff",
-                      border: `1.5px solid ${done ? A : cur ? INK : LINE}`,
-                      color: cur ? INK : "#8a8f93",
-                      transition: "all .3s",
-                    }}
+                <div key={t} style={{ display: "contents" }}>
+                  {i === BREVET && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px 6px", font: `600 10.5px ${MONO}`, letterSpacing: ".08em", textTransform: "uppercase", color: "#8a8f93" }}>
+                      <span style={{ flex: 1, height: 1, background: LINE }} />
+                      Betaling {PRIS} kr
+                      <span style={{ flex: 1, height: 1, background: LINE }} />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => done && i < FORHAND && go(i, i === DETALJER ? Math.max(valgte.length - 1, 0) : 0)}
+                    aria-current={cur ? "step" : undefined}
+                    style={{ ...KNAPP, display: "flex", gap: 14, alignItems: "flex-start", padding: 10, borderRadius: 10, cursor: done && i < FORHAND ? "pointer" : "default", background: cur ? "#f3f3f0" : "transparent", transition: "background .25s" }}
                   >
-                    {done ? <Hake /> : i + 1}
-                  </span>
-                  <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, paddingTop: 3 }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: done || cur ? INK : "#8a8f93" }}>{t}</span>
-                    {done && subs[i] && (
-                      <span style={{ fontSize: 12.5, color: "#5f6468", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 190 }}>{subs[i]}</span>
-                    )}
-                  </span>
-                </button>
+                    <span
+                      style={{
+                        width: 26,
+                        height: 26,
+                        flex: "none",
+                        boxSizing: "border-box",
+                        borderRadius: "50%",
+                        display: "grid",
+                        placeItems: "center",
+                        font: `600 12px ${MONO}`,
+                        background: done ? A : "#fff",
+                        border: `1.5px solid ${done ? A : cur ? (visUte ? "#9a9ea2" : INK) : LINE}`,
+                        color: cur ? INK : "#8a8f93",
+                        transition: "all .3s",
+                      }}
+                    >
+                      {done ? <Hake /> : i + 1}
+                    </span>
+                    <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, paddingTop: 3 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: done || cur ? INK : "#8a8f93" }}>{t}</span>
+                      {((done && subs[i]) || (i === VURDERING && !done && !cur)) && (
+                        <span style={{ fontSize: 12.5, color: "#5f6468", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 190 }}>{subs[i]}</span>
+                      )}
+                    </span>
+                  </button>
+                </div>
               );
             })}
           </nav>
+          <div style={{ marginTop: "auto", fontSize: 13, lineHeight: 1.5, color: "#5f6468" }}>Vurderingen er gratis. Du betaler først når du har sett brevet.</div>
         </aside>
       )}
 
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         {!isDesktop && (
-          <div style={{ background: "#fff", borderBottom: `1px solid ${LINE}`, padding: "14px 20px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ background: "#fff", borderBottom: `1px solid ${LINE}`, padding: "16px 20px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 16, fontWeight: 700 }}>Reklamasjon</span>
-              <span style={{ font: `500 12px ${MONO}`, color: "#5f6468" }}>{`${step + 1} / ${STEPS.length} · ${STEPS[step]}`}</span>
+              <Link href="/" aria-label="Til forsiden" style={{ color: INK, textDecoration: "none" }}>
+                <Logo liten />
+              </Link>
+              <span style={{ font: `500 12px ${MONO}`, color: "#5f6468" }}>{step === BREVET ? "Ferdig" : visUte ? "Vurdering" : `${step + 1} / ${FOR_BETALING} · ${STEG[step]}`}</span>
             </div>
-            <div style={{ display: "flex", gap: 4 }}>
-              {STEPS.map((t, i) => (
-                <span key={t} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? A : LINE, transition: "background .45s cubic-bezier(.22,1,.36,1)" }} />
-              ))}
-            </div>
+            {step !== BREVET && (
+              <div style={{ display: "flex", gap: 4 }}>
+                {STEG.slice(0, FOR_BETALING).map((t, i) => (
+                  <span key={t} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? (visUte ? "#9a9ea2" : A) : LINE, transition: "background .45s cubic-bezier(.22,1,.36,1)" }} />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         <div ref={scrollRef} style={{ flex: 1, overflow: "auto", overflowX: "hidden" }}>
-          <div style={{ maxWidth: 880, margin: "0 auto", padding: isDesktop ? "56px 40px 64px" : "28px 20px 40px", boxSizing: "border-box" }}>
-            {step === 0 && (
-              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 36 }}>
+          <div style={{ maxWidth: toKolonner ? 960 : 760, margin: "0 auto", padding: isDesktop ? "56px 40px 64px" : "28px 20px 36px", boxSizing: "border-box" }}>
+            {step === BILEN && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
                 <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <span style={OVERLINE}>Steg 1 av {STEPS.length} · Kjøretøy</span>
-                  <h1 style={H1}>Hvilken bil gjelder reklamasjonen?</h1>
-                  <p style={INGRESS}>Oppgi registreringsnummeret. Kjøretøyopplysningene hentes automatisk fra Statens vegvesen.</p>
+                  <span style={OVERLINE}>{overline("Bilen")}</span>
+                  <h1 style={H1}>{car && !fetching ? "Er dette bilen din?" : "Hvilken bil gjelder det?"}</h1>
+                  <p style={INGRESS}>{car && !fetching ? "Opplysningene er hentet fra Statens vegvesen." : "Skriv inn registreringsnummeret. Opplysningene hentes fra Statens vegvesen."}</p>
                 </header>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, animation: pop(2) }}>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "stretch",
-                        border: `2px solid ${INK}`,
-                        borderRadius: 8,
-                        overflow: "hidden",
-                        background: "#fff",
-                        height: 58,
-                        width: 230,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 28,
-                          flex: "none",
-                          background: "oklch(0.42 0.15 262)",
-                          color: "#fff",
-                          display: "flex",
-                          alignItems: "flex-end",
-                          justifyContent: "center",
-                          paddingBottom: 7,
-                          boxSizing: "border-box",
-                          font: `700 12px ${SANS}`,
-                        }}
-                      >
-                        N
-                      </div>
-                      <input
-                        value={regnr}
-                        onChange={(e) => setRegnr(e.target.value.toUpperCase().replace(/[^A-ZÆØÅ0-9 -]/g, ""))}
-                        onKeyDown={(e) => e.key === "Enter" && void fetchCar()}
-                        placeholder="AB 12345"
-                        maxLength={8}
-                        aria-label="Registreringsnummer"
-                        autoComplete="off"
-                        spellCheck={false}
-                        style={{
-                          border: "none",
-                          outline: "none",
-                          minWidth: 0,
-                          width: "100%",
-                          padding: "0 14px",
-                          font: `600 25px ${MONO}`,
-                          letterSpacing: ".06em",
-                          textTransform: "uppercase",
-                          color: INK,
-                          background: "transparent",
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => void fetchCar()}
-                      disabled={!gyldig || fetching}
-                      style={{
-                        ...KNAPP,
-                        cursor: gyldig && !fetching ? "pointer" : "not-allowed",
-                        height: 58,
-                        padding: "0 22px",
-                        borderRadius: 10,
-                        background: gyldig ? INK : "#9a9ea2",
-                        color: "#fff",
-                        fontSize: 15,
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        transition: "background .2s",
-                      }}
-                    >
-                      {fetching && (
-                        <span
-                          style={{
-                            width: 14,
-                            height: 14,
-                            borderRadius: "50%",
-                            border: "2px solid rgba(255,255,255,.35)",
-                            borderTopColor: "#fff",
-                            animation: "rkSpin .7s linear infinite",
-                          }}
+                {!car && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, animation: pop(2) }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "stretch", border: `2px solid ${INK}`, borderRadius: 8, overflow: "hidden", background: "#fff", height: 58, width: 230 }}>
+                        <div aria-hidden="true" style={{ width: 28, flex: "none", background: "oklch(0.42 0.15 262)", color: "#fff", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: 7, boxSizing: "border-box", font: `700 12px ${SANS}` }}>
+                          N
+                        </div>
+                        <input
+                          value={regnr}
+                          onChange={(e) => setRegnr(e.target.value.toUpperCase().replace(/[^A-ZÆØÅ0-9 -]/g, ""))}
+                          onKeyDown={(e) => e.key === "Enter" && void fetchCar()}
+                          placeholder="AB 12345"
+                          maxLength={8}
+                          aria-label="Registreringsnummer"
+                          autoComplete="off"
+                          spellCheck={false}
+                          style={{ border: "none", outline: "none", minWidth: 0, width: "100%", padding: "0 14px", font: `600 25px ${MONO}`, letterSpacing: ".06em", textTransform: "uppercase", color: INK, background: "transparent" }}
                         />
-                      )}
-                      {fetching ? "Henter …" : car ? "Hent på nytt" : "Hent opplysninger"}
-                    </button>
-                  </div>
-                  {oppslagFeil && (
-                    <Varsel type="stopp">{oppslagFeil}</Varsel>
-                  )}
-                </div>
-
-                {fetching && (
-                  <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: 22, display: "flex", flexDirection: "column", gap: 12 }}>
-                    <span style={{ height: 18, width: "55%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out infinite" }} />
-                    <span style={{ height: 12, width: "35%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out .15s infinite" }} />
-                    <span style={{ height: 12, width: "70%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out .3s infinite" }} />
-                  </div>
-                )}
-
-                {car && !fetching && (
-                  <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, overflow: "hidden", animation: pop(0) }}>
-                    <div style={{ padding: "20px 22px", display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start", borderBottom: "1px solid #eeeeeb" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>{carName}</span>
-                        <span style={{ fontSize: 14, color: "#5f6468" }}>{[car.k.regnr, car.k.ar].filter(Boolean).join(" · ")}</span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => {
-                          setCar(null);
-                          setRegnr("");
-                        }}
-                        style={{ all: "unset", cursor: "pointer", fontSize: 13, fontWeight: 600, color: A, whiteSpace: "nowrap" }}
+                        onClick={() => void fetchCar()}
+                        disabled={!gyldig || fetching}
+                        style={{ ...KNAPP, cursor: gyldig && !fetching ? "pointer" : "not-allowed", height: 58, padding: "0 22px", borderRadius: 10, background: gyldig ? A : "#9a9ea2", color: "#fff", fontSize: 15, fontWeight: 600, display: "flex", alignItems: "center", gap: 10 }}
                       >
-                        Feil bil?
+                        {fetching && <span style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,.35)", borderTopColor: "#fff", animation: "rkSpin .7s linear infinite" }} />}
+                        {fetching ? "Henter …" : "Sjekk bilen"}
                       </button>
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))" }}>
-                      {carRows.map((c, i) => (
-                        <div key={c.k} style={{ padding: "14px 22px", display: "flex", flexDirection: "column", gap: 3, animation: pop(i + 1) }}>
-                          <span style={{ fontSize: 12, color: "#5f6468" }}>{c.k}</span>
-                          <span style={{ fontSize: 14.5, fontWeight: 500 }}>{c.v}</span>
-                        </div>
-                      ))}
-                    </div>
+                    {oppslagFeil && <Varsel type="stopp">{oppslagFeil}</Varsel>}
+                  </div>
+                )}
+
+                {fetching && (
+                  <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: 22, display: "flex", flexDirection: "column", gap: 12 }}>
+                    {["55%", "35%", "70%"].map((b, i) => (
+                      <span key={b} style={{ height: i ? 12 : 18, width: b, borderRadius: 4, background: "#ecedea", animation: `rkShimmer 1.1s ease-in-out ${i * 0.15}s infinite` }} />
+                    ))}
                   </div>
                 )}
 
                 {car && !fetching && (
-                  <section id="felt-kjopsdato" style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(4) }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Når kjøpte du bilen?</h2>
-                      <p style={{ margin: 0, fontSize: 14, color: "#5f6468" }}>
-                        {car.eierFra ? "Foreslått ut fra når bilen sist ble omregistrert. Endre hvis det ikke stemmer." : "Vi fant ikke datoen i motorvognregisteret. Fyll inn selv."}
-                      </p>
+                  <>
+                    <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, overflow: "hidden", animation: pop(0) }}>
+                      <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 10, borderBottom: "1px solid #eeeeeb" }}>
+                        <Skilt regnr={car.k.regnr} />
+                        <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>{carName}</span>
+                        {car.k.ar && <span style={{ fontSize: 14, color: "#5f6468" }}>{car.k.ar}</span>}
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))" }}>
+                        {carRows.map((c, i) => (
+                          <div key={c.k} style={{ padding: "14px 22px", display: "flex", flexDirection: "column", gap: 3, animation: pop(i + 1) }}>
+                            <span style={{ fontSize: 12, color: "#5f6468" }}>{c.k}</span>
+                            <span style={{ fontSize: 14.5, fontWeight: 500 }}>{c.v}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <Datovelger
-                      etikett="Kjøpsdato"
-                      verdi={kjopsdato}
-                      maks={idag}
-                      sett={(d) => {
-                        setKjopsdato(d);
-                        setFunn(null);
+                    <Radiovalg
+                      id="stemmer"
+                      sporsmal="Stemmer dette?"
+                      valg={STEMMER}
+                      valgt={bilBekreftet}
+                      velg={(v) => {
+                        if (v === "ja") return setBilBekreftet("ja");
+                        setCar(null);
+                        setRegnr("");
+                        setBilBekreftet(null);
                       }}
                     />
-                    {datoOk && kjopsdato >= aarSiden(5) && kjopsdato < aarSiden(2) && <Fristvarsel v={lovversjon(kjopsdato)}>{OVER_TO_AAR_KJOP}</Fristvarsel>}
-                    <Merknader
-                      stopp={[...(erDato(kjopsdato) ? merk(tidslinje, "kjopsdato").stopp : []), ...merkR("kjopsdato").stopp]}
-                      advarsler={merkR("kjopsdato").advarsler}
-                    />
-                  </section>
-                )}
-
-                {car && !fetching && (
-                  <section id="felt-kjopesum" style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(6) }}>
-                    <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Om kjøpet</h2>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 12 }}>
-                      <Tallfelt etikett="Kilometerstand ved kjøp" hjelp="Står i kjøpekontrakten." enhet="km" verdi={km} sett={setKm} maks={7} />
-                      <Tallfelt etikett="Kjøpesum" hjelp="Det du betalte for bilen." enhet="kr" verdi={kjopesum} sett={setKjopesum} maks={8} />
-                    </div>
-                    <Merknader {...merkR("kjopesum")} />
-                  </section>
-                )}
-
-                {car && !fetching && (
-                  <section id="felt-selger" style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(7) }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Hvem kjøpte du bilen av?</h2>
-                      <p style={{ margin: 0, fontSize: 14, color: "#5f6468" }}>Søk på navnet eller org.nr. fra kjøpekontrakten. Brevet adresseres til selgeren slik Enhetsregisteret oppgir den.</p>
-                    </div>
-                    <Selgervalg valgt={selger} velg={setSelger} />
-                    <Merknader {...merkR("selger")} />
-                  </section>
-                )}
-
-                {car && !fetching && (
-                  <section id="felt-somDenEr" style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(8) }}>
-                    <h2 id="som-den-er" style={{ margin: 0, fontSize: 17, fontWeight: 600, textWrap: "pretty" }}>
-                      Sto det «som den er», «som forevist» eller lignende i kontrakten eller annonsen?
-                    </h2>
-                    <div role="radiogroup" aria-labelledby="som-den-er" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 10 }}>
-                      {SOM_DEN_ER.map((o, i) => (
-                        <button
-                          key={o.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={somDenEr === o.id}
-                          onClick={() => setSomDenEr(o.id)}
-                          className="rk-kat"
-                          style={{ ...kort(somDenEr === o.id, pop(9 + i)), display: "flex", alignItems: "center", gap: 12, padding: "15px 16px" }}
-                        >
-                          <Radiomerke valgt={somDenEr === o.id} />
-                          <span style={{ fontSize: 15, fontWeight: 500 }}>{o.navn}</span>
-                        </button>
-                      ))}
-                    </div>
-                    <Merknader {...merkR("somDenEr")} />
-                  </section>
+                  </>
                 )}
               </div>
             )}
 
-            {step === 1 && (
-              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 36 }}>
+            {step === KJOPET && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
                 <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <span style={OVERLINE}>Steg 2 av {STEPS.length} · Feilen</span>
+                  <span style={OVERLINE}>{overline("Kjøpet")}</span>
+                  <h1 style={H1}>Om kjøpet</h1>
+                </header>
+                <section id="felt-kjopsdato" style={{ display: "flex", flexDirection: "column", gap: 8, animation: pop(0) }}>
+                  <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Når overtok du bilen?</h2>
+                  <Datovelger etikett="Kjøpsdato" verdi={kjopsdato} maks={idag} sett={setKjopsdato} />
+                  <span style={{ fontSize: 13, lineHeight: 1.55, color: "#5f6468" }}>
+                    Fristene regnes fra denne datoen.{car?.eierFra ? " Foreslått ut fra når bilen sist ble omregistrert." : ""}
+                  </span>
+                  {erDato(kjopsdato) && !ute && kjopsdato < aarSiden(2) && <Fristvarsel v={lovversjon(kjopsdato)}>{OVER_TO_AAR_KJOP}</Fristvarsel>}
+                  <Merknader stopp={kjopStopp} advarsler={merkR("kjopsdato").advarsler} />
+                </section>
+                <section id="felt-kjopesum" style={{ display: "flex", flexDirection: "column", gap: 12, animation: pop(1) }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
+                    <Tallfelt etikett="Km ved kjøp" hjelp="Står i kjøpekontrakten." enhet="km" verdi={km} sett={setKm} maks={7} />
+                    <Tallfelt etikett="Kjøpesum" hjelp="Det du betalte for bilen." enhet="kr" verdi={kjopesum} sett={setKjopesum} maks={8} />
+                  </div>
+                  <Merknader {...merkR("kjopesum")} />
+                </section>
+                <section id="felt-somDenEr" style={{ display: "flex", flexDirection: "column", gap: 12, animation: pop(2) }}>
+                  <Radiovalg id="som-den-er" sporsmal="Står det «som den er» eller lignende i kontrakten eller annonsen?" valg={SOM_DEN_ER} valgt={somDenEr} velg={setSomDenEr} min={120} />
+                  {somDenErGammel({ kjopsdato, km: Number(km) || null, ar: car?.k.ar ?? null, somDenEr }) && <Varsel type="advarsel">{SOM_DEN_ER_GAMMEL}</Varsel>}
+                </section>
+              </div>
+            )}
+
+            {step === FEILEN && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
+                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <span style={OVERLINE}>{overline("Feilen")}</span>
                   <h1 style={H1}>Hva er galt med bilen?</h1>
-                  <p style={INGRESS}>Velg ett eller flere områder. Du beskriver dem nærmere i neste steg.</p>
+                  <p style={INGRESS}>Velg ett eller flere områder, og deretter feilene du har lagt merke til.</p>
                 </header>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 10 }}>
                   {HOVEDKATEGORIER.map((o, i) => {
@@ -1281,339 +908,230 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                         aria-pressed={sel}
                         onClick={() => toggleCat(o.id)}
                         className="rk-kat"
-                        style={{
-                          ...KNAPP,
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 18,
-                          padding: "14px 14px 16px",
-                          borderRadius: 12,
-                          border: `1.5px solid ${sel ? A : LINE}`,
-                          background: sel ? AS : "#fff",
-                          transition: "border-color .2s,background .2s,transform .15s,box-shadow .2s",
-                          animation: pop(i),
-                        }}
+                        style={{ ...KNAPP, display: "flex", flexDirection: "column", gap: 18, padding: "14px 14px 16px", borderRadius: 12, border: `1.5px solid ${sel ? A : LINE}`, background: sel ? AS : "#fff", transition: "border-color .2s,background .2s,transform .15s,box-shadow .2s", animation: pop(i) }}
                       >
                         <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ font: `500 11px ${MONO}`, color: "#8a8f93" }}>{o.kode}</span>
-                          <span
-                            style={{
-                              width: 18,
-                              height: 18,
-                              borderRadius: 5,
-                              border: `1.5px solid ${sel ? A : "#b4b8bc"}`,
-                              background: sel ? A : "#fff",
-                              display: "grid",
-                              placeItems: "center",
-                              transition: "all .2s",
-                            }}
-                          >
-                            {sel && <Hake />}
-                          </span>
+                          <span style={{ width: 18, height: 18, boxSizing: "border-box", borderRadius: 5, border: `1.5px solid ${sel ? A : "#b4b8bc"}`, background: sel ? A : "#fff", display: "grid", placeItems: "center", transition: "all .2s" }}>{sel && <Hake />}</span>
                         </span>
                         <span style={{ fontSize: 15, fontWeight: 600 }}>{o.navn}</span>
                       </button>
                     );
                   })}
                 </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 32 }}>
-                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <span style={OVERLINE}>Steg 3 av {STEPS.length} · Detaljer</span>
-                  <h1 style={H1}>Beskriv feilene</h1>
-                  <p style={INGRESS}>
-                    Tiden regnes fra overtakelsen. {beskrevet} av {valgte.length} områder er besvart.
-                  </p>
-                </header>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {valgte.map((h, i) => {
-                    const d = detaljer[h.id] ?? {};
-                    const besvart = besvarteMed(h.id, detaljer);
-                    const done = ferdig(h.id);
-                    const open = apenId === h.id;
-                    const r = d.rapport ?? TOM_RAPPORT;
-                    // A report already filled in for an earlier defect, to copy.
-                    const forrige = valgte
-                      .slice(0, i)
-                      .reverse()
-                      .map((x) => detaljer[x.id]?.rapport)
-                      .find((x) => x?.hvem && x.navn.trim() && x.dato);
-                    const sammendrag = [
-                      d.beskrivelse?.trim(),
-                      ...h.under.filter((u) => valg[h.id].includes(u.id)).map((u) => u.navn),
-                      d.oppdaget && erDato(d.oppdaget) ? `Oppdaget ${d.omtrentlig ? "omtrent " : ""}${datoTekst(d.oppdaget)}` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ");
-                    return (
-                      <div
-                        key={h.id}
-                        id={`felt-feil-${h.id}`}
-                        style={{
-                          background: "#fff",
-                          border: `1.5px solid ${open ? A : LINE}`,
-                          borderRadius: 14,
-                          overflow: "hidden",
-                          boxShadow: open ? "0 8px 28px rgba(20,30,50,.08)" : "none",
-                          transition: "border-color .25s,box-shadow .25s",
-                          animation: pop(i),
-                        }}
-                      >
-                        <button
-                          type="button"
-                          aria-expanded={open}
-                          onClick={() => setApent(open ? null : h.id)}
-                          style={{ ...KNAPP, width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px 18px" }}
-                        >
-                          <span
-                            style={{
-                              width: 28,
-                              height: 28,
-                              flex: "none",
-                              borderRadius: "50%",
-                              display: "grid",
-                              placeItems: "center",
-                              font: `600 12px ${MONO}`,
-                              background: done ? A : "#fff",
-                              border: `1.5px solid ${done ? A : open ? INK : LINE}`,
-                              color: open ? INK : "#8a8f93",
-                              transition: "all .3s",
-                            }}
-                          >
-                            {done ? <Hake /> : i + 1}
-                          </span>
-                          <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-                            <span style={{ fontSize: 16, fontWeight: 600 }}>{h.navn}</span>
-                            {!open && sammendrag && (
-                              <span style={{ fontSize: 13.5, color: "#5f6468", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sammendrag}</span>
-                            )}
-                          </span>
-                          {!open && <span style={{ fontSize: 13, fontWeight: 600, color: done ? A : "#8a8f93", whiteSpace: "nowrap" }}>{done ? "Endre" : besvart === 3 ? "Mangler rapport" : `${besvart} av 3`}</span>}
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 14 14"
-                            aria-hidden="true"
-                            style={{ flex: "none", transform: `rotate(${open ? 180 : 0}deg)`, transition: "transform .3s cubic-bezier(.22,1,.36,1)" }}
-                          >
-                            <path d="M3.5 5.5L7 9l3.5-3.5" fill="none" stroke="#5f6468" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                        {open && (
-                          <div style={{ padding: isDesktop ? "4px 18px 22px 60px" : "4px 18px 22px", display: "flex", flexDirection: "column", gap: 22 }}>
-                            <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, fontWeight: 600, animation: pop(0) }}>
-                              <span>
-                                Hva er feil? <span style={{ fontWeight: 400, color: "#5f6468" }}>(valgfritt)</span>
-                              </span>
-                              <input
-                                value={d.beskrivelse ?? ""}
-                                onChange={(e) => {
-                                  const beskrivelse = e.target.value;
-                                  setDetaljer((v) => ({ ...v, [h.id]: { ...v[h.id], beskrivelse } }));
-                                }}
-                                placeholder="Feilen er at …"
-                                maxLength={MAKS_BESKRIVELSE}
-                                className="rk-input"
-                                style={{
-                                  height: 48,
-                                  border: `1.5px solid ${LINE}`,
-                                  borderRadius: 10,
-                                  padding: "0 14px",
-                                  font: `400 15px ${SANS}`,
-                                  color: INK,
-                                  outline: "none",
-                                  background: "#fff",
-                                }}
-                              />
-                              <Merknader {...merkR("beskrivelse", h.id)} />
-                            </label>
-                            {h.under.length > 0 && (
-                              <div style={{ display: "flex", flexDirection: "column", gap: 10, animation: pop(1) }}>
-                                <span style={{ fontSize: 14, fontWeight: 600 }}>Hva gjelder feilen?</span>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                                  {h.under.map((u) => {
-                                    const sel = valg[h.id].includes(u.id);
-                                    return (
-                                      <button key={u.id} type="button" aria-pressed={sel} onClick={() => toggleSub(h.id, u.id)} className="rk-chip" style={chip(sel)}>
-                                        {u.navn}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            )}
-                            <div style={{ display: "flex", flexDirection: "column", gap: 8, animation: pop(2) }}>
-                              <span style={{ fontSize: 14, fontWeight: 600 }}>Når oppdaget du feilen?</span>
-                              <span style={{ fontSize: 13, color: "#5f6468", lineHeight: 1.5 }}>Dagen du først merket feilen. Vet du ikke dagen, velg omtrent og kryss av for omtrentlig.</span>
-                              <Datovelger
-                                etikett={`Når oppdaget du ${h.navn}?`}
-                                verdi={d.oppdaget ?? ""}
-                                min={kjopsdato ? dagEtter(kjopsdato) : undefined}
-                                maks={idag}
-                                sett={(dato) => settDetalj(h.id, { oppdaget: dato, bekreftet: false })}
-                              />
-                              <Avkrysning valgt={!!d.omtrentlig} velg={() => settDetalj(h.id, { omtrentlig: !d.omtrentlig, bekreftet: false })}>
-                                Datoen er omtrentlig
-                              </Avkrysning>
-                              {/* The defect's own date, and a complaint late for this defect (also shown at the complaint in step 4). */}
-                              <Merknader stopp={merk(tidslinje, "oppdaget", h.id).stopp} advarsler={[...merk(tidslinje, "oppdaget", h.id).advarsler, ...merk(tidslinje, "reklamert", h.id).advarsler]} />
-                              {tidslinje.advarsler.some((m) => m.feilId === h.id && m.bekreft) && (
-                                <Avkrysning valgt={!!d.bekreftet} velg={() => settDetalj(h.id, { bekreftet: !d.bekreftet })}>
-                                  Jeg har sjekket datoen, og den stemmer
-                                </Avkrysning>
-                              )}
-                            </div>
-                            <div style={{ animation: pop(3) }}>
-                              <Chipvalg
-                                sporsmal="Har et verksted undersøkt feilen?"
-                                etikett={`Har et verksted undersøkt ${h.navn}?`}
-                                valg={KILDE}
-                                valgt={d.verksted}
-                                velg={(k) => settDetalj(h.id, { verksted: k })}
-                              />
-                            </div>
-                            {d.verksted === "skriftlig" && (
-                              <fieldset
-                                style={{ margin: 0, minWidth: 0, border: `1px solid ${LINE}`, borderRadius: 12, padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 20, background: "#fafaf8", animation: pop(0) }}
-                              >
-                                <legend style={{ padding: "0 6px", fontSize: 14, fontWeight: 600 }}>Rapporten fra verkstedet</legend>
-                                {forrige && (
-                                  <button type="button" onClick={() => kopierRapport(h.id, forrige)} className="rk-chip" style={{ ...chip(false), alignSelf: "flex-start" }}>
-                                    Samme rapport som forrige feil
-                                  </button>
-                                )}
-                                <Chipvalg sporsmal="Hvem undersøkte bilen?" etikett={`Hvem undersøkte ${h.navn}?`} valg={VERKSTED_HVEM} valgt={r.hvem} velg={(x) => settRapport(h.id, { hvem: x })} />
-                                <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, fontWeight: 600 }}>
-                                  Verkstedets navn
-                                  <input
-                                    value={r.navn}
-                                    onChange={(e) => settRapport(h.id, { navn: e.target.value })}
-                                    maxLength={MAKS_VERKSTEDNAVN}
-                                    autoComplete="off"
-                                    className="rk-input"
-                                    style={{ height: 48, border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "0 14px", font: `400 15px ${SANS}`, color: INK, outline: "none", background: "#fff" }}
-                                  />
-                                </label>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                  <span style={{ fontSize: 14, fontWeight: 600 }}>Dato for rapporten</span>
-                                  <Datovelger etikett={`Dato for rapporten om ${h.navn}`} verdi={r.dato} min={kjopsdato ? dagEtter(kjopsdato) : undefined} maks={idag} sett={(dato) => settRapport(h.id, { dato })} />
-                                  <Merknader
-                                    {...(r.dato && !etterKjop(r.dato) ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk(tidslinje, "rapport", h.id))}
-                                  />
-                                </div>
-                                <div role="group" aria-label={`Hva sier rapporten om ${h.navn}?`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                  <span style={{ fontSize: 14, fontWeight: 600 }}>Hva sier rapporten?</span>
-                                  <span style={{ fontSize: 13.5, color: "#5f6468", lineHeight: 1.5 }}>Kryss bare av det rapporten faktisk sier. Forhandleren kan be om å få se den.</span>
-                                  {RAPPORT_PUNKTER.map((p) => (
-                                    <Avkrysning
-                                      key={p.id}
-                                      valgt={r.punkter.includes(p.id)}
-                                      velg={() => settRapport(h.id, { punkter: r.punkter.includes(p.id) ? r.punkter.filter((x) => x !== p.id) : [...r.punkter, p.id] })}
-                                    >
-                                      {p.skjema}
-                                    </Avkrysning>
-                                  ))}
-                                </div>
-                                {r.punkter.includes("overslag") && (
-                                  <div style={{ maxWidth: 320 }}>
-                                    <Tallfelt etikett="Kostnadsoverslag for utbedring" hjelp="Beløpet rapporten oppgir. Valgfritt." enhet="kr" verdi={r.overslag} sett={(overslag) => settRapport(h.id, { overslag })} maks={7} />
-                                  </div>
-                                )}
-                                <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, fontWeight: 600 }}>
-                                  <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                                    <span>
-                                      Rapportens konklusjon, ordrett <span style={{ fontWeight: 400, color: "#5f6468" }}>(valgfritt)</span>
-                                    </span>
-                                    <span style={{ fontSize: 13, fontWeight: 400, color: "#5f6468" }}>Skriv av rapportens konklusjon ordrett, gjerne én til tre setninger.</span>
-                                  </span>
-                                  <textarea
-                                    value={r.konklusjon}
-                                    onChange={(e) => settRapport(h.id, { konklusjon: e.target.value })}
-                                    maxLength={MAKS_KONKLUSJON}
-                                    rows={4}
-                                    className="rk-input"
-                                    style={{ border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "12px 14px", font: `400 15px/1.5 ${SANS}`, color: INK, outline: "none", background: "#fff", resize: "vertical" }}
-                                  />
-                                  <Merknader {...merkR("konklusjon", h.id)} />
-                                </label>
-                              </fieldset>
-                            )}
-                            <div style={{ animation: pop(4) }}>
-                              <Chipvalg
-                                sporsmal="Skrev eller sa selger noe om dette før kjøpet, for eksempel i annonse, kontrakt eller melding?"
-                                etikett={`Skrev eller sa selger noe om ${h.navn} før kjøpet?`}
-                                valg={KILDE}
-                                valgt={d.opplysning}
-                                velg={(k) => settDetalj(h.id, { opplysning: k })}
-                              />
-                              <Merknader {...merkR("opplysning", h.id)} />
-                            </div>
-                          </div>
-                        )}
+                {valgte
+                  .filter((h) => h.under.length)
+                  .map((h) => (
+                    <section key={h.id} aria-label={`${h.navn}: hva gjelder feilen?`} style={{ display: "flex", flexDirection: "column", gap: 12, animation: pop(0) }}>
+                      <span style={{ fontSize: 15, fontWeight: 600 }}>
+                        {h.navn} <span style={{ fontWeight: 400, color: "#5f6468" }}>– hva gjelder feilen? (valgfritt)</span>
+                      </span>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {h.under.map((u) => {
+                          const sel = valg[h.id].includes(u.id);
+                          return (
+                            <button key={u.id} type="button" aria-pressed={sel} onClick={() => toggleSub(h.id, u.id)} className="rk-chip" style={chip(sel)}>
+                              {u.navn}
+                            </button>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
-                {tidslinje.avledet.some((a) => a.tidsnivaa === 3) && (
-                  <Fristvarsel v={lovversjon(kjopsdato)}>{OVER_TO_AAR_FEIL}</Fristvarsel>
+                    </section>
+                  ))}
+                {valgte.length > 0 && (
+                  <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Når oppdaget du {valgte.length > 1 ? "hver feil" : "feilen"}?</h2>
+                    {valgte.map((h, i) => {
+                      const d = detaljer[h.id] ?? {};
+                      const under = h.under.filter((u) => valg[h.id].includes(u.id)).map((u) => u.navn);
+                      const oppdaget = merk("oppdaget", h.id);
+                      const slitedel = erDato(d.oppdaget) && erDato(kjopsdato) ? slitedelGrunn(kjopsdato, { hoved: h.id, under: valg[h.id], oppdaget: d.oppdaget }) : null;
+                      return (
+                        <div key={h.id} id={`felt-oppdaget-${h.id}`} style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10, animation: pop(i) }}>
+                          <span style={{ fontSize: 15, fontWeight: 600 }}>
+                            {h.navn}
+                            {under.length > 0 && <span style={{ fontWeight: 400, color: "#5f6468" }}> · {under.join(", ")}</span>}
+                          </span>
+                          <span style={{ fontSize: 13.5, color: "#5f6468" }}>Dagen du først merket feilen. Vet du ikke dagen, velg omtrent og kryss av for omtrentlig.</span>
+                          <Datovelger etikett={`Når oppdaget du ${h.navn}?`} verdi={d.oppdaget ?? ""} min={kjopsdato ? dagEtter(kjopsdato) : undefined} maks={idag} sett={(dato) => settDetalj(h.id, { oppdaget: dato, bekreftet: false })} />
+                          {erDato(d.oppdaget) && erDato(kjopsdato) && d.oppdaget > kjopsdato && <span style={{ fontSize: 13, lineHeight: 1.55, color: "#5f6468" }}>{tidEtter(kjopsdato, d.oppdaget)}</span>}
+                          <Avkrysning valgt={!!d.omtrentlig} velg={() => settDetalj(h.id, { omtrentlig: !d.omtrentlig, bekreftet: false })}>
+                            Datoen er omtrentlig
+                          </Avkrysning>
+                          <Merknader stopp={oppdaget.stopp} advarsler={[...oppdaget.advarsler, ...(slitedel ? [{ melding: slitedel.tekst }] : [])]} />
+                          {tidslinje.advarsler.some((m) => m.feilId === h.id && m.felt === "oppdaget" && m.bekreft) && (
+                            <Avkrysning valgt={!!d.bekreftet} velg={() => settDetalj(h.id, { bekreftet: !d.bekreftet })}>
+                              Jeg har sjekket datoen, og den stemmer
+                            </Avkrysning>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {tidslinje.avledet.some((a) => a.tidsnivaa === 3) && <Fristvarsel v={lovversjon(kjopsdato)}>{OVER_TO_AAR_FEIL}</Fristvarsel>}
+                  </section>
                 )}
               </div>
             )}
 
-            {step === 3 && (
-              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 36 }}>
-                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <span style={OVERLINE}>Steg 4 av {STEPS.length} · Krav</span>
-                  <h1 style={H1}>Hva krever du av forhandleren?</h1>
-                  <p style={INGRESS}>Rettighetene ved mangel følger av forbrukerkjøpsloven. Velg det kravet som best beskriver ønsket løsning.</p>
-                </header>
-                <div id="felt-krav" role="radiogroup" aria-label="Krav" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(250px,1fr))", gap: 10 }}>
-                  {KRAV.map((o, i) => (
-                    <button
-                      key={o.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={krav === o.id}
-                      onClick={() => setKrav(o.id)}
-                      className="rk-kat"
-                      style={{ ...kort(krav === o.id, pop(i)), borderRadius: 12, display: "flex", flexDirection: "column", gap: 10, padding: 18 }}
-                    >
-                      <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <Radiomerke valgt={krav === o.id} />
-                        <span style={{ fontSize: 16, fontWeight: 600, flex: 1 }}>{o.navn}</span>
-                        {o.merke && (
-                          <span
-                            style={{
-                              font: `600 10.5px ${MONO}`,
-                              letterSpacing: ".05em",
-                              textTransform: "uppercase",
-                              color: A,
-                              background: "oklch(0.94 0.03 255)",
-                              padding: "3px 7px",
-                              borderRadius: 5,
-                            }}
-                          >
-                            {o.merke}
-                          </span>
-                        )}
-                      </span>
-                      <span style={{ fontSize: 14, lineHeight: 1.5, color: "#5f6468", paddingLeft: 30, textWrap: "pretty" }}>{o.tekst}</span>
-                    </button>
-                  ))}
-                </div>
+            {step === VURDERING && (
+              <div style={{ animation: stepAnim }}>
+                {visUte ? (
+                  <Vurderingsvisning v={{ status: "ute", grunner: [], lovversjon: lovversjon(kjopsdato), lovlinjer: [], tall: [], kort: [], niva: null, poeng: [], sammenligning: null }} kjopsdato={kjopsdato} fortsett={() => {}} endreKjopsdato={() => go(KJOPET)} steg="Vurdering" />
+                ) : vurderer || (!vurdering && !vurderingFeil) ? (
+                  <Venter overline={overline("Vurdering")} tittel="Vi ser på saken din" tekst="Vi sammenligner svarene dine med loven og med vedtakene fra Forbrukerklageutvalget." anim={stepAnim} bred={isDesktop} />
+                ) : vurderingFeil ? (
+                  <Feilmelding tittel="Vi fikk ikke laget vurderingen" melding={vurderingFeil} igjen={vurder} anim={stepAnim} />
+                ) : (
+                  vurdering && (
+                    <Vurderingsvisning
+                      v={vurdering}
+                      kjopsdato={kjopsdato}
+                      steg={`Steg 4 av ${FOR_BETALING} · Gratis vurdering`}
+                      endreKjopsdato={() => go(KJOPET)}
+                      fortsett={() => {
+                        maal("fortsett_klikket", { status: vurdering.status });
+                        go(DETALJER);
+                      }}
+                    />
+                  )
+                )}
+              </div>
+            )}
 
-                <Merknader stopp={[...merkR("krav").stopp, ...merkR("kategori").stopp]} advarsler={[...merkR("krav").advarsler, ...merkR("kategori").advarsler]} />
+            {step === DETALJER && sideFeil && (() => {
+              const h = sideFeil;
+              const d = detaljer[h.id] ?? {};
+              const r = d.rapport ?? TOM_RAPPORT;
+              const i = valgte.indexOf(h);
+              // A report already filled in for an earlier defect, to copy.
+              const forrige = valgte
+                .slice(0, i)
+                .reverse()
+                .map((x) => detaljer[x.id]?.rapport)
+                .find((x) => x?.hvem && x.navn.trim() && x.dato);
+              const sdeOpplyst = d.opplysning && d.opplysning !== "nei" ? riktighet.advarsler.filter((m) => m.regel === "som_den_er_opplyst") : [];
+              return (
+                <div key={h.id} style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
+                  <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <span style={OVERLINE}>{overline(valgte.length > 1 ? `Feil ${i + 1} av ${valgte.length}` : h.navn)}</span>
+                    <h1 style={H1}>Litt mer om feilen</h1>
+                    {valgte.length > 1 && <p style={INGRESS}>{[h.navn, ...h.under.filter((u) => valg[h.id].includes(u.id)).map((u) => u.navn)].join(" · ")}</p>}
+                  </header>
+                  <section id="felt-rapport" style={{ display: "flex", flexDirection: "column", gap: 14, animation: pop(0) }}>
+                    <Radiovalg id={`verksted-${h.id}`} sporsmal="Er feilen undersøkt av et verksted?" valg={VERKSTED_VALG} valgt={d.verksted} velg={(k) => settDetalj(h.id, { verksted: k })} min={200} />
+                    {d.verksted === "skriftlig" && (
+                      <fieldset style={{ margin: 0, minWidth: 0, border: `1px solid ${LINE}`, borderRadius: 12, padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 20, background: "#fafaf8", animation: pop(0) }}>
+                        <legend style={{ padding: "0 6px", fontSize: 14, fontWeight: 600 }}>Rapporten fra verkstedet</legend>
+                        {forrige && (
+                          <button type="button" onClick={() => kopierRapport(h.id, forrige)} className="rk-chip" style={{ ...chip(false), alignSelf: "flex-start" }}>
+                            Samme rapport som forrige feil
+                          </button>
+                        )}
+                        <Chipvalg sporsmal="Hvem undersøkte bilen?" etikett={`Hvem undersøkte ${h.navn}?`} valg={VERKSTED_HVEM} valgt={r.hvem} velg={(x) => settRapport(h.id, { hvem: x })} />
+                        <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, fontWeight: 600 }}>
+                          Verkstedets navn
+                          <input
+                            value={r.navn}
+                            onChange={(e) => settRapport(h.id, { navn: e.target.value })}
+                            maxLength={MAKS_VERKSTEDNAVN}
+                            autoComplete="off"
+                            className="rk-input"
+                            style={{ height: 48, border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "0 14px", font: `400 15px ${SANS}`, color: INK, outline: "none", background: "#fff" }}
+                          />
+                        </label>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>Dato for rapporten</span>
+                          <Datovelger etikett={`Dato for rapporten om ${h.navn}`} verdi={r.dato} min={kjopsdato ? dagEtter(kjopsdato) : undefined} maks={idag} sett={(dato) => settRapport(h.id, { dato })} />
+                          <Merknader {...(r.dato && !etterKjop(r.dato) ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk("rapport", h.id))} />
+                        </div>
+                        <div role="group" aria-label={`Hva sier rapporten om ${h.navn}?`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>Hva sier rapporten?</span>
+                          <span style={{ fontSize: 13.5, color: "#5f6468", lineHeight: 1.5 }}>Kryss bare av det rapporten faktisk sier. Forhandleren kan be om å få se den.</span>
+                          {RAPPORT_PUNKTER.map((p) => (
+                            <Avkrysning key={p.id} valgt={r.punkter.includes(p.id)} velg={() => settRapport(h.id, { punkter: r.punkter.includes(p.id) ? r.punkter.filter((x) => x !== p.id) : [...r.punkter, p.id] })}>
+                              {p.skjema}
+                            </Avkrysning>
+                          ))}
+                        </div>
+                        {r.punkter.includes("overslag") && (
+                          <div style={{ maxWidth: 320 }}>
+                            <Tallfelt etikett="Kostnadsoverslag for utbedring" hjelp="Beløpet rapporten oppgir. Valgfritt." enhet="kr" verdi={r.overslag} sett={(overslag) => settRapport(h.id, { overslag })} maks={7} />
+                          </div>
+                        )}
+                        <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, fontWeight: 600 }}>
+                          <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            <span>
+                              Rapportens konklusjon, ordrett <span style={{ fontWeight: 400, color: "#5f6468" }}>(valgfritt)</span>
+                            </span>
+                            <span style={{ fontSize: 13, fontWeight: 400, color: "#5f6468" }}>Skriv av rapportens konklusjon ordrett, gjerne én til tre setninger. Legg ved rapporten når du sender brevet.</span>
+                          </span>
+                          <textarea
+                            value={r.konklusjon}
+                            onChange={(e) => settRapport(h.id, { konklusjon: e.target.value })}
+                            maxLength={MAKS_KONKLUSJON}
+                            rows={4}
+                            className="rk-input"
+                            style={{ border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "12px 14px", font: `400 15px/1.5 ${SANS}`, color: INK, outline: "none", background: "#fff", resize: "vertical" }}
+                          />
+                          <Merknader {...merkR("konklusjon", h.id)} />
+                        </label>
+                      </fieldset>
+                    )}
+                  </section>
+                  <section id="felt-opplysning" style={{ display: "flex", flexDirection: "column", gap: 12, animation: pop(1) }}>
+                    <Radiovalg id={`opplysning-${h.id}`} sporsmal="Sa selger noe om denne feilen før kjøpet?" hjelp="For eksempel i annonsen, kontrakten eller en melding." valg={OPPLYSNING_VALG} valgt={d.opplysning} velg={(k) => settDetalj(h.id, { opplysning: k })} min={96} />
+                    <Merknader stopp={merkR("opplysning", h.id).stopp} advarsler={[...merkR("opplysning", h.id).advarsler, ...sdeOpplyst]} />
+                  </section>
+                  <label id="felt-beskrivelse" style={{ display: "flex", flexDirection: "column", gap: 8, animation: pop(2) }}>
+                    <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                      <span style={{ fontSize: 15, fontWeight: 600 }}>Beskriv feilen med egne ord</span>
+                      <span style={{ fontSize: 13.5, color: "#5f6468" }}>Valgfritt. Teksten brukes i brevet.</span>
+                    </span>
+                    <textarea
+                      value={d.beskrivelse ?? ""}
+                      onChange={(e) => settDetalj(h.id, { beskrivelse: e.target.value })}
+                      maxLength={MAKS_BESKRIVELSE}
+                      rows={3}
+                      placeholder="Feilen er at …"
+                      className="rk-input"
+                      style={{ border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "12px 14px", font: `400 15px/1.5 ${SANS}`, color: INK, outline: "none", background: "#fff", resize: "vertical" }}
+                    />
+                    <Merknader {...merkR("beskrivelse", h.id)} />
+                  </label>
+                  <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.5, color: "#8a8f93" }}>Tjenesten gir ikke juridisk rådgivning. Brevet bygges av dine svar, og du er ansvarlig for at de stemmer.</p>
+                </div>
+              );
+            })()}
+
+            {step === KRAVSTEG && (
+              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 32 }}>
+                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <span style={OVERLINE}>{overline("Krav og selger")}</span>
+                  <h1 style={H1}>Hva krever du, og av hvem?</h1>
+                </header>
+                <section id="felt-krav" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <h2 id="krav-sporsmal" style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
+                    Hva krever du av forhandleren?
+                  </h2>
+                  <div role="radiogroup" aria-labelledby="krav-sporsmal" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(250px,1fr))", gap: 10 }}>
+                    {KRAV.map((o, i) => (
+                      <button key={o.id} type="button" role="radio" aria-checked={krav === o.id} onClick={() => setKrav(o.id)} className="rk-kat" style={{ ...kort(krav === o.id, pop(i)), borderRadius: 12, display: "flex", flexDirection: "column", gap: 8, padding: "16px 18px" }}>
+                        <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <Radiomerke valgt={krav === o.id} />
+                          <span style={{ fontSize: 16, fontWeight: 600, flex: 1 }}>{o.navn}</span>
+                          {o.merke && <span style={{ font: `600 10.5px ${MONO}`, letterSpacing: ".05em", textTransform: "uppercase", color: A, background: "oklch(0.94 0.03 255)", padding: "3px 7px", borderRadius: 5 }}>{o.merke}</span>}
+                        </span>
+                        <span style={{ fontSize: 14, lineHeight: 1.5, color: "#5f6468", paddingLeft: 30, textWrap: "pretty" }}>{o.tekst}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <Merknader stopp={[...merkR("krav").stopp, ...merkR("kategori").stopp]} advarsler={[...merkR("krav").advarsler, ...merkR("kategori").advarsler]} />
+                </section>
 
                 <section id="felt-kontakt" aria-labelledby="kontakt-med-selger" style={{ display: "flex", flexDirection: "column", gap: 18, animation: pop(3) }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <h2 id="kontakt-med-selger" style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>
-                      Kontakt med selger
-                    </h2>
-                    <p style={{ margin: 0, fontSize: 14, color: "#5f6468" }}>Har du reklamert til selger før du skriver dette brevet? Svarene kommer med i brevet.</p>
-                  </div>
+                  <h2 id="kontakt-med-selger" style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
+                    Har du tatt opp feilen med forhandleren?
+                  </h2>
                   <Chipvalg sporsmal="Har du reklamert til selger?" valg={JA_NEI} valgt={reklamert} velg={velgReklamert} />
                   {reklamert === "nei" && <p style={{ margin: 0, fontSize: 14, color: "#5f6468", animation: pop(0) }}>Da er dette brevet selve reklamasjonen.</p>}
                   {reklamert === "ja" && (
@@ -1621,7 +1139,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         <span style={{ fontSize: 14, fontWeight: 600 }}>Når reklamerte du første gang?</span>
                         <Datovelger etikett="Dato for første reklamasjon" verdi={reklamertDato} min={kjopsdato ? dagEtter(kjopsdato) : undefined} maks={idag} sett={setReklamertDato} />
-                        <Merknader {...(reklamertDato && !etterKjop(reklamertDato) ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk(tidslinje, "reklamert"))} />
+                        <Merknader {...(reklamertDato && !etterKjop(reklamertDato) ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk("reklamert"))} />
                       </div>
                       <Chipvalg sporsmal="Hvordan?" etikett="Hvordan reklamerte du?" valg={HVORDAN} valgt={reklamertForm} velg={setReklamertForm} />
                       <Chipvalg sporsmal="Hva har selger gjort?" valg={SELGER_SVAR} valgt={selgerSvar} velg={setSelgerSvar} />
@@ -1634,349 +1152,273 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                   )}
                 </section>
 
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={kreverUtlegg}
-                  onClick={() => setKreverUtlegg(!kreverUtlegg)}
-                  style={{ ...kort(kreverUtlegg, pop(5)), borderRadius: 12, display: "flex", alignItems: "flex-start", gap: 14, padding: "16px 18px" }}
-                >
-                  <span
-                    style={{
-                      width: 18,
-                      height: 18,
-                      flex: "none",
-                      marginTop: 1,
-                      borderRadius: 5,
-                      border: `1.5px solid ${kreverUtlegg ? A : "#b4b8bc"}`,
-                      background: kreverUtlegg ? A : "#fff",
-                      display: "grid",
-                      placeItems: "center",
-                      transition: "all .2s",
-                    }}
-                  >
-                    {kreverUtlegg && <Hake />}
-                  </span>
-                  <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                    <span style={{ fontSize: 15, fontWeight: 600 }}>Jeg krever i tillegg erstatning for utlegg</span>
-                    <span style={{ fontSize: 14, color: "#5f6468", lineHeight: 1.5 }}>For eksempel tauing, feilsøking eller leiebil.</span>
-                  </span>
-                </button>
-
-                {kreverUtlegg && (
-                  <section style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: -16, animation: pop(0) }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Legg til utlegg</h2>
+                <section id="felt-utlegg" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <button type="button" role="checkbox" aria-checked={kreverUtlegg} onClick={() => setKreverUtlegg(!kreverUtlegg)} style={{ ...kort(kreverUtlegg, pop(5)), borderRadius: 12, display: "flex", alignItems: "flex-start", gap: 14, padding: "16px 18px" }}>
+                    <span style={{ width: 18, height: 18, flex: "none", marginTop: 1, boxSizing: "border-box", borderRadius: 5, border: `1.5px solid ${kreverUtlegg ? A : "#b4b8bc"}`, background: kreverUtlegg ? A : "#fff", display: "grid", placeItems: "center", transition: "all .2s" }}>
+                      {kreverUtlegg && <Hake />}
+                    </span>
+                    <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                      <span style={{ fontSize: 15, fontWeight: 600 }}>Jeg krever i tillegg erstatning for utlegg</span>
+                      <span style={{ fontSize: 14, color: "#5f6468", lineHeight: 1.5 }}>For eksempel tauing, feilsøking eller leiebil.</span>
+                    </span>
+                  </button>
+                  {kreverUtlegg && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16, animation: pop(0) }}>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {UTLEGG_FORSLAG.map((l, i) => (
-                          <button
-                            key={l}
-                            type="button"
-                            onClick={() => setUtlegg((u) => [...u, { beskrivelse: l, belop: "" }])}
-                            className="rk-chip rk-forslag"
-                            style={{ ...chip(false), display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", animation: pop(i) }}
-                          >
+                          <button key={l} type="button" onClick={() => setUtlegg((u) => [...u, { beskrivelse: l, belop: "" }])} className="rk-chip rk-forslag" style={{ ...chip(false), display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", animation: pop(i) }}>
                             <span style={{ color: A, fontWeight: 600 }}>+</span>
                             {l}
                           </button>
                         ))}
                       </div>
-                    </div>
-                    {utlegg.length > 0 && (
-                      <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, overflow: "hidden" }}>
-                        {utlegg.map((x, i) => (
-                          <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "10px 12px", borderTop: i ? "1px solid #eeeeeb" : "none", animation: pop(0) }}>
-                            <input
-                              value={x.beskrivelse}
-                              onChange={(e) => settUtlegg(i, { beskrivelse: e.target.value })}
-                              placeholder="Beskrivelse"
-                              aria-label="Beskrivelse av utlegget"
-                              maxLength={100}
-                              className="rk-input"
-                              style={{
-                                flex: 1,
-                                minWidth: 0,
-                                height: 44,
-                                border: `1.5px solid ${LINE}`,
-                                borderRadius: 9,
-                                padding: "0 12px",
-                                font: `15px ${SANS}`,
-                                color: INK,
-                                outline: "none",
-                                background: "#fff",
-                              }}
-                            />
-                            <span
-                              className="rk-felt"
-                              style={{ display: "flex", alignItems: "center", width: 128, flex: "none", height: 44, border: `1.5px solid ${LINE}`, borderRadius: 9, background: "#fff", overflow: "hidden", boxSizing: "border-box" }}
-                            >
+                      {utlegg.length > 0 && (
+                        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, overflow: "hidden" }}>
+                          {utlegg.map((x, i) => (
+                            <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "10px 12px", borderTop: i ? "1px solid #eeeeeb" : "none" }}>
                               <input
-                                value={tall(x.belop)}
-                                onChange={(e) => settUtlegg(i, { belop: kunSifre(e.target.value, 7) })}
-                                inputMode="numeric"
-                                placeholder="0"
-                                aria-label="Beløp"
-                                style={{ flex: 1, minWidth: 0, border: "none", outline: "none", padding: "0 4px 0 12px", font: `500 15px ${MONO}`, textAlign: "right", color: INK, background: "transparent" }}
+                                value={x.beskrivelse}
+                                onChange={(e) => settUtlegg(i, { beskrivelse: e.target.value })}
+                                placeholder="Beskrivelse"
+                                aria-label="Beskrivelse av utlegget"
+                                maxLength={100}
+                                className="rk-input"
+                                style={{ flex: 1, minWidth: 0, height: 44, border: `1.5px solid ${LINE}`, borderRadius: 9, padding: "0 12px", font: `15px ${SANS}`, color: INK, outline: "none", background: "#fff" }}
                               />
-                              <span style={{ padding: "0 12px 0 4px", fontSize: 13, color: "#5f6468" }}>kr</span>
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setUtlegg((u) => u.filter((_, j) => j !== i))}
-                              aria-label="Fjern"
-                              className="rk-tilbake"
-                              style={{ ...KNAPP, width: 32, height: 32, flex: "none", borderRadius: 8, display: "grid", placeItems: "center", color: "#8a8f93", fontSize: 18 }}
-                            >
-                              ×
+                              <span className="rk-felt" style={{ display: "flex", alignItems: "center", width: 128, flex: "none", height: 44, border: `1.5px solid ${LINE}`, borderRadius: 9, background: "#fff", overflow: "hidden", boxSizing: "border-box" }}>
+                                <input
+                                  value={tall(x.belop)}
+                                  onChange={(e) => settUtlegg(i, { belop: kunSifre(e.target.value, 7) })}
+                                  inputMode="numeric"
+                                  placeholder="0"
+                                  aria-label="Beløp"
+                                  style={{ flex: 1, minWidth: 0, border: "none", outline: "none", padding: "0 4px 0 12px", font: `500 15px ${MONO}`, textAlign: "right", color: INK, background: "transparent" }}
+                                />
+                                <span style={{ padding: "0 12px 0 4px", fontSize: 13, color: "#5f6468" }}>kr</span>
+                              </span>
+                              <button type="button" onClick={() => setUtlegg((u) => u.filter((_, j) => j !== i))} aria-label="Fjern" className="rk-tilbake" style={{ ...KNAPP, width: 32, height: 32, flex: "none", borderRadius: 8, display: "grid", placeItems: "center", color: "#8a8f93", fontSize: 18 }}>
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", background: "#f8f8f6", borderTop: "1px solid #eeeeeb" }}>
+                            <button type="button" onClick={() => setUtlegg((u) => [...u, { beskrivelse: "", belop: "" }])} style={{ ...KNAPP, fontSize: 14, fontWeight: 600, color: A }}>
+                              + Legg til annet utlegg
                             </button>
+                            <span style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
+                              <span style={{ fontSize: 13, color: "#5f6468" }}>Sum</span>
+                              <span style={{ font: `600 16px ${MONO}` }}>{tall(String(utleggSum))} kr</span>
+                            </span>
                           </div>
-                        ))}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", background: "#f8f8f6", borderTop: "1px solid #eeeeeb" }}>
-                          <button
-                            type="button"
-                            onClick={() => setUtlegg((u) => [...u, { beskrivelse: "", belop: "" }])}
-                            style={{ ...KNAPP, fontSize: 14, fontWeight: 600, color: A }}
-                          >
-                            + Legg til annet utlegg
-                          </button>
-                          <span style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
-                            <span style={{ fontSize: 13, color: "#5f6468" }}>Sum</span>
-                            <span style={{ font: `600 16px ${MONO}` }}>{tall(String(utleggSum))} kr</span>
+                        </div>
+                      )}
+                      <Varsel type="info">Husk å legge ved kopi av fakturaer og kvitteringer. Vedleggene listes opp i brevet.</Varsel>
+                    </div>
+                  )}
+                  <Merknader {...merkR("utlegg")} />
+                </section>
+
+                <section id="felt-selger" style={{ display: "flex", flexDirection: "column", gap: 10, animation: pop(6) }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Hvem solgte bilen?</h2>
+                    <span style={{ fontSize: 13.5, lineHeight: 1.45, color: "#5f6468" }}>Søk i Brønnøysundregistrene på navnet eller org.nr. fra kjøpekontrakten. Brevet adresseres til selgeren slik Enhetsregisteret oppgir den.</span>
+                  </div>
+                  <Selgervalg valgt={selger} velg={setSelger} />
+                  <Merknader {...merkR("selger")} />
+                </section>
+              </div>
+            )}
+
+            {step === FORHAND &&
+              (soker || (!funn && !forhand)
+                ? <Venter overline={overline("Forhåndsvisning")} tittel="Vent mens vi lager brevet" tekst="Vi velger vedtaket brevet skal vise til, og setter sammen brevet. Det tar noen sekunder." anim={stepAnim} bred={isDesktop} />
+                : (funn && !funn.ok) || (forhand && !forhand.ok)
+                  ? <Feilmelding tittel="Vi fikk ikke laget brevet" melding={funn && !funn.ok ? funn.melding : forhand && !forhand.ok ? forhand.melding : ""} igjen={lagBrev} anim={stepAnim} />
+                  : forhand?.ok && (
+                      <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
+                        <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          <span style={OVERLINE}>{overline("Forhåndsvisning")}</span>
+                          <h1 style={H1}>Slik blir brevet ditt</h1>
+                          <p style={INGRESS}>Sakens bakgrunn og starten på vedtaksavsnittet vises nå. Resten låses opp når du har betalt.</p>
+                        </header>
+                        {alleAdvarsler.length > 0 && (
+                          <section aria-label="Advarsler" data-advarsler>
+                            <Varsel
+                              type="advarsel"
+                              tittel={
+                                <>
+                                  Brevet har {alleAdvarsler.length} {alleAdvarsler.length === 1 ? "advarsel" : "advarsler"}
+                                  {datoadvarsler ? (datoadvarsler === alleAdvarsler.length ? " om datoer" : `, ${datoadvarsler} av dem om datoer`) : ""}. Se over før du betaler.
+                                </>
+                              }
+                            >
+                              {alleAdvarsler.map((m, i) => (
+                                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                                  <span style={{ flex: 1 }}>{m.melding}</span>
+                                  <button type="button" onClick={() => gaaTil(m)} style={{ ...KNAPP, fontSize: 14, fontWeight: 600, color: A, whiteSpace: "nowrap" }}>
+                                    Endre
+                                  </button>
+                                </div>
+                              ))}
+                            </Varsel>
+                          </section>
+                        )}
+                        <div style={{ display: "grid", gridTemplateColumns: toKolonner ? "minmax(0,1fr) 320px" : "minmax(0,1fr)", gap: toKolonner ? 40 : 24, alignItems: "start" }}>
+                          <Brevvisning brev={forhand.brev} bred={false} />
+                          <div data-betaling style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: 20, display: "flex", flexDirection: "column", gap: 16, position: toKolonner ? "sticky" : undefined, top: 0 }}>
+                            <h2 style={H2}>Lås opp hele brevet</h2>
+                            {car && (
+                              <div style={{ background: "#f6f6f4", borderRadius: 12, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                                <span style={OVERLINE}>Brevet skrives for</span>
+                                <Skilt regnr={car.k.regnr} />
+                                <span style={{ fontSize: 15, fontWeight: 600 }}>
+                                  {carName}
+                                  {car.k.ar && <span style={{ fontWeight: 400, color: "#5f6468" }}> · {car.k.ar}</span>}
+                                </span>
+                                <span style={{ fontSize: 13, lineHeight: 1.5, color: "#5f6468" }}>Bilen kan ikke byttes etter kjøpet. Er det feil bil, endrer du svarene først.</span>
+                              </div>
+                            )}
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                              <Punkt>{funn?.ok && funn.vedtak?.saksnummer ? `Hele brevet, med ordrette sitater og lenke til vedtak ${funn.vedtak.saksnummer.replace(/^FKU-\d{4}-(\d+)(?:-\d+)?$/, "$1")}` : "Hele brevet"}</Punkt>
+                              <Punkt>Rettslig vurdering, krav og frist for svar</Punkt>
+                              <Punkt>Word-fil og kopierbar tekst</Punkt>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", borderTop: "1px solid #eeeeeb", paddingTop: 14 }}>
+                              <span style={{ fontSize: 14, color: "#5f6468" }}>Totalt</span>
+                              <span style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-0.02em" }}>{PRIS} kr</span>
+                            </div>
+                            {forhand.betalingIUtvikling ? (
+                              <button type="button" onClick={betal} style={storKnapp("vipps")}>
+                                Betal med Vipps
+                              </button>
+                            ) : (
+                              <>
+                                <button type="button" disabled style={storKnapp("av")}>
+                                  Betal med Vipps (kommer)
+                                </button>
+                                <button type="button" disabled style={{ ...storKnapp("kant"), color: "#8a8f93", cursor: "not-allowed" }}>
+                                  Betal med kort (kommer)
+                                </button>
+                              </>
+                            )}
+                            <span style={{ fontSize: 13, lineHeight: 1.55, color: "#5f6468" }}>Engangsbeløp, ingen abonnement.</span>
+                          </div>
+                        </div>
+                        <details style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "14px 18px" }}>
+                          <summary style={{ cursor: "pointer", fontSize: 15, fontWeight: 600 }}>Se over opplysningene i brevet</summary>
+                          <table aria-label="Opplysningene i brevet" style={{ width: "100%", borderCollapse: "collapse", fontSize: 14.5, marginTop: 12 }}>
+                            <tbody>
+                              {[
+                                { navn: "Bil", verdi: car ? `${carName}, ${car.k.regnr}` : "", m: { felt: "kjopsdato", regel: "" } },
+                                { navn: "Kjøpsdato", verdi: erDato(kjopsdato) ? datoTekst(kjopsdato) : "", m: { felt: "kjopsdato", regel: "" } },
+                                { navn: "Kilometerstand", verdi: km ? `${tall(km)} km` : "", m: { felt: "kjopesum", regel: "" } },
+                                { navn: "Kjøpesum", verdi: kjopesum ? `${tall(kjopesum)} kr` : "", m: { felt: "kjopesum", regel: "" } },
+                                { navn: "«Som den er»", verdi: SOM_DEN_ER.find((o) => o.id === somDenEr)?.navn ?? "", m: { felt: "somDenEr", regel: "" } },
+                                ...valgte.map((h) => {
+                                  const d = detaljer[h.id] ?? {};
+                                  const r = d.rapport;
+                                  return {
+                                    navn: h.navn,
+                                    m: { felt: "rapport", feilId: h.id, regel: "" },
+                                    verdi: [
+                                      h.under.filter((u) => valg[h.id]?.includes(u.id)).map((u) => u.navn).join(", "),
+                                      d.oppdaget && erDato(d.oppdaget) ? `Oppdaget ${d.omtrentlig ? "omtrent " : ""}${datoTekst(d.oppdaget)}` : "",
+                                      d.verksted === "skriftlig" && r ? `Rapport fra ${r.navn}${erDato(r.dato) ? ` ${datoTekst(r.dato)}` : ""}` : d.verksted === "muntlig" ? "Undersøkt av verksted, uten rapport" : "Ikke undersøkt av verksted",
+                                      `Selger sa: ${OPPLYSNING_VALG.find((k) => k.id === d.opplysning)?.navn.toLowerCase() ?? "–"}`,
+                                    ]
+                                      .filter(Boolean)
+                                      .join(" · "),
+                                  };
+                                }),
+                                {
+                                  navn: "Reklamasjon",
+                                  m: { felt: "reklamert", regel: "" },
+                                  verdi:
+                                    reklamert === "ja"
+                                      ? `${erDato(reklamertDato) ? datoTekst(reklamertDato) : ""}, ${reklamertForm ?? ""}. Selger: ${SELGER_SVAR.find((o) => o.id === selgerSvar)?.navn.toLowerCase() ?? "–"}${selgerSvar === "forsokt" ? `, ${RETTINGSFORSOK.find((o) => o.id === forsok)?.navn ?? "–"}` : ""}`
+                                      : "Nei. Dette brevet er reklamasjonen.",
+                                },
+                                { navn: "Krav", verdi: KRAV.find((k) => k.id === krav)?.navn ?? "", m: { felt: "krav", regel: "" } },
+                                { navn: "Utlegg", verdi: kreverUtlegg ? `${utlegg.map((u) => `${u.beskrivelse} ${tall(u.belop)} kr`).join(", ")} (til sammen ${tall(String(utleggSum))} kr)` : "Ingen", m: { felt: "utlegg", regel: "" } },
+                                { navn: "Selger", verdi: selger ? `${selger.navn}, org.nr. ${orgnrTekst(selger.orgnr)}` : "", m: { felt: "selger", regel: "" } },
+                              ].map((rad, i) => (
+                                <tr key={i} style={{ borderTop: i ? "1px solid #eeeeeb" : "none" }}>
+                                  <th scope="row" style={{ textAlign: "left", verticalAlign: "top", padding: "12px 10px 12px 0", fontWeight: 600, width: isDesktop ? 150 : 100 }}>
+                                    {rad.navn}
+                                  </th>
+                                  <td style={{ verticalAlign: "top", padding: "12px 4px", color: "#2c3033", lineHeight: 1.5, textWrap: "pretty" }}>{rad.verdi}</td>
+                                  <td style={{ verticalAlign: "top", padding: "12px 0 12px 10px", textAlign: "right" }}>
+                                    <button type="button" onClick={() => gaaTil(rad.m)} style={{ ...KNAPP, fontSize: 14, fontWeight: 600, color: A }}>
+                                      Endre
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </details>
+                      </div>
+                    ))}
+
+            {step === BREVET &&
+              (soker || !heltBrev
+                ? <Venter overline="Brevet" tittel="Vent mens vi lager brevet" tekst="Hele brevet settes sammen med vedtaket fra forhåndsvisningen." anim={stepAnim} bred={isDesktop} />
+                : !heltBrev.ok
+                  ? <Feilmelding tittel="Vi fikk ikke laget brevet" melding={heltBrev.melding} igjen={betal} anim={stepAnim} />
+                  : !heltBrev.fullt
+                    ? <Feilmelding tittel="Betalingen er ikke bekreftet" melding="Vi fant ingen bekreftet betaling for brevet. Gå tilbake til forhåndsvisningen og prøv igjen." igjen={() => go(FORHAND)} anim={stepAnim} />
+                    : (
+                      <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
+                        <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          <span aria-hidden="true" style={{ width: 44, height: 44, borderRadius: "50%", background: A, display: "grid", placeItems: "center" }}>
+                            <svg width="20" height="20" viewBox="0 0 12 12">
+                              <path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                           </span>
+                          <span style={OVERLINE}>Ferdig · Reklamasjonsbrev</span>
+                          <h1 style={H1}>Brevet er klart</h1>
+                          <p style={INGRESS}>Send det selv til {selger?.navn ?? "selgeren"}, for eksempel som e-post eller rekommandert post. Ta vare på en kopi.</p>
+                        </header>
+                        <div style={{ display: "grid", gridTemplateColumns: toKolonner ? "minmax(0,1fr) 320px" : "minmax(0,1fr)", gap: toKolonner ? 40 : 24, alignItems: "start" }}>
+                          <div style={{ order: toKolonner ? 0 : 1 }}>
+                            <Brevvisning brev={heltBrev.brev} bred={false} />
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8, position: toKolonner ? "sticky" : undefined, top: 0 }}>
+                            <button type="button" onClick={() => lastNed(heltBrev.brev)} className="rk-neste" style={storKnapp("aksent")}>
+                              Last ned Word
+                            </button>
+                            <button type="button" onClick={() => kopier(heltBrev.brev)} className="rk-tilbake" style={storKnapp("kant")}>
+                              {kopiert ? "Kopiert" : "Kopier tekst"}
+                            </button>
+                            {heltBrev.brev.vedlegg && <span style={{ fontSize: 13, lineHeight: 1.55, color: "#5f6468" }}>Legg ved vedleggene som står nederst i brevet når du sender det.</span>}
+                          </div>
                         </div>
                       </div>
-                    )}
-                    <Varsel type="info">Husk å legge ved kopi av fakturaer og kvitteringer. Vedleggene listes opp i brevet.</Varsel>
-                  </section>
-                )}
-
-                <Merknader {...merkR("utlegg")} />
-              </div>
-            )}
-
-            {step === BREV && !soker && !funn && !brevet && (
-              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 24 }}>
-                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
-                  <h1 style={H1}>Se over opplysningene</h1>
-                  <p style={INGRESS}>Brevet bygges av svarene dine. Sjekk at alt stemmer før du betaler. Et feil registreringsnummer eller feil selger kan ikke vi se.</p>
-                </header>
-
-                {alleAdvarsler.length > 0 && (
-                  <section aria-label="Advarsler" data-advarsler>
-                    <Varsel
-                      type="advarsel"
-                      tittel={
-                        <>
-                          Brevet har {alleAdvarsler.length} {alleAdvarsler.length === 1 ? "advarsel" : "advarsler"}
-                          {datoadvarsler ? (datoadvarsler === alleAdvarsler.length ? " om datoer" : `, ${datoadvarsler} av dem om datoer`) : ""}. Se over før du betaler.
-                        </>
-                      }
-                    >
-                      {alleAdvarsler.map((m, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                          <span style={{ flex: 1 }}>{m.melding}</span>
-                          <button type="button" onClick={() => gaaTil(m.felt, m.feilId)} style={{ ...KNAPP, fontSize: 14, fontWeight: 600, color: A, whiteSpace: "nowrap" }}>
-                            Endre
-                          </button>
-                        </div>
-                      ))}
-                    </Varsel>
-                  </section>
-                )}
-
-                <table aria-label="Opplysningene i brevet" style={{ width: "100%", borderCollapse: "collapse", background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, overflow: "hidden", fontSize: 14.5 }}>
-                  <tbody>
-                    {[
-                      { navn: "Bil", verdi: car ? `${car.k.merke} ${car.k.modell}, ${car.k.regnr}` : "", felt: "kjopsdato" },
-                      { navn: "Kjøpsdato", verdi: erDato(kjopsdato) ? datoTekst(kjopsdato) : "", felt: "kjopsdato" },
-                      { navn: "Kilometerstand", verdi: km ? `${tall(km)} km` : "", felt: "kjopesum" },
-                      { navn: "Kjøpesum", verdi: kjopesum ? `${tall(kjopesum)} kr` : "", felt: "kjopesum" },
-                      { navn: "«Som den er»", verdi: SOM_DEN_ER.find((o) => o.id === somDenEr)?.navn ?? "", felt: "somDenEr" },
-                      ...valgte.map((h) => {
-                        const d = detaljer[h.id] ?? {};
-                        const r = d.rapport;
-                        return {
-                          navn: h.navn,
-                          feilId: h.id,
-                          felt: "oppdaget",
-                          verdi: [
-                            h.under.filter((u) => valg[h.id]?.includes(u.id)).map((u) => u.navn).join(", "),
-                            d.oppdaget && erDato(d.oppdaget) ? `Oppdaget ${d.omtrentlig ? "omtrent " : ""}${datoTekst(d.oppdaget)}` : "",
-                            d.verksted === "skriftlig" && r ? `Rapport fra ${r.navn}${erDato(r.dato) ? ` ${datoTekst(r.dato)}` : ""}` : d.verksted === "muntlig" ? "Undersøkt av verksted, muntlig" : "Ikke undersøkt av verksted",
-                            `Selger sa: ${KILDE.find((k) => k.id === d.opplysning)?.navn.toLowerCase() ?? "–"}`,
-                          ]
-                            .filter(Boolean)
-                            .join(" · "),
-                        };
-                      }),
-                      {
-                        navn: "Reklamasjon",
-                        felt: "reklamert",
-                        verdi:
-                          reklamert === "ja"
-                            ? `${erDato(reklamertDato) ? datoTekst(reklamertDato) : ""}, ${reklamertForm ?? ""}. Selger: ${SELGER_SVAR.find((o) => o.id === selgerSvar)?.navn.toLowerCase() ?? "–"}${selgerSvar === "forsokt" ? `, ${RETTINGSFORSOK.find((o) => o.id === forsok)?.navn ?? "–"}` : ""}`
-                            : "Nei. Dette brevet er reklamasjonen.",
-                      },
-                      { navn: "Krav", verdi: KRAV.find((k) => k.id === krav)?.navn ?? "", felt: "krav" },
-                      { navn: "Utlegg", verdi: kreverUtlegg ? `${utlegg.map((u) => `${u.beskrivelse} ${tall(u.belop)} kr`).join(", ")} (til sammen ${tall(String(utleggSum))} kr)` : "Ingen", felt: "utlegg" },
-                      { navn: "Selger", verdi: selger ? `${selger.navn}, org.nr. ${orgnrTekst(selger.orgnr)}` : "", felt: "selger" },
-                    ].map((rad, i) => (
-                      <tr key={i} style={{ borderTop: i ? "1px solid #eeeeeb" : "none" }}>
-                        <th scope="row" style={{ textAlign: "left", verticalAlign: "top", padding: "12px 14px", fontWeight: 600, width: isDesktop ? 170 : 110 }}>
-                          {rad.navn}
-                        </th>
-                        <td style={{ verticalAlign: "top", padding: "12px 4px", color: "#2c3033", lineHeight: 1.5, textWrap: "pretty" }}>{rad.verdi}</td>
-                        <td style={{ verticalAlign: "top", padding: "12px 14px", textAlign: "right" }}>
-                          <button type="button" onClick={() => gaaTil(rad.felt, "feilId" in rad ? rad.feilId : undefined)} style={{ ...KNAPP, fontSize: 14, fontWeight: 600, color: A }}>
-                            Endre
-                          </button>
-                        </td>
-                      </tr>
                     ))}
-                  </tbody>
-                </table>
-
-                <Varsel type="info">Tjenesten gir ikke juridisk rådgivning. Brevet bygges av dine svar, og du er ansvarlig for at de stemmer.</Varsel>
-
-                <button
-                  type="button"
-                  onClick={lagBrev}
-                  className="rk-neste"
-                  style={{ ...KNAPP, minHeight: 50, padding: "12px 26px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: "#fff", background: A, alignSelf: isDesktop ? "flex-start" : "stretch", textAlign: "center" }}
-                >
-                  Opplysningene stemmer, gå til betaling
-                </button>
-              </div>
-            )}
-
-            {step === BREV && soker && (
-              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
-                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
-                  <h1 style={H1}>Vent mens vi lager brevet</h1>
-                  <p style={INGRESS}>Vi leter i vedtakene fra Forbrukerklageutvalget etter en lignende sak der kjøperen fikk medhold, og setter sammen brevet. Det tar noen sekunder.</p>
-                </header>
-                <div role="status" aria-label="Vent mens vi lager brevet" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "28px 32px" : "22px 20px", display: "flex", flexDirection: "column", gap: 12, animation: pop(0) }}>
-                  <span
-                    aria-hidden="true"
-                    style={{ width: 22, height: 22, boxSizing: "border-box", borderRadius: "50%", border: `2px solid ${AS}`, borderTopColor: A, animation: "rkSpin .7s linear infinite", marginBottom: 6 }}
-                  />
-                  <span aria-hidden="true" style={{ height: 14, width: "92%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out infinite" }} />
-                  <span aria-hidden="true" style={{ height: 14, width: "78%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out .15s infinite" }} />
-                  <span aria-hidden="true" style={{ height: 14, width: "85%", borderRadius: 4, background: "#ecedea", animation: "rkShimmer 1.1s ease-in-out .3s infinite" }} />
-                </div>
-              </div>
-            )}
-
-            {step === BREV && !soker && ((funn && !funn.ok) || (brevet && !brevet.ok)) && (
-              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 20 }}>
-                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
-                  <h1 style={H1}>Vi fikk ikke laget brevet</h1>
-                </header>
-                <Varsel type="stopp">{funn && !funn.ok ? funn.melding : brevet && !brevet.ok ? brevet.melding : ""}</Varsel>
-                <button
-                  type="button"
-                  onClick={lagBrev}
-                  disabled={soker}
-                  className="rk-neste"
-                  style={{ ...KNAPP, height: 50, padding: "0 26px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: "#fff", background: A, alignSelf: "flex-start" }}
-                >
-                  Prøv igjen
-                </button>
-              </div>
-            )}
-
-            {step === BREV && brevet?.ok && (
-              <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 24 }}>
-                <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
-                  <h1 style={H1}>{brevet.fullt ? "Ditt reklamasjonsbrev" : "Forhåndsvisning av brevet"}</h1>
-                  <p style={INGRESS}>
-                    {brevet.fullt
-                      ? "Les gjennom brevet før du sender det. Du kan kopiere teksten eller laste det ned som Word-dokument."
-                      : "Dette er sakens bakgrunn og avsnittet som viser til en lignende sak der kjøperen fikk medhold. Resten av brevet er skjult til du har betalt."}
-                  </p>
-                </header>
-
-                {brevet.fullt && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                    <button type="button" onClick={() => kopier(brevet.brev)} className="rk-neste" style={{ ...KNAPP, height: 46, padding: "0 20px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: "#fff", background: A }}>
-                      {kopiert ? "Kopiert" : "Kopier tekst"}
-                    </button>
-                    <button type="button" onClick={() => lastNed(brevet.brev)} className="rk-tilbake" style={{ ...KNAPP, height: 46, padding: "0 20px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: INK, border: `1.5px solid ${LINE}`, background: "#fff" }}>
-                      Last ned som Word
-                    </button>
-                  </div>
-                )}
-
-                <Brevvisning brev={brevet.brev} bred={isDesktop} />
-
-                {!brevet.fullt && (
-                  <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: isDesktop ? "24px 28px" : "20px", display: "flex", flexDirection: "column", gap: 12, width: "210mm", maxWidth: "100%", margin: "0 auto", boxSizing: "border-box" }}>
-                    <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Få hele brevet</h2>
-                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: "#5f6468" }}>
-                      Hele brevet har mangel, rettslig vurdering, krav og frist for svar, ferdig utfylt med dine opplysninger. Du får det etter betaling med Vipps.
-                    </p>
-                    <button type="button" disabled style={{ ...KNAPP, height: 50, padding: "0 26px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: "#fff", background: "#c4c7ca", cursor: "not-allowed", alignSelf: "flex-start" }}>
-                      Betal med Vipps (kommer)
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
-        <div style={{ background: "#fff", borderTop: `1px solid ${LINE}`, padding: "14px 20px" }}>
-          <div style={{ maxWidth: 880, margin: "0 auto", display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between" }}>
-            <button
-              type="button"
-              onClick={() => step > 0 && go(step - 1)}
-              className="rk-tilbake"
-              style={{
-                ...KNAPP,
-                height: 50,
-                padding: "0 18px",
-                borderRadius: 10,
-                fontSize: 15,
-                fontWeight: 600,
-                color: INK,
-                opacity: step === 0 ? 0 : 1,
-                transition: "opacity .2s,background .2s",
-              }}
-            >
-              Tilbake
-            </button>
-            {step < BREV && (
-              <button
-                type="button"
-                onClick={() => ok && go(step + 1)}
-                className="rk-neste"
-                style={{
-                  ...KNAPP,
-                  height: 50,
-                  padding: "0 26px",
-                  borderRadius: 10,
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "#fff",
-                  background: ok ? A : "#c4c7ca",
-                  cursor: ok ? "pointer" : "not-allowed",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flex: isDesktop ? "0 0 auto" : "1",
-                  transition: "background .25s,transform .15s",
-                }}
-              >
-                {step < BREV - 1 ? "Fortsett" : "Se over"}
+        {step !== BREVET && (
+          <div style={{ background: "#fff", borderTop: `1px solid ${LINE}`, padding: isDesktop ? "14px 40px" : "14px 20px" }}>
+            <div style={{ maxWidth: toKolonner ? 960 : 760, margin: "0 auto", display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between" }}>
+              <button type="button" onClick={tilbake} className="rk-tilbake" style={{ ...KNAPP, height: 50, padding: "0 18px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: INK, opacity: step === BILEN ? 0 : 1, pointerEvents: step === BILEN ? "none" : undefined, transition: "opacity .2s,background .2s" }}>
+                Tilbake
               </button>
-            )}
+              {harNeste && (
+                <button
+                  type="button"
+                  onClick={neste}
+                  className="rk-neste"
+                  style={{ ...KNAPP, height: 50, padding: "0 26px", borderRadius: 10, fontSize: 15, fontWeight: 600, color: "#fff", background: ok ? A : "#c4c7ca", cursor: ok ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", flex: isDesktop ? "0 0 auto" : "1", transition: "background .25s,transform .15s" }}
+                >
+                  {nesteTekst}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 }
+

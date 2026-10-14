@@ -17,11 +17,20 @@ describe("forhåndsvisning", () => {
   const visning = forhandsvisning(brev);
   const json = JSON.stringify(visning);
 
-  it("viser sakens bakgrunn og avsnittet som viser til vedtaket", () => {
+  it("viser sakens bakgrunn og bare første setning av avsnittet som viser til vedtaket", () => {
     const tekst = somTekst(visning);
     expect(tekst).toContain("Jeg viser til kjøp av Volkswagen Golf");
     expect(tekst).toContain("Det vises til Forbrukerklageutvalgets vedtak i sak 22/2868");
-    expect(tilDokument(visning).flat().some((l) => l.lenke === "https://example.org/vedtak/22-2868")).toBe(true);
+    // No quote, no link and nothing of the paragraph after its first sentence before payment.
+    expect(JSON.stringify(visning.avsnitt[2])).not.toMatch(/[«»]/);
+    expect(json).not.toContain("Det foreligger en mangel");
+    expect(json).not.toContain("Saken gjaldt");
+    expect(json).not.toContain("example.org");
+    expect(tilDokument(visning).flat().some((l) => l.lenke)).toBe(false);
+    const praksis = visning.avsnitt[2].blokker.filter((b) => "setninger" in b);
+    expect(praksis).toHaveLength(1);
+    expect("setninger" in praksis[0] && praksis[0].setninger.map((s) => s.tekst)).toEqual([expect.stringMatching(/^Det vises til .*22\/2868[^.]*\.$|^Det vises til .*\.$/)]);
+    expect(visning.avsnitt[2].blokker.at(-1)).toEqual({ skjult: expect.any(Number) });
   });
 
   it("sender aldri den skjulte teksten til nettleseren", () => {

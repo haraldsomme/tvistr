@@ -1,0 +1,61 @@
+## før 2024, innen formodningen
+[ja] Du er innenfor fristen for å reklamere (fem år fra overtakelsen). (forbrukerkjøpsloven § 27 annet ledd annet punktum)
+[ja, uthevet] Feilen viste seg innen 6 måneder. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. (forbrukerkjøpsloven § 18 annet ledd)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjaldt før 2024.
+
+## før 2024, etter formodningen
+[ja] Du er innenfor fristen for å reklamere (fem år fra overtakelsen). (forbrukerkjøpsloven § 27 annet ledd annet punktum)
+[nei] Feilen viste seg etter 6 måneder. Da må du selv sannsynliggjøre at feilen var der ved levering, typisk med en verkstedrapport. Brevet legger opp til det. (forbrukerkjøpsloven § 18 annet ledd)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjaldt før 2024.
+
+## fra 2024, innen formodningen
+[ja] Du er innenfor fristen for å reklamere (to år fra overtakelsen). (forbrukerkjøpsloven § 27 annet ledd første punktum)
+[ja, uthevet] Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. (forbrukerkjøpsloven § 18 annet ledd)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+
+## fra 2024, etter formodningen
+[ja] Du er innenfor fristen for å reklamere (fem år fra overtakelsen). (forbrukerkjøpsloven § 27 annet ledd annet punktum)
+[nei] Feilen viste seg etter 2 år. Da må du selv sannsynliggjøre at feilen var der ved levering, typisk med en verkstedrapport. Brevet legger opp til det. (forbrukerkjøpsloven § 18 annet ledd)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+
+## før 2024, «som den er»
+[ja] Du er innenfor fristen for å reklamere (fem år fra overtakelsen). (forbrukerkjøpsloven § 27 annet ledd annet punktum)
+[ja, uthevet] Feilen viste seg innen 6 måneder. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. (forbrukerkjøpsloven § 18 annet ledd)
+[ja] Bilen ble solgt «som den er». Du kan likevel reklamere hvis bilen er i dårligere stand enn du kunne forvente. (forbrukerkjøpsloven § 17 første ledd bokstav a)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjaldt før 2024.
+
+## fra 2024, «som den er»
+[ja] Du er innenfor fristen for å reklamere (to år fra overtakelsen). (forbrukerkjøpsloven § 27 annet ledd første punktum)
+[ja, uthevet] Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. (forbrukerkjøpsloven § 18 annet ledd)
+[ja] Et alminnelig «som den er»-forbehold gjelder ikke lenger etter loven fra 2024. (forbrukerkjøpsloven § 15 annet ledd)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+
+## «vet ikke» om forbeholdet
+[ja] Du er innenfor fristen for å reklamere (to år fra overtakelsen). (forbrukerkjøpsloven § 27 annet ledd første punktum)
+[ja, uthevet] Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. (forbrukerkjøpsloven § 18 annet ledd)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+
+## to feil, én innen og én etter formodningen
+[nei] Fristen kan være ute for slitedeler. (forbrukerkjøpsloven § 27 annet ledd)
+[ja, uthevet] Feilen ved motor og eksos viste seg innen 6 måneder. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. (forbrukerkjøpsloven § 18 annet ledd)
+[nei] Feilen ved klimaanlegg og varme viste seg etter 6 måneder. Da må du selv sannsynliggjøre at feilen var der ved levering, typisk med en verkstedrapport. Brevet legger opp til det. (forbrukerkjøpsloven § 18 annet ledd)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjaldt før 2024.
+
+## to feil innen formodningen
+[ja] Du er innenfor fristen for å reklamere (to år fra overtakelsen). (forbrukerkjøpsloven § 27 annet ledd første punktum)
+[ja, uthevet] Feilene viste seg innen 2 år. Da er det selger som må bevise at feilene ikke var der da du overtok bilen. (forbrukerkjøpsloven § 18 annet ledd)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+
+## feil i det selgeren sa (ingen formodning)
+[ja] Du er innenfor fristen for å reklamere (to år fra overtakelsen). (forbrukerkjøpsloven § 27 annet ledd første punktum)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+
+## over to år siden kjøpet, slitedel
+[nei] Fristen kan være ute for slitedeler. (forbrukerkjøpsloven § 27 annet ledd)
+[ja, uthevet] Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. (forbrukerkjøpsloven § 18 annet ledd)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
+
+## over to år siden kjøpet, ikke slitedel
+[ja] Du er innenfor fristen for å reklamere (fem år fra overtakelsen). (forbrukerkjøpsloven § 27 annet ledd annet punktum)
+[ja, uthevet] Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. (forbrukerkjøpsloven § 18 annet ledd)
+[info] Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.

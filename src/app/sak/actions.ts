@@ -1,71 +1,51 @@
 "use server";
 
 import { headers } from "next/headers";
-import { inArray, sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { vedtak } from "@/db/schema";
 import { AvvistAvModellError } from "@/lib/ai/klient";
 import { hentForhandler, tittel } from "@/lib/brreg";
 import { byggBrev, forhandsvisning } from "@/lib/brev/brev";
 import type { Brev, Brevsak } from "@/lib/brev/typer";
-import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
-import { GRUNNFILTER } from "@/lib/matching/grunnfilter";
 import { type Niva, ranger } from "@/lib/matching/ranger";
-import type { Kandidat } from "@/lib/matching/typer";
 import { poengtekst } from "@/lib/matching/rett";
 import { lagGrense } from "@/lib/rategrense";
 import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
-import { hentProfil } from "@/lib/vipps/profil";
+import { HELT_BREV_UTEN_BETALING, hentProfil } from "@/lib/vipps/profil";
 import { LOVSETNING, UTVALG_I_TEKSTEN, type Vedtaksdetaljer, velgVedtak } from "@/lib/vedtaksvalg/valg";
 import { vurderRiktighet } from "@/lib/brev/riktighet";
 import { lovversjon } from "@/lib/brev/paragrafer";
 import { idagOslo, rensBrevsvar, riktighetssak } from "./rens";
-import { signer, sjekkSignatur } from "./signatur";
+import { apne, forsegle } from "./signatur";
+import { hentAlle } from "./vedtak-db";
 
-// The paragraph the letter cites its precedent with, and the decision it rests on.
+// The decision the letter cites, as the browser may see it before payment: the level, the case number
+// and the date (public), never the paragraph's quotes or the link. The paragraph itself travels sealed
+// (signatur.ts) and is opened only by byggBrevet.
 export type Funn =
   | {
       ok: true;
-      avsnitt: string;
       // Null when there was no candidate and the letter rests on the law (LOVSETNING).
       niva: Niva | null;
-      vedtak: { saksnummer: string | null; vedtaksdato: string | null; kildeUrl: string; lovversjon: "før_2024" | "etter_2024" | "ukjent" } | null;
+      vedtak: { saksnummer: string | null; vedtaksdato: string | null } | null;
       antallKandidater: number;
       perNiva: Record<Niva, number>;
-      // The server's signature on the paragraph, the level and the decision (signatur.ts).
-      signatur: string;
+      forseglet: string;
     }
   | { ok: false; melding: string };
 
-const forMange = lagGrense({ antall: 20, vinduMs: 60_000 });
+// What is sealed: the paragraph, the level and the decision with its link.
+type Forseglet = { avsnitt: string; niva: Niva | null; vedtak: { saksnummer: string | null; vedtaksdato: string | null; kildeUrl: string; lovversjon: "før_2024" | "etter_2024" | "ukjent" } | null };
+const tilNettleseren = (f: Forseglet, rest: { antallKandidater: number; perNiva: Record<Niva, number> }): Funn => ({
+  ok: true,
+  niva: f.niva,
+  vedtak: f.vedtak && { saksnummer: f.vedtak.saksnummer, vedtaksdato: f.vedtak.vedtaksdato },
+  ...rest,
+  forseglet: forsegle(f),
+});
 
-// Steps 3 and 5 reach across categories, so every decision is ranked. The set only changes on
-// import, so it is read once per server instance.
-let alleVedtak: Promise<Kandidat[]> | null = null;
-function hentAlle(): Promise<Kandidat[]> {
-  alleVedtak ??= db
-    .select({
-      id: vedtak.id,
-      saksnummer: vedtak.saksnummer,
-      vedtaksdato: vedtak.vedtaksdato,
-      km: vedtak.kmVedKjop,
-      alder: vedtak.alderVedKjop,
-      somDenEr: vedtak.somDenEr,
-      sanksjoner: vedtak.sanksjoner,
-      mangelsgrunnlag: vedtak.mangelsgrunnlag,
-      paragrafer: vedtak.paragrafer,
-      tvistetema: vedtak.tvistetema,
-      feil: sql<AvledetFeil[]>`coalesce(${vedtak.feilvurdering}->'feil', '[]'::jsonb)`,
-      avgjorende: vedtak.avgjorende,
-    })
-    .from(vedtak)
-    .where(GRUNNFILTER)
-    .catch((e) => {
-      alleVedtak = null;
-      throw e;
-    });
-  return alleVedtak;
-}
+const forMange = lagGrense({ antall: 20, vinduMs: 60_000 });
 
 // kjopsdato: the day the car was registered on its current owner. ar: the year it was first
 // registered; the decisions' age is from the model year, so the user's age is an approximation.
@@ -102,7 +82,7 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
     const { kandidater, perNiva } = ranger(alle, sak);
     if (!kandidater.length) {
       console.info("vedtaksvalg: ingen kandidat, lovsetning");
-      return { ok: true, avsnitt: LOVSETNING, niva: null, vedtak: null, antallKandidater: 0, perNiva, signatur: signer({ avsnitt: LOVSETNING, niva: null, vedtak: null }) };
+      return tilNettleseren({ avsnitt: LOVSETNING, niva: null, vedtak: null }, { antallKandidater: 0, perNiva });
     }
     const detaljrader = await db
       .select({
@@ -137,12 +117,10 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
       `vedtaksvalg: ${valgt.saksnummer} (nivå ${svar.niva}${svar.fulgt ? "" : ", rangeringens førstevalg"}), ${svar.forbruk.tokensInn} inn / ${svar.forbruk.tokensUt} ut, $${svar.forbruk.kostnadUsd.toFixed(3)}`,
       kontroll,
     );
-    const funnet = {
-      avsnitt: svar.avsnitt,
-      niva: svar.niva,
-      vedtak: { saksnummer: valgt.saksnummer, vedtaksdato: valgt.vedtaksdato, kildeUrl: vedtakDetaljer.get(valgt.id)!.kildeUrl, lovversjon: lovversjoner.get(valgt.id)! },
-    };
-    return { ok: true, ...funnet, antallKandidater: kandidater.length, perNiva, signatur: signer(funnet) };
+    return tilNettleseren(
+      { avsnitt: svar.avsnitt, niva: svar.niva, vedtak: { saksnummer: valgt.saksnummer, vedtaksdato: valgt.vedtaksdato, kildeUrl: vedtakDetaljer.get(valgt.id)!.kildeUrl, lovversjon: lovversjoner.get(valgt.id)! } },
+      { antallKandidater: kandidater.length, perNiva },
+    );
   } catch (e) {
     console.error("vedtaksvalget feilet", e);
     if (e instanceof AvvistAvModellError) return { ok: false, melding: "Saken kunne ikke behandles automatisk. Prøv igjen, eller beskriv feilen på en annen måte." };
@@ -150,18 +128,20 @@ export async function finnVedtak(inn: unknown): Promise<Funn> {
   }
 }
 
-export type BrevResultat = { ok: true; brev: Brev; fullt: boolean } | { ok: false; melding: string };
+// `betalingIUtvikling`: development only (TVISTR_HELT_BREV_UTEN_BETALING=1), the pay button simulates a
+// payment until Vipps is connected.
+export type BrevResultat = { ok: true; brev: Brev; fullt: boolean; betalingIUtvikling: boolean } | { ok: false; melding: string };
 
 const forMangeBrev = lagGrense({ antall: 20, vinduMs: 60_000 });
 
-// What finnVedtak gave the browser, taken back only with the server's signature on it, so the paragraph
-// in the letter is the one the server wrote. undefined: not signed by this server.
+// What finnVedtak gave the browser, taken back only when this server sealed it, so the paragraph in
+// the letter is the one the server wrote. undefined: not sealed by this server.
 function rensPraksis(f: unknown): Brevsak["praksis"] | undefined {
   const x = (f && typeof f === "object" ? f : {}) as Record<string, unknown>;
-  if (x.ok !== true || !sjekkSignatur({ avsnitt: x.avsnitt, niva: x.niva, vedtak: x.vedtak }, x.signatur)) return undefined;
-  const v = x.vedtak as { saksnummer: string | null; kildeUrl: string; lovversjon: "før_2024" | "etter_2024" | "ukjent" } | null;
-  if (x.niva === null || !v) return null;
-  return { avsnitt: x.avsnitt as string, kildeUrl: v.kildeUrl, saksnummer: v.saksnummer, lovversjon: v.lovversjon };
+  const p = x.ok === true ? (apne(x.forseglet) as Forseglet | undefined) : undefined;
+  if (!p || typeof p.avsnitt !== "string") return undefined;
+  if (p.niva === null || !p.vedtak) return null;
+  return { avsnitt: p.avsnitt, kildeUrl: p.vedtak.kildeUrl, saksnummer: p.vedtak.saksnummer, lovversjon: p.vedtak.lovversjon };
 }
 
 // The whole letter once the buyer has paid, otherwise the preview: the background and the paragraph
@@ -208,12 +188,12 @@ export async function byggBrevet(inn: unknown): Promise<BrevResultat> {
     JSON.stringify({
       lovversjon: lovversjon(r.kjopsdato),
       tidsniva: r.vedtak.tidslinje.avledet.map((a) => a.tidsnivaa),
-      niva: (o.funn as { niva?: unknown }).niva ?? null,
+      niva: (o.funn as { niva?: unknown } | undefined)?.niva ?? null,
       vedtak: praksis?.saksnummer ?? null,
       advarsler: regler.length,
       regler,
       fullt: !!kjoper,
     }),
   );
-  return { ok: true, brev: kjoper ? brev : forhandsvisning(brev), fullt: !!kjoper };
+  return { ok: true, brev: kjoper ? brev : forhandsvisning(brev), fullt: !!kjoper, betalingIUtvikling: HELT_BREV_UTEN_BETALING() };
 }

@@ -187,3 +187,31 @@ Kjent før bygging, og ikke et kriterium:
 | Riktighet 5: ingen stopp på de 12 | **Grønt.** |
 
 Ikke bygget, se `riktighet.md`: reglene om kilometerstand (vegvesenets API har ikke km), og «slettet» foretak (kan ikke velges).
+
+---
+
+# Ferdigkriterier: før betalingsmuren (landingsside, vurdering, forhåndsvisning)
+
+Den nye flyten (landingsside → 1 Bilen → 2 Kjøpet → 3 Feilen → 4 Vurdering → 5 Detaljer → 6 Krav og selger → 7 Forhåndsvisning → 8 Brevet) er ferdig når alle fem er grønne. Kriteriene er satt før bygging og endres ikke mens de måles. Er ett rødt, rapporteres tallet, og arbeidet stopper.
+
+Alt før muren er kode og oppslag i databasen: ingen modellkall før steg 7, ingen tekst skrevet av en modell, ingen sannsynlighet for utfall.
+
+1. **Fra regnr til vurdering** tar under 2 minutter i Playwright (desktop og mobil) og gjør null modellkall. Måles i `e2e/flyt.spec.ts`; at `velgVedtak` ikke kalles i steg 4 testes i `vurdering.test.ts`.
+2. **De 12 simulerte sakene** får riktig status og riktige lovlinjer. Forventet status per sak står i en gylden fil, satt ut fra reglene i `docs/vurdering.md` før vurderingen ble kjørt.
+3. **Statistikk-tabellen** (`statistikk_kategori`) bygges ved import, ikke per forespørsel, og steg 4 leser den. Tellingene stemmer mot en fersk telling i databasen for tre underkategorier, og tall under 5 vises ikke.
+4. **Steg 7** viser ikke sitater eller lenke før betaling: vedtaksavsnittet har bare første setning i klartekst, og verken forhåndsvisningen eller svaret fra serveren inneholder sitatene eller `kilde_url`.
+5. **Måling** er på plass for alle hendelsene: landing, regnr ok, steg 2 ferdig, steg 3 ferdig, vurdering vist (med status), fortsett klikket, steg 7 vist, betaling startet, betaling fullført, brev lastet ned. Bare status og kategori lagres, aldri regnr eller navn.
+
+I tillegg, som tester og ikke egne kriterier: status per gren (tabelltest, «fristen er ute» gir ingen betalingsknapp), lovlinjene per lovversjon, formodning og forbehold (snapshot), kortene er de tre øverste fra `ranger()` uten sitater og lenker, og ingen tekst før muren inneholder «vinne», «sannsynlig», «garanter» eller forsterkerne fra brevet.
+
+## Resultat for før betalingsmuren (2026-10-14)
+
+| # | Kriterium | Resultat |
+|---|---|---|
+| 1 | Regnr til vurdering under 2 minutter, null modellkall | **Grønt.** `e2e/flyt.spec.ts` ved desktop og mobil: 5 sekunder fra landingssiden til vurderingen, for alle tre statusene. Før steg 7 går det nøyaktig ett serverkall (`vurderSaken`), og «fristen er ute» ingen. `vurdering.test.ts` viser at `velgVedtak` ikke kalles, og at serverhandlingen for steg 4 ikke importerer modellen. |
+| 2 | De 12 simulerte sakene | **Grønt.** Forventet status, grunner og lovlinjer ble satt i `src/lib/vurdering/__fixtures__/forventet.json` før kjøringen. Alle 12 stemmer (`gylne.test.ts`): 9 «du kan ha en sak», 3 «står svakt» (girkasse og rust med «som den er» på gammel bil før 2024, rust og nødmodus oppdaget etter to år, rust som slitedel, nødmodus uten vedtak på nivå A). Skjermene står i `docs/jurist-gjennomgang.md`. |
+| 3 | Statistikk-tabellen | **Grønt.** `statistikk_kategori` (63 rader, 2 145 vedtak) bygges av importene og `npm run statistikk:bygg`, og steg 4 og landingssiden leser den. `npm run ferdig:vurdering`: turbo, bremser og rust er like en fersk SQL-telling. Tall under 5 vises ikke (tabelltest). |
+| 4 | Ingen sitater eller lenke før betaling | **Grønt.** Forhåndsvisningen har bare første setning av vedtaksavsnittet (`brev.test.ts`); avsnittet er forseglet i svaret fra serveren (`signatur.test.ts`). Playwright: ingen «» utenom «som den er», ingen lenker og ingen vedtaks-URL i siden i steg 4 og 7; i steg 8 (dev-flagget) er lenken og sitatene der. |
+| 5 | Måling | **Grønt.** Alle ti hendelsene lagres i `hendelse` med status og kategorier, sett i databasen etter en gjennomgang i nettleseren; serveren forkaster regnr og navn (`maling.test.ts`). |
+
+Kjent og ikke kriterium: Vipps (betalingen simuleres bare i utvikling), og at `next build` stopper på en lokal, git-ignorert fil (`data/explore/pilot.mts`) som ikke er en del av appen; med den utenfor bygges alle sider, og landingssiden prerendres med antallet.

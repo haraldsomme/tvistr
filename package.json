@@ -24,9 +24,12 @@
     "standpunkt:hent": "tsx --env-file=.env.local scripts/standpunkt-hent.ts",
     "rettslig:hent": "tsx --env-file=.env.local scripts/rettslig-hent.ts",
     "simuler": "tsx --env-file=.env.local scripts/simuler.ts",
+    "statistikk:bygg": "tsx --env-file=.env.local scripts/statistikk.ts",
+    "vurdering:gylne": "tsx --env-file=.env.local scripts/vurdering-gylne.ts",
     "ferdig:stikkprove": "tsx --env-file=.env.local scripts/ferdig-stikkprove.ts",
     "ferdig:dekning": "tsx --env-file=.env.local scripts/ferdig-dekning.ts",
     "ferdig:simulert": "tsx --env-file=.env.local scripts/ferdig-simulert.ts",
+    "ferdig:vurdering": "tsx --env-file=.env.local scripts/ferdig-vurdering.ts",
     "ferdig:brevlop": "tsx --env-file=.env.local scripts/ferdig-brevlop.ts",
     "brev:praksis": "tsx --env-file=.env.local scripts/brev-praksis.ts",
     "brev:jurist": "tsx scripts/brev-jurist.ts"

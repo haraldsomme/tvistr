@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import { Topp } from "@/app/topp";
 import { Skjema } from "./skjema";
 
-export const metadata: Metadata = { title: "Ny sak – tvistr" };
+export const metadata: Metadata = { title: "Sjekk saken din – tvistr" };
 
-// The buyer's form: car, defects, details, claim. «Lag brev» ranks the decisions with medhold and
-// step 5 shows the best ones; the letter itself is built later.
+// The buyer's form, from the registration number to the letter (skjema.tsx, docs/skjema.md). The
+// landing page sends the number as ?regnr=, which the form reads on the client.
 export default function Page() {
   return (
     <div className="flex h-dvh flex-col">
-      <Topp />
       <Skjema />
     </div>
   );

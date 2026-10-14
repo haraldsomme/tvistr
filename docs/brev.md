@@ -1,6 +1,6 @@
 # Brevet
 
-Steg 5 viser et ferdig reklamasjonsbrev. Alt er ren kode: maler fylt med felt fra skjemaet, Vipps-profilen (en stub foreløpig), Enhetsregisteret, motorvognregisteret og lovteksten. Ingen modell skriver noe i brevet. Modellen brukes bare til å velge hvilket vedtak avsnittet om praksis viser til (`docs/vedtaksvalg.md`).
+Steg 7 viser forhåndsvisningen og steg 8 det ferdige reklamasjonsbrevet (rekkefølgen i skjemaet står i `docs/skjema.md`, vurderingen før betaling i `docs/vurdering.md`). Alt er ren kode: maler fylt med felt fra skjemaet, Vipps-profilen (en stub foreløpig), Enhetsregisteret, motorvognregisteret og lovteksten. Ingen modell skriver noe i brevet. Modellen brukes bare til å velge hvilket vedtak avsnittet om praksis viser til (`docs/vedtaksvalg.md`).
 
 **Prinsippet:** hver setning kan spores til et felt, et svar i skjemaet eller en lovtekst. Fins ikke feltet, fins ikke setningen. Hver setning har derfor en `kilde` (`skjema:feil[0].tid`, `lov:etter_2024:avvik`, `brreg:navn`, `vipps:epost`, `vedtak:22/2868`, `fast`), og en test sjekker at ingen setning har tom kilde.
 
@@ -8,16 +8,16 @@ Koden ligger i `src/lib/brev/`, én fil per avsnitt. Malfunksjonene er rene og t
 
 ## Flyt
 
-1. «Opplysningene stemmer, gå til betaling» i steg 5 kaller `finnVedtak` (`src/app/sak/actions.ts`). Den renser og vurderer hele saken (en sak som stopper, koster ikke et modellkall), finner vedtaksavsnittet og signerer det (`signatur.ts`).
-2. Deretter kaller den `byggBrevet` med svarene og avsnittet. Serveren:
+1. Steg 7 kaller `finnVedtak` (`src/app/sak/actions.ts`). Den renser og vurderer hele saken (en sak som stopper, koster ikke et modellkall), finner vedtaksavsnittet og forsegler det (AES-256-GCM, `signatur.ts`). Nettleseren får bare nivå, saksnummer og dato i klartekst; avsnittet, sitatene og lenken kan ikke leses før betaling.
+2. Deretter kaller den `byggBrevet` med svarene og det forseglede avsnittet. Serveren:
    - renser svarene og kjører alle stopp-regler på nytt (`src/app/sak/rens.ts`, `docs/riktighet.md`),
-   - godtar bare et vedtaksavsnitt med serverens egen signatur,
+   - godtar bare et avsnitt serveren selv har forseglet,
    - henter selgerens navn og adresse fra Enhetsregisteret på nytt (nettleseren oppgir bare org.nr.),
-   - henter kjøperen fra Vipps-profilen (`src/lib/vipps/profil.ts`),
+   - henter kjøperen fra Vipps-profilen (`src/lib/vipps/profil.ts`), som bare finnes etter betaling (en ordre-id),
    - bygger brevet (`byggBrev`).
-3. **Uten betaling** (ingen profil) får nettleseren `forhandsvisning(brev)`: tittel og mottaker, avsnitt 1 og vedtaksavsnittet. Resten er byttet ut med lengden på teksten, så den skjulte teksten aldri sendes. Avsnitt 1 og avsnittet om praksis er alt som vises, med resten som grå felt.
-4. **Etter betaling** får nettleseren hele brevet, med «Kopier tekst» og «Last ned som Word».
-5. I utvikling vises hele brevet uten betaling når `TVISTR_HELT_BREV_UTEN_BETALING=1` står i `.env.local` (aldri i produksjon).
+3. **Uten betaling** (ingen profil) får nettleseren `forhandsvisning(brev)`: tittel og mottaker, avsnitt 1 og første setning av vedtaksavsnittet («Det vises til … vedtak i sak … av …», `forsteSetning` i `mal.ts`), uten lenke. Resten er byttet ut med lengden på teksten, så den skjulte teksten aldri sendes.
+4. **Etter betaling** (steg 8) kaller skjemaet `byggBrevet` på nytt med ordre-id og det samme forseglede avsnittet, så brevet bygger på vedtaket forhåndsvisningen viste. Nettleseren får hele brevet, med «Kopier tekst» og «Last ned Word».
+5. I utvikling simulerer «Betal med Vipps» betalingen når `TVISTR_HELT_BREV_UTEN_BETALING=1` står i `.env.local` (aldri i produksjon): skjemaet lager en ordre-id, og stuben gir profilen.
 
 Skjermen, den kopierte teksten og Word-filen bygges av samme linjeliste (`tilDokument` i `brev.ts`), så teksten er den samme i alle tre. Lenken til vedtaket er en lenke på skjermen og en fotnote i Word (`docx.ts`).
 
@@ -161,8 +161,8 @@ Integrasjonen er en egen oppgave. Brevet bygges mot en stub (`src/lib/vipps/prof
 - Hva som skjer når brukeren ikke har registrert e-post eller adresse. Dokumentasjonen sier det ikke, så brevet er skrevet slik at begge kan mangle.
 - Hvilken adresse som brukes når det er flere.
 - Betalingen må bekreftes på serveren (webhook eller GET), ikke bare med en redirect.
-- **Vedtaket må følge betalingen.** Valget av vedtak er ikke deterministisk (modellkallet), så et nytt «Lag brev» etter betaling kan gi et annet vedtak enn forhåndsvisningen viste. Lagre vedtaket eller avsnittet sammen med ordre-id, eller la forhåndsvisningen og det betalte brevet bruke samme valg.
-- Ordre-id lagres i `sessionStorage` (`tvistr:ordre`), og serveren svarer «betalt» på oppslag mot ordre-id. Stuben `hentProfil` tar imot ordre-id, men bruker den ikke ennå.
+- **Vedtaket må følge betalingen.** Innenfor økten gjør det det: steg 8 bygger brevet med det forseglede avsnittet fra steg 7. Ved en omlasting etter betaling (ny økt) må det forseglede avsnittet lagres sammen med ordre-id.
+- Ordre-id lagres i `sessionStorage` (`tvistr:ordre`), og serveren svarer «betalt» på oppslag mot ordre-id. Stuben `hentProfil` gir profilen bare når det finnes en ordre-id (og bare i utvikling).
 
 ## Avvik fra planen
 
@@ -212,4 +212,4 @@ Datoene og rekkefølgen mellom dem vurderes av `tidslinje.ts`, resten av `riktig
 - `npm test`: paragrafer, kombinasjoner (`src/lib/brev/__snapshots__/*.txt`), de tolv gylne brevene (`__snapshots__/gylne/`), forhåndsvisningen, Word-filen og renseren.
 - `npm run brev:praksis`: finner vedtaksavsnittet for de tolv sakene på nytt (databasen og modellen, om lag $0,14). Kjør bare når rangeringen, valget eller avsnittsmalen endres.
 - `npm run brev:jurist`: skriver hele brevet inn under hver av de 15 sakene i `docs/jurist-gjennomgang.md`.
-- `node scripts/ferdig-brevskjema.mjs <mappe>`: går gjennom steg 4 og 5 ved 1280 og 390 piksler mot en kjørende dev-server.
+- `npx playwright test` (`e2e/flyt.spec.ts`): går gjennom hele flyten fra landingssiden til steg 7 (og 8 med dev-flagget) ved desktop- og mobilbredde mot en kjørende dev-server. Erstatter `scripts/ferdig-brevskjema.mjs`, som gikk gjennom det gamle skjemaet.

@@ -25,9 +25,9 @@ export const STUB_PROFIL: Vippsprofil = {
 // Development only: the letter is shown in full without paying.
 export const HELT_BREV_UTEN_BETALING = () => process.env.NODE_ENV !== "production" && process.env.TVISTR_HELT_BREV_UTEN_BETALING === "1";
 
-// null until the Vipps integration exists (or outside development): nobody has paid.
+// null until the Vipps integration exists (or outside development): nobody has paid. In development the
+// pay button in step 7 gives an order id, which stands for a confirmed payment.
 export async function hentProfil(ordreId: string | null): Promise<Vippsprofil | null> {
   // The real version looks the order up and returns the profile only if the payment is confirmed.
-  void ordreId;
-  return HELT_BREV_UTEN_BETALING() ? STUB_PROFIL : null;
+  return HELT_BREV_UTEN_BETALING() && ordreId ? STUB_PROFIL : null;
 }

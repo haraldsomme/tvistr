@@ -1,0 +1,15 @@
+{
+  "_om": "Forventet status og grunner for de tolv simulerte sakene (scripts/simulerte-saker.ts) på 13.10.2026, satt ut fra reglene i docs/vurdering.md før vurderingen ble kjørt mot databasen. «A» er om rangeringen må finne et vedtak på nivå A for at statusen skal stå; uten det legges «ingen_niva_a» til og statusen blir «svak».",
+  "Turbo kort etter kjøp": { "grunner": [], "frist": "ja", "bevisbyrde": ["ja"], "forbehold": false },
+  "Girkasse, kjøpt 2023": { "grunner": ["som_den_er_gammel"], "frist": "ja", "bevisbyrde": ["nei"], "forbehold": true },
+  "Rust etter over to år, som den er": { "grunner": ["feil_over_to_aar", "som_den_er_gammel", "slitedel_sen"], "frist": "nei", "bevisbyrde": ["nei"], "forbehold": true },
+  "Servicehefte lovet i annonsen": { "grunner": [], "frist": "ja", "bevisbyrde": [], "forbehold": false },
+  "Tilbakestilt kilometerstand": { "grunner": [], "frist": "ja", "bevisbyrde": [], "forbehold": false },
+  "Elbil med lav batterikapasitet": { "grunner": [], "frist": "ja", "bevisbyrde": ["ja"], "forbehold": false },
+  "Varsellampe, vet ikke årsak": { "grunner": [], "frist": "ja", "bevisbyrde": ["ja"], "forbehold": false },
+  "Klima, bare hovedkategori": { "grunner": [], "frist": "ja", "bevisbyrde": ["ja"], "forbehold": false },
+  "Bremser på eldre bil": { "grunner": [], "frist": "ja", "bevisbyrde": ["ja"], "forbehold": true },
+  "Oljeforbruk og lys, to kategorier": { "grunner": [], "frist": "ja", "bevisbyrde": ["ja"], "forbehold": false },
+  "Garanti ikke som lovet": { "grunner": [], "frist": "ja", "bevisbyrde": [], "forbehold": false },
+  "Nødmodus etter over to år": { "grunner": ["feil_over_to_aar"], "frist": "nei", "bevisbyrde": ["nei"], "forbehold": false }
+}

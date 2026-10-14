@@ -1,7 +1,7 @@
 import { feilnavn, ledd } from "./feiltype";
 import { FORSOK_ANTALL, kr, liste, smaa } from "./format";
 import { jf, lovkilde, lovversjon, type Poeng } from "./paragrafer";
-import { forsokAv, harPunkt, overslagSum } from "./rapport";
+import { forsokAv, harPunkt, overslagFordeling, overslagSum, reklamerte } from "./rapport";
 import type { Brevsak, Setning } from "./typer";
 
 // What the seller said or the car's history: a repair cannot make it right, so the letter does not
@@ -24,6 +24,7 @@ export function krav(s: Brevsak): Setning[][] {
   const lov = (p: Poeng) => `skjema:krav; ${lovkilde(v, p)}`;
   const hoved: Setning[] = [];
   const forsok = forsokAv(s);
+  const { tidligere, nye } = reklamerte(s);
   const svar = s.kontakt?.svar;
   // A seller who has turned the complaint down or not answered it will not offer to repair.
   const ingenRetting = svar === "avviste" || svar === "ikke_svart";
@@ -40,18 +41,30 @@ export function krav(s: Brevsak): Setning[][] {
   }
 
   if (s.krav === "prisavslag") {
-    // The workshops' estimates, added up over the defects.
-    const o = overslagSum(s);
-    hoved.push({
-      tekst: `På dette grunnlaget krever jeg prisavslag${jf(v, "prisavslag")}${o ? `, tilsvarende utbedringskostnaden på ${kr(o.sum)} ifølge ${o.antallRapporter > 1 ? "verkstedenes" : "verkstedets"} overslag` : ""}.`,
-      kilde: `${lov("prisavslag")}${o ? "; skjema:feil[].rapport.overslag" : ""}`,
-    });
+    // The workshops' estimates, added up over the known defects that have one. When only some have,
+    // the estimate is the least the reduction must be, and the rest is left until it is documented.
+    const { med, uten } = overslagFordeling(s);
+    const o = overslagSum({ feil: med });
+    const verkstedets = o && o.antallRapporter > 1 ? "verkstedenes" : "verkstedets";
+    const navn = (fs: typeof med) => liste(fs.map((f) => smaa(feilnavn(f))));
+    const kildeAv = (fs: typeof med) => fs.map((f) => `skjema:feil[${s.feil.indexOf(f)}].rapport.overslag`).join("; ");
+    if (o && uten.length) {
+      hoved.push({ tekst: `På dette grunnlaget krever jeg prisavslag${jf(v, "prisavslag")}.`, kilde: lov("prisavslag") });
+      hoved.push({ tekst: `Prisavslaget skal minst tilsvare utbedringskostnaden for ${navn(med)}, ${kr(o.sum)} ifølge ${verkstedets} overslag.`, kilde: kildeAv(med) });
+      hoved.push({ tekst: `For ${navn(uten)} fastsettes prisavslaget når utbedringskostnaden er dokumentert.`, kilde: kildeAv(uten) });
+    } else
+      hoved.push({
+        tekst: `På dette grunnlaget krever jeg prisavslag${jf(v, "prisavslag")}${o ? `, tilsvarende utbedringskostnaden på ${kr(o.sum)} ifølge ${verkstedets} overslag` : ""}.`,
+        kilde: `${lov("prisavslag")}${o ? "; skjema:feil[].rapport.overslag" : ""}`,
+      });
   }
 
   if (s.krav === "heving") {
     hoved.push({ tekst: `På dette grunnlaget hever jeg kjøpet${jf(v, "heving")}.`, kilde: lov("heving") });
+    // The repairs were tried on the defects of the earlier complaint, named when there are others.
+    const rettet = nye.length ? liste(tidligere.map((f) => smaa(feilnavn(f)))) : flere ? "dem" : "den";
     hoved.push({
-      tekst: `${flere ? "Mangelene er ikke uvesentlige" : "Mangelen er ikke uvesentlig"}${forsok > 0 ? `, og dere har ikke lykkes med å rette ${flere ? "dem" : "den"} etter ${FORSOK_ANTALL[forsok]}` : ""}.`,
+      tekst: `${flere ? "Mangelene er ikke uvesentlige" : "Mangelen er ikke uvesentlig"}${forsok > 0 && tidligere.length ? `, og dere har ikke lykkes med å rette ${rettet} etter ${FORSOK_ANTALL[forsok]}` : ""}.`,
       kilde: `skjema:krav${forsok > 0 ? "; skjema:kontakt.forsok" : ""}`,
     });
     if (ingenRetting)
@@ -70,10 +83,13 @@ export function krav(s: Brevsak): Setning[][] {
 
   // The seller may offer to repair even when the buyer asks for a reduction or to cancel (the repair
   // rules in §§ 29–30), unless repairs have already been tried, or the seller has turned the complaint
-  // down and the buyer cancels, or nothing in the letter can be repaired.
-  const kanRettes = ledd(s.feil).some((l) => !KAN_IKKE_RETTES.includes(l.under ? `${l.feil.hoved}.${l.under}` : l.feil.hoved));
-  if ((s.krav === "prisavslag" || s.krav === "heving") && forsok === 0 && kanRettes && !(s.krav === "heving" && ingenRetting)) {
-    hoved.push({ tekst: `Dersom dere ønsker å rette ${mangelen} selv, ber jeg om beskjed innen fristen under.`, kilde: `skjema:krav; skjema:kontakt; ${lovkilde(v, "retting")}` });
+  // down and the buyer cancels, or nothing in the letter can be repaired. After repairs have been tried
+  // the offer stands for the defects this letter complains about for the first time, by name.
+  const tilbudFor = forsok === 0 ? s.feil : nye;
+  const kanRettes = ledd(tilbudFor).some((l) => !KAN_IKKE_RETTES.includes(l.under ? `${l.feil.hoved}.${l.under}` : l.feil.hoved));
+  if ((s.krav === "prisavslag" || s.krav === "heving") && tilbudFor.length && kanRettes && !(s.krav === "heving" && ingenRetting)) {
+    const hva = forsok === 0 ? mangelen : liste(nye.map((f) => smaa(feilnavn(f))));
+    hoved.push({ tekst: `Dersom dere ønsker å rette ${hva} selv, ber jeg om beskjed innen fristen under.`, kilde: `skjema:krav; skjema:kontakt; ${lovkilde(v, "retting")}` });
     hoved.push({ tekst: `Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid${jf(v, "retting")}.`, kilde: lov("retting") });
   }
 

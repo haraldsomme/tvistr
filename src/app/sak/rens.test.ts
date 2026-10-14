@@ -17,7 +17,7 @@ const SVAR = {
   valg: { elektrisk: ["lys"], motor: ["turbo", "finnes_ikke"] },
   detaljer: {
     motor: { oppdaget: mndSiden(7), beskrivelse: "  Mistet kraft  ", opplysning: "nei", verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["arsak", "bekrefter", "overslag"] } },
-    elektrisk: { oppdaget: mndSiden(8), omtrentlig: true, opplysning: "muntlig", verksted: "nei" },
+    elektrisk: { oppdaget: mndSiden(8), omtrentlig: true, opplysning: "muntlig", opplyst: "i_orden", verksted: "nei" },
   },
   kjopsdato: aarSiden(1),
   km: 120_000,
@@ -120,6 +120,19 @@ describe("rensBrevsvar", () => {
   it("krever svar på verksted og selgers opplysning for hver feil", () => {
     const r = rensBrevsvar(med({ detaljer: { motor: { oppdaget: mndSiden(7), verksted: "nei" }, elektrisk: { oppdaget: mndSiden(8), opplysning: "nei", verksted: "nei" } } }));
     expect(r.ok).toBe(false);
+  });
+
+  it("krever hva selger sa om en teknisk feil selger sa noe om, og dropper det ellers", () => {
+    const medEl = (endring: Record<string, unknown>) => med({ detaljer: { ...SVAR.detaljer, elektrisk: { ...SVAR.detaljer.elektrisk, ...endring } } });
+    expect(rensBrevsvar(medEl({ opplyst: undefined }))).toEqual({ ok: false, melding: "Svar på alle spørsmålene om hver feil." });
+    expect(rensBrevsvar(medEl({ opplyst: "noe annet" })).ok).toBe(false);
+    const ok = rensBrevsvar(medEl({ opplyst: "feilen" }));
+    expect(ok.ok && ok.svar.feil.find((f) => f.hoved === "elektrisk")?.opplyst).toBe("feilen");
+    // «Nei» has nothing said, and a defect about what the seller said is not asked this way.
+    const nei = rensBrevsvar(medEl({ opplysning: "nei", opplyst: "i_orden" }));
+    expect(nei.ok && nei.svar.feil.find((f) => f.hoved === "elektrisk")?.opplyst).toBe(null);
+    const km = rensBrevsvar(med({ valg: { historikk: ["km"] }, detaljer: { historikk: { oppdaget: mndSiden(8), opplysning: "skriftlig", opplyst: "i_orden", verksted: "nei" } } }));
+    expect(km.ok && km.svar.feil[0].opplyst).toBe(null);
   });
 
   it("renser utlegg og avviser linjer uten beskrivelse eller beløp", () => {

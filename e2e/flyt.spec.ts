@@ -112,7 +112,7 @@ for (const s of SAKER)
     // 5 Detaljer
     await expect(page.getByRole("heading", { name: "Litt mer om feilen" })).toBeVisible();
     await page.getByRole("radiogroup", { name: "Er feilen undersøkt av et verksted?" }).getByRole("radio", { name: "Nei" }).click();
-    await page.getByRole("radiogroup", { name: "Sa selger noe om denne feilen før kjøpet?" }).getByRole("radio", { name: "Nei" }).click();
+    await page.getByRole("radiogroup", { name: "Sa selger noe om denne feilen før kjøpet?" }).getByRole("radio", { name: "Ingenting" }).click();
     await page.getByRole("button", { name: "Fortsett" }).click();
 
     // 6 Krav og selger

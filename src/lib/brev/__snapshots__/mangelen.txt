@@ -1,271 +1,361 @@
-90 ulike tekster over feilsett(4) × tid(3) × opplysning(3) × verksted(3) × beskrivelse(2)
+90 ulike tekster over feilsett(4) × tid(3) × opplysning(3) × verksted(3) × beskrivelse(2) (18 kombinasjoner skjemaet stopper er utelatt)
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av verksted.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":null}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"nei","verksted":"muntlig","beskrivelse":null}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"nei","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"nei","verksted":"nei","beskrivelse":null}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"innen_6_mnd","opplysning":"nei","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":null}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"nei","verksted":"muntlig","beskrivelse":null}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"nei","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"nei","verksted":"nei","beskrivelse":null}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"6_til_24_mnd","opplysning":"nei","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. Feilen er undersøkt av verksted.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":null}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"nei","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"nei","verksted":"muntlig","beskrivelse":null}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"nei","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"nei","verksted":"nei","beskrivelse":null}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","tid":"over_24_mnd","opplysning":"nei","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av verksted.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. september 2026. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. september 2026. Feilen er undersøkt av verksted.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. september 2026.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Dokumentasjon vedlegges.
+Jeg reklamerer herved på følgende mangel.
+Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.»
 
-## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
+## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
-## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
-## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
+## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av verksted.
 
-## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
 
-## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
+## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mai 2024.
 
-## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.»
 
-## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
+## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
-## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
-## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
+## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted.
 
-## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
 
-## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
+## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mars 2025.
 
-## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+## {"feilsett":"garanti","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.»
 
-## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
+## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. september 2026. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
-## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
 
-## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
+## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. september 2026. Feilen er undersøkt av verksted.
 
-## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
 
-## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
+## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. september 2026.
 
-## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+## {"feilsett":"garanti","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+1 like)
+Jeg reklamerer herved på følgende mangel.
 Garanti ikke som lovet: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.»
 
 ## {"feilsett":"vet_ikke","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av verksted. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mai 2024. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mars 2025. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. september 2026. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. september 2026. Feilen er undersøkt av verksted. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. september 2026. Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.
 
 ## {"feilsett":"vet_ikke","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
+Jeg reklamerer herved på følgende feil.
 Varsellampe: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.

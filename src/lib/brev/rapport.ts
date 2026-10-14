@@ -1,6 +1,7 @@
 // What the buyer says about contact with the seller and about a workshop report. The form (steps 3
 // and 4), the cleaning on the server and the letter all read the same lists, so a tick in the form is
 // one fixed sentence in the letter, and what is not ticked gives no sentence.
+import { reklamasjonFor } from "./tidslinje";
 import type { Brevsak, Brevfeil } from "./typer";
 
 // Step 4, «Kontakt med selger»: what the seller has done since the complaint. One answer, so the
@@ -100,10 +101,28 @@ export function rapporter(s: Pick<Brevsak, "feil">): { rapport: Rapport; feil: B
 
 // The estimates of the defects, added up. One estimate per defect, also when a report covers several
 // (then the buyer has given the figure for each), and only when the report has the tick.
-export function overslagSum(s: { feil: { rapport: Pick<Rapport, "navn" | "dato" | "punkter" | "overslag"> | null }[] }): { sum: number; antallRapporter: number } | null {
-  const poster = s.feil.filter((f) => f.rapport && harPunkt(f.rapport, "overslag") && f.rapport.overslag);
+type MedOverslag = { rapport: Pick<Rapport, "navn" | "dato" | "punkter" | "overslag"> | null };
+const harOverslag = (f: MedOverslag) => !!(f.rapport && harPunkt(f.rapport, "overslag") && f.rapport.overslag);
+
+export function overslagSum(s: { feil: MedOverslag[] }): { sum: number; antallRapporter: number } | null {
+  const poster = s.feil.filter(harOverslag);
   if (!poster.length) return null;
   return { sum: poster.reduce((t, f) => t + f.rapport!.overslag!, 0), antallRapporter: new Set(poster.map((f) => nokkel(f.rapport!))).size };
 }
 
-export const forsokAv = (s: Pick<Brevsak, "kontakt">) => s.kontakt?.forsok ?? 0;
+// The known defects with and without an estimate. A symptom («vet ikke») has its own demand to be
+// examined and repaired, so it is in neither.
+export function overslagFordeling<F extends MedOverslag & { hoved: string }>(s: { feil: F[] }): { med: F[]; uten: F[] } {
+  const kjente = s.feil.filter((f) => f.hoved !== "vet_ikke");
+  return { med: kjente.filter(harOverslag), uten: kjente.filter((f) => !harOverslag(f)) };
+}
+
+export const forsokAv =(s: Pick<Brevsak, "kontakt">) => s.kontakt?.forsok ?? 0;
+
+// The defects the earlier complaint covered, and the ones discovered after it, which this letter
+// complains about. Without an earlier complaint every defect is new. The repairs tried and the seller's
+// answer belong to the covered ones only.
+export function reklamerte(s: Pick<Brevsak, "feil" | "kontakt" | "dato">): { tidligere: Brevfeil[]; nye: Brevfeil[] } {
+  const omfattet = (f: Brevfeil) => reklamasjonFor(f, s.kontakt?.dato, s.dato).omfattet;
+  return { tidligere: s.feil.filter(omfattet), nye: s.feil.filter((f) => !omfattet(f)) };
+}

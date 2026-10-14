@@ -2,14 +2,16 @@
 // product over axes. Every name and number here is fictitious.
 import { STUB_PROFIL } from "@/lib/vipps/profil";
 import type { VisteSegValg } from "@/lib/feil/kategorier";
-import { plussManeder } from "./tidslinje";
+import { vurderRiktighet } from "./riktighet";
+import { plussManeder, vurderTidslinje } from "./tidslinje";
 import type { Rapport } from "./rapport";
 import type { Brevfeil, Brevsak, Kilde, Kontakt } from "./typer";
 
 // The purchase dates leave room for a defect discovered more than two years later, before the letter.
 export const KJOPSDATO = { før_2024: "2023-05-02", etter_2024: "2024-03-10" } as const;
-// The date of an earlier complaint, after the first six months for a defect «6–24 måneder».
-export const KONTAKT_DATO = { før_2024: "2023-09-01", etter_2024: "2024-06-01" } as const;
+// The date of an earlier complaint: after a defect «6–24 måneder» (discovered 12 months after the
+// purchase, TID_MND) and before one «over 24 måneder», which the letter then complains about itself.
+export const KONTAKT_DATO = { før_2024: "2024-06-01", etter_2024: "2025-04-01" } as const;
 
 export const kontakt = (lov: Lov, o: Partial<Kontakt> = {}): Kontakt => ({ dato: KONTAKT_DATO[lov], form: "skriftlig", forsok: 0, svar: "annet", ...o });
 
@@ -75,15 +77,58 @@ export type Lov = keyof typeof KJOPSDATO;
 // «+n» is n months after a date: a defect's discovery after the purchase, a report after the discovery.
 const relativ = (iso: string, fra: string) => (iso.startsWith("+") ? plussManeder(fra, Number(iso.slice(1))) : iso);
 
+// A case the form and the server would stop. lagSak refuses it, so no test can build a letter the
+// form never allows (a complaint dated before the defect once slipped through this way); samle leaves
+// such combinations out and counts them.
+export class UgyldigSak extends Error {}
+
+// The rules that stop the case, as the form and the server judge it (tidslinje.ts and riktighet.ts).
+export function stoppFor(s: Brevsak): string[] {
+  const t = vurderTidslinje({
+    kjop: s.kjopsdato,
+    feil: s.feil.map((f, i) => ({ id: `${i}`, oppdaget: f.oppdaget, omtrentlig: f.omtrentlig, ...(f.rapport && { rapport: f.rapport.dato }) })),
+    ...(s.kontakt && { reklamert: s.kontakt.dato }),
+    idag: s.dato,
+  });
+  const r = vurderRiktighet({
+    kjopsdato: s.kjopsdato,
+    kjopesum: s.kjopesum,
+    forsteRegistrert: s.bil.forsteRegistrert,
+    somDenEr: s.somDenEr,
+    krav: s.krav,
+    forsok: s.kontakt?.forsok ?? 0,
+    svar: s.kontakt?.svar ?? null,
+    feil: s.feil.map((f) => ({ ...f, konklusjon: f.rapport?.konklusjon ?? null })),
+    utlegg: s.utlegg,
+    selger: null,
+  });
+  return [...t.stopp, ...r.stopp].map((m) => m.regel);
+}
+
+// The case a builder makes, or nothing when the form would stop it: for lists over many combinations.
+export function gyldig<T>(bygg: () => T): T[] {
+  try {
+    return [bygg()];
+  } catch (e) {
+    if (e instanceof UgyldigSak) return [];
+    throw e;
+  }
+}
+
 export function lagSak(lov: Lov, endring: Partial<Brevsak> = {}): Brevsak {
-  const s = { ...BASE, kjopsdato: KJOPSDATO[lov], ...endring };
-  return {
+  // A symptom alone can only be examined and repaired, so such a case asks for repair unless the test says otherwise.
+  const kunSymptom = !!endring.feil?.length && endring.feil.every((f) => f.hoved === "vet_ikke");
+  const s = { ...BASE, kjopsdato: KJOPSDATO[lov], ...(kunSymptom && { krav: "retting" as const }), ...endring };
+  const sak = {
     ...s,
     feil: s.feil.map((f) => {
       const oppdaget = relativ(f.oppdaget, s.kjopsdato);
       return { ...f, oppdaget, rapport: f.rapport && { ...f.rapport, dato: relativ(f.rapport.dato, oppdaget) } };
     }),
   };
+  const stopp = stoppFor(sak);
+  if (stopp.length) throw new UgyldigSak(`Saken stoppes av skjemaet: ${stopp.join(", ")}`);
+  return sak;
 }
 
 // The product of the axes: [{a: 1, b: "x"}, {a: 1, b: "y"}, ...].
@@ -95,12 +140,20 @@ export function produkt<T extends Record<string, readonly unknown[]>>(akser: T):
 // many inputs gave the same. Written to a snapshot file, so any change in a template shows as a diff.
 export function samle<T extends Record<string, readonly unknown[]>>(akser: T, bygg: (valg: { [K in keyof T]: T[K][number] }) => string): string {
   const tekster = new Map<string, { valg: unknown; antall: number }>();
+  let ugyldige = 0;
   for (const valg of produkt(akser)) {
-    const tekst = bygg(valg);
+    let tekst: string;
+    try {
+      tekst = bygg(valg);
+    } catch (e) {
+      if (!(e instanceof UgyldigSak)) throw e;
+      ugyldige++;
+      continue;
+    }
     const funnet = tekster.get(tekst);
     if (funnet) funnet.antall++;
     else tekster.set(tekst, { valg, antall: 1 });
   }
-  const hode = `${tekster.size} ulike tekster over ${Object.entries(akser).map(([k, v]) => `${k}(${v.length})`).join(" × ")}`;
+  const hode = `${tekster.size} ulike tekster over ${Object.entries(akser).map(([k, v]) => `${k}(${v.length})`).join(" × ")}${ugyldige ? ` (${ugyldige} kombinasjoner skjemaet stopper er utelatt)` : ""}`;
   return [hode, ...[...tekster].map(([tekst, { valg, antall }]) => `\n## ${JSON.stringify(valg)}${antall > 1 ? ` (+${antall - 1} like)` : ""}\n${tekst}`)].join("\n") + "\n";
 }

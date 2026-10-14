@@ -1,6 +1,7 @@
 12 ulike tekster over feilsett(3) × forsok(4)
 
 ## {"feilsett":"teknisk","forsok":0}
+Jeg reklamerer herved på følgende mangel.
 Turbo: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"teknisk","forsok":1}
@@ -16,6 +17,7 @@ Turbo: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted. Der
 Dere har forsøkt å rette feilen tre eller flere ganger uten at det har lykkes.
 
 ## {"feilsett":"to_tekniske_ulik_tid","forsok":0}
+Jeg reklamerer herved på følgende mangler.
 Turbo: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
 Lys: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
 
@@ -35,6 +37,7 @@ Lys: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av verksted. Dere g
 Dere har forsøkt å rette feilene tre eller flere ganger uten at det har lykkes.
 
 ## {"feilsett":"utstyr_blandet","forsok":0}
+Jeg reklamerer herved på følgende mangel.
 Dekk og felger; nøkler og tilbehør: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted. Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"utstyr_blandet","forsok":1}

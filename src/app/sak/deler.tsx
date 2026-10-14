@@ -11,7 +11,7 @@ import { type Forslag, tittel as tittelNavn } from "@/lib/brreg";
 import { type Linje, tilDokument } from "@/lib/brev/brev";
 import { fristTekst } from "@/lib/brev/tidslinje";
 import type { Lovversjon } from "@/lib/brev/paragrafer";
-import type { Brev } from "@/lib/brev/typer";
+import type { Brev, Opplyst } from "@/lib/brev/typer";
 import type { RapportPunkt, VerkstedHvem } from "@/lib/brev/rapport";
 
 export const A = "oklch(0.47 0.12 255)",
@@ -41,7 +41,15 @@ export const TOM_RAPPORT: RapportSkjema = { navn: "", dato: "", punkter: [], kon
 // anything about it before the sale. With a written workshop assessment: the report.
 // The day the defect was discovered, whether it is approximate, and whether the buyer has checked an
 // approximate day near a deadline.
-export type Detalj = { oppdaget?: string; omtrentlig?: boolean; bekreftet?: boolean; beskrivelse?: string; verksted?: Kilde; opplysning?: Kilde; rapport?: RapportSkjema };
+// For a technical defect the seller said something about: that it was in order, or about the defect.
+export type Detalj = { oppdaget?: string; omtrentlig?: boolean; bekreftet?: boolean; beskrivelse?: string; verksted?: Kilde; opplysning?: Kilde; opplyst?: Opplyst; rapport?: RapportSkjema };
+// «Sa selger noe?» for a technical defect: what was said, then how.
+export const OPPLYST_VALG = [
+  { id: "ingenting", navn: "Ingenting" },
+  { id: "i_orden", navn: "Selger sa det var i orden eller nylig utbedret" },
+  { id: "feilen", navn: "Selger opplyste om feilen" },
+] as const;
+export type OpplystValg = (typeof OPPLYST_VALG)[number]["id"];
 export type Krav = "retting" | "prisavslag" | "heving";
 export const KRAV: { id: Krav; navn: string; merke?: string; tekst: string }[] = [
   { id: "retting", navn: "Retting", merke: "Vanligst", tekst: "Forhandleren utbedrer feilen uten kostnad for deg. Dette er normalt første steg." },

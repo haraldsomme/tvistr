@@ -78,6 +78,19 @@ export function tidsnivaFor(kjop: string, oppdaget: string, v: Lovversjon = lovv
   return { dager, tidsnivaa, formodning: tidsnivaa === 1, intervall, ...(naer && { naerFrist: naer }) };
 }
 
+// Whether a defect was part of the buyer's earlier complaint (discovered on or before its date), and
+// the day the defect is complained about: the earlier complaint if so, otherwise the letter's date.
+// The form's warning and the letter's sentences both read it, so they cannot disagree.
+export function reklamasjonFor(f: { oppdaget: string }, reklamert: string | null | undefined, brevdato: string): { omfattet: boolean; dato: string } {
+  const omfattet = !!reklamert && reklamert >= f.oppdaget;
+  return { omfattet, dato: omfattet ? reklamert! : brevdato };
+}
+
+// A complaint within two months of the discovery is always in time (§ 27 første ledd). An approximate
+// day counts from the first of its month, since the letter names only the month.
+export const innenToManeder = (f: { oppdaget: string; omtrentlig: boolean }, dato: string) =>
+  dato <= plussManeder(f.omtrentlig ? `${f.oppdaget.slice(0, 8)}01` : f.oppdaget, SEN_REKLAMASJON_MND);
+
 // The notices the form shows about the limits for complaining. The paragraph numbers come from
 // paragrafer.ts for the version that applies to the purchase, as in the letter.
 export const fristTekst = (v: Lovversjon) =>
@@ -139,12 +152,11 @@ export function vurderTidslinje(t: Tidslinje, v: Lovversjon = lovversjon(t.kjop)
   // never less than two months). The complaint is the earlier one when it came after this defect was
   // discovered; otherwise it is this letter.
   for (const f of gyldige) {
-    const tidligere = erDato(t.reklamert) && t.reklamert >= f.oppdaget;
-    const ref = tidligere ? t.reklamert! : t.idag;
-    if (ref > plussManeder(f.oppdaget, SEN_REKLAMASJON_MND))
+    const r = reklamasjonFor(f, erDato(t.reklamert) ? t.reklamert : null, t.idag);
+    if (r.dato > plussManeder(f.oppdaget, SEN_REKLAMASJON_MND))
       advarsler.push({
         regel: "reklamasjon_sen",
-        felt: tidligere ? "reklamert" : "oppdaget",
+        felt: r.omfattet ? "reklamert" : "oppdaget",
         feilId: f.id,
         melding: `Reklamasjon innen to måneder etter at feilen ble oppdaget er alltid i tide. Etter det vurderes det om du reklamerte innen rimelig tid. Du reklamerer mer enn to måneder etter at feilen ble oppdaget. Selger kan hevde at reklamasjonen er for sen (${lovRef(v, "reklamasjon")}). Du kan likevel lage brevet.`,
       });

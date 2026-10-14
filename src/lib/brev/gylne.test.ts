@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { BREVDATO, SAKER, tilBrevsak } from "../../../scripts/simulerte-saker";
 import praksis from "./__fixtures__/praksis.json";
 import { alleSetninger, byggBrev, somTekst } from "./brev";
+import { stoppFor } from "./testsak";
 import { tidsnivaFor, vurderTidslinje } from "./tidslinje";
 import type { Brevsak } from "./typer";
 
@@ -33,6 +34,10 @@ describe("de tolv simulerte sakene", () => {
         if (f.rapport) expect(f.rapport.dato > x.kjopsdato && f.rapport.dato <= BREVDATO, `${x.navn}: rapportdato`).toBe(true);
       }
     }
+  });
+
+  it("stoppes ikke av skjemaet: tidslinjen og riktighetsreglene, slik serveren vurderer saken", () => {
+    for (const x of SAKER) expect(stoppFor(tilBrevsak(x, (praksis as Record<string, Brevsak["praksis"]>)[x.navn])), x.navn).toEqual([]);
   });
 
   it("har en tidslinje uten stopp og uten advarsler, og samme tidsnivå som før datoene", () => {

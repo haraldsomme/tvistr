@@ -1,4 +1,5 @@
 import { dato } from "./format";
+import { tekniskFeil, tekniskSa } from "./feiltype";
 import { rapporter } from "./rapport";
 import type { Brevfeil, Brevsak, Setning } from "./typer";
 
@@ -6,11 +7,15 @@ import type { Brevfeil, Brevsak, Setning } from "./typer";
 // the mileage, the service book for the service history, and so on.
 const VEDLEGG_AV_UNDER: Record<string, string> = {
   "historikk.km": "Utskrift fra Statens vegvesen",
-  "service.servicehefte": "Servicehefte",
+  // Not for «Servicehefte mangler»: the book that is missing cannot be enclosed.
   "service.service": "Servicehefte",
   "historikk.skade": "Utskrift fra Statens vegvesen eller skaderapport",
   "historikk.eu": "EU-kontrollseddel",
 };
+
+// The advert or contract is enclosed for what the seller wrote about the defect: always for what the
+// seller said or promised, and for a technical defect only when the seller wrote that it was in order.
+export const annonse = (f: Brevfeil) => f.opplysning === "skriftlig" && (!tekniskFeil(f) || tekniskSa(f) === "i_orden");
 
 // The enclosures one defect brings by its category, each once.
 export const kategorivedlegg = (f: Brevfeil): string[] => [...new Set(f.under.flatMap((u) => VEDLEGG_AV_UNDER[`${f.hoved}.${u}`] ?? []))];
@@ -29,7 +34,8 @@ export function vedlegg(s: Brevsak): Setning[] {
       if (finnes) finnes.kilde += `; skjema:feil[${i}].under`;
       else ut.push({ tekst, kilde: `skjema:feil[${i}].under` });
     }
-  if (s.feil.some((f) => f.opplysning === "skriftlig")) ut.push({ tekst: "Annonse/kjøpekontrakt", kilde: "skjema:feil[].opplysning" });
+  // What the seller wrote, when it helps the buyer: not a written word about the technical defect itself.
+  if (s.feil.some(annonse)) ut.push({ tekst: "Annonse/kjøpekontrakt", kilde: "skjema:feil[].opplysning" });
   if (s.utlegg.length) ut.push({ tekst: "Kvitteringer for utlegg", kilde: "skjema:utlegg" });
   if (s.kontakt?.form === "skriftlig") ut.push({ tekst: "Tidligere reklamasjon", kilde: "skjema:kontakt" });
   return ut;

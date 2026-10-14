@@ -27,6 +27,7 @@ Kjøperen oppgir datoer; koden regner all inndeling fra dem. «Når viste feilen
 | Rapporten datert før feilen ble oppdaget | stopp | Rapporten kan ikke være datert før du oppdaget feilen. |
 | Rapporten datert i fremtiden | stopp | Datoen kan ikke være i fremtiden. |
 | Reklamasjonen før den første feilen ble oppdaget (eller samme dag som kjøpet) | stopp | Du kan ikke ha reklamert før den første feilen viste seg. Sjekk datoene. |
+| (Ingen melding.) Reklamasjonen før en senere feil ble oppdaget | – | Ikke en feil: den tidligere reklamasjonen gjaldt bare feilene som var oppdaget, og brevet reklamerer på resten (`reklamasjonFor`, se `brev.md`, «Kontakt med selger»). |
 | Reklamasjonen i fremtiden | stopp | Datoen kan ikke være i fremtiden. |
 | Reklamasjonen mer enn to måneder etter at en feil ble oppdaget. Har kjøperen ikke reklamert før, eller kom feilen etter den tidligere reklamasjonen, regnes det fra brevets dato. | advarsel | Reklamasjon innen to måneder etter at feilen ble oppdaget er alltid i tide. Etter det vurderes det om du reklamerte innen rimelig tid. Du reklamerer mer enn to måneder etter at feilen ble oppdaget. Selger kan hevde at reklamasjonen er for sen (forbrukerkjøpsloven § 27 første ledd). Du kan likevel lage brevet. |
 | Feilen oppdaget innenfor 14 dager fra en frist: seks måneder (bare før 2024), to år eller fem år etter kjøpet | advarsel, som må bekreftes når datoen er omtrentlig | Datoen ligger nær en frist i loven ({frist}). Sjekk at den stemmer; den avgjør hvem som må bevise når feilen oppsto. Før 2024 er to og fem år frister for reklamasjonen, og da står det i stedet «den avgjør om reklamasjonen er i tide». |
@@ -47,10 +48,11 @@ Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon 
 | Samme feil valgt to ganger | stopp | Samme feil er valgt to ganger. (Skjemaet kan ikke gi dette; serveren sjekker likevel.) |
 | Erstatning for utlegg uten linjer, eller en linje uten beløp | stopp | Fyll ut beskrivelse og beløp for hvert utlegg. |
 | Prisavslag uten rapport med kostnadsoverslag | advarsel | Uten et kostnadsoverslag fra verkstedet kan brevet ikke oppgi beløp. Brevet krever prisavslag uten å nevne et beløp. |
+| Prisavslag, og overslag for noen, men ikke alle, kjente feil («vet ikke ennå» regnes ikke med) | advarsel | Kostnadsoverslag mangler for {feil}. Brevet krever prisavslag for {den / dem} uten beløp. |
 | Heving uten rettingsforsøk, og selger har ikke avvist eller latt være å svare | advarsel | Selger kan ha rett til å forsøke retting først. Brevet tar høyde for det, men heving står svakere. |
 | Heving, ett feil, og overslaget under 10 % av kjøpesummen (terskelen er skjønn, ikke lov) | advarsel | Heving krever at mangelen ikke er uvesentlig. Når utbedringen koster lite i forhold til kjøpesummen, blir heving sjelden godtatt. Vurder prisavslag. |
 | Rapporten fraråder bruk, og krav om prisavslag | advarsel | Verkstedet fraråder bruk. Retting eller heving passer ofte bedre når bilen ikke kan brukes. |
-| Selger sa noe om en teknisk feil før kjøpet (alle kjøp, uansett «som den er») | advarsel | Hvis selger opplyste om akkurat denne feilen før kjøpet, kan du som regel ikke reklamere på den. Sjekk hva som ble sagt, og om det gjaldt denne feilen eller noe annet. |
+| Selger opplyste om en teknisk feil før kjøpet (alle kjøp, uansett «som den er»). For en side med bare tekniske feil svarer kjøperen Ingenting / Selger sa det var i orden eller nylig utbedret / Selger opplyste om feilen; bare det siste advarer. På sider med blandede typer advarer «skriftlig» og «muntlig» som før. | advarsel | Hvis selger opplyste om akkurat denne feilen før kjøpet, kan du som regel ikke reklamere på den. Sjekk hva som ble sagt, og om det gjaldt denne feilen eller noe annet. |
 | Utleggene til sammen over kjøpesummen | advarsel | Utleggene er høyere enn kjøpesummen. Sjekk beløpene. |
 | Rapport fra selgers eget verksted med «til stede ved levering» | ingen | Gyldig. Brevet kaller verkstedet «deres eget verksted», aldri uavhengig. |
 | Rettingsforsøk uten reklamasjon, eller sammen med «ikke svart» eller «tilbudt retting» | umulig | Antall forsøk spørres bare under «Hva har selger gjort? → Forsøkt å rette», og serveren setter forsøkene til 0 for alle andre svar og uten reklamasjon. |
@@ -113,11 +115,14 @@ I brevet står teksten alltid som sitat i «», aldri som brevets egen setning. 
 - Alle tall finnes i svarene (kjøpesum, km, overslag, utlegg, sum, første registreringsår) eller i navnet på bilen, regnr eller org.nr.
 - Avsender og signatur kommer fra Vipps, mottakeren fra Enhetsregisteret, bilen fra vegvesenet og verkstedet fra kjøperens rapport.
 - Kravet nevner ett av retting, prisavslag og heving, og det er kjøperens.
-- Vedleggene følger av svarene, og alt brevet sier «vedlegges» eller «følger vedlagt» om, står i listen.
+- Vedleggene følger av svarene, og alt brevet sier «vedlegges» eller «følger vedlagt» om, står i listen. Et dokument som vedlegges, står med navn, aldri «Dokumentasjon vedlegges». «Annonse/kjøpekontrakt» står når, og bare når, selger skrev noe som hjelper kjøperen.
+- Uten tidligere reklamasjon står «Jeg reklamerer herved». Med tidligere reklamasjon nevner rettingsforsøkene aldri en feil oppdaget etter den, og hver slik feil står i en «… reklameres herved.»-setning.
 - Ingen forbudte ord («klart», «åpenbart», «utvilsomt», «garantert», «jeg er klar over», «jeg mener»), og aldri «norsk bil».
 - Høyst to A4-sider ved tre feil. Dette er et anslag (88 tegn per linje, 54 linjer per side), ikke en side i Word.
 
 En egen test planter et brudd av hvert slag og ser at invariantene fanger det.
+
+Testsakene i `src/lib/brev/testsak.ts` går gjennom de samme reglene: `lagSak` nekter en sak som tidslinjen eller riktighetsreglene stopper (`stoppFor`), og kombinasjons-snapshotene utelater slike kombinasjoner og sier hvor mange i overskriften. Den gylne testen sjekker det samme for de tolv sakene. Slik kan ingen snapshot vise et brev skjemaet aldri ville laget (en reklamasjon datert før feilen slapp tidligere gjennom på denne måten).
 
 ## Oppsummeringen før betaling
 

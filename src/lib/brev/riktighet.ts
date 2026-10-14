@@ -6,9 +6,10 @@
 // Every rule is listed with its message in docs/riktighet.md.
 import { gyldigOrgnr } from "@/lib/brreg";
 import type { Krav } from "@/lib/matching/typer";
-import { feiltype } from "./feiltype";
-import { overslagSum, type Rapport, type SelgerSvar } from "./rapport";
-import type { Kilde, SomDenEr } from "./typer";
+import { liste, smaa } from "./format";
+import { feilnavn, feiltype, tekniskFeil, tekniskSa } from "./feiltype";
+import { overslagFordeling, overslagSum, type Rapport, type SelgerSvar } from "./rapport";
+import type { Kilde, Opplyst, SomDenEr } from "./typer";
 
 export type Riktighetssak = {
   kjopsdato: string;
@@ -18,7 +19,7 @@ export type Riktighetssak = {
   krav: Krav | null;
   forsok: number;
   svar: SelgerSvar | null;
-  feil: { hoved: string; under: string[]; opplysning: Kilde | null; verksted: Kilde | null; rapport: Pick<Rapport, "punkter" | "overslag" | "navn" | "dato"> | null; beskrivelse: string | null; konklusjon: string | null }[];
+  feil: { hoved: string; under: string[]; opplysning: Kilde | null; opplyst?: Opplyst | null; verksted: Kilde | null; rapport: Pick<Rapport, "punkter" | "overslag" | "navn" | "dato"> | null; beskrivelse: string | null; konklusjon: string | null }[];
   utlegg: { belop: number }[];
   selger: { orgnr: string; status: "konkurs" | "avvikling" | null; naeringskode: string | null } | null;
 };
@@ -79,17 +80,30 @@ export function vurderRiktighet(s: Riktighetssak): Riktighet {
   const o = overslagSum(s);
   if (s.krav === "prisavslag" && !o)
     advarsler.push({ regel: "prisavslag_uten_overslag", felt: "krav", melding: "Uten et kostnadsoverslag fra verkstedet kan brevet ikke oppgi beløp. Brevet krever prisavslag uten å nevne et beløp." });
+  // Estimates for some of the known defects but not all: the letter asks the estimate as the least
+  // reduction, and leaves the rest until it is documented.
+  const fordeling = overslagFordeling(s);
+  if (s.krav === "prisavslag" && fordeling.med.length && fordeling.uten.length)
+    advarsler.push({
+      regel: "prisavslag_delvis_overslag",
+      felt: "krav",
+      melding: `Kostnadsoverslag mangler for ${liste(fordeling.uten.map((f) => smaa(feilnavn(f))))}. Brevet krever prisavslag for ${fordeling.uten.length > 1 ? "dem" : "den"} uten beløp.`,
+    });
   if (s.krav === "heving" && s.forsok === 0 && s.svar !== "avviste" && s.svar !== "ikke_svart")
     advarsler.push({ regel: "heving_uten_retting", felt: "krav", melding: "Selger kan ha rett til å forsøke retting først. Brevet tar høyde for det, men heving står svakere." });
   if (s.krav === "heving" && o && s.kjopesum && s.feil.length === 1 && o.sum < s.kjopesum * LITEN_UTBEDRING)
     advarsler.push({ regel: "heving_liten_utbedring", felt: "krav", melding: "Heving krever at mangelen ikke er uvesentlig. Når utbedringen koster lite i forhold til kjøpesummen, blir heving sjelden godtatt. Vurder prisavslag." });
   if (s.krav === "prisavslag" && s.feil.some((f) => f.rapport?.punkter.includes("frarader")))
     advarsler.push({ regel: "frarader_prisavslag", felt: "krav", melding: "Verkstedet fraråder bruk. Retting eller heving passer ofte bedre når bilen ikke kan brukes." });
-  // What the buyer knew at the purchase cannot be relied on, whatever the reservation and the version of the law.
-  if (s.feil.some((f, i) => typer[i].includes("teknisk") && f.opplysning !== null && f.opplysning !== "nei"))
+  // What the buyer knew at the purchase cannot be relied on, whatever the reservation and the version of
+  // the law. For a technical defect the form asks whether the seller told of the defect or said it was
+  // in order; only the first warns.
+  const opplyst = s.feil.find((f, i) => typer[i].includes("teknisk") && f.opplysning !== null && f.opplysning !== "nei" && (!tekniskFeil(f) || tekniskSa({ opplysning: f.opplysning, opplyst: f.opplyst }) === "feilen"));
+  if (opplyst)
     advarsler.push({
       regel: "som_den_er_opplyst",
       felt: "somDenEr",
+      feilId: opplyst.hoved,
       melding: "Hvis selger opplyste om akkurat denne feilen før kjøpet, kan du som regel ikke reklamere på den. Sjekk hva som ble sagt, og om det gjaldt denne feilen eller noe annet.",
     });
 

@@ -1,99 +1,122 @@
-24 ulike tekster over lov(2) × feilsett(6) × tid(3) × verksted(3) × kontakt(2)
+28 ulike tekster over lov(2) × feilsett(6) × tid(3) × verksted(3) × kontakt(2) (60 kombinasjoner skjemaet stopper er utelatt)
 
 ## {"lov":"før_2024","feilsett":"teknisk","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":false} (+11 like)
 Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 
-## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":false} (+5 like)
+## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":false} (+3 like)
 Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
-## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":true} (+5 like)
+## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":true}
 Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
 Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
-## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","verksted":"muntlig","kontakt":false} (+29 like)
+## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","verksted":"muntlig","kontakt":false} (+13 like)
 Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 
-## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","verksted":"muntlig","kontakt":true} (+29 like)
+## {"lov":"før_2024","feilsett":"teknisk","tid":"6_til_24_mnd","verksted":"muntlig","kontakt":true} (+1 like)
 Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
 
-## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":false}
+## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":false} (+1 like)
 For turbo: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For lys: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 For lys: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
-## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":true}
-For turbo: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
-For lys: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-For lys: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
-
-## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"muntlig","kontakt":false} (+1 like)
+## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"muntlig","kontakt":false} (+3 like)
 For turbo: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For lys: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 
-## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"muntlig","kontakt":true} (+1 like)
-For turbo: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
-For lys: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-
-## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":false} (+1 like)
+## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":false} (+2 like)
 For lys: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 For turbo: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
-## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":true} (+1 like)
+## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":true}
 For lys: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+For turbo: Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
 For turbo: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
-## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"muntlig","kontakt":false} (+3 like)
+## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"muntlig","kontakt":false} (+5 like)
 For lys: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
 
-## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"muntlig","kontakt":true} (+3 like)
+## {"lov":"før_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"muntlig","kontakt":true} (+1 like)
 For lys: Mangelen viste seg innen seks måneder etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+For turbo: Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
 
-## {"lov":"før_2024","feilsett":"opplysning","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":false} (+71 like)
+## {"lov":"før_2024","feilsett":"teknisk_og_opplysning","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":true}
+Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+Reklamasjonen er fremsatt innen to måneder etter at feilene ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
+Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
+
+## {"lov":"før_2024","feilsett":"teknisk_og_opplysning","tid":"6_til_24_mnd","verksted":"muntlig","kontakt":true} (+1 like)
+Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+Reklamasjonen er fremsatt innen to måneder etter at feilene ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
+
+## {"lov":"før_2024","feilsett":"opplysning","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":false} (+35 like)
 
 
-## {"lov":"etter_2024","feilsett":"teknisk","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":false} (+23 like)
+## {"lov":"før_2024","feilsett":"opplysning","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":true} (+11 like)
+Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
+
+## {"lov":"etter_2024","feilsett":"teknisk","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":false} (+17 like)
 Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 
-## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":false}
+## {"lov":"etter_2024","feilsett":"teknisk","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":true} (+2 like)
+Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
+Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
+
+## {"lov":"etter_2024","feilsett":"teknisk","tid":"over_24_mnd","verksted":"skriftlig","kontakt":false}
+Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
+Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
+
+## {"lov":"etter_2024","feilsett":"teknisk","tid":"over_24_mnd","verksted":"muntlig","kontakt":false} (+7 like)
+Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
+
+## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":false} (+1 like)
 For turbo: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For lys: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+For lys: Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
 For lys: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
-## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"skriftlig","kontakt":true}
-For turbo: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
-For lys: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-For lys: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
-
-## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"muntlig","kontakt":false} (+1 like)
+## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"muntlig","kontakt":false} (+3 like)
 For turbo: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For lys: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+For lys: Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
 
-## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"innen_6_mnd","verksted":"muntlig","kontakt":true} (+1 like)
-For turbo: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
-For lys: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-
-## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":false} (+5 like)
+## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":false} (+2 like)
 Mangelene viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 
-## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","verksted":"skriftlig","kontakt":false}
+## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":true} (+2 like)
+Mangelene viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
+For turbo: Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
+
+## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","verksted":"skriftlig","kontakt":false} (+1 like)
 For lys: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+For turbo: Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
 For turbo: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
 
-## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","verksted":"skriftlig","kontakt":true}
-For lys: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
-For turbo: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
-For turbo: Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
-
-## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","verksted":"muntlig","kontakt":false} (+1 like)
+## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","verksted":"muntlig","kontakt":false} (+3 like)
 For lys: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
 For turbo: Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+For turbo: Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
 
-## {"lov":"etter_2024","feilsett":"to_tekniske_ulik_tid","tid":"over_24_mnd","verksted":"muntlig","kontakt":true} (+1 like)
-For lys: Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
-For turbo: Reklamasjonen er fremsatt innen to år etter at bilen ble levert, jf. § 27 annet ledd første punktum.
+## {"lov":"etter_2024","feilsett":"teknisk_og_opplysning","tid":"6_til_24_mnd","verksted":"skriftlig","kontakt":true} (+2 like)
+Mangelen viste seg innen to år etter overtakelsen og formodes etter § 18 annet ledd å ha eksistert ved leveringen, med mindre dere beviser noe annet.
+Reklamasjonen er fremsatt innen to måneder etter at feilene ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
+
+## {"lov":"etter_2024","feilsett":"teknisk_og_opplysning","tid":"over_24_mnd","verksted":"skriftlig","kontakt":false}
+Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+Reklamasjonen er fremsatt innen to måneder etter at feilene ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
+Til dokumentasjon av forholdet viser jeg til verkstedets skriftlige vurdering, som følger vedlagt.
+
+## {"lov":"etter_2024","feilsett":"teknisk_og_opplysning","tid":"over_24_mnd","verksted":"muntlig","kontakt":false} (+1 like)
+Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.
+Reklamasjonen er fremsatt innen to måneder etter at feilene ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.

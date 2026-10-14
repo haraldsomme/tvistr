@@ -1,6 +1,6 @@
 import { bestemtForm, HOVEDKATEGORIER, komponenttype } from "@/lib/feil/kategorier";
 import { liste, smaa } from "./format";
-import type { Brevfeil } from "./typer";
+import type { Brevfeil, Opplyst } from "./typer";
 
 // What kind of defect a choice is, which decides how the letter argues it:
 //   teknisk     a part that fails: «does not match what I could expect» (§ 16 a)
@@ -19,6 +19,14 @@ export function feiltype(hoved: string, under: string | null): Feiltype {
   return "teknisk";
 }
 
+// A choice whose every entry is technical. The form asks what the seller said about it in three
+// answers (nothing, that it was in order, about the defect) instead of only how it was said.
+export const tekniskFeil = (f: { hoved: string; under: string[] }) => (f.under.length ? f.under : [null]).every((u) => feiltype(f.hoved, u) === "teknisk");
+
+// What the seller said about a technical defect. An answer without `opplyst` reads as the seller
+// having told of the defect, which is what the question used to ask.
+export const tekniskSa = (f: Pick<Brevfeil, "opplysning" | "opplyst">): "ingenting" | Opplyst => (f.opplysning === "nei" ? "ingenting" : (f.opplyst ?? "feilen"));
+
 // One defect choice may hold several subcategories of different kinds (equipment: tyres and keys), so
 // the letter works on one entry per subcategory, or one for the main category when none is ticked.
 export type Ledd = { feil: Brevfeil; i: number; under: string | null; type: Feiltype };
@@ -27,7 +35,7 @@ export const ledd = (feil: Brevfeil[]): Ledd[] =>
   feil.flatMap((f, i) => (f.under.length ? f.under : [null]).map((under) => ({ feil: f, i, under, type: feiltype(f.hoved, under) })));
 
 // «Turbo», «Turbo og kjøling og topplokk», or the main category's name when no subcategory is ticked.
-export function feilnavn(f: Brevfeil): string {
+export function feilnavn(f: Pick<Brevfeil, "hoved" | "under">): string {
   const h = HOVEDKATEGORIER.find((x) => x.id === f.hoved);
   if (!h) throw new Error(`Ukjent hovedkategori: ${f.hoved}`);
   const navn = f.under.map((u) => h.under.find((x) => x.id === u)?.navn ?? u);

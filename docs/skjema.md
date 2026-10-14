@@ -62,7 +62,7 @@ Ingen spørsmål; skjermen viser resultatet av `vurderSaken`. Se `docs/vurdering
 | Spørsmål | Svar | Krav |
 |---|---|---|
 | Er feilen undersøkt av et verksted? | Ja, og jeg har en rapport (skriftlig) / Ja, men uten rapport (muntlig) / Nei | Må besvares |
-| Sa selger noe om denne feilen før kjøpet? | Nei / Skriftlig / Muntlig | Må besvares. Ved skriftlig eller muntlig om en teknisk feil vises advarselen om at en feil selger opplyste om, som regel ikke kan reklameres på. |
+| Sa selger noe om denne feilen før kjøpet? | Når alle valgene på siden er tekniske feil (`tekniskFeil` i `feiltype.ts`): Ingenting / Selger sa det var i orden eller nylig utbedret / Selger opplyste om feilen, og under de to siste «Hvordan sa selger det?» Skriftlig / Muntlig. Ellers (opplysning, garanti, blandet): Nei / Skriftlig / Muntlig. | Må besvares, også hvordan. «Selger opplyste om feilen» gir advarselen om at en feil selger opplyste om, som regel ikke kan reklameres på (på blandede sider: skriftlig eller muntlig). «I orden» gir § 16 c i brevet (se `brev.md`). |
 | Beskriv feilen med egne ord | Fritekst, maks 200 tegn. Linjeskift og doble anførselstegn fjernes; lenker og tekst med bare tall stopper. | Valgfri |
 
 Tidsnivå, formodning og frister regnes fra datoen i steg 3 (`tidslinje.ts`); datoen gir samme tidsnivå som de gamle intervallene. En rapport datert før feilen ble oppdaget stopper her.
@@ -137,7 +137,8 @@ Hele brevet, bygget med samme vedtak som forhåndsvisningen (avsnittet er forseg
 | Som den er | Ja | Ja |
 | Krav | Ja, mot sanksjonene i vedtaket | Ja |
 | Verksted undersøkt | Ja, når utvalget la vekt på sakkyndig dokumentasjon | Ja |
-| Selger sa noe | Ja, når utvalget la vekt på selgers opplysning | Ja |
+| Selger sa noe (skriftlig / muntlig / nei) | Ja, når utvalget la vekt på selgers opplysning | Ja |
+| **Hva selger sa om en teknisk feil (i orden / om feilen)** | **Nei** | **Nei** |
 | Rettingsforsøk | Ja, i vurderingen av rettslige poeng (to eller flere forsøk) | Ja |
 | Hva verkstedrapporten sier (avkrysningene) | Nei | Ja, som `rapport_sier` per feil, så modellen kan foretrekke et vedtak der utvalget la vekt på sakkyndig dokumentasjon |
 | Beskrivelse (fritekst) | Nei | Ja |
@@ -152,7 +153,7 @@ Hele brevet, bygget med samme vedtak som forhåndsvisningen (avsnittet er forseg
 ## Lagring
 
 - Ingenting lagres i databasen. Det finnes ingen saksrad eller bruker, og vegvesen-oppslaget lagres ikke.
-- Svarene, inkludert valgt selger, kontakten med selger og rapportene, ligger i `sessionStorage` (nøkkel `tvistr:sak:v3`; svar lagret under `v2` hadde andre stegnummer og brukes ikke), så en reload eller tilbake-knappen beholder dem. Vurderingen, vedtaket og brevet lagres ikke: vurderingen hentes på nytt når steg 4 vises, og siden åpner aldri på steg 7 eller 8.
+- Svarene, inkludert valgt selger, kontakten med selger og rapportene, ligger i `sessionStorage` (nøkkel `tvistr:sak:v4`; svar lagret under `v3` hadde ikke svaret om hva selger sa om en teknisk feil, og under `v2` andre stegnummer, og brukes ikke), så en reload eller tilbake-knappen beholder dem. Vurderingen, vedtaket og brevet lagres ikke: vurderingen hentes på nytt når steg 4 vises, og siden åpner aldri på steg 7 eller 8.
 - Ordre-id fra Vipps skal lagres i `sessionStorage` (`tvistr:ordre`) slik at en omlasting etter betaling finner brevet igjen. Det gjør Vipps-oppgaven; skjemaet leser nøkkelen og sender den med.
 - Serveren lagrer ingenting om brevet. Selgerens navn og adresse hentes fra Enhetsregisteret ved hvert brev, og kjøperen hentes fra Vipps-profilen.
 - Målingen (`docs/vurdering.md`, «Måling») lagrer hendelser per økt uten persondata.

@@ -3,7 +3,8 @@
 // text trimmed and cut. Shared by the decision search (finnVedtak) and the letter (byggBrevet).
 import { orgnrFra } from "@/lib/brreg";
 import { MAKS_BESKRIVELSE, MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, type Rapport, rensFritekst, rensKonklusjon, SELGER_SVAR, VERKSTED_HVEM } from "@/lib/brev/rapport";
-import type { Brevfeil, Kilde, Kontakt, SomDenEr } from "@/lib/brev/typer";
+import { tekniskFeil } from "@/lib/brev/feiltype";
+import type { Brevfeil, Kilde, Kontakt, Opplyst, SomDenEr } from "@/lib/brev/typer";
 import { type Riktighetssak, vurderRiktighet } from "@/lib/brev/riktighet";
 import { erDato, type Vurdering, vurderTidslinje } from "@/lib/brev/tidslinje";
 import { type Feilvalg, HOVEDKATEGORIER, type Hovedkategori, rensFeilvalg } from "@/lib/feil/kategorier";
@@ -19,6 +20,7 @@ const KRAV: readonly Krav[] = ["retting", "prisavslag", "heving"];
 const KILDER: readonly Kilde[] = ["skriftlig", "muntlig", "nei"];
 const SOM_DEN_ER: readonly SomDenEr[] = ["ja", "nei", "vet_ikke"];
 const kildeAv = (v: unknown) => KILDER.find((k) => k === v) ?? null;
+const OPPLYST: readonly Opplyst[] = ["i_orden", "feilen"];
 
 // Today in Norway, so a letter written late in the evening is dated that day.
 export const idagOslo = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Oslo" }).format(new Date());
@@ -67,7 +69,7 @@ export type Vedtakssvar = {
   // 0 when the buyer has not complained before, the number of repairs when they have, null when not given.
   forsok: number | null;
   kontakt: Kontakt | null;
-  detaljer: Record<string, { oppdaget: string; omtrentlig: boolean; beskrivelse: string | null; opplysning: Kilde | null; verksted: Kilde | null; rapport: Rapport | null }>;
+  detaljer: Record<string, { oppdaget: string; omtrentlig: boolean; beskrivelse: string | null; opplysning: Kilde | null; opplyst: Opplyst | null; verksted: Kilde | null; rapport: Rapport | null }>;
   // The timeline judged (tidslinje.ts): no stops, possibly warnings, and the time level per defect.
   tidslinje: Vurdering;
 };
@@ -88,11 +90,14 @@ export function rensVedtakssvar(s: Record<string, unknown>): Resultat<Vedtakssva
     const verksted = kildeAv(d[h.id]?.verksted);
     const oppdaget = gyldigDato(d[h.id]?.oppdaget);
     if (!oppdaget) return { ok: false, melding: "Velg når du oppdaget hver feil." };
+    const opplysning = kildeAv(d[h.id]?.opplysning);
     detaljer[h.id] = {
       oppdaget,
       omtrentlig: d[h.id]?.omtrentlig === true,
       beskrivelse: rensFritekst(d[h.id]?.beskrivelse, MAKS_BESKRIVELSE),
-      opplysning: kildeAv(d[h.id]?.opplysning),
+      opplysning,
+      // What the seller said belongs to a technical defect the seller said something about, and to nothing else.
+      opplyst: opplysning && opplysning !== "nei" && tekniskFeil({ hoved: h.id, under: rent[h.id] }) ? (OPPLYST.find((x) => x === d[h.id]?.opplyst) ?? null) : null,
       verksted,
       // A report belongs to an answer «ja, skriftlig» and to nothing else.
       rapport: verksted === "skriftlig" ? rensRapport(d[h.id]?.rapport, dato) : null,
@@ -158,8 +163,9 @@ export function rensBrevsvar(s: Record<string, unknown>): Resultat<Brevsvar> {
   for (const id of v.svar.rekkefolge) {
     const d = v.svar.detaljer[id];
     if (!d.opplysning || !d.verksted) return { ok: false, melding: "Svar på alle spørsmålene om hver feil." };
+    if (d.opplysning !== "nei" && !d.opplyst && tekniskFeil({ hoved: id, under: v.svar.rent[id] })) return { ok: false, melding: "Svar på alle spørsmålene om hver feil." };
     if (d.verksted === "skriftlig" && !d.rapport) return { ok: false, melding: "Fyll ut rapporten fra verkstedet for hver feil som er undersøkt skriftlig." };
-    feil.push({ hoved: id, under: v.svar.rent[id], oppdaget: d.oppdaget, omtrentlig: d.omtrentlig, beskrivelse: d.beskrivelse, opplysning: d.opplysning, verksted: d.verksted, rapport: d.rapport });
+    feil.push({ hoved: id, under: v.svar.rent[id], oppdaget: d.oppdaget, omtrentlig: d.omtrentlig, beskrivelse: d.beskrivelse, opplysning: d.opplysning, opplyst: d.opplyst, verksted: d.verksted, rapport: d.rapport });
   }
 
   const b = (s.bil && typeof s.bil === "object" ? s.bil : {}) as Record<string, unknown>;
@@ -207,7 +213,7 @@ export function riktighetssak(
     krav: r.krav,
     forsok: r.kontakt?.forsok ?? 0,
     svar: r.kontakt?.svar ?? null,
-    feil: r.feil.map((f) => ({ hoved: f.hoved, under: f.under, opplysning: f.opplysning, verksted: f.verksted, rapport: f.rapport, beskrivelse: f.beskrivelse, konklusjon: f.rapport?.konklusjon ?? null })),
+    feil: r.feil.map((f) => ({ hoved: f.hoved, under: f.under, opplysning: f.opplysning, opplyst: f.opplyst, verksted: f.verksted, rapport: f.rapport, beskrivelse: f.beskrivelse, konklusjon: f.rapport?.konklusjon ?? null })),
     utlegg: r.utlegg,
     selger,
   };

@@ -8,7 +8,7 @@ import { krav, krav as krav_ } from "./krav";
 import { mangelen } from "./mangelen";
 import { RAPPORT_PUNKTER, type Rapport, type RapportPunkt, type SelgerSvar, VERKSTED_HVEM } from "./rapport";
 import { mangel, praksis, tidspunkt } from "./rettslig";
-import { FEILSETT, FEILSETT_ENKLE, kontakt as lagKontakt, KJOPSDATO, lagSak, type Lov, produkt, RAPPORT, samle } from "./testsak";
+import { FEILSETT, FEILSETT_ENKLE, gyldig, kontakt as lagKontakt, KJOPSDATO, lagSak, type Lov, produkt, RAPPORT, samle } from "./testsak";
 import type { Brevfeil, Kontakt, Setning } from "./typer";
 import { vedlegg } from "./vedlegg";
 
@@ -142,15 +142,17 @@ describe("avsnitt 3: rettslig vurdering", () => {
 
   it("siterer rapportene med dato når to rapporter sier at feilen forelå ved leveringen", () => {
     const feil = [
-      ...medRapport(FEILSETT.teknisk("over_24_mnd", "nei", "skriftlig"), rapport({ dato: "2025-05-01", punkter: ["til_stede"] })),
-      ...medRapport(lys(FEILSETT.teknisk("over_24_mnd", "nei", "skriftlig")), rapport({ dato: "2025-06-01", punkter: ["til_stede"] })),
+      ...medRapport(FEILSETT.teknisk("over_24_mnd", "nei", "skriftlig"), rapport({ dato: "2026-09-20", punkter: ["til_stede"] })),
+      ...medRapport(lys(FEILSETT.teknisk("over_24_mnd", "nei", "skriftlig")), rapport({ dato: "2026-10-01", punkter: ["til_stede"] })),
     ];
-    expect(tekst(tidspunkt(lagSak("etter_2024", { feil })))).toContain("Verkstedene legger til grunn at feilene forelå ved leveringen, jf. rapportene av 1. mai 2025 og 1. juni 2025.");
+    expect(tekst(tidspunkt(lagSak("etter_2024", { feil })))).toContain("Verkstedene legger til grunn at feilene forelå ved leveringen, jf. rapportene av 20. september 2026 og 1. oktober 2026.");
   });
 
   it("har ingen bevissetning uten rapport", () => {
     const t = tekst(tidspunkt(lagSak("etter_2024", { feil: FEILSETT.teknisk("over_24_mnd", "nei", "muntlig") })));
-    expect(t).toBe("Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.");
+    expect(t).toBe(
+      "Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.\nReklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.",
+    );
   });
 
   it("praksis er vedtaksavsnittet uendret, og utelates uten vedtak", () => {
@@ -271,10 +273,11 @@ describe("alle brev", () => {
     krav: ["retting", "prisavslag", "heving"] as const,
     kontakt: ["ingen", "skriftlig, annet", "muntlig, avviste", "skriftlig, forsøkt 1 gang"] as const,
     tillegg: [false, true],
-  }).map((v) => ({
-    v,
-    brev: byggBrev(
-      lagSak(v.lov, {
+  }).flatMap((v) =>
+    gyldig(() => ({
+      v,
+      brev: byggBrev(
+        lagSak(v.lov, {
         somDenEr: v.somDenEr,
         krav: v.krav,
         kontakt: kontaktAv(v.lov, v.kontakt),
@@ -283,9 +286,10 @@ describe("alle brev", () => {
         ),
         utlegg: v.tillegg ? [{ beskrivelse: "Tauing", belop: 1200 }] : [],
         praksis: v.tillegg ? lagSak(v.lov).praksis : null,
-      }),
-    ),
-  }));
+        }),
+      ),
+    })),
+  );
 
   // Problems are collected and checked once: an expect per sentence is too slow over this many letters.
   const avvik = (sjekk: (x: Setning) => string | null) => {

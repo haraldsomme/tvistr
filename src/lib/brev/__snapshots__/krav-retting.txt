@@ -1,9 +1,9 @@
-6 ulike tekster over saker(16) × krav(2)
+6 ulike tekster over saker(16) × krav(2) (2 kombinasjoner skjemaet stopper er utelatt)
 
-## {"saker":"teknisk","krav":"prisavslag"} (+5 like)
+## {"saker":"teknisk","krav":"prisavslag"} (+4 like)
 På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 
-## {"saker":"teknisk","krav":"heving"} (+5 like)
+## {"saker":"teknisk","krav":"heving"} (+4 like)
 På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
 
 ## {"saker":"service","krav":"prisavslag"} (+8 like)

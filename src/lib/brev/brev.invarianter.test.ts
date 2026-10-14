@@ -9,13 +9,14 @@ import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { STUB_PROFIL } from "@/lib/vipps/profil";
 import praksisfil from "./__fixtures__/praksis.json";
 import { alleSetninger, byggBrev, somTekst, tilDokument } from "./brev";
-import { dato, km as kmTekst, kr, maaned, orgnr as orgnrTekst, tall } from "./format";
+import { dato, km as kmTekst, kr, maaned, orgnr as orgnrTekst, smaa, tall } from "./format";
 import { LOVORD, lovversjon, PARAGRAFER } from "./paragrafer";
 import { overslagSum, RAPPORT_PUNKTER, type Rapport, SELGER_SVAR, VERKSTED_HVEM } from "./rapport";
 import { vurderRiktighet } from "./riktighet";
 import { dagerMellom, plussDager, vurderTidslinje } from "./tidslinje";
 import type { Brev, Brevfeil, Brevsak, Kilde, Setning } from "./typer";
-import { kategorivedlegg } from "./vedlegg";
+import { annonse, kategorivedlegg } from "./vedlegg";
+import { feilnavn, tekniskFeil } from "./feiltype";
 
 const PRAKSIS = Object.values(praksisfil as Record<string, Brevsak["praksis"]>).filter((p): p is NonNullable<Brevsak["praksis"]> => !!p);
 const FORBUDT = /\b(klart|åpenbart|utvilsomt|garantert)\b|jeg er klar over|jeg mener/i;
@@ -123,8 +124,22 @@ function avvik(s: Brevsak, b: Brev, golden: boolean): string[] {
   if ((tekst.includes("Rapporten følger vedlagt") || tekst.includes("som følger vedlagt")) && !har("Rapport fra")) ut.push("rapport nevnt, ikke i vedlegg");
   if (tekst.includes("Kvitteringer vedlegges") && !har("Kvitteringer for utlegg")) ut.push("kvitteringer nevnt, ikke i vedlegg");
   if (har("Rapport fra") && !s.feil.some((f) => f.rapport)) ut.push("rapport i vedlegg uten rapport");
-  if (tekst.includes("Dokumentasjon vedlegges") && !s.feil.some((f) => kategorivedlegg(f).some((t) => har(t)))) ut.push("dokumentasjon nevnt, ikke i vedlegg");
-  if (har("Annonse/kjøpekontrakt") && !s.feil.some((f) => f.opplysning === "skriftlig")) ut.push("annonse i vedlegg uten skriftlig opplysning");
+  if (tekst.includes("Dokumentasjon vedlegges")) ut.push("dokumentasjon uten navn");
+  for (const t of s.feil.flatMap(kategorivedlegg)) if (tekst.includes(`${t} vedlegges`) && !har(t)) ut.push(`${t} nevnt, ikke i vedlegg`);
+  if (har("Annonse/kjøpekontrakt") !== s.feil.some(annonse)) ut.push("annonse i vedlegg uten skriftlig opplysning som hjelper kjøperen, eller omvendt");
+
+  // The letter is the complaint for every defect the buyer has not complained about before, and the
+  // repairs tried never name a defect discovered after the earlier complaint.
+  if (!s.kontakt && !tekst.includes("Jeg reklamerer herved")) ut.push("brevet uten tidligere reklamasjon sier ikke at det reklameres");
+  if (s.kontakt) {
+    const nye = s.feil.filter((f) => f.oppdaget > s.kontakt!.dato);
+    const forsok = egne.find((x) => x.tekst.startsWith("Dere har forsøkt å rette"))?.tekst ?? "";
+    for (const f of nye) {
+      const navn = smaa(feilnavn(f));
+      if (forsok && (forsok.includes(navn) || /rette feilen(e)? /.test(forsok))) ut.push(`forsøk nevner en feil oppdaget etter reklamasjonen: ${forsok}`);
+      if (!egne.some((x) => x.tekst.endsWith("reklameres herved.") && x.tekst.toLowerCase().includes(navn.toLowerCase()))) ut.push(`${navn} oppdaget etter reklamasjonen, men ikke reklamert`);
+    }
+  }
   if (har("Kvitteringer for utlegg") && !s.utlegg.length) ut.push("kvitteringer uten utlegg");
   if (har("Tidligere reklamasjon") && s.kontakt?.form !== "skriftlig") ut.push("tidligere reklamasjon uten skriftlig reklamasjon");
 
@@ -178,14 +193,18 @@ function generer(frø: number): Brevsak {
             overslag: punkter.includes("overslag") && r() < 0.8 ? n(1, 80) * 1_000 : null,
           }
         : null;
+    const under = noen(h.under.map((u) => u.id), 0, 2);
+    // A warranty is something the seller said or promised.
+    const opplysning = h.id === "garanti" ? en(["skriftlig", "muntlig"] as const) : en(KILDER);
     return {
       hoved: h.id,
-      under: noen(h.under.map((u) => u.id), 0, 2),
+      under,
       oppdaget,
       omtrentlig: r() < 0.3,
       beskrivelse: en(BESKRIVELSER),
-      // A warranty is something the seller said or promised.
-      opplysning: h.id === "garanti" ? en(["skriftlig", "muntlig"] as const) : en(KILDER),
+      opplysning,
+      // For a technical defect the seller said it was in order, or told of the defect.
+      opplyst: opplysning !== "nei" && tekniskFeil({ hoved: h.id, under }) ? en(["i_orden", "feilen"] as const) : null,
       verksted,
       rapport,
     };
@@ -239,6 +258,8 @@ describe("invariantene", () => {
     expect(saker.filter((s) => s.kontakt).length).toBeGreaterThan(50);
     expect(saker.filter((s) => lovversjon(s.kjopsdato) === "før_2024").length).toBeGreaterThan(20);
     expect(new Set(saker.map((s) => s.krav)).size).toBe(3);
+    expect(saker.filter((s) => s.kontakt && s.feil.some((f) => f.oppdaget > s.kontakt!.dato)).length).toBeGreaterThan(10);
+    expect(saker.filter((s) => s.feil.some((f) => f.opplyst === "i_orden")).length).toBeGreaterThan(10);
   });
 
   it("fanger et brudd når ett er plantet", () => {

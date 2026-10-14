@@ -14,11 +14,13 @@ Jeg viser til kjøp av Ford Focus, første gang registrert i 2015, reg.nr. XY 10
 
 2. Mangelen
 
-Servicehefte mangler: Feilen viste seg den 20. august 2025. «Annonsen lovet full servicehistorikk, men det mangler service for fire år.» Dokumentasjon vedlegges.
+Servicehefte mangler: Feilen viste seg den 20. august 2025. «Annonsen lovet full servicehistorikk, men det mangler service for fire år.»
 
 3. Rettslig vurdering
 
 Bilen svarer ikke til de opplysningene dere ga om serviceheftet, og har en mangel etter forbrukerkjøpsloven § 16 første ledd bokstav c.
+
+Reklamasjonen er fremsatt innen to måneder etter at feilen ble oppdaget, og dermed innen rimelig tid, jf. § 27 første ledd.
 
 Det vises til Forbrukerklageutvalgets vedtak i sak 115321 av 17.9.2025. Saken gjaldt servicedokumentasjon på en Volkswagen Tiguan 2013-modell som hadde gått 126 000 km ved kjøpet. Utvalget uttalte: «Utvalget legger etter dette til grunn at det ikke er fremlagt dokumentasjon på «storservice» slik bilen ble annonsert med, og at dette ikke er ettersendt slik avtalt.» Utvalget uttalte videre: «Manglende oversendelse av dokumentasjon på service er følgelig ikke i samsvar med de krav som fulgt av avtalen fkjl. § 15 første ledd.» Kjøperen fikk medhold i krav om prisavslag. Vedtaket ble avgjort etter loven slik den lød før 1.1.2024.
 
@@ -34,5 +36,4 @@ Med vennlig hilsen
 Kari Testesen
 
 Vedlegg:
-– Servicehefte
 – Annonse/kjøpekontrakt

@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransiti
 import { Logo } from "@/app/logo";
 import { somTekst } from "@/lib/brev/brev";
 import { liste } from "@/lib/brev/format";
+import { tekniskFeil } from "@/lib/brev/feiltype";
 import { MAKS_BESKRIVELSE, MAKS_KONKLUSJON, MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, rensFritekst, rensKonklusjon, SELGER_SVAR, type SelgerSvar, VERKSTED_HVEM } from "@/lib/brev/rapport";
 import { type Riktighet, type Riktighetsmerknad, vurderRiktighet } from "@/lib/brev/riktighet";
 import type { Brev } from "@/lib/brev/typer";
@@ -52,6 +53,8 @@ import {
   Merknader,
   MONO,
   orgnrTekst,
+  OPPLYST_VALG,
+  type OpplystValg,
   OVERLINE,
   pop,
   Punkt,
@@ -163,8 +166,9 @@ const TOM: Lagret = {
   forsok: null,
   selgerSvar: null,
 };
-// v3: the steps of the new flow. Answers saved under v2 had other step numbers and are left behind.
-const LAGRINGSNOKKEL = "tvistr:sak:v3";
+// v4: «Sa selger noe?» for a technical defect has its own answers. Answers saved under v3 had only how
+// it was said, and are left behind.
+const LAGRINGSNOKKEL = "tvistr:sak:v4";
 // The Vipps order id, kept so that a reload after payment finds the paid letter again (docs/brev.md).
 // In development the pay button writes one that stands for a confirmed payment.
 const ORDRENOKKEL = "tvistr:ordre";
@@ -202,6 +206,7 @@ function lesLagret(): Lagret | null {
         ...(typeof d?.beskrivelse === "string" && { beskrivelse: d.beskrivelse.slice(0, 200) }),
         ...(KILDE.some((k) => k.id === d?.verksted) && { verksted: d.verksted as Kilde }),
         ...(KILDE.some((k) => k.id === d?.opplysning) && { opplysning: d.opplysning as Kilde }),
+        ...((d?.opplyst === "i_orden" || d?.opplyst === "feilen") && { opplyst: d.opplyst }),
         ...(d?.rapport && typeof d.rapport === "object" ? { rapport: lesRapport(d.rapport as Record<string, unknown>) } : {}),
       };
     }
@@ -531,6 +536,7 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
             hoved: h.id,
             under: valg[h.id] ?? [],
             opplysning: x.opplysning ?? null,
+            opplyst: x.opplyst ?? null,
             verksted: x.verksted ?? null,
             rapport: r ? { navn: r.navn, dato: r.dato, punkter: r.punkter, overslag: r.overslag ? Number(r.overslag) : null } : null,
             beskrivelse: rensFritekst(x.beskrivelse, MAKS_BESKRIVELSE),
@@ -565,11 +571,14 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
     return (
       !!d.verksted &&
       !!d.opplysning &&
+      // A technical defect the seller said something about needs what was said.
+      (d.opplysning === "nei" || !teknisk(id) || !!d.opplyst) &&
       (d.verksted !== "skriftlig" || rapportOk(d.rapport)) &&
       !riktighet.stopp.some((m) => m.feilId === id) &&
       !tidslinje.stopp.some((m) => m.feilId === id && m.felt === "rapport")
     );
   };
+  const teknisk = (id: string) => tekniskFeil({ hoved: id, under: valg[id] ?? [] });
   const settDetalj = (id: string, endring: Detalj) => setDetaljer((v) => ({ ...v, [id]: { ...v[id], ...endring } }));
   const settRapport = (id: string, endring: Partial<RapportSkjema>) => setDetaljer((v) => ({ ...v, [id]: { ...v[id], rapport: { ...(v[id]?.rapport ?? TOM_RAPPORT), ...endring } } }));
   // The same report for this defect as for the one before: the workshop, the date and who. What the
@@ -1009,7 +1018,10 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
                 .reverse()
                 .map((x) => detaljer[x.id]?.rapport)
                 .find((x) => x?.hvem && x.navn.trim() && x.dato);
-              const sdeOpplyst = d.opplysning && d.opplysning !== "nei" ? riktighet.advarsler.filter((m) => m.regel === "som_den_er_opplyst") : [];
+              // The warning that a defect the seller told of is usually excepted, on the pages where the seller did.
+              const sierFeilen = !!d.opplysning && d.opplysning !== "nei" && (!teknisk(h.id) || d.opplyst === "feilen");
+              const sdeOpplyst = sierFeilen ? riktighet.advarsler.filter((m) => m.regel === "som_den_er_opplyst") : [];
+              const opplystValg: OpplystValg | undefined = d.opplysning === "nei" ? "ingenting" : d.opplyst;
               return (
                 <div key={h.id} style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
                   <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1079,7 +1091,23 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
                     )}
                   </section>
                   <section id="felt-opplysning" style={{ display: "flex", flexDirection: "column", gap: 12, animation: pop(1) }}>
-                    <Radiovalg id={`opplysning-${h.id}`} sporsmal="Sa selger noe om denne feilen før kjøpet?" hjelp="For eksempel i annonsen, kontrakten eller en melding." valg={OPPLYSNING_VALG} valgt={d.opplysning} velg={(k) => settDetalj(h.id, { opplysning: k })} min={96} />
+                    {teknisk(h.id) ? (
+                      <>
+                        {/* What the seller said, which decides whether it helps (in order) or weakens (told of the defect), then how. */}
+                        <Radiovalg
+                          id={`opplysning-${h.id}`}
+                          sporsmal="Sa selger noe om denne feilen før kjøpet?"
+                          hjelp="For eksempel i annonsen, kontrakten eller en melding."
+                          valg={OPPLYST_VALG}
+                          valgt={opplystValg}
+                          velg={(k) => settDetalj(h.id, k === "ingenting" ? { opplysning: "nei", opplyst: undefined } : { opplyst: k, opplysning: d.opplysning === "nei" ? undefined : d.opplysning })}
+                          min={200}
+                        />
+                        {d.opplyst && d.opplysning !== "nei" && <Chipvalg sporsmal="Hvordan sa selger det?" etikett={`Hvordan sa selger det om ${h.navn}?`} valg={HVORDAN} valgt={d.opplysning} velg={(k) => settDetalj(h.id, { opplysning: k })} />}
+                      </>
+                    ) : (
+                      <Radiovalg id={`opplysning-${h.id}`} sporsmal="Sa selger noe om denne feilen før kjøpet?" hjelp="For eksempel i annonsen, kontrakten eller en melding." valg={OPPLYSNING_VALG} valgt={d.opplysning} velg={(k) => settDetalj(h.id, { opplysning: k })} min={96} />
+                    )}
                     <Merknader stopp={merkR("opplysning", h.id).stopp} advarsler={[...merkR("opplysning", h.id).advarsler, ...sdeOpplyst]} />
                   </section>
                   <label id="felt-beskrivelse" style={{ display: "flex", flexDirection: "column", gap: 8, animation: pop(2) }}>
@@ -1324,7 +1352,9 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
                                       h.under.filter((u) => valg[h.id]?.includes(u.id)).map((u) => u.navn).join(", "),
                                       d.oppdaget && erDato(d.oppdaget) ? `Oppdaget ${d.omtrentlig ? "omtrent " : ""}${datoTekst(d.oppdaget)}` : "",
                                       d.verksted === "skriftlig" && r ? `Rapport fra ${r.navn}${erDato(r.dato) ? ` ${datoTekst(r.dato)}` : ""}` : d.verksted === "muntlig" ? "Undersøkt av verksted, uten rapport" : "Ikke undersøkt av verksted",
-                                      `Selger sa: ${OPPLYSNING_VALG.find((k) => k.id === d.opplysning)?.navn.toLowerCase() ?? "–"}`,
+                                      teknisk(h.id) && d.opplysning !== "nei"
+                                        ? `${OPPLYST_VALG.find((k) => k.id === d.opplyst)?.navn ?? "Selger sa: –"}${d.opplysning ? ` (${d.opplysning})` : ""}`
+                                        : `Selger sa: ${OPPLYSNING_VALG.find((k) => k.id === d.opplysning)?.navn.toLowerCase() ?? "–"}`,
                                     ]
                                       .filter(Boolean)
                                       .join(" · "),

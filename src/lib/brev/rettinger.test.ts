@@ -4,7 +4,7 @@ import { byggBrev, somTekst } from "./brev";
 import { krav } from "./krav";
 import { kategorivedlegg, vedlegg } from "./vedlegg";
 import { mangelen } from "./mangelen";
-import { feil, lagSak, type Lov, samle } from "./testsak";
+import { feil, gyldig, lagSak, type Lov, samle } from "./testsak";
 import type { Brevfeil, Setning } from "./typer";
 
 // The corrections after the review of the twelve test letters (docs/brev.md): the time limit for every
@@ -20,7 +20,8 @@ describe("femårsfristen når feilen viste seg etter to år", () => {
     for (const lov of LOV)
       for (const h of HOVEDKATEGORIER)
         for (const under of [[], ...h.under.map((u) => [u.id])]) {
-          const brev = somTekst(byggBrev(lagSak(lov, { feil: [feil(h.id, under, "over_24_mnd", "muntlig", "nei")] })));
+          // A symptom alone can only be examined and repaired (riktighet.ts).
+          const brev = somTekst(byggBrev(lagSak(lov, { krav: h.id === "vet_ikke" ? "retting" : "prisavslag", feil: [feil(h.id, under, "over_24_mnd", "muntlig", "nei")] })));
           if (!brev.includes("Reklamasjonen er fremsatt innen fristen på fem år etter at bilen ble levert, jf. § 27 annet ledd annet punktum.")) mangler.push(`${lov} ${h.id}.${under[0] ?? ""}`);
         }
     expect(mangler).toEqual([]);
@@ -33,7 +34,7 @@ describe("femårsfristen når feilen viste seg etter to år", () => {
 
   it("står ikke for en feil som viste seg innen to år", () => {
     for (const k of ["vet_ikke", "garanti", "historikk"]) {
-      const brev = somTekst(byggBrev(lagSak("etter_2024", { feil: [feil(k, [], "6_til_24_mnd", "muntlig", "nei")] })));
+      const brev = somTekst(byggBrev(lagSak("etter_2024", { krav: k === "vet_ikke" ? "retting" : "prisavslag", feil: [feil(k, [], "6_til_24_mnd", "muntlig", "nei")] })));
       expect(brev, k).not.toContain("fristen på fem år");
     }
   });
@@ -77,14 +78,16 @@ describe("vedlegg etter kategori", () => {
       }
   });
 
-  it("fører samme vedlegg bare én gang, også fra flere feil", () => {
-    const fs = [feil("service", ["service", "servicehefte"], "6_til_24_mnd", "muntlig", "nei"), feil("service", ["servicehefte"], "6_til_24_mnd", "muntlig", "nei")];
+  it("fører samme vedlegg bare én gang, og ikke et servicehefte som mangler", () => {
+    const fs = [feil("service", ["service", "servicehefte"], "6_til_24_mnd", "muntlig", "nei")];
     expect(kategorivedlegg(fs[0])).toEqual(["Servicehefte"]);
     expect(vedlegg(sak(fs)).filter((x) => x.tekst === "Servicehefte")).toHaveLength(1);
+    expect(kategorivedlegg(feil("service", ["servicehefte"], "6_til_24_mnd", "muntlig", "nei"))).toEqual([]);
   });
 
-  it("sier «Dokumentasjon vedlegges» bare for feil med vedlegg av kategorien", () => {
-    expect(tekst(mangelen(sak(KATEGORIER.km)))).toContain("Dokumentasjon vedlegges.");
+  it("nevner dokumentet som vedlegges bare for feil med vedlegg av kategorien", () => {
+    expect(tekst(mangelen(sak(KATEGORIER.km)))).toContain("Utskrift fra Statens vegvesen vedlegges.");
+    expect(tekst(mangelen(sak(KATEGORIER.turbo)))).not.toContain(" vedlegges.");
     expect(tekst(mangelen(sak(KATEGORIER.turbo)))).not.toContain("Dokumentasjon vedlegges");
   });
 });
@@ -118,8 +121,8 @@ describe("tilbud om retting", () => {
   it("utelates bare når ingen av feilene kan rettes", () => {
     for (const [navn, fs] of Object.entries(SAKER))
       for (const k of ["prisavslag", "heving"] as const) {
-        const t = tekst(krav(lagSak("etter_2024", { krav: k, feil: fs })));
-        expect(t.includes(RETTING), `${navn} ${k}`).toBe(!UTEN_TILBUD.includes(navn));
+        // A symptom alone cannot be met with a reduction or cancellation: the form stops it.
+        for (const s of gyldig(() => lagSak("etter_2024", { krav: k, feil: fs }))) expect(tekst(krav(s)).includes(RETTING), `${navn} ${k}`).toBe(!UTEN_TILBUD.includes(navn));
       }
   });
 });

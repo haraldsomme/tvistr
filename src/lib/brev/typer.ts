@@ -6,6 +6,7 @@ import type { Rapport, SelgerSvar } from "./rapport";
 
 export type { Kilde };
 export type SomDenEr = "ja" | "nei" | "vet_ikke";
+export type Opplyst = "i_orden" | "feilen";
 
 // One sentence of the letter and where it comes from: a form answer («skjema:feil[0].tid»), the
 // register («brreg:selger»), the buyer's profile («vipps:navn»), a statute («lov:etter_2024:avvik»),
@@ -23,6 +24,10 @@ export type Brevfeil = {
   beskrivelse: string | null;
   // Did the seller write or say anything about this before the sale?
   opplysning: Kilde;
+  // For a technical defect, what the seller said (with `opplysning` skriftlig or muntlig): that it was
+  // in order or recently repaired, or about the defect itself. Missing for the other kinds; missing on
+  // a technical defect reads as «feilen», the old question's meaning (tekniskSa in feiltype.ts).
+  opplyst?: Opplyst | null;
   verksted: Kilde;
   // What a workshop has put in writing about this defect: with verksted = skriftlig, otherwise null.
   rapport: Rapport | null;

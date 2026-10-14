@@ -21,18 +21,20 @@ Kjøperen oppgir datoer; koden regner all inndeling fra dem. «Når viste feilen
 | Regel | Nivå | Melding |
 |---|---|---|
 | Kjøpsdato i fremtiden | stopp | Kjøpsdatoen kan ikke være i fremtiden. |
-| Kjøpsdato mer enn fem år tilbake | stopp | Det er mer enn fem år siden kjøpet. Da er fristen for å reklamere ute (forbrukerkjøpsloven § 27). |
+| Kjøpsdato mer enn fem år tilbake | stopp | Det er mer enn fem år siden du overtok bilen. Den lengste fristen for å reklamere er fem år (forbrukerkjøpsloven § 27 annet ledd annet punktum), og dette brevet kan ikke brukes etter det. Mener du selger har holdt noe skjult, eller har du en garanti som gjelder lenger, bør du kontakte Forbrukerrådet eller en advokat. |
 | Feilen oppdaget samme dag som eller før kjøpet | stopp | Feilen kan ikke ha vist seg før du overtok bilen. |
 | Feilen oppdaget i fremtiden | stopp | Datoen kan ikke være i fremtiden. |
 | Rapporten datert før feilen ble oppdaget | stopp | Rapporten kan ikke være datert før du oppdaget feilen. |
 | Rapporten datert i fremtiden | stopp | Datoen kan ikke være i fremtiden. |
 | Reklamasjonen før den første feilen ble oppdaget (eller samme dag som kjøpet) | stopp | Du kan ikke ha reklamert før den første feilen viste seg. Sjekk datoene. |
 | Reklamasjonen i fremtiden | stopp | Datoen kan ikke være i fremtiden. |
-| Reklamasjonen mer enn to måneder etter at en feil ble oppdaget. Har kjøperen ikke reklamert før, eller kom feilen etter den tidligere reklamasjonen, regnes det fra brevets dato. | advarsel | Du reklamerer mer enn to måneder etter at feilen ble oppdaget. Selger kan hevde at reklamasjonen er for sen (forbrukerkjøpsloven § 27). Brevet sendes likevel. |
+| Reklamasjonen mer enn to måneder etter at en feil ble oppdaget. Har kjøperen ikke reklamert før, eller kom feilen etter den tidligere reklamasjonen, regnes det fra brevets dato. | advarsel | Reklamasjon innen to måneder etter at feilen ble oppdaget er alltid i tide. Etter det vurderes det om du reklamerte innen rimelig tid. Du reklamerer mer enn to måneder etter at feilen ble oppdaget. Selger kan hevde at reklamasjonen er for sen (forbrukerkjøpsloven § 27 første ledd). Du kan likevel lage brevet. |
 | Feilen oppdaget innenfor 14 dager fra en frist: seks måneder (bare før 2024), to år eller fem år etter kjøpet | advarsel, som må bekreftes når datoen er omtrentlig | Datoen ligger nær en frist i loven ({frist}). Sjekk at den stemmer; den avgjør hvem som må bevise når feilen oppsto. Før 2024 er to og fem år frister for reklamasjonen, og da står det i stedet «den avgjør om reklamasjonen er i tide». |
 | Rapporten mer enn seks måneder etter at feilen ble oppdaget | advarsel | Det gikk lang tid fra feilen ble oppdaget til verkstedet undersøkte den. Selger kan bruke det. |
 
 Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon kan bare velges fra dagen etter kjøpet til i dag.
+
+**Fristvarslene ved datofeltene** (ikke regler, bare tekst): kjøp mer enn to år tilbake og en feil oppdaget mer enn to år etter overtakelsen viser hver sin gule boks med `§`, og under den teksten `fristTekst` i `tidslinje.ts`. Over fem år vises bare stoppen. Paragrafene i meldingene hentes fra `paragrafer.ts` for kjøpets lovversjon; en test i `tidslinje.test.ts` sjekker det. Fullstendig oversikt over alle meldinger: `docs/meldinger-til-jurist.md`.
 
 ## Svar som strider mot hverandre
 
@@ -46,9 +48,9 @@ Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon 
 | Erstatning for utlegg uten linjer, eller en linje uten beløp | stopp | Fyll ut beskrivelse og beløp for hvert utlegg. |
 | Prisavslag uten rapport med kostnadsoverslag | advarsel | Uten et kostnadsoverslag fra verkstedet kan brevet ikke oppgi beløp. Brevet krever prisavslag uten å nevne et beløp. |
 | Heving uten rettingsforsøk, og selger har ikke avvist eller latt være å svare | advarsel | Selger kan ha rett til å forsøke retting først. Brevet tar høyde for det, men heving står svakere. |
-| Heving, ett feil, og overslaget under 10 % av kjøpesummen | advarsel | Utbedringen koster lite i forhold til kjøpesummen. Utvalget avviser ofte heving da. Vurder prisavslag. |
+| Heving, ett feil, og overslaget under 10 % av kjøpesummen (terskelen er skjønn, ikke lov) | advarsel | Heving krever at mangelen ikke er uvesentlig. Når utbedringen koster lite i forhold til kjøpesummen, blir heving sjelden godtatt. Vurder prisavslag. |
 | Rapporten fraråder bruk, og krav om prisavslag | advarsel | Verkstedet fraråder bruk. Retting eller heving passer ofte bedre når bilen ikke kan brukes. |
-| «Som den er», kjøp fra 2024, og selger sa noe om en teknisk feil | advarsel | Hvis selger opplyste om akkurat denne feilen før kjøpet, kan den være unntatt. Sjekk hva som ble sagt. |
+| Selger sa noe om en teknisk feil før kjøpet (alle kjøp, uansett «som den er») | advarsel | Hvis selger opplyste om akkurat denne feilen før kjøpet, kan du som regel ikke reklamere på den. Sjekk hva som ble sagt, og om det gjaldt denne feilen eller noe annet. |
 | Utleggene til sammen over kjøpesummen | advarsel | Utleggene er høyere enn kjøpesummen. Sjekk beløpene. |
 | Rapport fra selgers eget verksted med «til stede ved levering» | ingen | Gyldig. Brevet kaller verkstedet «deres eget verksted», aldri uavhengig. |
 | Rettingsforsøk uten reklamasjon, eller sammen med «ikke svart» eller «tilbudt retting» | umulig | Antall forsøk spørres bare under «Hva har selger gjort? → Forsøkt å rette», og serveren setter forsøkene til 0 for alle andre svar og uten reklamasjon. |
@@ -58,7 +60,7 @@ Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon 
 | Regel | Nivå | Melding |
 |---|---|---|
 | Kjøpesum under 5 000 eller over 3 000 000 kr | stopp | Kjøpesummen må være mellom 5 000 og 3 000 000 kr. Sjekk beløpet. |
-| Kjøpesum under 20 000 kr og krav om heving | advarsel | Ved så lav kjøpesum legger utvalget til grunn at mye må påregnes. |
+| Kjøpesum under 20 000 kr og krav om heving (grensen er skjønn, ikke lov) | advarsel | Ved så lav kjøpesum legger utvalget til grunn at mye må påregnes. |
 | Første registrering etter kjøpsåret | stopp | Bilen ble første gang registrert etter kjøpsdatoen. Sjekk kjøpsdatoen. |
 | Registreringsnummeret finnes ikke hos vegvesenet | stopp | Som før: bilen kan ikke velges uten et treff. |
 | Bruktimportert | ingen regel | Brevet sier aldri «norsk bil» (sjekket av invariantene). |
@@ -68,7 +70,7 @@ Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon 
 | Regel | Nivå | Melding |
 |---|---|---|
 | Organisasjonsnummeret har feil kontrollsiffer (modulus 11) | stopp | Organisasjonsnummeret er ikke gyldig. Velg selgeren på nytt. |
-| Foretaket er registrert som konkurs eller under avvikling | advarsel | Foretaket er registrert {som konkurs / under avvikling}. Brevet kan sendes, men kravet kan være vanskelig å inndrive. |
+| Foretaket er registrert som konkurs eller under avvikling | advarsel | Foretaket er registrert {som konkurs / under avvikling}. Du kan likevel lage brevet, men kravet kan være vanskelig å inndrive. |
 | Næringskoden er ikke bilhandel (45.1) | advarsel | Foretaket er ikke registrert som bilforhandler. Er dette riktig selger? |
 | Forretningsadressen mangler | ingen | Brevet utelater adresselinjene. |
 

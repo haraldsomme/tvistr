@@ -68,7 +68,7 @@ describe("regler som advarer", () => {
     ["heving uten rettingsforsøk og uten avslag", { krav: "heving" }, "heving_uten_retting"],
     ["heving og en liten utbedring", { krav: "heving", svar: "avviste", feil: [feil({ verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["overslag"], overslag: 14_999 } })] }, "heving_liten_utbedring"],
     ["fraråder bruk og prisavslag", { krav: "prisavslag", feil: [feil({ verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["frarader", "overslag"], overslag: 40_000 } })] }, "frarader_prisavslag"],
-    ["«som den er» fra 2024 og selger sa noe om en teknisk feil", { somDenEr: "ja", feil: [feil({ opplysning: "muntlig" })] }, "som_den_er_opplyst"],
+    ["selger sa noe om en teknisk feil, med «som den er» fra 2024", { somDenEr: "ja", feil: [feil({ opplysning: "muntlig" })] }, "som_den_er_opplyst"],
     ["utlegg over kjøpesummen", { utlegg: [{ belop: 100_000 }, { belop: 60_000 }] }, "utlegg_over_kjopesum"],
     ["lav kjøpesum og heving", { krav: "heving", svar: "avviste", kjopesum: 19_999 }, "lav_kjopesum_heving"],
     ["selger under konkurs", { selger: { orgnr: "999999999", status: "konkurs", naeringskode: "45.111" } }, "selger_konkurs"],
@@ -78,8 +78,8 @@ describe("regler som advarer", () => {
   for (const [navn, endring, regel] of TILFELLER) it(navn, () => expect(regler(sak(endring)).advarsler).toContain(regel));
 
   it("advarer ikke når vilkåret ikke er oppfylt", () => {
-    // «Som den er» before 2024 is the old § 17; heving after a refusal; a large repair; several defects.
-    expect(regler(sak({ kjopsdato: "2023-05-02", forsteRegistrert: 2016, somDenEr: "ja", feil: [feil({ opplysning: "muntlig" })] })).advarsler).not.toContain("som_den_er_opplyst");
+    // Nothing said before the purchase; heving after a refusal; a large repair; several defects.
+    expect(regler(sak({ feil: [feil({ opplysning: "nei" })] })).advarsler).not.toContain("som_den_er_opplyst");
     expect(regler(sak({ krav: "heving", svar: "ikke_svart" })).advarsler).not.toContain("heving_uten_retting");
     expect(regler(sak({ krav: "heving", forsok: 1, svar: "forsokt" })).advarsler).not.toContain("heving_uten_retting");
     expect(regler(sak({ krav: "heving", svar: "avviste", feil: [feil({ verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["overslag"], overslag: 15_000 } })] })).advarsler).not.toContain("heving_liten_utbedring");
@@ -94,5 +94,38 @@ describe("regler som advarer", () => {
   it("sier hvilket krav den kjente feilen får ved «vet ikke» og prisavslag", () => {
     const r = vurderRiktighet(sak({ krav: "prisavslag", feil: [feil(), feil({ hoved: "vet_ikke", under: ["lyd"] })] }));
     expect(r.advarsler.find((m) => m.regel === "vet_ikke_blandet")?.melding).toBe("Du har valgt både en kjent feil og «vet ikke». Brevet krever retting av den ukjente og prisavslag for den kjente.");
+  });
+});
+
+describe("opplysning om feilen før kjøpet", () => {
+  // What the buyer knew at the purchase cannot be relied on: before 2024, after 2024, with or without a reservation.
+  for (const [navn, kjopsdato, somDenEr] of [
+    ["før 2024 med «som den er»", "2023-05-02", "ja"],
+    ["før 2024 uten «som den er»", "2023-05-02", "nei"],
+    ["fra 2024 uten «som den er»", "2025-03-10", "nei"],
+  ] as const)
+    it(`advarer ${navn}`, () => expect(regler(sak({ kjopsdato, somDenEr, feil: [feil({ opplysning: "muntlig" })] })).advarsler).toContain("som_den_er_opplyst"));
+});
+
+describe("teksten i meldingene", () => {
+  const alle = () => {
+    const r = [
+      vurderRiktighet(sak({ krav: "heving", svar: "avviste", feil: [feil({ opplysning: "muntlig", verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["overslag"], overslag: 1_000 } })], selger: { orgnr: "999999999", status: "konkurs", naeringskode: "68.209" } })),
+    ];
+    return r.flatMap((x) => [...x.stopp, ...x.advarsler]).map((m) => m.melding);
+  };
+  it("sier at brukeren kan lage brevet, ikke at det sendes", () => {
+    expect(alle().length).toBeGreaterThan(3);
+    for (const m of alle()) expect(m).not.toMatch(/\bsendes\b|\bsender\b/i);
+    const konkurs = vurderRiktighet(sak({ selger: { orgnr: "999999999", status: "konkurs", naeringskode: "45.111" } })).advarsler[0].melding;
+    expect(konkurs).toBe("Foretaket er registrert som konkurs. Du kan likevel lage brevet, men kravet kan være vanskelig å inndrive.");
+  });
+  it("forklarer heving ved liten utbedring som lovens vilkår, ikke som utvalgets vane", () => {
+    const m = vurderRiktighet(sak({ krav: "heving", svar: "avviste", feil: [feil({ verksted: "skriftlig", rapport: { ...RAPPORT, punkter: ["overslag"], overslag: 1_000 } })] })).advarsler.find((x) => x.regel === "heving_liten_utbedring")?.melding;
+    expect(m).toBe("Heving krever at mangelen ikke er uvesentlig. Når utbedringen koster lite i forhold til kjøpesummen, blir heving sjelden godtatt. Vurder prisavslag.");
+  });
+  it("sier hva opplysningen før kjøpet betyr", () => {
+    const m = vurderRiktighet(sak({ feil: [feil({ opplysning: "muntlig" })] })).advarsler.find((x) => x.regel === "som_den_er_opplyst")?.melding;
+    expect(m).toBe("Hvis selger opplyste om akkurat denne feilen før kjøpet, kan du som regel ikke reklamere på den. Sjekk hva som ble sagt, og om det gjaldt denne feilen eller noe annet.");
   });
 });

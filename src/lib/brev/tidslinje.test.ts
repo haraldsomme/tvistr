@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { dagerMellom, erDato, plussDager, plussManeder, type Tidslinje, tidsnivaFor, vurderTidslinje } from "./tidslinje";
+import { PARAGRAFER } from "./paragrafer";
+import { dagerMellom, erDato, fristTekst, OVER_TO_AAR_FEIL, OVER_TO_AAR_KJOP, plussDager, plussManeder, type Tidslinje, tidsnivaFor, vurderTidslinje } from "./tidslinje";
 
 const IDAG = "2026-10-13";
 const linje = (t: Partial<Tidslinje> = {}): Tidslinje => ({ kjop: "2025-03-10", feil: [{ id: "motor", oppdaget: "2025-05-01", omtrentlig: false }], idag: IDAG, ...t });
@@ -159,5 +160,50 @@ describe("regler som advarer", () => {
 
   it("gir ingen advarsel for en tidslinje i orden", () => {
     expect(vurderTidslinje(linje({ feil: [{ id: "motor", oppdaget: "2025-05-01", omtrentlig: false, rapport: "2025-05-20" }], reklamert: "2025-06-01" }))).toMatchObject({ stopp: [], advarsler: [] });
+  });
+});
+
+describe("teksten i meldingene", () => {
+  const meldinger = (t: Tidslinje) => {
+    const v = vurderTidslinje(t);
+    return [...v.stopp, ...v.advarsler].map((m) => m.melding);
+  };
+  const FEM_AAR = linje({ kjop: "2021-10-12", feil: [] });
+  const SEN = linje({ reklamert: "2025-08-01" });
+
+  it("stopper bare, uten et varsel i tillegg, mer enn fem år etter overtakelsen", () => {
+    const v = vurderTidslinje(FEM_AAR);
+    expect(v.stopp.map((m) => m.melding)).toEqual([
+      "Det er mer enn fem år siden du overtok bilen. Den lengste fristen for å reklamere er fem år (forbrukerkjøpsloven § 27 annet ledd annet punktum), og dette brevet kan ikke brukes etter det. Mener du selger har holdt noe skjult, eller har du en garanti som gjelder lenger, bør du kontakte Forbrukerrådet eller en advokat.",
+    ]);
+    expect(v.advarsler).toEqual([]);
+  });
+
+  it("sier at to måneder er minstefristen, før den sier at reklamasjonen kan være for sen", () => {
+    expect(meldinger(SEN)).toEqual([
+      "Reklamasjon innen to måneder etter at feilen ble oppdaget er alltid i tide. Etter det vurderes det om du reklamerte innen rimelig tid. Du reklamerer mer enn to måneder etter at feilen ble oppdaget. Selger kan hevde at reklamasjonen er for sen (forbrukerkjøpsloven § 27 første ledd). Du kan likevel lage brevet.",
+    ]);
+  });
+
+  it("gjør fem år til hovedregelen for bil i varslene om to år", () => {
+    expect(OVER_TO_AAR_KJOP).toBe("Det er mer enn to år siden du overtok bilen. For biler gjelder som regel en frist på fem år, men for slitedeler kan fristen være to år. Selger kan bruke det.");
+    expect(OVER_TO_AAR_FEIL).toBe("En eller flere feil viste seg mer enn to år etter at du overtok bilen. For biler gjelder som regel en frist på fem år, men for slitedeler kan fristen være to år. Selger kan bruke det.");
+    expect(fristTekst("etter_2024")).toBe(
+      "Fristen for å reklamere er fem år for deler som er ment å vare vesentlig lenger enn to år, ellers to år, regnet fra overtakelsen (forbrukerkjøpsloven § 27 annet ledd). Reklamasjonen må i tillegg fremsettes innen rimelig tid etter at feilen ble oppdaget (forbrukerkjøpsloven § 27 første ledd).",
+    );
+  });
+
+  it("henter alle paragrafer fra paragrafer.ts, for begge lovversjoner", () => {
+    for (const v of ["før_2024", "etter_2024"] as const) {
+      const kjent = Object.values(PARAGRAFER[v]).filter((x): x is string => !!x);
+      const tekster = [fristTekst(v), ...meldinger(linje({ kjop: v === "før_2024" ? "2021-10-12" : "2025-03-10", feil: v === "før_2024" ? [] : linje().feil, reklamert: v === "før_2024" ? undefined : "2025-08-01" }))];
+      for (const t of tekster)
+        for (const [, par] of t.matchAll(/forbrukerkjøpsloven (§ \d+[a-z]?(?: (?:første|annet|tredje) ledd)?(?: (?:første|annet) punktum)?)/g)) expect(kjent, `${par} i «${t}»`).toContain(par);
+    }
+  });
+
+  it("sier aldri at brevet sendes", () => {
+    for (const t of [FEM_AAR, SEN, linje({ feil: [{ id: "motor", oppdaget: "2027-01-01", omtrentlig: false }] })]) for (const m of meldinger(t)) expect(m).not.toMatch(/\bsendes\b|\bsender\b/i);
+    for (const t of [fristTekst("før_2024"), fristTekst("etter_2024"), OVER_TO_AAR_KJOP, OVER_TO_AAR_FEIL]) expect(t).not.toMatch(/\bsendes\b|\bsender\b/i);
   });
 });

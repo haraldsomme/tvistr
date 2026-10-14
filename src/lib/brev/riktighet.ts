@@ -7,7 +7,6 @@
 import { gyldigOrgnr } from "@/lib/brreg";
 import type { Krav } from "@/lib/matching/typer";
 import { feiltype } from "./feiltype";
-import { lovversjon } from "./paragrafer";
 import { overslagSum, type Rapport, type SelgerSvar } from "./rapport";
 import type { Kilde, SomDenEr } from "./typer";
 
@@ -53,7 +52,6 @@ export function fritekstMerknad(tekst: string | null, felt: "beskrivelse" | "kon
 export function vurderRiktighet(s: Riktighetssak): Riktighet {
   const stopp: Riktighetsmerknad[] = [];
   const advarsler: Riktighetsmerknad[] = [];
-  const v = lovversjon(s.kjopsdato);
   const typer = s.feil.map((f) => (f.under.length ? f.under : [null]).map((u) => feiltype(f.hoved, u)));
 
   // 1. Answers that contradict each other.
@@ -84,11 +82,16 @@ export function vurderRiktighet(s: Riktighetssak): Riktighet {
   if (s.krav === "heving" && s.forsok === 0 && s.svar !== "avviste" && s.svar !== "ikke_svart")
     advarsler.push({ regel: "heving_uten_retting", felt: "krav", melding: "Selger kan ha rett til å forsøke retting først. Brevet tar høyde for det, men heving står svakere." });
   if (s.krav === "heving" && o && s.kjopesum && s.feil.length === 1 && o.sum < s.kjopesum * LITEN_UTBEDRING)
-    advarsler.push({ regel: "heving_liten_utbedring", felt: "krav", melding: "Utbedringen koster lite i forhold til kjøpesummen. Utvalget avviser ofte heving da. Vurder prisavslag." });
+    advarsler.push({ regel: "heving_liten_utbedring", felt: "krav", melding: "Heving krever at mangelen ikke er uvesentlig. Når utbedringen koster lite i forhold til kjøpesummen, blir heving sjelden godtatt. Vurder prisavslag." });
   if (s.krav === "prisavslag" && s.feil.some((f) => f.rapport?.punkter.includes("frarader")))
     advarsler.push({ regel: "frarader_prisavslag", felt: "krav", melding: "Verkstedet fraråder bruk. Retting eller heving passer ofte bedre når bilen ikke kan brukes." });
-  if (s.somDenEr === "ja" && v === "etter_2024" && s.feil.some((f, i) => typer[i].includes("teknisk") && f.opplysning !== null && f.opplysning !== "nei"))
-    advarsler.push({ regel: "som_den_er_opplyst", felt: "somDenEr", melding: "Hvis selger opplyste om akkurat denne feilen før kjøpet, kan den være unntatt. Sjekk hva som ble sagt." });
+  // What the buyer knew at the purchase cannot be relied on, whatever the reservation and the version of the law.
+  if (s.feil.some((f, i) => typer[i].includes("teknisk") && f.opplysning !== null && f.opplysning !== "nei"))
+    advarsler.push({
+      regel: "som_den_er_opplyst",
+      felt: "somDenEr",
+      melding: "Hvis selger opplyste om akkurat denne feilen før kjøpet, kan du som regel ikke reklamere på den. Sjekk hva som ble sagt, og om det gjaldt denne feilen eller noe annet.",
+    });
 
   const valgte = s.feil.flatMap((f) => f.under.map((u) => `${f.hoved}.${u}`));
   if (new Set(valgte).size !== valgte.length || new Set(s.feil.map((f) => f.hoved)).size !== s.feil.length)
@@ -112,7 +115,7 @@ export function vurderRiktighet(s: Riktighetssak): Riktighet {
       advarsler.push({
         regel: "selger_konkurs",
         felt: "selger",
-        melding: `Foretaket er registrert ${s.selger.status === "konkurs" ? "som konkurs" : "under avvikling"}. Brevet kan sendes, men kravet kan være vanskelig å inndrive.`,
+        melding: `Foretaket er registrert ${s.selger.status === "konkurs" ? "som konkurs" : "under avvikling"}. Du kan likevel lage brevet, men kravet kan være vanskelig å inndrive.`,
       });
     if (s.selger.naeringskode && !s.selger.naeringskode.startsWith("45.1"))
       advarsler.push({ regel: "selger_ikke_bilforhandler", felt: "selger", melding: "Foretaket er ikke registrert som bilforhandler. Er dette riktig selger?" });

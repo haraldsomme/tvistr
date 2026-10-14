@@ -16,7 +16,8 @@ import { MAKS_BESKRIVELSE, MAKS_KONKLUSJON, MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, 
 import { type Riktighet, type Riktighetsmerknad, vurderRiktighet } from "@/lib/brev/riktighet";
 import type { Brev } from "@/lib/brev/typer";
 import { type Kjoretoy, normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
-import { erDato, type Merknad, type Vurdering, vurderTidslinje } from "@/lib/brev/tidslinje";
+import { type Lovversjon, lovversjon } from "@/lib/brev/paragrafer";
+import { erDato, fristTekst, type Merknad, OVER_TO_AAR_FEIL, OVER_TO_AAR_KJOP, type Vurdering, vurderTidslinje } from "@/lib/brev/tidslinje";
 import { type Feilvalg, HOVEDKATEGORIER, rensFeilvalg } from "@/lib/feil/kategorier";
 import { type BrevResultat, byggBrevet, type Funn, finnVedtak } from "./actions";
 
@@ -212,20 +213,43 @@ function Avkrysning({ valgt, velg, children }: { valgt: boolean; velg: () => voi
   );
 }
 
+// Every notice in the form is one of three kinds, drawn the same way: a tinted box that starts with an icon (! by default, § for the law), 14px text and a bold lead line.
+// stopp (red) blocks the user, advarsel (amber) only warns, info (grey) reminds.
+const VARSEL = {
+  stopp: { bg: "oklch(0.96 0.03 25)", merke: "#a3372b", role: "alert" },
+  advarsel: { bg: "oklch(0.96 0.04 75)", merke: "oklch(0.5 0.13 60)", role: "note" },
+  info: { bg: "#eef0f1", merke: A, role: "note" },
+} as const;
+
+function Varsel({ type, ikon, tittel, children, ...rest }: { type: keyof typeof VARSEL; ikon?: string; tittel?: React.ReactNode; children?: React.ReactNode } & { [k in `data-${string}`]?: boolean }) {
+  const v = VARSEL[type];
+  return (
+    <div role={v.role} {...rest} style={{ background: v.bg, borderRadius: 12, padding: "14px 16px", display: "flex", gap: 12, animation: pop(0) }}>
+      <span aria-hidden="true" style={{ font: `600 15px ${MONO}`, color: v.merke, lineHeight: 1.4, flex: "none", width: 10, textAlign: "center" }}>
+        {ikon ?? "!"}
+      </span>
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 14, lineHeight: 1.5, color: "#2c3033", textWrap: "pretty" }}>
+        {tittel && <strong style={{ fontWeight: 600 }}>{tittel}</strong>}
+        {children}
+      </div>
+    </div>
+  );
+}
+
 // The messages at a field: what stops in red, what only warns in amber.
 function Merknader({ stopp = [], advarsler = [] }: { stopp?: { melding: string }[]; advarsler?: { melding: string }[] }) {
   if (!stopp.length && !advarsler.length) return null;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {stopp.map((m) => (
-        <span key={m.melding} role="alert" style={{ fontSize: 13, color: "#a3372b", lineHeight: 1.45 }}>
+        <Varsel key={m.melding} type="stopp">
           {m.melding}
-        </span>
+        </Varsel>
       ))}
       {advarsler.map((m) => (
-        <span key={m.melding} role="note" data-advarsel style={{ fontSize: 13, color: "#5c3d0a", background: "oklch(0.96 0.04 75)", borderRadius: 8, padding: "8px 10px", lineHeight: 1.45 }}>
+        <Varsel key={m.melding} type="advarsel" data-advarsel>
           {m.melding}
-        </span>
+        </Varsel>
       ))}
     </div>
   );
@@ -256,24 +280,14 @@ function Tallfelt({ etikett, hjelp, enhet, verdi, sett, maks }: { etikett: strin
   );
 }
 
-// fkjl. § 27: the absolute deadline, shown where a date or a choice puts it in doubt.
-function Fristvarsel({ children }: { children: React.ReactNode }) {
+// fkjl. § 27: the limits for complaining, shown where a date or a choice puts them in doubt.
+function Fristvarsel({ v, children }: { v: Lovversjon; children: React.ReactNode }) {
   return (
-    <div role="note" style={{ background: "oklch(0.96 0.04 75)", borderRadius: 12, padding: "16px 18px", display: "flex", gap: 14, animation: pop(0) }}>
-      <span aria-hidden="true" style={{ font: `600 15px ${MONO}`, color: "oklch(0.5 0.13 60)", lineHeight: 1.4 }}>
-        §
-      </span>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, lineHeight: 1.5, color: "#2c3033", textWrap: "pretty" }}>
-        <span>
-          Fristen for å reklamere er to år etter overtakelsen, eller fem år for deler som er ment å vare vesentlig lenger. Reklamasjonen må fremsettes innen rimelig tid
-          etter at feilen ble oppdaget (forbrukerkjøpsloven § 27).
-        </span>
-        <span style={{ fontWeight: 600 }}>{children}</span>
-      </div>
-    </div>
+    <Varsel type="advarsel" ikon="§" tittel={children}>
+      <span>{fristTekst(v)}</span>
+    </Varsel>
   );
 }
-
 
 // A date: the phone's own picker on a touch screen, the calendar with a mouse.
 function Datovelger({ etikett, verdi, sett, min, maks }: { etikett: string; verdi: string; sett: (iso: string) => void; min?: string; maks: string }) {
@@ -396,7 +410,7 @@ function Selgervalg({ valgt, velg }: { valgt: Selger | null; velg: (s: Selger | 
         style={{ height: 50, border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "0 14px", font: `16px ${SANS}`, color: INK, outline: "none", background: "#fff", boxSizing: "border-box" }}
       />
       {soker && s.length >= 3 && <span role="status" style={{ fontSize: 13, color: "#5f6468" }}>Søker …</span>}
-      {feil && !soker && s.length >= 3 && <span role="alert" style={{ fontSize: 13, color: "#a3372b" }}>Vi fikk ikke kontakt med Enhetsregisteret. Prøv igjen om litt.</span>}
+      {feil && !soker && s.length >= 3 && <Varsel type="stopp">Vi fikk ikke kontakt med Enhetsregisteret. Prøv igjen om litt.</Varsel>}
       {treff.length > 0 && (
         <div role="listbox" aria-label="Treff i Enhetsregisteret" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, overflow: "hidden" }}>
           {treff.map((f, i) => (
@@ -422,7 +436,7 @@ function Selgervalg({ valgt, velg }: { valgt: Selger | null; velg: (s: Selger | 
       )}
       {trengerSvar && !treff.length && !feil && (
         <span style={{ fontSize: 13, color: "#5f6468", lineHeight: 1.5 }}>
-          Ingen treff. Prøv navnet slik det står i kontrakten, eller organisasjonsnummeret. Vi finner aksjeselskaper og lignende, ikke enkeltpersonforetak.
+          Ingen treff. Prøv navnet slik det står i kontrakten, eller organisasjonsnummeret. Vi søker ikke etter enkeltpersonforetak, fordi navnet på dem er et personnavn.
         </span>
       )}
     </div>
@@ -1135,9 +1149,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                     </button>
                   </div>
                   {oppslagFeil && (
-                    <p role="alert" style={{ margin: 0, fontSize: 14, color: "#a3372b" }}>
-                      {oppslagFeil}
-                    </p>
+                    <Varsel type="stopp">{oppslagFeil}</Varsel>
                   )}
                 </div>
 
@@ -1195,12 +1207,11 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                         setFunn(null);
                       }}
                     />
-                    {datoOk && kjopsdato < aarSiden(5) ? (
-                      <Fristvarsel>Du kjøpte bilen for mer enn fem år siden. Da kan fristen for å reklamere ha gått ut, også for deler som er ment å vare vesentlig lenger.</Fristvarsel>
-                    ) : datoOk && kjopsdato < aarSiden(2) ? (
-                      <Fristvarsel>Du kjøpte bilen for mer enn to år siden. Da kan fristen for å reklamere ha gått ut, med mindre delen er ment å vare vesentlig lenger.</Fristvarsel>
-                    ) : null}
-                    <Merknader {...merkR("kjopsdato")} />
+                    {datoOk && kjopsdato >= aarSiden(5) && kjopsdato < aarSiden(2) && <Fristvarsel v={lovversjon(kjopsdato)}>{OVER_TO_AAR_KJOP}</Fristvarsel>}
+                    <Merknader
+                      stopp={[...(erDato(kjopsdato) ? merk(tidslinje, "kjopsdato").stopp : []), ...merkR("kjopsdato").stopp]}
+                      advarsler={merkR("kjopsdato").advarsler}
+                    />
                   </section>
                 )}
 
@@ -1547,7 +1558,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                   })}
                 </div>
                 {tidslinje.avledet.some((a) => a.tidsnivaa === 3) && (
-                  <Fristvarsel>En eller flere feil viste seg mer enn to år etter overtakelsen. Reklamasjon for disse kan være for sent fremsatt, med mindre delen er ment å vare vesentlig lenger.</Fristvarsel>
+                  <Fristvarsel v={lovversjon(kjopsdato)}>{OVER_TO_AAR_FEIL}</Fristvarsel>
                 )}
               </div>
             )}
@@ -1735,12 +1746,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                         </div>
                       </div>
                     )}
-                    <div role="note" style={{ background: "#eef0f1", borderRadius: 12, padding: "14px 16px", display: "flex", gap: 12, fontSize: 14, lineHeight: 1.5, color: "#2c3033" }}>
-                      <span aria-hidden="true" style={{ font: `600 14px ${MONO}`, color: A }}>
-                        !
-                      </span>
-                      <span style={{ textWrap: "pretty" }}>Husk å legge ved kopi av fakturaer og kvitteringer når du sender brevet. Vedleggene listes opp i brevet.</span>
-                    </div>
+                    <Varsel type="info">Husk å legge ved kopi av fakturaer og kvitteringer. Vedleggene listes opp i brevet.</Varsel>
                   </section>
                 )}
 
@@ -1757,19 +1763,25 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                 </header>
 
                 {alleAdvarsler.length > 0 && (
-                  <section aria-label="Advarsler" data-advarsler style={{ background: "oklch(0.96 0.04 75)", borderRadius: 14, padding: isDesktop ? "18px 22px" : "16px", display: "flex", flexDirection: "column", gap: 12 }}>
-                    <strong style={{ fontSize: 15, color: "#5c3d0a" }}>
-                      Brevet har {alleAdvarsler.length} {alleAdvarsler.length === 1 ? "advarsel" : "advarsler"}
-                      {datoadvarsler ? (datoadvarsler === alleAdvarsler.length ? " om datoer" : `, ${datoadvarsler} av dem om datoer`) : ""}. Se over før du betaler.
-                    </strong>
-                    {alleAdvarsler.map((m, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, fontSize: 14, lineHeight: 1.5, color: "#2c3033" }}>
-                        <span style={{ flex: 1, textWrap: "pretty" }}>{m.melding}</span>
-                        <button type="button" onClick={() => gaaTil(m.felt, m.feilId)} style={{ ...KNAPP, fontSize: 14, fontWeight: 600, color: A, whiteSpace: "nowrap" }}>
-                          Endre
-                        </button>
-                      </div>
-                    ))}
+                  <section aria-label="Advarsler" data-advarsler>
+                    <Varsel
+                      type="advarsel"
+                      tittel={
+                        <>
+                          Brevet har {alleAdvarsler.length} {alleAdvarsler.length === 1 ? "advarsel" : "advarsler"}
+                          {datoadvarsler ? (datoadvarsler === alleAdvarsler.length ? " om datoer" : `, ${datoadvarsler} av dem om datoer`) : ""}. Se over før du betaler.
+                        </>
+                      }
+                    >
+                      {alleAdvarsler.map((m, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                          <span style={{ flex: 1 }}>{m.melding}</span>
+                          <button type="button" onClick={() => gaaTil(m.felt, m.feilId)} style={{ ...KNAPP, fontSize: 14, fontWeight: 600, color: A, whiteSpace: "nowrap" }}>
+                            Endre
+                          </button>
+                        </div>
+                      ))}
+                    </Varsel>
                   </section>
                 )}
 
@@ -1825,6 +1837,8 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                   </tbody>
                 </table>
 
+                <Varsel type="info">Tjenesten gir ikke juridisk rådgivning. Brevet bygges av dine svar, og du er ansvarlig for at de stemmer.</Varsel>
+
                 <button
                   type="button"
                   onClick={lagBrev}
@@ -1861,9 +1875,7 @@ function SkjemaInnhold({ start, lagre }: { start: Lagret | null; lagre: boolean 
                   <span style={OVERLINE}>Steg 5 av {STEPS.length} · Brev</span>
                   <h1 style={H1}>Vi fikk ikke laget brevet</h1>
                 </header>
-                <p role="alert" style={{ margin: 0, padding: "18px 22px", fontSize: 14, color: "#a3372b", background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14 }}>
-                  {funn && !funn.ok ? funn.melding : brevet && !brevet.ok ? brevet.melding : ""}
-                </p>
+                <Varsel type="stopp">{funn && !funn.ok ? funn.melding : brevet && !brevet.ok ? brevet.melding : ""}</Varsel>
                 <button
                   type="button"
                   onClick={lagBrev}

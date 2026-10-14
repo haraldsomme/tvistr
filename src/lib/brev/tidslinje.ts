@@ -6,7 +6,7 @@
 //
 // Impossible orders stop; possible but weakening ones warn.
 import type { VisteSegValg } from "@/lib/feil/kategorier";
-import { type Lovversjon, lovversjon } from "./paragrafer";
+import { type Lovversjon, lovRef, lovversjon } from "./paragrafer";
 
 export type Tidsniva = 1 | 2 | 3;
 
@@ -78,6 +78,15 @@ export function tidsnivaFor(kjop: string, oppdaget: string, v: Lovversjon = lovv
   return { dager, tidsnivaa, formodning: tidsnivaa === 1, intervall, ...(naer && { naerFrist: naer }) };
 }
 
+// The notices the form shows about the limits for complaining. The paragraph numbers come from
+// paragrafer.ts for the version that applies to the purchase, as in the letter.
+export const fristTekst = (v: Lovversjon) =>
+  `Fristen for å reklamere er fem år for deler som er ment å vare vesentlig lenger enn to år, ellers to år, regnet fra overtakelsen (${lovRef(v, "reklamasjon_frister")}). Reklamasjonen må i tillegg fremsettes innen rimelig tid etter at feilen ble oppdaget (${lovRef(v, "reklamasjon")}).`;
+export const OVER_TO_AAR_KJOP =
+  "Det er mer enn to år siden du overtok bilen. For biler gjelder som regel en frist på fem år, men for slitedeler kan fristen være to år. Selger kan bruke det.";
+export const OVER_TO_AAR_FEIL =
+  "En eller flere feil viste seg mer enn to år etter at du overtok bilen. For biler gjelder som regel en frist på fem år, men for slitedeler kan fristen være to år. Selger kan bruke det.";
+
 const FRISTNAVN = { "6mnd": "seks måneder", "2aar": "to år", "5aar": "fem år" } as const;
 
 export function vurderTidslinje(t: Tidslinje, v: Lovversjon = lovversjon(t.kjop)): Vurdering {
@@ -88,7 +97,7 @@ export function vurderTidslinje(t: Tidslinje, v: Lovversjon = lovversjon(t.kjop)
   if (!erDato(t.kjop)) return { stopp: [{ regel: "kjop_mangler", felt: "kjopsdato", melding: "Velg kjøpsdatoen." }], advarsler, avledet };
   if (t.kjop > t.idag) stopp.push({ regel: "kjop_fremtid", felt: "kjopsdato", melding: "Kjøpsdatoen kan ikke være i fremtiden." });
   if (t.kjop < plussManeder(t.idag, -FEM_AAR))
-    stopp.push({ regel: "kjop_fem_aar", felt: "kjopsdato", melding: "Det er mer enn fem år siden kjøpet. Da er fristen for å reklamere ute (forbrukerkjøpsloven § 27)." });
+    stopp.push({ regel: "kjop_fem_aar", felt: "kjopsdato", melding: `Det er mer enn fem år siden du overtok bilen. Den lengste fristen for å reklamere er fem år (${lovRef(v, "reklamasjon_5ar")}), og dette brevet kan ikke brukes etter det. Mener du selger har holdt noe skjult, eller har du en garanti som gjelder lenger, bør du kontakte Forbrukerrådet eller en advokat.` });
 
   // A date that is missing is required elsewhere; here only dates that are there are judged.
   const gyldige = t.feil.filter((f) => erDato(f.oppdaget) && f.oppdaget > t.kjop && f.oppdaget <= t.idag);
@@ -137,7 +146,7 @@ export function vurderTidslinje(t: Tidslinje, v: Lovversjon = lovversjon(t.kjop)
         regel: "reklamasjon_sen",
         felt: tidligere ? "reklamert" : "oppdaget",
         feilId: f.id,
-        melding: "Du reklamerer mer enn to måneder etter at feilen ble oppdaget. Selger kan hevde at reklamasjonen er for sen (forbrukerkjøpsloven § 27). Brevet sendes likevel.",
+        melding: `Reklamasjon innen to måneder etter at feilen ble oppdaget er alltid i tide. Etter det vurderes det om du reklamerte innen rimelig tid. Du reklamerer mer enn to måneder etter at feilen ble oppdaget. Selger kan hevde at reklamasjonen er for sen (${lovRef(v, "reklamasjon")}). Du kan likevel lage brevet.`,
       });
   }
   return { stopp, advarsler, avledet };

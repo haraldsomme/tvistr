@@ -29,6 +29,7 @@ export const POENG = [
   "formodning", // a defect that shows itself early is presumed to have existed at delivery
   "garanti",
   "reklamasjon", // notice of a defect
+  "reklamasjon_frister", // the two limits together, as the form's notices name them
   "reklamasjon_2ar", // the two-year limit
   "reklamasjon_5ar", // the five-year limit
   "retting",
@@ -51,6 +52,7 @@ export const PARAGRAFER: Record<Lovversjon, Record<Poeng, string | null>> = {
     // (avtale, avvik) and of what the seller said (uriktig). Kept for the table's completeness.
     garanti: "§ 18 a",
     reklamasjon: "§ 27 første ledd",
+    reklamasjon_frister: "§ 27 annet ledd",
     reklamasjon_2ar: "§ 27 annet ledd første punktum",
     reklamasjon_5ar: "§ 27 annet ledd annet punktum",
     retting: "§§ 29 og 30",
@@ -70,6 +72,7 @@ export const PARAGRAFER: Record<Lovversjon, Record<Poeng, string | null>> = {
     formodning: "§ 18 annet ledd",
     garanti: "§ 18 a",
     reklamasjon: "§ 27 første ledd",
+    reklamasjon_frister: "§ 27 annet ledd",
     reklamasjon_2ar: "§ 27 annet ledd første punktum",
     reklamasjon_5ar: "§ 27 annet ledd annet punktum",
     retting: "§§ 29 og 30",

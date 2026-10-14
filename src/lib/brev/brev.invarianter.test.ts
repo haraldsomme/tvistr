@@ -15,6 +15,7 @@ import { overslagSum, RAPPORT_PUNKTER, type Rapport, SELGER_SVAR, VERKSTED_HVEM 
 import { vurderRiktighet } from "./riktighet";
 import { dagerMellom, plussDager, vurderTidslinje } from "./tidslinje";
 import type { Brev, Brevfeil, Brevsak, Kilde, Setning } from "./typer";
+import { kategorivedlegg } from "./vedlegg";
 
 const PRAKSIS = Object.values(praksisfil as Record<string, Brevsak["praksis"]>).filter((p): p is NonNullable<Brevsak["praksis"]> => !!p);
 const FORBUDT = /\b(klart|åpenbart|utvilsomt|garantert)\b|jeg er klar over|jeg mener/i;
@@ -122,6 +123,7 @@ function avvik(s: Brevsak, b: Brev, golden: boolean): string[] {
   if ((tekst.includes("Rapporten følger vedlagt") || tekst.includes("som følger vedlagt")) && !har("Rapport fra")) ut.push("rapport nevnt, ikke i vedlegg");
   if (tekst.includes("Kvitteringer vedlegges") && !har("Kvitteringer for utlegg")) ut.push("kvitteringer nevnt, ikke i vedlegg");
   if (har("Rapport fra") && !s.feil.some((f) => f.rapport)) ut.push("rapport i vedlegg uten rapport");
+  if (tekst.includes("Dokumentasjon vedlegges") && !s.feil.some((f) => kategorivedlegg(f).some((t) => har(t)))) ut.push("dokumentasjon nevnt, ikke i vedlegg");
   if (har("Annonse/kjøpekontrakt") && !s.feil.some((f) => f.opplysning === "skriftlig")) ut.push("annonse i vedlegg uten skriftlig opplysning");
   if (har("Kvitteringer for utlegg") && !s.utlegg.length) ut.push("kvitteringer uten utlegg");
   if (har("Tidligere reklamasjon") && s.kontakt?.form !== "skriftlig") ut.push("tidligere reklamasjon uten skriftlig reklamasjon");

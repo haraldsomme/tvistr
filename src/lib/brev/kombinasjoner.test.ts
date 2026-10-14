@@ -126,7 +126,7 @@ describe("avsnitt 3: rettslig vurdering", () => {
   });
 
   it("tidspunkt gir samme tekst som sist for hver kombinasjon", async () => {
-    const ut = samle({ lov: LOV, feilsett: ["teknisk", "to_tekniske_ulik_tid", "teknisk_og_opplysning", "opplysning", "vet_ikke"] as const, tid: TID, verksted: KILDE, kontakt: [false, true] }, (v) =>
+    const ut = samle({ lov: LOV, feilsett: ["teknisk", "to_tekniske_ulik_tid", "teknisk_og_opplysning", "opplysning", "garanti", "vet_ikke"] as const, tid: TID, verksted: KILDE, kontakt: [false, true] }, (v) =>
       tekst(tidspunkt(lagSak(v.lov, { kontakt: v.kontakt ? lagKontakt(v.lov) : null, feil: FEILSETT[v.feilsett](v.tid, "nei", v.verksted) }))),
     );
     await expect(ut).toMatchFileSnapshot(snapshot("rettslig-tidspunkt"));

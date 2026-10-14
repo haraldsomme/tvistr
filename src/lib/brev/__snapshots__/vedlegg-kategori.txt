@@ -1,0 +1,180 @@
+30 ulike tekster over kategori(7) × opplysning(3) × verksted(2)
+
+## {"kategori":"km","opplysning":"skriftlig","verksted":"skriftlig"}
+Kilometerstand: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Utskrift fra Statens vegvesen
+Annonse/kjøpekontrakt
+
+## {"kategori":"km","opplysning":"skriftlig","verksted":"nei"}
+Kilometerstand: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+Utskrift fra Statens vegvesen
+Annonse/kjøpekontrakt
+
+## {"kategori":"km","opplysning":"muntlig","verksted":"skriftlig"} (+1 like)
+Kilometerstand: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Utskrift fra Statens vegvesen
+
+## {"kategori":"km","opplysning":"muntlig","verksted":"nei"} (+1 like)
+Kilometerstand: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+Utskrift fra Statens vegvesen
+
+## {"kategori":"servicehefte","opplysning":"skriftlig","verksted":"skriftlig"}
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Servicehefte
+Annonse/kjøpekontrakt
+
+## {"kategori":"servicehefte","opplysning":"skriftlig","verksted":"nei"}
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+Servicehefte
+Annonse/kjøpekontrakt
+
+## {"kategori":"servicehefte","opplysning":"muntlig","verksted":"skriftlig"} (+1 like)
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Servicehefte
+
+## {"kategori":"servicehefte","opplysning":"muntlig","verksted":"nei"} (+1 like)
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+Servicehefte
+
+## {"kategori":"service","opplysning":"skriftlig","verksted":"skriftlig"}
+Service ikke utført: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Servicehefte
+Annonse/kjøpekontrakt
+
+## {"kategori":"service","opplysning":"skriftlig","verksted":"nei"}
+Service ikke utført: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+Servicehefte
+Annonse/kjøpekontrakt
+
+## {"kategori":"service","opplysning":"muntlig","verksted":"skriftlig"} (+1 like)
+Service ikke utført: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Servicehefte
+
+## {"kategori":"service","opplysning":"muntlig","verksted":"nei"} (+1 like)
+Service ikke utført: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+Servicehefte
+
+## {"kategori":"skade","opplysning":"skriftlig","verksted":"skriftlig"}
+Skade og kollisjon: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Utskrift fra Statens vegvesen eller skaderapport
+Annonse/kjøpekontrakt
+
+## {"kategori":"skade","opplysning":"skriftlig","verksted":"nei"}
+Skade og kollisjon: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+Utskrift fra Statens vegvesen eller skaderapport
+Annonse/kjøpekontrakt
+
+## {"kategori":"skade","opplysning":"muntlig","verksted":"skriftlig"} (+1 like)
+Skade og kollisjon: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Utskrift fra Statens vegvesen eller skaderapport
+
+## {"kategori":"skade","opplysning":"muntlig","verksted":"nei"} (+1 like)
+Skade og kollisjon: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+Utskrift fra Statens vegvesen eller skaderapport
+
+## {"kategori":"eu","opplysning":"skriftlig","verksted":"skriftlig"}
+EU-kontroll og registrering: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+EU-kontrollseddel
+Annonse/kjøpekontrakt
+
+## {"kategori":"eu","opplysning":"skriftlig","verksted":"nei"}
+EU-kontroll og registrering: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+EU-kontrollseddel
+Annonse/kjøpekontrakt
+
+## {"kategori":"eu","opplysning":"muntlig","verksted":"skriftlig"} (+1 like)
+EU-kontroll og registrering: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+EU-kontrollseddel
+
+## {"kategori":"eu","opplysning":"muntlig","verksted":"nei"} (+1 like)
+EU-kontroll og registrering: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+EU-kontrollseddel
+
+## {"kategori":"km og skade","opplysning":"skriftlig","verksted":"skriftlig"}
+Kilometerstand; skade og kollisjon: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Utskrift fra Statens vegvesen
+Utskrift fra Statens vegvesen eller skaderapport
+Annonse/kjøpekontrakt
+
+## {"kategori":"km og skade","opplysning":"skriftlig","verksted":"nei"}
+Kilometerstand; skade og kollisjon: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+Utskrift fra Statens vegvesen
+Utskrift fra Statens vegvesen eller skaderapport
+Annonse/kjøpekontrakt
+
+## {"kategori":"km og skade","opplysning":"muntlig","verksted":"skriftlig"} (+1 like)
+Kilometerstand; skade og kollisjon: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Utskrift fra Statens vegvesen
+Utskrift fra Statens vegvesen eller skaderapport
+
+## {"kategori":"km og skade","opplysning":"muntlig","verksted":"nei"} (+1 like)
+Kilometerstand; skade og kollisjon: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
+---
+Utskrift fra Statens vegvesen
+Utskrift fra Statens vegvesen eller skaderapport
+
+## {"kategori":"turbo","opplysning":"skriftlig","verksted":"skriftlig"}
+Turbo: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+Annonse/kjøpekontrakt
+
+## {"kategori":"turbo","opplysning":"skriftlig","verksted":"nei"}
+Turbo: Feilen viste seg den 10. mars 2025.
+---
+Annonse/kjøpekontrakt
+
+## {"kategori":"turbo","opplysning":"muntlig","verksted":"skriftlig"}
+Turbo: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+
+## {"kategori":"turbo","opplysning":"muntlig","verksted":"nei"}
+Turbo: Feilen viste seg den 10. mars 2025.
+---
+(ingen)
+
+## {"kategori":"turbo","opplysning":"nei","verksted":"skriftlig"}
+Turbo: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dere ga ingen opplysninger om dette før kjøpet.
+---
+Rapport fra Nordre Bil og Verksted AS av 10. april 2025
+
+## {"kategori":"turbo","opplysning":"nei","verksted":"nei"}
+Turbo: Feilen viste seg den 10. mars 2025. Dere ga ingen opplysninger om dette før kjøpet.
+---
+(ingen)

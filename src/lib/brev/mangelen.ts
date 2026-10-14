@@ -2,6 +2,7 @@ import { dato, FORSOK, naar } from "./format";
 import { feilnavn, ledd } from "./feiltype";
 import { forsokAv, RAPPORT_PUNKTER, VERKSTED_HVEM } from "./rapport";
 import type { Brevsak, Setning } from "./typer";
+import { kategorivedlegg } from "./vedlegg";
 
 // 2. Mangelen: one block per defect in the order the buyer chose, then the repair attempts.
 export function mangelen(s: Brevsak): Setning[][] {
@@ -26,6 +27,7 @@ export function mangelen(s: Brevsak): Setning[][] {
     if (typer.includes("vet_ikke"))
       ut.push({ tekst: "Årsaken er ennå ikke klarlagt, og jeg tar forbehold om å utvide reklamasjonen når den er det.", kilde: `${k}.hoved` });
     if (typer.includes("teknisk") && f.opplysning === "nei") ut.push({ tekst: "Dere ga ingen opplysninger om dette før kjøpet.", kilde: `${k}.opplysning` });
+    if (kategorivedlegg(f).length) ut.push({ tekst: "Dokumentasjon vedlegges.", kilde: `${k}.under` });
     return ut;
   });
   const forsok = forsokAv(s);

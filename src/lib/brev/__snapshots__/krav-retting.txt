@@ -1,0 +1,19 @@
+6 ulike tekster over saker(16) × krav(2)
+
+## {"saker":"teknisk","krav":"prisavslag"} (+5 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+
+## {"saker":"teknisk","krav":"heving"} (+5 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelen selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+
+## {"saker":"service","krav":"prisavslag"} (+8 like)
+På dette grunnlaget krever jeg prisavslag, jf. § 31.
+
+## {"saker":"service","krav":"heving"} (+8 like)
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelen er ikke uvesentlig. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon.
+
+## {"saker":"km og turbo","krav":"prisavslag"}
+På dette grunnlaget krever jeg prisavslag, jf. § 31. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.
+
+## {"saker":"km og turbo","krav":"heving"}
+På dette grunnlaget hever jeg kjøpet, jf. § 32. Mangelene er ikke uvesentlige. Jeg krever kjøpesummen på kr 185 000 tilbakebetalt, mot at bilen stilles til deres disposisjon. Dersom dere ønsker å rette mangelene selv, ber jeg om beskjed innen fristen under. Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30.

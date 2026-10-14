@@ -10,7 +10,8 @@ Bilen svarer ikke til de opplysningene dere ga om serviceheftet, og har en mange
 Dere har forsømt å opplyse om serviceheftet, som dere burde kjenne til og som jeg hadde grunn til å regne med å få, jf. forbrukerkjøpsloven § 16 første ledd bokstav b.
 
 ## {"lov":"før_2024","somDenEr":"ja","feilsett":"garanti","opplysning":"skriftlig","kontakt":false} (+35 like)
-Bilen ble ikke levert med den garantien som ble avtalt, jf. forbrukerkjøpsloven § 15 og § 18 a.
+Bilen ble ikke levert med den garantien som ble avtalt.
+Den svarer dermed ikke til avtalen, jf. forbrukerkjøpsloven § 15 første ledd, jf. § 16 første ledd bokstav a, og til opplysningene dere ga om garantien, jf. § 16 første ledd bokstav c.
 
 ## {"lov":"før_2024","somDenEr":"ja","feilsett":"vet_ikke","opplysning":"skriftlig","kontakt":false} (+8 like)
 Bilen har en funksjonssvikt som viste seg den 2. juli 2023, og jeg reklamerer herved på denne, jf. forbrukerkjøpsloven § 27 første ledd.

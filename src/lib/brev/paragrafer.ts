@@ -21,6 +21,7 @@ export type Lovversjon = "før_2024" | "etter_2024";
 
 export const POENG = [
   "krav", // what the thing must be like
+  "avtale", // what the thing must be like: what follows from the contract
   "avvik", // defect: not as § 15 requires
   "tilbakeholdt", // defect: the seller kept back information
   "uriktig", // defect: the thing does not match what the seller said
@@ -40,11 +41,14 @@ export type Poeng = (typeof POENG)[number];
 export const PARAGRAFER: Record<Lovversjon, Record<Poeng, string | null>> = {
   før_2024: {
     krav: "§ 15",
+    avtale: "§ 15 første ledd",
     avvik: "§ 16 første ledd bokstav a",
     tilbakeholdt: "§ 16 første ledd bokstav b",
     uriktig: "§ 16 første ledd bokstav c",
     forbehold: "§ 17 første ledd bokstav a",
     formodning: "§ 18 annet ledd",
+    // Not cited as the ground of a defect: a warranty not delivered is a breach of the contract
+    // (avtale, avvik) and of what the seller said (uriktig). Kept for the table's completeness.
     garanti: "§ 18 a",
     reklamasjon: "§ 27 første ledd",
     reklamasjon_2ar: "§ 27 annet ledd første punktum",
@@ -56,6 +60,7 @@ export const PARAGRAFER: Record<Lovversjon, Record<Poeng, string | null>> = {
   },
   etter_2024: {
     krav: "§ 15",
+    avtale: "§ 15 første ledd",
     avvik: "§ 16 første ledd bokstav a",
     tilbakeholdt: "§ 16 første ledd bokstav b",
     uriktig: "§ 16 første ledd bokstav c",

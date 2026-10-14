@@ -54,13 +54,13 @@ Brevet er i første person og formelt, uten forsterkere («klart», «åpenbart�
 |---|---|
 | Hode | Kjøper og selger har adresse eller ikke. Mangler kjøperens poststed, står bare datoen til høyre. Før betaling er avsenderen tom. |
 | 1. Bakgrunn | «Som den er» ja / nei / vet ikke. Kontakt med selger: reklamasjon skriftlig / muntlig, og selgers svar (se under). Selger sa noe om en opplysningsfeil (skriftlig / muntlig). Første registreringsår kjent eller ikke. |
-| 2. Mangelen | Per feil: når feilen viste seg (dato, «Feilen viste seg den 12. mai 2026» eller «i mai 2026» når datoen er omtrentlig), beskrivelse (kjøperens egne ord, uendret), verksted (muntlig gir én setning, skriftlig gir rapportavsnittet, se under), «vet ikke ennå», og for tekniske feil «selger sa ingenting». Til slutt rettingsforsøk (1, 2, 3 eller flere). |
-| 3. Mangel | Per type feil: teknisk, opplysning der selger sa noe, opplysning der selger ikke sa noe, garanti, vet ikke. Like typer slås sammen til én setning. «Som den er» etter lovversjon (se under). |
-| 3. Tidspunkt | Bare tekniske feil. Tidsnivået regnes fra datoen feilen ble oppdaget (`tidslinje.ts`). Formodningen gjelder (§ 18 annet ledd; to år fra 2024, ellers seks måneder), eller reklamasjonen er i tide (§ 27: to år eller fem år, regnet fra tidligere reklamasjon om den finnes, ellers fra brevets dato). Er feilene delt mellom de to, sier hver setning hvilke feil den gjelder. Rapporten legges til som bevis (se under). |
+| 2. Mangelen | Per feil: når feilen viste seg (dato, «Feilen viste seg den 12. mai 2026» eller «i mai 2026» når datoen er omtrentlig), beskrivelse (kjøperens egne ord, uendret), verksted (muntlig gir én setning, skriftlig gir rapportavsnittet, se under), «vet ikke ennå», og for tekniske feil «selger sa ingenting». For feil med dokumenter som hører til kategorien (kilometerstand, service, skade, EU-kontroll) til slutt «Dokumentasjon vedlegges.». Til slutt rettingsforsøk (1, 2, 3 eller flere). |
+| 3. Mangel | Per type feil: teknisk, opplysning der selger sa noe, opplysning der selger ikke sa noe, garanti, vet ikke. Garanti er avvik fra avtalen (§ 15 første ledd, jf. § 16 første ledd bokstav a) og uriktig opplysning om garantien (§ 16 første ledd bokstav c); § 18 a brukes ikke. Like typer slås sammen til én setning. «Som den er» etter lovversjon (se under). |
+| 3. Tidspunkt | Tidsnivået regnes fra datoen feilen ble oppdaget (`tidslinje.ts`). Formodningen (§ 18 annet ledd; to år fra 2024, ellers seks måneder) og bevisene fra rapporten gjelder bare tekniske feil. Fristsetningen (§ 27: to år eller fem år, regnet fra tidligere reklamasjon om den finnes, ellers fra brevets dato) gjelder tekniske feil utenfor formodningen og alle andre feil, også garanti, opplysning og «vet ikke ennå», som viste seg mer enn to år etter kjøpet. Er feilene delt mellom de to, sier hver setning hvilke feil den gjelder. Rapporten legges til som bevis (se under). |
 | 3. Praksis | Vedtaksavsnittet uendret. Uten kandidat (lovsetningen) utelates underavsnittet. |
-| 4. Krav | Retting (med hast når verkstedet fraråder bruk), prisavslag (med verkstedenes overslag, summert) eller heving (med rettingsforsøk, og at retting ikke vil bli tilbudt når selger avviste eller ikke svarte). Erstatning for utlegg. Selgerens rett til å rette, når kravet er prisavslag eller heving uten rettingsforsøk, men ikke ved heving etter at selger avviste eller ikke svarte. |
+| 4. Krav | Retting (med hast når verkstedet fraråder bruk), prisavslag (med verkstedenes overslag, summert) eller heving (med rettingsforsøk, og at retting ikke vil bli tilbudt når selger avviste eller ikke svarte). Erstatning for utlegg. Selgerens rett til å rette, når kravet er prisavslag eller heving uten rettingsforsøk, men ikke ved heving etter at selger avviste eller ikke svarte, og ikke når alle feilene gjelder det selgeren sa eller bilens historikk, som ikke kan rettes (service, kilometerstand, tidligere bruk, import, skade, pant). Garanti, utstyr, ombygging, EU-kontroll og tekniske feil beholder tilbudet, og det står også i en sak der bare noen av feilene er av den første typen. |
 | 5. Frist | E-post om Vipps har den, ellers telefon. |
-| Vedlegg | Én linje per rapport («Rapport fra {verksted} av {dato}»; samme verksted og dato er én linje), annonse/kjøpekontrakt (selger sa noe skriftlig), kvitteringer, tidligere reklamasjon (skriftlig). Utelates når listen er tom. |
+| Vedlegg | Én linje per rapport («Rapport fra {verksted} av {dato}»; samme verksted og dato er én linje), dokumentene som hører til kategorien (kilometerstand: «Utskrift fra Statens vegvesen»; service og servicehefte: «Servicehefte»; skade: «Utskrift fra Statens vegvesen eller skaderapport»; EU-kontroll: «EU-kontrollseddel»; samme tekst bare én gang), annonse/kjøpekontrakt (selger sa noe skriftlig), kvitteringer, tidligere reklamasjon (skriftlig). Utelates når listen er tom. |
 
 ### Kontakt med selger
 
@@ -119,7 +119,8 @@ Kontrollert 2026-10-13 mot primærkilder, ikke fra hukommelsen:
 | mangel, uriktig opplysning | § 16 første ledd bokstav c | § 16 første ledd bokstav c |
 | «som den er» | § 17 første ledd bokstav a | **§ 15 annet ledd** (§ 17 er omskrevet) |
 | formodning | § 18 annet ledd (seks måneder) | § 18 annet ledd (to år) |
-| garanti | § 18 a | § 18 a |
+| avtalen (garanti som ikke er levert) | § 15 første ledd | § 15 første ledd |
+| garanti | § 18 a, men brukes ikke som mangelsgrunnlag | § 18 a, men brukes ikke som mangelsgrunnlag |
 | reklamasjon | § 27 første ledd | § 27 første ledd |
 | to år / fem år | § 27 annet ledd første / annet punktum | § 27 annet ledd første / annet punktum |
 | retting | §§ 29 og 30 | §§ 29 og 30 |
@@ -172,7 +173,8 @@ Gjort der planteksten ville påstått mer enn feltene vet, eller ikke fulgte lov
 - Formodningen skrives med lovens ord («formodes») og lovens periode (to år fra 2024, ellers seks måneder).
 - «Unnlatt å opplyse» er blitt «forsømt å opplyse» (§ 16 første ledd bokstav b).
 - Selgerens rett til å rette har lovens ord fra § 30: «uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid, jf. §§ 29 og 30».
-- Avsnitt 5 nevner **Forbrukerklageutvalget**, ikke Forbrukertilsynet. Utvalget avgjør sakene vedtakene kommer fra, og er administrert av Forbrukertilsynet. Ordet står i `INSTANS` i `frist.ts`.
+- Avsnitt 5 nevner **Forbrukertilsynet**, som mekler. Forbrukerklageutvalget behandler saken etterpå, og vedtakene brevet viser til er utvalgets. Ordet står i `INSTANS` i `frist.ts`.
+- **§ 18 a** (garantier) finnes med samme innhold i første til tredje ledd både før og etter 2024, og fjerde ledd er nytt (kontrollert på Lovdata 2026-10-14). Paragrafen står i tabellen, men brukes ikke som mangelsgrunnlag: en garanti som ikke er levert er avvik fra avtalen (§ 15 første ledd) og uriktig opplysning (§ 16 første ledd bokstav c).
 - Feilene står i den rekkefølgen kjøperen valgte dem. Etter en omlasting av siden er det kategorirekkefølgen.
 - Flere underkategorier under én feil skrives «Turbo og kjøling og topplokk», eller med semikolon når et navn selv har «og» i seg («Dekk og felger; nøkler og tilbehør»).
 - «Utstyr», «service» og «historikk» uten underkategori regnes som opplysning om hva selgeren sa (ikke som en teknisk feil), og «garanti» som garanti.
@@ -194,7 +196,6 @@ Datoene og rekkefølgen mellom dem vurderes av `tidslinje.ts`, resten av `riktig
 ## Kjente gap
 
 - **§ 27 for feil som viste seg etter to år.** Brevet sier «innen fristen på fem år», men ikke at delen er ment å vare vesentlig lenger enn to år (§ 27 annet ledd annet punktum), og ikke noe om «innen rimelig tid» etter at feilen ble oppdaget (§ 27 første ledd). Skjemaet spør ikke om noen av dem.
-- **«Vet ikke ennå» uten fristsetning.** Setningen om at reklamasjonen er i tide lages bare for tekniske feil. Et symptom som viste seg mer enn to år etter overtakelsen får ingen setning om § 27 annet ledd.
 - **Prisavslag «tilsvarende utbedringskostnaden».** Etter § 31 settes prisavslaget ut fra forholdet mellom verdien med og uten mangelen, ikke utbedringskostnaden. Setningen er slik planen ba om, men bør vurderes av jurist.
 - **Flere feil i én setning.** En mangelsetning som slår sammen flere feil av samme type nevner ikke hvilke (avsnitt 2 gjør det).
 - **Gammel § 17.** Ordlyden før 2024 står slik Prop. 49 LS gjengir den, siden Lovdata bare viser gjeldende lov.

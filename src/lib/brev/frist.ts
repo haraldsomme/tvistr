@@ -1,8 +1,8 @@
 import type { Brevsak, Setning } from "./typer";
 
-// Where the case goes if the seller does not answer. The complaints committee is administered by the
-// Consumer Authority; the decisions the letter cites are the committee's.
-export const INSTANS = "Forbrukerklageutvalget";
+// Where the case goes if the seller does not answer. The buyer complains to the Consumer Authority,
+// which mediates; the complaints committee, whose decisions the letter cites, comes after that.
+export const INSTANS = "Forbrukertilsynet";
 
 // 5. Frist for tilbakemelding. The reply address is the e-mail when Vipps has one, otherwise the
 // telephone number. Without a buyer (before payment) there is no address to give.

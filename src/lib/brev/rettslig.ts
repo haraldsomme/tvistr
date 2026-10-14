@@ -65,7 +65,16 @@ export function mangel(s: Brevsak): Setning[] {
     });
 
   const garanti = alle.filter((l) => l.type === "garanti");
-  if (garanti.length) ut.push({ tekst: `Bilen ble ikke levert med den garantien som ble avtalt${henv("krav", "garanti")}.`, kilde: kilde(v, `${idx(garanti)}.hoved`, "krav", "garanti") });
+  // A warranty that was agreed and not delivered is a breach of the contract and of what the seller
+  // said about it. § 18 a is not the ground of the defect.
+  if (garanti.length) {
+    const ref = (p: Poeng) => (nevnt ? parRef(v, p) : lov(p));
+    ut.push({ tekst: "Bilen ble ikke levert med den garantien som ble avtalt.", kilde: `${idx(garanti)}.hoved` });
+    ut.push({
+      tekst: `Den svarer dermed ikke til avtalen, jf. ${ref("avtale")}, jf. ${ref("avvik")}, og til opplysningene dere ga om garantien, jf. ${ref("uriktig")}.`,
+      kilde: kilde(v, `${idx(garanti)}.hoved; ${idx(garanti)}.opplysning`, "avtale", "avvik", "uriktig"),
+    });
+  }
 
   // No claim of a defect before the cause is known: the letter only gives notice.
   const vet = alle.filter((l) => l.type === "vet_ikke");
@@ -81,18 +90,25 @@ export function mangel(s: Brevsak): Setning[] {
 }
 
 // Tidspunkt: whether the defect is presumed to have existed at delivery, or the notice is in time.
-// Only for technical defects: for what the seller said, the time of showing is of no consequence,
-// and for a symptom without a known cause there is no defect to date yet.
+// The presumption and the proof of what the defect was at delivery are for technical defects only:
+// for what the seller said, the time of showing is of no consequence, and for a symptom without a
+// known cause there is no defect to date yet. The time limit of § 27 is for every kind of defect that
+// showed itself more than two years after delivery.
 export function tidspunkt(s: Brevsak): Setning[] {
   const v = lovversjon(s.kjopsdato);
   const tek = unike(ledd(s.feil).filter((l) => l.type === "teknisk").map((l) => l.feil));
-  if (!tek.length) return [];
+  const sene = unike(ledd(s.feil).filter((l) => l.type !== "teknisk").map((l) => l.feil)).filter((f) => !tek.includes(f) && tidsnivaFor(s.kjopsdato, f.oppdaget, v).tidsnivaa === 3);
+  if (!tek.length && !sene.length) return [];
   const i = (f: Brevfeil) => s.feil.indexOf(f);
   const med = (fs: Brevfeil[]) => `skjema:feil[${fs.map(i).join(",")}].oppdaget`;
   // The time level is worked out from the day the defect was discovered (tidslinje.ts).
   const innenFristen = (f: Brevfeil) => tidsnivaFor(s.kjopsdato, f.oppdaget, v).tidsnivaa === 1;
   const gjelder = tek.filter(innenFristen);
   const utenfor = tek.filter((f) => !innenFristen(f));
+  // The defects the time limit is about: the technical ones outside the presumption, and the late others.
+  const frister = [...utenfor, ...sene];
+  // The time-limit sentence says which defects it is about when it does not cover all of those it speaks of.
+  const fristFeil = frister.length < tek.length + sene.length ? `For ${liste(frister.map((f) => smaa(feilnavn(f))))}: ` : "";
   // With defects in both groups each sentence says which defects it is about.
   const prefiks = (fs: Brevfeil[]) => (gjelder.length && utenfor.length ? `For ${liste(fs.map((f) => smaa(feilnavn(f))))}: ` : "");
   const mangelen = (fs: Brevfeil[]) => (fs.length > 1 ? "Mangelene" : "Mangelen");
@@ -116,16 +132,19 @@ export function tidspunkt(s: Brevsak): Setning[] {
       });
   }
 
-  if (utenfor.length) {
+  if (frister.length) {
     // The notice is dated by the earlier one if the buyer has given notice before, otherwise by this letter.
     const sendt = s.kontakt?.dato ?? s.dato;
     const poeng = sendt <= plussManeder(s.kjopsdato, 24) ? "reklamasjon_2ar" : sendt <= plussManeder(s.kjopsdato, 60) ? "reklamasjon_5ar" : null;
     // Past five years there is nothing to say: the form and the server turn such a case away.
     if (poeng)
       ut.push({
-        tekst: `${prefiks(utenfor)}Reklamasjonen er fremsatt innen ${poeng === "reklamasjon_2ar" ? "to år" : "fristen på fem år"} etter at bilen ble levert${jf(v, poeng)}.`,
-        kilde: kilde(v, `skjema:kjopsdato; ${s.kontakt ? "skjema:kontakt" : "fast:dato"}`, poeng),
+        tekst: `${fristFeil}Reklamasjonen er fremsatt innen ${poeng === "reklamasjon_2ar" ? "to år" : "fristen på fem år"} etter at bilen ble levert${jf(v, poeng)}.`,
+        kilde: kilde(v, `${med(frister)}; skjema:kjopsdato; ${s.kontakt ? "skjema:kontakt" : "fast:dato"}`, poeng),
       });
+  }
+
+  if (utenfor.length) {
     // The proof of what the defect was at delivery. The report that says so is cited by its date;
     // a report that does not is only referred to as documentation; no report, no sentence.
     const medRapport = utenfor.filter((f) => f.rapport);

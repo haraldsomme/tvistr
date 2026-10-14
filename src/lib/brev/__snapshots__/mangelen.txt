@@ -109,58 +109,58 @@ Turbo: Feilen viste seg den 10. september 2026. Dere ga ingen opplysninger om de
 Turbo: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Dere ga ingen opplysninger om dette før kjøpet.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av verksted.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024.
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.»
+Servicehefte mangler: Feilen viste seg den 10. mai 2024. «Bilen mistet kraft etter tre uker.» Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. april 2025. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025.
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"6_til_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.»
+Servicehefte mangler: Feilen viste seg den 10. mars 2025. «Bilen mistet kraft etter tre uker.» Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
+Servicehefte mangler: Feilen viste seg den 10. september 2026. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.
+Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. oktober 2026. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. Feilen er undersøkt av verksted.
+Servicehefte mangler: Feilen viste seg den 10. september 2026. Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"muntlig","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted.
+Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Feilen er undersøkt av verksted. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":null} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026.
+Servicehefte mangler: Feilen viste seg den 10. september 2026. Dokumentasjon vedlegges.
 
 ## {"feilsett":"opplysning","tid":"over_24_mnd","opplysning":"skriftlig","verksted":"nei","beskrivelse":"Bilen mistet kraft etter tre uker."} (+2 like)
-Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.»
+Servicehefte mangler: Feilen viste seg den 10. september 2026. «Bilen mistet kraft etter tre uker.» Dokumentasjon vedlegges.
 
 ## {"feilsett":"garanti","tid":"innen_6_mnd","opplysning":"skriftlig","verksted":"skriftlig","beskrivelse":null} (+2 like)
 Garanti ikke som lovet: Feilen viste seg den 10. mai 2024. Feilen er undersøkt av Nordre Bil og Verksted AS (uavhengig verksted) den 10. juni 2024. Verkstedet bekrefter feilen. Verkstedet har fastslått årsaken. Rapporten følger vedlagt.

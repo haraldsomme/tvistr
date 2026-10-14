@@ -1,8 +1,14 @@
-import { feilnavn } from "./feiltype";
+import { feilnavn, ledd } from "./feiltype";
 import { FORSOK_ANTALL, kr, liste, smaa } from "./format";
 import { jf, lovkilde, lovversjon, type Poeng } from "./paragrafer";
 import { forsokAv, harPunkt, overslagSum } from "./rapport";
 import type { Brevsak, Setning } from "./typer";
+
+// What the seller said or the car's history: a repair cannot make it right, so the letter does not
+// invite the seller to repair it. «service» alone is the main category without a subcategory, all of
+// whose subcategories are in the list. Warranty, equipment, EU control, rebuilding and every technical
+// defect keep the offer.
+const KAN_IKKE_RETTES = ["service.service", "service.servicehefte", "historikk.km", "historikk.bruk", "historikk.import", "historikk.skade", "historikk.pant", "service"];
 
 // 4. Krav: one of retting, prisavslag or heving, then damages for expenses if the buyer claims them.
 export function krav(s: Brevsak): Setning[][] {
@@ -64,8 +70,9 @@ export function krav(s: Brevsak): Setning[][] {
 
   // The seller may offer to repair even when the buyer asks for a reduction or to cancel (the repair
   // rules in §§ 29–30), unless repairs have already been tried, or the seller has turned the complaint
-  // down and the buyer cancels.
-  if ((s.krav === "prisavslag" || s.krav === "heving") && forsok === 0 && !(s.krav === "heving" && ingenRetting)) {
+  // down and the buyer cancels, or nothing in the letter can be repaired.
+  const kanRettes = ledd(s.feil).some((l) => !KAN_IKKE_RETTES.includes(l.under ? `${l.feil.hoved}.${l.under}` : l.feil.hoved));
+  if ((s.krav === "prisavslag" || s.krav === "heving") && forsok === 0 && kanRettes && !(s.krav === "heving" && ingenRetting)) {
     hoved.push({ tekst: `Dersom dere ønsker å rette ${mangelen} selv, ber jeg om beskjed innen fristen under.`, kilde: `skjema:krav; skjema:kontakt; ${lovkilde(v, "retting")}` });
     hoved.push({ tekst: `Retting må i så fall skje uten kostnad og uten vesentlig ulempe for meg og innen rimelig tid${jf(v, "retting")}.`, kilde: lov("retting") });
   }

@@ -20,6 +20,11 @@ Spørsmålene er artefaktens, uten «ny eller brukt». Selger privat, leasing el
 
 `evaluate()` (`src/lib/app/vurdering.ts`) gir sterk, mulig, svak eller utenfor ut fra svarene, med en rad per forhold under «Dette sier loven om din sak». Formodningsperioden er seks måneder for kjøp før 1.1.2024 og to år etter. «Som den er» vurderes etter gamle § 17 før 2024 og § 15 annet ledd etter. Paragrafene kommer fra `src/lib/brev/paragrafer.ts` (`src/lib/app/lov.ts`).
 
+Reglene for tid regnes i kalendermåneder fra overtakelsen, som i rangeringen (`tidsnivaFor`):
+- Formodningen gjelder bare feil som viste seg innen perioden. Feil i det selgeren opplyste eller lovet (historikk, service, utstyr, garanti) fantes ved salget, så formodningen brukes ikke for dem.
+- Etter fem år fra overtakelsen er fristen ute, også når feilen viste seg før.
+- Uten datoer er vurderingen «Foreløpig». Er en dato frem i tid, trekkes ingen konklusjon om fristene; kjøperen bes sjekke datoene.
+
 «Lignende saker» kommer fra databasen gjennom `vurderSaken` (`src/app/sak/vurdering.ts`, ingen modellkall). Den gir tallene for den første kategorien med nok vedtak, og de tre nærmeste vedtakene med medhold fra `ranger()`. Kortene viser bil, utfall, saksnummer og år. De er ikke lenker, og ingen sitater sendes før betaling.
 
 ## Betaling
@@ -30,7 +35,11 @@ Vipps er ikke koblet på. «Gå til betaling» kaller `lasOpp` (`src/app/brev/ac
 
 Stegene er Partene, Bilen, Mangelen og Krav, som i artefakten. Forhandleren søkes opp i Enhetsregisteret (`/api/firma`). Vurdering-fanen regner ut vurderingen på nytt mens kjøperen skriver, og har «Endre»-lenker til steget som påvirker den.
 
-Brevet bygges i nettleseren av `byggBrev` (`src/lib/app/brev.ts`). Manglende svar vises som grå plassholdere, og «Kopier brevet» bruker samme blokker (`tilTekst`). Avsnittet om vedtaket er Tvistrs: `finnVedtak` (rangering, ett Sonnet-kall, malen i `mal.ts`) gir modellens valg først og deretter to alternativer fra rangeringen. Kjøperen velger blant dem. `finnVedtak` svarer bare når ordren er betalt, og kalles én gang per sett med svar.
+Brevet bygges i nettleseren av `byggBrev` (`src/lib/app/brev.ts`). Manglende svar vises som grå plassholdere, og «Kopier brevet» bruker samme blokker (`tilTekst`).
+- Formodningen nevnes per feil: bare for feilene innenfor perioden, og femårsregelen bare for feil mellom to og fem år.
+- Brevet sier at reklamasjonen er rettidig bare når den er innen to måneder etter oppdagelsen og innen fem år. Ellers sier det ingenting om det.
+- Mens vedtaket hentes, står en plassholder der avsnittet skal stå, og «Kopier brevet» venter.
+- Sjekklisten viser datoer som ikke kan stemme (`datoavvik` i `src/lib/app/datoer.ts`): kjøp etter overtakelse, datoer frem i tid, feil oppdaget før overtakelsen, reklamasjon før oppdagelsen, brev datert før reklamasjonen og mer enn fem år siden overtakelsen. Avsnittet om vedtaket er Tvistrs: `finnVedtak` (rangering, ett Sonnet-kall, malen i `mal.ts`) gir modellens valg først og deretter to alternativer fra rangeringen. Kjøperen velger blant dem. `finnVedtak` svarer bare når ordren er betalt, og kalles én gang per sett med svar.
 
 ## Måling
 

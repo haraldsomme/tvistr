@@ -880,3 +880,6 @@ html,body{overflow-x:clip}
    JS-placed sliding indicators (.thumb, .wind, .halo). ───── */
 .seg input:checked + span,.wtabs button[aria-selected="true"],.steps .st[aria-current="step"]{background:var(--surface);box-shadow:var(--sh-xs),0 0 0 1px var(--line)}
 .seg input:checked + span{border-radius:10px}
+/* A long link in the letter (the decision's address) must wrap, not widen the paper past the screen. */
+.letter{overflow-wrap:anywhere}
+.desk > *,.desk-l > *{min-width:0}

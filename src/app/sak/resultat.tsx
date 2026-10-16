@@ -14,6 +14,7 @@ import { maal } from "@/lib/maling";
 import { fraSjekk, nokkel, sjekkTilSvar } from "@/lib/app/saken";
 import { standard } from "@/lib/app/skjema";
 import { evaluate } from "@/lib/app/vurdering";
+import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { PRIS } from "@/lib/pris";
 import { type Lignende as LignendeSvar, vurderSaken } from "./vurdering";
 import type { Tilstand } from "./sjekk";
@@ -30,7 +31,8 @@ const FORDELER = [
 export function Resultat({ a, ordre, utvikling, onTilbake, onOmStart }: { a: Tilstand; ordre: string; utvikling: boolean; onTilbake: () => void; onOmStart: () => void }) {
   const router = useRouter();
   const datoer = (a.cats ?? []).map((c) => a.fdates?.[c]).filter((d): d is string => !!d).sort();
-  const r = evaluate({ ...a, found: datoer[0], sist: datoer.at(-1) }, idag());
+  const opplysning = !!a.cats?.length && a.cats.every((c) => opplysningsfeil(c, a.issues?.[c] ?? []));
+  const r = evaluate({ ...a, found: datoer[0], sist: datoer.at(-1), opplysning }, idag());
   const [lignende, settLignende] = useState<LignendeSvar | null>(null);
   const [kjop, settKjop] = useState(false);
   const [unna, settUnna] = useState(false);

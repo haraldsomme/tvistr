@@ -2,6 +2,7 @@
 // Periods and paragraphs follow the law version of the purchase (lov.ts). The section citing a
 // decision is Tvistr's paragraph from the server (finnVedtak → mal.ts), never written here.
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
+import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { LOVORD } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
@@ -147,7 +148,8 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   const formodning = `Etter ${L.par("formodning")} skal en mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises.`;
   // Each fault on its own date, in calendar months as the law and the ranking count (tidsnivaFor):
   // the presumption only for the faults inside it, the five-year rule only between two and five years.
-  const datert = s.f_cats.map((c) => ({ c, d: s.f_area[c]?.found ?? "" })).filter((x) => x.d && s.c_delivery && x.d >= s.c_delivery);
+  // A fault in what the seller said or promised existed at the sale: no presumption for it.
+  const datert = s.f_cats.map((c) => ({ c, d: s.f_area[c]?.found ?? "" })).filter((x) => x.d && s.c_delivery && x.d >= s.c_delivery && !opplysningsfeil(x.c, s.f_parts[x.c] ?? []));
   const ved = (xs: typeof datert) => listJoin(xs.map((x) => smaa(feilnavn(x.c, s.f_parts[x.c] ?? []))));
   if (s.c_delivery && datert.length) {
     const inne = datert.filter((x) => x.d <= plussManeder(s.c_delivery, L.formodningMnd));
@@ -165,17 +167,16 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
       const hvem = alene ? `Feilen viste seg ${dur(del!, parseD(sene[0].d)!)} etter overtakelsen.` : `${sene.length > 1 ? "Feilene" : "Feilen"} ved ${ved(sene)} viste seg mer enn to år etter overtakelsen.`;
       B.push({ t: "p", tekst: [`${hvem} En bil er ment å vare vesentlig lenger enn to år, og reklamasjonsfristen er derfor fem år, jf. ${L.par("reklamasjon_5ar")}.`] });
     }
-  } else if (!del || !found) B.push({ t: "p", tekst: [`En mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, jf. ${L.par("formodning")}.`] });
+  } else if ((!del || !found) && !s.f_cats.every((c) => opplysningsfeil(c, s.f_parts[c] ?? []))) B.push({ t: "p", tekst: [`En mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, jf. ${L.par("formodning")}.`] });
   if (found) {
     const nr = (s.f_prior && parseD(s.f_prior_date)) || ld;
     const etterFemAr = !!del && nr > parseD(plussManeder(s.c_delivery, 60))!;
-    // No claim of a timely complaint past five years, or with a complaint dated before the discovery.
-    if (!etterFemAr && nr >= found) {
-      if (nr <= addMonths(found, 2)) B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen, og er dermed rettidig etter ${L.par("reklamasjon")}.`] });
-      else B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen rimelig tid etter at jeg oppdaget feilen, jf. ${L.par("reklamasjon")}.`] });
-    }
+    // Timely only when it surely is: within two months of the discovery and five years of the handover,
+    // and not dated before the discovery. Later than two months the letter claims nothing.
+    if (!etterFemAr && nr >= found && nr <= addMonths(found, 2)) B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen, og er dermed rettidig etter ${L.par("reklamasjon")}.`] });
   }
-  if (s.c_warranty) B.push({ t: "p", tekst: ["Bilen er også omfattet av garanti. Garantien gjelder i tillegg til mine rettigheter etter loven og begrenser dem ikke."] });
+  // Not when the complaint is that the promised warranty is missing.
+  if (s.c_warranty && !s.f_cats.includes("garanti")) B.push({ t: "p", tekst: ["Bilen er også omfattet av garanti. Garantien gjelder i tillegg til mine rettigheter etter loven og begrenser dem ikke."] });
 
   if (s.prec_on) {
     if (presedens === "venter") {
@@ -209,7 +210,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
     B.push({ t: "p", tekst: [`Dersom ${s.k_main} ikke skjer innen rimelig tid, ikke lykkes eller ikke er mulig, krever jeg subsidiært ${s.k_alt === "prisavslag" ? `et forholdsmessig prisavslag, jf. ${L.par("prisavslag")}` : `å heve kjøpet, jf. ${L.par("heving")}`}.`] });
   if (s.k_exp) {
     const it = s.exp.filter((x) => x.t || x.a);
-    B.push({ t: "p", tekst: [`I tillegg krever jeg erstatning for utgifter jeg har hatt som følge av mangelen, jf. ${L.par("erstatning")}${it.length ? ":" : "."}`] });
+    B.push({ t: "p", tekst: [`I tillegg krever jeg erstatning for utgifter jeg har hatt som følge av mangelen, jf. ${L.par("erstatning")}${it.length ? ":" : ""}`, ...(it.length ? [] : [" ", { ph: "legg til utgiftene" }, "."])] });
     if (it.length) B.push({ t: "exp", rader: it.map((x) => [[x.t ? x.t : { ph: "utgift" }], kr(+x.a || 0)]), sum: kr(it.reduce((a, x) => a + (+x.a || 0), 0)) });
   }
   // § 28 (tilbakeholdsrett) is the same in both versions and not in the paragraph tables.

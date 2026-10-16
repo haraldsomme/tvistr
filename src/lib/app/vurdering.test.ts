@@ -75,3 +75,19 @@ describe("tidslinjen i vurderingen", () => {
   it("dato frem i tid", () => expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-12-01" }, idag).factors.some((f) => f.t === "Sjekk datoene")).toBe(true));
   it("én av flere feil utenfor formodningen", () => expect(evaluate({ ...base, delivery: "2023-03-01", found: "2023-05-01", sist: "2024-01-15" }, idag).factors.some((f) => f.t === "Én av feilene viste seg senere")).toBe(true));
 });
+
+describe("brukertesten", () => {
+  it("over to år: «Mer enn to år»", () => expect(evaluate({ ...base, delivery: "2022-09-01", found: "2025-10-01" }, idag).factors.some((f) => f.t === "Mer enn to år etter overtakelsen")).toBe(true));
+  it("fristen ute: ikke samtidig «Du er i tide»", () => {
+    const r = evaluate({ ...base, delivery: "2021-02-01", found: "2026-09-01" }, idag);
+    expect(r.factors.some((f) => f.t === "Fristen er ute")).toBe(true);
+    expect(r.factors.some((f) => f.t === "Du er i tide")).toBe(false);
+  });
+  it("fristen ute når reklamasjonen kommer etter fem år, selv om feilen viste seg før", () =>
+    expect(evaluate({ ...base, delivery: "2021-09-01", found: "2026-08-01" }, idag).factors.some((f) => f.t === "Fristen er ute")).toBe(true));
+  it("feil i det selgeren opplyste: ingen formodning", () => {
+    const r = evaluate({ ...base, delivery: "2026-03-01", found: "2026-06-01", opplysning: true }, idag);
+    expect(r.factors.some((f) => f.t.startsWith("Feilen viste seg innen"))).toBe(false);
+    expect(r.factors.some((f) => f.t === "Bilen var ikke som selgeren opplyste")).toBe(true);
+  });
+});

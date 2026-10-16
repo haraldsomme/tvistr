@@ -111,3 +111,22 @@ describe("tidslinjen i brevet", () => {
     expect(t).not.toContain(LOVSETNING);
   });
 });
+
+describe("brukertesten", () => {
+  const en = (s: ReturnType<typeof eksempel>, c: string, under: string[], found: string) => ({ ...s, f_cats: [c], f_parts: { [c]: under }, f_area: { [c]: { found, impact: [], known: "nei" } }, f_catdesc: {} });
+  it("påstår ikke «innen rimelig tid» når det har gått mer enn to måneder", () => {
+    const s = en({ ...eksempel(idag), c_purchase: "2023-03-01", c_delivery: "2023-03-01", f_prior: false }, "drivlinje", ["girkasse"], "2023-11-15");
+    expect(tekst(s)).not.toContain("Reklamasjonen er fremsatt");
+  });
+  it("feil i det selgeren opplyste: ingen formodning", () => {
+    const s = en({ ...eksempel(idag), c_purchase: "2026-03-01", c_delivery: "2026-03-01" }, "historikk", ["km"], "2026-06-01");
+    expect(tekst(s)).not.toContain("formodes");
+  });
+  it("garanti ikke som lovet: ingen formodning og ingen setning om at garantien gjelder", () => {
+    const s = en({ ...eksempel(idag), c_purchase: "2025-11-01", c_delivery: "2025-11-01", c_warranty: true }, "garanti", [], "2026-02-01");
+    const t = tekst(s);
+    expect(t).not.toContain("formodes");
+    expect(t).not.toContain("Bilen er også omfattet av garanti");
+  });
+  it("erstatning uten utgifter: plassholder", () => expect(tekst({ ...eksempel(idag), k_exp: true, exp: [] })).toContain("[legg til utgiftene]"));
+});

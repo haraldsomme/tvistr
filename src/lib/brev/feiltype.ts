@@ -16,3 +16,7 @@ export function feiltype(hoved: string, under: string | null): Feiltype {
   if (under ? komponenttype(hoved, under) === "opplysning" : OPPLYSNING_UTEN_UNDER.includes(hoved)) return "opplysning";
   return "teknisk";
 }
+
+// A fault in what the seller said or promised (incl. a warranty): it existed at the sale, so the
+// presumption for defects that show themselves later does not apply.
+export const opplysningsfeil = (hoved: string, under: string[]) => (under.length ? under : [null]).every((u) => feiltype(hoved, u) !== "teknisk" && feiltype(hoved, u) !== "vet_ikke");

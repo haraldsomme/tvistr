@@ -1,6 +1,7 @@
 // The free verdict: sterk / mulig / svak from the buyer's answers, or utenfor when the case is not one
 // the letter covers. Ported from the artifact (evaluate, wsFactors); the presumption period and the
 // «som den er» rule follow the law version of the purchase (lov.ts).
+import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { LOVORD } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
 import { addMonths, dayDiff, dur, fmtD, iso, parseD } from "./dato";
@@ -25,6 +26,8 @@ export type Sjekksvar = {
   notifiedDate?: string;
   km?: string;
   sev?: number;
+  // Every fault is in what the seller said or promised (opplysningsfeil).
+  opplysning?: boolean;
 };
 export type Resultat = {
   tier: Niva;
@@ -75,15 +78,28 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   const F: Faktor[] = [{ s: "good", t: "Forbrukerkjøpsloven gjelder", d: "Du kjøpte som privatperson fra en forhandler. Loven kan ikke avtales bort til din ugunst." }];
   const del = parseD(q.delivery),
     fd = parseD(q.found);
+  // The five years run from the handover; a complaint made after them is too late whenever the fault showed.
+  const reklamert = q.notified === "ja" && q.notifiedDate ? q.notifiedDate : idag;
+  let ute = false;
   if (del && fd) {
     if (fd < del) F.push({ s: "warn", t: "Feilen ble oppdaget før overtakelsen", d: "Var feilen kjent før du overtok bilen, kan det svekke saken. Sjekk at datoene stemmer." });
     else {
       // Calendar months, as the law and the ranking count (tidsnivaFor).
       const d = dur(del, fd) || "samme dag";
-      if (q.found! > plussManeder(q.delivery!, 60)) F.push({ s: "bad", t: "Fristen er ute", d: `Feilen viste seg ${d} etter overtakelsen. Den absolutte fristen på fem år har gått ut, med mindre en garanti gir lengre frist.`, law: L.ref("reklamasjon_5ar") });
+      const fem = plussManeder(q.delivery!, 60);
+      ute = q.found! > fem || reklamert > fem;
+      if (ute)
+        F.push({
+          s: "bad",
+          t: "Fristen er ute",
+          d: q.found! > fem ? `Feilen viste seg ${d} etter overtakelsen. Den absolutte fristen på fem år har gått ut, med mindre en garanti gir lengre frist.` : "Det er mer enn fem år siden du overtok bilen. Den absolutte fristen på fem år har gått ut, med mindre en garanti gir lengre frist.",
+          law: L.ref("reklamasjon_5ar"),
+        });
+      else if (q.opplysning)
+        F.push({ s: "good", t: "Bilen var ikke som selgeren opplyste", d: "Avviket fantes allerede da du kjøpte bilen, så du trenger ikke formodningsregelen. Det er nok å vise hva selgeren opplyste.", law: L.ref("uriktig") });
       else if (q.found! <= plussManeder(q.delivery!, L.formodningMnd))
         F.push({ s: "good", t: `Feilen viste seg innen ${L.formodningTekst}`, d: `Feilen viste seg ${d} etter overtakelsen. Da regnes den som hovedregel for å ha vært der fra start, og det er forhandleren som må bevise noe annet.`, law: L.ref("formodning") });
-      else F.push({ s: "warn", t: `Mer enn ${L.formodningTekst} etter overtakelsen`, d: "Du er innenfor femårsfristen for bil, men må selv sannsynliggjøre at feilen skyldes forhold ved leveringen.", law: L.ref("reklamasjon_5ar") });
+      else F.push({ s: "warn", t: `Mer enn ${q.found! > plussManeder(q.delivery!, 24) ? "to år" : L.formodningTekst} etter overtakelsen`, d: "Du er innenfor femårsfristen for bil, men må selv sannsynliggjøre at feilen skyldes forhold ved leveringen.", law: L.ref("reklamasjon_5ar") });
     }
   } else F.push({ s: "warn", t: "Datoene mangler", d: "Uten overtakelsesdato og dato for når feilen ble oppdaget, kan vi ikke vurdere fristene. Vurderingen er derfor foreløpig." });
 
@@ -93,11 +109,11 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
     q.notified === "ja" && q.notifiedDate && q.found && q.notifiedDate < q.found ? "Du har oppgitt at du sa fra før du oppdaget feilen." : "",
   ].filter(Boolean);
   if (avvik.length) F.push({ s: "warn", t: "Sjekk datoene", d: `${avvik.join(" ")} Sjekk at datoene stemmer.` });
-  if (del && fd && q.sist && fd >= del && q.found! <= plussManeder(q.delivery!, L.formodningMnd) && q.sist > plussManeder(q.delivery!, L.formodningMnd))
+  if (!ute && !q.opplysning && del && fd && q.sist && fd >= del && q.found! <= plussManeder(q.delivery!, L.formodningMnd) && q.sist > plussManeder(q.delivery!, L.formodningMnd))
     F.push({ s: "warn", t: "Én av feilene viste seg senere", d: `Én av feilene viste seg mer enn ${L.formodningTekst} etter overtakelsen. For den må du selv sannsynliggjøre at den skyldes forhold ved leveringen.` });
 
   let sendBy: string | null = null;
-  if (fd && fd >= (del ?? fd)) {
+  if (!ute && fd && fd >= (del ?? fd)) {
     const lim = addMonths(fd, 2),
       nd = parseD(q.notifiedDate);
     if (q.notified === "ja" && nd && nd >= fd) {
@@ -171,6 +187,7 @@ export const writerQ = (s: Skjema): Sjekksvar => ({
   kjopsdato: s.c_purchase || s.c_delivery,
   delivery: s.c_delivery,
   found: s.f_found,
+  opplysning: s.f_cats.length > 0 && s.f_cats.every((c) => opplysningsfeil(c, s.f_parts[c] ?? [])),
   sist: s.f_cats.map((c) => s.f_area[c]?.found).filter((d): d is string => !!d).sort().at(-1),
   sev: s.f_sev,
   known: (s.f_known || undefined) as Sjekksvar["known"],

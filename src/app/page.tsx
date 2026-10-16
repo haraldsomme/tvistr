@@ -332,7 +332,7 @@ export default async function Home() {
             Fra vedtak i Forbrukerklageutvalget, som Forbrukertilsynet publiserer. Brevet oppgir saksnummer og lenke, så forhandleren kan lese vedtaket selv. Hver sak vurderes konkret, så en lignende sak er et sterkt argument, men ingen garanti for samme utfall.
           </Sporsmal>
           <Sporsmal q="Gjelder dette også bruktbil?">
-            Ja, Tvistr er laget for bruktbil kjøpt fra forhandler, og da gjelder forbrukerkjøpsloven. Står det «som den er» i kontrakten, kan forhandleren likevel ha ansvar hvis bilen er i vesentlig dårligere stand enn du hadde grunn til å regne med.
+            Ja, Tvistr er laget for bruktbil kjøpt fra forhandler, og da gjelder forbrukerkjøpsloven. Står det «som den er» i kontrakten, kan forhandleren likevel ha ansvar. For kjøp fra 2024 er et generelt forbehold ikke nok, og for eldre kjøp har bilen en mangel hvis den er i dårligere stand enn du hadde grunn til å forvente.
           </Sporsmal>
           <Sporsmal q="Jeg kjøpte bilen av en privatperson. Kan jeg bruke dette?">Brevet er laget for kjøp fra forhandler. Ved kjøp mellom privatpersoner gjelder kjøpsloven, og reglene er strengere for deg som kjøper. Forbrukerrådet kan gi råd om slike saker.</Sporsmal>
           <Sporsmal q="Må forhandleren få reparere først?">Som hovedregel ja. Du kan likevel sette prisavslag eller heving som subsidiært krav, slik at det gjelder hvis rettingen ikke skjer innen rimelig tid eller ikke lykkes.</Sporsmal>

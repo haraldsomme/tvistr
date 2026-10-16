@@ -7,29 +7,7 @@ import { Lovrader } from "@/app/deler/lovrader";
 import { type Lignende as LignendeSvar, vurderSaken } from "@/app/sak/vurdering";
 import { nokkel, tilSvar } from "@/lib/app/saken";
 import type { Skjema } from "@/lib/app/skjema";
-import { evaluate, type Faktor, type Resultat, type Sjekksvar, wsFactors } from "@/lib/app/vurdering";
-
-export const writerQ = (s: Skjema): Sjekksvar => ({
-  seller: "forhandler",
-  buyer: "privat",
-  asis: s.c_asis ? "ja" : "nei",
-  km: s.c_km,
-  delivery: s.c_delivery,
-  found: s.f_found,
-  sev: s.f_sev,
-  known: (s.f_known || undefined) as Sjekksvar["known"],
-  cause: (s.f_cause || undefined) as Sjekksvar["cause"],
-  notified: s.f_prior ? "ja" : "nei",
-  notifiedDate: s.f_prior_date,
-});
-
-// The verdict in the writer: the check's rules plus the workshop and what the seller said.
-export function skriverResultat(s: Skjema, idag: string): Resultat {
-  const r = evaluate(writerQ(s), idag);
-  const ut = { ...r, factors: [...r.factors, ...wsFactors({ ...s, dato: s.c_purchase || s.c_delivery })] };
-  if (!s.c_delivery && !s.f_found) return { ...ut, tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen." };
-  return ut;
-}
+import type { Faktor, Resultat } from "@/lib/app/vurdering";
 
 // Which step a factor's answer is in.
 const stegFor = (f: Faktor) => (/lov/i.test(f.t) ? 0 : /som den er|to år|seks måneder|Fristen|overtakelsen|Datoene|fra start/i.test(f.t) ? 1 : 2);

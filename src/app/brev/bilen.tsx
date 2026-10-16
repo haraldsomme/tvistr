@@ -1,6 +1,7 @@
 // Step 2, «Bilen og kjøpet». Used cars only: no «Ny bil» tile.
 import { Skilt } from "@/app/deler/skilt";
 import { fmtD } from "@/lib/app/dato";
+import { regler } from "@/lib/app/lov";
 import { Bryter, Felt, type StegProps } from "./felt";
 
 export function Bilen({ s, sett }: StegProps) {
@@ -62,7 +63,17 @@ export function Bilen({ s, sett }: StegProps) {
         </div>
       </div>
       <div className="block">
-        <Bryter s={s} sett={sett} k="c_asis" tittel="Solgt «som den er»" tekst="Forhandleren kan likevel ha ansvar hvis bilen er i vesentlig dårligere stand enn du hadde grunn til å regne med." />
+        <Bryter
+          s={s}
+          sett={sett}
+          k="c_asis"
+          tittel="Solgt «som den er»"
+          tekst={
+            regler(s.c_purchase || s.c_delivery).versjon === "før_2024"
+              ? "Forhandleren kan likevel ha ansvar hvis bilen er i dårligere stand enn du hadde grunn til å forvente."
+              : "Fra 2024 er et generelt forbehold ikke nok. Det gjelder bare egenskaper du ble spesielt opplyst om og uttrykkelig godtok."
+          }
+        />
         <Bryter s={s} sett={sett} k="c_warranty" tittel="Bilen har garanti" tekst="Fabrikkgaranti, bruktbilgaranti eller lignende. Garantien kommer i tillegg til rettighetene dine etter loven." />
       </div>
     </section>

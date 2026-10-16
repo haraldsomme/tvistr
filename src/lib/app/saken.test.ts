@@ -13,7 +13,7 @@ describe("tilSvar", () => {
     expect(s.krav).toBe("retting");
     expect(s.somDenEr).toBe("nei");
     expect(s.feil).toHaveLength(1);
-    expect(s.feil[0]).toMatchObject({ hoved: "hoyvolt", under: ["kapasitet", "lading"], opplysning: "skriftlig", verksted: "skriftlig" });
+    expect(s.feil[0]).toMatchObject({ hoved: "hoyvolt", under: ["kapasitet", "lading"], opplysning: "muntlig", verksted: "skriftlig" });
     expect(s.feil[0].rapport?.punkter).toEqual(["bekrefter", "arsak", "ikke_slitasje"]);
   });
   it("omlevering blir retting", () => expect(tilSvar({ ...eksempel(idag), k_main: "omlevering" })!.krav).toBe("retting"));
@@ -45,5 +45,12 @@ describe("fraSjekk", () => {
   it("overskriver ikke det som er fylt inn", () => {
     const s = fraSjekk({ make: "Peugeot 308", cats: [] }, { ...standard(idag), c_make: "Volvo", k_main: "heving" });
     expect([s.c_make, s.k_main]).toEqual(["Volvo", "heving"]);
+  });
+});
+
+describe("rettinger etter gjennomgangen", () => {
+  it("#4 selger opplyste om feilen er ikke en uriktig opplysning", () => {
+    expect(tilSvar({ ...eksempel(idag), seller_said: "opplyste" })!.feil[0].opplysning).toBeNull();
+    expect(tilSvar({ ...eksempel(idag), seller_said: "lovet" })!.feil[0].opplysning).toBe("muntlig");
   });
 });

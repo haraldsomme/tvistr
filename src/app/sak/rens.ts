@@ -15,8 +15,9 @@ const valg = <T extends string>(v: unknown, lov: string[]): T | null | undefined
 export function rensSvar(inn: unknown): Svar | null {
   const s = (inn && typeof inn === "object" ? inn : {}) as Record<string, unknown>;
   if (!erDato(s.kjopsdato) || !Array.isArray(s.feil) || !s.feil.length || s.feil.length > HOVEDKATEGORIER.length) return null;
-  const km = heltall(s.km, 0, 1_500_000),
-    ar = heltall(s.ar, 1950, 2100),
+  // Km and model year only sharpen the ranking: a figure out of range is dropped, not the case.
+  const km = heltall(s.km, 0, 1_500_000) ?? null,
+    ar = heltall(s.ar, 1950, 2100) ?? null,
     forsok = heltall(s.forsok, 0, 3);
   const somDenEr = valg<"ja" | "nei">(s.somDenEr, ["ja", "nei"]),
     krav = valg<Svar["krav"] & string>(s.krav, KRAV);

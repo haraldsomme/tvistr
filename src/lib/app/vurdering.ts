@@ -2,8 +2,10 @@
 // the letter covers. Ported from the artifact (evaluate, wsFactors); the presumption period and the
 // «som den er» rule follow the law version of the purchase (lov.ts).
 import { LOVORD } from "@/lib/brev/paragrafer";
-import { addMonths, dayDiff, dur, fmtD, iso, monthsFrac, parseD } from "./dato";
+import { plussManeder } from "@/lib/brev/tidslinje";
+import { addMonths, dayDiff, dur, fmtD, iso, parseD } from "./dato";
 import { regler } from "./lov";
+import type { Skjema } from "./skjema";
 
 export type Niva = "sterk" | "mulig" | "svak" | "utenfor" | "ukjent";
 export type Faktor = { s: "good" | "warn" | "bad" | "info"; t: string; d: string; law?: string };
@@ -11,6 +13,8 @@ export type Sjekksvar = {
   seller?: "forhandler" | "privat" | "leasing";
   buyer?: "privat" | "naering";
   asis?: "ja" | "nei" | "vetikke";
+  // The purchase date decides the law version; the handover date stands in when it is missing.
+  kjopsdato?: string;
   delivery?: string;
   found?: string;
   known?: "nei" | "opplyst" | "synlig";
@@ -65,17 +69,17 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   if (q.buyer === "naering") return ut("naering");
 
   const today = parseD(idag)!;
-  const L = regler(q.delivery);
+  const L = regler(q.kjopsdato || q.delivery);
   const F: Faktor[] = [{ s: "good", t: "Forbrukerkjøpsloven gjelder", d: "Du kjøpte som privatperson fra en forhandler. Loven kan ikke avtales bort til din ugunst." }];
   const del = parseD(q.delivery),
     fd = parseD(q.found);
   if (del && fd) {
     if (fd < del) F.push({ s: "warn", t: "Feilen ble oppdaget før overtakelsen", d: "Var feilen kjent før du overtok bilen, kan det svekke saken. Sjekk at datoene stemmer." });
     else {
-      const m = monthsFrac(del, fd),
-        d = dur(del, fd) || "samme dag";
-      if (m > 60) F.push({ s: "bad", t: "Fristen er ute", d: `Feilen viste seg ${d} etter overtakelsen. Den absolutte fristen på fem år har gått ut, med mindre en garanti gir lengre frist.`, law: L.ref("reklamasjon_5ar") });
-      else if (m < L.formodningMnd)
+      // Calendar months, as the law and the ranking count (tidsnivaFor).
+      const d = dur(del, fd) || "samme dag";
+      if (q.found! > plussManeder(q.delivery!, 60)) F.push({ s: "bad", t: "Fristen er ute", d: `Feilen viste seg ${d} etter overtakelsen. Den absolutte fristen på fem år har gått ut, med mindre en garanti gir lengre frist.`, law: L.ref("reklamasjon_5ar") });
+      else if (q.found! <= plussManeder(q.delivery!, L.formodningMnd))
         F.push({ s: "good", t: `Feilen viste seg innen ${L.formodningTekst}`, d: `Feilen viste seg ${d} etter overtakelsen. Da regnes den som hovedregel for å ha vært der fra start, og det er forhandleren som må bevise noe annet.`, law: L.ref("formodning") });
       else F.push({ s: "warn", t: `Mer enn ${L.formodningTekst} etter overtakelsen`, d: "Du er innenfor femårsfristen for bil, men må selv sannsynliggjøre at feilen skyldes forhold ved leveringen.", law: L.ref("reklamasjon_5ar") });
     }
@@ -104,16 +108,14 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   else if (q.cause === "vetikke") F.push({ s: "info", t: "Årsaken er uklar", d: "En verkstedrapport som beskriver feilen og årsaken, gjør saken mye sterkere." });
   else if (q.cause === "nei") F.push({ s: "good", t: "Feilen skyldes bilen", d: "Feilen har oppstått uten uhell eller feil bruk." });
 
+  // Before 2024 «som den er» is judged by old § 17; from 2024 a general clause is no agreed exception
+  // under § 15 annet ledd, so it does not weaken the case.
   if (q.asis === "ja")
-    F.push({
-      s: "warn",
-      t: "Solgt «som den er»",
-      d:
-        L.versjon === "før_2024"
-          ? `Du må vise at bilen er ${LOVORD.dårligereStand.replace("jeg", "du")}, eller at forhandleren holdt tilbake opplysninger.`
-          : "Du må vise at bilen er i vesentlig dårligere stand enn du hadde grunn til å regne med, eller at forhandleren holdt tilbake opplysninger.",
-      law: L.ref("forbehold"),
-    });
+    F.push(
+      L.versjon === "før_2024"
+        ? { s: "warn", t: "Solgt «som den er»", d: `Du må vise at bilen er ${LOVORD.dårligereStand.replace("jeg", "du")}, eller at forhandleren holdt tilbake opplysninger.`, law: L.ref("forbehold") }
+        : { s: "info", t: "Solgt «som den er»", d: "Et generelt forbehold om at bilen selges «som den er», er ikke et avtalt unntak. Det gjelder bare egenskaper du ble spesielt opplyst om og uttrykkelig godtok.", law: L.ref("forbehold") },
+    );
 
   const sev = q.sev ?? 0;
   if (sev >= 4) F.push({ s: "good", t: "Alvorlig feil", d: "Kan gi grunnlag for å heve kjøpet hvis forhandleren ikke klarer å rette feilen.", law: L.ref("heving") });
@@ -146,4 +148,28 @@ export function wsFactors(s: { ws?: string; ws_says?: string[]; seller_said?: st
   if (s.seller_said === "lovet") F.push({ s: "good", t: "Selger sa at bilen var fri for slike feil", d: "Det selger opplyste før kjøpet, er en del av avtalen. Avvik fra det er en mangel.", law: regler(s.dato).ref("uriktig") });
   else if (s.seller_said === "opplyste") F.push({ s: "bad", t: "Selger opplyste om feilen", d: "Du kan normalt ikke reklamere på en feil selger fortalte om før kjøpet." });
   return F;
+}
+
+// The verdict in the writer: the check's rules on the writer's answers, plus the workshop and what the
+// seller said. Without dates it is only preliminary.
+export const writerQ = (s: Skjema): Sjekksvar => ({
+  seller: "forhandler",
+  buyer: "privat",
+  asis: s.c_asis ? "ja" : "nei",
+  km: s.c_km,
+  kjopsdato: s.c_purchase || s.c_delivery,
+  delivery: s.c_delivery,
+  found: s.f_found,
+  sev: s.f_sev,
+  known: (s.f_known || undefined) as Sjekksvar["known"],
+  cause: (s.f_cause || undefined) as Sjekksvar["cause"],
+  notified: s.f_prior ? "ja" : "nei",
+  notifiedDate: s.f_prior_date,
+});
+
+export function skriverResultat(s: Skjema, idag: string): Resultat {
+  const r = evaluate(writerQ(s), idag);
+  const ut = { ...r, factors: [...r.factors, ...wsFactors({ ...s, dato: s.c_purchase || s.c_delivery })] };
+  if (!s.c_delivery && !s.f_found) return { ...ut, tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen." };
+  return ut;
 }

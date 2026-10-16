@@ -63,3 +63,17 @@ describe("brevet", () => {
 
   it("emnefeltet", () => expect(emne(byggBrev(syncAreas(eksempel(idag)), null, idag))).toBe("Reklamasjon på mangel ved Volkswagen ID.4, reg.nr. EL 48213"));
 });
+
+describe("rettinger etter gjennomgangen", () => {
+  it("#2 «som den er» fra 2024: ikke et avtalt unntak etter § 15 annet ledd", () => {
+    const s = { ...eksempel(idag), c_asis: true };
+    const t = tekst(s);
+    expect(t).toContain("er ikke et avtalt unntak etter forbrukerkjøpsloven § 15 annet ledd");
+    expect(t).not.toContain("vesentlig dårligere stand");
+  });
+  it("#3 ingen formodning en dag etter seks kalendermåneder", () => {
+    const s = { ...eksempel(idag), c_purchase: "2023-01-31", c_delivery: "2023-01-31" };
+    s.f_area = { hoyvolt: { ...s.f_area.hoyvolt, found: "2023-08-01" } };
+    expect(tekst(s)).not.toContain("formodes");
+  });
+});

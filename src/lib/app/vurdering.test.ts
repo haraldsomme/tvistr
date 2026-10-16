@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { dur, parseD, relText } from "./dato";
 import { regler } from "./lov";
-import { evaluate, wsFactors } from "./vurdering";
+import { eksempel, syncAreas } from "./skjema";
+import { evaluate, skriverResultat, wsFactors } from "./vurdering";
 
 const idag = "2026-10-16";
 const base = { seller: "forhandler", buyer: "privat", asis: "nei", known: "nei", cause: "nei", notified: "nei" } as const;
@@ -46,5 +47,25 @@ describe("dato og lov", () => {
     expect(dur(parseD("2026-01-01")!, parseD("2026-03-15")!)).toBe("2 måneder");
     expect(relText("2026-03-15", "2026-01-01")).toBe("2 måneder og 2 uker etter overtakelsen");
     expect(relText("2025-12-01", "2026-01-01")).toBe("Før overtakelsen");
+  });
+});
+
+describe("rettinger etter gjennomgangen", () => {
+  it("#1 skriveren bruker kjøpsdatoen for lovversjonen", () => {
+    const s = { ...eksempel(idag), c_purchase: "2023-12-20", c_delivery: "2024-01-05", c_asis: true };
+    s.f_area = { hoyvolt: { ...s.f_area.hoyvolt, found: "2024-10-01" } };
+    const r = skriverResultat(syncAreas(s), idag);
+    expect(r.factors.some((f) => f.t.startsWith("Mer enn seks måneder"))).toBe(true);
+    expect(r.factors.find((f) => f.t === "Solgt «som den er»")?.law).toBe("forbrkjl. § 17 første ledd bokstav a");
+  });
+  it("#2 «som den er» fra 2024 er ikke et avtalt unntak, uten «vesentlig»", () => {
+    const f = evaluate({ ...base, asis: "ja", delivery: "2024-06-01", found: "2024-07-01" }, idag).factors.find((x) => x.t === "Solgt «som den er»")!;
+    expect(f.s).toBe("info");
+    expect(f.d).not.toContain("vesentlig");
+    expect(f.d).toContain("spesielt opplyst");
+  });
+  it("#3 seks måneder telles i kalendermåneder", () => {
+    expect(evaluate({ ...base, delivery: "2023-01-31", found: "2023-08-01" }, idag).factors.some((f) => f.t.startsWith("Mer enn seks måneder"))).toBe(true);
+    expect(evaluate({ ...base, delivery: "2023-01-31", found: "2023-07-31" }, idag).factors.some((f) => f.t === "Feilen viste seg innen seks måneder")).toBe(true);
   });
 });

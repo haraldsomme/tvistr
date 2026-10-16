@@ -5,6 +5,17 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 
 const erObjekt = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+const slag = (v: unknown) => (v === null ? "null" : Array.isArray(v) ? "liste" : typeof v);
+
+// The stored fields over the defaults, keeping only those of the default's type (an edited or older
+// draft must not crash the page). A default of null takes any plain value; unknown keys are kept.
+function flett(s: Record<string, unknown>, v: Record<string, unknown>) {
+  const ut = { ...s };
+  for (const [k, x] of Object.entries(v)) {
+    if (!(k in s) || slag(x) === slag(s[k]) || (s[k] === null && slag(x) !== "liste" && slag(x) !== "object")) ut[k] = x;
+  }
+  return ut;
+}
 
 // The stored value, merged over the defaults for objects; the defaults when missing, corrupt or of
 // another shape.
@@ -56,7 +67,7 @@ function tolk<T>(r: string, standard: () => T): T {
   if (!r) return s;
   try {
     const v: unknown = JSON.parse(r);
-    if (erObjekt(s)) return erObjekt(v) ? ({ ...s, ...v } as T) : s;
+    if (erObjekt(s)) return erObjekt(v) ? (flett(s, v) as T) : s;
     return typeof v === typeof s ? (v as T) : s;
   } catch {
     return s;

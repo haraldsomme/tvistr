@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { lasOpp } from "@/app/brev/actions";
 import { tall } from "@/lib/app/format";
+import { trygt } from "@/lib/app/kall";
 import { PRIS } from "@/lib/pris";
 import { InfoSirkel, Lukk } from "./ikoner";
 
@@ -26,7 +27,7 @@ export function Kjop({ apen, onLukk, onBetalt }: { apen: boolean; onLukk: () => 
 
   async function betal() {
     settVenter(true);
-    const r = await lasOpp();
+    const r = await trygt(lasOpp(), "Vi fikk ikke kontakt. Prøv igjen.");
     settVenter(false);
     if (r.ok) onBetalt(r.ordreId);
     else settMelding(r.melding);

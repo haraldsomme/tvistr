@@ -21,7 +21,9 @@ export function tilSvar(s: Skjema): Svar | null {
   const kjopsdato = s.c_purchase || s.c_delivery;
   const feil = s.f_cats.filter((c) => s.f_area[c]?.found);
   if (!kjopsdato || !feil.length) return null;
-  const opplysning: Kilde | null = s.seller_said === "nei" ? "nei" : s.seller_said ? "skriftlig" : null;
+  // «lovet»: the seller said the car was free of such faults (the form does not ask whether in writing).
+  // «opplyste»: the seller disclosed the fault, which is no misrepresentation, so it is left out.
+  const opplysning: Kilde | null = s.seller_said === "nei" ? "nei" : s.seller_said === "lovet" ? "muntlig" : null;
   const verksted: Kilde | null = s.ws === "rapport" ? "skriftlig" : s.ws === "uten" ? "muntlig" : s.ws === "nei" ? "nei" : null;
   const rapport = s.ws === "rapport" ? { punkter: s.ws_says.map((k) => WS_TIL_PUNKT[k]).filter(Boolean) } : null;
   return {

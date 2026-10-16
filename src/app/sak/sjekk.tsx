@@ -23,7 +23,7 @@ const HURTIG = [["I dag", 0], ["I går", 1], ["For en uke siden", 7], ["For to u
 
 export function Sjekk() {
   const router = useRouter();
-  const [a, settA, klar] = useLagret<Tilstand>("tvistr-sjekk", () => ({}));
+  const [a, settA, klar] = useLagret<Tilstand>("tvistr-sjekk", () => ({ _i: 0, cats: [], issues: {}, fdates: {} }));
   const [ordre] = useLagret("tvistr-ordre", () => "");
   const [retning, settRetning] = useState<1 | -1>(1);
   const [adv, settAdv] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export function Sjekk() {
   const omStart = () => {
     avbryt();
     settRetning(1);
-    settA({ _screen: "q", _i: 0 });
+    settA({ _screen: "q", _i: 0, cats: [], issues: {}, fdates: {} });
   };
 
   function velg(id: keyof Svar, v: string, nokkel: string) {

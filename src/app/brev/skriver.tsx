@@ -15,7 +15,8 @@ import { Krav } from "./krav";
 import { Mangelen } from "./mangelen";
 import { Partene } from "./partene";
 import { har, STEG } from "./steg";
-import { skriverResultat, useLignende, Vurderingsfane } from "./vurderingsfane";
+import { skriverResultat } from "@/lib/app/vurdering";
+import { useLignende, Vurderingsfane } from "./vurderingsfane";
 
 type Fane = "form" | "case" | "letter";
 export function Skriver() {

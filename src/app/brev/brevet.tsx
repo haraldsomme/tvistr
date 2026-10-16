@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Kopier } from "@/app/deler/ikoner";
 import { byggBrev, emne, type Presedens, tilTekst } from "@/lib/app/brev";
 import { idag } from "@/lib/app/dato";
+import { husk } from "@/lib/app/kall";
 import { nokkel, tilSvar } from "@/lib/app/saken";
 import { maal } from "@/lib/maling";
 import type { Skjema } from "@/lib/app/skjema";
@@ -13,12 +14,8 @@ import { Papir } from "./papir";
 import { ETIKETT, mangler } from "./steg";
 
 // One model call per set of answers in this page session, however often the tab is opened.
-const hurtig = new Map<string, Promise<Funn>>();
-function hent(svar: NonNullable<ReturnType<typeof tilSvar>>, ordreId: string) {
-  const k = `${ordreId}|${nokkel(svar)}`;
-  if (!hurtig.has(k)) hurtig.set(k, finnVedtak({ svar, ordreId }).then((f) => (f.ok || hurtig.delete(k), f)));
-  return hurtig.get(k)!;
-}
+const hent = (svar: NonNullable<ReturnType<typeof tilSvar>>, ordreId: string) =>
+  husk(`${ordreId}|${nokkel(svar)}`, () => finnVedtak({ svar, ordreId }), "Vi fikk ikke kontakt. Prøv igjen.");
 
 export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: Sett; ordre: string; onSteg: (i: number) => void; onToast: (m: string) => void }) {
   const svar = tilSvar(s);

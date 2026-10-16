@@ -35,3 +35,15 @@ describe("lagring", () => {
     expect(() => skriv("x", 1)).not.toThrow();
   });
 });
+
+describe("#5 lagret verdi av feil type", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it("beholder bare felt med samme type som standard", () => {
+    vi.stubGlobal("localStorage", minne('{"f_cats":"motor","c_make":null,"b_name":"Kari","f_area":[1]}'));
+    expect(les("x", () => ({ f_cats: [] as string[], c_make: "", b_name: "", f_area: {} as Record<string, unknown> }))).toEqual({ f_cats: [], c_make: "", b_name: "Kari", f_area: {} });
+  });
+  it("sjekker typen på nøkler som finnes i standard, og beholder de andre", () => {
+    vi.stubGlobal("localStorage", minne('{"_i":"x","cats":"motor","make":"Volvo"}'));
+    expect(les<{ _i: number; cats: string[]; make?: string }>("x", () => ({ _i: 0, cats: [] }))).toEqual({ _i: 0, cats: [], make: "Volvo" });
+  });
+});

@@ -3,8 +3,9 @@
 // decision is Tvistr's paragraph from the server (finnVedtak → mal.ts), never written here.
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { LOVORD } from "@/lib/brev/paragrafer";
+import { plussManeder } from "@/lib/brev/tidslinje";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
-import { addDays, addMonths, dur, fmtD, monthsFrac, parseD } from "./dato";
+import { addDays, addMonths, dur, fmtD, parseD } from "./dato";
 import { regler } from "./lov";
 import { DOCS, IMPACT, type Skjema, WS_SAYS, WS_WHO } from "./skjema";
 
@@ -128,23 +129,25 @@ export function byggBrev(s: Skjema, presedens: Presedens | null, idag: string): 
 
   B.push({ t: "h", tekst: ["Rettslig grunnlag"] });
   B.push({ t: "p", tekst: [`Etter ${L.lovRef("krav")} skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. Når den ikke er det, foreligger det en mangel, jf. ${L.par("avvik")}.`] });
+  // Before 2024 old § 17; from 2024 a general «som den er» is no agreed exception under § 15 annet ledd
+  // (the wording the lawyer reviewed in the earlier letter).
   if (s.c_asis)
     B.push({
       t: "p",
       tekst: [
         L.versjon === "før_2024"
           ? `Bilen ble solgt «som den er». Etter ${L.lovRef("forbehold")} har bilen likevel en mangel når den er ${LOVORD.dårligereStand}, eller når dere har unnlatt å opplyse om forhold dere kjente til.`
-          : "Bilen ble solgt «som den er». Det fritar ikke dere for ansvar når bilen er i vesentlig dårligere stand enn jeg hadde grunn til å regne med ut fra kjøpesummen og forholdene ellers, eller når dere har unnlatt å opplyse om forhold dere kjente til.",
+          : `Forbeholdet om at bilen ble solgt «som den er», er ikke et avtalt unntak etter ${L.lovRef("forbehold")}. Unntaket fra ${LOVORD.kravTredjeFjerde} forutsetter at jeg ved inngåelsen av avtalen ${LOVORD.avtaltUnntak}.`,
       ],
     });
   const del = parseD(s.c_delivery),
     found = parseD(s.f_found);
   const formodning = `Etter ${L.par("formodning")} skal en mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises.`;
   if (del && found && found >= del) {
-    const m = monthsFrac(del, found);
-    if (m < L.formodningMnd) B.push({ t: "p", tekst: [`Feilen viste seg ${dur(del, found) || "samme dag"} etter overtakelsen. ${formodning} Det er dermed dere som må bevise at feilen ikke var til stede da jeg overtok bilen.`] });
+    // Calendar months, as the law and the ranking count (tidsnivaFor).
+    if (s.f_found <= plussManeder(s.c_delivery, L.formodningMnd)) B.push({ t: "p", tekst: [`Feilen viste seg ${dur(del, found) || "samme dag"} etter overtakelsen. ${formodning} Det er dermed dere som må bevise at feilen ikke var til stede da jeg overtok bilen.`] });
     // Between the presumption and two years (only before 2024) the letter claims neither.
-    else if (m >= 24) B.push({ t: "p", tekst: [`Feilen viste seg ${dur(del, found)} etter overtakelsen. En bil er ment å vare vesentlig lenger enn to år, og reklamasjonsfristen er derfor fem år, jf. ${L.par("reklamasjon_5ar")}.`] });
+    else if (s.f_found > plussManeder(s.c_delivery, 24)) B.push({ t: "p", tekst: [`Feilen viste seg ${dur(del, found)} etter overtakelsen. En bil er ment å vare vesentlig lenger enn to år, og reklamasjonsfristen er derfor fem år, jf. ${L.par("reklamasjon_5ar")}.`] });
   } else if (!del || !found) B.push({ t: "p", tekst: [`En mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, jf. ${L.par("formodning")}.`] });
   if (found) {
     const nr = (s.f_prior && parseD(s.f_prior_date)) || ld;

@@ -21,7 +21,7 @@ Kjøperen oppgir datoer; koden regner all inndeling fra dem. «Når viste feilen
 | Regel | Nivå | Melding |
 |---|---|---|
 | Kjøpsdato i fremtiden | stopp | Kjøpsdatoen kan ikke være i fremtiden. |
-| Kjøpsdato mer enn fem år tilbake | stopp | Det er mer enn fem år siden du overtok bilen. Den lengste fristen for å reklamere er fem år (forbrukerkjøpsloven § 27 annet ledd annet punktum), og dette brevet kan ikke brukes etter det. Mener du selger har holdt noe skjult, eller har du en garanti som gjelder lenger, bør du kontakte Forbrukerrådet eller en advokat. |
+| Kjøpsdato mer enn fem år tilbake (vises på siden «Fristen er ute», ikke ved feltet) | stopp | Det er mer enn fem år siden du overtok bilen. Den lengste fristen for å reklamere er fem år (forbrukerkjøpsloven § 27 annet ledd annet punktum), og dette brevet kan ikke brukes etter det. Mener du selger har holdt noe skjult, eller har du en garanti som gjelder lenger, bør du kontakte Forbrukerrådet eller en advokat. |
 | Feilen oppdaget samme dag som eller før kjøpet | stopp | Feilen kan ikke ha vist seg før du overtok bilen. |
 | Feilen oppdaget i fremtiden | stopp | Datoen kan ikke være i fremtiden. |
 | Rapporten datert før feilen ble oppdaget | stopp | Rapporten kan ikke være datert før du oppdaget feilen. |
@@ -33,7 +33,7 @@ Kjøperen oppgir datoer; koden regner all inndeling fra dem. «Når viste feilen
 | Feilen oppdaget innenfor 14 dager fra en frist: seks måneder (bare før 2024), to år eller fem år etter kjøpet | advarsel, som må bekreftes når datoen er omtrentlig | Datoen ligger nær en frist i loven ({frist}). Sjekk at den stemmer; den avgjør hvem som må bevise når feilen oppsto. Før 2024 er to og fem år frister for reklamasjonen, og da står det i stedet «den avgjør om reklamasjonen er i tide». |
 | Rapporten mer enn seks måneder etter at feilen ble oppdaget | advarsel | Det gikk lang tid fra feilen ble oppdaget til verkstedet undersøkte den. Selger kan bruke det. |
 
-Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon kan bare velges fra dagen etter kjøpet til i dag.
+«I dag» er dagen i Norge (Europe/Oslo), i skjemaet som på serveren. Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon kan bare velges fra dagen etter kjøpet til i dag.
 
 **Fristvarslene ved datofeltene** (ikke regler, bare tekst): kjøp mer enn to år tilbake og en feil oppdaget mer enn to år etter overtakelsen viser hver sin gule boks med `§`, og under den teksten `fristTekst` i `tidslinje.ts`. Over fem år vises bare stoppen. Paragrafene i meldingene hentes fra `paragrafer.ts` for kjøpets lovversjon; en test i `tidslinje.test.ts` sjekker det. Fullstendig oversikt over alle meldinger: `docs/meldinger-til-jurist.md`.
 
@@ -49,7 +49,7 @@ Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon 
 | Erstatning for utlegg uten linjer, eller en linje uten beløp | stopp | Fyll ut beskrivelse og beløp for hvert utlegg. |
 | Prisavslag uten rapport med kostnadsoverslag | advarsel | Uten et kostnadsoverslag fra verkstedet kan brevet ikke oppgi beløp. Brevet krever prisavslag uten å nevne et beløp. |
 | Prisavslag, og overslag for noen, men ikke alle, kjente feil («vet ikke ennå» regnes ikke med) | advarsel | Kostnadsoverslag mangler for {feil}. Brevet krever prisavslag for {den / dem} uten beløp. |
-| Heving uten rettingsforsøk, og selger har ikke avvist eller latt være å svare | advarsel | Selger kan ha rett til å forsøke retting først. Brevet tar høyde for det, men heving står svakere. |
+| Heving uten rettingsforsøk, og selger har ikke avvist eller latt være å svare | advarsel | Selger kan ha rett til å forsøke retting først. Brevet tar høyde for det, men selger kan bruke det mot hevingen. |
 | Heving, ett feil, og overslaget under 10 % av kjøpesummen (terskelen er skjønn, ikke lov) | advarsel | Heving krever at mangelen ikke er uvesentlig. Når utbedringen koster lite i forhold til kjøpesummen, blir heving sjelden godtatt. Vurder prisavslag. |
 | Rapporten fraråder bruk, og krav om prisavslag | advarsel | Verkstedet fraråder bruk. Retting eller heving passer ofte bedre når bilen ikke kan brukes. |
 | Selger opplyste om en teknisk feil før kjøpet (alle kjøp, uansett «som den er»). For en side med bare tekniske feil svarer kjøperen Ingenting / Selger sa det var i orden eller nylig utbedret / Selger opplyste om feilen; bare det siste advarer. På sider med blandede typer advarer «skriftlig» og «muntlig» som før. | advarsel | Hvis selger opplyste om akkurat denne feilen før kjøpet, kan du som regel ikke reklamere på den. Sjekk hva som ble sagt, og om det gjaldt denne feilen eller noe annet. |
@@ -64,7 +64,7 @@ Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon 
 | Kjøpesum under 5 000 eller over 3 000 000 kr | stopp | Kjøpesummen må være mellom 5 000 og 3 000 000 kr. Sjekk beløpet. |
 | Kjøpesum under 20 000 kr og krav om heving (grensen er skjønn, ikke lov) | advarsel | Ved så lav kjøpesum legger utvalget til grunn at mye må påregnes. |
 | Første registrering etter kjøpsåret | stopp | Bilen ble første gang registrert etter kjøpsdatoen. Sjekk kjøpsdatoen. |
-| Registreringsnummeret finnes ikke hos vegvesenet | stopp | Som før: bilen kan ikke velges uten et treff. |
+| Registreringsnummeret finnes ikke hos vegvesenet | stopp | Som før: bilen kan ikke velges uten et treff. Serveren bruker bare bilen den selv har forseglet (`/api/kjoretoy`), og sjekker første registrering mot kjøpsåret også i vurderingen. |
 | Bruktimportert | ingen regel | Brevet sier aldri «norsk bil» (sjekket av invariantene). |
 
 ## Selger
@@ -73,7 +73,7 @@ Datovelgerne hindrer det meste før det skjer: oppdaget, rapport og reklamasjon 
 |---|---|---|
 | Organisasjonsnummeret har feil kontrollsiffer (modulus 11) | stopp | Organisasjonsnummeret er ikke gyldig. Velg selgeren på nytt. |
 | Foretaket er registrert som konkurs eller under avvikling | advarsel | Foretaket er registrert {som konkurs / under avvikling}. Du kan likevel lage brevet, men kravet kan være vanskelig å inndrive. |
-| Næringskoden er ikke bilhandel (45.1) | advarsel | Foretaket er ikke registrert som bilforhandler. Er dette riktig selger? |
+| Ingen av foretakets tre næringskoder er salg av kjøretøy (45.1 og 45.4 i SN2007; 47.81, 46.71 og 47.83 i SN2025, som Brreg bruker fra 2025). Store forhandlere har ofte reparasjon (95.31) som hovedkode og salget som annen kode | advarsel | Foretaket er ikke registrert som bilforhandler. Er dette riktig selger? |
 | Forretningsadressen mangler | ingen | Brevet utelater adresselinjene. |
 
 ## Kjøperens egen tekst (beskrivelse og rapportens konklusjon)
@@ -84,11 +84,12 @@ Dette er de eneste stedene kjøperen kan skrive noe brevet gjengir ordrett.
 - trim
 - maks lengde: 200 tegn for beskrivelsen og 300 for konklusjonen
 - linjeskift blir mellomrom, og doble mellomrom blir enkle
+- usynlige tegn (Unicode Cf, f.eks. null-bredde-mellomrom) fjernes
 - doble anførselstegn fjernes (" “ ” „ « »), fordi brevet setter «» rundt teksten
 
 | Regel | Nivå | Melding |
 |---|---|---|
-| Lenke (http, www eller et domene) | stopp | Legg ved dokumentet i stedet for lenken. |
+| Lenke: http, www, et navn med et vanlig toppdomene (små eller bare store bokstaver) eller et navn med sti (`x.yz/`). Usynlige tegn og fullbreddepunktum normaliseres først. | stopp | Legg ved dokumentet i stedet for lenken. |
 | Bare tall eller tegn, ingen bokstaver | stopp | Skriv med ord, ikke bare tall eller tegn. |
 
 I brevet står teksten alltid som sitat i «», aldri som brevets egen setning. En feil der er derfor synlig som kjøperens ord.
@@ -126,11 +127,11 @@ Testsakene i `src/lib/brev/testsak.ts` går gjennom de samme reglene: `lagSak` n
 
 ## Oppsummeringen før betaling
 
-Steg 7 (forhåndsvisningen) viser advarslene øverst med antall: «Brevet har {n} advarsler, {k} av dem om datoer. Se over før du betaler.», hver med «Endre», som fører tilbake til feltet (steg 2, 3, 5 eller 6). Under forhåndsvisningen står oppsummeringen i tabellform under «Se over opplysningene i brevet»: bil, kjøpsdato, km, kjøpesum, «som den er», hver feil med dato og rapport, reklamasjon, krav, utlegg og selger, med «Endre» per rad. «Lås opp hele brevet» viser skiltet og bilen, siden bilen ikke kan byttes etter kjøpet.
+Steg 7 (forhåndsvisningen) viser advarslene øverst med antall: «Brevet har {n} advarsler, {k} av dem om datoer. Se over før du betaler.» (entall: «1 advarsel»; er alle om datoer: «Brevet har {n} advarsler om datoer.»; ingen om datoer: uten leddet), hver med «Endre», som fører tilbake til feltet (steg 2, 3, 5 eller 6). Under forhåndsvisningen står oppsummeringen i tabellform under «Se over opplysningene i brevet»: bil, kjøpsdato, km, kjøpesum, «som den er», hver feil med dato og rapport, reklamasjon, krav, utlegg og selger, med «Endre» per rad. «Lås opp hele brevet» viser skiltet og bilen, siden bilen ikke kan byttes etter kjøpet.
 
 Dette er stedet som fanger det som er mulig, men galt, som feil regnr eller feil selger valgt i søket.
 
-Vurderingen i steg 4 bruker de samme advarseltekstene som grunner når saken står svakt (`docs/vurdering.md`): `OVER_TO_AAR_FEIL`, og de nye `SOM_DEN_ER_GAMMEL` (steg 2) og slitedel etter seks måneder (steg 3). De to nye er bare advarsler i skjemaet og vurderingen; de er ikke regler i `riktighet.ts` og stopper ingenting.
+Vurderingen i steg 4 bruker de samme vilkårene som grunner til statusen `svak` (`docs/vurdering.md`; grunnene vises ikke for kjøperen der): `OVER_TO_AAR_FEIL`, og de nye `SOM_DEN_ER_GAMMEL` (steg 2) og slitedel etter seks måneder (steg 3). De to nye er bare advarsler i skjemaet og vurderingen; de er ikke regler i `riktighet.ts` og stopper ingenting.
 
 ## Logg per brev
 

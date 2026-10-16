@@ -70,6 +70,7 @@ export function rensFritekst(s: unknown, maks: number): string | null {
   if (typeof s !== "string") return null;
   const t = s
     .replace(/[\r\n]+/g, " ")
+    .replace(/\p{Cf}/gu, "")
     .replace(/["“”„«»]/g, "")
     .replace(/ {2,}/g, " ")
     .trim()

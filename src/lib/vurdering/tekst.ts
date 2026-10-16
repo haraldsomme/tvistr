@@ -9,7 +9,6 @@ const IKON = { ja: "✓", nei: "!", info: "i" } as const;
 export function vurderingSomTekst(v: VurderingResultat, kjopsdato: string): string {
   if (v.status === "ute") return [`# ${OVERSKRIFT.ute}`, fristenUteTekst(kjopsdato), "[Gå til Forbrukerrådet] [Endre kjøpsdato]", "Du har ikke betalt noe."].join("\n\n");
   const deler: string[] = [`# ${OVERSKRIFT[v.status]}`];
-  if (v.status === "svak") deler.push("## Dette svekker saken", v.grunner.map((g) => `! ${g.tekst}`).join("\n"));
   deler.push("## Dette sier loven om din sak", v.lovlinjer.map((l) => `${IKON[l.ikon]} ${l.tekst}${l.paragraf ? ` [${l.paragraf}]` : ""}`).join("\n"));
   deler.push("## Lignende saker i Forbrukerklageutvalget", ...v.tall.map((b) => tallsetninger(b).join(" ")));
   if (v.kort.length)

@@ -4,7 +4,7 @@
 //
 // Impossible or self-contradictory answers stop; answers that are possible but weaken the case warn.
 // Every rule is listed with its message in docs/riktighet.md.
-import { gyldigOrgnr } from "@/lib/brreg";
+import { erBilhandel, gyldigOrgnr } from "@/lib/brreg";
 import type { Krav } from "@/lib/matching/typer";
 import { liste, smaa } from "./format";
 import { feilnavn, feiltype, tekniskFeil, tekniskSa } from "./feiltype";
@@ -37,15 +37,23 @@ export const KJOPESUM_MAKS = 3_000_000;
 const KJOPESUM_LAV = 20_000;
 const LITEN_UTBEDRING = 0.1;
 
+export const REGISTRERT_ETTER_KJOP = "Bilen ble første gang registrert etter kjøpsdatoen. Sjekk kjøpsdatoen.";
+
 const KRAVNAVN: Record<Krav, string> = { retting: "retting", prisavslag: "prisavslag", heving: "heving" };
 
 // Free text the letter quotes: only letters make it something to quote, and a link is not a quote.
 const BARE_TEGN = /^[^\p{L}]+$/u;
-const LENKE = /(https?:\/\/|www\.)|\b[\w-]+\.(no|com|net|org|io|se|dk|eu)\b/i;
+// A link: a scheme, «www.», or a name followed by a common top-level domain or by a path. The domain is
+// lower case or all capitals, so a missing space before a capital («verkstedet.De») is not a link.
+// Invisible characters and full-width dots are normalised first, so «vg\u200b.no» and «finn．no» are.
+const TOPPDOMENER = "no|com|net|org|info|biz|io|ai|app|dev|co|me|ly|to|tv|cc|gl|link|page|site|online|shop|xyz|se|dk|fi|is|eu|de|uk|nl|fr|es|it|pl|be|ch|at|us|ru|cn";
+const LENKE = new RegExp(`(?:https?://|www\\.)|\\b[\\w-]+\\.(?:(?:${TOPPDOMENER}|${TOPPDOMENER.toUpperCase()})\\b|[a-z]{2,}/)`);
+const LENKE_START = /https?:\/\/|www\./i;
+const somLenke = (t: string) => t.normalize("NFKC").replace(/\p{Cf}/gu, "").replace(/[。｡]/g, ".");
 
 export function fritekstMerknad(tekst: string | null, felt: "beskrivelse" | "konklusjon", feilId: string): Riktighetsmerknad | null {
   if (!tekst) return null;
-  if (LENKE.test(tekst)) return { regel: "fritekst_lenke", felt, feilId, melding: "Legg ved dokumentet i stedet for lenken." };
+  if (LENKE.test(somLenke(tekst)) || LENKE_START.test(tekst)) return { regel: "fritekst_lenke", felt, feilId, melding: "Legg ved dokumentet i stedet for lenken." };
   if (BARE_TEGN.test(tekst)) return { regel: "fritekst_bare_tegn", felt, feilId, melding: "Skriv med ord, ikke bare tall eller tegn." };
   return null;
 }
@@ -90,7 +98,7 @@ export function vurderRiktighet(s: Riktighetssak): Riktighet {
       melding: `Kostnadsoverslag mangler for ${liste(fordeling.uten.map((f) => smaa(feilnavn(f))))}. Brevet krever prisavslag for ${fordeling.uten.length > 1 ? "dem" : "den"} uten beløp.`,
     });
   if (s.krav === "heving" && s.forsok === 0 && s.svar !== "avviste" && s.svar !== "ikke_svart")
-    advarsler.push({ regel: "heving_uten_retting", felt: "krav", melding: "Selger kan ha rett til å forsøke retting først. Brevet tar høyde for det, men heving står svakere." });
+    advarsler.push({ regel: "heving_uten_retting", felt: "krav", melding: "Selger kan ha rett til å forsøke retting først. Brevet tar høyde for det, men selger kan bruke det mot hevingen." });
   if (s.krav === "heving" && o && s.kjopesum && s.feil.length === 1 && o.sum < s.kjopesum * LITEN_UTBEDRING)
     advarsler.push({ regel: "heving_liten_utbedring", felt: "krav", melding: "Heving krever at mangelen ikke er uvesentlig. Når utbedringen koster lite i forhold til kjøpesummen, blir heving sjelden godtatt. Vurder prisavslag." });
   if (s.krav === "prisavslag" && s.feil.some((f) => f.rapport?.punkter.includes("frarader")))
@@ -120,7 +128,7 @@ export function vurderRiktighet(s: Riktighetssak): Riktighet {
   if (s.kjopesum !== null && s.kjopesum < KJOPESUM_LAV && s.krav === "heving")
     advarsler.push({ regel: "lav_kjopesum_heving", felt: "krav", melding: "Ved så lav kjøpesum legger utvalget til grunn at mye må påregnes." });
   if (s.forsteRegistrert !== null && s.forsteRegistrert > Number(s.kjopsdato.slice(0, 4)))
-    stopp.push({ regel: "registrert_etter_kjop", felt: "kjopsdato", melding: "Bilen ble første gang registrert etter kjøpsdatoen. Sjekk kjøpsdatoen." });
+    stopp.push({ regel: "registrert_etter_kjop", felt: "kjopsdato", melding: REGISTRERT_ETTER_KJOP });
 
   // 3. The seller.
   if (s.selger) {
@@ -131,7 +139,7 @@ export function vurderRiktighet(s: Riktighetssak): Riktighet {
         felt: "selger",
         melding: `Foretaket er registrert ${s.selger.status === "konkurs" ? "som konkurs" : "under avvikling"}. Du kan likevel lage brevet, men kravet kan være vanskelig å inndrive.`,
       });
-    if (s.selger.naeringskode && !s.selger.naeringskode.startsWith("45.1"))
+    if (s.selger.naeringskode && !erBilhandel(s.selger.naeringskode))
       advarsler.push({ regel: "selger_ikke_bilforhandler", felt: "selger", melding: "Foretaket er ikke registrert som bilforhandler. Er dette riktig selger?" });
   }
 

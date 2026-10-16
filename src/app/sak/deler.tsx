@@ -78,7 +78,13 @@ export type Utlegg = { beskrivelse: string; belop: string };
 
 // Digits with a space every third place: 84210 → «84 210».
 export const tall = (s: string) => s.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-export const kunSifre = (s: string, maks: number) => s.replace(/\D/g, "").replace(/^0+/, "").slice(0, maks);
+// Digits only. Øre and «,-» at the end are dropped first, so «4 999,00» pasted is 4 999 and not 499 900.
+export const kunSifre = (s: string, maks: number) =>
+  s
+    .replace(/(?:[.,]\d{1,2}|,-)\s*(?:kr)?\s*$/i, "")
+    .replace(/\D/g, "")
+    .replace(/^0+/, "")
+    .slice(0, maks);
 
 export const pop = (i: number) => `rkPop 560ms cubic-bezier(.22,1,.36,1) ${70 + i * 45}ms backwards`;
 export const datoTekst = (d: string) =>
@@ -349,6 +355,8 @@ export function Selgervalg({ valgt, velg }: { valgt: Selger | null; velg: (s: Se
   const [feil, setFeil] = useState(false);
   // The query the list on screen belongs to, so «no hits» is not shown while the next one is on its way.
   const [sokt, setSokt] = useState("");
+  // Raised by «Prøv igjen», so the same query is searched again.
+  const [igjen, setIgjen] = useState(0);
 
   const s = q.trim();
   useEffect(() => {
@@ -357,7 +365,8 @@ export function Selgervalg({ valgt, velg }: { valgt: Selger | null; velg: (s: Se
     const timer = setTimeout(async () => {
       setSoker(true);
       try {
-        const res = await fetch(`/api/firma?${new URLSearchParams({ q: s })}`, { signal: avbryt.signal });
+        // Ten seconds, so a register that does not answer gives the message instead of «Søker …» for ever.
+        const res = await fetch(`/api/firma?${new URLSearchParams({ q: s })}`, { signal: AbortSignal.any([avbryt.signal, AbortSignal.timeout(10_000)]) });
         const json = (await res.json()) as { forslag?: Forslag[]; feil?: true };
         if (avbryt.signal.aborted) return;
         setForslag(json.forslag ?? []);
@@ -375,7 +384,7 @@ export function Selgervalg({ valgt, velg }: { valgt: Selger | null; velg: (s: Se
       clearTimeout(timer);
       avbryt.abort();
     };
-  }, [s]);
+  }, [s, igjen]);
   // A query shorter than three letters shows nothing, whatever an earlier one left behind.
   const treff = s.length >= 3 ? forslag : [];
 
@@ -409,7 +418,14 @@ export function Selgervalg({ valgt, velg }: { valgt: Selger | null; velg: (s: Se
         style={{ height: 50, border: `1.5px solid ${LINE}`, borderRadius: 10, padding: "0 14px", font: `16px ${SANS}`, color: INK, outline: "none", background: "#fff", boxSizing: "border-box" }}
       />
       {soker && s.length >= 3 && <span role="status" style={{ fontSize: 13, color: "#5f6468" }}>Søker …</span>}
-      {feil && !soker && s.length >= 3 && <Varsel type="stopp">Vi fikk ikke kontakt med Enhetsregisteret. Prøv igjen om litt.</Varsel>}
+      {feil && !soker && s.length >= 3 && (
+        <Varsel type="stopp">
+          Vi fikk ikke kontakt med Enhetsregisteret.{" "}
+          <button type="button" onClick={() => setIgjen((n) => n + 1)} style={{ ...KNAPP, display: "inline", fontWeight: 600, color: A, textDecoration: "underline" }}>
+            Prøv igjen
+          </button>
+        </Varsel>
+      )}
       {treff.length > 0 && (
         <div role="listbox" aria-label="Treff i Enhetsregisteret" style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, overflow: "hidden" }}>
           {treff.map((f, i) => (

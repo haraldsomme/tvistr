@@ -5,11 +5,12 @@ import { orgnrFra } from "@/lib/brreg";
 import { MAKS_BESKRIVELSE, MAKS_VERKSTEDNAVN, RAPPORT_PUNKTER, type Rapport, rensFritekst, rensKonklusjon, SELGER_SVAR, VERKSTED_HVEM } from "@/lib/brev/rapport";
 import { tekniskFeil } from "@/lib/brev/feiltype";
 import type { Brevfeil, Kilde, Kontakt, Opplyst, SomDenEr } from "@/lib/brev/typer";
-import { type Riktighetssak, vurderRiktighet } from "@/lib/brev/riktighet";
+import { REGISTRERT_ETTER_KJOP, type Riktighetssak, vurderRiktighet } from "@/lib/brev/riktighet";
 import { erDato, type Vurdering, vurderTidslinje } from "@/lib/brev/tidslinje";
 import { type Feilvalg, HOVEDKATEGORIER, type Hovedkategori, rensFeilvalg } from "@/lib/feil/kategorier";
 import { normaliserRegnr } from "@/lib/kjoretoy/vegvesen";
 import type { Krav } from "@/lib/matching/typer";
+import { apne } from "./signatur";
 
 // A real day written as YYYY-MM-DD («2025-02-30» is not one).
 export const gyldigDato = (v: unknown): string | null => (erDato(v) ? v : null);
@@ -24,6 +25,15 @@ const OPPLYST: readonly Opplyst[] = ["i_orden", "feilen"];
 
 // Today in Norway, so a letter written late in the evening is dated that day.
 export const idagOslo = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Oslo" }).format(new Date());
+
+// The vehicle as the server sealed it in /api/kjoretoy, never as the browser describes it: a car that was
+// not looked up, or a year changed in the browser, does not reach the assessment or the letter.
+type Bil = { regnr: string; merke: string; modell: string; ar: number | null };
+function bilFra(segl: unknown): Bil | null {
+  const b = apne(segl) as Record<string, unknown> | undefined;
+  if (!b || typeof b.regnr !== "string" || !normaliserRegnr(b.regnr) || typeof b.merke !== "string" || !b.merke || typeof b.modell !== "string") return null;
+  return { regnr: b.regnr, merke: b.merke, modell: b.modell, ar: heltall(b.ar, 1900, 2100) };
+}
 
 // A written report: who, the name, the date (after the purchase, not in the future), at least one tick,
 // the conclusion cleaned (rensKonklusjon) and the estimate, which has a place only with the tick for it.
@@ -63,6 +73,7 @@ export type Vedtakssvar = {
   rent: Feilvalg;
   kjopsdato: string;
   km: number | null;
+  bil: Bil;
   ar: number | null;
   somDenEr: SomDenEr | null;
   krav: Krav | null;
@@ -83,6 +94,9 @@ export function rensVedtakssvar(s: Record<string, unknown>): Resultat<Vedtakssva
   if (!valgte.length) return { ok: false, melding: "Velg minst én feil." };
   const dato = gyldigDato(s.kjopsdato);
   if (!dato) return { ok: false, melding: "Velg kjøpsdatoen." };
+  const bil = bilFra(s.bilSegl);
+  if (!bil) return { ok: false, melding: "Vi må hente bilen på nytt. Gå til første steg og trykk «Sjekk bilen»." };
+  if (bil.ar !== null && bil.ar > Number(dato.slice(0, 4))) return { ok: false, melding: REGISTRERT_ETTER_KJOP };
 
   const d = (s.detaljer && typeof s.detaljer === "object" ? s.detaljer : {}) as Record<string, Record<string, unknown> | undefined>;
   const detaljer: Vedtakssvar["detaljer"] = {};
@@ -125,7 +139,8 @@ export function rensVedtakssvar(s: Record<string, unknown>): Resultat<Vedtakssva
       rent,
       kjopsdato: dato,
       km: heltall(s.km, 1, 1_500_000),
-      ar: heltall(s.ar, 1950, 2100),
+      bil,
+      ar: bil.ar,
       somDenEr: SOM_DEN_ER.find((x) => x === s.somDenEr) ?? null,
       krav: KRAV.find((k) => k === s.krav) ?? null,
       // Repairs need a complaint: without one the number is 0 whatever the browser says.
@@ -168,12 +183,6 @@ export function rensBrevsvar(s: Record<string, unknown>): Resultat<Brevsvar> {
     feil.push({ hoved: id, under: v.svar.rent[id], oppdaget: d.oppdaget, omtrentlig: d.omtrentlig, beskrivelse: d.beskrivelse, opplysning: d.opplysning, opplyst: d.opplyst, verksted: d.verksted, rapport: d.rapport });
   }
 
-  const b = (s.bil && typeof s.bil === "object" ? s.bil : {}) as Record<string, unknown>;
-  const regnr = tekst(b.regnr, 20);
-  const merke = tekst(b.merke, 60);
-  const modell = tekst(b.modell, 60);
-  if (!regnr || !normaliserRegnr(regnr) || !merke || !modell) return { ok: false, melding: "Bilen mangler. Gå tilbake til første steg." };
-
   const orgnr = typeof s.selgerOrgnr === "string" ? orgnrFra(s.selgerOrgnr) : null;
   if (!orgnr) return { ok: false, melding: "Velg selgeren i steg 1." };
 
@@ -187,7 +196,8 @@ export function rensBrevsvar(s: Record<string, unknown>): Resultat<Brevsvar> {
     }
   }
 
-  const bil = { regnr, merke, modell, forsteRegistrert: heltall(b.ar, 1900, 2100) };
+  const { regnr, merke, modell, ar } = v.svar.bil;
+  const bil = { regnr, merke, modell, forsteRegistrert: ar };
   // The rules besides the dates (riktighet.ts). What stops in the form stops here too; the seller's
   // status and industry are only known once the register has answered, so those warnings are judged
   // in byggBrevet.

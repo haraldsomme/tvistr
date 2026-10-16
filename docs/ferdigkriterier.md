@@ -215,3 +215,46 @@ I tillegg, som tester og ikke egne kriterier: status per gren (tabelltest, «fri
 | 5 | Måling | **Grønt.** Alle ti hendelsene lagres i `hendelse` med status og kategorier, sett i databasen etter en gjennomgang i nettleseren; serveren forkaster regnr og navn (`maling.test.ts`). |
 
 Kjent og ikke kriterium: Vipps (betalingen simuleres bare i utvikling), og at `next build` stopper på en lokal, git-ignorert fil (`data/explore/pilot.mts`) som ikke er en del av appen; med den utenfor bygges alle sider, og landingssiden prerendres med antallet.
+
+---
+
+# Ferdigkriterier: registreringen
+
+Registreringen er alt kjøperen fyller ut, fra landingssiden til oppsummeringen i steg 7 (`docs/skjema.md`). Den er ferdig når alle seks er grønne. Kriteriene er satt før testingen og endres ikke mens de måles. Agentene tester og retter ingenting; er ett rødt, rapporteres tallet, og arbeidet stopper.
+
+| # | Kriterium | Måling | Grønt |
+|---|---|---|---|
+| 1 | Ingen stopp-regel kan omgås | Hver stopp-regel i `riktighet.md` og tidslinjen, i skjemaet og med et forfalsket kall til serveren: datoer i feil rekkefølge, motstridende svar og grenseverdier (kjøpesum 4 999 / 5 000 / 3 000 000 / 3 000 001, fristene ±1 dag) | 0 omgått i skjemaet, 0 godtatt av serveren |
+| 2 | Meldingene vises riktig | Hver stopp og advarsel ved feltet, med teksten ordrett fra `riktighet.md`; advarslene samlet i steg 7, og «Endre» fører til riktig felt | 100 % |
+| 3 | Serveren får nøyaktig det kjøperen sist svarte | 30 tilfeldige saker (fast frø), med endringer underveis (kontakt nei, rapport og feil fjernet, «Samme rapport»): oppsummeringen i steg 7 og det serveren får, felt for felt | 100 % like felt, 0 gamle svar |
+| 4 | Ingenting går tapt | Omlasting, nettleserens tilbake, «Tilbake» og «Endre» på hvert steg; nytt regnr gir ny sak, samme fortsetter; gammel lagringsnøkkel (`v3`) brukes ikke | 0 tapte svar |
+| 5 | Oppslagene virker, også når de svikter | Vegvesenet simulert (personbil, varebil, elbil, bruktimport, MC, bobil); Brreg-søk på navn og org.nr. for 10 ekte forhandlere; svikt simulert (404, 500, tidsavbrudd, 429) hos vegvesen, Brreg og vurderingen | Riktig visning for alle; ved svikt en forståelig melding, «prøv igjen», aldri låst skjema |
+| 6 | Fullførbar på mobil og desktop, med tastatur | 390 og 1280 px i Chromium, WebKit og Firefox; hele flyten med bare tastatur | Alle felt har etikett, ingen horisontal scroll, 0 konsollfeil |
+
+Ikke kriterium her: brevet og vurderingen (egne kriterier over), Vipps (ikke bygget), rategrensene (slått av under testing), brukertest og juristgjennomgang (mennesker, ikke agenter), enkeltpersonforetak (ikke dekket av skjemaet).
+
+## Resultat for registreringen (2026-10-14)
+
+Målt av fire testagenter mot utviklingsserveren, med de ucommittede endringene. Ingenting er rettet. Skript og rådata ligger i økten sin scratchpad (`a/` til `d/`) og er ikke sjekket inn.
+
+| # | Kriterium | Resultat |
+|---|---|---|
+| 1 | Ingen stopp-regel kan omgås | **Rødt.** 9 av 20 omgått i skjemaet, 4 av 20 godtatt av serveren. To når steg 7: lenke i fritekst (`LENKE` dekker bare åtte toppdomener, f.eks. `bit.ly`, `example.de` slipper gjennom) og en bil som ikke er hentet fra vegvesenet (serveren slår aldri opp bilen). Serveren godtar også en sak uten registreringsår (`bil.ar`) og stiller ingen krav til samme feil to ganger (fjernes stille). Innliming av «4 999,00» i kjøpesum gir 499 900. De øvrige omgåelsene krever endret `sessionStorage` og stopper senest i steg 6. Grenseverdiene for kjøpesum og femårsfristen stemmer på serveren. |
+| 2 | Meldingene vises riktig | **Rødt.** 66 av 73. Avvik: rapport- og reklamasjonsdato i fremtiden og reklamasjon samme dag som kjøpet gir en annen tekst enn `riktighet.md`; utlegg uten linjer eller beløp gir ingen melding; samleboksen med bare datoadvarsler har en form som ikke står i dokumentene; «Endre» på raden Bil går til kjøpsdatoen; kjøp over fem år vises ikke rødt ved feltet (`skjema.md` og `meldinger-til-jurist.md` er uenige). Utenom tellingen: skjemaet bruker UTC-dato, så mellom 00 og 02 norsk tid er dagens dato «i fremtiden». |
+| 3 | Serveren får nøyaktig det kjøperen sist svarte | **Rødt.** 3 523 av 3 523 felt like over 30 saker, men 16 gamle svar i kroppen (rapporter valgt bort og detaljer for fjernede feil; `brevsvar()` sender alle `detaljer`). Rensingen kaster dem, så brevet er riktig. «Samme rapport som forrige feil» kan kopiere en rapport kjøperen har valgt bort. |
+| 4 | Ingenting går tapt | **Rødt.** 1 tapt svar: samme regnr fra landingssiden lar `?regnr=` stå i adressen, så «Nei, søk på nytt» og omlasting gir en tom sak med den gamle bilen. Omlasting endrer også rekkefølgen på feilene i brevet (`rensFeilvalg` sorterer). 68 av 68 målinger av det skjemaet viser, var ellers like. |
+| 5 | Oppslagene virker, også når de svikter | **Rødt.** Alle ekte forhandlere får «ikke registrert som bilforhandler»: Brreg bruker nye næringskoder (47.810), regelen sjekker `45.1`. Svikt i vurderingen i steg 4 gir Next sin engelske feilside (ingen `error.tsx`). Vegvesen eller vurdering som aldri svarer, låser skjemaet til omlasting. HTML-svar fra `/api/kjoretoy` gir en teknisk JSON-melding. En bil med merke men uten modell regnes som ikke funnet. Ellers: seks kjøretøytyper vises riktig, 10 av 10 forhandlere funnet på org.nr., 9 av 10 på navn, riktig adresse i alle. |
+| 6 | Fullførbar på mobil og desktop, med tastatur | **Grønt.** Fullført i Chromium, WebKit og Firefox ved 390 og 1280 px, og med bare tastatur. Ingen horisontal scroll, 0 konsollfeil, alle felt har navn. Utenom kriteriet: knappene har ikke synlig fokus (`all: unset`, ingen `:focus-visible`), fokus går ikke til feilen eller til nytt steg, og selgersøket virker ikke med piltaster. |
+
+## Resultat for registreringen etter første retting (2026-10-15)
+
+Rettet: næringskodene (de nye kodene fra 2025, og alle tre kodene til foretaket), lenkesjekken, «Samme rapport» og gamle svar, rekkefølgen på feilene, `?regnr=` i adressen, og kall som svikter eller henger (melding og «Prøv igjen» i stedet for Next sin feilside eller evig venting; `src/app/error.tsx`). Målt med de samme skriptene.
+
+| # | Kriterium | Resultat |
+|---|---|---|
+| 1 | Ingen stopp-regel kan omgås | **Rødt.** 8 av 20 omgått i skjemaet (før 9), 3 av 20 godtatt av serveren (før 4). Lenkene er rettet. Gjenstår: bil som ikke er hentet fra vegvesenet, `bil.ar` på serveren, innliming av kjøpesum, og omgåelser via endret `sessionStorage` som stopper senest i steg 6. |
+| 2 | Meldingene vises riktig | **Rødt.** 66 av 73, uendret (ikke en del av rettingen). |
+| 3 | Serveren får nøyaktig det kjøperen sist svarte | **Grønt.** 3 523 av 3 523 felt like, 0 gamle svar. |
+| 4 | Ingenting går tapt | **Grønt.** 0 tapte svar, og rekkefølgen på feilene er den samme før og etter omlasting. |
+| 5 | Oppslagene virker, også når de svikter | **Rødt.** Rettet og målt: 10 av 10 forhandlere uten falsk advarsel (også Birger N Haug og Jæger med reparasjon som hovedkode), vegvesen-feil gir norsk melding og gir opp etter 15 s, nettfeil og heng i steg 4 gir melding og «Prøv igjen» som virker. Gjenstår: bil med merke men uten modell regnes som ikke funnet; Brreg-søket har ingen «Prøv igjen» og viser «Søker …» uten slutt når Brreg ikke svarer; «Bil i Nord» finnes ikke på navn. Ikke målt: heng i steg 7. Auksjonen.no har 47.810 som tredje kode og får ikke lenger advarselen. |
+| 6 | Fullførbar på mobil og desktop, med tastatur | **Grønt**, uendret. |

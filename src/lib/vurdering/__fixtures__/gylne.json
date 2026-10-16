@@ -5,6 +5,12 @@
     "lovversjon": "etter_2024",
     "lovlinjer": [
       {
+        "tema": "mangel",
+        "ikon": "ja",
+        "tekst": "Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel.",
+        "paragraf": "forbrukerkjøpsloven § 16 første ledd bokstav a"
+      },
+      {
         "tema": "frist",
         "ikon": "ja",
         "tekst": "Du er innenfor fristen for å reklamere (to år fra overtakelsen).",
@@ -189,8 +195,8 @@
     "lovlinjer": [
       {
         "tema": "frist",
-        "ikon": "nei",
-        "tekst": "Fristen kan være ute for slitedeler.",
+        "ikon": "ja",
+        "tekst": "Fristen er fem år for deler som er ment å vare vesentlig lenger enn to år, ellers to år.",
         "paragraf": "forbrukerkjøpsloven § 27 annet ledd"
       },
       {
@@ -272,6 +278,12 @@
     "lovversjon": "etter_2024",
     "lovlinjer": [
       {
+        "tema": "mangel",
+        "ikon": "ja",
+        "tekst": "Bilen skal svare til det selger opplyste før kjøpet.",
+        "paragraf": "forbrukerkjøpsloven § 16 første ledd bokstav c"
+      },
+      {
         "tema": "frist",
         "ikon": "ja",
         "tekst": "Du er innenfor fristen for å reklamere (to år fra overtakelsen).",
@@ -344,6 +356,12 @@
     "grunner": [],
     "lovversjon": "etter_2024",
     "lovlinjer": [
+      {
+        "tema": "mangel",
+        "ikon": "ja",
+        "tekst": "Bilen skal svare til det selger opplyste før kjøpet.",
+        "paragraf": "forbrukerkjøpsloven § 16 første ledd bokstav c"
+      },
       {
         "tema": "frist",
         "ikon": "ja",
@@ -418,6 +436,12 @@
     "lovversjon": "etter_2024",
     "lovlinjer": [
       {
+        "tema": "mangel",
+        "ikon": "ja",
+        "tekst": "Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel.",
+        "paragraf": "forbrukerkjøpsloven § 16 første ledd bokstav a"
+      },
+      {
         "tema": "frist",
         "ikon": "ja",
         "tekst": "Du er innenfor fristen for å reklamere (to år fra overtakelsen).",
@@ -474,6 +498,12 @@
     "grunner": [],
     "lovversjon": "etter_2024",
     "lovlinjer": [
+      {
+        "tema": "mangel",
+        "ikon": "ja",
+        "tekst": "Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel.",
+        "paragraf": "forbrukerkjøpsloven § 16 første ledd bokstav a"
+      },
       {
         "tema": "frist",
         "ikon": "ja",
@@ -556,6 +586,12 @@
     "lovversjon": "etter_2024",
     "lovlinjer": [
       {
+        "tema": "mangel",
+        "ikon": "ja",
+        "tekst": "Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel.",
+        "paragraf": "forbrukerkjøpsloven § 16 første ledd bokstav a"
+      },
+      {
         "tema": "frist",
         "ikon": "ja",
         "tekst": "Du er innenfor fristen for å reklamere (fem år fra overtakelsen).",
@@ -636,6 +672,12 @@
     "lovversjon": "etter_2024",
     "lovlinjer": [
       {
+        "tema": "mangel",
+        "ikon": "ja",
+        "tekst": "Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel.",
+        "paragraf": "forbrukerkjøpsloven § 16 første ledd bokstav a"
+      },
+      {
         "tema": "frist",
         "ikon": "ja",
         "tekst": "Du er innenfor fristen for å reklamere (to år fra overtakelsen).",
@@ -710,6 +752,12 @@
     "grunner": [],
     "lovversjon": "etter_2024",
     "lovlinjer": [
+      {
+        "tema": "mangel",
+        "ikon": "ja",
+        "tekst": "Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel.",
+        "paragraf": "forbrukerkjøpsloven § 16 første ledd bokstav a"
+      },
       {
         "tema": "frist",
         "ikon": "ja",
@@ -806,6 +854,12 @@
     "lovversjon": "etter_2024",
     "lovlinjer": [
       {
+        "tema": "mangel",
+        "ikon": "ja",
+        "tekst": "Bilen skal svare til det som er avtalt, også garantien.",
+        "paragraf": "forbrukerkjøpsloven § 15 første ledd"
+      },
+      {
         "tema": "frist",
         "ikon": "ja",
         "tekst": "Du er innenfor fristen for å reklamere (to år fra overtakelsen).",
@@ -887,9 +941,15 @@
     "lovversjon": "før_2024",
     "lovlinjer": [
       {
+        "tema": "mangel",
+        "ikon": "ja",
+        "tekst": "Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel.",
+        "paragraf": "forbrukerkjøpsloven § 16 første ledd bokstav a"
+      },
+      {
         "tema": "frist",
-        "ikon": "nei",
-        "tekst": "Fristen kan være ute for slitedeler.",
+        "ikon": "ja",
+        "tekst": "Fristen er fem år for deler som er ment å vare vesentlig lenger enn to år, ellers to år.",
         "paragraf": "forbrukerkjøpsloven § 27 annet ledd"
       },
       {

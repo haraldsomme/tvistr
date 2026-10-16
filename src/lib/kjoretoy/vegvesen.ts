@@ -51,14 +51,15 @@ type Svar = {
   }[];
 };
 
-// Reads the registry's answer. null when it holds no vehicle with a make and a model.
+// Reads the registry's answer. null when it holds no vehicle with a make. The model is "" when the
+// registry has none (some vehicles have no trade name); the letter then names the make alone.
 export function lesKjoretoy(json: unknown): Kjoretoy | null {
   const k = (json as Svar | null)?.kjoretoydataListe?.[0];
   const generelt = k?.godkjenning?.tekniskGodkjenning?.tekniskeData?.generelt;
   const merke = generelt?.merke?.[0]?.merke?.trim();
-  const modell = generelt?.handelsbetegnelse?.[0]?.trim();
+  const modell = generelt?.handelsbetegnelse?.[0]?.trim() ?? "";
   const regnr = k?.kjoretoyId?.kjennemerke?.trim();
-  if (!merke || !modell || !regnr) return null;
+  if (!merke || !regnr) return null;
   const dato = k?.godkjenning?.forstegangsGodkjenning?.forstegangRegistrertDato ?? k?.forstegangsregistrering?.registrertForstegangNorgeDato;
   const ar = Number(dato?.slice(0, 4));
   // ponytail: three months between the two dates counts as imported used; a new car is registered here

@@ -1,7 +1,8 @@
 // The whole flow before the paywall, from the landing page to step 7 (docs/ferdigkriterier.md, «Før
 // betalingsmuren»), at desktop and mobile width, with one case per status. The vehicle registry and the
-// seller search are mocked in the browser, so the cases do not depend on a real registration number;
-// the server's own calls (the database, Brreg by org.nr. and, in step 7, the model) are real.
+// seller search are mocked in the browser (the vehicle sealed by the server in development), so the
+// cases do not depend on a real registration number; the server's own calls (the database, Brreg by
+// org.nr. and, in step 7, the model) are real.
 //
 //   npm run dev   (TVISTR_HELT_BREV_UTEN_BETALING=1 in .env.local for the paid letter)
 //   npx playwright test
@@ -23,17 +24,19 @@ const forsteIManeden = () => {
 };
 
 // A real dealer, so the server finds it in the Enhetsregister when it addresses the letter.
-const SELGER = { orgnr: "925354627", navn: "MØLLE BIL AS", kommune: "INDRE ØSTFOLD", bransje: "Bilhandel", naeringskode: "45.111", status: null, adresse: null, forretningsadresse: null };
+const SELGER = { orgnr: "925354627", navn: "MØLLE BIL AS", kommune: "INDRE ØSTFOLD", bransje: "Bilhandel", naeringskode: "47.810", status: null, adresse: null, forretningsadresse: null };
 
 type Sak = { navn: string; status: "sak" | "svak" | "ute"; kjopt: string; hoved: string; under: string };
 const SAKER: Sak[] = [
   { navn: "du kan ha en sak", status: "sak", kjopt: maanederSiden(5), hoved: "Motor og eksos", under: "Turbo" },
-  { navn: "saken står svakt (slitedel etter seks måneder)", status: "svak", kjopt: maanederSiden(11), hoved: "Girkasse, clutch og drivlinje", under: "Clutch" },
+  { navn: "svak status (slitedel etter seks måneder)", status: "svak", kjopt: maanederSiden(11), hoved: "Girkasse, clutch og drivlinje", under: "Clutch" },
   { navn: "fristen er ute", status: "ute", kjopt: maanederSiden(70), hoved: "", under: "" },
 ];
 
 async function mockApi(page: Page, kjopt: string) {
-  await page.route("**/api/kjoretoy?*", (r) => r.fulfill({ json: { kjoretoy: { regnr: "EK 48213", merke: "Volkswagen", modell: "Golf", ar: 2019, bruktimportert: false }, eierFra: kjopt } }));
+  // The server seals the vehicle the letter is built from; in development it seals the test's own (POST).
+  const bil = await (await page.request.post("/api/kjoretoy", { data: { kjoretoy: { regnr: "EK 48213", merke: "Volkswagen", modell: "Golf", ar: 2019, bruktimportert: false }, eierFra: kjopt } })).json();
+  await page.route("**/api/kjoretoy?*", (r) => r.fulfill({ json: bil }));
   await page.route("**/api/firma?*", (r) => r.fulfill({ json: { forslag: [SELGER] } }));
 }
 
@@ -101,7 +104,9 @@ for (const s of SAKER)
     expect(handlinger).toHaveLength(1);
     await expect(page.getByRole("heading", { name: "Dette sier loven om din sak" })).toBeVisible();
     await expect(page.locator("[data-lovlinje=bevisbyrde]")).toBeVisible();
-    if (s.status === "svak") await expect(page.locator("[data-grunn=slitedel_sen]")).toBeVisible();
+    // «svak» is only a status: the same heading as «sak», and the word is never shown.
+    await expect(page.getByRole("heading", { name: "Du kan ha en reklamasjonssak" })).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/svak/i);
     // No quotes and no links to the decisions before payment.
     const vurdering = page.locator("[data-status]");
     expect(await vurdering.locator("a").count()).toBe(0);

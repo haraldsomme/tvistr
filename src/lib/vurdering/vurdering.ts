@@ -7,6 +7,7 @@
 import { liste, smaa, tall } from "@/lib/brev/format";
 import { OVER_TO_AAR_FEIL, plussManeder, tidsnivaFor } from "@/lib/brev/tidslinje";
 import { type Lovversjon, lovRef, lovversjon } from "@/lib/brev/paragrafer";
+import { feiltype } from "@/lib/brev/feiltype";
 import { HOVEDKATEGORIER, komponenttype } from "@/lib/feil/kategorier";
 import { type Niva, ranger, avgjorendeFor } from "@/lib/matching/ranger";
 import type { RettsligPoeng } from "@/lib/matching/rett";
@@ -28,13 +29,15 @@ export type Vurderingssak = {
   feil: { hoved: string; under: string[]; oppdaget: string }[];
 };
 
+// «svak» is a status for the measuring only: the buyer reads the same heading as for «sak».
 export const OVERSKRIFT: Record<Status, string> = {
   ute: "Fristen for å reklamere er ute",
-  svak: "Du kan ha en sak, men den står svakt",
+  svak: "Du kan ha en reklamasjonssak",
   sak: "Du kan ha en reklamasjonssak",
 };
 
-// Why a case stands weakly. The texts are the same as the warnings in the form (step 2 and 3).
+// What makes a case «svak», for the status and the log; not shown to the buyer. The texts are the same
+// as the warnings in the form (step 2 and 3).
 export type Grunn = { regel: "feil_over_to_aar" | "som_den_er_gammel" | "slitedel_sen" | "ingen_niva_a"; tekst: string; feilId?: string };
 
 export const FEM_AAR_MND = 60;
@@ -101,7 +104,7 @@ export function vurderStatus(s: Vurderingssak, harNivaA: boolean): { status: Sta
 // «Dette sier loven om din sak»: fixed texts chosen by code, each with its paragraph from paragrafer.ts
 // or none. `ikon`: ja (in the buyer's favour), nei (against), info. `uthevet`: the presumption, the
 // strongest single point.
-export type Lovlinje = { tema: "frist" | "bevisbyrde" | "forbehold" | "lovversjon"; ikon: "ja" | "nei" | "info"; tekst: string; paragraf: string | null; uthevet?: true };
+export type Lovlinje = { tema: "mangel" | "frist" | "bevisbyrde" | "forbehold" | "lovversjon"; ikon: "ja" | "nei" | "info"; tekst: string; paragraf: string | null; uthevet?: true };
 
 const navnPa = (hoved: string) => smaa(HOVEDKATEGORIER.find((h) => h.id === hoved)?.navn ?? hoved);
 
@@ -109,12 +112,22 @@ export function lovlinjer(s: Vurderingssak): Lovlinje[] {
   const v = lovversjon(s.kjopsdato);
   const ut: Lovlinje[] = [];
 
+  // What a defect is, for each kind of defect the buyer chose (the grounds of the letter's mangel()).
+  // Every case has at least one line in the buyer's favour. A symptom («vet ikke ennå») is a part that
+  // fails. Before 2024 a technical defect on a car sold «som den er» is judged by § 17, which the line
+  // on the reservation gives instead.
+  const arter = new Set(s.feil.flatMap((f) => (f.under.length ? f.under : [null]).map((u) => feiltype(f.hoved, u))));
+  if ((arter.has("teknisk") || arter.has("vet_ikke")) && !(v === "før_2024" && s.somDenEr === "ja"))
+    ut.push({ tema: "mangel", ikon: "ja", tekst: "Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel.", paragraf: lovRef(v, "avvik") });
+  if (arter.has("opplysning")) ut.push({ tema: "mangel", ikon: "ja", tekst: "Bilen skal svare til det selger opplyste før kjøpet.", paragraf: lovRef(v, "uriktig") });
+  if (arter.has("garanti")) ut.push({ tema: "mangel", ikon: "ja", tekst: "Bilen skal svare til det som er avtalt, også garantien.", paragraf: lovRef(v, "avtale") });
+
   // The limit runs from the handover to the complaint, which is now (or earlier, which step 6 asks).
   const typer = s.feil.flatMap((f) => (f.under.length ? f.under : [null]).map((u) => komponenttype(f.hoved, u)));
   if (s.idag <= plussManeder(s.kjopsdato, TO_AAR_MND))
     ut.push({ tema: "frist", ikon: "ja", tekst: "Du er innenfor fristen for å reklamere (to år fra overtakelsen).", paragraf: lovRef(v, "reklamasjon_2ar") });
   else if (typer.some((t) => t === "slitedel" || t === null))
-    ut.push({ tema: "frist", ikon: "nei", tekst: "Fristen kan være ute for slitedeler.", paragraf: lovRef(v, "reklamasjon_frister") });
+    ut.push({ tema: "frist", ikon: "ja", tekst: "Fristen er fem år for deler som er ment å vare vesentlig lenger enn to år, ellers to år.", paragraf: lovRef(v, "reklamasjon_frister") });
   else ut.push({ tema: "frist", ikon: "ja", tekst: "Du er innenfor fristen for å reklamere (fem år fra overtakelsen).", paragraf: lovRef(v, "reklamasjon_5ar") });
 
   // The presumption, for the defects that are not about what the seller said (those existed at the sale).

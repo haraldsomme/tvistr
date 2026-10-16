@@ -56,7 +56,11 @@ describe("regler som stopper", () => {
   });
 
   it("godtar vanlig tekst med tall og forkortelser", () => {
-    for (const t of ["Bilen mistet kraft etter 3 uker.", "Ca. 38 000 kr, jf. fkjl.", "EU-kontroll underkjent 12.05."]) expect(fritekstMerknad(t, "beskrivelse", "motor")).toBeNull();
+    for (const t of ["Bilen mistet kraft etter 3 uker.", "Ca. 38 000 kr, jf. fkjl.", "EU-kontroll underkjent 12.05.", "Lyd fra turbo, f.eks. ved 80 km/t.", "Sa det var i orden.De visste det."])
+      expect(fritekstMerknad(t, "beskrivelse", "motor")).toBeNull();
+    // Shortened links, other countries, a path, capitals, an invisible character and a full-width dot.
+    for (const t of ["se bit.ly/3abcd", "rapporten ligger på example.de/rapport", "se verksted.bilxyz/rapport", "se FINN.NO", "WWW.FINN.NO", "se vg\u200b.no", "se finn．no"])
+      expect(fritekstMerknad(t, "beskrivelse", "motor")?.regel).toBe("fritekst_lenke");
   });
 });
 
@@ -74,6 +78,7 @@ describe("regler som advarer", () => {
     ["selger under konkurs", { selger: { orgnr: "999999999", status: "konkurs", naeringskode: "45.111" } }, "selger_konkurs"],
     ["selger under avvikling", { selger: { orgnr: "999999999", status: "avvikling", naeringskode: "45.111" } }, "selger_konkurs"],
     ["selger er ikke bilforhandler", { selger: { orgnr: "999999999", status: null, naeringskode: "68.209" } }, "selger_ikke_bilforhandler"],
+    ["selger er verksted (SN2025)", { selger: { orgnr: "999999999", status: null, naeringskode: "95.310" } }, "selger_ikke_bilforhandler"],
   ];
   for (const [navn, endring, regel] of TILFELLER) it(navn, () => expect(regler(sak(endring)).advarsler).toContain(regel));
 
@@ -89,6 +94,8 @@ describe("regler som advarer", () => {
     expect(regler(sak({ krav: "retting", feil: [feil(), feil({ hoved: "vet_ikke", under: ["lyd"] })] })).advarsler).not.toContain("vet_ikke_blandet");
     expect(regler(sak({ utlegg: [{ belop: 150_000 }] })).advarsler).not.toContain("utlegg_over_kjopesum");
     expect(regler(sak({ selger: { orgnr: "999999999", status: null, naeringskode: null } })).advarsler).toEqual([]);
+    // Brreg's codes from 2025 (SN2025): cars retail and wholesale, and motorcycles.
+    for (const naeringskode of ["47.810", "46.710", "47.830", "45.400"]) expect(regler(sak({ selger: { orgnr: "999999999", status: null, naeringskode } })).advarsler).toEqual([]);
   });
 
   it("sier hvilket krav den kjente feilen får ved «vet ikke» og prisavslag", () => {

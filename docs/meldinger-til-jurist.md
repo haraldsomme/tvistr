@@ -20,7 +20,7 @@ Skjemaet på `/sak` viser brukeren meldinger når svarene er umulige, strider mo
 | # | Vises når | Nivå | Melding |
 |---|---|---|---|
 | 1.1 | Kjøpsdatoen ligger i fremtiden | stopp | Kjøpsdatoen kan ikke være i fremtiden. |
-| 1.2 | Det er mer enn fem år siden kjøpsdatoen. Vises ved datofeltet. | stopp | Det er mer enn fem år siden du overtok bilen. Den lengste fristen for å reklamere er fem år (forbrukerkjøpsloven § 27 annet ledd annet punktum), og dette brevet kan ikke brukes etter det. Mener du selger har holdt noe skjult, eller har du en garanti som gjelder lenger, bør du kontakte Forbrukerrådet eller en advokat. |
+| 1.2 | Det er mer enn fem år siden kjøpsdatoen. «Fortsett» går til siden «Fristen er ute», der teksten står (ikke rødt ved datofeltet, se `skjema.md`, steg 2). | stopp | Det er mer enn fem år siden du overtok bilen. Den lengste fristen for å reklamere er fem år (forbrukerkjøpsloven § 27 annet ledd annet punktum), og dette brevet kan ikke brukes etter det. Mener du selger har holdt noe skjult, eller har du en garanti som gjelder lenger, bør du kontakte Forbrukerrådet eller en advokat. |
 | 1.3 | (utgått: over fem år vises bare stoppen 1.2) | | |
 | 1.4 | Det er mer enn to, men under fem år siden kjøpsdatoen | advarsel | **Fet:** Det er mer enn to år siden du overtok bilen. For biler gjelder som regel en frist på fem år, men for slitedeler kan fristen være to år. Selger kan bruke det. <br>+ fast tekst, se 1.5 |
 | 1.5 | Alltid under 1.4 og 1.6 | (del av dem) | Fristen for å reklamere er fem år for deler som er ment å vare vesentlig lenger enn to år, ellers to år, regnet fra overtakelsen (forbrukerkjøpsloven § 27 annet ledd). Reklamasjonen må i tillegg fremsettes innen rimelig tid etter at feilen ble oppdaget (forbrukerkjøpsloven § 27 første ledd). |
@@ -50,7 +50,7 @@ Skjemaet på `/sak` viser brukeren meldinger når svarene er umulige, strider mo
 | 2.4 | «Vet ikke ennå» sammen med en kjent feil, og krav om heving | advarsel | Du har valgt både en kjent feil og «vet ikke». Brevet hever kjøpet på grunn av den kjente feilen; den ukjente er bare beskrevet. |
 | 2.5 | Samme feil valgt to ganger (skjemaet kan ikke gi dette; serveren sjekker likevel) | stopp | Samme feil er valgt to ganger. |
 | 2.6 | Prisavslag uten kostnadsoverslag fra verkstedet | advarsel | Uten et kostnadsoverslag fra verkstedet kan brevet ikke oppgi beløp. Brevet krever prisavslag uten å nevne et beløp. |
-| 2.7 | Heving, ingen rettingsforsøk, og selger har verken avvist eller latt være å svare | advarsel | Selger kan ha rett til å forsøke retting først. Brevet tar høyde for det, men heving står svakere. |
+| 2.7 | Heving, ingen rettingsforsøk, og selger har verken avvist eller latt være å svare | advarsel | Selger kan ha rett til å forsøke retting først. Brevet tar høyde for det, men selger kan bruke det mot hevingen. |
 | 2.8 | Heving, én feil, og overslaget er under 10 % av kjøpesummen | advarsel | Heving krever at mangelen ikke er uvesentlig. Når utbedringen koster lite i forhold til kjøpesummen, blir heving sjelden godtatt. Vurder prisavslag. |
 | 2.9 | Verkstedet fraråder bruk, og kravet er prisavslag | advarsel | Verkstedet fraråder bruk. Retting eller heving passer ofte bedre når bilen ikke kan brukes. |
 | 2.10 | Selger sa noe (skriftlig eller muntlig) om en teknisk feil før kjøpet. Gjelder alle kjøp, uansett «som den er» og lovversjon. | advarsel | Hvis selger opplyste om akkurat denne feilen før kjøpet, kan du som regel ikke reklamere på den. Sjekk hva som ble sagt, og om det gjaldt denne feilen eller noe annet. |
@@ -67,7 +67,7 @@ Skjemaet på `/sak` viser brukeren meldinger når svarene er umulige, strider mo
 | 3.2 | Bilen ble første gang registrert i et senere år enn kjøpsåret | stopp | Bilen ble første gang registrert etter kjøpsdatoen. Sjekk kjøpsdatoen. |
 | 3.3 | Organisasjonsnummeret har feil kontrollsiffer | stopp | Organisasjonsnummeret er ikke gyldig. Velg selgeren på nytt. |
 | 3.4 | Selgeren er registrert som konkurs eller under avvikling (vises også som rød etikett på selgerkortet: «Registrert som konkurs» / «Under avvikling») | advarsel | Foretaket er registrert {som konkurs / under avvikling}. Du kan likevel lage brevet, men kravet kan være vanskelig å inndrive. |
-| 3.5 | Næringskoden er ikke bilhandel (45.1) | advarsel | Foretaket er ikke registrert som bilforhandler. Er dette riktig selger? |
+| 3.5 | Ingen av foretakets tre næringskoder er salg av kjøretøy (45.1 og 45.4 i SN2007; 47.81, 46.71 og 47.83 i SN2025, som Brreg bruker fra 2025). Store forhandlere har ofte reparasjon (95.31) som hovedkode og salget som annen kode | advarsel | Foretaket er ikke registrert som bilforhandler. Er dette riktig selger? |
 | 3.6 | Søket i Enhetsregisteret gir ingen treff | info (ren tekst) | Ingen treff. Prøv navnet slik det står i kontrakten, eller organisasjonsnummeret. Vi søker ikke etter enkeltpersonforetak, fordi navnet på dem er et personnavn. |
 
 **Hvorfor.** 3.1–3.3 fanger tastefeil og feil registrering, så brevet ikke går til feil selger eller med feil beløp. 3.4 er praktisk informasjon om innkreving, ikke en rettslig vurdering. 3.6: søket tar bare AS, ASA, ANS, DA og NUF. Enkeltpersonforetak er holdt utenfor med vilje, fordi navnet på dem er et personnavn. Det betyr at en kjøper som har kjøpt av et enkeltpersonforetak ikke kan lage brev i dag. Å ta dem med er et eget valg.
@@ -86,7 +86,7 @@ Brevet gjengir disse to feltene som sitat i «», aldri som sin egen setning.
 | # | Vises når | Nivå | Tekst |
 |---|---|---|---|
 | 5.1 | Brukeren krever erstatning for utlegg (steg 4) | info | Husk å legge ved kopi av fakturaer og kvitteringer. Vedleggene listes opp i brevet. |
-| 5.2 | Det finnes minst én advarsel før betaling | advarsel (samleboks) | Brevet har {n} advarsel/advarsler{, k av dem om datoer}. Se over før du betaler. Så hver advarsel (1.x–3.x) med «Endre». |
+| 5.2 | Det finnes minst én advarsel før betaling | advarsel (samleboks) | Brevet har {n} advarsel/advarsler{, k av dem om datoer | om datoer, når alle er det}. Se over før du betaler. Så hver advarsel (1.x–3.x) med «Endre». |
 | 5.3 | Alltid i steg 5 | ingress | Brevet bygges av svarene dine. Sjekk at alt stemmer før du betaler. Et feil registreringsnummer eller feil selger kan ikke vi se. |
 | 5.5 | Alltid i steg 5, under oppsummeringen | info | Tjenesten gir ikke juridisk rådgivning. Brevet bygges av dine svar, og du er ansvarlig for at de stemmer. |
 | 5.4 | Uten betaling | ingress | Dette er sakens bakgrunn og avsnittet som viser til en lignende sak der kjøperen fikk medhold. Resten av brevet er skjult til du har betalt. |

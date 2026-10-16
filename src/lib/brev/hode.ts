@@ -1,5 +1,5 @@
 import type { Adresse } from "@/lib/brreg";
-import { dato, sted } from "./format";
+import { bilnavn, dato, sted } from "./format";
 import type { Brevsak, Setning } from "./typer";
 
 // The address as lines: the street lines, then «0150 Oslo». Empty when there is no address, so the
@@ -21,6 +21,6 @@ export const stedDato = (s: Brevsak): Setning => {
 export const mottaker = (s: Brevsak): Setning[] => [{ tekst: s.selger.navn, kilde: "brreg:navn" }, ...adresselinjer(s.selger.adresse, "brreg:adresse")];
 
 export const tittel = (s: Brevsak): Setning => ({
-  tekst: `REKLAMASJON – ${s.bil.merke} ${s.bil.modell}, reg.nr. ${s.bil.regnr}, kjøpt ${dato(s.kjopsdato)}`,
+  tekst: `REKLAMASJON – ${bilnavn(s.bil)}, reg.nr. ${s.bil.regnr}, kjøpt ${dato(s.kjopsdato)}`,
   kilde: "vegvesen:bil; skjema:kjopsdato",
 });

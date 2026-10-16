@@ -204,23 +204,10 @@ export function Vurderingsvisning({ v, kjopsdato, fortsett, endreKjopsdato, steg
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }} data-status={v.status}>
       <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <Ikon type={v.status === "sak" ? "ja" : "nei"} stor />
+        <Ikon type="ja" stor />
         <span style={OVERLINE}>{steg}</span>
         <h1 style={H1}>{OVERSKRIFT[v.status]}</h1>
       </header>
-
-      {v.status === "svak" && (
-        <section aria-labelledby="svekker" style={{ display: "flex", flexDirection: "column", gap: 10, animation: pop(0) }}>
-          <h2 id="svekker" style={H2}>
-            Dette svekker saken
-          </h2>
-          {v.grunner.map((g) => (
-            <Varsel key={`${g.regel}${g.feilId ?? ""}`} type="advarsel">
-              <span data-grunn={g.regel}>{g.tekst}</span>
-            </Varsel>
-          ))}
-        </section>
-      )}
 
       <Lovlinjer linjer={v.lovlinjer} />
       <Lignende v={v} />

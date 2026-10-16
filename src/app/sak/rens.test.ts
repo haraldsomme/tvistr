@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { idagOslo, rensBrevsvar, rensVedtakssvar } from "./rens";
+import { forsegle } from "./signatur";
 
 const idag = idagOslo();
 const aarSiden = (n: number) => `${Number(idag.slice(0, 4)) - n}${idag.slice(4)}`;
@@ -22,11 +23,11 @@ const SVAR = {
   kjopsdato: aarSiden(1),
   km: 120_000,
   kjopesum: 150_000,
-  ar: 2016,
   somDenEr: "ja",
   krav: "prisavslag",
   kontakt: { reklamert: false },
-  bil: { regnr: "AB 12345", merke: "Volkswagen", modell: "Golf", ar: 2016 },
+  // The vehicle as /api/kjoretoy sealed it.
+  bilSegl: forsegle({ regnr: "AB 12345", merke: "Volkswagen", modell: "Golf", ar: 2016 }),
   selgerOrgnr: "999 999 999",
   utlegg: [],
 };
@@ -110,7 +111,7 @@ describe("rensBrevsvar", () => {
   });
 
   it("avviser manglende felt og gir en melding", () => {
-    for (const endring of [{ kjopesum: 0 }, { km: null }, { krav: "noe" }, { kontakt: undefined }, { bil: {} }, { bil: { regnr: "!", merke: "A", modell: "B" } }, { selgerOrgnr: "123" }, { selgerOrgnr: undefined }, { kjopsdato: "i går" }]) {
+    for (const endring of [{ kjopesum: 0 }, { km: null }, { krav: "noe" }, { kontakt: undefined }, { bilSegl: undefined }, { bilSegl: "tull" }, { bilSegl: forsegle({ regnr: "!", merke: "A", modell: "B", ar: 2016 }) }, { selgerOrgnr: "123" }, { selgerOrgnr: undefined }, { kjopsdato: "i går" }]) {
       const r = rensBrevsvar(med(endring));
       expect(r.ok, JSON.stringify(endring)).toBe(false);
       if (!r.ok) expect(r.melding).toBeTruthy();
@@ -236,7 +237,7 @@ describe("riktighet på serveren", () => {
     ["bare «vet ikke» og prisavslag", { valg: { vet_ikke: ["lyd"] }, detaljer: { vet_ikke: { oppdaget: mndSiden(7), opplysning: "nei", verksted: "nei" } } }, /bare kreve at feilen undersøkes/],
     ["kjøpesum under 5 000 kr", { kjopesum: 4_999 }, /mellom 5 000 og 3 000 000/],
     ["kjøpesum over 3 000 000 kr", { kjopesum: 3_000_001 }, /mellom 5 000 og 3 000 000/],
-    ["første registrering etter kjøpet", { bil: { ...SVAR.bil, ar: Number(idag.slice(0, 4)) + 1 } }, /registrert etter kjøpsdatoen/],
+    ["første registrering etter kjøpet", { bilSegl: forsegle({ regnr: "AB 12345", merke: "Volkswagen", modell: "Golf", ar: Number(idag.slice(0, 4)) + 1 }) }, /registrert etter kjøpsdatoen/],
     ["organisasjonsnummer med feil kontrollsiffer", { selgerOrgnr: "999999998" }, /ikke gyldig/],
     ["lenke i beskrivelsen", { detaljer: { ...D, motor: { ...D.motor, beskrivelse: "Se https://bilforum.no/tråd" } } }, /Legg ved dokumentet/],
     ["bare tall i konklusjonen", { detaljer: { ...D, motor: { ...D.motor, rapport: { ...D.motor.rapport, konklusjon: "123 456" } } } }, /Skriv med ord/],
@@ -251,5 +252,25 @@ describe("riktighet på serveren", () => {
   it("renser beskrivelsen som konklusjonen: linjeskift og doble anførselstegn", () => {
     const r = rensBrevsvar({ ...SVAR, detaljer: { ...D, motor: { ...D.motor, beskrivelse: ' Mistet "kraft"\nog  stoppet ' } } });
     expect(r.ok && r.svar.feil.find((f) => f.hoved === "motor")!.beskrivelse).toBe("Mistet kraft og stoppet");
+  });
+});
+
+describe("bilen", () => {
+  it("kommer fra forseglingen, ikke fra det nettleseren skriver", () => {
+    const r = rensBrevsvar(med({ bil: { regnr: "ZZ 99999", merke: "Tesla", modell: "Roadster", ar: 2030 }, ar: 2030 }));
+    expect(r.ok && r.svar.bil).toEqual({ regnr: "AB 12345", merke: "Volkswagen", modell: "Golf", forsteRegistrert: 2016 });
+  });
+  it("avvises uten forsegling, også i vurderingen", () => {
+    const uten = med({ bilSegl: undefined });
+    expect(rensVedtakssvar(uten).ok).toBe(false);
+    expect(rensBrevsvar(uten).ok).toBe(false);
+  });
+  it("stopper når bilen ble registrert etter kjøpsåret", () => {
+    const r = rensVedtakssvar(med({ bilSegl: forsegle({ regnr: "AB 12345", merke: "Volkswagen", modell: "Golf", ar: Number(aarSiden(1).slice(0, 4)) + 1 }) }));
+    expect(r.ok ? "" : r.melding).toMatch(/registrert etter kjøpsdatoen/);
+  });
+  it("godtar en bil uten modell", () => {
+    const r = rensBrevsvar(med({ bilSegl: forsegle({ regnr: "AB 12345", merke: "Fiat", modell: "", ar: 2016 }) }));
+    expect(r.ok && r.svar.bil.modell).toBe("");
   });
 });

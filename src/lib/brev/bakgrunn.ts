@@ -1,4 +1,4 @@
-import { dato, kr, km, liste, orgnr, smaa } from "./format";
+import { bilnavn, dato, kr, km, liste, orgnr, smaa } from "./format";
 import { feilnavn, form, ledd, tekniskFeil, tekniskSa } from "./feiltype";
 import { reklamerte } from "./rapport";
 import type { Brevsak, Setning } from "./typer";
@@ -8,7 +8,7 @@ export function bakgrunn(s: Brevsak): Setning[] {
   const forste = s.bil.forsteRegistrert ? `, første gang registrert i ${s.bil.forsteRegistrert}` : "";
   const ut: Setning[] = [
     {
-      tekst: `Jeg viser til kjøp av ${s.bil.merke} ${s.bil.modell}${forste}, reg.nr. ${s.bil.regnr}, fra ${s.selger.navn} (org.nr. ${orgnr(s.selger.orgnr)}) den ${dato(s.kjopsdato)}.`,
+      tekst: `Jeg viser til kjøp av ${bilnavn(s.bil)}${forste}, reg.nr. ${s.bil.regnr}, fra ${s.selger.navn} (org.nr. ${orgnr(s.selger.orgnr)}) den ${dato(s.kjopsdato)}.`,
       kilde: "vegvesen:bil; skjema:kjopsdato; brreg:selger",
     },
     { tekst: `Kjøpesummen var ${kr(s.kjopesum)}.`, kilde: "skjema:kjopesum" },

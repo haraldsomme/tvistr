@@ -38,3 +38,6 @@ export const sted = (s: string) => (s === s.toUpperCase() ? s.toLowerCase().repl
 
 export const FORSOK: Record<number, string> = { 1: "én gang", 2: "to ganger", 3: "tre eller flere ganger" };
 export const FORSOK_ANTALL: Record<number, string> = { 1: "ett forsøk", 2: "to forsøk", 3: "tre eller flere forsøk" };
+
+// «Volkswagen Golf», or the make alone when the registry has no model.
+export const bilnavn = (b: { merke: string; modell: string }) => [b.merke, b.modell].filter(Boolean).join(" ");

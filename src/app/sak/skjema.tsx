@@ -118,7 +118,9 @@ function tidEtter(kjop: string, dato: string): string {
 }
 const kortDato = (iso: string) => `${iso.slice(8)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 
-type Bil = { k: Kjoretoy; eierFra: string | null };
+// `segl` is the server's seal on the vehicle (/api/kjoretoy); the server builds the letter from it, never
+// from the make, model or year the browser sends.
+type Bil = { k: Kjoretoy; eierFra: string | null; segl: string };
 // Everything the buyer has typed or chosen, kept in sessionStorage so a reload or the browser's back
 // button does not lose it. The assessment, the decision and the letter are not kept: they are found
 // again from the answers.
@@ -215,7 +217,10 @@ function lesLagret(): Lagret | null {
       step: typeof r.step === "number" && Number.isInteger(r.step) ? Math.min(Math.max(r.step, 0), KRAVSTEG) : 0,
       detaljSide: typeof r.detaljSide === "number" && Number.isInteger(r.detaljSide) ? Math.max(r.detaljSide, 0) : 0,
       regnr: streng(r.regnr, 8),
-      car: bil && typeof bil === "object" && bil.k && typeof bil.k.merke === "string" && typeof bil.k.modell === "string" ? { k: bil.k, eierFra: typeof bil.eierFra === "string" ? bil.eierFra : null } : null,
+      car:
+        bil && typeof bil === "object" && bil.k && typeof bil.k.merke === "string" && typeof bil.k.modell === "string" && typeof bil.segl === "string"
+          ? { k: bil.k, eierFra: typeof bil.eierFra === "string" ? bil.eierFra : null, segl: bil.segl }
+          : null,
       bilBekreftet: r.bilBekreftet === "ja" ? "ja" : null,
       kjopsdato: streng(r.kjopsdato, 10),
       valg: rensFeilvalg(r.valg),
@@ -267,6 +272,26 @@ function Venter({ overline, tittel, tekst, anim, bred }: { overline: string; tit
       </div>
     </div>
   );
+}
+
+// A server call that never throws: a network failure, or no answer within `ms`, gives a message instead,
+// so the form never falls through to Next's error page or waits for ever. Server actions run one at a
+// time, so after a call that hangs only a reload (the answers are kept) can try again.
+const NETTFEIL = "Vi fikk ikke kontakt med serveren. Sjekk nettet og prøv igjen.";
+const TREGT = "Det tok for lang tid å få svar. Prøv igjen; svarene dine er lagret.";
+async function sikkert<T>(kall: () => Promise<T>, ms: number, henger: { current: boolean }): Promise<T | { ok: false; melding: string }> {
+  let t: ReturnType<typeof setTimeout> | undefined;
+  const tid = new Promise<"tid">((r) => (t = setTimeout(() => r("tid"), ms)));
+  try {
+    const r = await Promise.race([kall(), tid]);
+    if (r !== "tid") return r;
+    henger.current = true;
+    return { ok: false, melding: TREGT };
+  } catch {
+    return { ok: false, melding: NETTFEIL };
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 function Feilmelding({ tittel, melding, igjen, anim }: { tittel: string; melding: string; igjen: () => void; anim: string }) {
@@ -337,11 +362,12 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
     return () => clearTimeout(t);
   }, [fokus, step]);
   const [soker, startSok] = useTransition();
-  const [vurderer, startVurdering] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const foresporsel = useRef(0);
   const vForesporsel = useRef(0);
+  const henger = useRef(false);
+  const provIgjen = (f: () => void) => (henger.current ? window.location.reload() : f());
 
   useEffect(() => {
     if (!rootRef.current || !window.ResizeObserver) return;
@@ -359,7 +385,7 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
   }, [lagre, step, detaljSide, regnr, car, bilBekreftet, kjopsdato, valg, km, kjopesum, somDenEr, detaljer, krav, kreverUtlegg, utlegg, selger, reklamert, reklamertDato, reklamertForm, forsok, selgerSvar]);
 
   const isDesktop = w >= 820;
-  const idag = new Date().toISOString().slice(0, 10);
+  const idag = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Oslo" }).format(new Date());
   const valgte = HOVEDKATEGORIER.filter((h) => h.id in valg);
   // The categories as the measurement keeps them: «motor.turbo», or «motor» without a subcategory.
   const kategorier = valgte.flatMap((h) => (valg[h.id].length ? valg[h.id].map((u) => `${h.id}.${u}`) : [h.id]));
@@ -367,20 +393,29 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
   // The same rule the lookup uses, so the button only works for a number the server accepts.
   const gyldig = normaliserRegnr(regnr) !== null;
 
+  // The chosen defects in the catalogue's order, the order of the pages in step 5 and of the letter. A
+  // reload reads them back the same way, so the letter does not change with the order of the clicks.
+  const valgIRekkefolge = () => rensFeilvalg(valg);
   // What steps 1–3 answered, as the assessment and the decision search read it.
-  const grunnsvar = () => ({ valg, kjopsdato, km: Number(km) || null, ar: car?.k.ar ?? null, somDenEr, detaljer: Object.fromEntries(valgte.map((h) => [h.id, { oppdaget: detaljer[h.id]?.oppdaget, omtrentlig: !!detaljer[h.id]?.omtrentlig }])) });
+  const grunnsvar = () => ({ valg: valgIRekkefolge(), kjopsdato, km: Number(km) || null, bilSegl: car?.segl, somDenEr, detaljer: Object.fromEntries(valgte.map((h) => [h.id, { oppdaget: detaljer[h.id]?.oppdaget, omtrentlig: !!detaljer[h.id]?.omtrentlig }])) });
   // Everything, for the letter.
   const brevsvar = () => ({
-    valg,
+    valg: valgIRekkefolge(),
     kjopsdato,
     km: Number(km),
     kjopesum: Number(kjopesum),
-    ar: car?.k.ar ?? null,
+    bilSegl: car?.segl,
     somDenEr,
     krav,
-    // The estimate is typed as text in the form; the server wants a number.
-    detaljer: Object.fromEntries(Object.entries(detaljer).map(([id, d]) => [id, d.rapport ? { ...d, rapport: { ...d.rapport, overslag: d.rapport.overslag ? Number(d.rapport.overslag) : null } } : d])),
-    bil: car && { regnr: car.k.regnr, merke: car.k.merke, modell: car.k.modell, ar: car.k.ar },
+    // Only the chosen defects, and a report only while the answer is «with a report»: the form keeps
+    // the rest, so changing back restores it, but it is not an answer. The estimate is typed as text;
+    // the server wants a number.
+    detaljer: Object.fromEntries(
+      valgte.map((h) => {
+        const { rapport, ...d } = detaljer[h.id] ?? {};
+        return [h.id, d.verksted === "skriftlig" && rapport ? { ...d, rapport: { ...rapport, overslag: rapport.overslag ? Number(rapport.overslag) : null } } : d];
+      }),
+    ),
     selgerOrgnr: selger?.orgnr ?? null,
     kontakt: reklamert === "ja" ? { reklamert: true, dato: reklamertDato, form: reklamertForm, svar: selgerSvar, forsok: selgerSvar === "forsokt" ? forsok : 0 } : { reklamert: false },
     utlegg: kreverUtlegg ? utlegg.map((u) => ({ beskrivelse: u.beskrivelse, belop: Number(u.belop) })) : [],
@@ -396,13 +431,15 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
       maal("vurdering_vist", { status: "ute", kategorier });
       return;
     }
-    startVurdering(async () => {
-      const r = await vurderSaken(grunnsvar());
+    // Not a transition: React keeps a transition pending until the server action answers, so a
+    // message after the time limit would never show. The screen follows the state alone.
+    void (async () => {
+      const r = await sikkert(() => vurderSaken(grunnsvar()), 30_000, henger);
       if (mitt !== vForesporsel.current) return;
       if (!r.ok) return setVurderingFeil(r.melding);
       setVurdering(r.vurdering);
       maal("vurdering_vist", { status: r.vurdering.status, kategorier });
-    });
+    })();
   }
 
   // Step 7 opens at once and waits for the answer. The decision is found first (the one model call),
@@ -414,11 +451,11 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
     setHeltBrev(null);
     startSok(async () => {
       const svar = brevsvar();
-      const f = await finnVedtak(svar);
+      const f = await sikkert(() => finnVedtak(svar), 90_000, henger);
       if (mitt !== foresporsel.current) return;
       setFunn(f);
       if (!f.ok) return;
-      const b = await byggBrevet({ svar, funn: f });
+      const b = await sikkert(() => byggBrevet({ svar, funn: f }), 30_000, henger);
       if (mitt !== foresporsel.current) return;
       setForhand(b);
       if (b.ok) maal("steg7_vist");
@@ -434,9 +471,10 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
       sessionStorage.setItem(ORDRENOKKEL, ordreId);
     } catch {}
     go(BREVET);
+    setHeltBrev(null);
     const mitt = foresporsel.current;
     startSok(async () => {
-      const b = await byggBrevet({ svar: brevsvar(), funn, ordreId });
+      const b = await sikkert(() => byggBrevet({ svar: brevsvar(), funn, ordreId }), 30_000, henger);
       if (mitt !== foresporsel.current) return;
       setHeltBrev(b);
       if (b.ok && b.fullt) maal("betaling_fullfort");
@@ -465,34 +503,18 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
     setCar(null);
     setBilBekreftet(null);
     setOppslagFeil(null);
+    // Only the server's own message is shown; anything else (no JSON, no network, no answer) is general.
+    let json: { kjoretoy?: Kjoretoy; eierFra?: string | null; segl?: string; feil?: string } | null = null;
     try {
-      const res = await fetch(`/api/kjoretoy?${new URLSearchParams({ regnr })}`);
-      const json = (await res.json()) as { kjoretoy?: Kjoretoy; eierFra?: string | null; feil?: string };
-      if (!json.kjoretoy) throw new Error(json.feil ?? "Noe gikk galt. Prøv igjen.");
-      setCar({ k: json.kjoretoy, eierFra: json.eierFra ?? null });
-      setKjopsdato(json.eierFra ?? "");
-      maal("regnr_ok");
-    } catch (e) {
-      setOppslagFeil(e instanceof Error && !(e instanceof TypeError) ? e.message : "Noe gikk galt. Prøv igjen.");
-    } finally {
-      setFetching(false);
-    }
+      const res = await fetch(`/api/kjoretoy?${new URLSearchParams({ regnr })}`, { signal: AbortSignal.timeout(15_000) });
+      json = await res.json().catch(() => null);
+    } catch {}
+    setFetching(false);
+    if (!json?.kjoretoy || !json.segl) return setOppslagFeil(typeof json?.feil === "string" ? json.feil : "Noe gikk galt. Prøv igjen.");
+    setCar({ k: json.kjoretoy, eierFra: json.eierFra ?? null, segl: json.segl });
+    setKjopsdato(json.eierFra ?? "");
+    maal("regnr_ok");
   }
-
-  // A page restored on step 4 finds its assessment again; the landing page's number is looked up. In a
-  // timeout, so a remount in development's strict mode cancels the first run.
-  useEffect(() => {
-    if (!lagre) return;
-    const t = setTimeout(() => {
-      if (autoHent) {
-        window.history.replaceState(null, "", "/sak");
-        void fetchCar();
-      } else if (step === VURDERING) vurder();
-    });
-    return () => clearTimeout(t);
-    // Once, on the client's first render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lagre]);
 
   const toggleCat = (id: string) => setValg((v) => (id in v ? Object.fromEntries(Object.entries(v).filter(([k]) => k !== id)) : { ...v, [id]: [] }));
   const toggleSub = (h: string, u: string) => setValg((v) => ({ ...v, [h]: v[h].includes(u) ? v[h].filter((x) => x !== u) : [...v[h], u] }));
@@ -596,7 +618,7 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
   };
   const settUtlegg = (i: number, endring: Partial<Utlegg>) => setUtlegg((u) => u.map((x, j) => (j === i ? { ...x, ...endring } : x)));
 
-  const carName = car ? `${car.k.merke} ${car.k.modell}` : "";
+  const carName = car ? [car.k.merke, car.k.modell].filter(Boolean).join(" ") : "";
   const kjopStopp = [...tidslinje.stopp.filter((m) => m.felt === "kjopsdato" && m.regel !== "kjop_fem_aar" && m.regel !== "kjop_mangler"), ...merkR("kjopsdato").stopp];
   const aarSiden = (n: number) => `${Number(idag.slice(0, 4)) - n}${idag.slice(4)}`;
   const utleggSum = utlegg.reduce((s, x) => s + (Number(x.belop) || 0), 0);
@@ -606,7 +628,7 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
   const kontaktOk =
     reklamert === "nei" || (reklamert === "ja" && etterKjop(reklamertDato) && !tidslinje.stopp.some((m) => m.felt === "reklamert") && !!reklamertForm && !!selgerSvar && (selgerSvar !== "forsokt" || (forsok ?? 0) > 0));
   const sideFeil = valgte[Math.min(detaljSide, Math.max(valgte.length - 1, 0))];
-  const valid = [
+  const stegOk = [
     !!car && !fetching && bilBekreftet === "ja",
     erDato(kjopsdato) && !kjopStopp.length && Number(km) > 0 && Number(kjopesum) > 0 && !!somDenEr && !riktighet.stopp.some((m) => m.felt === "kjopesum"),
     valgte.length > 0 && valgte.every((h) => datoFerdig(h.id)),
@@ -615,10 +637,42 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
     !!krav && kontaktOk && utleggOk && !!selger && !riktighet.stopp.length && !tidslinje.stopp.length,
     false,
     false,
-  ][step];
+  ];
+  const valid = stegOk[step];
   const ok = valid && !soker;
+  // A case read back from sessionStorage opens on the first step that is not done, never past it: what
+  // the browser stored is not trusted more than what the buyer would have had to get through.
+  const forsteApne = (): { steg: number; side: number } => {
+    for (const n of [BILEN, KJOPET]) if (n < step && !stegOk[n]) return { steg: n, side: 0 };
+    if (step > VURDERING && ute) return { steg: VURDERING, side: 0 };
+    if (step > FEILEN && !stegOk[FEILEN]) return { steg: FEILEN, side: 0 };
+    const side = valgte.findIndex((h) => !sideFerdig(h.id));
+    if (step > DETALJER && side >= 0) return { steg: DETALJER, side };
+    if (step === DETALJER && side >= 0 && side < detaljSide) return { steg: DETALJER, side };
+    return { steg: step, side: detaljSide };
+  };
 
-  const statusKort = vurdering ? { sak: "Du kan ha en sak", svak: "Saken står svakt", ute: "Fristen er ute" }[vurdering.status] : step >= VURDERING && ute ? "Fristen er ute" : "Gratis";
+  // A page restored on step 4 finds its assessment again; the landing page's number is looked up. In a
+  // timeout, so a remount in development's strict mode cancels the first run. The number leaves the
+  // address either way, so a reload later is not read as the landing page again.
+  useEffect(() => {
+    if (!lagre) return;
+    const t = setTimeout(() => {
+      if (window.location.search) window.history.replaceState(null, "", "/sak");
+      if (autoHent) return void fetchCar();
+      const { steg, side } = forsteApne();
+      if (steg !== step || side !== detaljSide) {
+        setStep(steg);
+        setDetaljSide(side);
+      }
+      if (steg === VURDERING) vurder();
+    });
+    return () => clearTimeout(t);
+    // Once, on the client's first render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lagre]);
+
+  const statusKort = vurdering ? { sak: "Du kan ha en sak", svak: "Du kan ha en sak", ute: "Fristen er ute" }[vurdering.status] : step >= VURDERING && ute ? "Fristen er ute" : "Gratis";
   const subs = [
     car ? `${carName} · ${car.k.regnr}` : "",
     erDato(kjopsdato) ? [kortDato(kjopsdato), kjopesum && `${tall(kjopesum)} kr`].filter(Boolean).join(" · ") : "",
@@ -632,6 +686,7 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
   // Where a field is: its step, the page of the defect, and the element to scroll to.
   const gaaTil = (m: { felt: string; feilId?: string; regel: string }) => {
     const sideFor = (id?: string) => Math.max(0, valgte.findIndex((h) => h.id === id));
+    if (m.felt === "bil") return go(BILEN);
     if (["kjopsdato", "kjopesum"].includes(m.felt) || (m.felt === "somDenEr" && m.regel !== "som_den_er_opplyst")) {
       go(KJOPET);
       return setFokus(`felt-${m.felt}`);
@@ -986,10 +1041,10 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
               <div style={{ animation: stepAnim }}>
                 {visUte ? (
                   <Vurderingsvisning v={{ status: "ute", grunner: [], lovversjon: lovversjon(kjopsdato), lovlinjer: [], tall: [], kort: [], niva: null, poeng: [], sammenligning: null }} kjopsdato={kjopsdato} fortsett={() => {}} endreKjopsdato={() => go(KJOPET)} steg="Vurdering" />
-                ) : vurderer || (!vurdering && !vurderingFeil) ? (
+                ) : !vurdering && !vurderingFeil ? (
                   <Venter overline={overline("Vurdering")} tittel="Vi ser på saken din" tekst="Vi sammenligner svarene dine med loven og med vedtakene fra Forbrukerklageutvalget." anim={stepAnim} bred={isDesktop} />
                 ) : vurderingFeil ? (
-                  <Feilmelding tittel="Vi fikk ikke laget vurderingen" melding={vurderingFeil} igjen={vurder} anim={stepAnim} />
+                  <Feilmelding tittel="Vi fikk ikke laget vurderingen" melding={vurderingFeil} igjen={() => provIgjen(vurder)} anim={stepAnim} />
                 ) : (
                   vurdering && (
                     <Vurderingsvisning
@@ -1016,6 +1071,7 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
               const forrige = valgte
                 .slice(0, i)
                 .reverse()
+                .filter((x) => detaljer[x.id]?.verksted === "skriftlig")
                 .map((x) => detaljer[x.id]?.rapport)
                 .find((x) => x?.hvem && x.navn.trim() && x.dato);
               // The warning that a defect the seller told of is usually excepted, on the pages where the seller did.
@@ -1054,7 +1110,7 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                           <span style={{ fontSize: 14, fontWeight: 600 }}>Dato for rapporten</span>
                           <Datovelger etikett={`Dato for rapporten om ${h.navn}`} verdi={r.dato} min={kjopsdato ? dagEtter(kjopsdato) : undefined} maks={idag} sett={(dato) => settRapport(h.id, { dato })} />
-                          <Merknader {...(r.dato && !etterKjop(r.dato) ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk("rapport", h.id))} />
+                          <Merknader {...(r.dato && !etterKjop(r.dato) && !merk("rapport", h.id).stopp.length ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk("rapport", h.id))} />
                         </div>
                         <div role="group" aria-label={`Hva sier rapporten om ${h.navn}?`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                           <span style={{ fontSize: 14, fontWeight: 600 }}>Hva sier rapporten?</span>
@@ -1167,7 +1223,7 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         <span style={{ fontSize: 14, fontWeight: 600 }}>Når reklamerte du første gang?</span>
                         <Datovelger etikett="Dato for første reklamasjon" verdi={reklamertDato} min={kjopsdato ? dagEtter(kjopsdato) : undefined} maks={idag} sett={setReklamertDato} />
-                        <Merknader {...(reklamertDato && !etterKjop(reklamertDato) ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk("reklamert"))} />
+                        <Merknader {...(reklamertDato && !etterKjop(reklamertDato) && !merk("reklamert").stopp.length ? { stopp: [{ melding: "Datoen må ligge etter kjøpsdatoen og ikke i fremtiden." }] } : merk("reklamert"))} />
                       </div>
                       <Chipvalg sporsmal="Hvordan?" etikett="Hvordan reklamerte du?" valg={HVORDAN} valgt={reklamertForm} velg={setReklamertForm} />
                       <Chipvalg sporsmal="Hva har selger gjort?" valg={SELGER_SVAR} valgt={selgerSvar} velg={setSelgerSvar} />
@@ -1243,7 +1299,7 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
                       <Varsel type="info">Husk å legge ved kopi av fakturaer og kvitteringer. Vedleggene listes opp i brevet.</Varsel>
                     </div>
                   )}
-                  <Merknader {...merkR("utlegg")} />
+                  <Merknader {...(utleggOk ? merkR("utlegg") : { stopp: [{ melding: "Fyll ut beskrivelse og beløp for hvert utlegg." }], advarsler: merkR("utlegg").advarsler })} />
                 </section>
 
                 <section id="felt-selger" style={{ display: "flex", flexDirection: "column", gap: 10, animation: pop(6) }}>
@@ -1258,10 +1314,12 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
             )}
 
             {step === FORHAND &&
-              (soker || (!funn && !forhand)
+              // Waiting until there is a preview or an error, not while the transition is pending: it stays
+              // pending as long as a hanging server action does.
+              (!forhand && !(funn && !funn.ok)
                 ? <Venter overline={overline("Forhåndsvisning")} tittel="Vent mens vi lager brevet" tekst="Vi velger vedtaket brevet skal vise til, og setter sammen brevet. Det tar noen sekunder." anim={stepAnim} bred={isDesktop} />
                 : (funn && !funn.ok) || (forhand && !forhand.ok)
-                  ? <Feilmelding tittel="Vi fikk ikke laget brevet" melding={funn && !funn.ok ? funn.melding : forhand && !forhand.ok ? forhand.melding : ""} igjen={lagBrev} anim={stepAnim} />
+                  ? <Feilmelding tittel="Vi fikk ikke laget brevet" melding={funn && !funn.ok ? funn.melding : forhand && !forhand.ok ? forhand.melding : ""} igjen={() => provIgjen(lagBrev)} anim={stepAnim} />
                   : forhand?.ok && (
                       <div style={{ animation: stepAnim, display: "flex", flexDirection: "column", gap: 28 }}>
                         <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1337,7 +1395,7 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
                           <table aria-label="Opplysningene i brevet" style={{ width: "100%", borderCollapse: "collapse", fontSize: 14.5, marginTop: 12 }}>
                             <tbody>
                               {[
-                                { navn: "Bil", verdi: car ? `${carName}, ${car.k.regnr}` : "", m: { felt: "kjopsdato", regel: "" } },
+                                { navn: "Bil", verdi: car ? `${carName}, ${car.k.regnr}` : "", m: { felt: "bil", regel: "" } },
                                 { navn: "Kjøpsdato", verdi: erDato(kjopsdato) ? datoTekst(kjopsdato) : "", m: { felt: "kjopsdato", regel: "" } },
                                 { navn: "Kilometerstand", verdi: km ? `${tall(km)} km` : "", m: { felt: "kjopesum", regel: "" } },
                                 { navn: "Kjøpesum", verdi: kjopesum ? `${tall(kjopesum)} kr` : "", m: { felt: "kjopesum", regel: "" } },
@@ -1391,10 +1449,10 @@ function SkjemaInnhold({ start, autoHent, lagre }: { start: Lagret | null; autoH
                     ))}
 
             {step === BREVET &&
-              (soker || !heltBrev
+              (!heltBrev
                 ? <Venter overline="Brevet" tittel="Vent mens vi lager brevet" tekst="Hele brevet settes sammen med vedtaket fra forhåndsvisningen." anim={stepAnim} bred={isDesktop} />
                 : !heltBrev.ok
-                  ? <Feilmelding tittel="Vi fikk ikke laget brevet" melding={heltBrev.melding} igjen={betal} anim={stepAnim} />
+                  ? <Feilmelding tittel="Vi fikk ikke laget brevet" melding={heltBrev.melding} igjen={() => provIgjen(betal)} anim={stepAnim} />
                   : !heltBrev.fullt
                     ? <Feilmelding tittel="Betalingen er ikke bekreftet" melding="Vi fant ingen bekreftet betaling for brevet. Gå tilbake til forhåndsvisningen og prøv igjen." igjen={() => go(FORHAND)} anim={stepAnim} />
                     : (

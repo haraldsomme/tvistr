@@ -28,15 +28,15 @@ Ett skjema, så ingen spørsmål stilles to ganger. Det vurderingen trenger (bil
 
 ## Status (3.1)
 
-Én av tre, bestemt av `vurderStatus`:
+Én av tre, bestemt av `vurderStatus`. `svak` er bare en status for målingen og loggen: kjøperen ser samme ikon, overskrift og side som ved `sak`, og grunnene vises ikke i steg 4. Det som gjelder saken, står i «Dette sier loven om din sak», og advarslene står ved feltene i skjemaet og samlet i steg 7. Ordet «svak» står aldri i tekst til kjøperen (testen for forbudte ord).
 
 | Status | Vilkår | Overskrift |
 |---|---|---|
-| Fristen er ute | mer enn fem år siden kjøpet (samme grense som tidslinjen, `kjop_fem_aar`) | «Fristen for å reklamere er ute» |
-| Saken kan være svak | én eller flere grunner under | «Du kan ha en sak, men den står svakt» |
-| Du kan ha en sak | ellers | «Du kan ha en reklamasjonssak» |
+| `ute` | mer enn fem år siden kjøpet (samme grense som tidslinjen, `kjop_fem_aar`) | «Fristen for å reklamere er ute» |
+| `svak` | én eller flere grunner under | «Du kan ha en reklamasjonssak» |
+| `sak` | ellers | «Du kan ha en reklamasjonssak» |
 
-Grunnene, i denne rekkefølgen. Tekstene er de samme som advarslene i skjemaet:
+Grunnene, i denne rekkefølgen. Tekstene er de samme som advarslene i skjemaet (steg 2 og 3), der de vises:
 
 | Regel | Vilkår | Tekst (vises også i skjemaet) |
 |---|---|---|
@@ -51,11 +51,15 @@ Ved «Fristen er ute» stopper flyten: teksten er den samme som stoppet i tidsli
 
 ## «Dette sier loven om din sak» (3.2)
 
-Faste tekster valgt av `lovlinjer`. Paragrafen kommer fra `paragrafer.ts` for lovversjonen kjøpet følger; ingen tekst har et paragrafnummer i seg. Alle kombinasjonene står i `src/lib/vurdering/__snapshots__/lovlinjer.txt`.
+Faste tekster valgt av `lovlinjer`. Hver sak som ikke er over fem år, har minst én linje i kjøperens favør (✓). En test går gjennom over 10 000 kombinasjoner for å sjekke det: alle kategorier og underkategorier, alene og med en feil til, kjøp før og etter 2024, feilen tidlig og sent, og alle svar om «som den er». Paragrafen kommer fra `paragrafer.ts` for lovversjonen kjøpet følger; ingen tekst har et paragrafnummer i seg. Alle kombinasjonene står i `src/lib/vurdering/__snapshots__/lovlinjer.txt`.
 
+- **Mangel**, først, én linje per type feil kjøperen valgte (samme grunnlag som brevets mangelsetning i `rettslig.ts`):
+  - teknisk feil eller «vet ikke ennå»: «Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel.» (§ 16 første ledd bokstav a). Utelates før 2024 ved «som den er» = ja, der linjen om forbeholdet (§ 17) gjelder i stedet.
+  - det selger sa eller lovet: «Bilen skal svare til det selger opplyste før kjøpet.» (§ 16 første ledd bokstav c)
+  - garanti: «Bilen skal svare til det som er avtalt, også garantien.» (§ 15 første ledd)
 - **Frist** (fra overtakelsen til i dag, siden brevet er reklamasjonen hvis kjøperen ikke har reklamert før):
   - innen to år: «Du er innenfor fristen for å reklamere (to år fra overtakelsen).» (§ 27 annet ledd første punktum)
-  - mellom to og fem år, og en feil er slitedel eller av ukjent type (for eksempel «vet ikke ennå»): «Fristen kan være ute for slitedeler.» (§ 27 annet ledd)
+  - mellom to og fem år, og en feil er slitedel eller av ukjent type (for eksempel «vet ikke ennå»): «Fristen er fem år for deler som er ment å vare vesentlig lenger enn to år, ellers to år.» (§ 27 annet ledd)
   - ellers: «Du er innenfor fristen for å reklamere (fem år fra overtakelsen).» (§ 27 annet ledd annet punktum)
 - **Bevisbyrde** (§ 18 annet ledd), for feil som ikke gjelder det selgeren sa eller lovet (der fantes feilen ved salget, og formodningen spiller ingen rolle). Fristen er 6 måneder før 2024 og 2 år fra 2024.
   - innen fristen, uthevet: «Feilen viste seg innen {frist}. Da er det selger som må bevise at feilen ikke var der da du overtok bilen.»
@@ -143,8 +147,8 @@ where v.hendelse = 'vurdering_vist' group by 1;
 
 ## Tester og målinger
 
-- `src/lib/vurdering/vurdering.test.ts`: status per gren, «fristen er ute» uten betaling, lovlinjene (snapshot), tall under 5, tellingen, kortene uten sitater og lenker, ingen modell i steg 4, og forbudte ord («vinne», «sannsynlig», «garanter», brevets forsterkere) i alle tekster før muren.
+- `src/lib/vurdering/vurdering.test.ts`: status per gren, «fristen er ute» uten betaling, lovlinjene (snapshot), tall under 5, tellingen, kortene uten sitater og lenker, ingen modell i steg 4, og forbudte ord («vinne», «sannsynlig», «garanter», «svak» som stamme, brevets forsterkere) i alle tekster før muren, også advarslene (`riktighet.ts`, `tidslinje.ts`, `skjema.tsx`).
 - `src/lib/vurdering/gylne.test.ts`: de tolv simulerte sakene mot `__fixtures__/forventet.json` (satt fra reglene før kjøringen) og `__fixtures__/gylne.json` (`npm run vurdering:gylne`, som også skriver skjermene til `docs/jurist-gjennomgang.md`).
 - `src/lib/brev/brev.test.ts`: forhåndsvisningen har bare første setning av vedtaksavsnittet.
-- `e2e/flyt.spec.ts` (Playwright, desktop og mobil): landing → steg 7 for hver status, tid til vurdering, ett serverkall før steg 7, ingen sitater eller lenker, ingen sideveis rulling, og hele brevet og Word med dev-flagget.
+- `e2e/flyt.spec.ts` (Playwright, desktop og mobil): landing → steg 7 for hver status (samme overskrift ved `sak` og `svak`, og aldri ordet «svak» på siden), tid til vurdering, ett serverkall før steg 7, ingen sitater eller lenker, ingen sideveis rulling, og hele brevet og Word med dev-flagget.
 - `npm run ferdig:vurdering`: tabellen mot en fersk telling.

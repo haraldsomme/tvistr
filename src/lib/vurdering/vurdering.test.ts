@@ -5,7 +5,9 @@ import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import type { Kandidat } from "@/lib/matching/typer";
 import { byggStatistikk, MIN_PRISAVSLAG, type Statistikkrad, type Tellevedtak } from "./statistikk";
 import { vurderingSomTekst } from "./tekst";
-import { byggVurdering, lovlinjer, tallblokker, tallsetninger, type Vurderingssak, vurderStatus } from "./vurdering";
+import { plussManeder } from "@/lib/brev/tidslinje";
+import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
+import { byggVurdering, fristenErUte, lovlinjer, tallblokker, tallsetninger, type Vurderingssak, vurderStatus } from "./vurdering";
 
 // The model must never be reached before step 7.
 const velgVedtak = vi.fn();
@@ -70,6 +72,30 @@ describe("lovlinjene", () => {
   it("er faste tekster valgt av kode, med paragraf fra paragrafer.ts", async () => {
     const tekst = kombinasjoner.map(([navn, s]) => `## ${navn}\n${lovlinjer(s).map((l) => `[${l.ikon}${l.uthevet ? ", uthevet" : ""}] ${l.tekst}${l.paragraf ? ` (${l.paragraf})` : ""}`).join("\n")}`).join("\n\n");
     await expect(`${tekst}\n`).toMatchFileSnapshot("__snapshots__/lovlinjer.txt");
+  });
+
+  // Every case that is not past the five years has at least one line in the buyer's favour: every kind
+  // of defect and subcategory, purchases before and after 2024, the defect showing itself early and
+  // late, and each answer about «som den er», alone and with a second defect.
+  it("har alltid minst én linje i kjøperens favør", () => {
+    const valg = HOVEDKATEGORIER.flatMap((h) => [{ hoved: h.id, under: [] as string[] }, ...h.under.map((u) => ({ hoved: h.id, under: [u.id] }))]);
+    const uten: string[] = [];
+    let n = 0;
+    for (const kjopsdato of ["2021-11-01", "2022-06-01", "2023-05-02", "2023-12-20", "2024-01-10", "2024-09-01", "2025-03-10", "2026-06-01"])
+      for (const m of [1, 5, 7, 18, 23, 25, 40]) {
+        const oppdaget = plussManeder(kjopsdato, m);
+        if (oppdaget > IDAG) continue;
+        for (const somDenEr of ["ja", "nei", "vet_ikke"] as const)
+          for (const f of valg)
+            for (const feil of [[{ ...f, oppdaget }], [{ hoved: "klima", under: ["ac"], oppdaget: plussManeder(kjopsdato, 1) }, { ...f, oppdaget }]]) {
+              const s = sak({ kjopsdato, somDenEr, feil });
+              if (fristenErUte(s.kjopsdato, s.idag) || new Set(feil.map((x) => x.hoved)).size < feil.length) continue;
+              n++;
+              if (!lovlinjer(s).some((l) => l.ikon === "ja")) uten.push(`${kjopsdato} +${m} mnd, «som den er» ${somDenEr}: ${feil.map((x) => [x.hoved, ...x.under].join(".")).join(" + ")}`);
+            }
+      }
+    expect(n).toBeGreaterThan(10_000);
+    expect(uten).toEqual([]);
   });
 
   it("har aldri et paragrafnummer i selve teksten", () => {
@@ -205,15 +231,16 @@ describe("kortene", () => {
 describe("ordene før betalingsmuren", () => {
   // The brief's forbidden words, and the letter's intensifiers. «sannsynliggjøre» is a different word, and
   // «klart» is left out: «klart til å sende» (ready) is the brief's own text, not an intensifier.
-  const FORBUDT = /(^|[^\p{L}])(vinne|vinner|vinn|sannsynlig|sannsynligvis|åpenbart|utvilsomt)(?![\p{L}])|(^|[^\p{L}])garanter|prosent sjanse/iu;
+  // «svak» is a status in the code, never a word the buyer reads («svakt», «svakere»).
+  const FORBUDT = /(^|[^\p{L}])(vinne|vinner|vinn|sannsynlig|sannsynligvis|åpenbart|utvilsomt)(?![\p{L}])|(^|[^\p{L}])(garanter|svak)|prosent sjanse/iu;
   it("finnes ikke på vurderingsskjermen for de tolv sakene", () => {
     const gylne = JSON.parse(readFileSync("src/lib/vurdering/__fixtures__/gylne.json", "utf8")) as Record<string, Parameters<typeof vurderingSomTekst>[0]>;
     for (const [navn, v] of Object.entries(gylne)) expect(vurderingSomTekst(v, "2025-01-01"), navn).not.toMatch(FORBUDT);
   });
   it("finnes ikke i skjermens faste tekster", () => {
-    for (const fil of ["src/app/sak/vurderingsvisning.tsx", "src/lib/vurdering/vurdering.ts", "src/app/page.tsx"]) {
+    for (const fil of ["src/app/sak/vurderingsvisning.tsx", "src/lib/vurdering/vurdering.ts", "src/lib/brev/riktighet.ts", "src/lib/brev/tidslinje.ts", "src/app/sak/skjema.tsx", "src/app/page.tsx"]) {
       const tekster = [...readFileSync(fil, "utf8").matchAll(/"([^"\n]*[a-zæøå]{3,}[^"\n]*)"|>([^<>{}\n]*[a-zæøå]{3,}[^<>{}\n]*)</g)].map((m) => m[1] ?? m[2]);
-      for (const t of tekster) expect(t, fil).not.toMatch(FORBUDT);
+      for (const t of tekster.filter((t) => t !== "svak")) expect(t, fil).not.toMatch(FORBUDT);
     }
   });
 });

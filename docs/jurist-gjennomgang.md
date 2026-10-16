@@ -897,14 +897,12 @@ Hvert vedtaksavsnitt over er nå også vist som en del av hele brevet (`npm run 
 
 ---
 
----
-
 # Vurderingen før betaling (de tolv simulerte sakene)
 
 Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sakene (`scripts/simulerte-saker.ts`) per 2026-10-13. Alt er regnet av kode fra svarene og databasen (se `docs/vurdering.md`); ingen modell har skrevet noe. Tallene er fra `statistikk_kategori`, kortene er de tre øverste vedtakene på nivå A fra rangeringen. Statusen er satt av reglene, ikke av en vurdering av saken.
 
 **Les hver skjerm mot kjøperens svar og loven, og noter under «Merknad»:**
-- Stemmer statusen og grunnene med svarene?
+- Stemmer statusen med svarene? (Ved «svak» ser kjøperen samme overskrift som ved «sak»; grunnene vises ikke.)
 - Er lovlinjene riktige for lovversjonen, og er paragrafene riktige?
 - Lover noe på skjermen mer enn loven og vedtakene gir grunnlag for?
 
@@ -916,6 +914,7 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 >
 > ## Dette sier loven om din sak
 >
+> ✓ Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel. [forbrukerkjøpsloven § 16 første ledd bokstav a]
 > ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
 > ✓ Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
 > i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
@@ -952,11 +951,7 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 
 **Kjøperens svar:** kjøpt 2023-05-02, 188000 km, første gang registrert 2012, «som den er»: ja; drivlinje.girkasse oppdaget 2024-02-01
 
-> # Du kan ha en sak, men den står svakt
->
-> ## Dette svekker saken
->
-> ! Bilen ble solgt «som den er» før 2024 og var over 10 år gammel eller hadde gått over 200 000 km. Da skal det mer til før bilen er i dårligere stand enn du med rimelighet kunne forvente.
+> # Du kan ha en reklamasjonssak
 >
 > ## Dette sier loven om din sak
 >
@@ -997,17 +992,11 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 
 **Kjøperens svar:** kjøpt 2023-01-20, 245000 km, første gang registrert 2008, «som den er»: ja; karosseri.rust oppdaget 2025-08-25
 
-> # Du kan ha en sak, men den står svakt
->
-> ## Dette svekker saken
->
-> ! En eller flere feil viste seg mer enn to år etter at du overtok bilen. For biler gjelder som regel en frist på fem år, men for slitedeler kan fristen være to år. Selger kan bruke det.
-> ! Bilen ble solgt «som den er» før 2024 og var over 10 år gammel eller hadde gått over 200 000 km. Da skal det mer til før bilen er i dårligere stand enn du med rimelighet kunne forvente.
-> ! Rust regnes ofte som slitasje, og feilen ble oppdaget mer enn 6 måneder etter kjøpet. Selger kan hevde at feilen skyldes normal slitasje.
+> # Du kan ha en reklamasjonssak
 >
 > ## Dette sier loven om din sak
 >
-> ! Fristen kan være ute for slitedeler. [forbrukerkjøpsloven § 27 annet ledd]
+> ✓ Fristen er fem år for deler som er ment å vare vesentlig lenger enn to år, ellers to år. [forbrukerkjøpsloven § 27 annet ledd]
 > ! Feilen viste seg etter 6 måneder. Da må du selv sannsynliggjøre at feilen var der ved levering, typisk med en verkstedrapport. Brevet legger opp til det. [forbrukerkjøpsloven § 18 annet ledd]
 > ✓ Bilen ble solgt «som den er». Du kan likevel reklamere hvis bilen er i dårligere stand enn du kunne forvente. [forbrukerkjøpsloven § 17 første ledd bokstav a]
 > i Kjøpet følger forbrukerkjøpsloven slik den gjaldt før 2024.
@@ -1048,6 +1037,7 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 >
 > ## Dette sier loven om din sak
 >
+> ✓ Bilen skal svare til det selger opplyste før kjøpet. [forbrukerkjøpsloven § 16 første ledd bokstav c]
 > ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
 > i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
 >
@@ -1087,6 +1077,7 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 >
 > ## Dette sier loven om din sak
 >
+> ✓ Bilen skal svare til det selger opplyste før kjøpet. [forbrukerkjøpsloven § 16 første ledd bokstav c]
 > ✓ Du er innenfor fristen for å reklamere (fem år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd annet punktum]
 > i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
 >
@@ -1126,6 +1117,7 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 >
 > ## Dette sier loven om din sak
 >
+> ✓ Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel. [forbrukerkjøpsloven § 16 første ledd bokstav a]
 > ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
 > ✓ Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
 > i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
@@ -1166,6 +1158,7 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 >
 > ## Dette sier loven om din sak
 >
+> ✓ Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel. [forbrukerkjøpsloven § 16 første ledd bokstav a]
 > ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
 > ✓ Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
 > i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
@@ -1208,6 +1201,7 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 >
 > ## Dette sier loven om din sak
 >
+> ✓ Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel. [forbrukerkjøpsloven § 16 første ledd bokstav a]
 > ✓ Du er innenfor fristen for å reklamere (fem år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd annet punktum]
 > ✓ Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
 > i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
@@ -1248,6 +1242,7 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 >
 > ## Dette sier loven om din sak
 >
+> ✓ Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel. [forbrukerkjøpsloven § 16 første ledd bokstav a]
 > ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
 > ✓ Feilen viste seg innen 2 år. Da er det selger som må bevise at feilen ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
 > ✓ Et alminnelig «som den er»-forbehold gjelder ikke lenger etter loven fra 2024. [forbrukerkjøpsloven § 15 annet ledd]
@@ -1288,6 +1283,7 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 >
 > ## Dette sier loven om din sak
 >
+> ✓ Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel. [forbrukerkjøpsloven § 16 første ledd bokstav a]
 > ✓ Du er innenfor fristen for å reklamere (fem år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd annet punktum]
 > ✓ Feilene viste seg innen 2 år. Da er det selger som må bevise at feilene ikke var der da du overtok bilen. [forbrukerkjøpsloven § 18 annet ledd]
 > i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
@@ -1330,6 +1326,7 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 >
 > ## Dette sier loven om din sak
 >
+> ✓ Bilen skal svare til det som er avtalt, også garantien. [forbrukerkjøpsloven § 15 første ledd]
 > ✓ Du er innenfor fristen for å reklamere (to år fra overtakelsen). [forbrukerkjøpsloven § 27 annet ledd første punktum]
 > i Kjøpet følger forbrukerkjøpsloven slik den gjelder fra 2024.
 >
@@ -1365,16 +1362,12 @@ Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sa
 
 **Kjøperens svar:** kjøpt 2023-03-01, 150000 km, første gang registrert 2017, «som den er»: nei; vet_ikke.nodmodus oppdaget 2025-11-01
 
-> # Du kan ha en sak, men den står svakt
->
-> ## Dette svekker saken
->
-> ! En eller flere feil viste seg mer enn to år etter at du overtok bilen. For biler gjelder som regel en frist på fem år, men for slitedeler kan fristen være to år. Selger kan bruke det.
-> ! Vi har ingen vedtak om akkurat denne feilen på en bil som din.
+> # Du kan ha en reklamasjonssak
 >
 > ## Dette sier loven om din sak
 >
-> ! Fristen kan være ute for slitedeler. [forbrukerkjøpsloven § 27 annet ledd]
+> ✓ Bilen skal ha den holdbarheten og de egenskapene du hadde grunn til å forvente. Gjør den ikke det, har den en mangel. [forbrukerkjøpsloven § 16 første ledd bokstav a]
+> ✓ Fristen er fem år for deler som er ment å vare vesentlig lenger enn to år, ellers to år. [forbrukerkjøpsloven § 27 annet ledd]
 > ! Feilen viste seg etter 6 måneder. Da må du selv sannsynliggjøre at feilen var der ved levering, typisk med en verkstedrapport. Brevet legger opp til det. [forbrukerkjøpsloven § 18 annet ledd]
 > i Kjøpet følger forbrukerkjøpsloven slik den gjaldt før 2024.
 >

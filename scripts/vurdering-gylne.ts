@@ -39,13 +39,14 @@ async function main() {
 Skjermen kjøperen ser i steg 4, før betaling, for hver av de tolv simulerte sakene (\`scripts/simulerte-saker.ts\`) per ${BREVDATO}. Alt er regnet av kode fra svarene og databasen (se \`docs/vurdering.md\`); ingen modell har skrevet noe. Tallene er fra \`statistikk_kategori\`, kortene er de tre øverste vedtakene på nivå A fra rangeringen. Statusen er satt av reglene, ikke av en vurdering av saken.
 
 **Les hver skjerm mot kjøperens svar og loven, og noter under «Merknad»:**
-- Stemmer statusen og grunnene med svarene?
+- Stemmer statusen med svarene? (Ved «svak» ser kjøperen samme overskrift som ved «sak»; grunnene vises ikke.)
 - Er lovlinjene riktige for lovversjonen, og er paragrafene riktige?
 - Lover noe på skjermen mer enn loven og vedtakene gir grunnlag for?
 
 `;
   const dok = readFileSync(DOK, "utf8");
-  const for_ = dok.includes(OVERSKRIFT) ? dok.slice(0, dok.indexOf(OVERSKRIFT)).trimEnd() : dok.trimEnd();
+  // Without the separators before the section, so a new run does not add another.
+  const for_ = (dok.includes(OVERSKRIFT) ? dok.slice(0, dok.indexOf(OVERSKRIFT)) : dok).replace(/(\s*---)+\s*$/, "");
   writeFileSync(DOK, `${for_}\n\n---\n\n${innledning}${seksjoner.join("\n\n**Merknad:**\n\n---\n\n")}\n\n**Merknad:**\n`);
   console.log(Object.entries(ut).map(([n, v]) => `${n}: ${(v as { status: string }).status}`).join("\n"));
   process.exit(0);

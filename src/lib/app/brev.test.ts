@@ -22,7 +22,7 @@ describe("brevet", () => {
 
   it("tomt skjema gir plassholdere", () => {
     const t = tekst(standard(idag));
-    for (const p of ["[Ditt navn]", "[Forhandlerens navn]", "[AB 12345]", "[kjøpsdato]", "[kjøpesum]"]) expect(t).toContain(p);
+    for (const p of ["[Ditt navn]", "[Forhandlerens navn]", "[reg.nr.]", "[kjøpsdato]", "[kjøpesum]"]) expect(t).toContain(p);
   });
 
   it("før 2024: seks måneder og § 17", () => {
@@ -129,4 +129,12 @@ describe("brukertesten", () => {
     expect(t).not.toContain("Bilen er også omfattet av garanti");
   });
   it("erstatning uten utgifter: plassholder", () => expect(tekst({ ...eksempel(idag), k_exp: true, exp: [] })).toContain("[legg til utgiftene]"));
+});
+
+describe("plassholdere", () => {
+  it("manglende reg.nr. ser ikke ut som et ekte skilt", () => {
+    const t = tekst({ ...eksempel(idag), c_reg: "" });
+    expect(t).toContain("[reg.nr.]");
+    expect(t).not.toContain("AB 12345");
+  });
 });

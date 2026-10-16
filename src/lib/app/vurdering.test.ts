@@ -91,3 +91,16 @@ describe("brukertesten", () => {
     expect(r.factors.some((f) => f.t === "Bilen var ikke som selgeren opplyste")).toBe(true);
   });
 });
+
+describe("kanttilfeller", () => {
+  it("uten datoer: foreløpig, ikke «Mulig sak»", () => {
+    const r = evaluate({ seller: "forhandler" }, idag);
+    expect(r.tier).toBe("ukjent");
+    expect(r.badge).toBe("Foreløpig");
+  });
+  it("dato frem i tid: ingen konklusjoner om frister", () => {
+    const r = evaluate({ ...base, delivery: "2026-06-01", found: "2027-01-01" }, idag);
+    expect(r.factors.some((f) => f.t === "Sjekk datoene")).toBe(true);
+    expect(r.factors.some((f) => /innen to år|Du er i tide/.test(f.t))).toBe(false);
+  });
+});

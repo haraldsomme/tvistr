@@ -111,3 +111,10 @@ export function lignende(inn: { svar: Svar; alle: Kandidat[]; statistikk: Map<st
   const profiler = a.map((r) => ({ alder: etterId.get(r.id)!.alder, km: etterId.get(r.id)!.km }));
   return { tall: tallblokker(svar, inn.statistikk), kort, sammenligning: sammenlign(alderVedKjop(svar.kjopsdato, svar.ar), svar.km, profiler) };
 }
+
+// A decision's car when the extraction has no `bil`: make, model and model year, or the year alone.
+export function bilnavnFra(merke: string | null, modell: string | null, arsmodell: number | null): string | null {
+  const navn = [merke, modell].filter(Boolean).join(" ");
+  if (navn) return arsmodell ? `${navn} ${arsmodell}` : navn;
+  return arsmodell ? `Bil, årsmodell ${arsmodell}` : null;
+}

@@ -76,8 +76,10 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   const today = parseD(idag)!;
   const L = regler(q.kjopsdato || q.delivery);
   const F: Faktor[] = [{ s: "good", t: "Forbrukerkjøpsloven gjelder", d: "Du kjøpte som privatperson fra en forhandler. Loven kan ikke avtales bort til din ugunst." }];
-  const del = parseD(q.delivery),
-    fd = parseD(q.found);
+  // A date in the future cannot be judged: only «Sjekk datoene», no conclusion about the limits.
+  const fremtid = [q.kjopsdato, q.delivery, q.found, q.sist, q.notified === "ja" ? q.notifiedDate : undefined].some((d) => d && d > idag);
+  const del = fremtid ? null : parseD(q.delivery),
+    fd = fremtid ? null : parseD(q.found);
   // The five years run from the handover; a complaint made after them is too late whenever the fault showed.
   const reklamert = q.notified === "ja" && q.notifiedDate ? q.notifiedDate : idag;
   let ute = false;
@@ -101,11 +103,11 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
         F.push({ s: "good", t: `Feilen viste seg innen ${L.formodningTekst}`, d: `Feilen viste seg ${d} etter overtakelsen. Da regnes den som hovedregel for å ha vært der fra start, og det er forhandleren som må bevise noe annet.`, law: L.ref("formodning") });
       else F.push({ s: "warn", t: `Mer enn ${q.found! > plussManeder(q.delivery!, 24) ? "to år" : L.formodningTekst} etter overtakelsen`, d: "Du er innenfor femårsfristen for bil, men må selv sannsynliggjøre at feilen skyldes forhold ved leveringen.", law: L.ref("reklamasjon_5ar") });
     }
-  } else F.push({ s: "warn", t: "Datoene mangler", d: "Uten overtakelsesdato og dato for når feilen ble oppdaget, kan vi ikke vurdere fristene. Vurderingen er derfor foreløpig." });
+  } else if (!fremtid) F.push({ s: "warn", t: "Datoene mangler", d: "Uten overtakelsesdato og dato for når feilen ble oppdaget, kan vi ikke vurdere fristene. Vurderingen er derfor foreløpig." });
 
   // Dates that cannot all be right.
   const avvik = [
-    [q.kjopsdato, q.delivery, q.found, q.sist, q.notified === "ja" ? q.notifiedDate : undefined].some((d) => d && d > idag) ? "En av datoene er frem i tid." : "",
+    fremtid ? "En av datoene er frem i tid." : "",
     q.notified === "ja" && q.notifiedDate && q.found && q.notifiedDate < q.found ? "Du har oppgitt at du sa fra før du oppdaget feilen." : "",
   ].filter(Boolean);
   if (avvik.length) F.push({ s: "warn", t: "Sjekk datoene", d: `${avvik.join(" ")} Sjekk at datoene stemmer.` });
@@ -155,6 +157,8 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   const claim = sev === 1 ? "Krev at feilen rettes. Prisavslag kan være et alternativ hvis du kan leve med feilen." : `Krev at forhandleren retter feilen, med ${alt} som subsidiært krav hvis rettingen ikke lykkes.`;
   // Always a used car, so the advice is always to get the workshop's word in writing.
   const docs = "Få et verksted til å beskrive feilen og årsaken skriftlig. Ta vare på kontrakt, bilder og kvitteringer.";
+  // Without any date there is nothing to weigh yet.
+  if (!q.delivery && !q.found) return { tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen.", factors: F, claim, alt, sendBy, docs };
   return { tier, ...TIER[tier], factors: F, claim, alt, sendBy, docs };
 }
 
@@ -198,7 +202,5 @@ export const writerQ = (s: Skjema): Sjekksvar => ({
 
 export function skriverResultat(s: Skjema, idag: string): Resultat {
   const r = evaluate(writerQ(s), idag);
-  const ut = { ...r, factors: [...r.factors, ...wsFactors({ ...s, dato: s.c_purchase || s.c_delivery })] };
-  if (!s.c_delivery && !s.f_found) return { ...ut, tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen." };
-  return ut;
+  return { ...r, factors: [...r.factors, ...wsFactors({ ...s, dato: s.c_purchase || s.c_delivery })] };
 }

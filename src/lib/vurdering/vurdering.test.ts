@@ -5,7 +5,7 @@ import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import type { Kandidat } from "@/lib/matching/typer";
 import { byggStatistikk, MIN_PRISAVSLAG, type Statistikkrad, type Tellevedtak } from "./statistikk";
 import type { Svar } from "@/lib/vedtaksvalg/kjoper";
-import { lignende, tallblokker, tallsetninger } from "./vurdering";
+import { bilnavnFra, lignende, tallblokker, tallsetninger } from "./vurdering";
 
 // The model must never be reached before payment.
 const velgVedtak = vi.fn();
@@ -143,4 +143,10 @@ describe("kortene", () => {
     const kilde = readFileSync("src/app/sak/vurdering.ts", "utf8");
     expect(kilde).not.toMatch(/vedtaksvalg\/valg|@\/lib\/ai|velgVedtak|finnVedtak|anthropic/i);
   });
+});
+
+describe("bilnavnFra", () => {
+  it("merke, modell og årsmodell", () => expect(bilnavnFra("Toyota", "RAV4", 2015)).toBe("Toyota RAV4 2015"));
+  it("bare årsmodell", () => expect(bilnavnFra(null, null, 2014)).toBe("Bil, årsmodell 2014"));
+  it("ingenting", () => expect(bilnavnFra(null, null, null)).toBeNull());
 });

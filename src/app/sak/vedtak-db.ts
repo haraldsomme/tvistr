@@ -6,6 +6,7 @@ import { vedtak } from "@/db/schema";
 import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import { GRUNNFILTER } from "@/lib/matching/grunnfilter";
 import type { Kandidat } from "@/lib/matching/typer";
+import { bilnavnFra } from "@/lib/vurdering/vurdering";
 
 type Rad = Kandidat & { merke: string | null; modell: string | null; arsmodell: number | null };
 
@@ -42,6 +43,6 @@ export const hentAlle = (): Promise<Kandidat[]> => hent();
 
 // Make, model and model year of every decision in the set, for a card whose extraction has no `bil`.
 export async function hentBilnavn(): Promise<(id: number) => string | null> {
-  const navn = new Map((await hent()).map((r) => [r.id, [r.merke, r.modell, r.arsmodell].filter(Boolean).join(" ") || null]));
+  const navn = new Map((await hent()).map((r) => [r.id, bilnavnFra(r.merke, r.modell, r.arsmodell)]));
   return (id) => navn.get(id) ?? null;
 }

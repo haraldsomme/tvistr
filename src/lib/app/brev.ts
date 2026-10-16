@@ -74,7 +74,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   B.push({ t: "date", tekst: [has("l_place") ? s.l_place : has("b_city") ? s.b_city : { ph: "Sted" }, `, ${fmtD(ld)}`] });
 
   const car: Del = has("c_make") || has("c_model") ? [s.c_make, s.c_model].filter(Boolean).join(" ").trim() : { ph: "Merke og modell" };
-  const reg = v("c_reg", "AB 12345");
+  const reg = v("c_reg", "reg.nr.");
   B.push({ t: "subj", tekst: ["Reklamasjon på mangel ved ", car, ", reg.nr. ", reg] });
   B.push({
     t: "p",

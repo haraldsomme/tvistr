@@ -127,19 +127,21 @@ export function Resultat({ a, ordre, utvikling, onTilbake, onOmStart }: { a: Til
             </span>
             <h2>{r.title}</h2>
             <p>{r.summary}</p>
-            <div className="m3" aria-hidden="true">
-              <div className="m3-bar">
-                <span />
-                <span />
-                <span />
-                <i style={{ left: r.pos }} />
+            {r.pos && (
+              <div className="m3" aria-hidden="true">
+                <div className="m3-bar">
+                  <span />
+                  <span />
+                  <span />
+                  <i style={{ left: r.pos }} />
+                </div>
+                <div className="m3-l">
+                  <span>Svak</span>
+                  <span>Usikker</span>
+                  <span>Sterk</span>
+                </div>
               </div>
-              <div className="m3-l">
-                <span>Svak</span>
-                <span>Usikker</span>
-                <span>Sterk</span>
-              </div>
-            </div>
+            )}
           </div>
           <Lovrader faktorer={r.factors} />
           {lignende?.ok && <Lignende tall={lignende.tall} kort={lignende.kort} sammenligning={lignende.sammenligning} fot="I brevet viser vi til saken som ligner mest, og forklarer hvorfor du har krav på samme resultat." />}

@@ -876,3 +876,7 @@ html,body{overflow-x:clip}
 #obProg i{border-radius:3px}
 .q-datef{max-width:340px}
 @media (max-width:900px){ .ob-top{padding:10px 0} }
+/* ───── Tvistr: the selected segment, tab and step are styled directly instead of with the artifact's
+   JS-placed sliding indicators (.thumb, .wind, .halo). ───── */
+.seg input:checked + span,.wtabs button[aria-selected="true"],.steps .st[aria-current="step"]{background:var(--surface);box-shadow:var(--sh-xs),0 0 0 1px var(--line)}
+.seg input:checked + span{border-radius:10px}

@@ -1,0 +1,108 @@
+// The writer's form controls, as the artifact draws them (.f/.lb/.in, .sw/.tg, .chip, .seg, .rv).
+import type { ReactNode } from "react";
+import { Hake } from "@/app/deler/ikoner";
+import { FMT, type Format } from "@/lib/app/format";
+import type { Skjema } from "@/lib/app/skjema";
+
+export type Sett = (patch: Partial<Skjema>) => void;
+export type StegProps = { s: Skjema; sett: Sett };
+type Tekstfelt = { [K in keyof Skjema]: Skjema[K] extends string ? K : never }[keyof Skjema];
+type Bryterfelt = { [K in keyof Skjema]: Skjema[K] extends boolean ? K : never }[keyof Skjema];
+
+export function Felt(p: {
+  s: Skjema;
+  sett: Sett;
+  k: Tekstfelt;
+  label: ReactNode;
+  klasse?: string;
+  fmt?: Format;
+  type?: string;
+  placeholder?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  autoComplete?: string;
+  mono?: boolean;
+  suffiks?: string;
+  prefiks?: string;
+  hint?: ReactNode;
+  flerlinje?: number;
+  maks?: number;
+}) {
+  const id = `f_${p.k}`;
+  const endre = (v: string) => p.sett({ [p.k]: p.fmt ? FMT[p.fmt](v) : v } as Partial<Skjema>);
+  const felles = { id, value: p.s[p.k], placeholder: p.placeholder, className: `in${p.mono ? " mono" : ""}` };
+  const input = p.flerlinje ? (
+    <textarea {...felles} style={{ minHeight: p.flerlinje }} onChange={(e) => endre(e.target.value)} />
+  ) : (
+    <input {...felles} type={p.type ?? "text"} inputMode={p.inputMode} autoComplete={p.autoComplete} maxLength={p.maks} onChange={(e) => endre(e.target.value)} />
+  );
+  return (
+    <div className={`f ${p.klasse ?? "c6"}`}>
+      <label className="lb" htmlFor={id}>
+        {p.label}
+      </label>
+      {p.suffiks || p.prefiks ? (
+        <div className={`ad${p.prefiks ? " pre" : ""}`}>
+          {input}
+          <span className="sx">{p.suffiks ?? p.prefiks}</span>
+        </div>
+      ) : (
+        input
+      )}
+      {p.hint && <span className="hint">{p.hint}</span>}
+    </div>
+  );
+}
+
+export function Bryter({ s, sett, k, tittel, tekst, stil }: { s: Skjema; sett: Sett; k: Bryterfelt; tittel: string; tekst: string; stil?: React.CSSProperties }) {
+  return (
+    <label className="sw" htmlFor={`f_${k}`} style={stil}>
+      <div>
+        <div className="sw-t">{tittel}</div>
+        <div className="sw-d">{tekst}</div>
+      </div>
+      <input className="tg" type="checkbox" role="switch" id={`f_${k}`} checked={s[k]} onChange={(e) => sett({ [k]: e.target.checked } as Partial<Skjema>)} />
+    </label>
+  );
+}
+
+// One choice among chips (radio), or several (checkbox) when `flere`.
+export function Chips({ verdi, valg, onVelg, navn, flere }: { verdi: string | string[]; valg: readonly (readonly [string, string])[]; onVelg: (v: string, pa: boolean) => void; navn: string; flere?: boolean }) {
+  return (
+    <div className="chips">
+      {valg.map(([v, l]) => {
+        const pa = Array.isArray(verdi) ? verdi.includes(v) : verdi === v;
+        return (
+          <label key={v} className="chip">
+            <input type={flere ? "checkbox" : "radio"} name={navn} value={v} checked={pa} onChange={(e) => onVelg(v, e.target.checked)} />
+            <span>
+              {flere && <Hake />}
+              {l}
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+export function Seg({ verdi, valg, onVelg, navn }: { verdi: string; valg: readonly (readonly [string, string])[]; onVelg: (v: string) => void; navn: string }) {
+  return (
+    <div className="seg">
+      {valg.map(([v, l]) => (
+        <label key={v}>
+          <input type="radio" name={navn} value={v} checked={verdi === v} onChange={() => onVelg(v)} />
+          <span>{l}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+// A part of the form shown only when `pa` (artifact .rv with data-show).
+export function Vis({ pa, children, klasse }: { pa: boolean; children: ReactNode; klasse?: string }) {
+  return (
+    <div className={`rv${pa ? "" : " off"}${klasse ? ` ${klasse}` : ""}`} inert={!pa}>
+      <div>{children}</div>
+    </div>
+  );
+}

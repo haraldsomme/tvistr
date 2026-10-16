@@ -217,3 +217,12 @@ export const VISTE_SEG_VALG = [
   { id: "over_24_mnd", navn: "Mer enn 2 år" },
 ] as const;
 export type VisteSegValg = (typeof VISTE_SEG_VALG)[number]["id"];
+
+// A decision's defect by name: the component the decision was about (feilvurdering), else our
+// subcategory or category. Used by the letter's paragraph and the cards on the verdict page.
+export function komponentnavn(f: { komponent: string | null; hovedkategori: string; underkategori: string | null }): string {
+  if (f.komponent) return f.komponent;
+  const h = HOVEDKATEGORIER.find((x) => x.id === f.hovedkategori);
+  const u = h?.under.find((x) => x.id === f.underkategori);
+  return (u?.navn ?? h?.navn ?? f.hovedkategori).toLowerCase();
+}

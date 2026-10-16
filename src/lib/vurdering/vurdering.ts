@@ -2,7 +2,7 @@
 // closest decisions with medhold, as fields only (no quotes, no link). Code and database only: nothing
 // here reaches the model, and nothing promises an outcome.
 import { liste, smaa, tall } from "@/lib/brev/format";
-import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
+import { HOVEDKATEGORIER, komponentnavn } from "@/lib/feil/kategorier";
 import { avgjorendeFor, ranger } from "@/lib/matching/ranger";
 import type { Kandidat } from "@/lib/matching/typer";
 import { byggSaken, type Svar } from "@/lib/vedtaksvalg/kjoper";
@@ -76,7 +76,8 @@ export function tallsetninger(b: Tallblokk): string[] {
 }
 
 // One of «Saker som ligner din»: fields only, no quotes and no link. `fikk`: what the buyer got, in lower case.
-export type Vedtakskort = { id: number; saksnummer: string | null; ar: string | null; bil: string; km: number | null; somDenEr: boolean; fikk: string[] };
+// `feil`: the defect the decision had (the same kind as the buyer's), by name.
+export type Vedtakskort = { id: number; saksnummer: string | null; ar: string | null; bil: string; km: number | null; somDenEr: boolean; fikk: string[]; feil: string | null };
 
 const SANKSJONSNAVN: Record<string, string> = { heving: "heving", prisavslag: "prisavslag", retting: "retting", erstatning: "erstatning", omlevering: "omlevering" };
 
@@ -106,7 +107,7 @@ export function lignende(inn: { svar: Svar; alle: Kandidat[]; statistikk: Map<st
     const fikk = (egne.length ? egne : (k.sanksjoner ?? [])).map((x) => SANKSJONSNAVN[x]).filter(Boolean);
     // The km is left out when the case was about the odometer, as in the letter.
     const omKm = r.feil?.hovedkategori === "historikk" && r.feil.underkategori === "km";
-    return { id: k.id, saksnummer: visSaksnummer(k.saksnummer), ar: k.vedtaksdato?.slice(0, 4) ?? null, bil: k.avgjorende?.bil ?? inn.bilnavn(k.id) ?? "Bil", km: omKm ? null : k.km, somDenEr: k.somDenEr === true, fikk };
+    return { id: k.id, saksnummer: visSaksnummer(k.saksnummer), ar: k.vedtaksdato?.slice(0, 4) ?? null, bil: k.avgjorende?.bil ?? inn.bilnavn(k.id) ?? "Bil", km: omKm ? null : k.km, somDenEr: k.somDenEr === true, fikk, feil: r.feil ? komponentnavn(r.feil) : null };
   });
   const profiler = a.map((r) => ({ alder: etterId.get(r.id)!.alder, km: etterId.get(r.id)!.km }));
   return { tall: tallblokker(svar, inn.statistikk), kort, sammenligning: sammenlign(alderVedKjop(svar.kjopsdato, svar.ar), svar.km, profiler) };

@@ -15,7 +15,8 @@ import type { AvledetFeil } from "../src/lib/feilvurdering/skjema";
 import { delOpp } from "../src/lib/avgjorende/verifiser";
 import { finnesIFulltekst, fulltekstVarianter } from "../src/lib/feilvurdering/verifiser";
 import { GRUNNFILTER } from "../src/lib/matching/grunnfilter";
-import { komponentnavn, UTVALG_I_TEKSTEN } from "../src/lib/vedtaksvalg/valg";
+import { komponentnavn } from "../src/lib/feil/kategorier";
+import { UTVALG_I_TEKSTEN } from "../src/lib/vedtaksvalg/valg";
 
 const { values: args } = parseArgs({ options: { trekk: { type: "boolean", default: false }, tell: { type: "string" } } });
 

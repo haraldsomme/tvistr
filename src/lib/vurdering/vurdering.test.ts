@@ -127,7 +127,7 @@ describe("kortene", () => {
     const json = JSON.stringify(v);
     expect(json).not.toContain("Turboen var");
     expect(json).not.toMatch(/«|https?:/);
-    expect(v.kort[0]).toEqual({ id: 1, saksnummer: "1", ar: "2025", bil: "Bil 1", km: 150_001, somDenEr: false, fikk: ["prisavslag"] });
+    expect(v.kort[0]).toEqual({ id: 1, saksnummer: "1", ar: "2025", bil: "Bil 1", km: 150_001, somDenEr: false, fikk: ["prisavslag"], feil: "turbo" });
   });
 
   it("sammenligner bilen bare når det går i kjøperens favør", () => {

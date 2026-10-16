@@ -54,7 +54,7 @@ export function Lignende({ tall: blokker, kort, sammenligning, brukes, fot }: { 
           <div className="sec-k">Saker som ligner din</div>
           <div className="sim-cases">
             {kort.map((k) => {
-              const meta = [k.somDenEr ? "«som den er»" : "", k.km !== null ? `${tall(k.km)} km` : ""].filter(Boolean).join(" · ");
+              const meta = [k.feil ? cap(k.feil) : "", k.somDenEr ? "«som den er»" : "", k.km !== null ? `${tall(k.km)} km` : ""].filter(Boolean).join(" · ");
               return (
                 <div key={k.id} className="sim-c">
                   <div className="sim-c-h">

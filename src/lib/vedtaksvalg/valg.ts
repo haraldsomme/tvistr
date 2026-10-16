@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { vedtak } from "@/db/schema";
 import { type Forbruk, kallVerktoy, MODELL } from "@/lib/ai/klient";
-import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
+import { komponentnavn } from "@/lib/feil/kategorier";
 import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import { avgjorendeFor, type Niva, type Rangert } from "@/lib/matching/ranger";
 import { poengtekst } from "@/lib/matching/rett";
@@ -32,14 +32,6 @@ const MAKS_SITATER_B = 6;
 
 // A quote the model may pick, with the defect it was said about (null for a legal point's sentence).
 export type Sitatvalg = { id: string; tekst: string; feil: AvledetFeil | null };
-
-// The defect as the paragraph names it: the component the decision was about, else our subcategory.
-export function komponentnavn(f: AvledetFeil): string {
-  if (f.komponent) return f.komponent;
-  const h = HOVEDKATEGORIER.find((x) => x.id === f.hovedkategori);
-  const u = h?.under.find((x) => x.id === f.underkategori);
-  return (u?.navn ?? h?.navn ?? f.hovedkategori).toLowerCase();
-}
 
 // The verified quotes a candidate offers: on level A those about the buyer's defect; on level B the
 // committee's sentences for the buyer's legal points (v4), else those about any accepted defect.

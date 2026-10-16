@@ -67,8 +67,8 @@ describe("låst til kjøpet", () => {
   const a = { reg: "AB 12345", cats: ["motor"], issues: { motor: ["turbo"] } };
   it("krever reg.nr. og en feil før betaling", () => {
     expect(manglerForKjop({ cats: ["motor"] })).toBe("reg");
-    expect(manglerForKjop({ reg: "AB 12345", cats: [] })).toBe("feil");
-    expect(manglerForKjop(a)).toBeNull();
+    expect(manglerForKjop({ reg: "AB 12345", make: "Skoda", cats: [] })).toBe("feil");
+    expect(manglerForKjop({ ...a, make: "Skoda Octavia" })).toBeNull();
   });
   it("samme sak: samme bil og samme feil", () => {
     const s = { ...standard(idag), c_reg: "AB 12345", f_cats: ["motor"], f_parts: { motor: ["turbo"] } };
@@ -82,4 +82,8 @@ describe("låst til kjøpet", () => {
     const ny = nyttKjop({ reg: "CD 67890", make: "Audi A4", cats: ["klima"], issues: { klima: ["ac"] }, fdates: { klima: "2026-09-01" } }, gammel, idag);
     expect([ny.b_name, ny.c_reg, ny.c_make, ny.d_name, ny.f_cats]).toEqual(["Kari", "CD 67890", "Audi", "", ["klima"]]);
   });
+});
+
+describe("bilen låst til kjøpet", () => {
+  it("krever merke før betaling når oppslaget ikke fant bilen", () => expect(manglerForKjop({ reg: "AB 12345", cats: ["motor"] })).toBe("bil"));
 });

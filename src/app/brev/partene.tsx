@@ -1,4 +1,4 @@
-// Step 1, «Partene»: the buyer (sender) and the dealer (recipient). The dealer is looked up in Brreg's
+// Steps 1 and 2: the buyer (sender) and the dealer (recipient). The dealer is looked up in Brreg's
 // Enhetsregister (/api/firma) by name or organisation number.
 import { useEffect, useRef, useState } from "react";
 import { Hake } from "@/app/deler/ikoner";
@@ -26,7 +26,32 @@ async function sok(q: string): Promise<Forslag[]> {
   }
 }
 
-export function Partene({ s, sett }: StegProps) {
+export function Deg({ s, sett }: StegProps) {
+  return (
+    <section className="panel">
+      <div className="head">
+        <h2>Deg</h2>
+        <p>Du er avsender av brevet. Hopp gjerne mellom stegene, ingenting må fylles ut før du går videre.</p>
+      </div>
+      <div className="block">
+        <div className="bt">
+          <h3>Deg</h3>
+          <span>Avsender</span>
+        </div>
+        <div className="grid">
+          <Felt s={s} sett={sett} k="b_name" label="Fullt navn" autoComplete="name" placeholder="Kari Nordmann" />
+          <Felt s={s} sett={sett} k="b_addr" label="Adresse" autoComplete="street-address" placeholder="Storgata 12" />
+          <Felt s={s} sett={sett} k="b_zip" label="Postnr." klasse="c2 m2" fmt="zip" inputMode="numeric" autoComplete="postal-code" placeholder="0155" mono />
+          <Felt s={s} sett={sett} k="b_city" label="Poststed" klasse="c4 m4" autoComplete="address-level2" placeholder="Oslo" />
+          <Felt s={s} sett={sett} k="b_phone" label="Telefon" klasse="c3" fmt="phone" inputMode="tel" autoComplete="tel-national" placeholder="912 34 567" prefiks="+47" />
+          <Felt s={s} sett={sett} k="b_email" label="E-post" klasse="c3" type="email" autoComplete="email" placeholder="kari@eksempel.no" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function Forhandleren({ s, sett }: StegProps) {
   const [treff, settTreff] = useState<Forslag[]>([]);
   const [aktiv, settAktiv] = useState(-1);
   const [fylt, settFylt] = useState(false);
@@ -68,22 +93,8 @@ export function Partene({ s, sett }: StegProps) {
   return (
     <section className="panel">
       <div className="head">
-        <h2>Partene</h2>
-        <p>Du er avsender, og brevet går til forhandleren du kjøpte bilen av. Hopp gjerne mellom stegene, ingenting må fylles ut før du går videre.</p>
-      </div>
-      <div className="block">
-        <div className="bt">
-          <h3>Deg</h3>
-          <span>Avsender</span>
-        </div>
-        <div className="grid">
-          <Felt s={s} sett={sett} k="b_name" label="Fullt navn" autoComplete="name" placeholder="Kari Nordmann" />
-          <Felt s={s} sett={sett} k="b_addr" label="Adresse" autoComplete="street-address" placeholder="Storgata 12" />
-          <Felt s={s} sett={sett} k="b_zip" label="Postnr." klasse="c2 m2" fmt="zip" inputMode="numeric" autoComplete="postal-code" placeholder="0155" mono />
-          <Felt s={s} sett={sett} k="b_city" label="Poststed" klasse="c4 m4" autoComplete="address-level2" placeholder="Oslo" />
-          <Felt s={s} sett={sett} k="b_phone" label="Telefon" klasse="c3" fmt="phone" inputMode="tel" autoComplete="tel-national" placeholder="912 34 567" prefiks="+47" />
-          <Felt s={s} sett={sett} k="b_email" label="E-post" klasse="c3" type="email" autoComplete="email" placeholder="kari@eksempel.no" />
-        </div>
+        <h2>Forhandleren</h2>
+        <p>Brevet går til forhandleren du kjøpte bilen av, også når feilen kommer fra fabrikken.</p>
       </div>
       <div className="block">
         <div className="bt">

@@ -196,16 +196,20 @@ export function Resultat({ a, ordre, utvikling, onTilbake, onOmStart, onTilSpors
             <div className="demo-note">
               <InfoSirkel />
               <span>
-                {mangler === "reg" ? "Legg inn registreringsnummeret først. Brevet gjelder bilen du betaler for." : "Velg hvilken feil det gjelder først. Brevet gjelder feilen du betaler for."}{" "}
-                <button type="button" className="lnk" onClick={() => onTilSporsmal(mangler === "reg" ? "reg" : "cats")}>
-                  {mangler === "reg" ? "Legg inn bilen" : "Velg feilen"}
+                {mangler === "reg"
+                  ? "Legg inn registreringsnummeret først. Brevet gjelder bilen du betaler for."
+                  : mangler === "bil"
+                    ? "Hent bilen fra Vegvesen eller skriv inn merke og modell først. Brevet gjelder bilen du betaler for, og den kan ikke endres etterpå."
+                    : "Velg hvilken feil det gjelder først. Brevet gjelder feilen du betaler for."}{" "}
+                <button type="button" className="lnk" onClick={() => onTilSporsmal(mangler === "feil" ? "cats" : "reg")}>
+                  {mangler === "feil" ? "Velg feilen" : "Legg inn bilen"}
                 </button>
               </span>
             </div>
           )}
           {!tilgang && !mangler && (
             <p className="fine" style={{ margin: 0 }}>
-              Brevet gjelder {a.reg} og feilen du har valgt.
+              Brevet gjelder {a.make} ({a.reg}) og feilen du har valgt. Bilen og feilen kan ikke endres etter kjøpet.
             </p>
           )}
           <button type="button" className="btn pri" onClick={apne}>

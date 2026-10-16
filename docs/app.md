@@ -34,12 +34,12 @@ Vipps er ikke koblet på. «Gå til betaling» kaller `lasOpp` (`src/app/brev/ac
 ## Brevskriveren
 
 Et kjøp gjelder én bil og feilene som er valgt i sjekken (område og underkategori):
-- Før betaling må sjekken ha registreringsnummer og minst én feil (`manglerForKjop` i `src/lib/app/saken.ts`).
-- I brevskriveren er registreringsnummeret og feilvalgene låst. Merke, modell og årsmodell er låst når de kom fra Vegvesen (`c_registrert`). Datoer, beskrivelser, verksted og krav kan fortsatt endres.
+- Før betaling må sjekken ha registreringsnummer, merke og modell, og minst én feil (`manglerForKjop` i `src/lib/app/saken.ts`).
+- I brevskriveren er bilen låst (registreringsnummer, merke, modell og årsmodell) og feilvalgene låst. Sjekken krever derfor bilen før betaling: hentet fra Vegvesen eller skrevet inn. Km-stand, datoer, beskrivelser, verksted og krav kan fortsatt endres. Understellsnummer er ikke med.
 - Velger kjøperen en annen bil eller feil i sjekken etter betaling, sier tilbudet at det krever et nytt kjøp (`sammeSak`). Et nytt kjøp starter et nytt brev og beholder bare kjøperens navn og adresse (`nyttKjop`).
 - Låsen er i nettleseren. Når Vipps kobles på, bør ordren på serveren lagre bilen og feilene, og `finnVedtak` sjekke at svaret gjelder dem.
 
-Stegene er Partene, Bilen, Mangelen og Krav, som i artefakten. Forhandleren søkes opp i Enhetsregisteret (`/api/firma`). Vurdering-fanen regner ut vurderingen på nytt mens kjøperen skriver, og har «Endre»-lenker til steget som påvirker den.
+Stegene er Deg, Forhandleren, Bilen, Kjøpet, Feilen, Verksted og vedlegg, Kontakt med selger og Kravet (`src/app/brev/steg.ts`). «Endre» i Vurdering-fanen og «Fyll ut» i sjekklisten går til riktig steg (`stegFor`). Forhandleren søkes opp i Enhetsregisteret (`/api/firma`). Vurdering-fanen regner ut vurderingen på nytt mens kjøperen skriver, og har «Endre»-lenker til steget som påvirker den.
 
 Brevet bygges i nettleseren av `byggBrev` (`src/lib/app/brev.ts`). Manglende svar vises som grå plassholdere, og «Kopier brevet» bruker samme blokker (`tilTekst`).
 - Formodningen nevnes per feil: bare for feilene innenfor perioden, og femårsregelen bare for feil mellom to og fem år.

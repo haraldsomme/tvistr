@@ -63,7 +63,6 @@ export function fraSjekk(a: Sjekk, s: Skjema): Skjema {
     if (v !== undefined && v !== "" && !(typeof ut[k] === "string" && ut[k])) ut[k] = v;
   };
   if (a.make) {
-    ut.c_registrert = true;
     const [merke, ...modell] = a.make.trim().split(/\s+/);
     sett("c_make", merke);
     sett("c_model", modell.join(" "));
@@ -97,9 +96,11 @@ export function fraSjekk(a: Sjekk, s: Skjema): Skjema {
 export const sakTekst = (saksnummer: string | null, ar: string | null) => (saksnummer ? `Sak ${saksnummer}${ar ? ` · ${ar}` : ""}` : `Vedtak${ar ? ` ${ar}` : ""}`);
 
 // A purchase is for one car and the faults chosen in the check; the writer cannot change them.
-// What the check still lacks before it can be bought: the registration number, or a fault.
-export function manglerForKjop(a: Sjekk): "reg" | "feil" | null {
+// What the check still lacks before it can be bought: the registration number, the car, or a fault.
+export function manglerForKjop(a: Sjekk): "reg" | "bil" | "feil" | null {
   if (!validReg(a.reg)) return "reg";
+  // The car is fixed at payment, so it must be known: from the register, or typed in the check.
+  if (!a.make?.trim()) return "bil";
   if (!a.cats?.length) return "feil";
   return null;
 }

@@ -212,6 +212,19 @@ function Bilen({ a, settA }: Pick<Props, "a" | "settA">) {
         </label>
         <Skilt id="qReg" verdi={a.reg ?? ""} funnet={funnet} onEndre={(reg) => settA((f) => ({ ...f, reg }))} onBil={(b) => settA((f) => ({ ...f, make: `${b.make} ${b.model}`.trim(), year: b.year, lastReg: b.lastReg }))} />
       </div>
+      {/* Filled by «Hent bilen»; typed by hand when the register does not have the car. The car is fixed at payment. */}
+      <div className="f c4">
+        <label className="lb" htmlFor="qMake">
+          Merke og modell
+        </label>
+        <input className="in" id="qMake" placeholder="Volkswagen Golf" value={a.make ?? ""} onChange={(e) => settA((f) => ({ ...f, make: e.target.value }))} />
+      </div>
+      <div className="f c2">
+        <label className="lb" htmlFor="qYear">
+          Årsmodell
+        </label>
+        <input className="in mono" id="qYear" inputMode="numeric" placeholder="2016" value={a.year ?? ""} onChange={(e) => settA((f) => ({ ...f, year: FMT.year(e.target.value) }))} />
+      </div>
       <div className="f c3">
         <label className="lb" htmlFor="qKm">
           Km-stand ved overtakelse <em>valgfritt</em>

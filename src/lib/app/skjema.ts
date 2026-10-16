@@ -8,10 +8,8 @@ export type Utgift = { t: string; a: number };
 export type Skjema = {
   b_name: string; b_addr: string; b_zip: string; b_city: string; b_phone: string; b_email: string;
   d_name: string; d_org: string; d_contact: string; d_addr: string; d_zip: string; d_city: string; d_email: string;
-  c_make: string; c_model: string; c_year: string; c_reg: string; c_vin: string;
+  c_make: string; c_model: string; c_year: string; c_reg: string;
   c_purchase: string; c_delivery: string; c_price: string; c_km: string; c_asis: boolean; c_warranty: boolean; c_lastreg: string;
-  // Make, model and year came from the vehicle register in the check: locked after payment.
-  c_registrert: boolean;
   // Fault areas are Tvistr's main categories, the parts their subcategories (src/lib/feil/kategorier.ts).
   f_cats: string[]; f_parts: Record<string, string[]>; f_area: Record<string, Omrade>; f_catdesc: Record<string, string>;
   f_desc: string; f_docs: string[]; files: string[];
@@ -29,7 +27,7 @@ export type Skjema = {
 export const standard = (idag: string): Skjema => ({
   b_name: "", b_addr: "", b_zip: "", b_city: "", b_phone: "", b_email: "",
   d_name: "", d_org: "", d_contact: "", d_addr: "", d_zip: "", d_city: "", d_email: "",
-  c_make: "", c_model: "", c_year: "", c_reg: "", c_vin: "", c_purchase: "", c_delivery: "", c_price: "", c_km: "", c_asis: false, c_warranty: false, c_lastreg: "", c_registrert: false,
+  c_make: "", c_model: "", c_year: "", c_reg: "", c_purchase: "", c_delivery: "", c_price: "", c_km: "", c_asis: false, c_warranty: false, c_lastreg: "",
   f_cats: [], f_parts: {}, f_area: {}, f_catdesc: {}, f_desc: "", f_docs: [], files: [],
   f_found: "", f_impact: [], f_known: "", f_cause: "", f_cause_check: "", f_sev: 0, f_drivable: "",
   ws: "", ws_who: "", ws_name: "", ws_date: "", ws_says: [], ws_quote: "", seller_said: "", seller_txt: "",
@@ -45,7 +43,7 @@ export function eksempel(idag: string): Skjema {
     ...standard(idag),
     b_name: "Kari Nordmann", b_addr: "Storgata 12", b_zip: "0155", b_city: "Oslo", b_phone: "912 34 567", b_email: "kari.nordmann@eksempel.no",
     d_name: "Bilhuset Vest AS", d_org: "923 456 783", d_contact: "Ola Hansen, selger", d_addr: "Industriveien 4", d_zip: "1337", d_city: "Sandvika", d_email: "kundeservice@bilhusetvest.no",
-    c_make: "Volkswagen", c_model: "ID.4", c_year: "2022", c_reg: "EL 48213", c_vin: "WVGZZZE2ZNP012345",
+    c_make: "Volkswagen", c_model: "ID.4", c_year: "2022", c_reg: "EL 48213",
     c_purchase: d(118), c_delivery: d(114), c_price: "329 900", c_km: "38 500", c_warranty: true,
     f_cats: ["hoyvolt"], f_parts: { hoyvolt: ["kapasitet", "lading"] },
     f_area: { hoyvolt: { found: d(16), impact: ["palitelig", "bruk"], known: "nei" } },

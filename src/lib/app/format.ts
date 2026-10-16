@@ -15,7 +15,6 @@ export const FMT = {
     if (d.length < 8) return d;
     return /^[49]/.test(d) ? d.replace(/(\d{3})(\d{2})(\d{3})/, "$1 $2 $3") : d.replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4");
   },
-  vin: (v: string) => v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 17),
   reg: (v: string) => {
     const c = v.toUpperCase().replace(/[^A-ZÆØÅ0-9]/g, "").slice(0, 9);
     const m = c.match(/^([A-ZÆØÅ]{2})(\d{1,5})$/);

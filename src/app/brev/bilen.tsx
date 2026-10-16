@@ -1,17 +1,16 @@
-// Step 2, «Bilen og kjøpet». Used cars only: no «Ny bil» tile.
+// Steps 3 and 4: the car and the purchase. The car is the one bought for: plate, make, model and year
+// are locked (from the check); only the mileage can be filled in.
 import { Skilt } from "@/app/deler/skilt";
 import { fmtD } from "@/lib/app/dato";
 import { regler } from "@/lib/app/lov";
 import { Bryter, Felt, type StegProps } from "./felt";
 
 export function Bilen({ s, sett }: StegProps) {
-  const d = s.c_lastreg;
-  const brukt = d && s.c_delivery === d && s.c_purchase === d;
   return (
     <section className="panel">
       <div className="head">
-        <h2>Bilen og kjøpet</h2>
-        <p>Hent opplysningene fra kjøpekontrakten og vognkortet. Overtakelsesdatoen er utgangspunktet for alle fristene.</p>
+        <h2>Bilen</h2>
+        <p>Brevet gjelder bilen du betalte for. Et brev for en annen bil krever et nytt kjøp.</p>
       </div>
       <div className="block">
         <div className="grid">
@@ -19,35 +18,29 @@ export function Bilen({ s, sett }: StegProps) {
             <label className="lb" htmlFor="c_reg">
               Registreringsnummer
             </label>
-            <Skilt
-              id="c_reg"
-              verdi={s.c_reg}
-              funnet={s.c_make && s.c_lastreg ? { make: s.c_make, model: s.c_model, year: s.c_year, lastReg: s.c_lastreg } : null}
-              laast
-              onEndre={(c_reg) => sett({ c_reg })}
-              onBil={(b) => sett({ c_make: b.make, c_model: b.model, c_year: b.year, c_lastreg: b.lastReg })}
-            />
+            <Skilt id="c_reg" verdi={s.c_reg} laast onEndre={() => {}} onBil={() => {}} />
           </div>
-          {/* From the vehicle register in the check: locked to the purchase. Typed by hand when the register had nothing. */}
-          <Felt s={s} sett={sett} k="c_make" label="Merke" klasse="c2" placeholder="Volkswagen" disabled={s.c_registrert} />
-          <Felt s={s} sett={sett} k="c_model" label="Modell" klasse="c2 m3" placeholder="ID.4" disabled={s.c_registrert} />
-          <Felt s={s} sett={sett} k="c_year" label="Årsmodell" klasse="c2 m3" fmt="year" inputMode="numeric" placeholder="2022" mono disabled={s.c_registrert} />
-          <Felt
-            s={s}
-            sett={sett}
-            k="c_vin"
-            label={
-              <>
-                Understellsnummer{" "}
-                <em>{/[IOQ]/.test(s.c_vin) ? <span className="tag warn">I, O og Q brukes ikke</span> : s.c_vin.length === 17 ? <span className="tag good">17/17</span> : `${s.c_vin.length}/17`}</em>
-              </>
-            }
-            fmt="vin"
-            maks={17}
-            placeholder="WVGZZZE2ZNP012345"
-            mono
-            hint="Står i vognkortet, felt E"
-          />
+          <Felt s={s} sett={sett} k="c_make" label="Merke" klasse="c2" placeholder="Volkswagen" disabled />
+          <Felt s={s} sett={sett} k="c_model" label="Modell" klasse="c2 m3" placeholder="ID.4" disabled />
+          <Felt s={s} sett={sett} k="c_year" label="Årsmodell" klasse="c2 m3" placeholder="2022" mono disabled />
+          <Felt s={s} sett={sett} k="c_km" label="Km-stand ved overtakelse" klasse="c3" fmt="num" inputMode="numeric" placeholder="38 500" suffiks="km" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function Kjopet({ s, sett }: StegProps) {
+  const d = s.c_lastreg;
+  const brukt = d && s.c_delivery === d && s.c_purchase === d;
+  return (
+    <section className="panel">
+      <div className="head">
+        <h2>Kjøpet</h2>
+        <p>Hent opplysningene fra kjøpekontrakten. Overtakelsesdatoen er utgangspunktet for alle fristene.</p>
+      </div>
+      <div className="block">
+        <div className="grid">
           <Felt s={s} sett={sett} k="c_purchase" label="Kjøpsdato" klasse="c3" type="date" />
           <Felt s={s} sett={sett} k="c_delivery" label="Overtakelsesdato" klasse="c3" type="date" />
           {d && !brukt && (
@@ -61,7 +54,6 @@ export function Bilen({ s, sett }: StegProps) {
             </div>
           )}
           <Felt s={s} sett={sett} k="c_price" label="Kjøpesum" klasse="c3" fmt="num" inputMode="numeric" placeholder="329 900" suffiks="kr" />
-          <Felt s={s} sett={sett} k="c_km" label="Km-stand ved overtakelse" klasse="c3" fmt="num" inputMode="numeric" placeholder="38 500" suffiks="km" />
         </div>
       </div>
       <div className="block">

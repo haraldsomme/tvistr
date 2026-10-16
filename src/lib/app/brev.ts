@@ -79,7 +79,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   B.push({
     t: "p",
     tekst: [
-      "Jeg viser til mitt kjøp av brukt ", car, has("c_year") ? `, årsmodell ${s.c_year}` : "", ", reg.nr. ", reg, has("c_vin") ? `, understellsnr. ${s.c_vin}` : "",
+      "Jeg viser til mitt kjøp av brukt ", car, has("c_year") ? `, årsmodell ${s.c_year}` : "", ", reg.nr. ", reg,
       ". Bilen ble kjøpt ", vd("c_purchase", "kjøpsdato"), " for kr ", v("c_price", "kjøpesum"), ", og jeg overtok den ", vd("c_delivery", "overtakelsesdato"),
       has("c_km") ? ` med en kilometerstand på ${s.c_km} km` : "", ".",
     ],

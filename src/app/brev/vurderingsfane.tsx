@@ -7,10 +7,9 @@ import { Lovrader } from "@/app/deler/lovrader";
 import { type Lignende as LignendeSvar, vurderSaken } from "@/app/sak/vurdering";
 import { nokkel, tilSvar } from "@/lib/app/saken";
 import type { Skjema } from "@/lib/app/skjema";
-import type { Faktor, Resultat } from "@/lib/app/vurdering";
+import type { Resultat } from "@/lib/app/vurdering";
+import { stegFor } from "./steg";
 
-// Which step a factor's answer is in.
-const stegFor = (f: Faktor) => (/lov/i.test(f.t) ? 0 : /som den er|to år|seks måneder|Fristen|overtakelsen|Datoene|fra start/i.test(f.t) ? 1 : 2);
 
 // «Lignende saker» for the writer's answers, fetched again (debounced) only when they change.
 export function useLignende(s: Skjema): LignendeSvar | null {
@@ -74,13 +73,13 @@ export function Vurderingsfane({ s, r, lignende, brukes, onSteg, onBrevet, onSkj
           <div className="cp-hint">
             <Info />
             <span>{!s.c_delivery || !s.f_found ? "Legg inn overtakelsesdato og når du oppdaget feilen" : "Svar på om du visste om feilen da du kjøpte bilen"} for en sikrere vurdering.</span>
-            <button type="button" className="lnk" onClick={() => onSteg(!s.c_delivery ? 1 : 2)}>
+            <button type="button" className="lnk" onClick={() => onSteg(stegFor(!s.c_delivery ? "Datoene mangler" : "Feilen var ukjent ved kjøpet"))}>
               Fyll inn
             </button>
           </div>
         )}
       </div>
-      <Lovrader faktorer={r.factors} endre={(f) => onSteg(stegFor(f))} />
+      <Lovrader faktorer={r.factors} endre={(f) => onSteg(stegFor(f.t))} />
       {lignende?.ok && (
         <Lignende
           tall={lignende.tall}

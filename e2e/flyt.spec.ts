@@ -57,8 +57,12 @@ test("fra forsiden til brevet med et vedtak", async ({ page }) => {
   await page.getByRole("button", { name: "Gå til betaling" }).click();
   await expect(page).toHaveURL(/\/brev$/, { timeout: 30_000 });
 
+  await page.getByRole("button", { name: /Neste: Forhandleren/ }).click();
   await page.getByRole("button", { name: /Neste: Bilen/ }).click();
+  // The car is the one bought for: locked.
   await expect(page.locator("#c_reg")).toHaveValue("AB 12345");
+  await expect(page.locator("#c_reg")).toHaveAttribute("readonly", "");
+  await expect(page.locator("#f_c_make")).toBeDisabled();
 
   await page.getByRole("tab", { name: "Brevet" }).click();
   const brev = page.locator("#letterFull");

@@ -1,5 +1,5 @@
-// Step 3, «Hva er feil med bilen?»: the areas (Tvistr's categories) with one card each, the workshop,
-// what the seller said, earlier contact and the attachments (file names only, nothing is uploaded).
+// Steps 5–7: the faults (one card per area, locked to the purchase), the workshop and attachments (file
+// names only, nothing is uploaded), and what the seller said and any earlier complaint.
 import { useState } from "react";
 import { Fil, Fold, Hake, Lukk, Opplast } from "@/app/deler/ikoner";
 import { relText } from "@/lib/app/dato";
@@ -68,11 +68,7 @@ function Omradekort({ s, sett, c, i, n }: StegProps & { c: string; i: number; n:
     </div>
   );
 }
-
-export function Mangelen({ s, sett }: StegProps) {
-  const [over, settOver] = useState(false);
-  const leggTil = (filer: FileList | null) => filer && sett({ files: [...new Set([...s.files, ...[...filer].map((f) => f.name)])] });
-  const nd = s.f_docs.length + s.files.length;
+export function Feilen({ s, sett }: StegProps) {
   return (
     <section className="panel">
       <div className="head">
@@ -103,6 +99,20 @@ export function Mangelen({ s, sett }: StegProps) {
         {s.f_cats.map((c, i) => (
           <Omradekort key={c} s={s} sett={sett} c={c} i={i} n={s.f_cats.length} />
         ))}
+      </div>
+    </section>
+  );
+}
+
+export function Verksted({ s, sett }: StegProps) {
+  const [over, settOver] = useState(false);
+  const leggTil = (filer: FileList | null) => filer && sett({ files: [...new Set([...s.files, ...[...filer].map((f) => f.name)])] });
+  const nd = s.f_docs.length + s.files.length;
+  return (
+    <section className="panel">
+      <div className="head">
+        <h2>Verksted og vedlegg</h2>
+        <p>En verkstedrapport og dokumentasjon gjør saken mye sterkere. Alt du krysser av for, føres opp i brevet.</p>
       </div>
       <div className="block">
         <div className="bt">
@@ -162,33 +172,6 @@ export function Mangelen({ s, sett }: StegProps) {
           </div>
         </Vis>
       </div>
-      <div className="block">
-        <div className="bt">
-          <h3>Sa selger noe om denne feilen før kjøpet?</h3>
-        </div>
-        <span className="hint" style={{ display: "block", margin: "-6px 0 12px" }}>
-          For eksempel i annonsen, kontrakten eller en melding.
-        </span>
-        <Chips navn="seller_said" verdi={s.seller_said} valg={[["nei", "Nei"], ["lovet", "Ja, at bilen var fri for slike feil"], ["opplyste", "Ja, de opplyste om feilen"]]} onVelg={(seller_said) => sett({ seller_said })} />
-        <Vis pa={s.seller_said === "lovet" || s.seller_said === "opplyste"}>
-          <div className="rv-in">
-            <Felt s={s} sett={sett} k="seller_txt" label={<>Hva sa selger? <em>så ordrett som mulig</em></>} flerlinje={84} placeholder="For eksempel: «Bilen er nylig gjennomgått og har ingen kjente feil»" />
-          </div>
-        </Vis>
-      </div>
-      <div className="block">
-        <Bryter s={s} sett={sett} k="f_prior" tittel="Jeg har allerede sagt fra til forhandleren" tekst="Muntlig eller skriftlig. Det er datoen for første reklamasjon som teller for fristen." />
-        <Vis pa={s.f_prior}>
-          <div className="rv-in grid">
-            <Felt s={s} sett={sett} k="f_prior_date" label="Dato du sa fra" klasse="c3" type="date" />
-            <div className="f c3">
-              <span className="lb">Hvordan?</span>
-              <Seg navn="f_prior_how" verdi={s.f_prior_how} valg={[["telefon", "Telefon"], ["e-post", "E-post"], ["oppmøte", "Oppmøte"]]} onVelg={(f_prior_how) => sett({ f_prior_how })} />
-            </div>
-            <Felt s={s} sett={sett} k="f_prior_resp" label={<>Hva svarte forhandleren? <em>valgfritt</em></>} flerlinje={92} placeholder="For eksempel: de mente feilen skyldes normal slitasje" />
-          </div>
-        </Vis>
-      </div>
       <details className="block fold" open>
         <summary className="fold-s">
           <h3>Dokumentasjon</h3>
@@ -230,6 +213,44 @@ export function Mangelen({ s, sett }: StegProps) {
           </div>
         </div>
       </details>
+    </section>
+  );
+}
+
+export function Kontakt({ s, sett }: StegProps) {
+  return (
+    <section className="panel">
+      <div className="head">
+        <h2>Kontakt med selger</h2>
+        <p>Hva selgeren sa før kjøpet, og om du allerede har sagt fra om feilen.</p>
+      </div>
+      <div className="block">
+        <div className="bt">
+          <h3>Sa selger noe om denne feilen før kjøpet?</h3>
+        </div>
+        <span className="hint" style={{ display: "block", margin: "-6px 0 12px" }}>
+          For eksempel i annonsen, kontrakten eller en melding.
+        </span>
+        <Chips navn="seller_said" verdi={s.seller_said} valg={[["nei", "Nei"], ["lovet", "Ja, at bilen var fri for slike feil"], ["opplyste", "Ja, de opplyste om feilen"]]} onVelg={(seller_said) => sett({ seller_said })} />
+        <Vis pa={s.seller_said === "lovet" || s.seller_said === "opplyste"}>
+          <div className="rv-in">
+            <Felt s={s} sett={sett} k="seller_txt" label={<>Hva sa selger? <em>så ordrett som mulig</em></>} flerlinje={84} placeholder="For eksempel: «Bilen er nylig gjennomgått og har ingen kjente feil»" />
+          </div>
+        </Vis>
+      </div>
+      <div className="block">
+        <Bryter s={s} sett={sett} k="f_prior" tittel="Jeg har allerede sagt fra til forhandleren" tekst="Muntlig eller skriftlig. Det er datoen for første reklamasjon som teller for fristen." />
+        <Vis pa={s.f_prior}>
+          <div className="rv-in grid">
+            <Felt s={s} sett={sett} k="f_prior_date" label="Dato du sa fra" klasse="c3" type="date" />
+            <div className="f c3">
+              <span className="lb">Hvordan?</span>
+              <Seg navn="f_prior_how" verdi={s.f_prior_how} valg={[["telefon", "Telefon"], ["e-post", "E-post"], ["oppmøte", "Oppmøte"]]} onVelg={(f_prior_how) => sett({ f_prior_how })} />
+            </div>
+            <Felt s={s} sett={sett} k="f_prior_resp" label={<>Hva svarte forhandleren? <em>valgfritt</em></>} flerlinje={92} placeholder="For eksempel: de mente feilen skyldes normal slitasje" />
+          </div>
+        </Vis>
+      </div>
     </section>
   );
 }

@@ -9,11 +9,11 @@ import { Frem, Hake, Tilbake } from "@/app/deler/ikoner";
 import { idag } from "@/lib/app/dato";
 import { useLagret } from "@/lib/app/lagring";
 import { type Skjema, standard, syncAreas } from "@/lib/app/skjema";
-import { Bilen } from "./bilen";
+import { Bilen, Kjopet } from "./bilen";
 import { Brevet } from "./brevet";
 import { Krav } from "./krav";
-import { Mangelen } from "./mangelen";
-import { Partene } from "./partene";
+import { Feilen, Kontakt, Verksted } from "./mangelen";
+import { Deg, Forhandleren } from "./partene";
 import { har, STEG } from "./steg";
 import { skriverResultat } from "@/lib/app/vurdering";
 import { useLignende, Vurderingsfane } from "./vurderingsfane";
@@ -129,10 +129,7 @@ export function Skriver() {
       <form className="main" noValidate autoComplete="on" onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT" && e.preventDefault()}>
         {fane === "form" && (
           <div key={steg}>
-            {steg === 0 && <Partene s={s} sett={sett} />}
-            {steg === 1 && <Bilen s={s} sett={sett} />}
-            {steg === 2 && <Mangelen s={s} sett={sett} />}
-            {steg === 3 && <Krav s={s} sett={sett} />}
+            {[Deg, Forhandleren, Bilen, Kjopet, Feilen, Verksted, Kontakt, Krav].map((Steg, i) => i === steg && <Steg key={i} s={s} sett={sett} />)}
           </div>
         )}
         {fane === "case" && <Vurderingsfane s={s} r={r} lignende={lignende} brukes={s.prec_on ? s.prec_id : null} onSteg={tilSteg} onBrevet={() => tilFane("letter")} onSkjema={() => tilFane("form")} />}

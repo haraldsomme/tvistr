@@ -77,3 +77,37 @@ describe("rettinger etter gjennomgangen", () => {
     expect(tekst(s)).not.toContain("formodes");
   });
 });
+
+describe("tidslinjen i brevet", () => {
+  const med = (s: ReturnType<typeof eksempel>, areas: Record<string, string>) => ({
+    ...s,
+    f_cats: Object.keys(areas),
+    f_area: Object.fromEntries(Object.entries(areas).map(([c, found]) => [c, { found, impact: [], known: "nei" }])),
+    f_parts: {},
+    f_catdesc: {},
+  });
+  it("to feil, én innenfor og én utenfor formodningen: formodningen nevner bare den ene", () => {
+    const s = med({ ...eksempel(idag), c_purchase: "2023-03-01", c_delivery: "2023-03-01" }, { motor: "2023-05-01", klima: "2024-01-15" });
+    const t = tekst(s);
+    expect(t).toContain("Feilen ved motor og eksos viste seg");
+    expect(t).toContain("at denne feilen ikke var til stede");
+    expect(t).not.toContain("Feilen viste seg 2 måneder");
+  });
+  it("to feil innenfor: flertall", () => {
+    const s = med({ ...eksempel(idag), c_purchase: "2025-03-01", c_delivery: "2025-03-01" }, { motor: "2025-05-01", klima: "2025-09-01" });
+    expect(tekst(s)).toContain("at feilene ikke var til stede");
+  });
+  it("feil oppdaget mer enn fem år etter overtakelsen: ingen påstand om femårsfristen", () => {
+    const s = med({ ...eksempel(idag), c_purchase: "2020-01-01", c_delivery: "2020-01-01" }, { motor: "2025-06-01" });
+    expect(tekst(s)).not.toContain("reklamasjonsfristen er derfor fem år");
+  });
+  it("før 2024: «som den er» uten halen om tilbakeholdte opplysninger", () => {
+    const s = { ...eksempel(idag), c_purchase: "2023-06-01", c_delivery: "2023-06-01", c_asis: true };
+    expect(tekst(s)).not.toContain("unnlatt å opplyse");
+  });
+  it("mens vedtaket hentes: plassholder i stedet for lovsetningen", () => {
+    const t = tilTekst(byggBrev(syncAreas(eksempel(idag)), "venter", idag));
+    expect(t).toContain("[lignende sak hentes]");
+    expect(t).not.toContain(LOVSETNING);
+  });
+});

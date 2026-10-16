@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fraSjekk, sjekkTilSvar, tilSvar } from "./saken";
+import { fraSjekk, sakTekst, sjekkTilSvar, tilSvar } from "./saken";
 import { eksempel, standard } from "./skjema";
 
 const idag = "2026-10-16";
@@ -52,5 +52,13 @@ describe("rettinger etter gjennomgangen", () => {
   it("#4 selger opplyste om feilen er ikke en uriktig opplysning", () => {
     expect(tilSvar({ ...eksempel(idag), seller_said: "opplyste" })!.feil[0].opplysning).toBeNull();
     expect(tilSvar({ ...eksempel(idag), seller_said: "lovet" })!.feil[0].opplysning).toBe("muntlig");
+  });
+});
+
+describe("sakTekst", () => {
+  it("med og uten saksnummer", () => {
+    expect(sakTekst("21/3494", "2022")).toBe("Sak 21/3494 · 2022");
+    expect(sakTekst(null, "2022")).toBe("Vedtak 2022");
+    expect(sakTekst(null, null)).toBe("Vedtak");
   });
 });

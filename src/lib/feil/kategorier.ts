@@ -193,32 +193,6 @@ export function komponenttype(hoved: string, under: string | null): Komponenttyp
   return typer.size === 1 ? ([...typer][0] ?? null) : null;
 }
 
-// A subcategory in the definite form, for the letter's «Før kjøpet opplyste dere om servicehistorikken».
-// Only subcategories of the type «opplysning» need one: they are the ones the seller said or promised
-// something about. The main-category entries are for a choice without a subcategory.
-export const BESTEMT_FORM: Record<string, string> = {
-  "historikk.skade": "skadehistorikken",
-  "historikk.km": "kilometerstanden",
-  "historikk.bruk": "tidligere bruk og antall eiere",
-  "historikk.import": "importen, årsmodellen og identiteten",
-  "historikk.ombygging": "ombyggingen og tuningen",
-  "historikk.eu": "EU-kontrollen og registreringen",
-  "historikk.pant": "pantet og heftelsen",
-  "service.service": "servicehistorikken",
-  "service.servicehefte": "serviceheftet",
-  "utstyr.utstyr": "utstyret",
-  "utstyr.nokler": "nøklene og tilbehøret",
-  "utstyr.utstyrsniva": "utstyrsnivået",
-  garanti: "garantien",
-  historikk: "bilens historikk",
-  service: "servicehistorikken",
-  utstyr: "utstyret",
-};
-
-// The definite form of a subcategory, or of the main category when no subcategory is ticked. null when
-// the category is not one the seller says things about.
-export const bestemtForm = (hoved: string, under: string | null): string | null => BESTEMT_FORM[under ? `${hoved}.${under}` : hoved] ?? null;
-
 // What the buyer ticked: main category id → subcategory ids (possibly none).
 export type Feilvalg = Record<string, string[]>;
 

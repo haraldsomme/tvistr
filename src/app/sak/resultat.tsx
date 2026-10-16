@@ -27,12 +27,10 @@ const FORDELER = [
   "Kopier brevet og send det på e-post samme dag",
 ];
 
-// The day the first fault was noticed, from the dates per area.
-export const forsteFeil = (a: Tilstand) => (a.cats ?? []).map((c) => a.fdates?.[c]).filter((d): d is string => !!d).sort()[0];
-
-export function Resultat({ a, ordre, onTilbake, onOmStart }: { a: Tilstand; ordre: string; onTilbake: () => void; onOmStart: () => void }) {
+export function Resultat({ a, ordre, utvikling, onTilbake, onOmStart }: { a: Tilstand; ordre: string; utvikling: boolean; onTilbake: () => void; onOmStart: () => void }) {
   const router = useRouter();
-  const r = evaluate({ ...a, found: forsteFeil(a) }, idag());
+  const datoer = (a.cats ?? []).map((c) => a.fdates?.[c]).filter((d): d is string => !!d).sort();
+  const r = evaluate({ ...a, found: datoer[0], sist: datoer.at(-1) }, idag());
   const [lignende, settLignende] = useState<LignendeSvar | null>(null);
   const [kjop, settKjop] = useState(false);
   const [unna, settUnna] = useState(false);
@@ -193,7 +191,7 @@ export function Resultat({ a, ordre, onTilbake, onOmStart }: { a: Tilstand; ordr
               <Pil />
             </button>
           </div>
-          <Kjop apen={kjop} onLukk={() => settKjop(false)} onBetalt={betalt} />
+          <Kjop utvikling={utvikling} apen={kjop} onLukk={() => settKjop(false)} onBetalt={betalt} />
         </>,
         document.body,
       )}

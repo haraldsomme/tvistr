@@ -50,7 +50,9 @@ function feilnavn(hoved: string, under: string[]): string {
   return navn.some((n) => /\bog\b|,/.test(n)) ? navn.join("; ") : listJoin(navn);
 }
 
-export function byggBrev(s: Skjema, presedens: Presedens | null, idag: string): Blokk[] {
+// `presedens`: the decision the buyer chose, null without one (the law's sentence), or «venter» while
+// finnVedtak is still working, so a letter copied then shows a gap rather than a letter without it.
+export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag: string): Blokk[] {
   const L = regler(s.c_purchase || s.c_delivery);
   const has = (k: Tekstfelt) => s[k].trim() !== "";
   const v = (k: Tekstfelt, ph: string): Del => (has(k) ? s[k].trim() : { ph });
@@ -136,28 +138,50 @@ export function byggBrev(s: Skjema, presedens: Presedens | null, idag: string): 
       t: "p",
       tekst: [
         L.versjon === "før_2024"
-          ? `Bilen ble solgt «som den er». Etter ${L.lovRef("forbehold")} har bilen likevel en mangel når den er ${LOVORD.dårligereStand}, eller når dere har unnlatt å opplyse om forhold dere kjente til.`
+          ? `Bilen ble solgt «som den er». Etter ${L.lovRef("forbehold")} har bilen likevel en mangel når den er ${LOVORD.dårligereStand}.`
           : `Forbeholdet om at bilen ble solgt «som den er», er ikke et avtalt unntak etter ${L.lovRef("forbehold")}. Unntaket fra ${LOVORD.kravTredjeFjerde} forutsetter at jeg ved inngåelsen av avtalen ${LOVORD.avtaltUnntak}.`,
       ],
     });
   const del = parseD(s.c_delivery),
     found = parseD(s.f_found);
   const formodning = `Etter ${L.par("formodning")} skal en mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises.`;
-  if (del && found && found >= del) {
-    // Calendar months, as the law and the ranking count (tidsnivaFor).
-    if (s.f_found <= plussManeder(s.c_delivery, L.formodningMnd)) B.push({ t: "p", tekst: [`Feilen viste seg ${dur(del, found) || "samme dag"} etter overtakelsen. ${formodning} Det er dermed dere som må bevise at feilen ikke var til stede da jeg overtok bilen.`] });
-    // Between the presumption and two years (only before 2024) the letter claims neither.
-    else if (s.f_found > plussManeder(s.c_delivery, 24)) B.push({ t: "p", tekst: [`Feilen viste seg ${dur(del, found)} etter overtakelsen. En bil er ment å vare vesentlig lenger enn to år, og reklamasjonsfristen er derfor fem år, jf. ${L.par("reklamasjon_5ar")}.`] });
+  // Each fault on its own date, in calendar months as the law and the ranking count (tidsnivaFor):
+  // the presumption only for the faults inside it, the five-year rule only between two and five years.
+  const datert = s.f_cats.map((c) => ({ c, d: s.f_area[c]?.found ?? "" })).filter((x) => x.d && s.c_delivery && x.d >= s.c_delivery);
+  const ved = (xs: typeof datert) => listJoin(xs.map((x) => smaa(feilnavn(x.c, s.f_parts[x.c] ?? []))));
+  if (s.c_delivery && datert.length) {
+    const inne = datert.filter((x) => x.d <= plussManeder(s.c_delivery, L.formodningMnd));
+    const sene = datert.filter((x) => x.d > plussManeder(s.c_delivery, 24) && x.d <= plussManeder(s.c_delivery, 60));
+    const alene = datert.length === 1;
+    if (inne.length) {
+      const hvem = alene
+        ? [`Feilen viste seg ${dur(del!, parseD(inne[0].d)!) || "samme dag"} etter overtakelsen.`, "feilen"]
+        : inne.length === datert.length
+          ? [`Feilene viste seg innen ${L.formodningTekst} etter overtakelsen.`, "feilene"]
+          : [`${inne.length > 1 ? "Feilene" : "Feilen"} ved ${ved(inne)} viste seg innen ${L.formodningTekst} etter overtakelsen.`, inne.length > 1 ? "disse feilene" : "denne feilen"];
+      B.push({ t: "p", tekst: [`${hvem[0]} ${formodning} Det er dermed dere som må bevise at ${hvem[1]} ikke var til stede da jeg overtok bilen.`] });
+    }
+    if (sene.length) {
+      const hvem = alene ? `Feilen viste seg ${dur(del!, parseD(sene[0].d)!)} etter overtakelsen.` : `${sene.length > 1 ? "Feilene" : "Feilen"} ved ${ved(sene)} viste seg mer enn to år etter overtakelsen.`;
+      B.push({ t: "p", tekst: [`${hvem} En bil er ment å vare vesentlig lenger enn to år, og reklamasjonsfristen er derfor fem år, jf. ${L.par("reklamasjon_5ar")}.`] });
+    }
   } else if (!del || !found) B.push({ t: "p", tekst: [`En mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, jf. ${L.par("formodning")}.`] });
   if (found) {
     const nr = (s.f_prior && parseD(s.f_prior_date)) || ld;
-    if (nr <= addMonths(found, 2)) B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen, og er dermed rettidig etter ${L.par("reklamasjon")}.`] });
-    else B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen rimelig tid etter at jeg oppdaget feilen, jf. ${L.par("reklamasjon")}.`] });
+    const etterFemAr = !!del && nr > parseD(plussManeder(s.c_delivery, 60))!;
+    // No claim of a timely complaint past five years, or with a complaint dated before the discovery.
+    if (!etterFemAr && nr >= found) {
+      if (nr <= addMonths(found, 2)) B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen, og er dermed rettidig etter ${L.par("reklamasjon")}.`] });
+      else B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen rimelig tid etter at jeg oppdaget feilen, jf. ${L.par("reklamasjon")}.`] });
+    }
   }
   if (s.c_warranty) B.push({ t: "p", tekst: ["Bilen er også omfattet av garanti. Garantien gjelder i tillegg til mine rettigheter etter loven og begrenser dem ikke."] });
 
   if (s.prec_on) {
-    if (presedens) {
+    if (presedens === "venter") {
+      B.push({ t: "h", tekst: ["Tilsvarende sak fra Forbrukerklageutvalget"] });
+      B.push({ t: "p", tekst: [{ ph: "lignende sak hentes" }] });
+    } else if (presedens) {
       B.push({ t: "h", tekst: [`Tilsvarende sak fra ${presedens.utvalg}`] });
       B.push({ t: "prec", avsnitt: [[presedens.avsnitt], ...(presedens.kildeUrl ? [[`Vedtaket er offentlig tilgjengelig: ${presedens.kildeUrl}`]] : [])] });
     } else B.push({ t: "p", tekst: [LOVSETNING] });

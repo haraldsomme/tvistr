@@ -108,14 +108,8 @@ export const lovRef = (v: Lovversjon, p: Poeng): string => {
   return par ? `forbrukerkjøpsloven ${par}` : "forbrukerkjøpsloven";
 };
 
-// «§ 15» for «etter § 15», or «forbrukerkjøpsloven» for a gap.
-export const parRef = (v: Lovversjon, p: Poeng): string => paragraf(v, p) ?? "forbrukerkjøpsloven";
-
 // «, jf. § 15 og § 18 a», or nothing when no number is known. Appended to a sentence before its full stop.
 export function jf(v: Lovversjon, ...poeng: Poeng[]): string {
   const par = poeng.map((p) => paragraf(v, p)).filter((x): x is string => !!x);
   return par.length ? `, jf. ${par.length < 2 ? par[0] : `${par.slice(0, -1).join(", ")} og ${par.at(-1)}`}` : "";
 }
-
-// The source label a sentence carries for the point it cites.
-export const lovkilde = (v: Lovversjon, p: Poeng): string => `lov:${v}:${p}`;

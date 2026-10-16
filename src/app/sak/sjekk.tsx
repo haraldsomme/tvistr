@@ -21,7 +21,7 @@ export type Tilstand = Svar & { _screen?: "q" | "result"; _i?: number };
 const ADV_MS = 750;
 const HURTIG = [["I dag", 0], ["I går", 1], ["For en uke siden", 7], ["For to uker siden", 14], ["For en måned siden", 30]] as const;
 
-export function Sjekk() {
+export function Sjekk({ utvikling }: { utvikling: boolean }) {
   const router = useRouter();
   const [a, settA, klar] = useLagret<Tilstand>("tvistr-sjekk", () => ({ _i: 0, cats: [], issues: {}, fdates: {} }));
   const [ordre] = useLagret("tvistr-ordre", () => "");
@@ -126,7 +126,7 @@ export function Sjekk() {
         {klar && (
           <div key={`${skjerm}-${i}`} className={retning < 0 ? "anim-b" : "anim-f"} style={{ width: "100%", display: "flex", justifyContent: "center" }}>
             {skjerm === "result" ? (
-              <Resultat a={a} ordre={ordre} onTilbake={tilbake} onOmStart={omStart} />
+              <Resultat a={a} ordre={ordre} utvikling={utvikling} onTilbake={tilbake} onOmStart={omStart} />
             ) : (
               <Sporsmalet q={q} a={a} settA={settA} adv={adv} siste={i === vq.length - 1} onVelg={velg} onNeste={neste} onTilbake={tilbake} />
             )}

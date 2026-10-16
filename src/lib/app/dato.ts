@@ -28,7 +28,6 @@ export function addMonths(d: Date, n: number): Date {
 }
 
 export const dayDiff = (a: Date, b: Date) => Math.round((b.getTime() - a.getTime()) / 864e5);
-export const monthsFrac = (a: Date, b: Date) => dayDiff(a, b) / 30.4375;
 
 function monthsBetween(a: Date, b: Date): number {
   let m = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());

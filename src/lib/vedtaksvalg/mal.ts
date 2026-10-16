@@ -76,11 +76,3 @@ export function avsnittB(v: Malvedtak, komponent: string, sitat: string): string
   return `${henvisning(v)}, som gjaldt ${komponent}. Utvalget uttalte: ${sitert(sitat)}`;
 }
 
-// The paragraph's first sentence, «Det vises til … vedtak i sak … av …», which the preview shows before
-// payment; the rest (the case, the quotes, the outcome) is hidden. Read from the templates above: on
-// level A it ends before «Saken gjaldt», on level B before «Utvalget uttalte». Empty when neither is
-// found, so nothing is shown by mistake.
-export function forsteSetning(avsnitt: string): string {
-  const m = /^(Det vises til .*?\.)\s(?=Saken gjaldt |Utvalget uttalte)/.exec(avsnitt);
-  return m ? m[1] : "";
-}

@@ -55,11 +55,6 @@ export const Dokument = ({ s = 18 }: { s?: number }) => (
     <path d="M9 13h6M9 17h4" />
   </Svg>
 );
-export const Vekt = () => (
-  <Svg s={15} w={1.9}>
-    <path d="M12 3v18M5 7h14M5 7l-2.5 6a3.5 3.5 0 0 0 5 0zM19 7l-2.5 6a3.5 3.5 0 0 0 5 0zM8 21h8" />
-  </Svg>
-);
 export const Lukk = ({ s = 16 }: { s?: number }) => (
   <Svg s={s} w={2.2}>
     <path d="M6 6l12 12M18 6L6 18" />

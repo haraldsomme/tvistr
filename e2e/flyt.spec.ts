@@ -62,12 +62,15 @@ test("fra forsiden til brevet med et vedtak", async ({ page }) => {
 
   await page.getByRole("tab", { name: "Brevet" }).click();
   const brev = page.locator("#letterFull");
-  await expect(brev).toContainText(/Tilsvarende sak fra|Kravet bygger på lovens vilkår\./, { timeout: 120_000 });
-  if ((await page.locator(".pp-opt").count()) > 1) {
-    const for_ = await page.locator(".l-prec").innerText();
-    await page.locator(".pp-opt").nth(1).click();
-    await expect(page.locator(".l-prec")).not.toHaveText(for_);
-  }
+  // Turbo on a used car has many decisions with medhold: the letter must cite one, with quotes and a link.
+  await expect(page.locator(".l-prec")).toBeVisible({ timeout: 120_000 });
+  await expect(brev).toContainText("Tilsvarende sak fra");
+  await expect(page.locator(".l-prec")).toContainText("«");
+  await expect(page.locator(".l-prec")).toContainText("http");
+  expect(await page.locator(".pp-opt").count()).toBeGreaterThanOrEqual(2);
+  const for_ = await page.locator(".l-prec").innerText();
+  await page.locator(".pp-opt").nth(1).click();
+  await expect(page.locator(".l-prec")).not.toHaveText(for_);
 });
 
 test("brevskriveren er stengt uten betaling", async ({ page }) => {

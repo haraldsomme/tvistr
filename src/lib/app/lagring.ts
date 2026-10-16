@@ -35,14 +35,6 @@ export function skriv(nokkel: string, v: unknown): void {
   lyttere.forEach((f) => f());
 }
 
-export function slett(nokkel: string): void {
-  minne.delete(nokkel);
-  try {
-    localStorage.removeItem(nokkel);
-  } catch {}
-  lyttere.forEach((f) => f());
-}
-
 // The raw values per key, seeded from localStorage on first use and kept here too, so a blocked
 // storage still works for the session.
 const minne = new Map<string, string>();

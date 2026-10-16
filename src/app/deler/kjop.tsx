@@ -9,7 +9,7 @@ import { InfoSirkel, Lukk } from "./ikoner";
 
 const PRISTEKST = `kr ${tall(PRIS)}`;
 
-export function Kjop({ apen, onLukk, onBetalt }: { apen: boolean; onLukk: () => void; onBetalt: (ordreId: string) => void }) {
+export function Kjop({ apen, utvikling, onLukk, onBetalt }: { apen: boolean; utvikling: boolean; onLukk: () => void; onBetalt: (ordreId: string) => void }) {
   const [melding, settMelding] = useState<string | null>(null);
   const [venter, settVenter] = useState(false);
   const knapp = useRef<HTMLButtonElement>(null);
@@ -59,7 +59,7 @@ export function Kjop({ apen, onLukk, onBetalt }: { apen: boolean; onLukk: () => 
         </div>
         <div className="demo-note">
           <InfoSirkel />
-          <span>{melding ?? "Betaling er ikke koblet til ennå. I denne versjonen åpnes brevskriveren direkte."}</span>
+          <span>{melding ?? (utvikling ? "Betaling er ikke koblet til ennå. I denne versjonen åpnes brevskriveren direkte." : "Betaling er ikke koblet til ennå. Brevskriveren kan ikke låses opp i denne versjonen.")}</span>
         </div>
         <button ref={knapp} type="button" className="btn pri xl" onClick={betal} disabled={venter}>
           Gå til betaling

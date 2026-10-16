@@ -3,6 +3,7 @@
 // links: the decisions' text reaches the buyer only in the letter, after payment.
 import type { ReactNode } from "react";
 import { cap, tall } from "@/lib/app/format";
+import { sakTekst } from "@/lib/app/saken";
 import type { Tallblokk, Vedtakskort } from "@/lib/vurdering/vurdering";
 import { Hake } from "./ikoner";
 
@@ -62,10 +63,7 @@ export function Lignende({ tall: blokker, kort, sammenligning, brukes, fot }: { 
                   </div>
                   {meta && <div className="sim-c-m">{meta}</div>}
                   <div className="sim-c-f">
-                    <span className="sim-chip">
-                      Sak {k.saksnummer}
-                      {k.ar && ` · ${k.ar}`}
-                    </span>
+                    <span className="sim-chip">{sakTekst(k.saksnummer, k.ar)}</span>
                     {brukes === k.id && <span className="sim-use">Brukes i brevet</span>}
                   </div>
                 </div>

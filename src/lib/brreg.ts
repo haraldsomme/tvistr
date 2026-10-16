@@ -1,7 +1,4 @@
 export type Adresse = { linjer: string[]; postnummer: string; poststed: string };
-export type Forhandler =
-  | { type: "brreg"; orgnr: string; navn: string; adresse?: Adresse }
-  | { type: "fritekst"; navn: string; adresse?: Adresse };
 
 // Lookup of dealers in Brreg's open Enhetsregister, by name or organisation number. ENK (sole
 // proprietorships) is left out on purpose: their names are usually personal names, which we do not
@@ -49,14 +46,6 @@ export function orgnrFra(s: string): string | null {
   return /^\d{9}$/.test(r) ? r : null;
 }
 
-// The check digit of an organisation number (modulus 11, weights 3 2 7 6 5 4 3 2). A number whose
-// remainder would give 10 is never issued.
-export function gyldigOrgnr(orgnr: string): boolean {
-  if (!/^\d{9}$/.test(orgnr)) return false;
-  const sum = [3, 2, 7, 6, 5, 4, 3, 2].reduce((t, v, i) => t + v * Number(orgnr[i]), 0);
-  const k = (11 - (sum % 11)) % 11;
-  return k !== 10 && k === Number(orgnr[8]);
-}
 
 // Mail goes to the postal address when the company has registered one, otherwise to the business address.
 function adresseFra(e: BrregEnhet): Adresse | null {
@@ -87,7 +76,6 @@ export const tilForslag = (e: BrregEnhet): Forslag => {
 };
 
 // A suggestion as the dealer of the letter.
-export const tilForhandler = (f: Forslag): Forhandler => ({ type: "brreg", orgnr: f.orgnr, navn: tittel(f.navn), ...(f.adresse && { adresse: f.adresse }) });
 
 const TIDSGRENSE = 4000;
 
@@ -137,16 +125,6 @@ export async function sokForhandler(q: string): Promise<{ forslag: Forslag[]; fe
   }
 }
 
-// One dealer by organisation number, for opening a link that carries it. null when it cannot be had.
-export async function hentForhandler(orgnr: string): Promise<Forslag | null> {
-  const o = orgnrFra(orgnr);
-  if (!o) return null;
-  try {
-    return await enhet(o);
-  } catch {
-    return null;
-  }
-}
 
 // Brreg writes names in capitals; this gives «Testbil AS» for «TESTBIL AS».
 export const tittel = (s: string) =>

@@ -90,3 +90,6 @@ export function fraSjekk(a: Sjekk, s: Skjema): Skjema {
   }
   return ut;
 }
+
+// «Sak 21/3494 · 2022», or «Vedtak 2022» when the decision has no case number.
+export const sakTekst = (saksnummer: string | null, ar: string | null) => (saksnummer ? `Sak ${saksnummer}${ar ? ` · ${ar}` : ""}` : `Vedtak${ar ? ` ${ar}` : ""}`);

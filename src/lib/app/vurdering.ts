@@ -16,7 +16,9 @@ export type Sjekksvar = {
   // The purchase date decides the law version; the handover date stands in when it is missing.
   kjopsdato?: string;
   delivery?: string;
+  // The first and the last day a fault was noticed, when there are several.
   found?: string;
+  sist?: string;
   known?: "nei" | "opplyst" | "synlig";
   cause?: "nei" | "slitasje" | "uhell" | "vetikke";
   notified?: "ja" | "nei";
@@ -85,14 +87,23 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
     }
   } else F.push({ s: "warn", t: "Datoene mangler", d: "Uten overtakelsesdato og dato for når feilen ble oppdaget, kan vi ikke vurdere fristene. Vurderingen er derfor foreløpig." });
 
+  // Dates that cannot all be right.
+  const avvik = [
+    [q.kjopsdato, q.delivery, q.found, q.sist, q.notified === "ja" ? q.notifiedDate : undefined].some((d) => d && d > idag) ? "En av datoene er frem i tid." : "",
+    q.notified === "ja" && q.notifiedDate && q.found && q.notifiedDate < q.found ? "Du har oppgitt at du sa fra før du oppdaget feilen." : "",
+  ].filter(Boolean);
+  if (avvik.length) F.push({ s: "warn", t: "Sjekk datoene", d: `${avvik.join(" ")} Sjekk at datoene stemmer.` });
+  if (del && fd && q.sist && fd >= del && q.found! <= plussManeder(q.delivery!, L.formodningMnd) && q.sist > plussManeder(q.delivery!, L.formodningMnd))
+    F.push({ s: "warn", t: "Én av feilene viste seg senere", d: `Én av feilene viste seg mer enn ${L.formodningTekst} etter overtakelsen. For den må du selv sannsynliggjøre at den skyldes forhold ved leveringen.` });
+
   let sendBy: string | null = null;
   if (fd && fd >= (del ?? fd)) {
     const lim = addMonths(fd, 2),
       nd = parseD(q.notifiedDate);
-    if (q.notified === "ja" && nd) {
+    if (q.notified === "ja" && nd && nd >= fd) {
       if (nd <= lim) F.push({ s: "good", t: "Du sa fra i tide", d: `Du sa fra ${dayDiff(fd, nd) <= 0 ? "samme dag som" : `${dur(fd, nd)} etter at`} du oppdaget feilen. Reklamasjon innen to måneder er alltid rettidig.`, law: L.ref("reklamasjon") });
       else F.push({ s: "warn", t: "Du sa fra etter mer enn to måneder", d: "Det kan fortsatt være innen rimelig tid, men forhandleren kan bestride det. Bekreft reklamasjonen skriftlig nå." });
-    } else if (q.notified === "ja") F.push({ s: "info", t: "Du har sagt fra", d: "Bekreft reklamasjonen skriftlig, så har du dokumentasjon på datoen." });
+    } else if (q.notified === "ja" && !nd) F.push({ s: "info", t: "Du har sagt fra", d: "Bekreft reklamasjonen skriftlig, så har du dokumentasjon på datoen." });
     else if (today <= lim) {
       sendBy = iso(lim);
       F.push({ s: "good", t: "Du er i tide", d: `Sender du reklamasjonen innen ${fmtD(lim)}, er den alltid rettidig.`, law: L.ref("reklamasjon") });
@@ -160,6 +171,7 @@ export const writerQ = (s: Skjema): Sjekksvar => ({
   kjopsdato: s.c_purchase || s.c_delivery,
   delivery: s.c_delivery,
   found: s.f_found,
+  sist: s.f_cats.map((c) => s.f_area[c]?.found).filter((d): d is string => !!d).sort().at(-1),
   sev: s.f_sev,
   known: (s.f_known || undefined) as Sjekksvar["known"],
   cause: (s.f_cause || undefined) as Sjekksvar["cause"],

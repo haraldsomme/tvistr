@@ -69,3 +69,9 @@ describe("rettinger etter gjennomgangen", () => {
     expect(evaluate({ ...base, delivery: "2023-01-31", found: "2023-07-31" }, idag).factors.some((f) => f.t === "Feilen viste seg innen seks måneder")).toBe(true);
   });
 });
+
+describe("tidslinjen i vurderingen", () => {
+  it("sa fra før feilen ble oppdaget", () => expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-09-01", notified: "ja", notifiedDate: "2026-08-01" }, idag).factors.some((f) => f.t === "Sjekk datoene")).toBe(true));
+  it("dato frem i tid", () => expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-12-01" }, idag).factors.some((f) => f.t === "Sjekk datoene")).toBe(true));
+  it("én av flere feil utenfor formodningen", () => expect(evaluate({ ...base, delivery: "2023-03-01", found: "2023-05-01", sist: "2024-01-15" }, idag).factors.some((f) => f.t === "Én av feilene viste seg senere")).toBe(true));
+});

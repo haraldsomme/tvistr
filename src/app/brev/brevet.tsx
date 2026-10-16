@@ -5,7 +5,8 @@ import { Kopier } from "@/app/deler/ikoner";
 import { byggBrev, emne, type Presedens, tilTekst } from "@/lib/app/brev";
 import { idag } from "@/lib/app/dato";
 import { husk } from "@/lib/app/kall";
-import { nokkel, tilSvar } from "@/lib/app/saken";
+import { datoavvik } from "@/lib/app/datoer";
+import { nokkel, sakTekst, tilSvar } from "@/lib/app/saken";
 import { maal } from "@/lib/maling";
 import type { Skjema } from "@/lib/app/skjema";
 import { type Funn, finnVedtak } from "./actions";
@@ -21,9 +22,11 @@ export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: S
   const svar = tilSvar(s);
   const n = nokkel(svar);
   const [funn, settFunn] = useState<{ n: string; f: Funn } | null>(null);
+  const [forsok, settForsok] = useState(0);
 
   useEffect(() => {
-    if (!svar) return;
+    // No model call while the letter is not to cite a decision.
+    if (!svar || !s.prec_on) return;
     let gjeldende = true;
     hent(svar, ordre).then((f) => {
       if (!gjeldende) return;
@@ -34,14 +37,16 @@ export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: S
     return () => {
       gjeldende = false;
     };
-    // `n` stands for `svar`.
+    // `n` stands for `svar`; `forsok` is «Prøv igjen».
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n, ordre]);
+  }, [n, ordre, s.prec_on, forsok]);
 
   const aktuell = funn && funn.n === n ? funn.f : null;
   const valg: Presedens[] = aktuell?.ok ? aktuell.valg : [];
   const valgt = valg.find((v) => v.id === s.prec_id) ?? valg[0] ?? null;
-  const blokker = byggBrev(s, valgt, idag());
+  const venter = !!svar && s.prec_on && (!aktuell || !aktuell.ok);
+  const blokker = byggBrev(s, venter ? "venter" : valgt, idag());
+  const avvik = datoavvik(s, idag());
 
   async function kopier(tekst: string, ok: string) {
     try {
@@ -90,7 +95,12 @@ export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: S
                 ) : !aktuell ? (
                   <p className="hint">Finner lignende saker …</p>
                 ) : !aktuell.ok ? (
-                  <p className="hint">{aktuell.melding}</p>
+                  <div className="sugg">
+                    <span>{aktuell.melding}</span>
+                    <button type="button" className="btn sm" onClick={() => settForsok((f) => f + 1)}>
+                      Prøv igjen
+                    </button>
+                  </div>
                 ) : !valg.length ? (
                   <p className="hint">Vi fant ingen lignende sak med medhold. Brevet bygger på lovens vilkår.</p>
                 ) : (
@@ -102,7 +112,7 @@ export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: S
                           <span className="pp-b">
                             <span className="pp-t">
                               <span>
-                                Sak {v.saksnummer} · {v.bil}
+                                {sakTekst(v.saksnummer, null)} · {v.bil}
                               </span>
                               <em>{v.best ? "Best treff" : "Alternativ"}</em>
                             </span>
@@ -115,7 +125,7 @@ export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: S
                       <p className="prec-src" style={{ margin: "10px 0 0" }}>
                         Les hele vedtaket:{" "}
                         <a href={valgt.kildeUrl} target="_blank" rel="noopener">
-                          sak {valgt.saksnummer} hos Forbrukertilsynet
+                          {valgt.saksnummer ? `sak ${valgt.saksnummer}` : "vedtaket"} hos Forbrukertilsynet
                         </a>
                       </p>
                     )}
@@ -125,7 +135,7 @@ export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: S
             )}
           </div>
           <div className="block d-copy" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button type="button" className="btn pri" onClick={() => {
+            <button type="button" className="btn pri" disabled={venter} title={venter ? "Venter på den lignende saken" : undefined} onClick={() => {
                 maal("brev_kopiert");
                 kopier(tilTekst(blokker), "Brevet er kopiert");
               }}>
@@ -149,8 +159,15 @@ export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: S
               <h3>Sjekkliste</h3>
             </div>
             <div className="miss">
-              {rader.length ? (
-                rader.map((r) => (
+              {avvik.map((a) => (
+                <div key={a} className="mr">
+                  <span style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <span className="tag warn">Sjekk</span>
+                    {a}
+                  </span>
+                </div>
+              ))}
+              {rader.map((r) => (
                   <div key={r.i} className="mr">
                     <span>
                       {r.navn}
@@ -160,8 +177,8 @@ export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: S
                       Fyll ut
                     </button>
                   </div>
-                ))
-              ) : (
+              ))}
+              {!rader.length && !avvik.length && (
                 <div className="mr">
                   <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
                     <span className="tag good">Klart</span>Alt sentralt er fylt ut.

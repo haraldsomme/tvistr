@@ -15,7 +15,9 @@ const stegFor = (f: Faktor) => (/lov/i.test(f.t) ? 0 : /som den er|to år|seks m
 // «Lignende saker» for the writer's answers, fetched again (debounced) only when they change.
 export function useLignende(s: Skjema): LignendeSvar | null {
   const [svar, settSvar] = useState<LignendeSvar | null>(null);
-  const t = tilSvar(s);
+  // Only what the cards depend on: a description typed in the form does not fetch them again.
+  const fullt = tilSvar(s);
+  const t = fullt && { ...fullt, krav: null, feil: fullt.feil.map((f) => ({ ...f, beskrivelse: null })) };
   const n = nokkel(t);
   useEffect(() => {
     if (!t) return;

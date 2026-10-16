@@ -145,8 +145,8 @@ export function Skriver() {
                 <span key={st.navn} className={`pip${i === steg ? " on" : status[i].f === status[i].t ? " done" : ""}`} />
               ))}
             </div>
-            <button type="button" className="btn pri" onClick={() => (steg === STEG.length - 1 ? tilFane("case") : tilSteg(steg + 1))}>
-              <span>{steg === STEG.length - 1 ? "Se vurderingen" : `Neste: ${STEG[steg + 1].navn}`}</span>
+            <button type="button" className="btn pri" onClick={() => (steg === STEG.length - 1 ? tilFane("letter") : tilSteg(steg + 1))}>
+              <span>{steg === STEG.length - 1 ? "Se brevet" : `Neste: ${STEG[steg + 1].navn}`}</span>
               <Frem />
             </button>
           </div>

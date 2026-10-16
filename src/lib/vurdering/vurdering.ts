@@ -110,7 +110,12 @@ export function lignende(inn: { svar: Svar; alle: Kandidat[]; statistikk: Map<st
     return { id: k.id, saksnummer: visSaksnummer(k.saksnummer), ar: k.vedtaksdato?.slice(0, 4) ?? null, bil: k.avgjorende?.bil ?? inn.bilnavn(k.id) ?? "Bil", km: omKm ? null : k.km, somDenEr: k.somDenEr === true, fikk, feil: r.feil ? komponentnavn(r.feil) : null };
   });
   const profiler = a.map((r) => ({ alder: etterId.get(r.id)!.alder, km: etterId.get(r.id)!.km }));
-  return { tall: tallblokker(svar, inn.statistikk), kort, sammenligning: sammenlign(alderVedKjop(svar.kjopsdato, svar.ar), svar.km, profiler) };
+  // With several faults, the figures for the fault the first card is about come first, so the block
+  // and the cards below it are about the same thing.
+  const forst = a[0]?.feil;
+  const passer = (b: Tallblokk) => !!forst && (b.nokkel === forst.hovedkategori || b.nokkel === `${forst.hovedkategori}.${forst.underkategori}`);
+  const tall = tallblokker(svar, inn.statistikk).sort((x, y) => Number(passer(y)) - Number(passer(x)));
+  return { tall, kort, sammenligning: sammenlign(alderVedKjop(svar.kjopsdato, svar.ar), svar.km, profiler) };
 }
 
 // A decision's car when the extraction has no `bil`: make, model and model year, or the year alone.

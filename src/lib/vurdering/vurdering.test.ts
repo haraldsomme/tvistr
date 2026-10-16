@@ -137,6 +137,16 @@ describe("kortene", () => {
 
   it("kaller aldri modellen", () => expect(velgVedtak).not.toHaveBeenCalled());
 
+  it("tallene følger feilen kortene viser når kjøperen har flere feil", () => {
+    const statistikk = new Map([
+      ["klima", rad("klima", 300, 100)],
+      ["motor.turbo", rad("motor.turbo", 138, 54)],
+    ]);
+    const r = lignende({ svar: sak({ km: 120_000, ar: 2017, feil: [{ hoved: "klima", under: [], oppdaget: "2025-04-01" }, { hoved: "motor", under: ["turbo"], oppdaget: "2025-04-01" }] }), alle, statistikk, bilnavn: () => null });
+    expect(r.kort[0].feil).toBe("turbo");
+    expect(r.tall[0].nokkel).toBe("motor.turbo");
+  });
+
   it("gir ingen kort uten vedtak på nivå A", () => expect(lignende({ svar: sak({ feil: [{ hoved: "fukt", under: ["lukt"], oppdaget: "2025-04-01" }] }), alle, statistikk: new Map(), bilnavn: () => null }).kort).toEqual([]));
 
   it("nevner ikke modellen i serverhandlingen", () => {

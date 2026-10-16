@@ -37,7 +37,8 @@ export type Avledet = {
 export type Vurdering = { stopp: Merknad[]; advarsler: Merknad[]; avledet: Avledet[] };
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
-export const erDato = (s: unknown): s is string => typeof s === "string" && ISO.test(s) && new Date(`${s}T00:00:00Z`).toISOString().slice(0, 10) === s;
+// A real calendar day: «2025-02-30» and «2025-13-40» are not (and must not throw).
+export const erDato = (s: unknown): s is string => typeof s === "string" && ISO.test(s) && new Date(`${s}T00:00:00Z`).toJSON()?.slice(0, 10) === s;
 
 const to = (n: number) => String(n).padStart(2, "0");
 // Calendar months, the way the law counts: 31 August + 6 months is 28 (or 29) February.

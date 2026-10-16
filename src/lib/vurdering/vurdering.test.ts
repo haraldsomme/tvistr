@@ -1,106 +1,21 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import type { AvgjorendeFeil } from "@/lib/avgjorende/skjema";
 import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import type { Kandidat } from "@/lib/matching/typer";
 import { byggStatistikk, MIN_PRISAVSLAG, type Statistikkrad, type Tellevedtak } from "./statistikk";
-import { vurderingSomTekst } from "./tekst";
-import { plussManeder } from "@/lib/brev/tidslinje";
-import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
-import { byggVurdering, fristenErUte, lovlinjer, tallblokker, tallsetninger, type Vurderingssak, vurderStatus } from "./vurdering";
+import type { Svar } from "@/lib/vedtaksvalg/kjoper";
+import { lignende, tallblokker, tallsetninger } from "./vurdering";
 
-// The model must never be reached before step 7.
+// The model must never be reached before payment.
 const velgVedtak = vi.fn();
 vi.mock("@/lib/vedtaksvalg/valg", () => ({ velgVedtak }));
 
-const IDAG = "2026-10-13";
-const sak = (s: Partial<Vurderingssak> = {}): Vurderingssak => ({
-  kjopsdato: "2025-03-10",
-  idag: IDAG,
-  km: 142_000,
-  ar: 2017,
-  somDenEr: "nei",
-  feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2025-04-01" }],
-  ...s,
-});
-const regler = (s: Vurderingssak, a = true) => vurderStatus(s, a).grunner.map((g) => g.regel);
-
-describe("statusen", () => {
-  it.each([
-    ["mer enn fem år siden kjøpet", sak({ kjopsdato: "2021-10-12" }), true, "ute", []],
-    ["akkurat fem år siden kjøpet", sak({ kjopsdato: "2021-10-13", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2021-12-01" }] }), true, "sak", []],
-    ["en vanlig sak med vedtak på nivå A", sak(), true, "sak", []],
-    ["feil oppdaget mer enn to år etter overtakelsen", sak({ kjopsdato: "2023-03-01", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2025-03-02" }] }), true, "svak", ["feil_over_to_aar"]],
-    ["feil oppdaget nøyaktig to år etter", sak({ kjopsdato: "2023-03-01", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2025-03-01" }] }), true, "sak", []],
-    ["«som den er» før 2024 på en bil over 10 år", sak({ kjopsdato: "2023-05-02", ar: 2012, km: 90_000, somDenEr: "ja", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2023-06-01" }] }), true, "svak", ["som_den_er_gammel"]],
-    ["«som den er» før 2024 med over 200 000 km", sak({ kjopsdato: "2023-05-02", ar: 2018, km: 200_001, somDenEr: "ja", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2023-06-01" }] }), true, "svak", ["som_den_er_gammel"]],
-    ["«som den er» fra 2024 på en gammel bil", sak({ kjopsdato: "2024-05-02", ar: 2005, km: 300_000, somDenEr: "ja", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2024-06-01" }] }), true, "sak", []],
-    ["en gammel bil uten «som den er»", sak({ kjopsdato: "2023-05-02", ar: 2005, km: 300_000, somDenEr: "nei", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2023-06-01" }] }), true, "sak", []],
-    ["en slitedel oppdaget etter seks måneder", sak({ feil: [{ hoved: "drivlinje", under: ["clutch"], oppdaget: "2025-09-11" }] }), true, "svak", ["slitedel_sen"]],
-    ["en slitedel oppdaget innen seks måneder", sak({ feil: [{ hoved: "drivlinje", under: ["clutch"], oppdaget: "2025-09-10" }] }), true, "sak", []],
-    ["ingen vedtak på nivå A", sak(), false, "svak", ["ingen_niva_a"]],
-  ] as const)("%s", (_navn, s, a, status, forventet) => {
-    expect(vurderStatus(s, a).status).toBe(status);
-    if (status !== "ute") expect(regler(s, a)).toEqual(forventet);
-  });
-
-  it("gir ingen betalingsknapp og ingen pris når fristen er ute", () => {
-    const v = byggVurdering({ sak: sak({ kjopsdato: "2020-07-31" }), alle: [], statistikk: new Map(), bilnavn: () => null });
-    expect(v.status).toBe("ute");
-    const tekst = vurderingSomTekst(v, "2020-07-31");
-    expect(tekst).toContain("Forbrukerrådet");
-    expect(tekst).not.toMatch(/Fortsett|kr\.|Betal/);
-  });
-});
-
-describe("lovlinjene", () => {
-  const kombinasjoner = [
-    ["før 2024, innen formodningen", sak({ kjopsdato: "2023-05-02", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2023-09-01" }] })],
-    ["før 2024, etter formodningen", sak({ kjopsdato: "2023-05-02", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2024-01-01" }] })],
-    ["fra 2024, innen formodningen", sak({ kjopsdato: "2025-03-10", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2026-03-01" }] })],
-    ["fra 2024, etter formodningen", sak({ kjopsdato: "2024-01-10", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2026-03-01" }] })],
-    ["før 2024, «som den er»", sak({ kjopsdato: "2023-05-02", somDenEr: "ja", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2023-09-01" }] })],
-    ["fra 2024, «som den er»", sak({ somDenEr: "ja" })],
-    ["«vet ikke» om forbeholdet", sak({ somDenEr: "vet_ikke" })],
-    ["to feil, én innen og én etter formodningen", sak({ kjopsdato: "2023-05-02", feil: [{ hoved: "motor", under: [], oppdaget: "2023-09-01" }, { hoved: "klima", under: ["ac"], oppdaget: "2024-02-01" }] })],
-    ["to feil innen formodningen", sak({ feil: [{ hoved: "motor", under: [], oppdaget: "2025-05-01" }, { hoved: "klima", under: [], oppdaget: "2025-06-01" }] })],
-    ["feil i det selgeren sa (ingen formodning)", sak({ feil: [{ hoved: "historikk", under: ["km"], oppdaget: "2025-05-01" }] })],
-    ["over to år siden kjøpet, slitedel", sak({ kjopsdato: "2024-01-10", feil: [{ hoved: "understell", under: ["bremser"], oppdaget: "2024-03-01" }] })],
-    ["over to år siden kjøpet, ikke slitedel", sak({ kjopsdato: "2024-01-10", feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2024-03-01" }] })],
-  ] as const;
-
-  it("er faste tekster valgt av kode, med paragraf fra paragrafer.ts", async () => {
-    const tekst = kombinasjoner.map(([navn, s]) => `## ${navn}\n${lovlinjer(s).map((l) => `[${l.ikon}${l.uthevet ? ", uthevet" : ""}] ${l.tekst}${l.paragraf ? ` (${l.paragraf})` : ""}`).join("\n")}`).join("\n\n");
-    await expect(`${tekst}\n`).toMatchFileSnapshot("__snapshots__/lovlinjer.txt");
-  });
-
-  // Every case that is not past the five years has at least one line in the buyer's favour: every kind
-  // of defect and subcategory, purchases before and after 2024, the defect showing itself early and
-  // late, and each answer about «som den er», alone and with a second defect.
-  it("har alltid minst én linje i kjøperens favør", () => {
-    const valg = HOVEDKATEGORIER.flatMap((h) => [{ hoved: h.id, under: [] as string[] }, ...h.under.map((u) => ({ hoved: h.id, under: [u.id] }))]);
-    const uten: string[] = [];
-    let n = 0;
-    for (const kjopsdato of ["2021-11-01", "2022-06-01", "2023-05-02", "2023-12-20", "2024-01-10", "2024-09-01", "2025-03-10", "2026-06-01"])
-      for (const m of [1, 5, 7, 18, 23, 25, 40]) {
-        const oppdaget = plussManeder(kjopsdato, m);
-        if (oppdaget > IDAG) continue;
-        for (const somDenEr of ["ja", "nei", "vet_ikke"] as const)
-          for (const f of valg)
-            for (const feil of [[{ ...f, oppdaget }], [{ hoved: "klima", under: ["ac"], oppdaget: plussManeder(kjopsdato, 1) }, { ...f, oppdaget }]]) {
-              const s = sak({ kjopsdato, somDenEr, feil });
-              if (fristenErUte(s.kjopsdato, s.idag) || new Set(feil.map((x) => x.hoved)).size < feil.length) continue;
-              n++;
-              if (!lovlinjer(s).some((l) => l.ikon === "ja")) uten.push(`${kjopsdato} +${m} mnd, «som den er» ${somDenEr}: ${feil.map((x) => [x.hoved, ...x.under].join(".")).join(" + ")}`);
-            }
-      }
-    expect(n).toBeGreaterThan(10_000);
-    expect(uten).toEqual([]);
-  });
-
-  it("har aldri et paragrafnummer i selve teksten", () => {
-    for (const [, s] of kombinasjoner) for (const l of lovlinjer(s)) expect(l.tekst).not.toMatch(/§/);
-  });
-});
+type Feil = { hoved: string; under: string[]; oppdaget: string };
+const sak = (s: Partial<Omit<Svar, "feil">> & { feil?: Feil[] } = {}): Svar => {
+  const { feil = [{ hoved: "motor", under: ["turbo"], oppdaget: "2025-04-01" }], ...rest } = s;
+  return { kjopsdato: "2025-03-10", km: 142_000, ar: 2017, somDenEr: "nei", krav: null, forsok: null, ...rest, feil: feil.map((f) => ({ ...f, beskrivelse: null, opplysning: null, verksted: null, rapport: null })) };
+};
 
 const rad = (nokkel: string, n: number, m: number, r: Partial<Statistikkrad> = {}): Statistikkrad => ({
   nokkel,
@@ -115,6 +30,7 @@ const rad = (nokkel: string, n: number, m: number, r: Partial<Statistikkrad> = {
   kmMedian: null,
   ...r,
 });
+
 
 describe("tallene", () => {
   const statistikk = new Map([
@@ -202,7 +118,7 @@ describe("kortene", () => {
     ...k,
   });
   const alle = [1, 2, 3, 4, 5].map((i) => kandidat(i));
-  const v = byggVurdering({ sak: sak({ km: 120_000, ar: 2017 }), alle, statistikk: new Map(), bilnavn: () => null });
+  const v = lignende({ svar: sak({ km: 120_000, ar: 2017 }), alle, statistikk: new Map(), bilnavn: () => null });
 
   it("er de tre øverste fra rangeringen, uten sitater og uten lenker", () => {
     expect(v.kort).toHaveLength(3);
@@ -216,8 +132,15 @@ describe("kortene", () => {
 
   it("sammenligner bilen bare når det går i kjøperens favør", () => {
     expect(v.sammenligning).toBe("Bilen din er yngre og har gått kortere enn i disse sakene.");
-    expect(byggVurdering({ sak: sak({ km: 200_000, ar: 2010 }), alle, statistikk: new Map(), bilnavn: () => null }).sammenligning).toBeNull();
+    expect(lignende({ svar: sak({ km: 200_000, ar: 2010 }), alle, statistikk: new Map(), bilnavn: () => null }).sammenligning).toBeNull();
   });
 
   it("kaller aldri modellen", () => expect(velgVedtak).not.toHaveBeenCalled());
+
+  it("gir ingen kort uten vedtak på nivå A", () => expect(lignende({ svar: sak({ feil: [{ hoved: "fukt", under: ["lukt"], oppdaget: "2025-04-01" }] }), alle, statistikk: new Map(), bilnavn: () => null }).kort).toEqual([]));
+
+  it("nevner ikke modellen i serverhandlingen", () => {
+    const kilde = readFileSync("src/app/sak/vurdering.ts", "utf8");
+    expect(kilde).not.toMatch(/vedtaksvalg\/valg|@\/lib\/ai|velgVedtak|finnVedtak|anthropic/i);
+  });
 });

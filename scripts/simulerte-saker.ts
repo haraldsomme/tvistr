@@ -90,5 +90,3 @@ export const SAKER: Sim[] = [
     kjopesum: 119_000, bil: { regnr: "XY 10012", merke: "Peugeot", modell: "308" }, selger: 2, kontakt: { dato: "2025-11-20", form: "muntlig", svar: "annet" }, kjoper: "full" },
 ];
 
-// The letter's date is fixed, so the golden letters do not change from day to day.
-export const BREVDATO = "2026-10-13";

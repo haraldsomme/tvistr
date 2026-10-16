@@ -128,6 +128,15 @@ export function tolkSvar(svar: Modellsvar | null, kandidater: Rangert[], sitater
   return { r: forste, valgte: (sitater.get(forste.id) ?? []).slice(0, antall(forste)), fulgt: false };
 }
 
+// The two decisions the buyer can pick instead of the chosen one: the next in the ranking that have
+// quotes, each with its first quotes, as tolkSvar takes them without a model answer.
+export function alternativer(kandidater: Rangert[], valgtId: number, sitater: Map<number, Sitatvalg[]>): { r: Rangert; valgte: Sitatvalg[] }[] {
+  return kandidater
+    .filter((r) => r.id !== valgtId && (sitater.get(r.id)?.length ?? 0) > 0)
+    .slice(0, 2)
+    .map((r) => ({ r, valgte: tolkSvar(null, [r], sitater).valgte }));
+}
+
 // The letter's sentence when there is no candidate.
 export const LOVSETNING = "Kravet bygger på lovens vilkår.";
 
@@ -138,6 +147,8 @@ export type Valgresultat = {
   sitater: string[];
   // Whether the model's choice was used; false when the ranking's first candidate was.
   fulgt: boolean;
+  // The buyer's other options in the letter (alternativer), each with its paragraph.
+  alternativer: { r: Rangert; avsnitt: string; sitater: string[] }[];
   modell: string | null;
   forbruk: Forbruk;
 };
@@ -175,7 +186,12 @@ export async function velgVedtak(opts: {
   }
   const { r, valgte, fulgt } = tolkSvar(svar, opts.kandidater, sitater);
   const avsnitt = byggAvsnitt(r, opts.alle.get(r.id)!, opts.detaljer.get(r.id)!, valgte, opts.sak);
-  return { r, niva: r.niva, avsnitt, sitater: valgte.map((x) => x.tekst), fulgt, modell, forbruk };
+  const andre = alternativer(opts.kandidater, r.id, sitater).map((a) => ({
+    r: a.r,
+    avsnitt: byggAvsnitt(a.r, opts.alle.get(a.r.id)!, opts.detaljer.get(a.r.id)!, a.valgte, opts.sak),
+    sitater: a.valgte.map((x) => x.tekst),
+  }));
+  return { r, niva: r.niva, avsnitt, sitater: valgte.map((x) => x.tekst), fulgt, modell, forbruk, alternativer: andre };
 }
 
 function byggAvsnitt(r: Rangert, k: Kandidat, d: Vedtaksdetaljer, valgte: Sitatvalg[], sak: Brukersak): string {

@@ -1,0 +1,78 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`brevet > eksempelbrevet 1`] = `
+"Kari Nordmann
+Storgata 12
+0155 Oslo
+Tlf. 912 34 567 · kari.nordmann@eksempel.no
+
+Bilhuset Vest AS
+Org.nr. 923 456 783
+Att.: Ola Hansen, selger
+Industriveien 4
+1337 Sandvika
+
+Oslo, 16. oktober 2026
+
+Reklamasjon på mangel ved Volkswagen ID.4, reg.nr. EL 48213
+
+Jeg viser til mitt kjøp av brukt Volkswagen ID.4, årsmodell 2022, reg.nr. EL 48213, understellsnr. WVGZZZE2ZNP012345. Bilen ble kjøpt 20. juni 2026 for kr 329 900, og jeg overtok den 24. juni 2026 med en kilometerstand på 38 500 km.
+
+Bilen har en mangel, og jeg reklamerer med dette etter forbrukerkjøpsloven § 27 første ledd.
+
+Mangelen
+
+Jeg har oppdaget følgende feil ved bilen:
+
+– Kapasitet og rekkevidde; lading og ladeutstyr, oppdaget 30. september 2026. Bilen lader ikke raskere enn 40 kW på hurtiglader, selv med varmt batteri, og rekkevidden har falt fra rundt 400 km til under 290 km med samme kjøremønster.
+
+Instrumentpanelet har tre ganger vist meldingen «Høyvoltsystem: oppsøk verksted». Merkeverkstedet har lest ut feilkoder som peker på en defekt batterimodul.
+
+Bilen kan bare brukes i begrenset grad, og jeg kan ikke stole på den i vanlig bruk. Konsekvensen er at feilen påvirker bruken av bilen.
+
+Bilen er undersøkt av et merkeverksted, Volkswagen Sandvika. Verkstedrapporten datert 7. oktober 2026 bekrefter feilen, angir årsaken til feilen og fastslår at feilen ikke skyldes normal slitasje. Rapporten følger vedlagt.
+
+Før kjøpet opplyste dere: «Batteriet har full kapasitet». Det er en del av avtalen, jf. forbrukerkjøpsloven § 16 første ledd bokstav c.
+
+Jeg tok opp feilen med dere på telefon 4. oktober 2026. Svaret jeg fikk, var at de ville se an utviklingen. Forholdet er ikke løst, og dette brevet bekrefter og utdyper reklamasjonen.
+
+Rettslig grunnlag
+
+Etter forbrukerkjøpsloven § 15 skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. Når den ikke er det, foreligger det en mangel, jf. § 16 første ledd bokstav a.
+
+Feilen viste seg 3 måneder etter overtakelsen. Etter § 18 annet ledd skal en mangel som viser seg innen to år etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises. Det er dermed dere som må bevise at feilen ikke var til stede da jeg overtok bilen.
+
+Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen, og er dermed rettidig etter § 27 første ledd.
+
+Bilen er også omfattet av garanti. Garantien gjelder i tillegg til mine rettigheter etter loven og begrenser dem ikke.
+
+Tilsvarende sak fra Forbrukerklageutvalget
+
+Forbrukerklageutvalget kom i sak 52074 til at bilen hadde en mangel.
+
+Vedtaket er offentlig tilgjengelig: https://example.org/v.pdf
+
+Mitt krav
+
+Jeg krever at mangelen rettes, jf. §§ 29 og 30. Rettingen skal skje uten kostnad for meg, innen rimelig tid og uten vesentlig ulempe for meg. Jeg ber om at dere stiller lånebil til disposisjon mens bilen er til reparasjon.
+
+Dersom retting ikke skjer innen rimelig tid, ikke lykkes eller ikke er mulig, krever jeg subsidiært å heve kjøpet, jf. § 32.
+
+I tillegg krever jeg erstatning for utgifter jeg har hatt som følge av mangelen, jf. § 33:
+
+– Feilsøking hos merkeverksted: kr 1 890
+– Leiebil i tre dager: kr 2 850
+Sum: kr 4 740
+
+Jeg ber om en skriftlig tilbakemelding innen 30. oktober 2026 med forslag til hvordan dere vil løse saken. Kommer vi ikke til enighet, vil jeg bringe saken inn for Forbrukerrådet for mekling og eventuelt videre til Forbrukerklageutvalget.
+
+Vedlegg
+
+1. Kjøpekontrakt
+2. Verkstedrapport
+3. Bilder og video
+
+Med vennlig hilsen
+
+Kari Nordmann"
+`;

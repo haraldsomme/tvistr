@@ -1,15 +1,15 @@
-import { Logo } from "@/app/logo";
+import type { CSSProperties, ReactNode } from "react";
+import Link from "next/link";
 import { MaalVisning } from "@/app/maal-visning";
 import { tall } from "@/lib/brev/format";
 import { PRIS } from "@/lib/pris";
 import { ALLE } from "@/lib/vurdering/statistikk";
+import { Dokument, Hake, Pil } from "./deler/ikoner";
+import { TilBrevskriveren } from "./til-brevskriveren";
 
-// The landing page (docs/vurdering.md, «Landingssiden»): one action, the registration number, which is
-// step 1 of the form. No testimonials and no promises; the number of decisions is read from the
-// database when the site is built.
+// The landing page (the artifact's home view). The number of decisions is read from the database when
+// the site is built.
 export const dynamic = "force-static";
-
-const PUNKTER = ["Riktige lovhenvisninger for ditt kjøp", "Et vedtak der kjøperen fikk medhold i en lignende sak", "Kravet og fristen formulert som en jurist ville gjort det"];
 
 // Without a database at build time the page is built without the number, not stopped.
 async function antallVedtak(): Promise<number | null> {
@@ -22,113 +22,339 @@ async function antallVedtak(): Promise<number | null> {
   }
 }
 
-function Hake({ stor }: { stor?: boolean }) {
+const MONO = "var(--f-mono)";
+const BLA = "#1F4F8F";
+const kicker: CSSProperties = { fontFamily: MONO, fontSize: 12.5, color: BLA };
+const h2: CSSProperties = { margin: 0, fontSize: "clamp(30px, 3.6vw, 44px)", lineHeight: 1.08, letterSpacing: "-0.035em", fontWeight: 600 };
+const ingress: CSSProperties = { margin: 0, fontSize: 16, lineHeight: 1.6, color: "#455063" };
+const kort: CSSProperties = { display: "flex", flexDirection: "column", gap: 14, padding: 28, border: "1px solid transparent", borderRadius: 20, background: "#FFFFFF", boxShadow: "var(--sh-1)" };
+const hvit: CSSProperties = { background: "#FFFFFF", borderTop: "1px solid #E2E6EC", borderBottom: "1px solid #E2E6EC" };
+const lovtag: CSSProperties = { alignSelf: "flex-start", marginTop: 4, fontFamily: MONO, fontSize: 11, padding: "3px 9px", borderRadius: 999, background: "#E9F0F9", color: BLA };
+const brevH: CSSProperties = { fontFamily: "var(--f-ui)", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", margin: "18px 0 8px" };
+const merket: CSSProperties = { background: "#E9F0F9", color: BLA, padding: "0 4px", borderRadius: 3 };
+const radGrid: CSSProperties = { display: "grid", gridTemplateColumns: "minmax(64px, .55fr) minmax(0, 1fr) minmax(0, 1fr)", gap: 12 };
+
+const Gronn = ({ s = 15, farge = "#1E7A4C" }: { s?: number; farge?: string }) => (
+  <span style={{ color: farge, display: "inline-flex", flex: "none" }}>
+    <Hake s={s} w={2.4} />
+  </span>
+);
+
+function Steg({ n, tittel, children }: { n: number; tittel: string; children: ReactNode }) {
   return (
-    <span className={`grid flex-none place-items-center rounded-full bg-[oklch(0.965_0.018_255)] ${stor ? "size-8" : "size-5"}`}>
-      <svg width={stor ? 14 : 11} height={stor ? 14 : 11} viewBox="0 0 12 12" aria-hidden>
-        <path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="oklch(0.47 0.12 255)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </span>
+    <div style={kort}>
+      <span style={{ width: 34, height: 34, borderRadius: "50%", background: BLA, color: "#FFFFFF", display: "grid", placeItems: "center", fontFamily: MONO, fontSize: 13 }}>{n}</span>
+      <h3 style={{ margin: "4px 0 0", fontSize: 19, fontWeight: 600, letterSpacing: "-0.015em" }}>{tittel}</h3>
+      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#455063" }}>{children}</p>
+    </div>
   );
 }
 
-// The plate and the button. A plain form, so it works before the page's script has loaded.
-function Regnrfelt() {
+function Sammenligning({ felt, din, sak }: { felt: string; din: string; sak: string }) {
   return (
-    <form action="/sak" method="get" className="flex flex-col gap-2.5 md:flex-row md:items-center md:gap-3">
-      <label className="flex h-[58px] w-full flex-none items-stretch overflow-hidden rounded-[8px] border-2 border-[#16181a] bg-white focus-within:shadow-[0_0_0_4px_oklch(0.965_0.018_255)] md:w-[230px]">
-        <span aria-hidden className="flex w-7 flex-none items-end justify-center bg-[oklch(0.42_0.15_262)] pb-[7px] text-[12px] font-bold text-white">
-          N
+    <div style={{ ...radGrid, padding: "13px 0", borderTop: "1px solid #E2E6EC", fontSize: 13.5, lineHeight: 1.45, alignItems: "start" }}>
+      <span style={{ color: "#5B6576" }}>{felt}</span>
+      <span>{din}</span>
+      <span style={{ display: "flex", gap: 8, justifyContent: "space-between" }}>
+        <span>{sak}</span>
+        <span aria-label="Likt" style={{ color: "#1E7A4C" }}>
+          <Hake s={13} />
         </span>
-        <span className="sr-only">Registreringsnummer</span>
-        <input
-          name="regnr"
-          required
-          maxLength={8}
-          pattern="[A-Za-zÆØÅæøå0-9 \-]{2,8}"
-          placeholder="AB 12345"
-          autoComplete="off"
-          spellCheck={false}
-          className="w-full min-w-0 bg-transparent px-3.5 font-[family-name:var(--font-jbmono)] text-[25px] font-semibold uppercase tracking-[.06em] text-[#16181a] outline-none placeholder:text-[#b4b8bc]"
-        />
-      </label>
-      <button type="submit" className="h-[50px] cursor-pointer rounded-[10px] bg-[oklch(0.47_0.12_255)] px-[26px] text-[15px] font-semibold text-white md:h-[58px] md:text-[16px]">
-        Sjekk bilen
-      </button>
-    </form>
+      </span>
+    </div>
   );
 }
+
+function Rettighet({ tall: t, tittel, tekst, lov }: { tall: string; tittel: string; tekst: string; lov: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "28px 28px 8px 0" }}>
+      <div style={{ fontSize: 60, lineHeight: 1, letterSpacing: "-0.05em", fontWeight: 600, color: BLA }}>{t}</div>
+      <div style={{ fontSize: 16, fontWeight: 600 }}>{tittel}</div>
+      <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "#455063" }}>{tekst}</p>
+      <span style={lovtag}>{lov}</span>
+    </div>
+  );
+}
+
+function Krav({ navn, tekst, par }: { navn: string; tekst: string; par: string }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "16px 18px", border: "1px solid #E2E6EC", borderRadius: 14 }}>
+      <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <span style={{ fontWeight: 600, fontSize: 15 }}>{navn}</span>
+        <span style={{ fontSize: 13, color: "#5B6576" }}>{tekst}</span>
+      </span>
+      <span style={{ fontFamily: MONO, fontSize: 11, color: BLA }}>{par}</span>
+    </div>
+  );
+}
+
+function Trinn({ n, tittel, tekst, forste, siste }: { n: number; tittel: string; tekst: string; forste?: boolean; siste?: boolean }) {
+  return (
+    <li style={{ display: "flex", gap: 20, paddingBottom: siste ? 0 : 28, position: "relative" }}>
+      <span style={{ flex: "none", width: 34, height: 34, borderRadius: "50%", background: forste ? BLA : "#E9F0F9", color: forste ? "#FFFFFF" : BLA, display: "grid", placeItems: "center", fontFamily: MONO, fontSize: 12.5, zIndex: 1 }}>{n}</span>
+      {!siste && <span aria-hidden="true" style={{ position: "absolute", left: 16, top: 34, bottom: 0, width: 2, background: "#E2E6EC" }} />}
+      <span style={{ display: "flex", flexDirection: "column", gap: 4, paddingTop: 5 }}>
+        <span style={{ fontWeight: 600, fontSize: 16 }}>{tittel}</span>
+        <span style={{ fontSize: 14.5, lineHeight: 1.6, color: "#455063" }}>{tekst}</span>
+      </span>
+    </li>
+  );
+}
+
+function Sporsmal({ q, children }: { q: string; children: ReactNode }) {
+  return (
+    <details style={{ borderBottom: "1px solid #E2E6EC" }}>
+      <summary style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 20, padding: "22px 0", fontSize: 17, fontWeight: 550 }}>
+        {q}
+        <svg className="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={BLA} strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </summary>
+      <p style={{ margin: "0 0 22px", fontSize: 15, lineHeight: 1.65, color: "#455063", maxWidth: "64ch" }}>{children}</p>
+    </details>
+  );
+}
+
+const SjekkKnapp = ({ stor, hvitKnapp }: { stor?: boolean; hvitKnapp?: boolean }) => (
+  <Link
+    href="/sak"
+    className={hvitKnapp ? undefined : "btn-pri"}
+    style={{
+      border: 0, display: "inline-flex", alignItems: "center", gap: 10, height: hvitKnapp ? 56 : 54, padding: hvitKnapp ? "0 26px" : "0 24px", borderRadius: 14,
+      background: hvitKnapp ? "#FFFFFF" : BLA, color: hvitKnapp ? BLA : "#FFFFFF", fontSize: 16, fontWeight: hvitKnapp ? 600 : 550, textDecoration: "none", whiteSpace: "nowrap",
+      boxShadow: stor ? "0 10px 24px -12px rgba(31,79,143,.7)" : undefined,
+    }}
+  >
+    Sjekk saken din gratis
+    <Pil />
+  </Link>
+);
 
 export default async function Home() {
   const n = await antallVedtak();
   return (
-    <div className="flex min-h-screen flex-col bg-[#f6f6f4] font-[family-name:var(--font-instrument)] text-[#16181a] antialiased">
+    <div className="home" style={{ minHeight: "100vh", background: "#F5F6F8" }}>
       <MaalVisning hendelse="landing" />
-      <header className="flex items-center justify-between border-b border-[#e2e3e0] bg-white px-5 py-[18px] md:px-16 md:py-[22px]">
-        <Logo liten />
-        <nav className="hidden text-[14px] font-medium text-[#2c3033] md:block">
-          <a href="#brevet">Slik fungerer det</a>
-        </nav>
+      <header style={{ position: "sticky", top: "env(safe-area-inset-top, 0px)", zIndex: 10, background: "rgba(245,246,248,.86)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderBottom: "1px solid #E2E6EC" }}>
+        <div className="wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, height: 68 }}>
+          <a href="#top" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", color: "#10141A" }}>
+            <span style={{ width: 34, height: 34, borderRadius: 10, background: BLA, color: "#FFFFFF", display: "grid", placeItems: "center" }}>
+              <Dokument />
+            </span>
+            <span style={{ fontWeight: 650, fontSize: 16, letterSpacing: "-0.015em" }}>Tvistr</span>
+          </a>
+          <nav className="navlinks" aria-label="Hovedmeny" style={{ display: "flex", gap: 32, fontSize: 14, fontWeight: 500 }}>
+            <a href="#slik">Slik fungerer det</a>
+            <a href="#saker">Vunnede saker</a>
+            <a href="#rettigheter">Dine rettigheter</a>
+            <a href="#avslag">Hvis de sier nei</a>
+            <a href="#sporsmal">Spørsmål</a>
+          </nav>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <TilBrevskriveren />
+            <Link href="/sak" className="btn-pri" style={{ border: 0, display: "inline-flex", alignItems: "center", gap: 8, height: 42, padding: "0 18px", borderRadius: 12, background: BLA, color: "#FFFFFF", fontSize: 14, fontWeight: 550, textDecoration: "none", whiteSpace: "nowrap" }}>
+              Sjekk saken din
+            </Link>
+          </div>
+        </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-[1280px] gap-10 px-5 pb-9 pt-9 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:items-center md:gap-[72px] md:px-16 md:pb-[88px] md:pt-24">
-        <div className="flex flex-col gap-3 md:gap-[26px]">
-          <span className="font-[family-name:var(--font-jbmono)] text-[11px] font-semibold uppercase tracking-[.08em] text-[oklch(0.47_0.12_255)]">For deg som har kjøpt bruktbil fra forhandler</span>
-          <h1 className="m-0 text-[34px] font-semibold leading-[1.06] tracking-[-0.03em] md:text-[56px] md:leading-[1.04] md:[text-wrap:balance]">Sjekk om du har en reklamasjonssak</h1>
-          <p className="m-0 max-w-[520px] text-[15.5px] leading-[1.55] text-[#5f6468] md:text-[18px] md:[text-wrap:pretty]">
-            Skriv inn registreringsnummeret, svar på fem spørsmål, og se hva loven og Forbrukerklageutvalget sier om saker som din.
-          </p>
-          <div className="mt-3 md:mt-0">
-            <Regnrfelt />
+      <section id="top" className="wrap" style={{ paddingTop: 80, paddingBottom: 96, display: "flex", flexWrap: "wrap", gap: 64, alignItems: "center" }}>
+        <div style={{ flex: "1 1 460px", minWidth: 0, display: "flex", flexDirection: "column", gap: 26 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: MONO, fontSize: 12.5, color: BLA }}>
+            <span>Forbrukerkjøpsloven</span>
+            <span style={{ height: 1, width: 48, background: "#CBD3DD" }} />
           </div>
-          <span className="text-[15px] font-semibold">Gratis. Brevet koster {PRIS} kr.</span>
-        </div>
-        <div aria-hidden className="hidden rotate-[.8deg] md:block">
-          <article className="flex flex-col gap-3.5 rounded-[6px] border border-[#e2e3e0] bg-white px-10 py-9 shadow-[0_18px_40px_-20px_rgba(20,25,35,.3)]">
-            <span className="text-[13px] text-[#5f6468]">Oslo, 14. oktober 2026</span>
-            <span className="text-[17px] font-bold leading-[1.35]">Reklamasjon – Volkswagen Golf, reg.nr. EK 48213</span>
-            <span className="text-[14.5px] leading-[1.65] text-[#2c3033]">Jeg viser til kjøp av ovennevnte bil 12. mai 2026. Bilen har en mangel etter forbrukerkjøpsloven, og jeg reklamerer herved …</span>
-            <div className="flex flex-col gap-2 pt-1.5">
-              {["100%", "94%", "97%", "62%"].map((b) => (
-                <div key={b} className="h-[9px] rounded-[3px] bg-[#ecedea]" style={{ width: b }} />
-              ))}
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section id="brevet" className="border-t border-[#e2e3e0]">
-        <div className="mx-auto flex max-w-[1280px] flex-col gap-3 px-5 py-7 md:gap-7 md:px-16 md:pb-16 md:pt-14">
-          <span className="font-[family-name:var(--font-jbmono)] text-[11px] font-semibold uppercase tracking-[.08em] text-[oklch(0.47_0.12_255)]">Brevet inneholder</span>
-          <div className="grid gap-2.5 md:grid-cols-3 md:gap-10">
-            {PUNKTER.map((p) => (
-              <div key={p} className="flex items-start gap-2.5 text-[14px] leading-[1.45] md:flex-col md:gap-3 md:text-[19px] md:font-semibold md:leading-[1.35] md:tracking-[-0.01em]">
-                <span className="md:hidden">
-                  <Hake />
-                </span>
-                <span className="hidden md:block">
-                  <Hake stor />
-                </span>
-                <span>{p}</span>
-              </div>
+          <h1 style={{ margin: 0, fontSize: "clamp(38px, 5.4vw, 64px)", lineHeight: 1.02, letterSpacing: "-0.042em", fontWeight: 600 }}>Feil på bilen du kjøpte? Skriv en reklamasjon som holder.</h1>
+          <p style={{ margin: 0, fontSize: 18, lineHeight: 1.6, color: "#455063", maxWidth: "52ch" }}>
+            Sjekk gratis om du har en sak. Har du det, får du et ferdig reklamasjonsbrev med riktige lovhenvisninger og en vunnet sak fra Forbrukerklageutvalget som ligner din.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 4 }}>
+            <SjekkKnapp stor />
+            <a className="btn-sec" href="#slik" style={{ display: "inline-flex", alignItems: "center", height: 54, padding: "0 22px", borderRadius: 14, border: "1px solid #CBD3DD", background: "#FFFFFF", color: "#455063", fontSize: 16, fontWeight: 550, textDecoration: "none" }}>
+              Slik fungerer det
+            </a>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 22px", fontSize: 13.5, color: "#5B6576" }}>
+            {["Gratis saksvurdering", "Ingen registrering", "Svarene blir i nettleseren din"].map((t) => (
+              <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <Gronn />
+                {t}
+              </span>
             ))}
           </div>
         </div>
+
+        <div className="hero-visual" style={{ flex: "1 1 440px", minWidth: 0, position: "relative", padding: "28px 0 0" }}>
+          <div className="hero-bg" aria-hidden="true" style={{ position: "absolute", inset: "0 -20px 0 40px", borderRadius: 28, background: "#ECEFF3" }} />
+          <div className="letter-pad" style={{ position: "relative", marginLeft: 28, background: "#FFFFFF", borderRadius: 6, boxShadow: "0 0 0 1px rgba(16,20,26,.04), 0 2px 4px rgba(16,20,26,.04), 0 40px 70px -34px rgba(16,20,26,.35)", padding: 40, fontFamily: "var(--f-doc)", fontSize: 14, lineHeight: 1.62, color: "#1A1E24" }}>
+            <div style={{ textAlign: "right", color: "#5C6676", fontSize: 13 }}>Oslo, 16. oktober 2026</div>
+            <div style={{ fontWeight: 600, fontSize: 17, lineHeight: 1.35, margin: "18px 0 14px" }}>Reklamasjon på mangel ved Volkswagen ID.4, reg.nr. EL 48213</div>
+            <p style={{ margin: "0 0 12px" }}>Bilen har en mangel, og jeg reklamerer med dette etter forbrukerkjøpsloven § 27.</p>
+            <div style={brevH}>Rettslig grunnlag</div>
+            <p style={{ margin: "0 0 12px" }}>
+              Feilen viste seg tre måneder etter overtakelsen. Etter <span style={merket}>§ 18 annet ledd</span> formodes den å ha eksistert ved leveringen.
+            </p>
+            <div style={brevH}>Mitt krav</div>
+            <p style={{ margin: 0 }}>Jeg krever at mangelen rettes, jf. § 29, uten kostnad for meg og innen rimelig tid.</p>
+            <div style={brevH}>Tilsvarende sak</div>
+            <p style={{ margin: 0, paddingLeft: 12, borderLeft: "2px solid #C9D8EC" }}>
+              I <span style={merket}>sak 104368</span> sviktet drivlinjen på en brukt elbil etter ti måneder, og Forbrukerklageutvalget hevet kjøpet.
+            </p>
+          </div>
+          <div className="float-plate" aria-hidden="true" style={{ position: "absolute", top: 4, right: -8, display: "flex", height: 46, border: "2px solid #1B1B1B", borderRadius: 7, background: "#FFFFFF", overflow: "hidden", boxShadow: "0 14px 28px -14px rgba(16,20,26,.45)", transform: "rotate(3deg)" }}>
+            <div style={{ width: 26, background: "#1E4AA6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 4, paddingBottom: 5 }}>
+              <svg width="14" height="10" viewBox="0 0 22 16">
+                <rect width="22" height="16" fill="#BA0C2F" />
+                <path d="M0 8h22M8 0v16" stroke="#FFFFFF" strokeWidth="4" />
+                <path d="M0 8h22M8 0v16" stroke="#00205B" strokeWidth="2" />
+              </svg>
+              <span style={{ color: "#FFFFFF", fontSize: 10, fontWeight: 700, lineHeight: 1 }}>N</span>
+            </div>
+            <div style={{ padding: "0 14px", display: "flex", alignItems: "center", fontFamily: "var(--f-plate)", fontWeight: 600, fontSize: 27, letterSpacing: "0.07em", color: "#111111" }}>EL 48213</div>
+          </div>
+        </div>
       </section>
 
-      {n !== null && (
-        <section className="border-t border-[#e2e3e0]">
-          <div className="mx-auto flex max-w-[1280px] flex-col gap-1 px-5 py-6 md:flex-row md:items-baseline md:gap-[18px] md:px-16 md:pb-14 md:pt-10">
-            <span className="text-[30px] font-semibold leading-none md:text-[44px]">{tall(n)}</span>
-            <span className="text-[14.5px] text-[#5f6468] md:text-[17px]">vedtak fra Forbrukerklageutvalget ligger til grunn</span>
+      <section id="slik" style={hvit}>
+        <div className="wrap" style={{ paddingTop: 96, paddingBottom: 96, display: "flex", flexDirection: "column", gap: 52 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: 24 }}>
+            <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={kicker}>Slik fungerer det</div>
+              <h2 style={h2}>Fra spørsmål til ferdig brev</h2>
+            </div>
+            <p style={{ ...ingress, maxWidth: 420, fontSize: 15.5 }}>Saksvurderingen er gratis. Du betaler bare hvis du vil ha brevet, og da er svarene dine allerede fylt inn.</p>
           </div>
-        </section>
-      )}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+            <Steg n={1} tittel="Sjekk saken gratis">
+              Svar på noen korte spørsmål om bilen, feilen og kjøpet. Det tar rundt to minutter.
+            </Steg>
+            <Steg n={2} tittel="Se vurderingen">
+              Du får vite om saken ser sterk ut, hvilke frister som gjelder, og hvilken vunnet sak fra Forbrukerklageutvalget som ligner mest på din.
+            </Steg>
+            <Steg n={3} tittel="Skriv og send brevet">
+              Lås opp brevskriveren og få et ferdig brev som viser til den vunnede saken og forklarer hvorfor du skal få samme resultat.
+            </Steg>
+          </div>
+        </div>
+      </section>
 
-      <footer className="mt-auto bg-[#16181a] text-[#c4c7ca]">
-        <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-5 py-8 text-[14px] leading-[1.5] md:px-16 md:py-10">
-          <span className="text-[15px] font-semibold text-white">tvistr.no</span>
-          <a href="mailto:kontakt@tvistr.no">kontakt@tvistr.no</a>
+      <section id="saker" className="wrap" style={{ paddingTop: 104, paddingBottom: 104, display: "flex", flexWrap: "wrap", gap: 56, alignItems: "center" }}>
+        <div style={{ flex: "1 1 400px", minWidth: 0, display: "flex", flexDirection: "column", gap: 18 }}>
+          <div style={kicker}>Vunnede saker</div>
+          <h2 style={h2}>Brevet viser til en sak som ligner din, og som forbrukeren vant</h2>
+          <p style={{ ...ingress, maxWidth: "54ch" }}>
+            Forbrukerklageutvalget avgjør tvister mellom forbrukere og bilforhandlere, og vedtakene er offentlige. Vi sammenligner saken din med vunnede bilsaker og bruker den som ligner mest, med saksnummer og lenke til vedtaket.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 15, lineHeight: 1.5, color: "#455063" }}>
+            {["Bare ekte vedtak der forbrukeren fikk medhold mot en profesjonell selger", "Sammenlignet på feiltype, bilens alder og kjørelengde, tidspunkt og forbehold i kontrakten", "Brevet forklarer punkt for punkt hvorfor din sak bør få samme resultat"].map((t) => (
+              <span key={t} style={{ display: "flex", gap: 12 }}>
+                <span style={{ marginTop: 3, display: "inline-flex" }}>
+                  <Gronn s={16} farge={BLA} />
+                </span>
+                {t}
+              </span>
+            ))}
+          </div>
+          {n !== null && <div style={{ fontFamily: MONO, fontSize: 12.5, color: "#5B6576", marginTop: 4 }}>Søker i {tall(n)} vedtak fra Forbrukerklageutvalget</div>}
+        </div>
+        <div style={{ flex: "1 1 460px", minWidth: 0, position: "relative", background: "#FFFFFF", border: "1px solid transparent", borderRadius: 22, padding: "26px 26px 22px", boxShadow: "var(--sh-1)" }}>
+          <span style={{ position: "absolute", top: -11, right: 22, fontFamily: MONO, fontSize: 11, padding: "3px 9px", borderRadius: 999, background: "#10141A", color: "#FFFFFF" }}>Eksempel</span>
+          <div style={{ ...radGrid, paddingBottom: 12, fontSize: 12, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#5B6576" }}>
+            <span />
+            <span>Din sak</span>
+            <span style={{ color: BLA }}>Sak 52074</span>
+          </div>
+          <Sammenligning felt="Selger" din="Bilforhandler" sak="Bilforhandler" />
+          <Sammenligning felt="Bil" din="Brukt, fra 2015" sak="Brukt Peugeot 308 fra 2014" />
+          <Sammenligning felt="Feil" din="Motoren bruker mye olje" sak="Nesten 1 liter olje per 1 000 km" />
+          <Sammenligning felt="Kontrakt" din="«Som den er»" sak="«Som den er»" />
+          <Sammenligning felt="Oppdaget" din="Etter tre uker" sak="Etter to uker" />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap", marginTop: 4, padding: "16px 18px", borderRadius: 14, background: "#E4F3EA" }}>
+            <span style={{ fontSize: 14, lineHeight: 1.5, color: "#10141A" }}>
+              <b style={{ fontWeight: 600 }}>Forbrukeren vant.</b> Kjøpet ble hevet, og forhandleren betalte tilbake 84&nbsp;539&nbsp;kr.
+            </span>
+            <a href="https://www.forbrukertilsynet.no/wp-content/uploads/2026/01/251124-52074fku.pdf" target="_blank" rel="noopener" style={{ fontSize: 13, fontWeight: 550, whiteSpace: "nowrap", color: BLA }}>
+              Les vedtaket
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="rettigheter" className="wrap" style={{ paddingTop: 104, paddingBottom: 104, display: "flex", flexDirection: "column", gap: 52 }}>
+        <div style={{ maxWidth: 680, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={kicker}>Dine rettigheter</div>
+          <h2 style={h2}>Loven står sterkere på din side enn mange forhandlere gir inntrykk av</h2>
+          <p style={ingress}>Kjøper du bil som privatperson fra en forhandler, gjelder forbrukerkjøpsloven. Den kan ikke avtales bort til din ugunst.</p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 0, borderTop: "1px solid #CBD3DD" }}>
+          <Rettighet tall="2 år" tittel="Bevisbyrden ligger hos forhandleren" tekst="En feil som viser seg innen to år etter levering, regnes som hovedregel for å ha vært der fra start. For kjøp før 2024 gjelder seks måneder." lov="forbrkjl. § 18" />
+          <Rettighet tall="5 år" tittel="Reklamasjonsfrist for bil" tekst="En bil er ment å vare vesentlig lenger enn to år, så du kan reklamere i opptil fem år etter overtakelsen." lov="forbrkjl. § 27" />
+          <Rettighet tall="2 mnd" tittel="Alltid i tide" tekst="Sier du fra innen to måneder etter at du oppdaget feilen, kan forhandleren ikke påstå at du reklamerte for sent." lov="forbrkjl. § 27" />
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 32, padding: 36, borderRadius: 24, background: "#FFFFFF", border: "1px solid transparent", boxShadow: "var(--sh-1)" }}>
+          <div style={{ flex: "1 1 260px", minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+            <h3 style={{ margin: 0, fontSize: 21, fontWeight: 600, letterSpacing: "-0.02em" }}>Dette kan du kreve</h3>
+            <p style={{ ...ingress, fontSize: 15 }}>Forhandleren har normalt rett til å rette feilen først. Prisavslag og heving blir aktuelt når det ikke skjer, ikke lykkes eller ikke er mulig. I tillegg kan du kreve dekket utgifter feilen har påført deg.</p>
+          </div>
+          <div style={{ flex: "2 1 480px", minWidth: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
+            <Krav navn="Retting" tekst="Gratis reparasjon" par="§ 29" />
+            <Krav navn="Omlevering" tekst="En tilsvarende bil" par="§ 29" />
+            <Krav navn="Prisavslag" tekst="Penger tilbake, du beholder bilen" par="§ 31" />
+            <Krav navn="Heving" tekst="Kjøpet går tilbake" par="§ 32" />
+          </div>
+        </div>
+      </section>
+
+      <section id="avslag" style={hvit}>
+        <div className="wrap" style={{ paddingTop: 96, paddingBottom: 96, display: "flex", flexWrap: "wrap", gap: 56, alignItems: "flex-start" }}>
+          <div style={{ flex: "1 1 340px", minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={kicker}>Hvis forhandleren sier nei</div>
+            <h2 style={h2}>Et avslag er ikke slutten på saken</h2>
+            <p style={ingress}>Brevet sier tydelig hva neste steg blir. Det alene får mange forhandlere til å ta saken på alvor.</p>
+          </div>
+          <ol style={{ flex: "1.3 1 460px", minWidth: 0, margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 0 }}>
+            <Trinn n={1} forste tittel="Skriftlig reklamasjon" tekst="Du sender brevet med svarfrist, normalt 14 dager." />
+            <Trinn n={2} tittel="Mekling i Forbrukerrådet" tekst="Gratis. Forbrukerrådet tar kontakt med forhandleren og prøver å finne en løsning." />
+            <Trinn n={3} siste tittel="Forbrukerklageutvalget" tekst="Fører ikke meklingen frem, kan saken avgjøres her. Vedtaket har samme virkning som en dom hvis det ikke bringes inn for retten." />
+          </ol>
+        </div>
+      </section>
+
+      <section id="sporsmal" className="wrap faq" style={{ paddingTop: 104, paddingBottom: 104, display: "flex", flexWrap: "wrap", gap: 56 }}>
+        <div style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={kicker}>Spørsmål</div>
+          <h2 style={h2}>Før du begynner</h2>
+        </div>
+        <div style={{ flex: "2 1 560px", minWidth: 0, display: "flex", flexDirection: "column", borderTop: "1px solid #CBD3DD" }}>
+          <Sporsmal q="Hva koster det?">Saksvurderingen er gratis. Brevskriveren koster kr {tall(PRIS)} som engangsbeløp, og du betaler først etter at du har sett vurderingen.</Sporsmal>
+          <Sporsmal q="Hvor kommer de vunnede sakene fra?">
+            Fra vedtak i Forbrukerklageutvalget, som Forbrukertilsynet publiserer. Brevet oppgir saksnummer og lenke, så forhandleren kan lese vedtaket selv. Hver sak vurderes konkret, så en lignende sak er et sterkt argument, men ingen garanti for samme utfall.
+          </Sporsmal>
+          <Sporsmal q="Gjelder dette også bruktbil?">
+            Ja, Tvistr er laget for bruktbil kjøpt fra forhandler, og da gjelder forbrukerkjøpsloven. Står det «som den er» i kontrakten, kan forhandleren likevel ha ansvar hvis bilen er i vesentlig dårligere stand enn du hadde grunn til å regne med.
+          </Sporsmal>
+          <Sporsmal q="Jeg kjøpte bilen av en privatperson. Kan jeg bruke dette?">Brevet er laget for kjøp fra forhandler. Ved kjøp mellom privatpersoner gjelder kjøpsloven, og reglene er strengere for deg som kjøper. Forbrukerrådet kan gi råd om slike saker.</Sporsmal>
+          <Sporsmal q="Må forhandleren få reparere først?">Som hovedregel ja. Du kan likevel sette prisavslag eller heving som subsidiært krav, slik at det gjelder hvis rettingen ikke skjer innen rimelig tid eller ikke lykkes.</Sporsmal>
+          <Sporsmal q="Hva skjer med opplysningene jeg fyller inn?">Utkastet lagres bare i nettleseren din, slik at du kan fortsette senere. Vedlegg du legger til, blir ikke lastet opp. Bare filnavnene brukes i vedleggslisten.</Sporsmal>
+          <Sporsmal q="Er dette juridisk rådgivning?">Nei. Tvistr er en mal som bygger på forbrukerkjøpsloven. Er saken stor eller uvanlig, bør du snakke med Forbrukerrådet eller en advokat.</Sporsmal>
+        </div>
+      </section>
+
+      <section className="wrap" style={{ paddingBottom: 96 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 32, padding: "clamp(36px, 5vw, 64px)", borderRadius: 28, background: BLA, color: "#FFFFFF" }}>
+          <div style={{ flex: "1 1 420px", minWidth: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+            <h2 style={{ margin: 0, fontSize: "clamp(28px, 3.4vw, 42px)", lineHeight: 1.1, letterSpacing: "-0.035em", fontWeight: 600 }}>Sjekk saken din i dag</h2>
+            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: "#D5E1F1", maxWidth: "50ch" }}>Jo før du sier fra, jo sterkere står du. Saksvurderingen tar rundt to minutter og er gratis.</p>
+          </div>
+          <SjekkKnapp hvitKnapp />
+        </div>
+      </section>
+
+      <footer style={{ borderTop: "1px solid #E2E6EC" }}>
+        <div className="wrap" style={{ paddingTop: 32, paddingBottom: 40, display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "16px 32px", fontSize: 13, color: "#5B6576" }}>
+          <span style={{ fontWeight: 600, color: "#10141A" }}>Tvistr</span>
+          <span style={{ maxWidth: "70ch", lineHeight: 1.55 }}>En mal basert på forbrukerkjøpsloven. Ikke juridisk rådgivning.</span>
         </div>
       </footer>
     </div>

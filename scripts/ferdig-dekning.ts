@@ -6,7 +6,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "../src/db";
 import { vedtak } from "../src/db/schema";
-import { TID_MND } from "../src/lib/brev/testsak";
 import { plussManeder, tidsnivaFor } from "../src/lib/brev/tidslinje";
 import { HOVEDKATEGORIER, type VisteSegValg } from "../src/lib/feil/kategorier";
 import type { AvledetFeil } from "../src/lib/feilvurdering/skjema";
@@ -15,6 +14,9 @@ import { ranger } from "../src/lib/matching/ranger";
 import type { Brukersak, Kandidat, Krav } from "../src/lib/matching/typer";
 
 const KRAV_DEKNING = 0.9;
+// Months from purchase to discovery for each «viste seg» choice.
+const TID_MND: Record<VisteSegValg, number> = { innen_6_mnd: 2, "6_til_24_mnd": 12, over_24_mnd: 30 };
+
 const TIDER: [VisteSegValg, string][] = [
   ["innen_6_mnd", "2024-06-01"],
   ["6_til_24_mnd", "2024-06-01"],

@@ -7,9 +7,7 @@
 // Used by scripts/simuler.ts (the decision paragraph), the golden letters (src/lib/brev/gylne.test.ts)
 // and scripts/brev-jurist.ts.
 import type { Rapport, SelgerSvar } from "../src/lib/brev/rapport";
-import type { Brevsak } from "../src/lib/brev/typer";
 import type { Krav } from "../src/lib/matching/typer";
-import { STUB_PROFIL, type Vippsprofil } from "../src/lib/vipps/profil";
 
 type Kilde = "skriftlig" | "muntlig" | "nei";
 // `oppdaget` is the day the defect was discovered; `niva` is the time level the case had when the form
@@ -92,39 +90,5 @@ export const SAKER: Sim[] = [
     kjopesum: 119_000, bil: { regnr: "XY 10012", merke: "Peugeot", modell: "308" }, selger: 2, kontakt: { dato: "2025-11-20", form: "muntlig", svar: "annet" }, kjoper: "full" },
 ];
 
-const PROFILER: Record<Sim["kjoper"], Vippsprofil> = {
-  full: STUB_PROFIL,
-  uten_adresse: { navn: STUB_PROFIL.navn, telefon: STUB_PROFIL.telefon, epost: STUB_PROFIL.epost },
-  uten_adresse_og_epost: { navn: STUB_PROFIL.navn, telefon: STUB_PROFIL.telefon },
-};
-
 // The letter's date is fixed, so the golden letters do not change from day to day.
 export const BREVDATO = "2026-10-13";
-
-export function tilBrevsak(x: Sim, praksis: Brevsak["praksis"]): Brevsak {
-  const s = SELGERE[x.selger];
-  return {
-    dato: BREVDATO,
-    kjoper: PROFILER[x.kjoper],
-    selger: { navn: s.navn, orgnr: s.orgnr, adresse: s.adresse ? { ...s.adresse, linjer: [...s.adresse.linjer] } : null },
-    bil: { ...x.bil, forsteRegistrert: x.ar },
-    kjopsdato: x.kjopsdato,
-    km: x.km,
-    kjopesum: x.kjopesum,
-    somDenEr: x.somDenEr,
-    feil: x.feil.map((f) => ({
-      hoved: f.hoved,
-      under: [...f.under],
-      oppdaget: f.oppdaget,
-      omtrentlig: f.omtrentlig ?? false,
-      beskrivelse: f.beskrivelse,
-      opplysning: f.opplysning,
-      verksted: f.verksted,
-      rapport: f.verksted === "skriftlig" ? (f.rapport ?? null) : null,
-    })),
-    krav: x.krav,
-    utlegg: x.utlegg ?? [],
-    kontakt: x.kontakt ? { ...x.kontakt, forsok: x.forsok } : null,
-    praksis,
-  };
-}

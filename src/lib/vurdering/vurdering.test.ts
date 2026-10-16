@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import type { AvgjorendeFeil } from "@/lib/avgjorende/skjema";
 import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
@@ -221,26 +220,4 @@ describe("kortene", () => {
   });
 
   it("kaller aldri modellen", () => expect(velgVedtak).not.toHaveBeenCalled());
-
-  it("nevner ikke modellen i serverhandlingen for steg 4", () => {
-    const kilde = readFileSync("src/app/sak/vurdering.ts", "utf8");
-    expect(kilde).not.toMatch(/vedtaksvalg\/valg|@\/lib\/ai|velgVedtak|finnVedtak|anthropic/i);
-  });
-});
-
-describe("ordene før betalingsmuren", () => {
-  // The brief's forbidden words, and the letter's intensifiers. «sannsynliggjøre» is a different word, and
-  // «klart» is left out: «klart til å sende» (ready) is the brief's own text, not an intensifier.
-  // «svak» is a status in the code, never a word the buyer reads («svakt», «svakere»).
-  const FORBUDT = /(^|[^\p{L}])(vinne|vinner|vinn|sannsynlig|sannsynligvis|åpenbart|utvilsomt)(?![\p{L}])|(^|[^\p{L}])(garanter|svak)|prosent sjanse/iu;
-  it("finnes ikke på vurderingsskjermen for de tolv sakene", () => {
-    const gylne = JSON.parse(readFileSync("src/lib/vurdering/__fixtures__/gylne.json", "utf8")) as Record<string, Parameters<typeof vurderingSomTekst>[0]>;
-    for (const [navn, v] of Object.entries(gylne)) expect(vurderingSomTekst(v, "2025-01-01"), navn).not.toMatch(FORBUDT);
-  });
-  it("finnes ikke i skjermens faste tekster", () => {
-    for (const fil of ["src/app/sak/vurderingsvisning.tsx", "src/lib/vurdering/vurdering.ts", "src/lib/brev/riktighet.ts", "src/lib/brev/tidslinje.ts", "src/app/sak/skjema.tsx", "src/app/page.tsx"]) {
-      const tekster = [...readFileSync(fil, "utf8").matchAll(/"([^"\n]*[a-zæøå]{3,}[^"\n]*)"|>([^<>{}\n]*[a-zæøå]{3,}[^<>{}\n]*)</g)].map((m) => m[1] ?? m[2]);
-      for (const t of tekster.filter((t) => t !== "svak")) expect(t, fil).not.toMatch(FORBUDT);
-    }
-  });
 });

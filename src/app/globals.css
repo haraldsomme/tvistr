@@ -883,3 +883,9 @@ html,body{overflow-x:clip}
 /* A long link in the letter (the decision's address) must wrap, not widen the paper past the screen. */
 .letter{overflow-wrap:anywhere}
 .desk > *,.desk-l > *{min-width:0}
+/* Locked to the purchase: the chosen car and faults show, the rest are dimmed and cannot be picked. */
+.chip input:disabled{cursor:default}
+.chip input:disabled:not(:checked) + span{opacity:.45}
+.chip:hover input:disabled + span{border-color:var(--line-2)}
+.chip input:disabled:checked + span{border-color:var(--accent)}
+.in:disabled{background:var(--sunken);color:var(--ink-2);cursor:default}

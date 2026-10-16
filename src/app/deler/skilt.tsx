@@ -9,7 +9,8 @@ type Status = { s: "idle" } | { s: "loading" } | { s: "found"; bil: Bil; note?: 
 const TOM = "Skriv registreringsnummeret og trykk «Hent bilen», så fyller vi inn merke, modell og årsmodell.";
 
 // The plate and «Hent bilen»: Statens vegvesen through /api/kjoretoy, on demand only.
-export function Skilt({ id, verdi, onEndre, onBil, funnet }: { id: string; verdi: string; onEndre: (v: string) => void; onBil: (b: Bil) => void; funnet?: Bil | null }) {
+// `laast`: the car the letter was bought for; it cannot be changed.
+export function Skilt({ id, verdi, onEndre, onBil, funnet, laast }: { id: string; verdi: string; onEndre: (v: string) => void; onBil: (b: Bil) => void; funnet?: Bil | null; laast?: boolean }) {
   const [status, settStatus] = useState<Status>(funnet ? { s: "found", bil: funnet, note: "fylt inn" } : { s: "idle" });
 
   async function hent() {
@@ -50,13 +51,18 @@ export function Skilt({ id, verdi, onEndre, onBil, funnet }: { id: string; verdi
           autoComplete="off"
           spellCheck={false}
           maxLength={10}
+          readOnly={laast}
         />
       </div>
-      <button type="button" className="btn reg-btn" disabled={!validReg(verdi)} onClick={hent}>
-        Hent bilen
-      </button>
-      <div className="lk" data-state={status.s} aria-live="polite">
-        {status.s === "loading" ? (
+      {!laast && (
+        <button type="button" className="btn reg-btn" disabled={!validReg(verdi)} onClick={hent}>
+          Hent bilen
+        </button>
+      )}
+      <div className="lk" data-state={laast ? "found" : status.s} aria-live="polite">
+        {laast ? (
+          <span>Brevet gjelder denne bilen. Et brev for en annen bil krever et nytt kjøp.</span>
+        ) : status.s === "loading" ? (
           <>
             <span className="spin" aria-hidden="true" />
             Henter bilen …

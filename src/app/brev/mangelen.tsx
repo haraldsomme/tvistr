@@ -32,9 +32,9 @@ function Omradekort({ s, sett, c, i, n }: StegProps & { c: string; i: number; n:
       {h.under.length > 0 && (
         <div className="f">
           <span className="lb">
-            Hva gjelder det? <em>velg en eller flere</em>
+            Hva gjelder det? <em>låst til kjøpet</em>
           </span>
-          <Chips flere navn={`${id}p`} verdi={s.f_parts[c] ?? []} valg={h.under.map((u) => [u.id, u.navn] as const)} onVelg={(v, pa) => sett({ f_parts: { ...s.f_parts, [c]: h.under.map((u) => u.id).filter((x) => (x === v ? pa : (s.f_parts[c] ?? []).includes(x))) } })} />
+          <Chips flere disabled navn={`${id}p`} verdi={s.f_parts[c] ?? []} valg={h.under.map((u) => [u.id, u.navn] as const)} onVelg={(v, pa) => sett({ f_parts: { ...s.f_parts, [c]: h.under.map((u) => u.id).filter((x) => (x === v ? pa : (s.f_parts[c] ?? []).includes(x))) } })} />
         </div>
       )}
       <div className="grid area-g">
@@ -82,10 +82,11 @@ export function Mangelen({ s, sett }: StegProps) {
       <div className="block">
         <div className="bt">
           <h3>Hvilke deler gjelder det?</h3>
-          <span>Velg en eller flere</span>
+          <span>Låst til kjøpet</span>
         </div>
         <Chips
           flere
+          disabled
           navn="f_cats"
           verdi={s.f_cats}
           valg={HOVEDKATEGORIER.map((h) => [h.id, h.navn] as const)}
@@ -94,11 +95,9 @@ export function Mangelen({ s, sett }: StegProps) {
             sett({ f_cats: cats, f_area: pa && !s.f_area[v] ? { ...s.f_area, [v]: TOM } : s.f_area });
           }}
         />
-        {!s.f_cats.length && (
-          <div className="hint" style={{ marginTop: 12 }}>
-            Velg ett eller flere områder. For hvert område kan du beskrive feilen og når du oppdaget den.
-          </div>
-        )}
+        <div className="hint" style={{ marginTop: 12 }}>
+          Brevet gjelder feilene du valgte før du betalte. Et brev om en annen feil krever et nytt kjøp. Under hvert område kan du beskrive feilen og når du oppdaget den.
+        </div>
       </div>
       <div id="areaCards">
         {s.f_cats.map((c, i) => (

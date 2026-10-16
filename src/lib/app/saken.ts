@@ -3,7 +3,8 @@
 // purchase (or handover) date.
 import type { RapportPunkt } from "@/lib/brev/rapport";
 import type { Kilde, Svar } from "@/lib/vedtaksvalg/kjoper";
-import type { Skjema } from "./skjema";
+import { validReg } from "./format";
+import { type Skjema, standard } from "./skjema";
 import type { Sjekksvar } from "./vurdering";
 
 // The check's state: the verdict's answers plus the car and the faults.
@@ -62,6 +63,7 @@ export function fraSjekk(a: Sjekk, s: Skjema): Skjema {
     if (v !== undefined && v !== "" && !(typeof ut[k] === "string" && ut[k])) ut[k] = v;
   };
   if (a.make) {
+    ut.c_registrert = true;
     const [merke, ...modell] = a.make.trim().split(/\s+/);
     sett("c_make", merke);
     sett("c_model", modell.join(" "));
@@ -93,3 +95,23 @@ export function fraSjekk(a: Sjekk, s: Skjema): Skjema {
 
 // «Sak 21/3494 · 2022», or «Vedtak 2022» when the decision has no case number.
 export const sakTekst = (saksnummer: string | null, ar: string | null) => (saksnummer ? `Sak ${saksnummer}${ar ? ` · ${ar}` : ""}` : `Vedtak${ar ? ` ${ar}` : ""}`);
+
+// A purchase is for one car and the faults chosen in the check; the writer cannot change them.
+// What the check still lacks before it can be bought: the registration number, or a fault.
+export function manglerForKjop(a: Sjekk): "reg" | "feil" | null {
+  if (!validReg(a.reg)) return "reg";
+  if (!a.cats?.length) return "feil";
+  return null;
+}
+
+const feilsett = (cats: string[], parts: Record<string, string[] | undefined>) => JSON.stringify([...cats].sort().map((c) => [c, [...(parts[c] ?? [])].sort()]));
+
+// The check is about the car and the faults the writer was bought for.
+export const sammeSak = (a: Sjekk, s: Skjema) => a.reg === s.c_reg && feilsett(a.cats ?? [], a.issues ?? {}) === feilsett(s.f_cats, s.f_parts);
+
+// A new purchase for another car or fault: a new letter from the check, keeping only the buyer.
+export function nyttKjop(a: Sjekk, gammel: Skjema, idag: string): Skjema {
+  const ny = standard(idag);
+  const kjoper = Object.fromEntries(Object.entries(gammel).filter(([k]) => k.startsWith("b_")));
+  return fraSjekk(a, { ...ny, ...kjoper });
+}

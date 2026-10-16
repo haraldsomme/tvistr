@@ -23,13 +23,15 @@ export function Bilen({ s, sett }: StegProps) {
               id="c_reg"
               verdi={s.c_reg}
               funnet={s.c_make && s.c_lastreg ? { make: s.c_make, model: s.c_model, year: s.c_year, lastReg: s.c_lastreg } : null}
+              laast
               onEndre={(c_reg) => sett({ c_reg })}
               onBil={(b) => sett({ c_make: b.make, c_model: b.model, c_year: b.year, c_lastreg: b.lastReg })}
             />
           </div>
-          <Felt s={s} sett={sett} k="c_make" label="Merke" klasse="c2" placeholder="Volkswagen" />
-          <Felt s={s} sett={sett} k="c_model" label="Modell" klasse="c2 m3" placeholder="ID.4" />
-          <Felt s={s} sett={sett} k="c_year" label="Årsmodell" klasse="c2 m3" fmt="year" inputMode="numeric" placeholder="2022" mono />
+          {/* From the vehicle register in the check: locked to the purchase. Typed by hand when the register had nothing. */}
+          <Felt s={s} sett={sett} k="c_make" label="Merke" klasse="c2" placeholder="Volkswagen" disabled={s.c_registrert} />
+          <Felt s={s} sett={sett} k="c_model" label="Modell" klasse="c2 m3" placeholder="ID.4" disabled={s.c_registrert} />
+          <Felt s={s} sett={sett} k="c_year" label="Årsmodell" klasse="c2 m3" fmt="year" inputMode="numeric" placeholder="2022" mono disabled={s.c_registrert} />
           <Felt
             s={s}
             sett={sett}

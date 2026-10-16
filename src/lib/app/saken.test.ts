@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fraSjekk, sakTekst, sjekkTilSvar, tilSvar } from "./saken";
+import { fraSjekk, manglerForKjop, nyttKjop, sakTekst, sammeSak, sjekkTilSvar, tilSvar } from "./saken";
 import { eksempel, standard } from "./skjema";
 
 const idag = "2026-10-16";
@@ -60,5 +60,26 @@ describe("sakTekst", () => {
     expect(sakTekst("21/3494", "2022")).toBe("Sak 21/3494 · 2022");
     expect(sakTekst(null, "2022")).toBe("Vedtak 2022");
     expect(sakTekst(null, null)).toBe("Vedtak");
+  });
+});
+
+describe("låst til kjøpet", () => {
+  const a = { reg: "AB 12345", cats: ["motor"], issues: { motor: ["turbo"] } };
+  it("krever reg.nr. og en feil før betaling", () => {
+    expect(manglerForKjop({ cats: ["motor"] })).toBe("reg");
+    expect(manglerForKjop({ reg: "AB 12345", cats: [] })).toBe("feil");
+    expect(manglerForKjop(a)).toBeNull();
+  });
+  it("samme sak: samme bil og samme feil", () => {
+    const s = { ...standard(idag), c_reg: "AB 12345", f_cats: ["motor"], f_parts: { motor: ["turbo"] } };
+    expect(sammeSak(a, s)).toBe(true);
+    expect(sammeSak({ ...a, reg: "CD 67890" }, s)).toBe(false);
+    expect(sammeSak({ ...a, cats: ["motor", "klima"] }, s)).toBe(false);
+    expect(sammeSak({ ...a, issues: { motor: ["registerreim"] } }, s)).toBe(false);
+  });
+  it("et nytt kjøp starter et nytt brev, men beholder kjøperen", () => {
+    const gammel = { ...standard(idag), b_name: "Kari", c_reg: "AB 12345", c_make: "Volvo", d_name: "Bil AS", f_cats: ["motor"] };
+    const ny = nyttKjop({ reg: "CD 67890", make: "Audi A4", cats: ["klima"], issues: { klima: ["ac"] }, fdates: { klima: "2026-09-01" } }, gammel, idag);
+    expect([ny.b_name, ny.c_reg, ny.c_make, ny.d_name, ny.f_cats]).toEqual(["Kari", "CD 67890", "Audi", "", ["klima"]]);
   });
 });

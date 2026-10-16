@@ -26,10 +26,11 @@ export function Felt(p: {
   hint?: ReactNode;
   flerlinje?: number;
   maks?: number;
+  disabled?: boolean;
 }) {
   const id = `f_${p.k}`;
   const endre = (v: string) => p.sett({ [p.k]: p.fmt ? FMT[p.fmt](v) : v } as Partial<Skjema>);
-  const felles = { id, value: p.s[p.k], placeholder: p.placeholder, className: `in${p.mono ? " mono" : ""}` };
+  const felles = { id, value: p.s[p.k], placeholder: p.placeholder, className: `in${p.mono ? " mono" : ""}`, disabled: p.disabled };
   const input = p.flerlinje ? (
     <textarea {...felles} style={{ minHeight: p.flerlinje }} onChange={(e) => endre(e.target.value)} />
   ) : (
@@ -66,14 +67,14 @@ export function Bryter({ s, sett, k, tittel, tekst, stil }: { s: Skjema; sett: S
 }
 
 // One choice among chips (radio), or several (checkbox) when `flere`.
-export function Chips({ verdi, valg, onVelg, navn, flere }: { verdi: string | string[]; valg: readonly (readonly [string, string])[]; onVelg: (v: string, pa: boolean) => void; navn: string; flere?: boolean }) {
+export function Chips({ verdi, valg, onVelg, navn, flere, disabled }: { verdi: string | string[]; valg: readonly (readonly [string, string])[]; onVelg: (v: string, pa: boolean) => void; navn: string; flere?: boolean; disabled?: boolean }) {
   return (
     <div className="chips">
       {valg.map(([v, l]) => {
         const pa = Array.isArray(verdi) ? verdi.includes(v) : verdi === v;
         return (
           <label key={v} className="chip">
-            <input type={flere ? "checkbox" : "radio"} name={navn} value={v} checked={pa} onChange={(e) => onVelg(v, e.target.checked)} />
+            <input type={flere ? "checkbox" : "radio"} name={navn} value={v} checked={pa} disabled={disabled} onChange={(e) => onVelg(v, e.target.checked)} />
             <span>
               {flere && <Hake />}
               {l}

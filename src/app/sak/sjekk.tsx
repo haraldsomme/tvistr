@@ -126,7 +126,7 @@ export function Sjekk({ utvikling }: { utvikling: boolean }) {
         {klar && (
           <div key={`${skjerm}-${i}`} className={retning < 0 ? "anim-b" : "anim-f"} style={{ width: "100%", display: "flex", justifyContent: "center" }}>
             {skjerm === "result" ? (
-              <Resultat a={a} ordre={ordre} utvikling={utvikling} onTilbake={tilbake} onOmStart={omStart} />
+              <Resultat a={a} ordre={ordre} utvikling={utvikling} onTilSporsmal={(id) => settA((f) => ({ ...f, _screen: "q", _i: Math.max(0, synlige(f).findIndex((q) => q.id === id)) }))} onTilbake={tilbake} onOmStart={omStart} />
             ) : (
               <Sporsmalet q={q} a={a} settA={settA} adv={adv} siste={i === vq.length - 1} onVelg={velg} onNeste={neste} onTilbake={tilbake} />
             )}

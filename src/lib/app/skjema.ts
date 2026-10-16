@@ -10,6 +10,8 @@ export type Skjema = {
   d_name: string; d_org: string; d_contact: string; d_addr: string; d_zip: string; d_city: string; d_email: string;
   c_make: string; c_model: string; c_year: string; c_reg: string; c_vin: string;
   c_purchase: string; c_delivery: string; c_price: string; c_km: string; c_asis: boolean; c_warranty: boolean; c_lastreg: string;
+  // Make, model and year came from the vehicle register in the check: locked after payment.
+  c_registrert: boolean;
   // Fault areas are Tvistr's main categories, the parts their subcategories (src/lib/feil/kategorier.ts).
   f_cats: string[]; f_parts: Record<string, string[]>; f_area: Record<string, Omrade>; f_catdesc: Record<string, string>;
   f_desc: string; f_docs: string[]; files: string[];
@@ -27,7 +29,7 @@ export type Skjema = {
 export const standard = (idag: string): Skjema => ({
   b_name: "", b_addr: "", b_zip: "", b_city: "", b_phone: "", b_email: "",
   d_name: "", d_org: "", d_contact: "", d_addr: "", d_zip: "", d_city: "", d_email: "",
-  c_make: "", c_model: "", c_year: "", c_reg: "", c_vin: "", c_purchase: "", c_delivery: "", c_price: "", c_km: "", c_asis: false, c_warranty: false, c_lastreg: "",
+  c_make: "", c_model: "", c_year: "", c_reg: "", c_vin: "", c_purchase: "", c_delivery: "", c_price: "", c_km: "", c_asis: false, c_warranty: false, c_lastreg: "", c_registrert: false,
   f_cats: [], f_parts: {}, f_area: {}, f_catdesc: {}, f_desc: "", f_docs: [], files: [],
   f_found: "", f_impact: [], f_known: "", f_cause: "", f_cause_check: "", f_sev: 0, f_drivable: "",
   ws: "", ws_who: "", ws_name: "", ws_date: "", ws_says: [], ws_quote: "", seller_said: "", seller_txt: "",

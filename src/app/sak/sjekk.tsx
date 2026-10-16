@@ -5,6 +5,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Merke } from "@/app/deler/merke";
+import { MaalVisning } from "@/app/maal-visning";
 import { Hake, Pil, Tilbake } from "@/app/deler/ikoner";
 import { type Bil, Skilt } from "@/app/deler/skilt";
 import { addDays, idag, iso, relText } from "@/lib/app/dato";
@@ -102,6 +103,7 @@ export function Sjekk() {
   const tot = Math.max(anslag(a), i + 1);
   return (
     <section className={`ob${skjerm === "result" ? " has-bar" : ""}`} aria-label="Saksvurdering">
+      {klar && skjerm === "q" && i === 0 && <MaalVisning hendelse="sjekk_startet" />}
       <div className="ob-top">
         <Merke undertekst="Gratis saksvurdering" />
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>

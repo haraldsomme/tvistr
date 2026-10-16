@@ -73,6 +73,8 @@ Har kjøperen en skriftlig verkstedrapport, ber instruksen modellen foretrekke b
 
 **Hvis svaret ikke holder** (ukjent vedtak, eller sitat-id-er vedtaket ikke har), brukes rangeringens førstevalg med de første sitatene. Det samme skjer om kallet feiler. Ingenting prøves på nytt.
 
+**Tre å velge mellom.** Brevfanen viser modellens valg først («Best treff»), og deretter de to neste kandidatene i rangeringen som har sitater (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger hvilket vedtak brevet viser til.
+
 ## 3. Malen (`src/lib/vedtaksvalg/mal.ts`, kode)
 
 **Nivå A:**
@@ -140,4 +142,4 @@ En kontroll per brev ble prøvd: et Sonnet-kall med fulltekst etter at avsnittet
 - **Dato:** 93 vedtak har ulik møtedato og signaturdato og vises uten dato.
 - **Alder ved kjøpet** er regnet fra årsmodell og kan avvike ett år fra det vedtaket sier. Derfor krever sammenligningssetningen minst to års forskjell.
 - **Vedtak uten uttrekk:** 90 vedtak i grunnsettet har ingen feil med medhold i feilvurderingen og har derfor ikke noe uttrekk.
-- **Resten av brevet** står i `docs/brev.md`. Avsnittet om praksis er det siste underavsnittet i avsnitt 3 («Rettslig vurdering»), etter mangel og tidspunkt, og settes inn uendret. Utelates når det ikke er noen kandidat (lovsetningen).
+- **Resten av brevet** står i `docs/app.md`. Avsnittet om praksis står under «Tilsvarende sak fra Forbrukerklageutvalget», etter det rettslige grunnlaget, og settes inn uendret. Uten kandidat står lovsetningen der.

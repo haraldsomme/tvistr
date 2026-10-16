@@ -1,22 +1,12 @@
-// The steps of the flow, measured per session without personal data (docs/vurdering.md, «Måling»):
+// The steps of the flow, measured per session without personal data (docs/app.md, «Måling»):
 // the event, the status of the assessment and the categories chosen. Never a registration number, a
 // name or a date. The server (src/app/api/hendelse) checks every field against these lists.
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 
-export const HENDELSER = [
-  "landing",
-  "regnr_ok",
-  "steg2_ferdig",
-  "steg3_ferdig",
-  "vurdering_vist",
-  "fortsett_klikket",
-  "steg7_vist",
-  "betaling_startet",
-  "betaling_fullfort",
-  "brev_lastet_ned",
-] as const;
+export const HENDELSER = ["landing", "sjekk_startet", "resultat_vist", "kjop_klikket", "betaling_fullfort", "brev_kopiert"] as const;
 export type Hendelse = (typeof HENDELSER)[number];
-export const STATUSER = ["ute", "svak", "sak"] as const;
+// The verdict's tier (src/lib/app/vurdering.ts).
+export const STATUSER = ["sterk", "mulig", "svak", "utenfor"] as const;
 
 const KJENTE = new Set(HOVEDKATEGORIER.flatMap((h) => [h.id, ...h.under.map((u) => `${h.id}.${u.id}`)]));
 

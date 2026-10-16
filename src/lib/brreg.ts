@@ -19,7 +19,7 @@ export type Forslag = {
   naeringskode: string | null;
   status: "konkurs" | "avvikling" | null;
   adresse: Adresse | null; // where mail goes
-  forretningsadresse: string | null; // one line, as the old form stored it (docs/gammelt-skjema.md)
+  forretningsadresse: string | null; // one line
 };
 
 type BrregAdresse = { adresse?: string[]; postnummer?: string; poststed?: string; kommune?: string };

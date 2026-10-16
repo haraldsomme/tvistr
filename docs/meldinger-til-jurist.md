@@ -1,5 +1,7 @@
 # Meldingene i skjemaet: oversikt til juridisk gjennomgang
 
+> Historisk: gjelder brevet og skjemaet som ble fjernet 2026-10-16 (se `docs/app.md`). Koden det viser til, står i git-historikken (commit `1c881fe`).
+
 Skjemaet på `/sak` viser brukeren meldinger når svarene er umulige, strider mot hverandre eller svekker saken. Her står alle, med hvorfor de vises og hva de bygger på. Teksten er ordrett slik brukeren ser den.
 
 **Tre slag.** Alle ser like ut i skjemaet (boks med ikon først), men betyr ulikt:

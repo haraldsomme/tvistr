@@ -10,6 +10,7 @@ import { Lovrader } from "@/app/deler/lovrader";
 import { idag } from "@/lib/app/dato";
 import { tall } from "@/lib/app/format";
 import { les, skriv } from "@/lib/app/lagring";
+import { maal } from "@/lib/maling";
 import { fraSjekk, nokkel, sjekkTilSvar } from "@/lib/app/saken";
 import { standard } from "@/lib/app/skjema";
 import { evaluate } from "@/lib/app/vurdering";
@@ -50,6 +51,13 @@ export function Resultat({ a, ordre, onTilbake, onOmStart }: { a: Tilstand; ordr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [n]);
 
+  const kategorier = (a.cats ?? []).flatMap((c) => [c, ...(a.issues?.[c] ?? []).map((u) => `${c}.${u}`)]);
+  useEffect(() => {
+    if (r.tier !== "ukjent") maal("resultat_vist", { status: r.tier, kategorier });
+    // Once per verdict shown.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [r.tier]);
+
   useEffect(() => {
     const el = tilbud.current;
     if (!el || !("IntersectionObserver" in window)) return;
@@ -59,12 +67,17 @@ export function Resultat({ a, ordre, onTilbake, onOmStart }: { a: Tilstand; ordr
   }, []);
 
   function betalt(ordreId: string) {
+    maal("betaling_fullfort");
     skriv("tvistr-ordre", ordreId);
     skriv("tvistr-skjema", fraSjekk(a, les("tvistr-skjema", () => standard(idag()))));
     router.push("/brev");
   }
 
-  const apne = () => (ordre ? router.push("/brev") : settKjop(true));
+  const apne = () => {
+    if (ordre) return router.push("/brev");
+    maal("kjop_klikket");
+    settKjop(true);
+  };
   const knapper = (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
       <button type="button" className="btn" onClick={onTilbake}>

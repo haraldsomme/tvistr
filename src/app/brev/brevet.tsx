@@ -5,6 +5,7 @@ import { Kopier } from "@/app/deler/ikoner";
 import { byggBrev, emne, type Presedens, tilTekst } from "@/lib/app/brev";
 import { idag } from "@/lib/app/dato";
 import { nokkel, tilSvar } from "@/lib/app/saken";
+import { maal } from "@/lib/maling";
 import type { Skjema } from "@/lib/app/skjema";
 import { type Funn, finnVedtak } from "./actions";
 import { Bryter, Felt, Seg, type Sett } from "./felt";
@@ -127,7 +128,10 @@ export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: S
             )}
           </div>
           <div className="block d-copy" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button type="button" className="btn pri" onClick={() => kopier(tilTekst(blokker), "Brevet er kopiert")}>
+            <button type="button" className="btn pri" onClick={() => {
+                maal("brev_kopiert");
+                kopier(tilTekst(blokker), "Brevet er kopiert");
+              }}>
               <Kopier />
               Kopier brevet
             </button>

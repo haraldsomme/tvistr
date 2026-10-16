@@ -15,7 +15,7 @@
 // Applies to contracts made from 1 January 2024.
 //
 // A point with no certain number is `null`: the letter then names «forbrukerkjøpsloven» alone and
-// the point is listed as a known gap in docs/brev.md. None is a gap today.
+// the point would be a known gap. None is a gap today.
 
 export type Lovversjon = "før_2024" | "etter_2024";
 

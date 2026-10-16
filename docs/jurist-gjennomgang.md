@@ -1,5 +1,7 @@
 # Juristgjennomgang av avsnittet om vedtaket
 
+> Historisk: gjelder brevet og skjemaet som ble fjernet 2026-10-16 (se `docs/app.md`). Koden det viser til, står i git-historikken (commit `1c881fe`).
+
 Femten avsnitt trukket tilfeldig (fast frø) fra målingen av 100 simulerte kjøpersaker (`npm run ferdig:brevlop`, 2026-10-13). Avsnittet bygges av en mal: alt om vedtaket er felt fra databasen eller ordrette sitater fra utvalgets vurdering (se `docs/vedtaksvalg.md`). Kjøperens svar er simulerte; kjøperen har ingen egen beskrivelse.
 
 **Les avsnittet mot vedtaket, og noter under «Merknad» om noe er feil eller misvisende:**

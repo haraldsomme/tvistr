@@ -14,7 +14,7 @@ import type { AvledetFeil, Sanksjon } from "@/lib/feilvurdering/skjema";
 export const UTFALL_I_TELLINGEN = ["medhold", "delvis_medhold", "ikke_medhold"] as const;
 const MEDHOLD = new Set(["medhold", "delvis_medhold"]);
 
-// Figures for fewer decisions than this are not shown (docs/vurdering.md).
+// Figures for fewer decisions than this are not shown (docs/app.md).
 export const MIN_SAKER = 5;
 // The median price reduction needs at least this many decisions with a known share.
 export const MIN_PRISAVSLAG = 10;

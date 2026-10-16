@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="nb" className={`${geist.variable} ${geistMono.variable} ${serif.variable} ${plate.variable}`}>
+    <html lang="nb" data-scroll-behavior="smooth" className={`${geist.variable} ${geistMono.variable} ${serif.variable} ${plate.variable}`}>
       <body>{children}</body>
     </html>
   );

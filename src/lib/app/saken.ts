@@ -51,3 +51,40 @@ export function sjekkTilSvar(a: Sjekk): Svar | null {
 
 // For change detection: finnVedtak and vurderSaken are called again only when this changes.
 export const nokkel = (v: Svar | null) => JSON.stringify(v);
+
+// The writer prefilled from the check when the buyer unlocks it (artifact prefill). What the writer
+// already has is kept.
+export function fraSjekk(a: Sjekk, s: Skjema): Skjema {
+  const ut = { ...s, f_parts: { ...s.f_parts }, f_area: { ...s.f_area } };
+  const sett = <K extends keyof Skjema>(k: K, v: Skjema[K] | undefined) => {
+    if (v !== undefined && v !== "" && !(typeof ut[k] === "string" && ut[k])) ut[k] = v;
+  };
+  if (a.make) {
+    const [merke, ...modell] = a.make.trim().split(/\s+/);
+    sett("c_make", merke);
+    sett("c_model", modell.join(" "));
+  }
+  sett("c_year", a.year);
+  sett("c_km", a.km);
+  sett("c_reg", a.reg);
+  sett("c_lastreg", a.lastReg);
+  sett("c_delivery", a.delivery);
+  if (a.asis) ut.c_asis = a.asis === "ja";
+  if (a.cats?.length) {
+    ut.f_cats = [...a.cats];
+    for (const c of a.cats) {
+      ut.f_parts[c] ??= [...(a.issues?.[c] ?? [])];
+      ut.f_area[c] ??= { found: a.fdates?.[c] ?? "", impact: [], known: a.known ?? "" };
+    }
+  }
+  sett("f_cause_check", a.cause);
+  if (a.notified === "ja") {
+    ut.f_prior = true;
+    sett("f_prior_date", a.notifiedDate);
+  }
+  if (!ut.k_main) {
+    ut.k_main = "retting";
+    ut.k_alt = "prisavslag";
+  }
+  return ut;
+}

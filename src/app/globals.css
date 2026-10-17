@@ -73,6 +73,8 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .saved{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:0 12px}
 .saved i{width:6px;height:6px;border-radius:50%;background:var(--good);transition:transform .35s var(--ease)}
 .saved.pulse i{transform:scale(1.9)}
+.saved.lagrer i{background:var(--muted)}
+.saved.feil i{background:var(--warn)}
 
 /* ───── Main ───── */
 .main{min-width:0;padding-top:6px}

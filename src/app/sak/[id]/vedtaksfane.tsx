@@ -11,8 +11,8 @@ import { type Funn, finnVedtak } from "./actions";
 import type { Sett } from "./felt";
 
 // One model call per set of answers in this page session, however often the tabs are opened.
-const hent = (svar: NonNullable<ReturnType<typeof tilSvar>>, ordreId: string) =>
-  husk(`${ordreId}|${nokkel(svar)}`, () => finnVedtak({ svar, ordreId }), "Vi fikk ikke kontakt. Prøv igjen.");
+const hent = (svar: NonNullable<ReturnType<typeof tilSvar>>, id: string) =>
+  husk(`${id}|${nokkel(svar)}`, () => finnVedtak({ id, svar }), "Vi fikk ikke kontakt. Prøv igjen.");
 
 export type Vedtaksvalg = {
   // The dates are missing, so there is nothing to look up yet.
@@ -27,16 +27,16 @@ export type Vedtaksvalg = {
 
 // The decisions for the writer's answers. Fetched only while `aktiv` (the Vedtak or Brevet tab is open)
 // and the letter is to cite one, so typing in the form makes no model call.
-export function useVedtak(s: Skjema, sett: Sett, ordre: string, aktiv: boolean): Vedtaksvalg {
+export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean): Vedtaksvalg {
   const svar = tilSvar(s);
   const n = nokkel(svar);
   const [funn, settFunn] = useState<{ n: string; f: Funn } | null>(null);
   const [forsok, settForsok] = useState(0);
 
   useEffect(() => {
-    if (!svar || !ordre || !aktiv || !s.prec_on) return;
+    if (!svar || !aktiv || !s.prec_on) return;
     let gjeldende = true;
-    hent(svar, ordre).then((f) => {
+    hent(svar, id).then((f) => {
       if (!gjeldende) return;
       settFunn({ n, f });
       // The picker starts on the decision the model chose.
@@ -47,7 +47,7 @@ export function useVedtak(s: Skjema, sett: Sett, ordre: string, aktiv: boolean):
     };
     // `n` stands for `svar`; `forsok` is «Prøv igjen».
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n, ordre, aktiv, s.prec_on, forsok]);
+  }, [n, id, aktiv, s.prec_on, forsok]);
 
   const aktuell = funn && funn.n === n ? funn.f : null;
   const valg = aktuell?.ok ? aktuell.valg : [];

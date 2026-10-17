@@ -175,7 +175,7 @@ the artifact's tiers), buy clicked, unlocked, letter copied. Drop events for rem
 ## Non-goals
 
 - No Vipps integration, no new payment provider.
-- No server storage of cases or letters.
+- No server storage of cases or letters. (Changed 2026-10-17: a paid case is stored in `sak`/`ordre` and the writer is at `/sak/[id]`; see `docs/app.md`.)
 - No new car types (new cars, boats).
 - No Word export (the artifact has copy only).
 - No postcode service.

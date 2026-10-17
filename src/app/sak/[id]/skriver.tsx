@@ -1,14 +1,13 @@
 "use client";
 
 // The letter writer (artifact «writer»): tabs Skjema · Vurdering · Vedtak · Brevet, the steps rail and the form.
-// Only for a buyer who has unlocked it; the answers stay in localStorage (tvistr-skjema).
-import { useRouter } from "next/navigation";
+// For a paid case: the page gives the stored form, and every change is saved back to the case.
 import { useEffect, useState } from "react";
 import { Merke } from "@/app/deler/merke";
 import { Frem, Hake, Tilbake } from "@/app/deler/ikoner";
 import { idag } from "@/lib/app/dato";
-import { useLagret } from "@/lib/app/lagring";
-import { type Skjema, standard, syncAreas } from "@/lib/app/skjema";
+import { type Skjema, syncAreas } from "@/lib/app/skjema";
+import { type Lagring, useAutolagring } from "./autolagring";
 import { Bilen, Kjopet } from "./bilen";
 import { Brevet } from "./brevet";
 import { Krav } from "./krav";
@@ -20,17 +19,15 @@ import { useVedtak, Vedtaksfane } from "./vedtaksfane";
 import { useLignende, Vurderingsfane } from "./vurderingsfane";
 
 type Fane = "form" | "case" | "prec" | "letter";
-export function Skriver() {
-  const router = useRouter();
-  const [ordre, , ordreKlar] = useLagret("tvistr-ordre", () => "");
-  const [raa, settRaa] = useLagret<Skjema>("tvistr-skjema", () => standard(idag()));
+const LAGRING: Record<Lagring, string> = { lagret: "Lagret", lagrer: "Lagrer …", feil: "Ikke lagret, prøver igjen" };
+
+export function Skriver({ id, start }: { id: string; start: Skjema }) {
+  const [raa, settRaa] = useState<Skjema>(start);
+  const lagring = useAutolagring(id, raa);
   const [fane, settFane] = useState<Fane>("form");
   const [steg, settSteg] = useState(0);
   const [toast, settToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (ordreKlar && !ordre) router.replace("/sak");
-  }, [ordreKlar, ordre, router]);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => settToast(null), 2400);
@@ -41,7 +38,7 @@ export function Skriver() {
   const sett = (patch: Partial<Skjema>) => settRaa((f) => ({ ...f, ...patch }));
   const r = skriverResultat(s, idag());
   const lignende = useLignende(s);
-  const vedtak = useVedtak(s, sett, ordre, fane === "prec" || fane === "letter");
+  const vedtak = useVedtak(s, sett, id, fane === "prec" || fane === "letter");
 
   const tilFane = (t: Fane) => {
     settFane(t);
@@ -53,7 +50,6 @@ export function Skriver() {
     window.scrollTo({ top: 0 });
   };
 
-  if (!ordreKlar || !ordre) return null;
   const status = STEG.map((st) => ({ f: st.felt.filter((k) => har(s, k)).length, t: st.felt.length }));
   const pst = Math.round((status.reduce((a, x) => a + x.f, 0) / status.reduce((a, x) => a + x.t, 0)) * 100);
   const FANER: [Fane, string][] = [["form", "Skjema"], ["case", "Vurdering"], ["prec", "Vedtak"], ["letter", "Brevet"]];
@@ -85,9 +81,9 @@ export function Skriver() {
           ))}
         </nav>
         <div className="wtools">
-          <div className="saved">
+          <div className={`saved ${lagring}`} role="status">
             <i />
-            <span>Utkast lagres i nettleseren</span>
+            <span>{LAGRING[lagring]}</span>
           </div>
         </div>
       </header>

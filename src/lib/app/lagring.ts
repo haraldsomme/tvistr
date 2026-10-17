@@ -1,21 +1,11 @@
-// The buyer's answers live in localStorage only, never on the server. Every read and write may fail
-// (private window, blocked storage): a failed read gives the defaults, a failed write is ignored.
+// The check and the last purchase live in localStorage; a paid case itself is in the database (sak).
+// Every read and write may fail (private window, blocked storage): a failed read gives the defaults,
+// a failed write is ignored.
 "use client";
 
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
-
-const erObjekt = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
-const slag = (v: unknown) => (v === null ? "null" : Array.isArray(v) ? "liste" : typeof v);
-
-// The stored fields over the defaults, keeping only those of the default's type (an edited or older
-// draft must not crash the page). A default of null takes any plain value; unknown keys are kept.
-function flett(s: Record<string, unknown>, v: Record<string, unknown>) {
-  const ut = { ...s };
-  for (const [k, x] of Object.entries(v)) {
-    if (!(k in s) || slag(x) === slag(s[k]) || (s[k] === null && slag(x) !== "liste" && slag(x) !== "object")) ut[k] = x;
-  }
-  return ut;
-}
+import { erObjekt, flett } from "./flett";
+import type { Kjopt } from "./saken";
 
 // The stored value, merged over the defaults for objects; the defaults when missing, corrupt or of
 // another shape.
@@ -81,3 +71,6 @@ export function useLagret<T>(nokkel: string, standard: () => T): [T, (neste: T |
   );
   return [verdi, sett, r !== null];
 }
+
+// The last purchase (tvistr-sak): which case the check's «Åpne brevskriveren» opens.
+export const useKjopt = () => useLagret<Kjopt>("tvistr-sak", () => ({ id: "", reg: "", cats: [], parts: {} }));

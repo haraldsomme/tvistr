@@ -10,7 +10,7 @@ import { Hake, Pil, Tilbake } from "@/app/deler/ikoner";
 import { type Bil, Skilt } from "@/app/deler/skilt";
 import { addDays, idag, iso, relText } from "@/lib/app/dato";
 import { FMT, lcFirst, listJoin } from "@/lib/app/format";
-import { useLagret } from "@/lib/app/lagring";
+import { useKjopt, useLagret } from "@/lib/app/lagring";
 import type { Sjekk as Svar } from "@/lib/app/saken";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { Resultat } from "./resultat";
@@ -24,7 +24,7 @@ const HURTIG = [["I dag", 0], ["I går", 1], ["For en uke siden", 7], ["For to u
 export function Sjekk({ utvikling, fraStart }: { utvikling: boolean; fraStart: boolean }) {
   const router = useRouter();
   const [a, settA, klar] = useLagret<Tilstand>("tvistr-sjekk", () => ({ _i: 0, cats: [], issues: {}, fdates: {} }));
-  const [ordre] = useLagret("tvistr-ordre", () => "");
+  const [kjopt] = useKjopt();
   const [retning, settRetning] = useState<1 | -1>(1);
   const [adv, settAdv] = useState<string | null>(null);
   const tid = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -117,8 +117,8 @@ export function Sjekk({ utvikling, fraStart }: { utvikling: boolean; fraStart: b
               Spørsmål {i + 1} av {tot}
             </span>
           )}
-          {ordre && (
-            <button type="button" className="btn sm" onClick={() => router.push("/brev")}>
+          {kjopt.id && (
+            <button type="button" className="btn sm" onClick={() => router.push(`/sak/${kjopt.id}`)}>
               Til brevskriveren
             </button>
           )}
@@ -131,7 +131,7 @@ export function Sjekk({ utvikling, fraStart }: { utvikling: boolean; fraStart: b
         {klar && (
           <div key={`${skjerm}-${i}`} className={retning < 0 ? "anim-b" : "anim-f"} style={{ width: "100%", display: "flex", justifyContent: "center" }}>
             {skjerm === "result" ? (
-              <Resultat a={a} ordre={ordre} utvikling={utvikling} onTilSporsmal={(id) => settA((f) => ({ ...f, _screen: "q", _i: Math.max(0, synlige(f).findIndex((q) => q.id === id)) }))} onTilbake={tilbake} onOmStart={omStart} />
+              <Resultat a={a} kjopt={kjopt} utvikling={utvikling} onTilSporsmal={(id) => settA((f) => ({ ...f, _screen: "q", _i: Math.max(0, synlige(f).findIndex((q) => q.id === id)) }))} onTilbake={tilbake} onOmStart={omStart} />
             ) : (
               <Sporsmalet q={q} a={a} settA={settA} adv={adv} siste={i === vq.length - 1} onVelg={velg} onNeste={neste} onTilbake={tilbake} />
             )}

@@ -9,10 +9,9 @@ import { Lignende } from "@/app/deler/lignende";
 import { Lovrader } from "@/app/deler/lovrader";
 import { idag } from "@/lib/app/dato";
 import { tall } from "@/lib/app/format";
-import { skriv, useLagret } from "@/lib/app/lagring";
+import { skriv } from "@/lib/app/lagring";
 import { maal } from "@/lib/maling";
-import { manglerForKjop, nokkel, nyttKjop, sammeSak, sjekkTilSvar } from "@/lib/app/saken";
-import { type Skjema, standard } from "@/lib/app/skjema";
+import { type Kjopt, manglerForKjop, nokkel, sammeSak, sjekkTilSvar } from "@/lib/app/saken";
 import { evaluate } from "@/lib/app/vurdering";
 import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { PRIS } from "@/lib/pris";
@@ -28,13 +27,12 @@ const FORDELER = [
   "Kopier brevet og send det på e-post samme dag",
 ];
 
-export function Resultat({ a, ordre, utvikling, onTilbake, onOmStart, onTilSporsmal }: { a: Tilstand; ordre: string; utvikling: boolean; onTilbake: () => void; onOmStart: () => void; onTilSporsmal: (id: "reg" | "cats") => void }) {
+export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSporsmal }: { a: Tilstand; kjopt: Kjopt; utvikling: boolean; onTilbake: () => void; onOmStart: () => void; onTilSporsmal: (id: "reg" | "cats") => void }) {
   const router = useRouter();
   const datoer = (a.cats ?? []).map((c) => a.fdates?.[c]).filter((d): d is string => !!d).sort();
   const opplysning = !!a.cats?.length && a.cats.every((c) => opplysningsfeil(c, a.issues?.[c] ?? []));
-  // The writer bought earlier is locked to its car and faults; this check may be about another.
-  const [skjema] = useLagret<Skjema>("tvistr-skjema", () => standard(idag()));
-  const tilgang = !!ordre && sammeSak(a, skjema);
+  // The case bought earlier is locked to its car and faults; this check may be about another.
+  const tilgang = sammeSak(a, kjopt);
   const mangler = manglerForKjop(a);
   const [visMangler, settVisMangler] = useState(false);
   const r = evaluate({ ...a, found: datoer[0], sist: datoer.at(-1), opplysning }, idag());
@@ -71,21 +69,21 @@ export function Resultat({ a, ordre, utvikling, onTilbake, onOmStart, onTilSpors
     return () => io.disconnect();
   }, []);
 
-  // A purchase is for this car and these faults: the writer starts a new letter for them.
-  function betalt(ordreId: string) {
+  // A purchase is a new case for this car and these faults, saved on the server; the browser keeps
+  // only which case it was.
+  function betalt(k: Kjopt) {
     maal("betaling_fullfort");
-    skriv("tvistr-ordre", ordreId);
-    skriv("tvistr-skjema", nyttKjop(a, skjema, idag()));
-    router.push("/brev");
+    skriv("tvistr-sak", k);
+    router.push(`/sak/${k.id}`);
   }
 
   const apne = () => {
-    if (tilgang) return router.push("/brev");
+    if (tilgang) return router.push(`/sak/${kjopt.id}`);
     if (mangler) return settVisMangler(true);
     maal("kjop_klikket");
     settKjop(true);
   };
-  const knappetekst = tilgang ? "Åpne brevskriveren" : ordre ? "Lås opp for denne saken" : "Lås opp brevskriveren";
+  const knappetekst = tilgang ? "Åpne brevskriveren" : kjopt.id ? "Lås opp for denne saken" : "Lås opp brevskriveren";
   const knapper = (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
       <button type="button" className="btn" onClick={onTilbake}>
@@ -159,15 +157,15 @@ export function Resultat({ a, ordre, utvikling, onTilbake, onOmStart, onTilSpors
           </p>
         </div>
         <aside ref={tilbud} className="offer anim-f" aria-label="Brevskriveren">
-          <div className="offer-k">{tilgang ? "Du har tilgang" : ordre ? "Ny sak" : "Neste steg"}</div>
+          <div className="offer-k">{tilgang ? "Du har tilgang" : kjopt.id ? "Ny sak" : "Neste steg"}</div>
           <h3>{r.tier === "svak" ? "Vil du reklamere likevel?" : "Skriv reklamasjonsbrevet"}</h3>
-          {!!ordre && !tilgang && (
+          {!!kjopt.id && !tilgang && (
             <div className="demo-note">
               <InfoSirkel />
               <span>
-                Brevskriveren er låst opp for {skjema.c_reg || "en annen bil"}. Et brev for en annen bil eller feil krever et nytt kjøp.{" "}
-                <button type="button" className="lnk" onClick={() => router.push("/brev")}>
-                  Åpne brevet for {skjema.c_reg || "den bilen"}
+                Brevskriveren er låst opp for {kjopt.reg || "en annen bil"}. Et brev for en annen bil eller feil krever et nytt kjøp.{" "}
+                <button type="button" className="lnk" onClick={() => router.push(`/sak/${kjopt.id}`)}>
+                  Åpne brevet for {kjopt.reg || "den bilen"}
                 </button>
               </span>
             </div>
@@ -234,7 +232,7 @@ export function Resultat({ a, ordre, utvikling, onTilbake, onOmStart, onTilSpors
               <Pil />
             </button>
           </div>
-          <Kjop utvikling={utvikling} apen={kjop} onLukk={() => settKjop(false)} onBetalt={betalt} />
+          <Kjop sjekk={a} forrige={kjopt.id || null} utvikling={utvikling} apen={kjop} onLukk={() => settKjop(false)} onBetalt={betalt} />
         </>,
         document.body,
       )}

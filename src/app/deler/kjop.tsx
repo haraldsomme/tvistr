@@ -1,15 +1,16 @@
-// The purchase modal (artifact #buy). Payment is a stub until Vipps is connected: lasOpp unlocks in
-// development and says so otherwise.
+// The purchase modal (artifact #buy). Payment is a stub until Vipps is connected: kjop saves the case
+// as paid in development and says so otherwise.
 import { useEffect, useRef, useState } from "react";
-import { lasOpp } from "@/app/brev/actions";
+import { kjop } from "@/app/sak/[id]/actions";
 import { tall } from "@/lib/app/format";
+import type { Kjopt, Sjekk } from "@/lib/app/saken";
 import { trygt } from "@/lib/app/kall";
 import { PRIS } from "@/lib/pris";
 import { InfoSirkel, Lukk } from "./ikoner";
 
 const PRISTEKST = `kr ${tall(PRIS)}`;
 
-export function Kjop({ apen, utvikling, onLukk, onBetalt }: { apen: boolean; utvikling: boolean; onLukk: () => void; onBetalt: (ordreId: string) => void }) {
+export function Kjop({ sjekk, forrige, apen, utvikling, onLukk, onBetalt }: { sjekk: Sjekk; forrige: string | null; apen: boolean; utvikling: boolean; onLukk: () => void; onBetalt: (k: Kjopt) => void }) {
   const [melding, settMelding] = useState<string | null>(null);
   const [venter, settVenter] = useState(false);
   const knapp = useRef<HTMLButtonElement>(null);
@@ -27,9 +28,9 @@ export function Kjop({ apen, utvikling, onLukk, onBetalt }: { apen: boolean; utv
 
   async function betal() {
     settVenter(true);
-    const r = await trygt(lasOpp(), "Vi fikk ikke kontakt. Prøv igjen.");
+    const r = await trygt(kjop({ sjekk, forrige }), "Vi fikk ikke kontakt. Prøv igjen.");
     settVenter(false);
-    if (r.ok) onBetalt(r.ordreId);
+    if (r.ok) onBetalt(r.sak);
     else settMelding(r.melding);
   }
 

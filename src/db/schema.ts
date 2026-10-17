@@ -17,6 +17,8 @@ import {
 import { sql } from "drizzle-orm";
 import type { Lagret as Avgjorende } from "../lib/avgjorende/skjema";
 import type { Lagret as Feilvurdering } from "../lib/feilvurdering/skjema";
+import type { Sjekk } from "../lib/app/saken";
+import type { Skjema } from "../lib/app/skjema";
 
 export const kildeArkivEnum = pgEnum("kilde_arkiv", ["hist", "prod", "wp"]);
 export const dokumentStatusEnum = pgEnum("dokument_status", [
@@ -400,8 +402,45 @@ export const hendelse = pgTable(
   (t) => [index("hendelse_okt_idx").on(t.okt), index("hendelse_hendelse_idx").on(t.hendelse)],
 );
 
+// A paid case: the check as it was at purchase and the letter writer's form, saved on every change
+// after. The id is random (src/lib/sak/id.ts) and is the only access control: whoever has the link
+// sees the case. Personal data, so left out of backups (scripts/backup-format.ts).
+export const sak = pgTable("sak", {
+  id: text("id").primaryKey(),
+  sjekk: jsonb("sjekk").$type<Sjekk>().notNull(),
+  skjema: jsonb("skjema").$type<Skjema>().notNull(),
+  // Null until an order for the case is paid.
+  betalt: timestamp("betalt", { withTimezone: true }),
+  opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
+  endret: timestamp("endret", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// One payment attempt for a case; Vipps gives each attempt its own reference, so a case may have
+// several. `id` is the reference sent to the payment provider (Vipps: 8–64 of [A-Za-z0-9-]).
+export const ordre = pgTable(
+  "ordre",
+  {
+    id: text("id").primaryKey(),
+    sakId: text("sak_id")
+      .notNull()
+      .references(() => sak.id, { onDelete: "cascade" }),
+    belopOre: integer("belop_ore").notNull(),
+    // "utvikling" (TVISTR_HELT_BREV_UTEN_BETALING) | "vipps"
+    leverandor: text("leverandor").notNull(),
+    // "opprettet" | "betalt" | "avbrutt" | "feilet"
+    status: text("status").notNull(),
+    // The provider's id for the payment (Vipps pspReference), once there is one.
+    transaksjonId: text("transaksjon_id"),
+    opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
+    oppdatert: timestamp("oppdatert", { withTimezone: true }).notNull().defaultNow(),
+    betalt: timestamp("betalt", { withTimezone: true }),
+  },
+  (t) => [index("ordre_sak_idx").on(t.sakId)],
+);
+
 export type Kildedokument = typeof kildedokument.$inferSelect;
 export type Vedtak = typeof vedtak.$inferSelect;
 export type NyttVedtak = typeof vedtak.$inferInsert;
 export type NyVedtakAnalyse = typeof vedtakAnalyse.$inferInsert;
 export type NyVedtakFeil = typeof vedtakFeil.$inferInsert;
+export type Sak = typeof sak.$inferSelect;

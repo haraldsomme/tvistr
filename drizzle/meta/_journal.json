@@ -120,6 +120,13 @@
       "when": 1791977954294,
       "tag": "0016_statistikk_hendelse",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792246854671,
+      "tag": "0017_sak",
+      "breakpoints": true
     }
   ]
 }

@@ -8,9 +8,13 @@ Appen er en React-port av artefakten «Bilreklamasjon», som eieren bygde utenfo
 |---|---|---|
 | `/` | `src/app/page.tsx` | Forsiden. Antall vedtak leses fra `statistikk_kategori` ved bygging. |
 | `/sak` | `src/app/sak/sjekk.tsx`, `resultat.tsx` | Gratis sjekk: ett spørsmål per skjerm (`sporsmal.ts`), deretter vurderingen og tilbudet. |
-| `/brev` | `src/app/brev/skriver.tsx` | Brevskriveren med fanene Skjema, Vurdering, Vedtak og Brevet. Krever betaling, ellers sendes kjøperen til `/sak`. |
+| `/sak/[id]` | `src/app/sak/[id]/page.tsx`, `skriver.tsx` | Brevskriveren for en betalt sak, med fanene Skjema, Vurdering, Vedtak og Brevet. En ukjent id eller en sak som ikke er betalt gir 404. |
 
-Svarene ligger bare i nettleseren (`localStorage`: `tvistr-sjekk`, `tvistr-skjema`, `tvistr-ordre`, se `src/lib/app/lagring.ts`). Ingenting om saken lagres på serveren.
+Sjekken og vurderingen ligger bare i nettleseren (`localStorage`: `tvistr-sjekk`, se `src/lib/app/lagring.ts`). En betalt sak ligger i databasen (`sak` og `ordre`, migrasjon 0017):
+- `sak`: id-en, sjekken slik den var ved kjøpet, hele skjemaet og når saken ble betalt.
+- `ordre`: ett betalingsforsøk per rad, med beløp i øre, leverandør, status, transaksjons-id og betalingstidspunkt.
+
+Id-ene er 12 tegn fra `nyId()` (`src/lib/sak/id.ts`, 32 tegn uten 0/o/1/l). Lenken er tilgangen: den som har den, ser saken. Nettleseren husker bare siste kjøp (`tvistr-sak`: id, reg.nr. og feil, `useKjopt`). Tabellene har persondata og holdes utenfor `db:backup`. Saker slettes ikke ennå.
 
 ## Sjekken
 
@@ -29,7 +33,15 @@ Reglene for tid regnes i kalendermåneder fra overtakelsen, som i rangeringen (`
 
 ## Betaling
 
-Vipps er ikke koblet på. «Gå til betaling» kaller `lasOpp` (`src/app/brev/actions.ts`). Med `TVISTR_HELT_BREV_UTEN_BETALING=1` (bare utenom produksjon) gir den en ordre-id som regnes som betalt (`betalt()` i `src/lib/vipps/profil.ts`). Ellers sier den at betaling ikke er koblet til ennå. Når kjøperen låser opp, fylles skjemaet fra sjekken (`fraSjekk` i `src/lib/app/saken.ts`).
+Vipps er ikke koblet på. «Gå til betaling» kaller `kjop` (`src/app/sak/[id]/actions.ts`).
+- Med `TVISTR_HELT_BREV_UTEN_BETALING=1` (bare utenom produksjon) lagres saken som betalt med én gang, med en ordre fra leverandøren «utvikling». Kjøperen sendes til `/sak/[id]`.
+- Ellers sier den at betaling ikke er koblet til ennå, og ingenting lagres.
+- Skjemaet fylles fra sjekken på serveren (`nyttKjop` og `fraSjekk` i `src/lib/app/saken.ts`). Kjøperens navn og adresse hentes fra forrige betalte sak i samme nettleser.
+
+Når Vipps kobles på:
+1. `kjop` lagrer saken med `betalt` null og en ordre med status «opprettet», og svarer med Vipps-adressen. `ordre.id` er referansen til Vipps.
+2. Vipps' tilbakekall setter `ordre.status`, `transaksjon_id` og `betalt` på ordren og på saken.
+3. Et nytt forsøk gir en ny ordre for samme sak.
 
 ## Brevskriveren
 
@@ -37,9 +49,15 @@ Et kjøp gjelder én bil og feilene som er valgt i sjekken (område og underkate
 - Før betaling må sjekken ha registreringsnummer, merke og modell, og minst én feil (`manglerForKjop` i `src/lib/app/saken.ts`).
 - I brevskriveren er bilen låst (registreringsnummer, merke, modell og årsmodell) og feilvalgene låst. Sjekken krever derfor bilen før betaling: hentet fra Vegvesen eller skrevet inn. Km-stand, datoer, beskrivelser, verksted og krav kan fortsatt endres. Understellsnummer er ikke med.
 - Velger kjøperen en annen bil eller feil i sjekken etter betaling, sier tilbudet at det krever et nytt kjøp (`sammeSak`). Et nytt kjøp starter et nytt brev og beholder bare kjøperens navn og adresse (`nyttKjop`).
-- Låsen er i nettleseren. Når Vipps kobles på, bør ordren på serveren lagre bilen og feilene, og `finnVedtak` sjekke at svaret gjelder dem.
+- Låsen håndheves på serveren. `lagreSak` beholder de låste feltene slik de ble kjøpt (`LAASTE_FELT`, `laas`). `finnVedtak` avviser svar om en annen årsmodell eller andre feil enn saken (`gjelderSaken`).
+- Skjemaet lagres i saken mens kjøperen skriver (`useAutolagring` i `src/app/sak/[id]/autolagring.ts`):
+  - Det lagres etter en pause på 0,8 sekunder, og med én gang når siden skjules.
+  - Feiler lagringen, prøves den igjen etter fem sekunder.
+  - Den som forlater siden med endringer som ikke er lagret, får spørsmål først.
+  - Toppen viser «Lagret», «Lagrer …» eller «Ikke lagret, prøver igjen».
+- Siden fletter det lagrede skjemaet over dagens standardverdier (`rensSkjema`). En sak som ble lagret før et nytt felt kom til, kan derfor fortsatt åpnes.
 
-Stegene er Deg, Forhandleren, Bilen, Kjøpet, Feilen, Verksted og vedlegg, Kontakt med selger og Kravet (`src/app/brev/steg.ts`). «Endre» i Vurdering-fanen og «Fyll ut» i sjekklisten går til riktig steg (`stegFor`). Forhandleren søkes opp i Enhetsregisteret (`/api/firma`). Vurdering-fanen regner ut vurderingen på nytt mens kjøperen skriver, og har «Endre»-lenker til steget som påvirker den.
+Stegene er Deg, Forhandleren, Bilen, Kjøpet, Feilen, Verksted og vedlegg, Kontakt med selger og Kravet (`src/app/sak/[id]/steg.ts`). «Endre» i Vurdering-fanen og «Fyll ut» i sjekklisten går til riktig steg (`stegFor`). Forhandleren søkes opp i Enhetsregisteret (`/api/firma`). Vurdering-fanen regner ut vurderingen på nytt mens kjøperen skriver, og har «Endre»-lenker til steget som påvirker den.
 
 Brevet bygges i nettleseren av `byggBrev` (`src/lib/app/brev.ts`). Manglende svar vises som grå plassholdere, og «Kopier brevet» bruker samme blokker (`tilTekst`).
 - Formodningen nevnes per feil: bare for feilene innenfor perioden, og femårsregelen bare for feil mellom to og fem år.
@@ -50,7 +68,7 @@ Brevet bygges i nettleseren av `byggBrev` (`src/lib/app/brev.ts`). Manglende sva
 - Renter: ved heving kreves renter etter forsinkelsesrenteloven på kjøpesummen, jf. fkjl. § 50 annet ledd, fra reklamasjonsdagen bare for kjøp fra 2024 (`RENTER_FRA_REKLAMASJON` i `paragrafer.ts`; startdagen er kontrollert mot lovteksten bare for gjeldende lov). Prisavslag og erstatning får «ved forsinket betaling kreves forsinkelsesrente etter forsinkelsesrenteloven § 2», uten å si når renten starter.
 - Vedleggslisten kommer fra `vedlegg(s)`: det kjøperen huket av, pluss verkstedrapporten når brevet sier at den følger vedlagt.
 - Mens vedtaket hentes, står en plassholder der avsnittet skal stå, og «Kopier brevet» venter.
-- Sjekklisten viser datoer som ikke kan stemme (`datoavvik` i `src/lib/app/datoer.ts`): kjøp etter overtakelse, datoer frem i tid, feil oppdaget før overtakelsen, reklamasjon før oppdagelsen, brev datert før reklamasjonen og mer enn fem år siden overtakelsen. Avsnittet om vedtaket er Tvistrs: `finnVedtak` (rangering, ett Sonnet-kall, malen i `mal.ts`) gir modellens valg («Anbefalt») først og deretter resten av rangeringens topp 10, hvert med en likhetsprosent (`src/lib/matching/likhet.ts`). Kjøperen velger blant dem i fanen Vedtak (`vedtaksfane.tsx`), og Brevet viser hvilket som brukes. Vedtakene hentes bare når fanen Vedtak eller Brevet er åpen. `finnVedtak` svarer bare når ordren er betalt, og kalles én gang per sett med svar.
+- Sjekklisten viser datoer som ikke kan stemme (`datoavvik` i `src/lib/app/datoer.ts`): kjøp etter overtakelse, datoer frem i tid, feil oppdaget før overtakelsen, reklamasjon før oppdagelsen, brev datert før reklamasjonen og mer enn fem år siden overtakelsen. Avsnittet om vedtaket er Tvistrs: `finnVedtak` (rangering, ett Sonnet-kall, malen i `mal.ts`) gir modellens valg («Anbefalt») først og deretter resten av rangeringens topp 10, hvert med en likhetsprosent (`src/lib/matching/likhet.ts`). Kjøperen velger blant dem i fanen Vedtak (`vedtaksfane.tsx`), og Brevet viser hvilket som brukes. Vedtakene hentes bare når fanen Vedtak eller Brevet er åpen. `finnVedtak` svarer bare for en betalt sak, og kalles én gang per sett med svar.
 
 ## Måling
 
@@ -58,5 +76,5 @@ Brevet bygges i nettleseren av `byggBrev` (`src/lib/app/brev.ts`). Manglende sva
 
 ## Tester
 
-- `npm test`: vurderingen per nivå og lovversjon, brevet (eksempelbrevet som snapshot, plassholdere og lovversjon), oversettelsen til rangeringen, `finnVedtak` uten betaling, topp 10 (`alternativer`), likheten og lagringen.
-- `npx playwright test` (`e2e/flyt.spec.ts`): hele flyten på desktop og mobil, mot databasen og modellen. Krever `TVISTR_HELT_BREV_UTEN_BETALING=1`.
+- `npm test`: vurderingen per nivå og lovversjon, brevet (eksempelbrevet som snapshot, plassholdere og lovversjon), oversettelsen til rangeringen, `kjop`, `lagreSak` og `finnVedtak` (uten betalt sak, andre feil enn saken), låsen og id-ene, topp 10 (`alternativer`), likheten og lagringen.
+- `npx playwright test` (`e2e/flyt.spec.ts`): hele flyten på desktop og mobil, mot databasen og modellen. Testen sjekker også at lenken til saken åpner det lagrede skjemaet i en annen nettleser, og at en ukjent id og `/brev` gir 404. Krever `TVISTR_HELT_BREV_UTEN_BETALING=1`. Hver kjøring lagrer en testsak i `sak`.

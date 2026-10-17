@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fraSjekk, manglerForKjop, nyttKjop, sakTekst, sammeSak, sjekkTilSvar, tilSvar } from "./saken";
+import { fraSjekk, gjelderSaken, kjopt, laas, manglerForKjop, nyttKjop, rensSkjema, sakTekst, sammeSak, sjekkTilSvar, tilSvar } from "./saken";
 import { eksempel, standard } from "./skjema";
 
 const idag = "2026-10-16";
@@ -77,11 +77,35 @@ describe("låst til kjøpet", () => {
     expect(manglerForKjop({ ...a, make: "Skoda Octavia" })).toBeNull();
   });
   it("samme sak: samme bil og samme feil", () => {
-    const s = { ...standard(idag), c_reg: "AB 12345", f_cats: ["motor"], f_parts: { motor: ["turbo"] } };
-    expect(sammeSak(a, s)).toBe(true);
-    expect(sammeSak({ ...a, reg: "CD 67890" }, s)).toBe(false);
-    expect(sammeSak({ ...a, cats: ["motor", "klima"] }, s)).toBe(false);
-    expect(sammeSak({ ...a, issues: { motor: ["registerreim"] } }, s)).toBe(false);
+    const k = kjopt("abcdefghijkm", { ...standard(idag), c_reg: "AB 12345", f_cats: ["motor"], f_parts: { motor: ["turbo"] } });
+    expect(sammeSak(a, k)).toBe(true);
+    expect(sammeSak(a, { ...k, id: "" })).toBe(false);
+    expect(sammeSak({ ...a, reg: "CD 67890" }, k)).toBe(false);
+    expect(sammeSak({ ...a, cats: ["motor", "klima"] }, k)).toBe(false);
+    expect(sammeSak({ ...a, issues: { motor: ["registerreim"] } }, k)).toBe(false);
+  });
+  it("bil og feil blir som kjøpt; resten kan endres", () => {
+    const lagret = { ...standard(idag), c_reg: "AB 12345", c_make: "Volvo", c_model: "V60", c_year: "2017", f_cats: ["motor"], f_parts: { motor: ["turbo"] } };
+    const ny = laas(lagret, { ...lagret, c_reg: "CD 67890", c_make: "Audi", c_model: "A4", c_year: "2020", f_cats: ["klima"], f_parts: { klima: ["ac"] }, c_km: "90 000", b_name: "Kari" });
+    expect([ny.c_reg, ny.c_make, ny.c_model, ny.c_year, ny.f_cats, ny.f_parts]).toEqual(["AB 12345", "Volvo", "V60", "2017", ["motor"], { motor: ["turbo"] }]);
+    expect([ny.c_km, ny.b_name]).toEqual(["90 000", "Kari"]);
+  });
+  it("svarene gjelder saken: samme årsmodell, bare kjøpte feil", () => {
+    const s = { ...eksempel(idag) };
+    const svar = tilSvar(s)!;
+    expect(gjelderSaken(svar, s)).toBe(true);
+    expect(gjelderSaken({ ...svar, ar: 2010 }, s)).toBe(false);
+    expect(gjelderSaken({ ...svar, feil: [{ ...svar.feil[0], hoved: "motor" }] }, s)).toBe(false);
+    expect(gjelderSaken({ ...svar, feil: [{ ...svar.feil[0], under: ["annet"] }] }, s)).toBe(false);
+  });
+  it("rensSkjema: bare kjente felt av riktig type", () => {
+    const s = rensSkjema({ b_name: "Kari", c_asis: "ja", ukjent: 1 }, idag)!;
+    expect(s.b_name).toBe("Kari");
+    expect(s.c_asis).toBe(false);
+    expect(s).not.toHaveProperty("ukjent");
+    expect(rensSkjema(null, idag)).toBeNull();
+    expect(rensSkjema([], idag)).toBeNull();
+    expect(rensSkjema({ f_desc: "x".repeat(70_000) }, idag)).toBeNull();
   });
   it("et nytt kjøp starter et nytt brev, men beholder kjøperen", () => {
     const gammel = { ...standard(idag), b_name: "Kari", c_reg: "AB 12345", c_make: "Volvo", d_name: "Bil AS", f_cats: ["motor"] };

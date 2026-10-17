@@ -1,8 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 
-// The whole flow: landing → check → verdict → unlock → writer → letter with a decision. Needs the
-// database (DATABASE_URL) and TVISTR_HELT_BREV_UTEN_BETALING=1 for the unlock; the vehicle and company
-// registers are stubbed, the ranking and the model are real.
+// The whole flow: landing → check → verdict → unlock → the case's writer (/sak/[id]) → letter with a
+// decision. Needs the database (DATABASE_URL) and TVISTR_HELT_BREV_UTEN_BETALING=1 for the unlock; the
+// vehicle and company registers are stubbed, the ranking and the model are real. Each run saves a case.
 
 const dager = (n: number) => {
   const d = new Date();
@@ -23,7 +23,7 @@ const velg = async (page: Page, navn: string | RegExp) => {
   await page.waitForTimeout(900);
 };
 
-test("fra forsiden til brevet med et vedtak", async ({ page }) => {
+test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   test.setTimeout(180_000);
   await stubRegistre(page);
   await page.goto("/");
@@ -54,7 +54,8 @@ test("fra forsiden til brevet med et vedtak", async ({ page }) => {
 
   await page.getByRole("button", { name: "Lås opp brevskriveren" }).click();
   await page.getByRole("button", { name: "Gå til betaling" }).click();
-  await expect(page).toHaveURL(/\/brev$/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/\/sak\/[a-km-np-z2-9]{12}$/, { timeout: 30_000 });
+  const lenke = page.url();
 
   await page.getByRole("button", { name: /Neste: Forhandleren/ }).click();
   await page.getByRole("button", { name: /Neste: Bilen/ }).click();
@@ -62,6 +63,19 @@ test("fra forsiden til brevet med et vedtak", async ({ page }) => {
   await expect(page.locator("#c_reg")).toHaveValue("AB 12345");
   await expect(page.locator("#c_reg")).toHaveAttribute("readonly", "");
   await expect(page.locator("#f_c_make")).toBeDisabled();
+
+  // The case is saved as the buyer types: the link opens it in another browser, without localStorage.
+  await page.locator("#f_c_km").fill("125000");
+  await page.waitForTimeout(1500);
+  await expect(page.locator(".saved")).toHaveText("Lagret", { timeout: 15_000 });
+  const annen = await browser.newPage();
+  await annen.goto(lenke);
+  await annen.getByRole("button", { name: /Neste: Forhandleren/ }).click();
+  await annen.getByRole("button", { name: /Neste: Bilen/ }).click();
+  await expect(annen.locator("#f_c_km")).toHaveValue(/125/);
+  await expect(annen.locator("#c_reg")).toHaveValue("AB 12345");
+  await expect(annen.locator("#f_c_make")).toBeDisabled();
+  await annen.close();
 
   await page.getByRole("tab", { name: "Brevet" }).click();
   const brev = page.locator("#letterFull");
@@ -89,7 +103,8 @@ test("fra forsiden til brevet med et vedtak", async ({ page }) => {
   await expect(page.locator(".l-prec")).not.toHaveText(for_);
 });
 
-test("brevskriveren er stengt uten betaling", async ({ page }) => {
-  await page.goto("/brev");
-  await expect(page).toHaveURL(/\/sak$/, { timeout: 30_000 });
+test("brevskriveren finnes bare for en betalt sak", async ({ page }) => {
+  expect((await page.goto("/sak/aaaaaaaaaaaa"))?.status()).toBe(404);
+  expect((await page.goto("/sak/ikke-en-id"))?.status()).toBe(404);
+  expect((await page.goto("/brev"))?.status()).toBe(404);
 });

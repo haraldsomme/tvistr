@@ -3,6 +3,7 @@
 // purchase (or handover) date.
 import type { RapportPunkt } from "@/lib/brev/rapport";
 import type { Kilde, Svar } from "@/lib/vedtaksvalg/kjoper";
+import { erObjekt, flett } from "./flett";
 import { validReg } from "./format";
 import { type Skjema, standard } from "./skjema";
 import type { Sjekksvar } from "./vurdering";
@@ -110,8 +111,36 @@ export function manglerForKjop(a: Sjekk): "reg" | "bil" | "feil" | null {
 
 const feilsett = (cats: string[], parts: Record<string, string[] | undefined>) => JSON.stringify([...cats].sort().map((c) => [c, [...(parts[c] ?? [])].sort()]));
 
-// The check is about the car and the faults the writer was bought for.
-export const sammeSak = (a: Sjekk, s: Skjema) => a.reg === s.c_reg && feilsett(a.cats ?? [], a.issues ?? {}) === feilsett(s.f_cats, s.f_parts);
+// The last purchase as the browser keeps it (localStorage tvistr-sak): the case's id and the car and
+// faults it is locked to. The case itself is in the database.
+export type Kjopt = { id: string; reg: string; cats: string[]; parts: Record<string, string[]> };
+export const kjopt = (id: string, s: Skjema): Kjopt => ({ id, reg: s.c_reg, cats: s.f_cats, parts: s.f_parts });
+
+// The check is about the car and the faults the case was bought for.
+export const sammeSak = (a: Sjekk, k: Kjopt) => !!k.id && a.reg === k.reg && feilsett(a.cats ?? [], a.issues ?? {}) === feilsett(k.cats, k.parts);
+
+// What the writer shows locked (bilen.tsx, mangelen.tsx); the server keeps them as bought.
+export const LAASTE_FELT = ["c_reg", "c_make", "c_model", "c_year", "f_cats", "f_parts"] as const satisfies readonly (keyof Skjema)[];
+
+export function laas(lagret: Skjema, inn: Skjema): Skjema {
+  const ut: Record<string, unknown> = { ...inn };
+  for (const k of LAASTE_FELT) ut[k] = lagret[k];
+  return ut as Skjema;
+}
+
+// The writer's answers are about the car and the faults of the case (finnVedtak).
+export function gjelderSaken(svar: Svar, s: Skjema): boolean {
+  return svar.ar === heltall(s.c_year) && svar.feil.every((f) => s.f_cats.includes(f.hoved) && f.under.every((u) => (s.f_parts[f.hoved] ?? []).includes(u)));
+}
+
+// A form from the browser, as the server saves it: only the known fields, each of the default's type.
+// Null when it is not a form or is far larger than any filled-in one.
+export function rensSkjema(inn: unknown, idag: string): Skjema | null {
+  if (!erObjekt(inn) || JSON.stringify(inn).length > 64_000) return null;
+  const s = standard(idag);
+  const kjente = Object.fromEntries(Object.entries(inn).filter(([k]) => k in s));
+  return flett(s, kjente) as Skjema;
+}
 
 // A new purchase for another car or fault: a new letter from the check, keeping only the buyer.
 export function nyttKjop(a: Sjekk, gammel: Skjema, idag: string): Skjema {

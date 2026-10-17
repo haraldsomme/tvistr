@@ -55,6 +55,26 @@ export const Dokument = ({ s = 18 }: { s?: number }) => (
     <path d="M9 13h6M9 17h4" />
   </Svg>
 );
+// The footer: organisation number, address and e-mail.
+export const Bygning = ({ s = 15 }: { s?: number }) => (
+  <Svg s={s} w={1.9}>
+    <path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" />
+    <path d="M16 9h2a2 2 0 0 1 2 2v10M3 21h18" />
+    <path d="M8 7h4M8 11h4M8 15h4" />
+  </Svg>
+);
+export const Sted = ({ s = 15 }: { s?: number }) => (
+  <Svg s={s} w={1.9}>
+    <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" />
+    <circle cx="12" cy="9.5" r="2.5" />
+  </Svg>
+);
+export const Post = ({ s = 15 }: { s?: number }) => (
+  <Svg s={s} w={1.9}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3.5 6.5l8.5 6.5 8.5-6.5" />
+  </Svg>
+);
 export const Lukk = ({ s = 16 }: { s?: number }) => (
   <Svg s={s} w={2.2}>
     <path d="M6 6l12 12M18 6L6 18" />

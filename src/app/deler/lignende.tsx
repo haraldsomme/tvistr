@@ -1,4 +1,4 @@
-// «Lignende saker i Forbrukerklageutvalget» (artifact simHTML): the counted figures for the buyer's
+// «Lignende saker i klageutvalgene» (artifact simHTML): the counted figures for the buyer's
 // first category with enough decisions, and the three closest decisions with medhold. The cards are not
 // links: the decisions' text reaches the buyer only in the letter, after payment.
 import type { ReactNode } from "react";
@@ -15,8 +15,8 @@ export function Lignende({ tall: blokker, kort, sammenligning, brukes, fot }: { 
   const t = b?.tall;
   const deler = t ? UTFALL.filter((k) => t[k] > 0) : [];
   return (
-    <section className="sim" aria-label="Lignende saker i Forbrukerklageutvalget">
-      <h3 className="sec-h">Lignende saker i Forbrukerklageutvalget</h3>
+    <section className="sim" aria-label="Lignende saker i klageutvalgene">
+      <h3 className="sec-h">Lignende saker i klageutvalgene</h3>
       {b && t && (
         <div className="sim-card">
           <div className="sim-n">
@@ -29,6 +29,9 @@ export function Lignende({ tall: blokker, kort, sammenligning, brukes, fot }: { 
           </div>
           <p className="sim-lede">
             Utvalget har behandlet {tall(t.saker)} saker om {b.tema} i brukte biler kjøpt fra forhandler. I {tall(t.medhold)} av dem fikk kjøperen medhold.
+          </p>
+          <p className="fine" style={{ margin: 0 }}>
+            Tallene gjelder saker som endte med vedtak. Hver sak vurderes konkret.
           </p>
           {deler.length > 0 && (
             <>

@@ -19,7 +19,7 @@ import { likhet } from "@/lib/matching/likhet";
 import { avgjorendeFor, type Rangert, ranger } from "@/lib/matching/ranger";
 import { poengtekst } from "@/lib/matching/rett";
 import type { Kandidat } from "@/lib/matching/typer";
-import { PRIS } from "@/lib/pris";
+import { GRATIS, PRIS } from "@/lib/pris";
 import { lagGrense } from "@/lib/rategrense";
 import { hentBetaltSak } from "@/lib/sak/db";
 import { nyId } from "@/lib/sak/id";
@@ -91,13 +91,16 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
 
 export type Kjop = { ok: true; sak: Kjopt } | { ok: false; melding: string };
 
-// The pay button. Until Vipps is connected it only works in development (TVISTR_HELT_BREV_UTEN_BETALING):
-// the case is saved as paid at once, with an order from «utvikling». The writer starts from the check,
+// The pay button. In the trial (GRATIS) the case is opened at once, with a free order «gratis» and no
+// consent to give, since nothing is sold. Otherwise, until Vipps is connected, it only works in development
+// (TVISTR_HELT_BREV_UTEN_BETALING): the case is saved as paid at once, with an order from «utvikling». The writer starts from the check,
 // keeping the buyer from the previous case (`forrige`) so the browser need not keep their details.
 // With Vipps: save the case with `betalt` null and an order «opprettet», answer with Vipps' URL, and
 // let the callback set the order's status, `transaksjon_id` and the case's `betalt`.
-export async function kjop(inn: { sjekk: unknown; forrige: unknown }): Promise<Kjop> {
-  if (!HELT_BREV_UTEN_BETALING()) return { ok: false, melding: "Betaling er ikke koblet til ennå." };
+export async function kjop(inn: { sjekk: unknown; forrige: unknown; samtykke: unknown }): Promise<Kjop> {
+  if (!GRATIS && !HELT_BREV_UTEN_BETALING()) return { ok: false, melding: "Betaling er ikke koblet til ennå." };
+  // The buyer has asked for the writer now and given up the right of withdrawal (angrerettloven § 22 n).
+  if (!GRATIS && inn?.samtykke !== true) return { ok: false, melding: "Kryss av for at brevet åpnes med en gang." };
   if (forMangeKjop(await ipAdresse())) return { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
   const sjekk = rensSjekk(inn?.sjekk);
   if (!sjekk || manglerForKjop(sjekk)) return { ok: false, melding: "Saken mangler bil eller feil." };
@@ -109,9 +112,9 @@ export async function kjop(inn: { sjekk: unknown; forrige: unknown }): Promise<K
     const na = new Date();
     await db.batch([
       db.insert(sak).values({ id, sjekk, skjema, betalt: na }),
-      db.insert(ordre).values({ id: nyId(), sakId: id, belopOre: PRIS * 100, leverandor: "utvikling", status: "betalt", betalt: na }),
+      db.insert(ordre).values({ id: nyId(), sakId: id, belopOre: GRATIS ? 0 : PRIS * 100, leverandor: GRATIS ? "gratis" : "utvikling", status: "betalt", betalt: na }),
     ]);
-    console.info("kjøp: ny sak (utvikling)");
+    console.info(`kjøp: ny sak (${GRATIS ? "gratis" : "utvikling"})`);
     return { ok: true, sak: kjopt(id, skjema) };
   } catch (e) {
     console.error("kjøpet feilet", e);

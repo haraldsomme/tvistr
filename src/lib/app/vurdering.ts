@@ -46,7 +46,7 @@ export type Resultat = {
 const UTENFOR = {
   privat: {
     title: "Kjøp fra privatperson dekkes ikke her",
-    summary: "Ved kjøp mellom privatpersoner gjelder kjøpsloven, og selgeren kan ha tatt forbehold i kontrakten. Brevskriveren er laget for kjøp fra forhandler.",
+    summary: "Ved kjøp mellom privatpersoner gjelder kjøpsloven, og selgeren kan ha tatt forbehold i kontrakten. Brevet er laget for kjøp fra forhandler.",
     advice: ["Les kontrakten og se etter forbehold som «som den er».", "Si fra skriftlig til selgeren så snart som mulig.", "Forbrukerrådet gir gratis råd, også om kjøp fra privatperson."],
   },
   leasing: {
@@ -56,7 +56,7 @@ const UTENFOR = {
   },
   naering: {
     title: "Kjøp gjennom firma dekkes ikke her",
-    summary: "Når bilen er kjøpt i næring, gjelder kjøpsloven, og kontrakten kan begrense rettighetene dine. Brevskriveren er laget for privatpersoner som har kjøpt bil av en forhandler.",
+    summary: "Når bilen er kjøpt i næring, gjelder kjøpsloven, og kontrakten kan begrense rettighetene dine. Brevet er laget for privatpersoner som har kjøpt bil av en forhandler.",
     advice: ["Les kontrakten og se hva den sier om feil og reklamasjon.", "Si fra skriftlig til forhandleren så snart som mulig.", "Snakk med en advokat hvis saken gjelder store beløp."],
   },
 };
@@ -98,7 +98,7 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
           law: L.ref("reklamasjon_5ar"),
         });
       else if (q.opplysning)
-        F.push({ s: "good", t: "Bilen var ikke som selgeren opplyste", d: "Avviket fantes allerede da du kjøpte bilen, så du trenger ikke formodningsregelen. Det er nok å vise hva selgeren opplyste.", law: L.ref("uriktig") });
+        F.push({ s: "good", t: "Bilen var ikke som selgeren opplyste", d: "Avviket fantes allerede da du kjøpte bilen, så du trenger ikke formodningsregelen. Du må vise hva selgeren opplyste, og at bilen ikke var slik.", law: L.ref("uriktig") });
       else if (q.found! <= plussManeder(q.delivery!, L.formodningMnd))
         F.push({ s: "good", t: `Feilen viste seg innen ${L.formodningTekst}`, d: `Feilen viste seg ${d} etter overtakelsen. Da regnes den som hovedregel for å ha vært der fra start, og det er forhandleren som må bevise noe annet.`, law: L.ref("formodning") });
       else F.push({ s: "warn", t: `Mer enn ${q.found! > plussManeder(q.delivery!, 24) ? "to år" : L.formodningTekst} etter overtakelsen`, d: "Du er innenfor femårsfristen for bil, men må selv sannsynliggjøre at feilen skyldes forhold ved leveringen.", law: L.ref("reklamasjon_5ar") });

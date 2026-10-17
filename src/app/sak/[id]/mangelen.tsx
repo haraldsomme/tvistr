@@ -5,6 +5,7 @@ import { Fil, Fold, Hake, Lukk, Opplast } from "@/app/deler/ikoner";
 import { relText } from "@/lib/app/dato";
 import { DOCS, IMPACT, impactToggle, KNOWN, type Omrade } from "@/lib/app/skjema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
+import { GRATIS, NYTT_KJOP } from "@/lib/pris";
 import { Bryter, Chips, Felt, Seg, type StegProps, Vis } from "./felt";
 
 const TOM: Omrade = { found: "", impact: [], known: "" };
@@ -32,7 +33,7 @@ function Omradekort({ s, sett, c, i, n }: StegProps & { c: string; i: number; n:
       {h.under.length > 0 && (
         <div className="f">
           <span className="lb">
-            Hva gjelder det? <em>låst til kjøpet</em>
+            Hva gjelder det? <em>{GRATIS ? "låst til saken" : "låst til kjøpet"}</em>
           </span>
           <Chips flere disabled navn={`${id}p`} verdi={s.f_parts[c] ?? []} valg={h.under.map((u) => [u.id, u.navn] as const)} onVelg={(v, pa) => sett({ f_parts: { ...s.f_parts, [c]: h.under.map((u) => u.id).filter((x) => (x === v ? pa : (s.f_parts[c] ?? []).includes(x))) } })} />
         </div>
@@ -78,7 +79,7 @@ export function Feilen({ s, sett }: StegProps) {
       <div className="block">
         <div className="bt">
           <h3>Hvilke deler gjelder det?</h3>
-          <span>Låst til kjøpet</span>
+          <span>{GRATIS ? "Låst til saken" : "Låst til kjøpet"}</span>
         </div>
         <Chips
           flere
@@ -92,7 +93,7 @@ export function Feilen({ s, sett }: StegProps) {
           }}
         />
         <div className="hint" style={{ marginTop: 12 }}>
-          Brevet gjelder feilene du valgte før du betalte. Et brev om en annen feil krever et nytt kjøp. Under hvert område kan du beskrive feilen og når du oppdaget den.
+          Brevet gjelder feilene du valgte {GRATIS ? "før du åpnet brevet" : "før du betalte"}. Et brev om en annen feil krever {NYTT_KJOP}. Under hvert område kan du beskrive feilen og når du oppdaget den.
         </div>
       </div>
       <div id="areaCards">

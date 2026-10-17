@@ -8,13 +8,18 @@ Appen er en React-port av artefakten «Bilreklamasjon», som eieren bygde utenfo
 |---|---|---|
 | `/` | `src/app/page.tsx` | Forsiden. Antall vedtak leses fra `statistikk_kategori` ved bygging. |
 | `/sak` | `src/app/sak/sjekk.tsx`, `resultat.tsx` | Gratis sjekk: ett spørsmål per skjerm (`sporsmal.ts`), deretter vurderingen og tilbudet. |
-| `/sak/[id]` | `src/app/sak/[id]/page.tsx`, `skriver.tsx` | Brevskriveren for en betalt sak, med fanene Skjema, Vurdering, Vedtak og Brevet. En ukjent id eller en sak som ikke er betalt gir 404. |
+| `/sak/[id]` | `src/app/sak/[id]/page.tsx`, `skriver.tsx` | Brevet for en betalt sak, med fanene Skjema, Vurdering, Vedtak og Brevet. En ukjent id eller en sak som ikke er betalt gir 404. |
+| `/vilkar`, `/personvern` | `src/app/vilkar/page.tsx`, `src/app/personvern/page.tsx` | Vilkår for kjøp og personvernerklæringen, i `Juridisk` (`src/app/deler/juridisk.tsx`). Hver påstand der skal stemme med koden; endres lagring, modellkall eller betaling, endres sidene. |
 
 Sjekken og vurderingen ligger bare i nettleseren (`localStorage`: `tvistr-sjekk`, se `src/lib/app/lagring.ts`). En betalt sak ligger i databasen (`sak` og `ordre`, migrasjon 0017):
 - `sak`: id-en, sjekken slik den var ved kjøpet, hele skjemaet og når saken ble betalt.
 - `ordre`: ett betalingsforsøk per rad, med beløp i øre, leverandør, status, transaksjons-id og betalingstidspunkt.
 
-Id-ene er 12 tegn fra `nyId()` (`src/lib/sak/id.ts`, 32 tegn uten 0/o/1/l). Lenken er tilgangen: den som har den, ser saken. Nettleseren husker bare siste kjøp (`tvistr-sak`: id, reg.nr. og feil, `useKjopt`). Tabellene har persondata og holdes utenfor `db:backup`. Saker slettes ikke ennå.
+Id-ene er 12 tegn fra `nyId()` (`src/lib/sak/id.ts`, 32 tegn uten 0/o/1/l). Lenken er tilgangen: den som har den, ser saken. Nettleseren husker bare siste kjøp (`tvistr-sak`: id, reg.nr. og feil, `useKjopt`). Tabellene har persondata og holdes utenfor `db:backup`.
+
+Sletting (`src/lib/sak/sletting.ts`, fristene i `lagringstid.ts`): en betalt sak slettes 3 år etter betalingen, en ubetalt 30 dager etter at den ble opprettet. Ordrene følger saken (cascade); regnskapet har betalingene. Vercel Cron kaller `/api/slett-saker` hver natt kl. 03 (`vercel.json`), med `CRON_SECRET` som bearer-token. Uten `CRON_SECRET` i Vercel svarer ruten 401 og sletter ingenting, og da holder ikke personvernerklæringen.
+
+Bunnteksten (`src/app/deler/bunn.tsx`) viser selskapet fra `src/lib/firma.ts` og lenker til vilkårene og personvernerklæringen. Kjøpsvinduet lenker til begge.
 
 ## Sjekken
 
@@ -34,6 +39,14 @@ Reglene for tid regnes i kalendermåneder fra overtakelsen, som i rangeringen (`
 ## Betaling
 
 Vipps er ikke koblet på. «Gå til betaling» kaller `kjop` (`src/app/sak/[id]/actions.ts`).
+
+**Prøveperioden (fra 2026-10-17):** `GRATIS = true` i `src/lib/pris.ts`. Brevet er gratis for alle, også i produksjon:
+- Knappen heter «Åpne brevet», og det er ingen kryssboks. Ingenting selges, så det er ingen angrerett å gi fra seg.
+- `kjop` lagrer saken som betalt med en ordre fra leverandøren «gratis» på 0 kr. Flagget og `samtykke` betyr ingenting.
+- Pris, Vipps og angrerett er skjult bak `GRATIS` i tilbudet, forsiden, vilkårene og personvernerklæringen.
+- Settes `GRATIS = false`, gjelder reglene under.
+
+- Knappen virker først når kjøperen har krysset av for at brevet åpnes med en gang og at angreretten da går tapt (angrerettloven § 22 bokstav n). `kjop` avviser kjøpet uten `samtykke: true`.
 - Med `TVISTR_HELT_BREV_UTEN_BETALING=1` (bare utenom produksjon) lagres saken som betalt med én gang, med en ordre fra leverandøren «utvikling». Kjøperen sendes til `/sak/[id]`.
 - Ellers sier den at betaling ikke er koblet til ennå, og ingenting lagres.
 - Skjemaet fylles fra sjekken på serveren (`nyttKjop` og `fraSjekk` i `src/lib/app/saken.ts`). Kjøperens navn og adresse hentes fra forrige betalte sak i samme nettleser.
@@ -43,11 +56,11 @@ Når Vipps kobles på:
 2. Vipps' tilbakekall setter `ordre.status`, `transaksjon_id` og `betalt` på ordren og på saken.
 3. Et nytt forsøk gir en ny ordre for samme sak.
 
-## Brevskriveren
+## Brevet
 
 Et kjøp gjelder én bil og feilene som er valgt i sjekken (område og underkategori):
 - Før betaling må sjekken ha registreringsnummer, merke og modell, og minst én feil (`manglerForKjop` i `src/lib/app/saken.ts`).
-- I brevskriveren er bilen låst (registreringsnummer, merke, modell og årsmodell) og feilvalgene låst. Sjekken krever derfor bilen før betaling: hentet fra Vegvesen eller skrevet inn. Km-stand, datoer, beskrivelser, verksted og krav kan fortsatt endres. Understellsnummer er ikke med.
+- I brevet er bilen låst (registreringsnummer, merke, modell og årsmodell) og feilvalgene låst. Sjekken krever derfor bilen før betaling: hentet fra Vegvesen eller skrevet inn. Km-stand, datoer, beskrivelser, verksted og krav kan fortsatt endres. Understellsnummer er ikke med.
 - Velger kjøperen en annen bil eller feil i sjekken etter betaling, sier tilbudet at det krever et nytt kjøp (`sammeSak`). Et nytt kjøp starter et nytt brev og beholder bare kjøperens navn og adresse (`nyttKjop`).
 - Låsen håndheves på serveren. `lagreSak` beholder de låste feltene slik de ble kjøpt (`LAASTE_FELT`, `laas`). `finnVedtak` avviser svar om en annen årsmodell eller andre feil enn saken (`gjelderSaken`).
 - Skjemaet lagres i saken mens kjøperen skriver (`useAutolagring` i `src/app/sak/[id]/autolagring.ts`):

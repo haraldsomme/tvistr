@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 // The whole flow: landing → check → verdict → unlock → the case's writer (/sak/[id]) → letter with a
-// decision. Needs the database (DATABASE_URL) and TVISTR_HELT_BREV_UTEN_BETALING=1 for the unlock; the
+// decision. Needs the database (DATABASE_URL); the letter is free in the trial (GRATIS in src/lib/pris.ts), so the unlock needs no flag; the
 // vehicle and company registers are stubbed, the ranking and the model are real. Each run saves a case.
 
 const dager = (n: number) => {
@@ -52,8 +52,8 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   expect(await page.locator(".sim-cases .sim-c").count()).toBeLessThanOrEqual(3);
   await expect(page.locator(".sim-cases a")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Lås opp brevskriveren" }).click();
-  await page.getByRole("button", { name: "Gå til betaling" }).click();
+  await page.locator(".offer").getByRole("button", { name: "Åpne brevet" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Åpne brevet" }).click();
   await expect(page).toHaveURL(/\/sak\/[a-km-np-z2-9]{12}$/, { timeout: 30_000 });
   const lenke = page.url();
 
@@ -103,7 +103,7 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   await expect(page.locator(".l-prec")).not.toHaveText(for_);
 });
 
-test("brevskriveren finnes bare for en betalt sak", async ({ page }) => {
+test("brevet finnes bare for en betalt sak", async ({ page }) => {
   expect((await page.goto("/sak/aaaaaaaaaaaa"))?.status()).toBe(404);
   expect((await page.goto("/sak/ikke-en-id"))?.status()).toBe(404);
   expect((await page.goto("/brev"))?.status()).toBe(404);

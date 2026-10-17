@@ -137,7 +137,7 @@ export function Brevet({ s, sett, vedtak, onSteg, onVedtak, onToast }: { s: Skje
               )}
             </div>
           </div>
-          <p className="fine d-fine">Brevet er en mal basert på forbrukerkjøpsloven og er ikke juridisk rådgivning. Forbrukerrådet hjelper gratis hvis forhandleren avviser saken.</p>
+          <p className="fine d-fine">Brevet er en mal basert på forbrukerkjøpsloven og er ikke juridisk rådgivning. Forbrukerrådet gir gratis råd, og Forbrukertilsynet mekler hvis forhandleren avviser saken.</p>
         </div>
         <div className="paper d-paper">
           <Papir blokker={blokker} id="letterFull" />

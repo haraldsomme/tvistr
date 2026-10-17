@@ -17,6 +17,7 @@ body{margin:0}
   --f-ui:var(--font-geist),"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --f-mono:var(--font-geist-mono),"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --f-doc:var(--font-serif),"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-logo:var(--font-logo),"Overpass",ui-sans-serif,system-ui,sans-serif;
   --f-plate:var(--font-plate),"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --ease:cubic-bezier(.22,.7,.18,1);
 }
@@ -350,6 +351,20 @@ input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;b
 h1,h2,h3{text-wrap:balance}
 .wrap{max-width:1200px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
 .navlinks a{color:#455063;text-decoration:none}
+.bunn a{color:#455063;text-decoration:none}
+.bunn a:hover{color:#10141A;text-decoration:underline}
+/* ───── Terms and privacy ───── */
+.jur{max-width:720px;padding-top:56px;padding-bottom:88px;font-size:15.5px;line-height:1.65;color:#455063}
+.jur h1{margin:0;font-size:clamp(32px,4.2vw,44px);line-height:1.08;letter-spacing:-0.035em;font-weight:600;color:#10141A}
+.jur h2{margin:40px 0 10px;font-size:20px;letter-spacing:-0.015em;font-weight:600;color:#10141A}
+.jur p{margin:0 0 12px}
+.jur ul{margin:0 0 12px;padding-left:20px}
+.jur li{margin:0 0 6px}
+.jur b{color:#10141A;font-weight:600}
+.jur a{color:#2B5BF0}
+.jur .jur-dato{margin:12px 0 0;font-family:var(--f-mono);font-size:12.5px;color:#5B6576}
+.jur-kort{margin:28px 0 0;padding:20px 22px;border-radius:16px;background:#FFFFFF;box-shadow:var(--sh-1)}
+.jur-kort ul{margin:0}
 .navlinks a:hover{color:#10141A}
 .btn-pri{transition:background .2s}
 .btn-pri:hover{background:#4A74F3!important;color:#FFFFFF!important}
@@ -539,7 +554,7 @@ body:has(#shell) .toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
   .rt-more{width:34px;padding:0}
 }
 @media (max-width:560px){
-  .rail-top .brand > div:last-child{display:none}
+  .rail-top .brand small{display:none}
 }
 
 /* ───── Writer tabs: Skjema · Vurdering · Brevet ───── */
@@ -580,7 +595,7 @@ html,body{overflow-x:clip}
 @media (max-width:900px){
   #shell,#shell.final{grid-template-columns:minmax(0,1fr);padding-top:0;gap:0}
   .wtop{grid-template-columns:auto minmax(0,1fr) auto;gap:10px;padding:10px 0;margin-bottom:16px}
-  .wtop .brand > div:last-child,.wtools .saved{display:none}
+  .wtop .brand small,.wtools .saved{display:none}
   .wtabs{width:100%}
   .wtabs button{flex:1;padding:0 8px;height:40px;font-size:14px}
   .wind{height:40px}

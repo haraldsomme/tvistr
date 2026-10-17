@@ -1,17 +1,11 @@
 import Link from "next/link";
-import { Dokument } from "./ikoner";
+import { Ordmerke } from "./ordmerke";
 
 // The brand mark and name, linking to the landing page.
-export function Merke({ undertekst }: { undertekst: string }) {
+export function Merke() {
   return (
     <Link href="/" className="brand brand-btn" aria-label="Tvistr, til forsiden" style={{ textDecoration: "none" }}>
-      <div className="mark" aria-hidden="true">
-        <Dokument />
-      </div>
-      <div>
-        <b>Tvistr</b>
-        <small>{undertekst}</small>
-      </div>
+      <Ordmerke size={30} />
     </Link>
   );
 }

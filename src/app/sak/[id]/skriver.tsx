@@ -57,8 +57,8 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
   return (
     <div className="shell" id="shell" data-wtab={fane} data-tier={r.tier}>
       <header className="wtop">
-        <Merke undertekst="Klage på mangel ved bilkjøp" />
-        <nav className="wtabs" role="tablist" aria-label="Brevskriveren">
+        <Merke />
+        <nav className="wtabs" role="tablist" aria-label="Brevet">
           {FANER.map(([id, navn], k) => (
             <button
               key={id}

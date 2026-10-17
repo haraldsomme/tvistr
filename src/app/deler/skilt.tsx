@@ -1,6 +1,7 @@
 // Used only from client components.
 import { useState } from "react";
 import { FMT, validReg } from "@/lib/app/format";
+import { NYTT_KJOP } from "@/lib/pris";
 import { Hake, Info, Skiltband } from "./ikoner";
 
 export type Bil = { make: string; model: string; year: string; lastReg: string };
@@ -61,7 +62,7 @@ export function Skilt({ id, verdi, onEndre, onBil, funnet, laast }: { id: string
       )}
       <div className="lk" data-state={laast ? "found" : status.s} aria-live="polite">
         {laast ? (
-          <span>Brevet gjelder denne bilen. Et brev for en annen bil krever et nytt kjøp.</span>
+          <span>Brevet gjelder denne bilen. Et brev for en annen bil krever {NYTT_KJOP}.</span>
         ) : status.s === "loading" ? (
           <>
             <span className="spin" aria-hidden="true" />

@@ -110,7 +110,7 @@ export function Sjekk({ utvikling, fraStart }: { utvikling: boolean; fraStart: b
     <section className={`ob${skjerm === "result" ? " has-bar" : ""}`} aria-label="Saksvurdering">
       {klar && skjerm === "q" && i === 0 && <MaalVisning hendelse="sjekk_startet" />}
       <div className="ob-top">
-        <Merke undertekst="Gratis saksvurdering" />
+        <Merke />
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {skjerm === "q" && klar && (
             <span className="kbd-hint">
@@ -119,7 +119,7 @@ export function Sjekk({ utvikling, fraStart }: { utvikling: boolean; fraStart: b
           )}
           {kjopt.id && (
             <button type="button" className="btn sm" onClick={() => router.push(`/sak/${kjopt.id}`)}>
-              Til brevskriveren
+              Til brevet
             </button>
           )}
         </div>

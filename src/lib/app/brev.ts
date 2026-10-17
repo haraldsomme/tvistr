@@ -296,7 +296,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   if (s.k_hold) B.push({ t: "p", tekst: [tone("Inntil saken er løst, vil jeg holde tilbake kr ", "Inntil saken er løst, holder jeg tilbake kr "), v("k_hold_amt", "beløp"), ` av det jeg skylder dere, jf. ${L.par("tilbakehold")}.`] });
 
   const dd: Del = s.k_days ? fmtD(addDays(ld, +s.k_days)) : { ph: "svarfrist" };
-  const nxt = "bringe saken inn for Forbrukerrådet for mekling og eventuelt videre til Forbrukerklageutvalget";
+  const nxt = "bringe saken inn for Forbrukertilsynet for mekling og eventuelt videre til Forbrukerklageutvalget";
   // An amount the seller must pay (a price reduction or compensation) draws late-payment interest
   // when it is paid late; when it falls due follows forsinkelsesrenteloven § 2, which the letter does
   // not restate. The purchase price repaid after heving has its own rule above (renter).

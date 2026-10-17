@@ -5,7 +5,7 @@ import { idag } from "@/lib/app/dato";
 import { hentBetaltSak } from "@/lib/sak/db";
 import { Skriver } from "./skriver";
 
-export const metadata: Metadata = { title: "Brevskriveren – Tvistr", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Brevet – Tvistr", robots: { index: false, follow: false } };
 
 // The letter writer for a paid case (skriver.tsx). The link is the access: an unknown, malformed or
 // unpaid id is not found. The stored form is merged over today's defaults, so a case saved before a

@@ -14,14 +14,15 @@ import { maal } from "@/lib/maling";
 import { type Kjopt, manglerForKjop, nokkel, sammeSak, sjekkTilSvar } from "@/lib/app/saken";
 import { evaluate } from "@/lib/app/vurdering";
 import { opplysningsfeil } from "@/lib/brev/feiltype";
-import { PRIS } from "@/lib/pris";
+import { GRATIS, NYTT_KJOP, PRIS } from "@/lib/pris";
 import { type Lignende as LignendeSvar, vurderSaken } from "./vurdering";
 import type { Tilstand } from "./sjekk";
 
-const PRISTEKST = `kr ${tall(PRIS)}`;
+const PRISTEKST = GRATIS ? "Gratis" : `kr ${tall(PRIS)}`;
+const BETALER_FOR = GRATIS ? "som brevet skal gjelde" : "du betaler for";
 const FORDELER = [
-  "Ferdig brev med riktige lovhenvisninger for din sak",
-  "Fristvurdering og bevisbyrde regnet ut automatisk",
+  "Brev med lovhenvisninger tilpasset svarene dine",
+  "Frister og bevisbyrde regnet ut fra datoene du oppgir",
   "Krav om retting, omlevering, prisavslag, heving og erstatning",
   "Svarene dine fra vurderingen er allerede fylt inn",
   "Kopier brevet og send det på e-post samme dag",
@@ -83,7 +84,7 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
     maal("kjop_klikket");
     settKjop(true);
   };
-  const knappetekst = tilgang ? "Åpne brevskriveren" : kjopt.id ? "Lås opp for denne saken" : "Lås opp brevskriveren";
+  const knappetekst = tilgang ? "Åpne brevet" : kjopt.id ? (GRATIS ? "Åpne for denne saken" : "Lås opp for denne saken") : GRATIS ? "Åpne brevet" : "Lås opp brevet";
   const knapper = (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
       <button type="button" className="btn" onClick={onTilbake}>
@@ -150,20 +151,20 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
             )}
           </div>
           <Lovrader faktorer={r.factors} />
-          {lignende?.ok && <Lignende tall={lignende.tall} kort={lignende.kort} sammenligning={lignende.sammenligning} fot="I brevet viser vi til saken som ligner mest, og forklarer hvorfor du har krav på samme resultat." />}
+          {lignende?.ok && <Lignende tall={lignende.tall} kort={lignende.kort} sammenligning={lignende.sammenligning} fot="I brevet viser vi til et vedtak som ligner saken din, og argumenterer for at din sak bør få samme utfall." />}
           {knapper}
           <p className="fine" style={{ margin: "4px 0 0" }}>
             Vurderingen er veiledende og bygger bare på svarene dine. Den er ikke juridisk rådgivning.
           </p>
         </div>
-        <aside ref={tilbud} className="offer anim-f" aria-label="Brevskriveren">
+        <aside ref={tilbud} className="offer anim-f" aria-label="Brevet">
           <div className="offer-k">{tilgang ? "Du har tilgang" : kjopt.id ? "Ny sak" : "Neste steg"}</div>
           <h3>{r.tier === "svak" ? "Vil du reklamere likevel?" : "Skriv reklamasjonsbrevet"}</h3>
           {!!kjopt.id && !tilgang && (
             <div className="demo-note">
               <InfoSirkel />
               <span>
-                Brevskriveren er låst opp for {kjopt.reg || "en annen bil"}. Et brev for en annen bil eller feil krever et nytt kjøp.{" "}
+                Brevet er låst opp for {kjopt.reg || "en annen bil"}. Et brev for en annen bil eller feil krever {NYTT_KJOP}.{" "}
                 <button type="button" className="lnk" onClick={() => router.push(`/sak/${kjopt.id}`)}>
                   Åpne brevet for {kjopt.reg || "den bilen"}
                 </button>
@@ -173,14 +174,14 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
           {!tilgang && (
             <div className="price">
               <b>{PRISTEKST}</b>
-              <span>engangsbeløp</span>
+              <span>{GRATIS ? "i prøveperioden" : "engangsbeløp"}</span>
             </div>
           )}
           <ul className="feats">
             <li>
               <Hake s={13} />
               <span>
-                <b style={{ color: "var(--ink)", fontWeight: 600 }}>Argumentasjon med en vunnet, lignende sak fra Forbrukerklageutvalget</b>
+                <b style={{ color: "var(--ink)", fontWeight: 600 }}>Argumentasjon med et vedtak der kjøperen fikk medhold i en lignende sak</b>
               </span>
             </li>
             {FORDELER.map((t) => (
@@ -195,10 +196,10 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
               <InfoSirkel />
               <span>
                 {mangler === "reg"
-                  ? "Legg inn registreringsnummeret først. Brevet gjelder bilen du betaler for."
+                  ? `Legg inn registreringsnummeret først. Brevet gjelder bilen ${BETALER_FOR}.`
                   : mangler === "bil"
-                    ? "Hent bilen fra Vegvesen eller skriv inn merke og modell først. Brevet gjelder bilen du betaler for, og den kan ikke endres etterpå."
-                    : "Velg hvilken feil det gjelder først. Brevet gjelder feilen du betaler for."}{" "}
+                    ? `Hent bilen fra Vegvesen eller skriv inn merke og modell først. Brevet gjelder bilen ${BETALER_FOR}, og den kan ikke endres etterpå.`
+                    : `Velg hvilken feil det gjelder først. Brevet gjelder feilen ${BETALER_FOR}.`}{" "}
                 <button type="button" className="lnk" onClick={() => onTilSporsmal(mangler === "feil" ? "cats" : "reg")}>
                   {mangler === "feil" ? "Velg feilen" : "Legg inn bilen"}
                 </button>
@@ -207,7 +208,7 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
           )}
           {!tilgang && !mangler && (
             <p className="fine" style={{ margin: 0 }}>
-              Brevet gjelder {a.make} ({a.reg}) og feilen du har valgt. Bilen og feilen kan ikke endres etter kjøpet.
+              Brevet gjelder {a.make} ({a.reg}) og feilen du har valgt. Bilen og feilen kan ikke endres {GRATIS ? "etterpå" : "etter kjøpet"}.
             </p>
           )}
           <button type="button" className="btn pri" onClick={apne}>
@@ -225,10 +226,10 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
           <div className={`res-bar${unna ? " away" : ""}`}>
             <div className="res-bar-t">
               <b>{tilgang ? "Du har tilgang" : PRISTEKST}</b>
-              <span>Brev med vunnet, lignende sak</span>
+              <span>Brev med en lignende sak kjøperen vant</span>
             </div>
             <button type="button" className="btn pri" onClick={apne}>
-              {tilgang ? "Åpne brevskriveren" : "Lås opp brevet"}
+              {tilgang || GRATIS ? "Åpne brevet" : "Lås opp brevet"}
               <Pil />
             </button>
           </div>

@@ -425,7 +425,7 @@ export const ordre = pgTable(
       .notNull()
       .references(() => sak.id, { onDelete: "cascade" }),
     belopOre: integer("belop_ore").notNull(),
-    // "utvikling" (TVISTR_HELT_BREV_UTEN_BETALING) | "vipps"
+    // "gratis" (the trial, GRATIS in src/lib/pris.ts) | "utvikling" (TVISTR_HELT_BREV_UTEN_BETALING) | "vipps"
     leverandor: text("leverandor").notNull(),
     // "opprettet" | "betalt" | "avbrutt" | "feilet"
     status: text("status").notNull(),

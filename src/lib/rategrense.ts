@@ -1,8 +1,7 @@
 // A per-address limit that lives in each server instance's memory, so it only stops simple abuse
 // from one address; a rate-limit rule in the Vercel Firewall is the real protection once the site
 // is public.
-// Off while we test. Turn back on before the site is public.
-const GRENSER_PA = false;
+const GRENSER_PA = true;
 
 export function lagGrense(grense: { antall: number; vinduMs: number }) {
   const treff = new Map<string, number[]>();

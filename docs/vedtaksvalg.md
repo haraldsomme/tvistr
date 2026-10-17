@@ -73,7 +73,7 @@ Har kjøperen en skriftlig verkstedrapport, ber instruksen modellen foretrekke b
 
 **Hvis svaret ikke holder** (ukjent vedtak, eller sitat-id-er vedtaket ikke har), brukes rangeringens førstevalg med de første sitatene. Det samme skjer om kallet feiler. Ingenting prøves på nytt.
 
-**Ti å velge mellom.** Fanen Vedtak i brevskriveren viser modellens valg først («Anbefalt»). Deretter kommer resten av rangeringens topp 10 som har sitater, i rangeringens rekkefølge (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger vedtaket i fanen Vedtak. Brevfanen viser bare hvilket vedtak brevet viser til, med en knapp tilbake til fanen.
+**Ti å velge mellom.** Fanen Vedtak i brevet viser modellens valg først («Anbefalt»). Deretter kommer resten av rangeringens topp 10 som har sitater, i rangeringens rekkefølge (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger vedtaket i fanen Vedtak. Brevfanen viser bare hvilket vedtak brevet viser til, med en knapp tilbake til fanen.
 
 **Likhet.** Hvert vedtak har en prosent (`likhet` i `src/lib/matching/likhet.ts`): poengsummen fra rangeringen delt på det et vedtak kan få mot kjøperens svar.
 - Nevneren er summen av `likt`-poengene for kriteriene kjøperen har svart på, og den er lik for alle vedtak i saken. Underkategori teller bare når kjøperen har valgt en. Grunnlag og egen vurdering teller alltid.

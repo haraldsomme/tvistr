@@ -72,5 +72,5 @@ export function useLagret<T>(nokkel: string, standard: () => T): [T, (neste: T |
   return [verdi, sett, r !== null];
 }
 
-// The last purchase (tvistr-sak): which case the check's «Åpne brevskriveren» opens.
+// The last purchase (tvistr-sak): which case the check's «Åpne brevet» opens.
 export const useKjopt = () => useLagret<Kjopt>("tvistr-sak", () => ({ id: "", reg: "", cats: [], parts: {} }));

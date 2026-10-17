@@ -6,10 +6,17 @@ import { erId } from "@/lib/sak/id";
 const hentAlle = vi.fn(async () => []);
 const hentBetaltSak = vi.fn<(id: unknown) => Promise<Sak | null>>(async () => null);
 const batch = vi.fn<(q: unknown[]) => Promise<unknown[]>>(async () => []);
+const pris = vi.hoisted(() => ({ gratis: false }));
 const satt = vi.fn<(v: unknown) => { where: () => Promise<void> }>(() => ({ where: async () => undefined }));
 vi.mock("next/headers", () => ({ headers: async () => new Map([["x-forwarded-for", "10.0.0.1"]]) }));
 vi.mock("@/app/sak/vedtak-db", () => ({ hentAlle, hentBilnavn: async () => () => null }));
 vi.mock("@/lib/sak/db", () => ({ hentBetaltSak }));
+vi.mock("@/lib/pris", () => ({
+  PRIS: 249,
+  get GRATIS() {
+    return pris.gratis;
+  },
+}));
 vi.mock("@/db", () => ({
   db: {
     batch,
@@ -30,6 +37,7 @@ const sjekk = { reg: "CD 67890", make: "Audi A4", year: "2019", cats: ["klima"],
 beforeEach(() => {
   vi.clearAllMocks();
   hentBetaltSak.mockResolvedValue(null);
+  pris.gratis = false;
   process.env.TVISTR_HELT_BREV_UTEN_BETALING = "1";
 });
 
@@ -64,12 +72,22 @@ describe("finnVedtak", () => {
 describe("kjop", () => {
   it("er ikke koblet til uten flagget, og lagrer ingenting", async () => {
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
-    expect(await kjop({ sjekk, forrige: null })).toEqual({ ok: false, melding: "Betaling er ikke koblet til ennå." });
+    expect(await kjop({ sjekk, forrige: null, samtykke: true })).toEqual({ ok: false, melding: "Betaling er ikke koblet til ennå." });
     expect(batch).not.toHaveBeenCalled();
   });
 
+  it("åpner saken gratis i prøveperioden, uten flagget og uten samtykke", async () => {
+    pris.gratis = true;
+    process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
+    const r = await kjop({ sjekk, forrige: null, samtykke: false });
+    expect(r.ok).toBe(true);
+    const [[sakRad, ordreRad]] = batch.mock.calls[0] as unknown as [[{ v: Record<string, unknown> }, { v: Record<string, unknown> }]];
+    expect(sakRad.v.betalt).toBeInstanceOf(Date);
+    expect(ordreRad.v).toMatchObject({ belopOre: 0, leverandor: "gratis", status: "betalt" });
+  });
+
   it("lagrer saken og en betalt ordre i utvikling", async () => {
-    const r = await kjop({ sjekk, forrige: null });
+    const r = await kjop({ sjekk, forrige: null, samtykke: true });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(erId(r.sak.id)).toBe(true);
@@ -88,15 +106,20 @@ describe("kjop", () => {
 
   it("beholder kjøperen fra forrige sak", async () => {
     hentBetaltSak.mockResolvedValue(betaltSak);
-    await kjop({ sjekk, forrige: betaltSak.id });
+    await kjop({ sjekk, forrige: betaltSak.id, samtykke: true });
     const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: { b_name: string; c_reg: string } } }]];
     expect([sakRad.v.skjema.b_name, sakRad.v.skjema.c_reg]).toEqual(["Kari", "CD 67890"]);
   });
 
+  it("krever samtykke til at angreretten går tapt", async () => {
+    expect(await kjop({ sjekk, forrige: null, samtykke: false })).toEqual({ ok: false, melding: "Kryss av for at brevet åpnes med en gang." });
+    expect(batch).not.toHaveBeenCalled();
+  });
+
   it("krever bil og feil", async () => {
-    expect((await kjop({ sjekk: { ...sjekk, reg: "" }, forrige: null })).ok).toBe(false);
-    expect((await kjop({ sjekk: { ...sjekk, cats: ["ukjent"] }, forrige: null })).ok).toBe(false);
-    expect((await kjop({ sjekk: "tull", forrige: null })).ok).toBe(false);
+    expect((await kjop({ sjekk: { ...sjekk, reg: "" }, forrige: null, samtykke: true })).ok).toBe(false);
+    expect((await kjop({ sjekk: { ...sjekk, cats: ["ukjent"] }, forrige: null, samtykke: true })).ok).toBe(false);
+    expect((await kjop({ sjekk: "tull", forrige: null, samtykke: true })).ok).toBe(false);
     expect(batch).not.toHaveBeenCalled();
   });
 });

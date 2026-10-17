@@ -3,6 +3,7 @@
 import { Skilt } from "@/app/deler/skilt";
 import { fmtD } from "@/lib/app/dato";
 import { regler } from "@/lib/app/lov";
+import { GRATIS, NYTT_KJOP } from "@/lib/pris";
 import { Bryter, Felt, type StegProps } from "./felt";
 
 export function Bilen({ s, sett }: StegProps) {
@@ -10,7 +11,9 @@ export function Bilen({ s, sett }: StegProps) {
     <section className="panel">
       <div className="head">
         <h2>Bilen</h2>
-        <p>Brevet gjelder bilen du betalte for. Et brev for en annen bil krever et nytt kjøp.</p>
+        <p>
+          Brevet gjelder bilen {GRATIS ? "du valgte" : "du betalte for"}. Et brev for en annen bil krever {NYTT_KJOP}.
+        </p>
       </div>
       <div className="block">
         <div className="grid">

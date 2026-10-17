@@ -120,12 +120,11 @@ export function tolkSvar(svar: Modellsvar | null, kandidater: Rangert[], sitater
   return { r: forste, valgte: (sitater.get(forste.id) ?? []).slice(0, antall(forste)), fulgt: false };
 }
 
-// The two decisions the buyer can pick instead of the chosen one: the next in the ranking that have
+// The decisions the buyer can pick instead of the chosen one: the rest of the ranking that have
 // quotes, each with its first quotes, as tolkSvar takes them without a model answer.
 export function alternativer(kandidater: Rangert[], valgtId: number, sitater: Map<number, Sitatvalg[]>): { r: Rangert; valgte: Sitatvalg[] }[] {
   return kandidater
     .filter((r) => r.id !== valgtId && (sitater.get(r.id)?.length ?? 0) > 0)
-    .slice(0, 2)
     .map((r) => ({ r, valgte: tolkSvar(null, [r], sitater).valgte }));
 }
 

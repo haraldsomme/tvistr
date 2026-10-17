@@ -4,7 +4,7 @@ import type { Blokk, Del } from "@/lib/app/brev";
 function Deler({ d }: { d: Del[] }) {
   return (
     <>
-      {d.map((x, i) => (typeof x === "string" ? x : "ph" in x ? <span key={i} className="ph">{x.ph}</span> : <b key={i}>{x.b}</b>))}
+      {d.map((x, i) => (typeof x === "string" ? x : <span key={i} className="ph">{x.ph}</span>))}
     </>
   );
 }

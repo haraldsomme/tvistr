@@ -35,15 +35,19 @@ function monthsBetween(a: Date, b: Date): number {
   return m;
 }
 
-// «2 måneder», «ett år og én måned»; empty when b is before a.
+// Small numbers in words, as formal Norwegian writes them: «tre måneder», «14 dager».
+const ORD = ["", "", "to", "tre", "fire", "fem", "seks", "sju", "åtte", "ni", "ti", "elleve", "tolv"];
+const antall = (n: number) => ORD[n] ?? String(n);
+
+// «to måneder», «ett år og én måned»; empty when b is before a.
 export function dur(a: Date, b: Date): string {
   const days = dayDiff(a, b);
   if (days < 0) return "";
   const m = monthsBetween(a, b);
-  if (m < 1) return days === 1 ? "én dag" : `${days} dager`;
+  if (m < 1) return days === 1 ? "én dag" : `${antall(days)} dager`;
   const y = Math.floor(m / 12),
     r = m % 12;
-  return [y ? (y === 1 ? "ett år" : `${y} år`) : "", r ? (r === 1 ? "én måned" : `${r} måneder`) : ""].filter(Boolean).join(" og ");
+  return [y ? (y === 1 ? "ett år" : `${antall(y)} år`) : "", r ? (r === 1 ? "én måned" : `${antall(r)} måneder`) : ""].filter(Boolean).join(" og ");
 }
 
 // «2 måneder og 2 uker etter overtakelsen», relative to the handover date when there is one.

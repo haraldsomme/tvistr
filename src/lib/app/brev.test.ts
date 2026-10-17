@@ -13,7 +13,14 @@ const PRES: Presedens = {
   avsnitt: "Forbrukerklageutvalget kom i sak 52074 til at bilen hadde en mangel.",
   kildeUrl: "https://example.org/v.pdf",
   utvalg: "Forbrukerklageutvalget",
-  best: true,
+  anbefalt: true,
+  niva: "A",
+  gjaldt: "turbo",
+  km: 150000,
+  alder: 9,
+  somDenEr: false,
+  likhet: 80,
+  treff: {} as Presedens["treff"],
 };
 const tekst = (s: ReturnType<typeof eksempel>, p: Presedens | null = null) => tilTekst(byggBrev(syncAreas(s), p, idag));
 
@@ -42,7 +49,7 @@ describe("brevet", () => {
 
   it("vedtaksavsnittet og lenken", () => {
     const t = tekst(eksempel(idag), PRES);
-    expect(t).toContain("Tilsvarende sak fra Forbrukerklageutvalget");
+    expect(t).toContain("Praksis fra Forbrukerklageutvalget");
     expect(t).toContain(PRES.avsnitt);
     expect(t).toContain(PRES.kildeUrl!);
   });
@@ -51,7 +58,7 @@ describe("brevet", () => {
 
   it("slått av: ingen sak", () => {
     const t = tekst({ ...eksempel(idag), prec_on: false }, PRES);
-    expect(t).not.toContain("Tilsvarende sak");
+    expect(t).not.toContain("Praksis fra");
     expect(t).not.toContain(LOVSETNING);
   });
 
@@ -62,6 +69,36 @@ describe("brevet", () => {
   });
 
   it("emnefeltet", () => expect(emne(byggBrev(syncAreas(eksempel(idag)), null, idag))).toBe("Reklamasjon på mangel ved Volkswagen ID.4, reg.nr. EL 48213"));
+});
+
+describe("tonen", () => {
+  // Every argument the letter can make: «som den er», five-year rule, warranty, promise, prior contact,
+  // expenses and withholding, and each main claim.
+  const alt = (k_main: string, ekstra: Partial<ReturnType<typeof eksempel>> = {}) => ({ ...eksempel(idag), k_main, c_asis: true, k_hold: true, k_hold_amt: "5 000", k_days: "14", ...ekstra });
+  const saker = [alt("retting"), alt("omlevering"), alt("prisavslag", { k_amount: "30 000" }), alt("heving"), alt("retting", { c_purchase: "2023-03-01", c_delivery: "2023-03-01" })];
+  const avsnitt = (s: ReturnType<typeof eksempel>) => tekst(s, PRES).split("\n\n");
+  const tall = (t: string) => (t.match(/§+ \d+\w*|\d+/g) ?? []).sort();
+
+  it("bestemt eksempelbrev", () => expect(tekst({ ...eksempel(idag), l_tone: "bestemt" }, PRES)).toMatchSnapshot());
+
+  it.each(saker.map((s, i) => [i, s] as const))("sak %i: samme paragrafer, beløp og datoer i begge toner", (_, s) => {
+    const a = tekst({ ...s, l_tone: "saklig" }, PRES);
+    const b = tekst({ ...s, l_tone: "bestemt" }, PRES);
+    expect(a).not.toBe(b);
+    expect(tall(b)).toEqual(tall(a));
+  });
+
+  it("argumentasjonen endres, fakta og vedtaket står fast", () => {
+    for (const s of saker) {
+      const a = avsnitt({ ...s, l_tone: "saklig" });
+      const b = avsnitt({ ...s, l_tone: "bestemt" });
+      expect(b.length).toBe(a.length);
+      const ulike = a.filter((x, i) => x !== b[i]);
+      expect(ulike.length).toBeGreaterThanOrEqual(7);
+      expect(b).toContain(PRES.avsnitt);
+      expect(ulike.join("\n")).not.toContain(PRES.avsnitt);
+    }
+  });
 });
 
 describe("rettinger etter gjennomgangen", () => {

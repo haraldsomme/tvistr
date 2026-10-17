@@ -40,10 +40,10 @@ describe("alternativer", () => {
   const fire = [rangert(1, "A"), rangert(2, "A"), rangert(3, "B"), rangert(4, "A")];
   const s = new Map(fire.map((r) => [r.id, sitater(3)]));
 
-  it("er de to neste i rangeringen, med sine første sitater", () => {
+  it("er resten av rangeringen, i rekkefølge, med sine første sitater", () => {
     const a = alternativer(fire, 2, s);
-    expect(a.map((x) => x.r.id)).toEqual([1, 3]);
-    expect(a.map((x) => x.valgte.map((v) => v.id))).toEqual([["s1", "s2"], ["s1"]]);
+    expect(a.map((x) => x.r.id)).toEqual([1, 3, 4]);
+    expect(a.map((x) => x.valgte.map((v) => v.id))).toEqual([["s1", "s2"], ["s1"], ["s1", "s2"]]);
   });
 
   it("er tom med én kandidat", () => expect(alternativer([rangert(1, "A")], 1, s)).toEqual([]));

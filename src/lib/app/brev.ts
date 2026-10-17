@@ -5,13 +5,15 @@ import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { LOVORD } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
+import type { Kriterium, Niva, Treff } from "@/lib/matching/ranger";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
 import { addDays, addMonths, dur, fmtD, parseD } from "./dato";
 import { regler } from "./lov";
 import { DOCS, IMPACT, type Skjema, WS_SAYS, WS_WHO } from "./skjema";
 
-// Text, a placeholder for a missing answer, or bold text.
-export type Del = string | { ph: string } | { b: string };
+// Text, or a placeholder for a missing answer. Nothing in the body is emphasised: the headings are the
+// only bold text, as in a lawyer's letter.
+export type Del = string | { ph: string };
 export type Blokk =
   | { t: "addr" | "sign"; linjer: Del[][] }
   | { t: "date" | "subj" | "h" | "p"; tekst: Del[] }
@@ -19,7 +21,7 @@ export type Blokk =
   | { t: "prec"; avsnitt: Del[][] }
   | { t: "exp"; rader: [Del[], string][]; sum: string };
 
-// One of the three decisions the letter can cite, as finnVedtak returns it after payment.
+// One of the (up to ten) decisions the letter can cite, as finnVedtak returns it after payment.
 export type Presedens = {
   id: number;
   saksnummer: string | null;
@@ -29,7 +31,17 @@ export type Presedens = {
   avsnitt: string;
   kildeUrl: string | null;
   utvalg: string;
-  best: boolean;
+  // The model's choice («Anbefalt»); the rest follow in the ranking's order.
+  anbefalt: boolean;
+  niva: Niva;
+  // What the decision was about: the defect on level A, the legal points on level B.
+  gjaldt: string;
+  km: number | null;
+  alder: number | null;
+  somDenEr: boolean | null;
+  // 0–100 on the ranking's points (matching/likhet.ts), and how each criterion compared.
+  likhet: number;
+  treff: Record<Kriterium, Treff>;
 };
 
 type Tekstfelt = { [K in keyof Skjema]: Skjema[K] extends string ? K : never }[keyof Skjema];
@@ -58,13 +70,16 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   const has = (k: Tekstfelt) => s[k].trim() !== "";
   const v = (k: Tekstfelt, ph: string): Del => (has(k) ? s[k].trim() : { ph });
   const vd = (k: Tekstfelt, ph: string): Del => (has(k) ? fmtD(s[k]) : { ph });
+  // The tone changes how each argument is put, never what it claims: both tones cite the same
+  // paragraphs, amounts and dates, and «Bestemt» states no right the law does not give.
   const firm = s.l_tone === "bestemt";
+  const tone = <T,>(saklig: T, bestemt: T) => (firm ? bestemt : saklig);
   const ld = parseD(s.l_date) ?? parseD(idag)!;
   const B: Blokk[] = [];
 
   const snd: Del[][] = [[v("b_name", "Ditt navn")], [v("b_addr", "Adresse")], [v("b_zip", "Postnr."), " ", v("b_city", "Poststed")]];
-  const ct = [has("b_phone") ? `Tlf. ${s.b_phone}` : "", has("b_email") ? s.b_email : ""].filter(Boolean);
-  if (ct.length) snd.push([ct.join(" · ")]);
+  if (has("b_phone")) snd.push([`Telefon: ${s.b_phone}`]);
+  if (has("b_email")) snd.push([`E-post: ${s.b_email}`]);
   B.push({ t: "addr", linjer: snd });
   const rc: Del[][] = [[v("d_name", "Forhandlerens navn")]];
   if (has("d_org")) rc.push([`Org.nr. ${s.d_org}`]);
@@ -94,7 +109,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
       punkter: s.f_cats.map((c) => {
         const a = s.f_area[c],
           desc = (s.f_catdesc[c] ?? "").trim();
-        return [{ b: feilnavn(c, s.f_parts[c] ?? []) }, ", oppdaget ", a?.found ? fmtD(a.found) : { ph: "dato" }, ".", desc ? ` ${sentence(desc)}` : ""];
+        return [feilnavn(c, s.f_parts[c] ?? []), ", oppdaget ", a?.found ? fmtD(a.found) : { ph: "dato" }, ".", desc ? ` ${sentence(desc)}` : ""];
       }),
     });
     if (has("f_desc")) B.push({ t: "p", tekst: [sentence(s.f_desc)] });
@@ -121,17 +136,20 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
     B.push({ t: "p", tekst: [p] });
   }
   if (s.seller_said === "lovet")
-    B.push({ t: "p", tekst: [has("seller_txt") ? `Før kjøpet opplyste dere: «${unquote(s.seller_txt)}». Det er en del av avtalen, jf. ${L.lovRef("uriktig")}.` : `Før kjøpet ga dere uttrykk for at bilen var fri for slike feil. Det er en del av avtalen, jf. ${L.lovRef("uriktig")}.`] });
+    {
+    const sa = has("seller_txt") ? `Før kjøpet opplyste dere: «${unquote(s.seller_txt)}».` : "Før kjøpet ga dere uttrykk for at bilen var fri for slike feil.";
+    B.push({ t: "p", tekst: [`${sa} ${tone("Opplysningen er en del av avtalen", "Dere er bundet av opplysningen, som er en del av avtalen")}, jf. ${L.lovRef("uriktig")}.`] });
+  }
   if (s.f_prior) {
     const how = has("f_prior_how") ? ` ${s.f_prior_how === "oppmøte" ? "ved oppmøte" : `på ${s.f_prior_how}`}` : "";
     let p = `Jeg tok opp feilen med dere${how} ${has("f_prior_date") ? fmtD(s.f_prior_date) : "tidligere"}.`;
     if (has("f_prior_resp")) p += ` Svaret jeg fikk, var at ${trimDot(s.f_prior_resp)}.`;
-    p += " Forholdet er ikke løst, og dette brevet bekrefter og utdyper reklamasjonen.";
+    p += tone(" Forholdet er ikke løst, og dette brevet bekrefter og utdyper reklamasjonen.", " Saken er fortsatt ikke løst. Dette brevet bekrefter og utdyper reklamasjonen, og jeg forventer nå en løsning.");
     B.push({ t: "p", tekst: [p] });
   }
 
   B.push({ t: "h", tekst: ["Rettslig grunnlag"] });
-  B.push({ t: "p", tekst: [`Etter ${L.lovRef("krav")} skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. Når den ikke er det, foreligger det en mangel, jf. ${L.par("avvik")}.`] });
+  B.push({ t: "p", tekst: [`Etter ${L.lovRef("krav")} skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. ${tone("Når den ikke er det, foreligger det en mangel", "Det har den ikke, og bilen har derfor en mangel")}, jf. ${L.par("avvik")}.`] });
   // Before 2024 old § 17; from 2024 a general «som den er» is no agreed exception under § 15 annet ledd
   // (the wording the lawyer reviewed in the earlier letter).
   if (s.c_asis)
@@ -139,8 +157,8 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
       t: "p",
       tekst: [
         L.versjon === "før_2024"
-          ? `Bilen ble solgt «som den er». Etter ${L.lovRef("forbehold")} har bilen likevel en mangel når den er ${LOVORD.dårligereStand}.`
-          : `Forbeholdet om at bilen ble solgt «som den er», er ikke et avtalt unntak etter ${L.lovRef("forbehold")}. Unntaket fra ${LOVORD.kravTredjeFjerde} forutsetter at jeg ved inngåelsen av avtalen ${LOVORD.avtaltUnntak}.`,
+          ? `${tone("Bilen ble solgt «som den er».", "At bilen ble solgt «som den er», fritar dere ikke uten videre for ansvar.")} Etter ${L.lovRef("forbehold")} har bilen likevel en mangel når den er ${LOVORD.dårligereStand}.`
+          : `${tone("Forbeholdet om at bilen ble solgt «som den er», er ikke", "Forbeholdet om at bilen ble solgt «som den er», endrer ikke dette. Det er ikke")} et avtalt unntak etter ${L.lovRef("forbehold")}. Unntaket fra ${LOVORD.kravTredjeFjerde} forutsetter at jeg ved inngåelsen av avtalen ${LOVORD.avtaltUnntak}.`,
       ],
     });
   const del = parseD(s.c_delivery),
@@ -161,11 +179,11 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
         : inne.length === datert.length
           ? [`Feilene viste seg innen ${L.formodningTekst} etter overtakelsen.`, "feilene"]
           : [`${inne.length > 1 ? "Feilene" : "Feilen"} ved ${ved(inne)} viste seg innen ${L.formodningTekst} etter overtakelsen.`, inne.length > 1 ? "disse feilene" : "denne feilen"];
-      B.push({ t: "p", tekst: [`${hvem[0]} ${formodning} Det er dermed dere som må bevise at ${hvem[1]} ikke var til stede da jeg overtok bilen.`] });
+      B.push({ t: "p", tekst: [`${hvem[0]} ${formodning} ${tone("Det er dermed dere som må bevise", "Bevisbyrden ligger hos dere. Dere må bevise")} at ${hvem[1]} ikke var til stede da jeg overtok bilen.`] });
     }
     if (sene.length) {
       const hvem = alene ? `Feilen viste seg ${dur(del!, parseD(sene[0].d)!)} etter overtakelsen.` : `${sene.length > 1 ? "Feilene" : "Feilen"} ved ${ved(sene)} viste seg mer enn to år etter overtakelsen.`;
-      B.push({ t: "p", tekst: [`${hvem} En bil er ment å vare vesentlig lenger enn to år, og reklamasjonsfristen er derfor fem år, jf. ${L.par("reklamasjon_5ar")}.`] });
+      B.push({ t: "p", tekst: [`${hvem} En bil er ment å vare vesentlig lenger enn to år, og reklamasjonsfristen er derfor fem år, jf. ${L.par("reklamasjon_5ar")}.${tone("", " Dere kan ikke avvise reklamasjonen fordi det har gått mer enn to år.")}`] });
     }
   } else if ((!del || !found) && !s.f_cats.every((c) => opplysningsfeil(c, s.f_parts[c] ?? []))) B.push({ t: "p", tekst: [`En mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, jf. ${L.par("formodning")}.`] });
   if (found) {
@@ -173,62 +191,72 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
     const etterFemAr = !!del && nr > parseD(plussManeder(s.c_delivery, 60))!;
     // Timely only when it surely is: within two months of the discovery and five years of the handover,
     // and not dated before the discovery. Later than two months the letter claims nothing.
-    if (!etterFemAr && nr >= found && nr <= addMonths(found, 2)) B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen, og er dermed rettidig etter ${L.par("reklamasjon")}.`] });
+    if (!etterFemAr && nr >= found && nr <= addMonths(found, 2)) B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen${tone(", og er dermed rettidig", ". Den er rettidig")} etter ${L.par("reklamasjon")}${tone("", ", og dere kan ikke avvise den som for sen")}.`] });
   }
   // Not when the complaint is that the promised warranty is missing.
-  if (s.c_warranty && !s.f_cats.includes("garanti")) B.push({ t: "p", tekst: ["Bilen er også omfattet av garanti. Garantien gjelder i tillegg til mine rettigheter etter loven og begrenser dem ikke."] });
+  if (s.c_warranty && !s.f_cats.includes("garanti")) B.push({ t: "p", tekst: [`Bilen er også omfattet av garanti. ${tone("Garantien gjelder i tillegg til mine rettigheter etter loven og begrenser dem ikke.", "Garantien kommer i tillegg til mine rettigheter etter loven, og dere kan ikke bruke garantivilkårene til å begrense dem.")}`] });
 
   if (s.prec_on) {
     if (presedens === "venter") {
-      B.push({ t: "h", tekst: ["Tilsvarende sak fra Forbrukerklageutvalget"] });
+      B.push({ t: "h", tekst: ["Praksis fra Forbrukerklageutvalget"] });
       B.push({ t: "p", tekst: [{ ph: "lignende sak hentes" }] });
     } else if (presedens) {
-      B.push({ t: "h", tekst: [`Tilsvarende sak fra ${presedens.utvalg}`] });
-      B.push({ t: "prec", avsnitt: [[presedens.avsnitt], ...(presedens.kildeUrl ? [[`Vedtaket er offentlig tilgjengelig: ${presedens.kildeUrl}`]] : [])] });
+      B.push({ t: "h", tekst: [`Praksis fra ${presedens.utvalg}`] });
+      B.push({ t: "prec", avsnitt: [[presedens.avsnitt], ...(presedens.kildeUrl ? [[`Vedtaket er offentlig tilgjengelig på ${presedens.kildeUrl}`]] : [])] });
     } else B.push({ t: "p", tekst: [LOVSETNING] });
   }
 
-  B.push({ t: "h", tekst: ["Mitt krav"] });
+  B.push({ t: "h", tekst: ["Krav"] });
   const kjop: Del = has("c_price") ? s.c_price : { ph: "kjøpesum" };
   switch (s.k_main) {
     case "retting":
-      B.push({ t: "p", tekst: [`Jeg krever at mangelen rettes, jf. ${L.par("retting")}. Rettingen skal skje uten kostnad for meg, innen rimelig tid og uten vesentlig ulempe for meg.${s.k_loaner ? " Jeg ber om at dere stiller lånebil til disposisjon mens bilen er til reparasjon." : ""}`] });
+      B.push({ t: "p", tekst: [`${tone("Mitt krav er", "Jeg krever")} at mangelen rettes, jf. ${L.par("retting")}. ${tone("Rettingen skal skje", "Etter loven skal rettingen skje")} uten kostnad for meg, innen rimelig tid og uten vesentlig ulempe for meg.${s.k_loaner ? ` Jeg ${tone("ber om", "forventer")} at dere stiller lånebil til disposisjon mens bilen er til reparasjon.` : ""}`] });
       break;
     case "omlevering":
-      B.push({ t: "p", tekst: [`Jeg krever omlevering, det vil si en tilsvarende bil uten mangel, jf. ${L.par("retting")}. Omleveringen skal skje uten kostnad for meg og innen rimelig tid.`] });
+      B.push({ t: "p", tekst: [`${tone("Mitt krav er", "Jeg krever")} omlevering, det vil si en tilsvarende bil uten mangel, jf. ${L.par("retting")}. ${tone("Omleveringen skal skje", "Etter loven skal omleveringen skje")} uten kostnad for meg og innen rimelig tid.`] });
       break;
     case "prisavslag":
-      B.push({ t: "p", tekst: ["Jeg krever et forholdsmessig prisavslag på kr ", v("k_amount", "beløp"), `, jf. ${L.par("prisavslag")}.${has("k_basis") ? ` Beløpet bygger på ${trimDot(s.k_basis)}.` : ""}`] });
+      B.push({ t: "p", tekst: [tone("Mitt krav er et forholdsmessig prisavslag på kr ", "Jeg krever et forholdsmessig prisavslag på kr "), v("k_amount", "beløp"), `, jf. ${L.par("prisavslag")}.${has("k_basis") ? ` Beløpet bygger på ${trimDot(s.k_basis)}.` : ""}`] });
       break;
     case "heving":
-      B.push({ t: "p", tekst: [`Mangelen er ikke uvesentlig, og jeg hever med dette kjøpet, jf. ${L.par("heving")}. Jeg krever kjøpesummen på kr `, kjop, " tilbakebetalt mot at bilen leveres tilbake til dere. Jeg ber om at dere tar kontakt for å avtale tilbakelevering og oppgjør."] });
+      B.push({
+        t: "p",
+        tekst: [
+          `Mangelen er ikke uvesentlig, og jeg hever med dette kjøpet, jf. ${L.par("heving")}. `,
+          ...tone<Del[]>(
+            ["Kjøpesummen på kr ", kjop, " skal da tilbakebetales mot at bilen leveres tilbake til dere. Jeg ber om at dere tar kontakt for å avtale tilbakelevering og oppgjør."],
+            ["Jeg krever kjøpesummen på kr ", kjop, " tilbakebetalt mot at bilen leveres tilbake til dere. Ta kontakt med meg for å avtale tilbakelevering og oppgjør."],
+          ),
+        ],
+      });
       break;
     default:
       B.push({ t: "p", tekst: ["Jeg krever ", { ph: "velg krav i steg 4" }, "."] });
   }
   if ((s.k_main === "retting" || s.k_main === "omlevering") && (s.k_alt === "prisavslag" || s.k_alt === "heving"))
-    B.push({ t: "p", tekst: [`Dersom ${s.k_main} ikke skjer innen rimelig tid, ikke lykkes eller ikke er mulig, krever jeg subsidiært ${s.k_alt === "prisavslag" ? `et forholdsmessig prisavslag, jf. ${L.par("prisavslag")}` : `å heve kjøpet, jf. ${L.par("heving")}`}.`] });
+    B.push({ t: "p", tekst: [`Dersom ${s.k_main} ikke skjer innen rimelig tid, ikke lykkes eller ikke er mulig, ${tone("vil jeg subsidiært kreve", "krever jeg subsidiært")} ${s.k_alt === "prisavslag" ? `et forholdsmessig prisavslag, jf. ${L.par("prisavslag")}` : `å heve kjøpet, jf. ${L.par("heving")}`}.`] });
   if (s.k_exp) {
     const it = s.exp.filter((x) => x.t || x.a);
-    B.push({ t: "p", tekst: [`I tillegg krever jeg erstatning for utgifter jeg har hatt som følge av mangelen, jf. ${L.par("erstatning")}${it.length ? ":" : ""}`, ...(it.length ? [] : [" ", { ph: "legg til utgiftene" }, "."])] });
+    B.push({ t: "p", tekst: [`${tone("Jeg fremmer også krav om", "I tillegg krever jeg")} erstatning for utgifter jeg har hatt som følge av mangelen, jf. ${L.par("erstatning")}${it.length ? ":" : ""}`, ...(it.length ? [] : [" ", { ph: "legg til utgiftene" }, "."])] });
     if (it.length) B.push({ t: "exp", rader: it.map((x) => [[x.t ? x.t : { ph: "utgift" }], kr(+x.a || 0)]), sum: kr(it.reduce((a, x) => a + (+x.a || 0), 0)) });
   }
   // § 28 (tilbakeholdsrett) is the same in both versions and not in the paragraph tables.
-  if (s.k_hold) B.push({ t: "p", tekst: ["Inntil saken er løst, holder jeg tilbake kr ", v("k_hold_amt", "beløp"), " av det jeg skylder dere, jf. § 28."] });
+  if (s.k_hold) B.push({ t: "p", tekst: [tone("Inntil saken er løst, vil jeg holde tilbake kr ", "Inntil saken er løst, holder jeg tilbake kr "), v("k_hold_amt", "beløp"), " av det jeg skylder dere, jf. § 28."] });
 
   const dd: Del = s.k_days ? fmtD(addDays(ld, +s.k_days)) : { ph: "svarfrist" };
   const nxt = "bringe saken inn for Forbrukerrådet for mekling og eventuelt videre til Forbrukerklageutvalget";
   B.push({ t: "p", tekst: firm ? ["Jeg krever skriftlig svar innen ", dd, `. Hører jeg ikke fra dere innen fristen, vil jeg ${nxt}.`] : ["Jeg ber om en skriftlig tilbakemelding innen ", dd, ` med forslag til hvordan dere vil løse saken. Kommer vi ikke til enighet, vil jeg ${nxt}.`] });
+  B.push({ t: "sign", linjer: [[tone("Med vennlig hilsen", "Med hilsen")], [""], [v("b_name", "Ditt navn")]] });
+  // The list of attachments follows the signature, as in a Norwegian business letter.
   const att = [...s.f_docs.map((d) => DOCS.find((x) => x[0] === d)?.[1]).filter((x): x is NonNullable<typeof x> => !!x), ...s.files];
   if (att.length) {
     B.push({ t: "h", tekst: ["Vedlegg"] });
     B.push({ t: "ol", punkter: att.map((a) => [a]) });
   }
-  B.push({ t: "sign", linjer: [["Med vennlig hilsen"], [""], [v("b_name", "Ditt navn")]] });
   return B;
 }
 
-const tekst = (d: Del[]) => d.map((x) => (typeof x === "string" ? x : "ph" in x ? `[${x.ph}]` : x.b)).join("");
+const tekst = (d: Del[]) => d.map((x) => (typeof x === "string" ? x : `[${x.ph}]`)).join("");
 
 // The letter as plain text for the clipboard, placeholders as «[…]».
 export function tilTekst(B: Blokk[]): string {

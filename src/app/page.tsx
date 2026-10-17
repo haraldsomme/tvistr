@@ -23,15 +23,15 @@ async function antallVedtak(): Promise<number | null> {
 }
 
 const MONO = "var(--f-mono)";
-const BLA = "#1F4F8F";
+const BLA = "#2B5BF0";
 const kicker: CSSProperties = { fontFamily: MONO, fontSize: 12.5, color: BLA };
 const h2: CSSProperties = { margin: 0, fontSize: "clamp(30px, 3.6vw, 44px)", lineHeight: 1.08, letterSpacing: "-0.035em", fontWeight: 600 };
 const ingress: CSSProperties = { margin: 0, fontSize: 16, lineHeight: 1.6, color: "#455063" };
 const kort: CSSProperties = { display: "flex", flexDirection: "column", gap: 14, padding: 28, border: "1px solid transparent", borderRadius: 20, background: "#FFFFFF", boxShadow: "var(--sh-1)" };
 const hvit: CSSProperties = { background: "#FFFFFF", borderTop: "1px solid #E2E6EC", borderBottom: "1px solid #E2E6EC" };
-const lovtag: CSSProperties = { alignSelf: "flex-start", marginTop: 4, fontFamily: MONO, fontSize: 11, padding: "3px 9px", borderRadius: 999, background: "#E9F0F9", color: BLA };
-const brevH: CSSProperties = { fontFamily: "var(--f-ui)", fontSize: 10.5, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", margin: "18px 0 8px" };
-const merket: CSSProperties = { background: "#E9F0F9", color: BLA, padding: "0 4px", borderRadius: 3 };
+const lovtag: CSSProperties = { alignSelf: "flex-start", marginTop: 4, fontFamily: MONO, fontSize: 11, padding: "3px 9px", borderRadius: 999, background: "#E8EEFE", color: BLA };
+const brevH: CSSProperties = { fontWeight: 700, margin: "18px 0 6px" };
+const merket: CSSProperties = { background: "#E8EEFE", color: BLA, padding: "0 4px", borderRadius: 3 };
 const radGrid: CSSProperties = { display: "grid", gridTemplateColumns: "minmax(64px, .55fr) minmax(0, 1fr) minmax(0, 1fr)", gap: 12 };
 
 const Gronn = ({ s = 15, farge = "#1E7A4C" }: { s?: number; farge?: string }) => (
@@ -91,7 +91,7 @@ function Krav({ navn, tekst, par }: { navn: string; tekst: string; par: string }
 function Trinn({ n, tittel, tekst, forste, siste }: { n: number; tittel: string; tekst: string; forste?: boolean; siste?: boolean }) {
   return (
     <li style={{ display: "flex", gap: 20, paddingBottom: siste ? 0 : 28, position: "relative" }}>
-      <span style={{ flex: "none", width: 34, height: 34, borderRadius: "50%", background: forste ? BLA : "#E9F0F9", color: forste ? "#FFFFFF" : BLA, display: "grid", placeItems: "center", fontFamily: MONO, fontSize: 12.5, zIndex: 1 }}>{n}</span>
+      <span style={{ flex: "none", width: 34, height: 34, borderRadius: "50%", background: forste ? BLA : "#E8EEFE", color: forste ? "#FFFFFF" : BLA, display: "grid", placeItems: "center", fontFamily: MONO, fontSize: 12.5, zIndex: 1 }}>{n}</span>
       {!siste && <span aria-hidden="true" style={{ position: "absolute", left: 16, top: 34, bottom: 0, width: 2, background: "#E2E6EC" }} />}
       <span style={{ display: "flex", flexDirection: "column", gap: 4, paddingTop: 5 }}>
         <span style={{ fontWeight: 600, fontSize: 16 }}>{tittel}</span>
@@ -117,12 +117,12 @@ function Sporsmal({ q, children }: { q: string; children: ReactNode }) {
 
 const SjekkKnapp = ({ stor, hvitKnapp }: { stor?: boolean; hvitKnapp?: boolean }) => (
   <Link
-    href="/sak"
+    href="/sak?start"
     className={hvitKnapp ? undefined : "btn-pri"}
     style={{
       border: 0, display: "inline-flex", alignItems: "center", gap: 10, height: hvitKnapp ? 56 : 54, padding: hvitKnapp ? "0 26px" : "0 24px", borderRadius: 14,
       background: hvitKnapp ? "#FFFFFF" : BLA, color: hvitKnapp ? BLA : "#FFFFFF", fontSize: 16, fontWeight: hvitKnapp ? 600 : 550, textDecoration: "none", whiteSpace: "nowrap",
-      boxShadow: stor ? "0 10px 24px -12px rgba(31,79,143,.7)" : undefined,
+      boxShadow: stor ? "0 10px 24px -12px rgba(43,91,240,.7)" : undefined,
     }}
   >
     Sjekk saken din gratis
@@ -152,7 +152,7 @@ export default async function Home() {
           </nav>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <TilBrevskriveren />
-            <Link href="/sak" className="btn-pri" style={{ border: 0, display: "inline-flex", alignItems: "center", gap: 8, height: 42, padding: "0 18px", borderRadius: 12, background: BLA, color: "#FFFFFF", fontSize: 14, fontWeight: 550, textDecoration: "none", whiteSpace: "nowrap" }}>
+            <Link href="/sak?start" className="btn-pri" style={{ border: 0, display: "inline-flex", alignItems: "center", gap: 8, height: 42, padding: "0 18px", borderRadius: 12, background: BLA, color: "#FFFFFF", fontSize: 14, fontWeight: 550, textDecoration: "none", whiteSpace: "nowrap" }}>
               Sjekk saken din
             </Link>
           </div>
@@ -188,17 +188,17 @@ export default async function Home() {
         <div className="hero-visual" style={{ flex: "1 1 440px", minWidth: 0, position: "relative", padding: "28px 0 0" }}>
           <div className="hero-bg" aria-hidden="true" style={{ position: "absolute", inset: "0 -20px 0 40px", borderRadius: 28, background: "#ECEFF3" }} />
           <div className="letter-pad" style={{ position: "relative", marginLeft: 28, background: "#FFFFFF", borderRadius: 6, boxShadow: "0 0 0 1px rgba(16,20,26,.04), 0 2px 4px rgba(16,20,26,.04), 0 40px 70px -34px rgba(16,20,26,.35)", padding: 40, fontFamily: "var(--f-doc)", fontSize: 14, lineHeight: 1.62, color: "#1A1E24" }}>
-            <div style={{ textAlign: "right", color: "#5C6676", fontSize: 13 }}>Oslo, 16. oktober 2026</div>
-            <div style={{ fontWeight: 600, fontSize: 17, lineHeight: 1.35, margin: "18px 0 14px" }}>Reklamasjon på mangel ved Volkswagen ID.4, reg.nr. EL 48213</div>
+            <div>Oslo, 16. oktober 2026</div>
+            <div style={{ fontWeight: 700, margin: "18px 0 12px" }}>Reklamasjon på mangel ved Volkswagen ID.4, reg.nr. EL 48213</div>
             <p style={{ margin: "0 0 12px" }}>Bilen har en mangel, og jeg reklamerer med dette etter forbrukerkjøpsloven § 27.</p>
             <div style={brevH}>Rettslig grunnlag</div>
             <p style={{ margin: "0 0 12px" }}>
               Feilen viste seg tre måneder etter overtakelsen. Etter <span style={merket}>§ 18 annet ledd</span> formodes den å ha eksistert ved leveringen.
             </p>
-            <div style={brevH}>Mitt krav</div>
+            <div style={brevH}>Krav</div>
             <p style={{ margin: 0 }}>Jeg krever at mangelen rettes, jf. § 29, uten kostnad for meg og innen rimelig tid.</p>
-            <div style={brevH}>Tilsvarende sak</div>
-            <p style={{ margin: 0, paddingLeft: 12, borderLeft: "2px solid #C9D8EC" }}>
+            <div style={brevH}>Praksis fra Forbrukerklageutvalget</div>
+            <p style={{ margin: 0 }}>
               I <span style={merket}>sak 104368</span> sviktet drivlinjen på en brukt elbil etter ti måneder, og Forbrukerklageutvalget hevet kjøpet.
             </p>
           </div>

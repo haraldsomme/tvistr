@@ -3,7 +3,7 @@
 // The free check (artifact «CASE CHECK»): one question per screen, auto-advance on a choice, then the
 // verdict. The answers stay in localStorage (tvistr-sjekk).
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Merke } from "@/app/deler/merke";
 import { MaalVisning } from "@/app/maal-visning";
 import { Hake, Pil, Tilbake } from "@/app/deler/ikoner";
@@ -21,7 +21,7 @@ export type Tilstand = Svar & { _screen?: "q" | "result"; _i?: number };
 const ADV_MS = 750;
 const HURTIG = [["I dag", 0], ["I går", 1], ["For en uke siden", 7], ["For to uker siden", 14], ["For en måned siden", 30]] as const;
 
-export function Sjekk({ utvikling }: { utvikling: boolean }) {
+export function Sjekk({ utvikling, fraStart }: { utvikling: boolean; fraStart: boolean }) {
   const router = useRouter();
   const [a, settA, klar] = useLagret<Tilstand>("tvistr-sjekk", () => ({ _i: 0, cats: [], issues: {}, fdates: {} }));
   const [ordre] = useLagret("tvistr-ordre", () => "");
@@ -48,10 +48,7 @@ export function Sjekk({ utvikling }: { utvikling: boolean }) {
       const n = Math.min(f._i ?? 0, v.length - 1);
       const d = v[n];
       if ((d?.terminal && d.terminal(f[d.id])) || n >= v.length - 1) return { ...f, _screen: "result" };
-      const ny = v[n + 1];
-      // The handover date starts as the day the car was registered on its current owner.
-      const delivery = ny.id === "delivery" && f.lastReg && !f.delivery ? f.lastReg : f.delivery;
-      return { ...f, delivery, _i: n + 1 };
+      return { ...f, _i: n + 1 };
     });
   }, [avbryt, settA]);
 
@@ -99,6 +96,14 @@ export function Sjekk({ utvikling }: { utvikling: boolean }) {
   });
 
   useEffect(() => () => clearTimeout(tid.current), []);
+
+  // From the front page: back to question 1 with the answers kept, before the stored position is
+  // painted. The parameter is dropped so a reload stays where the buyer is.
+  useLayoutEffect(() => {
+    if (!klar || !fraStart) return;
+    settA((f) => ({ ...f, _screen: "q", _i: 0 }));
+    router.replace("/sak");
+  }, [klar, fraStart, settA, router]);
 
   const tot = Math.max(anslag(a), i + 1);
   return (
@@ -210,7 +215,8 @@ function Bilen({ a, settA }: Pick<Props, "a" | "settA">) {
         <label className="lb" htmlFor="qReg">
           Registreringsnummer
         </label>
-        <Skilt id="qReg" verdi={a.reg ?? ""} funnet={funnet} onEndre={(reg) => settA((f) => ({ ...f, reg }))} onBil={(b) => settA((f) => ({ ...f, make: `${b.make} ${b.model}`.trim(), year: b.year, lastReg: b.lastReg }))} />
+        {/* The handover date starts as the day the car was registered on its current owner, unless the buyer changed it. */}
+        <Skilt id="qReg" verdi={a.reg ?? ""} funnet={funnet} onEndre={(reg) => settA((f) => ({ ...f, reg }))} onBil={(b) => settA((f) => ({ ...f, make: `${b.make} ${b.model}`.trim(), year: b.year, lastReg: b.lastReg, delivery: f.delivery && f.delivery !== f.lastReg ? f.delivery : b.lastReg || f.delivery }))} />
       </div>
       {/* Filled by «Hent bilen»; typed by hand when the register does not have the car. The car is fixed at payment. */}
       <div className="f c4">
@@ -226,6 +232,12 @@ function Bilen({ a, settA }: Pick<Props, "a" | "settA">) {
         <input className="in mono" id="qYear" inputMode="numeric" placeholder="2016" value={a.year ?? ""} onChange={(e) => settA((f) => ({ ...f, year: FMT.year(e.target.value) }))} />
       </div>
       <div className="f c3">
+        <label className="lb" htmlFor="qDelivery">
+          Overtakelsesdato
+        </label>
+        <input className="in" type="date" id="qDelivery" max={idag()} value={a.delivery ?? ""} onChange={(e) => settA((f) => ({ ...f, delivery: e.target.value }))} />
+      </div>
+      <div className="f c3">
         <label className="lb" htmlFor="qKm">
           Km-stand ved overtakelse <em>valgfritt</em>
         </label>
@@ -234,6 +246,11 @@ function Bilen({ a, settA }: Pick<Props, "a" | "settA">) {
           <span className="sx">km</span>
         </div>
       </div>
+      {a.lastReg && a.delivery === a.lastReg && (
+        <p className="hint c6" style={{ margin: 0 }}>
+          Overtakelsesdatoen er fylt inn med datoen bilen sist ble registrert. Endre den hvis du fikk bilen en annen dag. Fristene regnes herfra.
+        </p>
+      )}
     </div>
   );
 }
@@ -244,27 +261,20 @@ function Dato({ q, a, settA, adv, onVelg }: Pick<Props, "q" | "a" | "settA" | "a
     <>
       <div className="f q-datef">
         <label className="lb" htmlFor="qDate">
-          {q.id === "delivery" ? "Overtakelsesdato" : "Dato du sa fra"}
+          Dato du sa fra
         </label>
         <input className="in q-date" type="date" id="qDate" max={idag()} value={v} onChange={(e) => settA((f) => ({ ...f, [q.id]: e.target.value }))} />
       </div>
-      {q.id === "delivery" && a.lastReg && v === a.lastReg && (
-        <p className="hint" style={{ margin: "10px 0 0" }}>
-          Fylt inn med datoen bilen sist ble registrert. Endre den hvis du fikk bilen en annen dag.
-        </p>
-      )}
-      {q.id === "notifiedDate" && (
-        <div className="q-quick" role="group" aria-label="Hurtigvalg">
-          {HURTIG.map(([l, d]) => {
-            const dato = iso(addDays(new Date(), -d));
-            return (
-              <button key={l} type="button" className={`q-chip${adv === dato ? " adv" : ""}`} aria-pressed={v === dato} onClick={() => onVelg(q.id, dato, dato)}>
-                {l}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <div className="q-quick" role="group" aria-label="Hurtigvalg">
+        {HURTIG.map(([l, d]) => {
+          const dato = iso(addDays(new Date(), -d));
+          return (
+            <button key={l} type="button" className={`q-chip${adv === dato ? " adv" : ""}`} aria-pressed={v === dato} onClick={() => onVelg(q.id, dato, dato)}>
+              {l}
+            </button>
+          );
+        })}
+      </div>
     </>
   );
 }

@@ -30,9 +30,9 @@ Inneholder ett rad per vedtak fra Forbrukertvistutvalget/Forbrukerklageutvalget 
 
 Det som finnes:
 - **Appen** (`docs/app.md`, design i `docs/superpowers/specs/2026-10-16-ny-app-design.md`): en React-port av artefakten «Bilreklamasjon» som eieren bygde. Utseende, tekster og flyt følger artefakten, med navnet Tvistr, bare bruktbil og frister og paragrafer etter lovversjonen. Svarene ligger bare i `localStorage`.
-  - `/` forsiden. `/sak` er gratis sjekk og vurdering (`src/app/sak/`). `/brev` er brevskriveren med fanene Skjema, Vurdering og Brevet (`src/app/brev/`), bare etter betaling.
+  - `/` forsiden. `/sak` er gratis sjekk og vurdering (`src/app/sak/`). `/brev` er brevskriveren med fanene Skjema, Vurdering, Vedtak og Brevet (`src/app/brev/`), bare etter betaling.
   - Ren logikk i `src/lib/app/`: `vurdering.ts` (`evaluate`: sterk/mulig/svak/utenfor), `brev.ts` (`byggBrev`, hele brevet bygges i nettleseren), `lov.ts` (formodning 6 måneder før 2024 og 2 år etter, paragrafer fra `src/lib/brev/paragrafer.ts`), `saken.ts` (svarene → `byggSaken`, og `fraSjekk`) og `skjema.ts`.
-  - To serverhandlinger mot databasen: `vurderSaken` (`src/app/sak/vurdering.ts`) gir tall og tre vedtakskort uten sitater og lenker, uten modellkall. `finnVedtak` (`src/app/brev/actions.ts`) gir tre vedtak med avsnitt fra `mal.ts`: modellens valg og to alternativer. Den svarer bare når ordren er betalt.
+  - To serverhandlinger mot databasen: `vurderSaken` (`src/app/sak/vurdering.ts`) gir tall og tre vedtakskort uten sitater og lenker, uten modellkall. `finnVedtak` (`src/app/brev/actions.ts`) gir opptil ti vedtak med avsnitt fra `mal.ts` og likhetsprosent: modellens valg («Anbefalt») og resten av rangeringens topp 10. Den svarer bare når ordren er betalt.
   - Vipps er ikke koblet på. Med `TVISTR_HELT_BREV_UTEN_BETALING=1` låser «Gå til betaling» opp (`lasOpp`, `betalt()` i `src/lib/vipps/profil.ts`). Hendelser uten persondata lagres i `hendelse` (`src/lib/maling.ts`).
   - Tester: `npm test` og `npx playwright test` (`e2e/flyt.spec.ts`, hele flyten mot databasen og modellen).
 - **Feilkategoriene** (`src/lib/feil/kategorier.ts`): 13 hovedkategorier med underkategorier. Brukeren kan velge flere av begge. Hver underkategori har en komponenttype (`KOMPONENTTYPER`); typen «opplysning» (historikk, service, utstyr, garanti) gjelder det selgeren sa eller lovet, der bilprofil og formodningsregel ikke teller. «Vet ikke ennå» er symptomer og sammenlignes på symptomet.
@@ -49,11 +49,11 @@ Det som finnes:
   - Importen beholder bare sitater som står ordrett i utvalgets vurdering uten utelatelser. Den leser `signaturdato` fra teksten og bruker datavaskene «standpunkt» og «rettslig» (`data/avgjorende/`), og funnene i `kontrollfunn` som ikke er angret.
   - Rekkefølge: se `docs/vedtaksvalg.md`. Endres instruks eller svarformat, økes `AVGJORENDE_VERSJON`.
 - **Filtrene dette gir:** kategori og eventuelt underkategori, bare feil med medhold, tidsnivå, bilprofil (`alder_ved_kjop`, `km_ved_kjop`, `kjopesum_nok` fra tolk, i intervaller), «som den er» og sanksjon (`sanksjoner` på `vedtak` gjelder hele vedtaket; `avgjorende` har sanksjonen per feil).
-- **Vedtaksvalget** (`docs/vedtaksvalg.md` beskriver det, `docs/ferdigkriterier.md` kravene og målingene): Brevfanen gir tre vedtak og avsnittet i brevet som viser til det valgte. Brevløpet er rangering i kode → ett Sonnet-kall for valget → malen. Det har ingen kontroll per brev; kvaliteten sikres i datavaskene.
+- **Vedtaksvalget** (`docs/vedtaksvalg.md` beskriver det, `docs/ferdigkriterier.md` kravene og målingene): Fanen Vedtak gir topp 10 og avsnittet i brevet som viser til det valgte. Brevløpet er rangering i kode → ett Sonnet-kall for valget → malen. Det har ingen kontroll per brev; kvaliteten sikres i datavaskene.
   - Rangering (`src/lib/matching/`): nivå A er samme feil, vurdert for seg av utvalget, med minst to verifiserte sitater og en bil som ikke er mildere enn kjøperens. Nivå B er et vedtak som avgjorde et av kjøperens rettslige poeng (`rett.ts`), med utvalgets egen setning om poenget. Poengene i `vekter.ts` sorterer innenfor nivået, og de ti beste går videre.
   - Valget (`src/lib/vedtaksvalg/valg.ts`): Sonnet svarer bare med vedtak og sitat-id-er. Holder ikke svaret, brukes rangeringens førstevalg. Endres instruksen, økes `VEDTAKSVALG_VERSJON`.
   - Malen (`mal.ts`): avsnittet bygges bare av felt og ordrette sitater. Uten kandidater blir det lovsetningen «Kravet bygger på lovens vilkår.».
-  - Brevet tilbyr tre vedtak: valget og to alternativer fra rangeringen (`alternativer` i `valg.ts`), med sine første sitater.
+  - Fanen Vedtak tilbyr opptil ti vedtak: valget og resten av rangeringen (`alternativer` i `valg.ts`), med sine første sitater og en likhetsprosent (`src/lib/matching/likhet.ts`; ikke en vinnersjanse).
   - Målinger: `npm run ferdig:dekning`, `ferdig:stikkprove`, `simuler`.
 
 **Vedlikehold:** `README.md` beskriver kjøringsrekkefølge (`hent` → `klassifiser` → `tolk`) og sikkerhetskopi (`npm run db:backup`). Ta kopi før `tolk --på-nytt`. Endres prompt eller skjema i `src/lib/ai/`, øk versjonen i `src/lib/ai/prompter.ts`.

@@ -8,7 +8,7 @@ Appen er en React-port av artefakten «Bilreklamasjon», som eieren bygde utenfo
 |---|---|---|
 | `/` | `src/app/page.tsx` | Forsiden. Antall vedtak leses fra `statistikk_kategori` ved bygging. |
 | `/sak` | `src/app/sak/sjekk.tsx`, `resultat.tsx` | Gratis sjekk: ett spørsmål per skjerm (`sporsmal.ts`), deretter vurderingen og tilbudet. |
-| `/brev` | `src/app/brev/skriver.tsx` | Brevskriveren med fanene Skjema, Vurdering og Brevet. Krever betaling, ellers sendes kjøperen til `/sak`. |
+| `/brev` | `src/app/brev/skriver.tsx` | Brevskriveren med fanene Skjema, Vurdering, Vedtak og Brevet. Krever betaling, ellers sendes kjøperen til `/sak`. |
 
 Svarene ligger bare i nettleseren (`localStorage`: `tvistr-sjekk`, `tvistr-skjema`, `tvistr-ordre`, se `src/lib/app/lagring.ts`). Ingenting om saken lagres på serveren.
 
@@ -45,7 +45,7 @@ Brevet bygges i nettleseren av `byggBrev` (`src/lib/app/brev.ts`). Manglende sva
 - Formodningen nevnes per feil: bare for feilene innenfor perioden, og femårsregelen bare for feil mellom to og fem år.
 - Brevet sier at reklamasjonen er rettidig bare når den er innen to måneder etter oppdagelsen og innen fem år. Ellers sier det ingenting om det.
 - Mens vedtaket hentes, står en plassholder der avsnittet skal stå, og «Kopier brevet» venter.
-- Sjekklisten viser datoer som ikke kan stemme (`datoavvik` i `src/lib/app/datoer.ts`): kjøp etter overtakelse, datoer frem i tid, feil oppdaget før overtakelsen, reklamasjon før oppdagelsen, brev datert før reklamasjonen og mer enn fem år siden overtakelsen. Avsnittet om vedtaket er Tvistrs: `finnVedtak` (rangering, ett Sonnet-kall, malen i `mal.ts`) gir modellens valg først og deretter to alternativer fra rangeringen. Kjøperen velger blant dem. `finnVedtak` svarer bare når ordren er betalt, og kalles én gang per sett med svar.
+- Sjekklisten viser datoer som ikke kan stemme (`datoavvik` i `src/lib/app/datoer.ts`): kjøp etter overtakelse, datoer frem i tid, feil oppdaget før overtakelsen, reklamasjon før oppdagelsen, brev datert før reklamasjonen og mer enn fem år siden overtakelsen. Avsnittet om vedtaket er Tvistrs: `finnVedtak` (rangering, ett Sonnet-kall, malen i `mal.ts`) gir modellens valg («Anbefalt») først og deretter resten av rangeringens topp 10, hvert med en likhetsprosent (`src/lib/matching/likhet.ts`). Kjøperen velger blant dem i fanen Vedtak (`vedtaksfane.tsx`), og Brevet viser hvilket som brukes. Vedtakene hentes bare når fanen Vedtak eller Brevet er åpen. `finnVedtak` svarer bare når ordren er betalt, og kalles én gang per sett med svar.
 
 ## Måling
 
@@ -53,5 +53,5 @@ Brevet bygges i nettleseren av `byggBrev` (`src/lib/app/brev.ts`). Manglende sva
 
 ## Tester
 
-- `npm test`: vurderingen per nivå og lovversjon, brevet (eksempelbrevet som snapshot, plassholdere og lovversjon), oversettelsen til rangeringen, `finnVedtak` uten betaling, top 3 (`alternativer`) og lagringen.
+- `npm test`: vurderingen per nivå og lovversjon, brevet (eksempelbrevet som snapshot, plassholdere og lovversjon), oversettelsen til rangeringen, `finnVedtak` uten betaling, topp 10 (`alternativer`), likheten og lagringen.
 - `npx playwright test` (`e2e/flyt.spec.ts`): hele flyten på desktop og mobil, mot databasen og modellen. Krever `TVISTR_HELT_BREV_UTEN_BETALING=1`.

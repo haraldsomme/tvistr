@@ -37,8 +37,7 @@ test("fra forsiden til brevet med et vedtak", async ({ page }) => {
   await page.locator("#qKm").fill("120000");
   await page.getByRole("button", { name: "Hent bilen" }).click();
   await expect(page.getByText("Peugeot 308")).toBeVisible();
-  await page.getByRole("button", { name: "Neste" }).click();
-  await expect(page.locator("#qDate")).toHaveValue(dager(100));
+  await expect(page.locator("#qDelivery")).toHaveValue(dager(100));
   await page.getByRole("button", { name: "Neste" }).click();
   await page.getByRole("button", { name: "Motor og eksos" }).click();
   await page.getByRole("button", { name: "Turbo", exact: true }).click();
@@ -68,12 +67,23 @@ test("fra forsiden til brevet med et vedtak", async ({ page }) => {
   const brev = page.locator("#letterFull");
   // Turbo on a used car has many decisions with medhold: the letter must cite one, with quotes and a link.
   await expect(page.locator(".l-prec")).toBeVisible({ timeout: 120_000 });
-  await expect(brev).toContainText("Tilsvarende sak fra");
+  await expect(brev).toContainText("Praksis fra");
   await expect(page.locator(".l-prec")).toContainText("«");
   await expect(page.locator(".l-prec")).toContainText("http");
-  expect(await page.locator(".pp-opt").count()).toBeGreaterThanOrEqual(2);
+  // The letter tab no longer lists the decisions: they are picked in the Vedtak tab.
+  await expect(page.locator(".pp-opt")).toHaveCount(0);
   const for_ = await page.locator(".l-prec").innerText();
-  await page.locator(".pp-opt").nth(1).click();
+
+  await page.getByRole("tab", { name: "Vedtak" }).click();
+  const kort = page.locator(".vk");
+  expect(await kort.count()).toBeGreaterThanOrEqual(2);
+  expect(await kort.count()).toBeLessThanOrEqual(10);
+  await expect(kort.first()).toContainText("Anbefalt");
+  await expect(kort.first()).toContainText("%");
+  await expect(kort.first()).toContainText("Slik står det i brevet");
+  await kort.nth(1).click();
+  await expect(kort.nth(1)).toContainText("Slik står det i brevet");
+  await page.getByRole("tab", { name: "Brevet" }).click();
   await expect(page.locator(".l-prec")).not.toHaveText(for_);
 });
 

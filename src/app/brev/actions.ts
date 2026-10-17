@@ -1,8 +1,8 @@
 "use server";
 
 // The decisions the letter can cite, after payment: the ranking in code, one Sonnet call for the
-// choice, the paragraph from the template (docs/vedtaksvalg.md). The chosen one comes first, then two
-// alternatives from the ranking. Nothing here reaches the browser before payment: no quote, no link.
+// choice, the paragraph from the template (docs/vedtaksvalg.md). The chosen one comes first, then the
+// rest of the ranking's top ten, each with its likeness to the buyer's case. Nothing here reaches the browser before payment: no quote, no link.
 import { headers } from "next/headers";
 import { inArray } from "drizzle-orm";
 import { db } from "@/db";
@@ -10,7 +10,10 @@ import { vedtak } from "@/db/schema";
 import { rensSvar } from "@/app/sak/rens";
 import { hentAlle, hentBilnavn } from "@/app/sak/vedtak-db";
 import type { Presedens } from "@/lib/app/brev";
+import { komponentnavn } from "@/lib/feil/kategorier";
+import { likhet } from "@/lib/matching/likhet";
 import { avgjorendeFor, type Rangert, ranger } from "@/lib/matching/ranger";
+import { poengtekst } from "@/lib/matching/rett";
 import type { Kandidat } from "@/lib/matching/typer";
 import { lagGrense } from "@/lib/rategrense";
 import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
@@ -45,7 +48,7 @@ export async function finnVedtak(inn: { svar: unknown; ordreId: unknown }): Prom
     const bilnavn = await hentBilnavn();
 
     const svaret = await velgVedtak({ kjoper, sak, kandidater, alle: etterId, detaljer });
-    const presedens = (r: Rangert, avsnitt: string, best: boolean): Presedens => {
+    const presedens = (r: Rangert, avsnitt: string, anbefalt: boolean): Presedens => {
       const k: Kandidat = etterId.get(r.id)!;
       const egne = r.feil ? (avgjorendeFor(k.avgjorende, r.feil)?.sanksjoner ?? []) : [];
       return {
@@ -57,7 +60,14 @@ export async function finnVedtak(inn: { svar: unknown; ordreId: unknown }): Prom
         avsnitt,
         kildeUrl: detaljer.get(k.id)?.kildeUrl ?? null,
         utvalg: detaljer.get(k.id)?.utvalg ?? "Forbrukerklageutvalget",
-        best,
+        anbefalt,
+        niva: r.niva,
+        gjaldt: r.feil ? komponentnavn(r.feil) : r.rett.map(poengtekst).join("; "),
+        km: k.km,
+        alder: k.alder,
+        somDenEr: k.somDenEr,
+        likhet: likhet(r, sak),
+        treff: r.treff,
       };
     };
     console.info(`vedtaksvalg: ${etterId.get(svaret.r.id)?.saksnummer} (nivå ${svaret.niva}${svaret.fulgt ? "" : ", rangeringens førstevalg"}), $${svaret.forbruk.kostnadUsd.toFixed(3)}`);

@@ -1,50 +1,18 @@
-// The Brevet tab (artifact step «Brev»): place, date and tone, the decision the letter cites (one of
-// the top three from finnVedtak), copy buttons, the checklist and the letter on paper.
-import { useEffect, useState } from "react";
+// The Brevet tab (artifact step «Brev»): place, date and tone, the decision the letter cites (picked in
+// the Vedtak tab), copy buttons, the checklist and the letter on paper.
 import { Kopier } from "@/app/deler/ikoner";
-import { byggBrev, emne, type Presedens, tilTekst } from "@/lib/app/brev";
+import { byggBrev, emne, tilTekst } from "@/lib/app/brev";
 import { idag } from "@/lib/app/dato";
-import { husk } from "@/lib/app/kall";
 import { datoavvik } from "@/lib/app/datoer";
-import { nokkel, sakTekst, tilSvar } from "@/lib/app/saken";
 import { maal } from "@/lib/maling";
 import type { Skjema } from "@/lib/app/skjema";
-import { type Funn, finnVedtak } from "./actions";
 import { Bryter, Felt, Seg, type Sett } from "./felt";
 import { Papir } from "./papir";
 import { ETIKETT, mangler } from "./steg";
+import type { Vedtaksvalg } from "./vedtaksfane";
 
-// One model call per set of answers in this page session, however often the tab is opened.
-const hent = (svar: NonNullable<ReturnType<typeof tilSvar>>, ordreId: string) =>
-  husk(`${ordreId}|${nokkel(svar)}`, () => finnVedtak({ svar, ordreId }), "Vi fikk ikke kontakt. Prøv igjen.");
-
-export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: Sett; ordre: string; onSteg: (i: number) => void; onToast: (m: string) => void }) {
-  const svar = tilSvar(s);
-  const n = nokkel(svar);
-  const [funn, settFunn] = useState<{ n: string; f: Funn } | null>(null);
-  const [forsok, settForsok] = useState(0);
-
-  useEffect(() => {
-    // No model call while the letter is not to cite a decision.
-    if (!svar || !s.prec_on) return;
-    let gjeldende = true;
-    hent(svar, ordre).then((f) => {
-      if (!gjeldende) return;
-      settFunn({ n, f });
-      // The picker starts on the decision the model chose.
-      if (f.ok && f.valg.length && !f.valg.some((v) => v.id === s.prec_id)) sett({ prec_id: f.valg[0].id });
-    });
-    return () => {
-      gjeldende = false;
-    };
-    // `n` stands for `svar`; `forsok` is «Prøv igjen».
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n, ordre, s.prec_on, forsok]);
-
-  const aktuell = funn && funn.n === n ? funn.f : null;
-  const valg: Presedens[] = aktuell?.ok ? aktuell.valg : [];
-  const valgt = valg.find((v) => v.id === s.prec_id) ?? valg[0] ?? null;
-  const venter = !!svar && s.prec_on && (!aktuell || !aktuell.ok);
+export function Brevet({ s, sett, vedtak, onSteg, onVedtak, onToast }: { s: Skjema; sett: Sett; vedtak: Vedtaksvalg; onSteg: (i: number) => void; onVedtak: () => void; onToast: (m: string) => void }) {
+  const { funn, valgt, venter } = vedtak;
   const blokker = byggBrev(s, venter ? "venter" : valgt, idag());
   const avvik = datoavvik(s, idag());
 
@@ -90,46 +58,28 @@ export function Brevet({ s, sett, ordre, onSteg, onToast }: { s: Skjema; sett: S
             <Bryter s={s} sett={sett} k="prec_on" tittel="Vis til en lignende sak" tekst="Brevet sammenligner saken din med et vedtak fra Forbrukerklageutvalget der forbrukeren fikk medhold." />
             {s.prec_on && (
               <div className="rv-in" style={{ paddingBottom: 0 }}>
-                {!svar ? (
+                {vedtak.mangler ? (
                   <p className="hint">Legg inn overtakelsesdato og når du oppdaget feilen, så finner vi lignende saker.</p>
-                ) : !aktuell ? (
+                ) : !funn ? (
                   <p className="hint">Finner lignende saker …</p>
-                ) : !aktuell.ok ? (
+                ) : !funn.ok ? (
                   <div className="sugg">
-                    <span>{aktuell.melding}</span>
-                    <button type="button" className="btn sm" onClick={() => settForsok((f) => f + 1)}>
+                    <span>{funn.melding}</span>
+                    <button type="button" className="btn sm" onClick={vedtak.provIgjen}>
                       Prøv igjen
                     </button>
                   </div>
-                ) : !valg.length ? (
+                ) : !valgt ? (
                   <p className="hint">Vi fant ingen lignende sak med medhold. Brevet bygger på lovens vilkår.</p>
                 ) : (
-                  <>
-                    <div className="pp">
-                      {valg.map((v) => (
-                        <label key={v.id} className="pp-opt">
-                          <input type="radio" name="prec_id" value={v.id} checked={v.id === valgt?.id} onChange={() => sett({ prec_id: v.id })} />
-                          <span className="pp-b">
-                            <span className="pp-t">
-                              <span>
-                                {sakTekst(v.saksnummer, null)} · {v.bil}
-                              </span>
-                              <em>{v.best ? "Best treff" : "Alternativ"}</em>
-                            </span>
-                            {v.utfall[0] && <span className="pp-d">Kjøperen fikk {v.utfall.join(" og ")}{v.vedtaksdato && `, ${v.vedtaksdato.slice(0, 4)}`}</span>}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                    {valgt?.kildeUrl && (
-                      <p className="prec-src" style={{ margin: "10px 0 0" }}>
-                        Les hele vedtaket:{" "}
-                        <a href={valgt.kildeUrl} target="_blank" rel="noopener">
-                          {valgt.saksnummer ? `sak ${valgt.saksnummer}` : "vedtaket"} hos Forbrukertilsynet
-                        </a>
-                      </p>
-                    )}
-                  </>
+                  <div className="sugg">
+                    <span>
+                      Brevet viser til <b>{valgt.saksnummer ? `sak ${valgt.saksnummer}` : "vedtaket"}</b> · {valgt.bil} ({valgt.anbefalt ? "anbefalt, " : ""}likhet {valgt.likhet} %)
+                    </span>
+                    <button type="button" className="btn sm" onClick={onVedtak}>
+                      Velg et annet vedtak
+                    </button>
+                  </div>
                 )}
               </div>
             )}

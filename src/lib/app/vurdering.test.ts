@@ -44,7 +44,7 @@ describe("dato og lov", () => {
     expect(regler("2023-05-01").ref("forbehold")).toBe("forbrkjl. § 17 første ledd bokstav a");
   });
   it("dur og relText", () => {
-    expect(dur(parseD("2026-01-01")!, parseD("2026-03-15")!)).toBe("2 måneder");
+    expect(dur(parseD("2026-01-01")!, parseD("2026-03-15")!)).toBe("to måneder");
     expect(relText("2026-03-15", "2026-01-01")).toBe("2 måneder og 2 uker etter overtakelsen");
     expect(relText("2025-12-01", "2026-01-01")).toBe("Før overtakelsen");
   });

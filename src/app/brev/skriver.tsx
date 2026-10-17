@@ -1,6 +1,6 @@
 "use client";
 
-// The letter writer (artifact «writer»): tabs Skjema · Vurdering · Brevet, the steps rail and the form.
+// The letter writer (artifact «writer»): tabs Skjema · Vurdering · Vedtak · Brevet, the steps rail and the form.
 // Only for a buyer who has unlocked it; the answers stay in localStorage (tvistr-skjema).
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,9 +16,10 @@ import { Feilen, Kontakt, Verksted } from "./mangelen";
 import { Deg, Forhandleren } from "./partene";
 import { har, STEG } from "./steg";
 import { skriverResultat } from "@/lib/app/vurdering";
+import { useVedtak, Vedtaksfane } from "./vedtaksfane";
 import { useLignende, Vurderingsfane } from "./vurderingsfane";
 
-type Fane = "form" | "case" | "letter";
+type Fane = "form" | "case" | "prec" | "letter";
 export function Skriver() {
   const router = useRouter();
   const [ordre, , ordreKlar] = useLagret("tvistr-ordre", () => "");
@@ -40,6 +41,7 @@ export function Skriver() {
   const sett = (patch: Partial<Skjema>) => settRaa((f) => ({ ...f, ...patch }));
   const r = skriverResultat(s, idag());
   const lignende = useLignende(s);
+  const vedtak = useVedtak(s, sett, ordre, fane === "prec" || fane === "letter");
 
   const tilFane = (t: Fane) => {
     settFane(t);
@@ -54,7 +56,7 @@ export function Skriver() {
   if (!ordreKlar || !ordre) return null;
   const status = STEG.map((st) => ({ f: st.felt.filter((k) => har(s, k)).length, t: st.felt.length }));
   const pst = Math.round((status.reduce((a, x) => a + x.f, 0) / status.reduce((a, x) => a + x.t, 0)) * 100);
-  const FANER: [Fane, string][] = [["form", "Skjema"], ["case", "Vurdering"], ["letter", "Brevet"]];
+  const FANER: [Fane, string][] = [["form", "Skjema"], ["case", "Vurdering"], ["prec", "Vedtak"], ["letter", "Brevet"]];
 
   return (
     <div className="shell" id="shell" data-wtab={fane} data-tier={r.tier}>
@@ -70,7 +72,7 @@ export function Skriver() {
               tabIndex={fane === id ? 0 : -1}
               onClick={() => tilFane(id)}
               onKeyDown={(e) => {
-                const n = e.key === "ArrowRight" ? (k + 1) % 3 : e.key === "ArrowLeft" ? (k + 2) % 3 : -1;
+                const n = e.key === "ArrowRight" ? (k + 1) % FANER.length : e.key === "ArrowLeft" ? (k + FANER.length - 1) % FANER.length : -1;
                 if (n < 0) return;
                 e.preventDefault();
                 tilFane(FANER[n][0]);
@@ -133,7 +135,8 @@ export function Skriver() {
           </div>
         )}
         {fane === "case" && <Vurderingsfane s={s} r={r} lignende={lignende} brukes={s.prec_on ? s.prec_id : null} onSteg={tilSteg} onBrevet={() => tilFane("letter")} onSkjema={() => tilFane("form")} />}
-        {fane === "letter" && <Brevet s={s} sett={sett} ordre={ordre} onSteg={tilSteg} onToast={settToast} />}
+        {fane === "prec" && <Vedtaksfane s={s} sett={sett} vedtak={vedtak} onBrevet={() => tilFane("letter")} />}
+        {fane === "letter" && <Brevet s={s} sett={sett} vedtak={vedtak} onSteg={tilSteg} onVedtak={() => tilFane("prec")} onToast={settToast} />}
         {fane === "form" && (
           <div className="nav">
             <button type="button" className="btn gh" style={{ visibility: steg === 0 ? "hidden" : "visible" }} onClick={() => tilSteg(steg - 1)}>

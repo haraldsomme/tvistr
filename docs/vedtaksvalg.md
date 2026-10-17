@@ -73,7 +73,14 @@ Har kjøperen en skriftlig verkstedrapport, ber instruksen modellen foretrekke b
 
 **Hvis svaret ikke holder** (ukjent vedtak, eller sitat-id-er vedtaket ikke har), brukes rangeringens førstevalg med de første sitatene. Det samme skjer om kallet feiler. Ingenting prøves på nytt.
 
-**Tre å velge mellom.** Brevfanen viser modellens valg først («Best treff»), og deretter de to neste kandidatene i rangeringen som har sitater (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger hvilket vedtak brevet viser til.
+**Ti å velge mellom.** Fanen Vedtak i brevskriveren viser modellens valg først («Anbefalt»). Deretter kommer resten av rangeringens topp 10 som har sitater, i rangeringens rekkefølge (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger vedtaket i fanen Vedtak. Brevfanen viser bare hvilket vedtak brevet viser til, med en knapp tilbake til fanen.
+
+**Likhet.** Hvert vedtak har en prosent (`likhet` i `src/lib/matching/likhet.ts`): poengsummen fra rangeringen delt på det et vedtak kan få mot kjøperens svar.
+- Nevneren er summen av `likt`-poengene for kriteriene kjøperen har svart på, og den er lik for alle vedtak i saken. Underkategori teller bare når kjøperen har valgt en. Grunnlag og egen vurdering teller alltid.
+- En verdi vedtaket mangler, og feilkriteriene på nivå B, teller 0. Et vedtak om en annen feil havner derfor på høyst cirka 35 %.
+- «Strengere» for kjøperen gir delpoeng, som i rangeringen. I fanen vises det som en styrke («↑ Bilen hadde gått lenger enn din»).
+- Prosenten synker med rangeringen på nivå A. Det anbefalte vedtaket kan ha lavere prosent enn nummer to, fordi modellen også leser beskrivelsen.
+- Fanen sier at prosenten ikke er en vinnersjanse.
 
 ## 3. Malen (`src/lib/vedtaksvalg/mal.ts`, kode)
 
@@ -142,4 +149,4 @@ En kontroll per brev ble prøvd: et Sonnet-kall med fulltekst etter at avsnittet
 - **Dato:** 93 vedtak har ulik møtedato og signaturdato og vises uten dato.
 - **Alder ved kjøpet** er regnet fra årsmodell og kan avvike ett år fra det vedtaket sier. Derfor krever sammenligningssetningen minst to års forskjell.
 - **Vedtak uten uttrekk:** 90 vedtak i grunnsettet har ingen feil med medhold i feilvurderingen og har derfor ikke noe uttrekk.
-- **Resten av brevet** står i `docs/app.md`. Avsnittet om praksis står under «Tilsvarende sak fra Forbrukerklageutvalget», etter det rettslige grunnlaget, og settes inn uendret. Uten kandidat står lovsetningen der.
+- **Resten av brevet** står i `docs/app.md`. Avsnittet om praksis står under «Praksis fra Forbrukerklageutvalget», etter det rettslige grunnlaget, og settes inn uendret. Uten kandidat står lovsetningen der.

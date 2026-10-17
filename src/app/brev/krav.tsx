@@ -51,6 +51,18 @@ export function Krav({ s, sett }: StegProps) {
             <div className="c6 hint">Prisavslaget skal svare til verdiforskjellen mellom bilen med og uten mangelen. Et verkstedsoverslag er et godt utgangspunkt.</div>
           </div>
         </Vis>
+        <Vis pa={s.k_main === "heving" || s.k_alt === "heving" || s.k_main === "prisavslag"}>
+          <div className="rv-in grid">
+            <div className="f c6">
+              <span className="lb">
+                Hvor mange ganger har forhandleren forsøkt å rette feilen? <em>valgfritt</em>
+              </span>
+              <Seg navn="k_forsok" verdi={s.k_forsok} valg={[["0", "Ingen"], ["1", "Én"], ["2", "To"], ["3+", "Tre eller flere"]]} onVelg={(k_forsok) => sett({ k_forsok: k_forsok === s.k_forsok ? "" : k_forsok })} />
+            </div>
+            <Felt s={s} sett={sett} k="k_cost" label={<>Anslått utbedringskostnad <em>valgfritt</em></>} klasse="c3" fmt="num" inputMode="numeric" placeholder="85 000" suffiks="kr" />
+            <div className="c3 hint">Et overslag fra verkstedet eller en takst. Brevet setter kostnaden mot kjøpesummen, og to eller flere mislykkede rettingsforsøk gir rett til å gå videre til prisavslag eller heving.</div>
+          </div>
+        </Vis>
         <Vis pa={s.k_main === "heving"}>
           <div className="rv-in">
             <div className="note warn">

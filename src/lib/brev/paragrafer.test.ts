@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { jf, LOVORD, lovRef, lovversjon, PARAGRAFER, paragraf, POENG } from "./paragrafer";
+import { ANDRE_LOVER, jf, LOVORD, lovRef, lovversjon, PARAGRAFER, paragraf, POENG, RENTER_FRA_REKLAMASJON } from "./paragrafer";
 
 const VERSJONER = ["før_2024", "etter_2024"] as const;
 
@@ -19,6 +19,16 @@ describe("paragraftabellene", () => {
   it("peker på den gamle § 17 før 2024 og § 15 annet ledd etterpå", () => {
     expect(paragraf("før_2024", "forbehold")).toBe("§ 17 første ledd bokstav a");
     expect(paragraf("etter_2024", "forbehold")).toBe("§ 15 annet ledd");
+  });
+
+  it("renter ved tilbakebetaling og tilbakeholdsrett står i tabellen", () => {
+    for (const v of VERSJONER) {
+      expect(paragraf(v, "renter_heving")).toBe("§ 50 annet ledd");
+      expect(paragraf(v, "tilbakehold")).toBe("§ 28");
+    }
+    expect(RENTER_FRA_REKLAMASJON.etter_2024).toBe(true);
+    expect(RENTER_FRA_REKLAMASJON.før_2024).toBe(false);
+    expect(ANDRE_LOVER.forsinkelsesrente).toBe("forsinkelsesrenteloven § 2");
   });
 
   it("nevner bare forbrukerkjøpsloven når nummeret er et gap", () => {

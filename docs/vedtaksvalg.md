@@ -149,4 +149,4 @@ En kontroll per brev ble prøvd: et Sonnet-kall med fulltekst etter at avsnittet
 - **Dato:** 93 vedtak har ulik møtedato og signaturdato og vises uten dato.
 - **Alder ved kjøpet** er regnet fra årsmodell og kan avvike ett år fra det vedtaket sier. Derfor krever sammenligningssetningen minst to års forskjell.
 - **Vedtak uten uttrekk:** 90 vedtak i grunnsettet har ingen feil med medhold i feilvurderingen og har derfor ikke noe uttrekk.
-- **Resten av brevet** står i `docs/app.md`. Avsnittet om praksis står under «Praksis fra Forbrukerklageutvalget», etter det rettslige grunnlaget, og settes inn uendret. Uten kandidat står lovsetningen der.
+- **Resten av brevet** står i `docs/app.md`. Avsnittet om praksis står under «Praksis fra Forbrukerklageutvalget», etter det rettslige grunnlaget, og settes inn uendret. Uten kandidat står lovsetningen der. Etter avsnittet legger brevet til sin egen slutning (`slutning` i `src/lib/app/brev.ts`), bygget av `niva`, `treff` og `utfall`; den er brevets, ikke malens, og inngår ikke i målingene i `docs/ferdigkriterier.md`.

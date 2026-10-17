@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
-import { byggBrev, emne, type Presedens, tilTekst } from "./brev";
+import { byggBrev, emne, type Presedens, tilTekst, vedlegg } from "./brev";
 import { eksempel, standard, syncAreas } from "./skjema";
 
 const idag = "2026-10-16";
@@ -173,5 +173,123 @@ describe("plassholdere", () => {
     const t = tekst({ ...eksempel(idag), c_reg: "" });
     expect(t).toContain("[reg.nr.]");
     expect(t).not.toContain("AB 12345");
+  });
+});
+
+describe("vedleggslisten", () => {
+  it("rapporten brevet sier følger vedlagt, står i listen", () => {
+    const s = { ...eksempel(idag), f_docs: ["kontrakt"] };
+    const t = tekst(s);
+    expect(t).toContain("Rapporten følger vedlagt");
+    expect(vedlegg(s)).toEqual(["Kjøpekontrakt", "Verkstedrapport"]);
+    expect(t).toContain("\n2. Verkstedrapport");
+  });
+  it("huket av: bare én gang", () => expect(vedlegg(eksempel(idag)).filter((x) => x === "Verkstedrapport")).toHaveLength(1));
+  it("uten rapport legges ingenting til", () => expect(vedlegg({ ...eksempel(idag), ws: "uten", f_docs: [] })).toEqual([]));
+});
+
+describe("konsekvensen", () => {
+  const med = (impact: string[]) => {
+    const s = eksempel(idag);
+    return { ...s, f_area: { hoyvolt: { ...s.f_area.hoyvolt, impact } } };
+  };
+  it("«påvirker bruken» sies konkret når bilen ellers kan brukes", () => expect(tekst(med(["bruk"]))).toContain("Konsekvensen er at feilen merkes under kjøring og begrenser hvordan bilen kan brukes."));
+  it("«påvirker bruken» utelates når setningen før alt sier at bilen bare kan brukes delvis", () => {
+    const t = tekst(med(["palitelig", "bruk"]));
+    expect(t).toContain("Bilen kan bare brukes i begrenset grad");
+    expect(t).not.toContain("Konsekvensen er");
+  });
+  it("sikkerhet nevnes fortsatt sammen med delvis bruk", () => expect(tekst(med(["palitelig", "sikkerhet"]))).toContain("Konsekvensen er at feilen går ut over sikkerheten."));
+});
+
+describe("renter", () => {
+  it("heving: renter fra reklamasjonsdagen etter § 50 annet ledd (kjøp fra 2024)", () => {
+    const t = tekst({ ...eksempel(idag), k_main: "heving" });
+    expect(t).toContain("med tillegg av renter etter forsinkelsesrenteloven fra den dag jeg reklamerte, 4. oktober 2026, jf. § 50 annet ledd");
+  });
+  it("heving uten tidligere kontakt: brevets dato", () => {
+    const t = tekst({ ...eksempel(idag), k_main: "heving", f_prior: false });
+    expect(t).toContain("fra den dag jeg reklamerte, 16. oktober 2026, jf. § 50 annet ledd");
+  });
+  it("kjøp før 2024: renter kreves, men uten startdag", () => {
+    const s = { ...eksempel(idag), k_main: "heving", c_purchase: "2023-06-01", c_delivery: "2023-06-01" };
+    s.f_area = { hoyvolt: { ...s.f_area.hoyvolt, found: "2023-08-01" } };
+    const t = tekst(s);
+    expect(t).toContain("med tillegg av renter etter forsinkelsesrenteloven, jf. § 50 annet ledd");
+    expect(t).not.toContain("fra den dag jeg reklamerte");
+  });
+  it("subsidiær heving nevner også rentene", () => expect(tekst(eksempel(idag))).toContain("med tillegg av renter etter forsinkelsesrenteloven"));
+  it("prisavslag og erstatning: forsinkelsesrente ved forsinket betaling", () => {
+    const t = tekst({ ...eksempel(idag), k_main: "prisavslag", k_amount: "30 000" });
+    expect(t).toContain("Ved forsinket betaling kreves forsinkelsesrente etter forsinkelsesrenteloven § 2.");
+    expect(tekst({ ...eksempel(idag), k_exp: false })).not.toContain("forsinkelsesrenteloven § 2");
+  });
+  it("tilbakeholdsretten henviser via tabellen", () => expect(tekst({ ...eksempel(idag), k_hold: true, k_hold_amt: "5 000" })).toContain("av det jeg skylder dere, jf. § 28."));
+});
+
+describe("begrunnelsen for heving", () => {
+  const hev = (ekstra: Partial<ReturnType<typeof eksempel>> = {}) => ({ ...eksempel(idag), k_main: "heving", ...ekstra });
+  it("kostnad mot kjøpesum, forsøk, bruk, verksted og løfte, deretter konklusjonen", () => {
+    const s = hev({ k_cost: "85 000", k_forsok: "2", ws_says: ["bekrefter", "frarader"] });
+    s.f_area = { hoyvolt: { ...s.f_area.hoyvolt, impact: ["stopp", "sikkerhet"] } };
+    const t = tekst(s);
+    expect(t).toContain("Utbedringen er anslått til kr 85 000, som utgjør 26 % av kjøpesummen.");
+    expect(t).toContain("Dere har forsøkt å rette feilen to ganger uten å lykkes, og har dermed ikke lenger rett til å rette, jf. §§ 29 og 30.");
+    expect(t).toContain("Bilen kan ikke brukes.");
+    expect(t).toContain("Feilen går ut over sikkerheten.");
+    expect(t).toContain("Verkstedet fraråder videre bruk.");
+    expect(t).toContain("Bilen avviker fra det dere uttrykkelig opplyste før kjøpet.");
+    expect(t).toContain("Mangelen er derfor ikke uvesentlig, og jeg hever kjøpet, jf. § 32.");
+    expect(t).not.toContain("Mangelen er ikke uvesentlig, og jeg hever");
+  });
+  it("ett forsøk og liten kostnad: forsøket nevnes, kostnaden ikke", () => {
+    const t = tekst(hev({ k_cost: "9 000", k_forsok: "1", seller_said: "nei" }));
+    expect(t).toContain("Ett rettingsforsøk har ikke løst feilen.");
+    expect(t).not.toContain("anslått til");
+  });
+  it("«3+» skrives som tre eller flere ganger", () => expect(tekst(hev({ k_forsok: "3+" }))).toContain("tre eller flere ganger"));
+  it("uten grunnlag står dagens setning", () => {
+    const s = hev({ seller_said: "nei" });
+    s.f_area = { hoyvolt: { ...s.f_area.hoyvolt, impact: ["plagsom"] } };
+    expect(tekst(s)).toContain("Mangelen er ikke uvesentlig, og jeg hever med dette kjøpet, jf. § 32.");
+  });
+  it("subsidiær heving får samme grunner", () => {
+    const t = tekst({ ...eksempel(idag), k_forsok: "2" });
+    expect(t).toContain("kreve å heve kjøpet, jf. § 32.");
+    expect(t).toContain("Dere har forsøkt å rette feilen to ganger");
+  });
+  it("prisavslag uten grunnlagstekst nevner overslaget", () => {
+    expect(tekst({ ...eksempel(idag), k_main: "prisavslag", k_amount: "30 000", k_cost: "35 000" })).toContain("Beløpet bygger på et overslag over utbedringskostnaden på kr 35 000.");
+    expect(tekst({ ...eksempel(idag), k_main: "prisavslag", k_amount: "30 000", k_cost: "35 000", k_basis: "takst" })).toContain("Beløpet bygger på takst.");
+  });
+});
+
+describe("slutningen etter vedtaket", () => {
+  const T = (t: Partial<Presedens["treff"]>) => ({ underkategori: "likt", tidsniva: "likt", km: "likt", alder: "likt", som_den_er: "likt", krav: "likt", egen_vurdering: "likt", grunnlag: "likt", ...t }) as Presedens["treff"];
+  const pres = (p: Partial<Presedens>) => ({ ...PRES, treff: T({}), ...p });
+  it("nivå A med samme utgangspunkt og samme krav", () => {
+    const t = tekst({ ...eksempel(idag), k_main: "heving" }, pres({ utfall: ["heving"] }));
+    expect(t).toContain("Saken gjaldt samme type feil som i min sak. Bilen i min sak var ikke i et svakere utgangspunkt. Kjøperen fikk medhold i heving, som er det jeg krever. Min sak bør vurderes på samme måte.");
+  });
+  it("bestemt tone med samme utgangspunkt", () => {
+    const t = tekst({ ...eksempel(idag), k_main: "heving", l_tone: "bestemt" }, pres({ utfall: ["heving"] }));
+    expect(t).toContain("Min sak står minst like sterkt, og utfallet bør bli det samme.");
+  });
+  it("strengere på én side: ingen påstand om utgangspunktet, og saklig avslutning i begge toner", () => {
+    for (const l_tone of ["saklig", "bestemt"]) {
+      const t = tekst({ ...eksempel(idag), l_tone }, pres({ treff: T({ km: "strengere" }), utfall: ["heving"] }));
+      expect(t).not.toContain("svakere utgangspunkt");
+      expect(t).toContain("Min sak bør vurderes på samme måte.");
+      expect(t).not.toContain("minst like sterkt");
+    }
+  });
+  it("kravet nevnes bare når vedtaket ga det; omlevering regnes som retting", () => {
+    expect(tekst({ ...eksempel(idag), k_main: "prisavslag", k_amount: "1" }, pres({ utfall: ["heving"] }))).not.toContain("som er det jeg krever");
+    expect(tekst({ ...eksempel(idag), k_main: "omlevering" }, pres({ utfall: ["retting"] }))).toContain("Kjøperen fikk medhold i retting, som er det jeg krever.");
+  });
+  it("nivå B: samme rettslige spørsmål", () => expect(tekst(eksempel(idag), pres({ niva: "B" }))).toContain("Vedtaket avgjør det samme rettslige spørsmålet som denne saken reiser."));
+  it("uten vedtak eller mens det hentes: ingen slutning", () => {
+    expect(tekst(eksempel(idag))).not.toContain("vurderes på samme måte");
+    expect(tilTekst(byggBrev(syncAreas(eksempel(idag)), "venter", idag))).not.toContain("vurderes på samme måte");
   });
 });

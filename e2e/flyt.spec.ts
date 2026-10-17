@@ -70,6 +70,8 @@ test("fra forsiden til brevet med et vedtak", async ({ page }) => {
   await expect(brev).toContainText("Praksis fra");
   await expect(page.locator(".l-prec")).toContainText("«");
   await expect(page.locator(".l-prec")).toContainText("http");
+  // The letter's own conclusion after the decision's paragraph.
+  await expect(brev).toContainText(/Min sak bør vurderes på samme måte|Min sak står minst like sterkt/);
   // The letter tab no longer lists the decisions: they are picked in the Vedtak tab.
   await expect(page.locator(".pp-opt")).toHaveCount(0);
   const for_ = await page.locator(".l-prec").innerText();

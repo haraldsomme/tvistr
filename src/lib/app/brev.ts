@@ -3,12 +3,13 @@
 // decision is Tvistr's paragraph from the server (finnVedtak → mal.ts), never written here.
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { opplysningsfeil } from "@/lib/brev/feiltype";
-import { LOVORD } from "@/lib/brev/paragrafer";
+import { ANDRE_LOVER, LOVORD, RENTER_FRA_REKLAMASJON } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
 import type { Kriterium, Niva, Treff } from "@/lib/matching/ranger";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
 import { addDays, addMonths, dur, fmtD, parseD } from "./dato";
-import { regler } from "./lov";
+import { regler, type Regler } from "./lov";
+import { forsokTall } from "./saken";
 import { DOCS, IMPACT, type Skjema, WS_SAYS, WS_WHO } from "./skjema";
 
 // Text, or a placeholder for a missing answer. Nothing in the body is emphasised: the headings are the
@@ -61,6 +62,39 @@ function feilnavn(hoved: string, under: string[]): string {
   const navn = under.map((u) => h.under.find((x) => x.id === u)?.navn ?? u).map((n, i) => (i ? smaa(n) : n));
   if (!navn.length) return h.navn;
   return navn.some((n) => /\bog\b|,/.test(n)) ? navn.join("; ") : listJoin(navn);
+}
+
+// The attachments, in the form's order. A workshop report the letter says is attached is always listed.
+export function vedlegg(s: Skjema): string[] {
+  const ids = new Set(s.f_docs);
+  if (s.ws === "rapport") ids.add("verksted");
+  return [...DOCS.filter(([id]) => ids.has(id)).map(([, navn]) => navn), ...s.files];
+}
+
+const heltall = (s: string) => {
+  const d = s.replace(/\D/g, "");
+  return d ? Number(d) : null;
+};
+
+// Why the defect is not insignificant (fkjl. § 32), from the answers only: each sentence has a field
+// behind it, and none is written without one. The repair cost is left out under 5 % of the price,
+// where the figure would weaken the argument.
+function hevingsgrunner(s: Skjema, L: Regler): string[] {
+  const g: string[] = [];
+  const kost = heltall(s.k_cost),
+    pris = heltall(s.c_price);
+  if (kost && pris) {
+    const pst = Math.round((100 * kost) / pris);
+    if (pst >= 5) g.push(`Utbedringen er anslått til kr ${s.k_cost.trim()}, som utgjør ${pst} % av kjøpesummen.`);
+  }
+  const n = forsokTall(s.k_forsok);
+  if (n !== null && n >= 2) g.push(`Dere har forsøkt å rette feilen ${n >= 3 ? "tre eller flere" : "to"} ganger uten å lykkes, og har dermed ikke lenger rett til å rette, jf. ${L.par("retting")}.`);
+  else if (n === 1) g.push("Ett rettingsforsøk har ikke løst feilen.");
+  if (s.f_drivable === "nei") g.push("Bilen kan ikke brukes.");
+  if (s.f_impact.includes("sikkerhet")) g.push("Feilen går ut over sikkerheten.");
+  if (s.ws === "rapport" && s.ws_says.includes("frarader")) g.push("Verkstedet fraråder videre bruk.");
+  if (s.seller_said === "lovet") g.push("Bilen avviker fra det dere uttrykkelig opplyste før kjøpet.");
+  return g;
 }
 
 // `presedens`: the decision the buyer chose, null without one (the law's sentence), or «venter» while
@@ -119,7 +153,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   if (s.f_drivable === "nei") ex.push("Bilen kan ikke brukes slik den er nå.");
   else if (s.f_drivable === "delvis") ex.push("Bilen kan bare brukes i begrenset grad, og jeg kan ikke stole på den i vanlig bruk.");
   const imp = s.f_impact
-    .filter((k) => !(k === "stopp" && s.f_drivable === "nei") && !(k === "palitelig" && s.f_drivable === "delvis"))
+    .filter((k) => !(k === "stopp" && s.f_drivable === "nei") && !(k === "palitelig" && s.f_drivable === "delvis") && !(k === "bruk" && (s.f_drivable === "nei" || s.f_drivable === "delvis")))
     .map((k) => IMPACT.find((x) => x[0] === k)?.[4])
     .filter((x): x is NonNullable<typeof x> => !!x);
   if (imp.length) ex.push(`Konsekvensen er at ${listJoin(imp)}.`);
@@ -203,11 +237,17 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
     } else if (presedens) {
       B.push({ t: "h", tekst: [`Praksis fra ${presedens.utvalg}`] });
       B.push({ t: "prec", avsnitt: [[presedens.avsnitt], ...(presedens.kildeUrl ? [[`Vedtaket er offentlig tilgjengelig på ${presedens.kildeUrl}`]] : [])] });
+      B.push({ t: "p", tekst: [slutning(presedens, s, firm)] });
     } else B.push({ t: "p", tekst: [LOVSETNING] });
   }
 
   B.push({ t: "h", tekst: ["Krav"] });
   const kjop: Del = has("c_price") ? s.c_price : { ph: "kjøpesum" };
+  // Interest on the repaid price (fkjl. § 50 annet ledd). The day it runs from is only claimed where
+  // the table has verified it, and only with a known day of the complaint: the earlier contact when
+  // dated, else this letter.
+  const reklamert = s.f_prior ? (has("f_prior_date") ? fmtD(s.f_prior_date) : null) : fmtD(ld);
+  const renter = `med tillegg av renter etter forsinkelsesrenteloven${RENTER_FRA_REKLAMASJON[L.versjon] ? ` fra den dag jeg reklamerte${reklamert ? `, ${reklamert}` : ""}` : ""}, jf. ${L.par("renter_heving")}`;
   switch (s.k_main) {
     case "retting":
       B.push({ t: "p", tekst: [`${tone("Mitt krav er", "Jeg krever")} at mangelen rettes, jf. ${L.par("retting")}. ${tone("Rettingen skal skje", "Etter loven skal rettingen skje")} uten kostnad for meg, innen rimelig tid og uten vesentlig ulempe for meg.${s.k_loaner ? ` Jeg ${tone("ber om", "forventer")} at dere stiller lånebil til disposisjon mens bilen er til reparasjon.` : ""}`] });
@@ -216,44 +256,74 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
       B.push({ t: "p", tekst: [`${tone("Mitt krav er", "Jeg krever")} omlevering, det vil si en tilsvarende bil uten mangel, jf. ${L.par("retting")}. ${tone("Omleveringen skal skje", "Etter loven skal omleveringen skje")} uten kostnad for meg og innen rimelig tid.`] });
       break;
     case "prisavslag":
-      B.push({ t: "p", tekst: [tone("Mitt krav er et forholdsmessig prisavslag på kr ", "Jeg krever et forholdsmessig prisavslag på kr "), v("k_amount", "beløp"), `, jf. ${L.par("prisavslag")}.${has("k_basis") ? ` Beløpet bygger på ${trimDot(s.k_basis)}.` : ""}`] });
+      B.push({ t: "p", tekst: [tone("Mitt krav er et forholdsmessig prisavslag på kr ", "Jeg krever et forholdsmessig prisavslag på kr "), v("k_amount", "beløp"), `, jf. ${L.par("prisavslag")}.${has("k_basis") ? ` Beløpet bygger på ${trimDot(s.k_basis)}.` : has("k_cost") ? ` Beløpet bygger på et overslag over utbedringskostnaden på kr ${s.k_cost.trim()}.` : ""}`] });
       break;
-    case "heving":
+    case "heving": {
+      const g = hevingsgrunner(s, L);
       B.push({
         t: "p",
         tekst: [
-          `Mangelen er ikke uvesentlig, og jeg hever med dette kjøpet, jf. ${L.par("heving")}. `,
+          g.length ? `${g.join(" ")} Mangelen er derfor ikke uvesentlig, og jeg hever kjøpet, jf. ${L.par("heving")}. ` : `Mangelen er ikke uvesentlig, og jeg hever med dette kjøpet, jf. ${L.par("heving")}. `,
           ...tone<Del[]>(
-            ["Kjøpesummen på kr ", kjop, " skal da tilbakebetales mot at bilen leveres tilbake til dere. Jeg ber om at dere tar kontakt for å avtale tilbakelevering og oppgjør."],
-            ["Jeg krever kjøpesummen på kr ", kjop, " tilbakebetalt mot at bilen leveres tilbake til dere. Ta kontakt med meg for å avtale tilbakelevering og oppgjør."],
+            ["Kjøpesummen på kr ", kjop, " skal da tilbakebetales mot at bilen leveres tilbake til dere"],
+            ["Jeg krever kjøpesummen på kr ", kjop, " tilbakebetalt mot at bilen leveres tilbake til dere"],
           ),
+          `, ${renter}. `,
+          tone("Jeg ber om at dere tar kontakt for å avtale tilbakelevering og oppgjør.", "Ta kontakt med meg for å avtale tilbakelevering og oppgjør."),
         ],
       });
       break;
+    }
     default:
       B.push({ t: "p", tekst: ["Jeg krever ", { ph: "velg krav i steg 4" }, "."] });
   }
-  if ((s.k_main === "retting" || s.k_main === "omlevering") && (s.k_alt === "prisavslag" || s.k_alt === "heving"))
-    B.push({ t: "p", tekst: [`Dersom ${s.k_main} ikke skjer innen rimelig tid, ikke lykkes eller ikke er mulig, ${tone("vil jeg subsidiært kreve", "krever jeg subsidiært")} ${s.k_alt === "prisavslag" ? `et forholdsmessig prisavslag, jf. ${L.par("prisavslag")}` : `å heve kjøpet, jf. ${L.par("heving")}`}.`] });
+  if ((s.k_main === "retting" || s.k_main === "omlevering") && (s.k_alt === "prisavslag" || s.k_alt === "heving")) {
+    const g = s.k_alt === "heving" ? hevingsgrunner(s, L) : [];
+    B.push({
+      t: "p",
+      tekst: [
+        `Dersom ${s.k_main} ikke skjer innen rimelig tid, ikke lykkes eller ikke er mulig, ${tone("vil jeg subsidiært kreve", "krever jeg subsidiært")} ${s.k_alt === "prisavslag" ? `et forholdsmessig prisavslag, jf. ${L.par("prisavslag")}.` : `å heve kjøpet, jf. ${L.par("heving")}.`}`,
+        ...(g.length ? [` ${g.join(" ")} Mangelen er derfor ikke uvesentlig.`] : []),
+        ...(s.k_alt === "heving" ? [` Kjøpesummen skal i så fall tilbakebetales mot at bilen leveres tilbake, ${renter}.`] : []),
+      ],
+    });
+  }
   if (s.k_exp) {
     const it = s.exp.filter((x) => x.t || x.a);
     B.push({ t: "p", tekst: [`${tone("Jeg fremmer også krav om", "I tillegg krever jeg")} erstatning for utgifter jeg har hatt som følge av mangelen, jf. ${L.par("erstatning")}${it.length ? ":" : ""}`, ...(it.length ? [] : [" ", { ph: "legg til utgiftene" }, "."])] });
     if (it.length) B.push({ t: "exp", rader: it.map((x) => [[x.t ? x.t : { ph: "utgift" }], kr(+x.a || 0)]), sum: kr(it.reduce((a, x) => a + (+x.a || 0), 0)) });
   }
-  // § 28 (tilbakeholdsrett) is the same in both versions and not in the paragraph tables.
-  if (s.k_hold) B.push({ t: "p", tekst: [tone("Inntil saken er løst, vil jeg holde tilbake kr ", "Inntil saken er løst, holder jeg tilbake kr "), v("k_hold_amt", "beløp"), " av det jeg skylder dere, jf. § 28."] });
+  if (s.k_hold) B.push({ t: "p", tekst: [tone("Inntil saken er løst, vil jeg holde tilbake kr ", "Inntil saken er løst, holder jeg tilbake kr "), v("k_hold_amt", "beløp"), ` av det jeg skylder dere, jf. ${L.par("tilbakehold")}.`] });
 
   const dd: Del = s.k_days ? fmtD(addDays(ld, +s.k_days)) : { ph: "svarfrist" };
   const nxt = "bringe saken inn for Forbrukerrådet for mekling og eventuelt videre til Forbrukerklageutvalget";
-  B.push({ t: "p", tekst: firm ? ["Jeg krever skriftlig svar innen ", dd, `. Hører jeg ikke fra dere innen fristen, vil jeg ${nxt}.`] : ["Jeg ber om en skriftlig tilbakemelding innen ", dd, ` med forslag til hvordan dere vil løse saken. Kommer vi ikke til enighet, vil jeg ${nxt}.`] });
+  // An amount the seller must pay (a price reduction or compensation) draws late-payment interest
+  // when it is paid late; when it falls due follows forsinkelsesrenteloven § 2, which the letter does
+  // not restate. The purchase price repaid after heving has its own rule above (renter).
+  const belop = s.k_main === "prisavslag" || (s.k_exp && s.exp.some((x) => x.t || x.a)) ? ` Beløpet bes utbetalt innen fristen. Ved forsinket betaling kreves forsinkelsesrente etter ${ANDRE_LOVER.forsinkelsesrente}.` : "";
+  B.push({ t: "p", tekst: firm ? ["Jeg krever skriftlig svar innen ", dd, `.${belop} Hører jeg ikke fra dere innen fristen, vil jeg ${nxt}.`] : ["Jeg ber om en skriftlig tilbakemelding innen ", dd, ` med forslag til hvordan dere vil løse saken.${belop} Kommer vi ikke til enighet, vil jeg ${nxt}.`] });
   B.push({ t: "sign", linjer: [[tone("Med vennlig hilsen", "Med hilsen")], [""], [v("b_name", "Ditt navn")]] });
   // The list of attachments follows the signature, as in a Norwegian business letter.
-  const att = [...s.f_docs.map((d) => DOCS.find((x) => x[0] === d)?.[1]).filter((x): x is NonNullable<typeof x> => !!x), ...s.files];
+  const att = vedlegg(s);
   if (att.length) {
     B.push({ t: "h", tekst: ["Vedlegg"] });
     B.push({ t: "ol", punkter: att.map((a) => [a]) });
   }
   return B;
+}
+
+// The letter's own conclusion after the decision's paragraph (which mal.ts fills and the done criteria
+// measure): every sentence follows from a field, and the car is only said not to be worse placed when
+// each side the ranking compared is level or in the buyer's favour.
+function slutning(p: Presedens, s: Skjema, firm: boolean): string {
+  const sider: Kriterium[] = ["km", "alder", "som_den_er"];
+  const ikkeSvakere = sider.every((k) => p.treff[k] === "likt" || p.treff[k] === "mildere");
+  const krav = s.k_main === "omlevering" ? "retting" : s.k_main;
+  const d = [p.niva === "A" ? "Saken gjaldt samme type feil som i min sak." : "Vedtaket avgjør det samme rettslige spørsmålet som denne saken reiser."];
+  if (ikkeSvakere) d.push("Bilen i min sak var ikke i et svakere utgangspunkt.");
+  if (krav && p.utfall.includes(krav)) d.push(`Kjøperen fikk medhold i ${krav}, som er det jeg krever.`);
+  d.push(firm && ikkeSvakere ? "Min sak står minst like sterkt, og utfallet bør bli det samme." : "Min sak bør vurderes på samme måte.");
+  return d.join(" ");
 }
 
 const tekst = (d: Del[]) => d.map((x) => (typeof x === "string" ? x : `[${x.ph}]`)).join("");

@@ -16,6 +16,12 @@ describe("tilSvar", () => {
     expect(s.feil[0]).toMatchObject({ hoved: "hoyvolt", under: ["kapasitet", "lading"], opplysning: "muntlig", verksted: "skriftlig" });
     expect(s.feil[0].rapport?.punkter).toEqual(["bekrefter", "arsak", "ikke_slitasje"]);
   });
+  it("rettingsforsøk når rangeringen; «3+» er tre, tomt er null", () => {
+    expect(tilSvar(eksempel(idag))!.forsok).toBeNull();
+    expect(tilSvar({ ...eksempel(idag), k_forsok: "0" })!.forsok).toBe(0);
+    expect(tilSvar({ ...eksempel(idag), k_forsok: "2" })!.forsok).toBe(2);
+    expect(tilSvar({ ...eksempel(idag), k_forsok: "3+" })!.forsok).toBe(3);
+  });
   it("omlevering blir retting", () => expect(tilSvar({ ...eksempel(idag), k_main: "omlevering" })!.krav).toBe("retting"));
   it("uten datoer gir null", () => expect(tilSvar(standard(idag))).toBeNull());
   it("feil uten dato tas ut", () => {

@@ -13,6 +13,9 @@ export type Sjekk = Sjekksvar & { reg?: string; make?: string; year?: string; la
 // What the writer's workshop ticks mean in the ranking's words.
 const WS_TIL_PUNKT: Record<string, RapportPunkt> = { bekrefter: "bekrefter", aarsak: "arsak", levering: "til_stede", ikke_slitasje: "ikke_slitasje", frarader: "frarader", kostnad: "overslag" };
 
+// «3+» counts as three: the legal point «tapt retting» asks for two or more (matching/rett.ts).
+export const forsokTall = (s: string): number | null => (s === "" ? null : s === "3+" ? 3 : Number(s));
+
 const heltall = (s: string | undefined) => {
   const d = (s ?? "").replace(/\D/g, "");
   return d ? Number(d) : null;
@@ -33,7 +36,7 @@ export function tilSvar(s: Skjema): Svar | null {
     ar: heltall(s.c_year),
     somDenEr: s.c_asis ? "ja" : "nei",
     krav: s.k_main === "omlevering" ? "retting" : s.k_main === "retting" || s.k_main === "prisavslag" || s.k_main === "heving" ? s.k_main : null,
-    forsok: null,
+    forsok: forsokTall(s.k_forsok),
     feil: feil.map((c) => ({ hoved: c, under: s.f_parts[c] ?? [], oppdaget: s.f_area[c].found, beskrivelse: s.f_catdesc[c]?.trim() || null, opplysning, verksted, rapport })),
   };
 }

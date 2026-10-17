@@ -19,6 +19,9 @@ export type Skjema = {
   seller_said: string; seller_txt: string;
   f_prior: boolean; f_prior_date: string; f_prior_how: string; f_prior_resp: string;
   k_main: string; k_alt: string; k_amount: string; k_basis: string; k_loaner: boolean; k_exp: boolean; exp: Utgift[];
+  // Optional, for the argument that the defect is not insignificant: how many times the seller has tried
+  // to repair («0»–«3+», "" when not answered) and the estimated repair cost.
+  k_forsok: string; k_cost: string;
   k_hold: boolean; k_hold_amt: string; k_days: string;
   l_place: string; l_date: string; l_tone: string;
   prec_on: boolean; prec_id: number | null;
@@ -32,7 +35,7 @@ export const standard = (idag: string): Skjema => ({
   f_found: "", f_impact: [], f_known: "", f_cause: "", f_cause_check: "", f_sev: 0, f_drivable: "",
   ws: "", ws_who: "", ws_name: "", ws_date: "", ws_says: [], ws_quote: "", seller_said: "", seller_txt: "",
   f_prior: false, f_prior_date: "", f_prior_how: "", f_prior_resp: "",
-  k_main: "", k_alt: "ingen", k_amount: "", k_basis: "", k_loaner: false, k_exp: false, exp: [], k_hold: false, k_hold_amt: "", k_days: "14",
+  k_main: "", k_alt: "ingen", k_amount: "", k_basis: "", k_loaner: false, k_exp: false, exp: [], k_forsok: "", k_cost: "", k_hold: false, k_hold_amt: "", k_days: "14",
   l_place: "", l_date: idag, l_tone: "saklig", prec_on: true, prec_id: null,
 });
 
@@ -62,7 +65,7 @@ export function eksempel(idag: string): Skjema {
 export const IMPACT = [
   ["kosmetisk", "Bare kosmetisk", "Synlig, men påvirker ikke bruken", 1, "feilen er synlig"],
   ["plagsom", "Plagsom", "Lyd, lukt, vibrasjoner eller annet som irriterer", 2, "feilen er plagsom i daglig bruk"],
-  ["bruk", "Påvirker bruken", "Du merker det når du kjører, eller må unngå noe", 3, "feilen påvirker bruken av bilen"],
+  ["bruk", "Påvirker bruken", "Du merker det når du kjører, eller må unngå noe", 3, "feilen merkes under kjøring og begrenser hvordan bilen kan brukes"],
   ["palitelig", "Ikke til å stole på", "Svikter av og til, for eksempel ved start eller rekkevidde", 4, "bilen ikke er til å stole på"],
   ["sikkerhet", "Går ut over sikkerheten", "For eksempel bremser, styring eller varsellamper", 4, "feilen går ut over sikkerheten"],
   ["stopp", "Kan ikke brukes", "Den står, eller er ikke trygg å kjøre", 5, "bilen ikke kan brukes"],

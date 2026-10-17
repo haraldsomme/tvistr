@@ -45,26 +45,33 @@ export async function kallVerktoy<T>(opts: {
   maksTokens: number;
   strict?: boolean;
   modell?: Modell;
+  // For a buyer waiting on the page: one try, one network retry and 30 seconds, so a failing API
+  // gives way to the ranking quickly instead of holding the letter.
+  rask?: boolean;
 }): Promise<VerktoySvar<T>> {
   const modell = opts.modell ?? MODELL;
   const PRIS = PRISER[modell];
   const strict = opts.strict ?? true;
   const forbruk: Forbruk = { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 };
   let sisteFeil = "";
+  const forsokTotalt = opts.rask ? 1 : 3;
 
-  for (let forsok = 1; forsok <= 3; forsok++) {
-    const svar = await hentKlient().beta.messages.create({
-      model: modell,
-      max_tokens: opts.maksTokens,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: opts.effort },
-      // Tools + system are identical across all calls, so they are cached.
-      system: [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }],
-      tools: [{ ...opts.verktoy, input_schema: opts.verktoy.input_schema as Anthropic.Beta.BetaTool.InputSchema, strict }],
-      tool_choice: { type: "auto", disable_parallel_tool_use: true },
-      messages: [{ role: "user", content: opts.bruker }],
-    });
+  for (let forsok = 1; forsok <= forsokTotalt; forsok++) {
+    const svar = await hentKlient().beta.messages.create(
+      {
+        model: modell,
+        max_tokens: opts.maksTokens,
+        betas: ["server-side-fallback-2026-07-01"],
+        fallbacks: "default",
+        output_config: { effort: opts.effort },
+        // Tools + system are identical across all calls, so they are cached.
+        system: [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }],
+        tools: [{ ...opts.verktoy, input_schema: opts.verktoy.input_schema as Anthropic.Beta.BetaTool.InputSchema, strict }],
+        tool_choice: { type: "auto", disable_parallel_tool_use: true },
+        messages: [{ role: "user", content: opts.bruker }],
+      },
+      opts.rask ? { maxRetries: 1, timeout: 30_000 } : undefined,
+    );
 
     const u = svar.usage;
     const skriv = u.cache_creation_input_tokens ?? 0;
@@ -90,5 +97,5 @@ export async function kallVerktoy<T>(opts: {
     if (skjemafeil.length === 0) return { input: kall.input as T, modell: svar.model, forbruk };
     sisteFeil = `ugyldig svar: ${skjemafeil.slice(0, 5).join("; ")}`;
   }
-  throw new Error(`${sisteFeil} etter 3 forsøk`);
+  throw new Error(`${sisteFeil} etter ${forsokTotalt} forsøk`);
 }

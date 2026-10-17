@@ -25,6 +25,8 @@ export type Skjema = {
   k_hold: boolean; k_hold_amt: string; k_days: string;
   l_place: string; l_date: string; l_tone: string;
   prec_on: boolean; prec_id: number | null;
+  // The buyer picked the decision themselves instead of following the recommendation.
+  prec_selv: boolean;
 };
 
 export const standard = (idag: string): Skjema => ({
@@ -36,7 +38,7 @@ export const standard = (idag: string): Skjema => ({
   ws: "", ws_who: "", ws_name: "", ws_date: "", ws_says: [], ws_quote: "", seller_said: "", seller_txt: "",
   f_prior: false, f_prior_date: "", f_prior_how: "", f_prior_resp: "",
   k_main: "", k_alt: "ingen", k_amount: "", k_basis: "", k_loaner: false, k_exp: false, exp: [], k_forsok: "", k_cost: "", k_hold: false, k_hold_amt: "", k_days: "14",
-  l_place: "", l_date: idag, l_tone: "saklig", prec_on: true, prec_id: null,
+  l_place: "", l_date: idag, l_tone: "saklig", prec_on: true, prec_id: null, prec_selv: false,
 });
 
 export function eksempel(idag: string): Skjema {

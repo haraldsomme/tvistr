@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { vedtak } from "@/db/schema";
 import { type Forbruk, kallVerktoy, MODELL } from "@/lib/ai/klient";
@@ -144,37 +145,76 @@ export type Valgresultat = {
   forbruk: Forbruk;
 };
 
-// Chooses the decision and fills the template: the ranking in code, one call for the choice, then
-// the template. `alle` holds every ranked decision by id. `utenModell` skips the call and takes the
-// ranking's first candidate (to measure what the call adds).
-export async function velgVedtak(opts: {
+export type Valggrunnlag = {
   kjoper: Kjoper;
   sak: Brukersak;
   kandidater: Rangert[];
   alle: Map<number, Kandidat>;
   detaljer: Map<number, Vedtaksdetaljer>;
-  utenModell?: boolean;
-}): Promise<Valgresultat> {
-  const sitater = new Map(opts.kandidater.map((r) => [r.id, sitatvalg(r, opts.alle.get(r.id)!)]));
-  let svar: Modellsvar | null = null;
-  let modell: string | null = null;
-  let forbruk: Forbruk = { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 };
-  if (!opts.utenModell) {
-    try {
-      const kall = await kallVerktoy<Modellsvar>({
-        system: INSTRUKS,
-        verktoy: VERKTOY,
-        bruker: `Kjøperens sak:\n${JSON.stringify(opts.kjoper)}\n\nKandidatene:\n${JSON.stringify(opts.kandidater.map((r) => kandidattekst(r, opts.alle.get(r.id)!, opts.detaljer.get(r.id), sitater.get(r.id)!)))}`,
-        effort: "low",
-        maksTokens: 2000,
-        modell: MODELL,
-      });
-      ({ input: svar, modell, forbruk } = kall);
-    } catch (e) {
-      // The ranking alone still gives a letter.
-      console.error("vedtaksvalget: modellkallet feilet, bruker rangeringen", e);
-    }
+};
+
+// Each candidate's quotes, by decision id.
+export const sitaterFor = (opts: Valggrunnlag) => new Map(opts.kandidater.map((r) => [r.id, sitatvalg(r, opts.alle.get(r.id)!)]));
+
+// Everything the model reads, as one fingerprint: the same fingerprint gets the same answer, so a
+// stored answer can stand in for a new call.
+export const grunnlagFor = (kjoper: Kjoper, kandidater: Rangert[]) =>
+  createHash("sha256")
+    .update(JSON.stringify([VEDTAKSVALG_VERSJON, kjoper, kandidater.map((r) => r.id)]))
+    .digest("hex");
+
+// The one model call. Null when it fails: the ranking alone still gives a letter. `rask` is for a
+// buyer waiting on the page (kallVerktoy).
+export async function sporModellen(opts: Valggrunnlag & { rask?: boolean }): Promise<{ svar: Modellsvar | null; modell: string | null; forbruk: Forbruk }> {
+  const sitater = sitaterFor(opts);
+  try {
+    const kall = await kallVerktoy<Modellsvar>({
+      system: INSTRUKS,
+      verktoy: VERKTOY,
+      bruker: `Kjøperens sak:\n${JSON.stringify(opts.kjoper)}\n\nKandidatene:\n${JSON.stringify(opts.kandidater.map((r) => kandidattekst(r, opts.alle.get(r.id)!, opts.detaljer.get(r.id), sitater.get(r.id)!)))}`,
+      effort: "low",
+      maksTokens: 2000,
+      modell: MODELL,
+      rask: opts.rask,
+    });
+    return { svar: kall.input, modell: kall.modell, forbruk: kall.forbruk };
+  } catch (e) {
+    console.error("vedtaksvalget: modellkallet feilet, bruker rangeringen", e instanceof Error ? e.message : e);
+    return { svar: null, modell: null, forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } };
   }
+}
+
+// A model answer as a case keeps it (sak.vedtaksvalg): the quotes as text, since their ids are
+// positions that move when the ranking does.
+export type LagretSvar = { grunnlag: string; vedtakId: number; sitater: string[] };
+
+// The answer as tolkSvar takes it, held against the candidates and quotes as they are now.
+export function tilLagret(grunnlag: string, svar: Modellsvar, sitater: Map<number, Sitatvalg[]>): LagretSvar {
+  const egne = sitater.get(svar.vedtak_id) ?? [];
+  return { grunnlag, vedtakId: svar.vedtak_id, sitater: svar.sitater.flatMap((id) => egne.filter((s) => s.id === id).map((s) => s.tekst)) };
+}
+
+// A stored answer back to the model's form; null when its decision is no longer a candidate.
+export function fraLagret(lagret: LagretSvar | null | undefined, kandidater: Rangert[], sitater: Map<number, Sitatvalg[]>): Modellsvar | null {
+  if (!lagret || !kandidater.some((r) => r.id === lagret.vedtakId)) return null;
+  const egne = sitater.get(lagret.vedtakId) ?? [];
+  return { vedtak_id: lagret.vedtakId, sitater: lagret.sitater.flatMap((t) => egne.filter((s) => s.tekst === t).map((s) => s.id)) };
+}
+
+// What changed since the list the buyer last got: the recommendation before, when it is another one
+// now, and the decisions that are new on the list. Null the first time and when nothing changed.
+export type Endring = { forrigeAnbefalt: { id: number; saksnummer: string | null } | null; nye: number[] };
+export function endringMot(forrige: readonly number[] | undefined, liste: readonly number[], saksnummer: (id: number) => string | null): Endring | null {
+  if (!forrige?.length) return null;
+  const nye = liste.filter((id) => !forrige.includes(id));
+  const annenAnbefalt = forrige[0] !== liste[0];
+  if (!nye.length && !annenAnbefalt) return null;
+  return { forrigeAnbefalt: annenAnbefalt ? { id: forrige[0], saksnummer: saksnummer(forrige[0]) } : null, nye };
+}
+
+// The choice and the template, from a model answer or none (the ranking's first candidate).
+export function byggValg(svar: Modellsvar | null, opts: Valggrunnlag, modell: string | null = null, forbruk: Forbruk = { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 }): Valgresultat {
+  const sitater = sitaterFor(opts);
   const { r, valgte, fulgt } = tolkSvar(svar, opts.kandidater, sitater);
   const avsnitt = byggAvsnitt(r, opts.alle.get(r.id)!, opts.detaljer.get(r.id)!, valgte, opts.sak);
   const andre = alternativer(opts.kandidater, r.id, sitater).map((a) => ({
@@ -183,6 +223,15 @@ export async function velgVedtak(opts: {
     sitater: a.valgte.map((x) => x.tekst),
   }));
   return { r, niva: r.niva, avsnitt, sitater: valgte.map((x) => x.tekst), fulgt, modell, forbruk, alternativer: andre };
+}
+
+// Chooses the decision and fills the template: the ranking in code, one call for the choice, then
+// the template. `alle` holds every ranked decision by id. `utenModell` skips the call and takes the
+// ranking's first candidate (to measure what the call adds).
+export async function velgVedtak(opts: Valggrunnlag & { utenModell?: boolean }): Promise<Valgresultat> {
+  if (opts.utenModell) return byggValg(null, opts);
+  const { svar, modell, forbruk } = await sporModellen(opts);
+  return byggValg(svar, opts, modell, forbruk);
 }
 
 function byggAvsnitt(r: Rangert, k: Kandidat, d: Vedtaksdetaljer, valgte: Sitatvalg[], sak: Brukersak): string {

@@ -148,3 +148,14 @@ export function nyttKjop(a: Sjekk, gammel: Skjema, idag: string): Skjema {
   const kjoper = Object.fromEntries(Object.entries(gammel).filter(([k]) => k.startsWith("b_")));
   return fraSjekk(a, { ...ny, ...kjoper });
 }
+
+// Which decision the letter cites when a list arrives. The recommended one (first) unless the buyer
+// picked another themselves and it is still on the list. `utfall` tells the buyer what happened.
+export type Precutfall = "fulgt" | "beholdt" | "borte";
+export function nyttPrecValg(s: Pick<Skjema, "prec_id" | "prec_selv">, valg: readonly { id: number }[]): { endre: Partial<Skjema> | null; utfall: Precutfall } {
+  const anbefalt = valg[0]?.id;
+  if (anbefalt === undefined) return { endre: null, utfall: "fulgt" };
+  if (s.prec_selv && valg.some((v) => v.id === s.prec_id)) return { endre: null, utfall: "beholdt" };
+  if (s.prec_selv) return { endre: { prec_id: anbefalt, prec_selv: false }, utfall: "borte" };
+  return { endre: s.prec_id === anbefalt ? null : { prec_id: anbefalt }, utfall: "fulgt" };
+}

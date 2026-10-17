@@ -3,14 +3,41 @@ import type { Sak } from "@/db/schema";
 import { standard } from "@/lib/app/skjema";
 import { erId } from "@/lib/sak/id";
 
-const hentAlle = vi.fn(async () => []);
+const hentAlle = vi.fn<() => Promise<unknown[]>>(async () => []);
 const hentBetaltSak = vi.fn<(id: unknown) => Promise<Sak | null>>(async () => null);
 const batch = vi.fn<(q: unknown[]) => Promise<unknown[]>>(async () => []);
 const pris = vi.hoisted(() => ({ gratis: false }));
-const satt = vi.fn<(v: unknown) => { where: () => Promise<void> }>(() => ({ where: async () => undefined }));
+// The claim on a model call (update … returning): a row while the case has calls left.
+const returnering = vi.fn(async () => [{ n: 1 }]);
+type Hvor = { where: () => Promise<undefined> & { returning: typeof returnering } };
+const satt = vi.fn<(v: unknown) => Hvor>(() => ({ where: () => Object.assign(Promise.resolve(undefined), { returning: returnering }) }));
+const kandidater = vi.hoisted(() => ({ rader: [] as { id: number; niva: string; feil: null; rett: never[]; treff: object }[] }));
+const sporModellen = vi.fn(async () => ({ svar: { vedtak_id: 2, sitater: ["s1"] } as { vedtak_id: number; sitater: string[] } | null, modell: "m", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0.01 } }));
 vi.mock("next/headers", () => ({ headers: async () => new Map([["x-forwarded-for", "10.0.0.1"]]) }));
 vi.mock("@/app/sak/vedtak-db", () => ({ hentAlle, hentBilnavn: async () => () => null }));
 vi.mock("@/lib/sak/db", () => ({ hentBetaltSak }));
+vi.mock("@/lib/matching/ranger", () => ({ ranger: () => ({ kandidater: kandidater.rader }), avgjorendeFor: () => undefined }));
+// The limits per address are tested on their own; here every call is from the same address.
+vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => false }));
+vi.mock("@/lib/matching/likhet", () => ({ likhet: () => 50 }));
+// The ranking and the template are tested on their own; here only which answer is used, and when a call is made.
+vi.mock("@/lib/vedtaksvalg/valg", async (orig) => {
+  const ekte = await orig<typeof import("@/lib/vedtaksvalg/valg")>();
+  type R = { id: number };
+  return {
+    UTVALG_I_TEKSTEN: "utvalg",
+    endringMot: ekte.endringMot,
+    grunnlagFor: (kjoper: unknown, k: R[]) => JSON.stringify([kjoper, k.map((r) => r.id)]),
+    sporModellen,
+    sitaterFor: () => new Map(),
+    tilLagret: (grunnlag: string, svar: { vedtak_id: number }) => ({ grunnlag, vedtakId: svar.vedtak_id, sitater: ["tekst"] }),
+    fraLagret: (l: { vedtakId: number } | undefined, kandidater: R[]) => (l && kandidater.some((r) => r.id === l.vedtakId) ? { vedtak_id: l.vedtakId, sitater: ["s1"] } : null),
+    byggValg: (svar: { vedtak_id: number } | null, o: { kandidater: R[] }) => {
+      const r = o.kandidater.find((x) => x.id === svar?.vedtak_id) ?? o.kandidater[0];
+      return { r, niva: "A", avsnitt: "a", sitater: [], fulgt: !!svar, alternativer: o.kandidater.filter((x) => x !== r).map((x) => ({ r: x, avsnitt: "b", sitater: [] })) };
+    },
+  };
+});
 vi.mock("@/lib/pris", () => ({
   PRIS: 249,
   get GRATIS() {
@@ -21,6 +48,7 @@ vi.mock("@/db", () => ({
   db: {
     batch,
     insert: (tabell: unknown) => ({ values: (v: unknown) => ({ tabell, v }) }),
+    select: () => ({ from: () => ({ where: async () => [] }) }),
     update: () => ({ set: satt }),
   },
 }));
@@ -30,13 +58,15 @@ const { ordre, sak } = await import("@/db/schema");
 
 const idag = "2026-10-17";
 const skjema = { ...standard(idag), b_name: "Kari", c_reg: "AB 12345", c_make: "Volvo", c_model: "V60", c_year: "2017", f_cats: ["motor"], f_parts: { motor: ["turbo"] } };
-const betaltSak: Sak = { id: "abcdefghijkm", sjekk: {}, skjema, betalt: new Date(), opprettet: new Date(), endret: new Date() };
+const betaltSak: Sak = { id: "abcdefghijkm", sjekk: {}, skjema, betalt: new Date(), vedtaksvalg: null, modellkall: 0, opprettet: new Date(), endret: new Date() };
 const svar = { kjopsdato: "2025-03-10", km: 120000, ar: 2017, somDenEr: "nei", krav: "retting", forsok: null, feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2025-04-01", beskrivelse: null, opplysning: null, verksted: null, rapport: null }] };
 const sjekk = { reg: "CD 67890", make: "Audi A4", year: "2019", cats: ["klima"], issues: { klima: ["ac"] }, fdates: { klima: "2026-09-01" }, _screen: "result", _i: 9 };
 
 beforeEach(() => {
   vi.clearAllMocks();
   hentBetaltSak.mockResolvedValue(null);
+  hentAlle.mockResolvedValue([]);
+  kandidater.rader = [];
   pris.gratis = false;
   process.env.TVISTR_HELT_BREV_UTEN_BETALING = "1";
 });
@@ -65,7 +95,94 @@ describe("finnVedtak", () => {
 
   it("gir en tom liste uten kandidater", async () => {
     hentBetaltSak.mockResolvedValue(betaltSak);
-    expect(await finnVedtak({ id: betaltSak.id, svar })).toEqual({ ok: true, valg: [] });
+    expect(await finnVedtak({ id: betaltSak.id, svar })).toEqual({ ok: true, valg: [], endring: null });
+  });
+});
+
+describe("finnVedtak: ett modellkall per sett med svar", () => {
+  const vedtakene = (...ider: number[]) => {
+    hentAlle.mockResolvedValue([1, 2, 3, 4, 5, 7, 8].map((id) => ({ id, saksnummer: `FKU-2024-${id}`, vedtaksdato: null, avgjorende: null, sanksjoner: [], km: null, alder: null, somDenEr: null })));
+    kandidater.rader = ider.map((id) => ({ id, niva: "A", feil: null, rett: [], treff: {} }));
+  };
+  // The case as the database holds it after each call: what finnVedtak last wrote.
+  const iBasen = () => {
+    let rad: Sak = { ...betaltSak };
+    hentBetaltSak.mockImplementation(async () => rad);
+    satt.mockImplementation((v: unknown) => {
+      if ((v as Partial<Sak>).vedtaksvalg) rad = { ...rad, ...(v as Partial<Sak>) };
+      return { where: () => Object.assign(Promise.resolve(undefined), { returning: returnering }) };
+    });
+  };
+  const ider = (f: Awaited<ReturnType<typeof finnVedtak>>) => (f.ok ? f.valg.map((v) => v.id) : null);
+
+  it("bruker det lagrede svaret for de samme svarene", async () => {
+    vedtakene(1, 2, 3);
+    iBasen();
+    const forste = await finnVedtak({ id: betaltSak.id, svar });
+    expect(ider(forste)).toEqual([2, 1, 3]);
+    expect(forste.ok && forste.endring).toBeNull();
+    const andre = await finnVedtak({ id: betaltSak.id, svar });
+    expect(ider(andre)).toEqual([2, 1, 3]);
+    expect(andre.ok && andre.endring).toBeNull();
+    expect(sporModellen).toHaveBeenCalledTimes(1);
+  });
+
+  it("spør på nytt når svarene endres, og ikke når de endres tilbake", async () => {
+    vedtakene(1, 2, 3);
+    iBasen();
+    await finnVedtak({ id: betaltSak.id, svar });
+    const endret = { ...svar, feil: [{ ...svar.feil[0], beskrivelse: "Turboen hyler" }] };
+    await finnVedtak({ id: betaltSak.id, svar: endret });
+    await finnVedtak({ id: betaltSak.id, svar });
+    await finnVedtak({ id: betaltSak.id, svar: endret });
+    expect(sporModellen).toHaveBeenCalledTimes(2);
+  });
+
+  it("forteller hva som er nytt når listen endres", async () => {
+    vedtakene(1, 2, 3);
+    iBasen();
+    await finnVedtak({ id: betaltSak.id, svar });
+    vedtakene(4, 1, 5);
+    sporModellen.mockResolvedValueOnce({ svar: { vedtak_id: 4, sitater: ["s1"] }, modell: "m", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } });
+    const f = await finnVedtak({ id: betaltSak.id, svar: { ...svar, km: 150000 } });
+    expect(f.ok && f.endring).toEqual({ forrigeAnbefalt: { id: 2, saksnummer: "2" }, nye: [4, 5] });
+  });
+
+  it("bruker rangeringens førstevalg når kallet feiler, og lagrer ikke svaret", async () => {
+    vedtakene(1, 2, 3);
+    iBasen();
+    sporModellen.mockResolvedValueOnce({ svar: null, modell: "m", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } });
+    expect(ider(await finnVedtak({ id: betaltSak.id, svar }))).toEqual([1, 2, 3]);
+    await finnVedtak({ id: betaltSak.id, svar });
+    expect(sporModellen).toHaveBeenCalledTimes(2);
+  });
+
+  it("gjør ingen kall når saken har brukt opp sine, men bruker det lagrede svaret", async () => {
+    vedtakene(1, 2, 3);
+    iBasen();
+    await finnVedtak({ id: betaltSak.id, svar });
+    returnering.mockResolvedValueOnce([]);
+    expect(ider(await finnVedtak({ id: betaltSak.id, svar: { ...svar, km: 150000 } }))).toEqual([2, 1, 3]);
+    expect(sporModellen).toHaveBeenCalledTimes(1);
+  });
+
+  it("tar rangeringens førstevalg når taket er nådd og det lagrede vedtaket er borte", async () => {
+    vedtakene(1, 2, 3);
+    iBasen();
+    await finnVedtak({ id: betaltSak.id, svar });
+    vedtakene(7, 8);
+    returnering.mockResolvedValueOnce([]);
+    expect(ider(await finnVedtak({ id: betaltSak.id, svar: { ...svar, km: 150000 } }))).toEqual([7, 8]);
+  });
+
+  it("holder på de fem siste svarene", async () => {
+    vedtakene(1, 2, 3);
+    iBasen();
+    for (let km = 1; km <= 6; km++) await finnVedtak({ id: betaltSak.id, svar: { ...svar, km } });
+    const lagret = (await hentBetaltSak(betaltSak.id))!.vedtaksvalg!;
+    expect(lagret.svar).toHaveLength(5);
+    await finnVedtak({ id: betaltSak.id, svar: { ...svar, km: 1 } });
+    expect(sporModellen).toHaveBeenCalledTimes(7);
   });
 });
 

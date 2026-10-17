@@ -75,6 +75,19 @@ Har kjøperen en skriftlig verkstedrapport, ber instruksen modellen foretrekke b
 
 **Ti å velge mellom.** Fanen Vedtak i brevet viser modellens valg først («Anbefalt»). Deretter kommer resten av rangeringens topp 10 som har sitater, i rangeringens rekkefølge (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger vedtaket i fanen Vedtak. Brevfanen viser bare hvilket vedtak brevet viser til, med en knapp tilbake til fanen.
 
+**Ett kall per sett med svar.** `finnVedtak` kalles første gang fanen Vedtak eller Brevet vises.
+- **Lagring per sak:** `sak.vedtaksvalg` holder de fem siste modellsvarene (vedtak og sitater som tekst).
+  - Nøkkelen er det modellen leser: `kjoper`, kandidatene i rekkefølge og `VEDTAKSVALG_VERSJON` (`grunnlagFor`).
+  - Samme svar gir det lagrede valget uten kall: omlasting, faner, en ny enhet, og endringer som tas tilbake.
+  - Avsnittene bygges alltid på nytt av malen, så sammenligningen stemmer med svarene slik de er nå.
+- **Tak og brudd:**
+  - En sak kan gjøre fem kall (`sak.modellkall`, tatt atomisk). Deretter brukes det lagrede valget så lenge vedtaket står i listen, ellers rangeringens førstevalg.
+  - Kallet har ett forsøk, én nettverksretry og 30 sekunder (`rask` i `kallVerktoy`). Feiler det, brukes rangeringens førstevalg, og ingenting lagres.
+- **Når listen endres:** `finnVedtak` sammenligner med listen kjøperen sist fikk (`sak.vedtaksvalg.liste`, `endringMot`) og sier hvilke vedtak som er nye og om det anbefalte er byttet.
+  - Brevet følger det anbefalte. Unntaket er når kjøperen har valgt et annet selv (`prec_selv`) og det fortsatt står i listen (`nyttPrecValg`).
+  - Fanene sier fra om byttet, og kortene for nye vedtak er merket «Ny».
+  - Serverloggen viser for hvert valg om det var `lagret`, `nytt kall`, `tak nådd` eller `kallet feilet`.
+
 **Likhet.** Hvert vedtak har en prosent (`likhet` i `src/lib/matching/likhet.ts`): poengsummen fra rangeringen delt på det et vedtak kan få mot kjøperens svar.
 - Nevneren er summen av `likt`-poengene for kriteriene kjøperen har svart på, og den er lik for alle vedtak i saken. Underkategori teller bare når kjøperen har valgt en. Grunnlag og egen vurdering teller alltid.
 - En verdi vedtaket mangler, og feilkriteriene på nivå B, teller 0. Et vedtak om en annen feil havner derfor på høyst cirka 35 %.

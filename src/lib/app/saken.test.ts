@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fraSjekk, gjelderSaken, kjopt, laas, manglerForKjop, nyttKjop, rensSkjema, sakTekst, sammeSak, sjekkTilSvar, tilSvar } from "./saken";
+import { fraSjekk, gjelderSaken, kjopt, laas, manglerForKjop, nyttKjop, nyttPrecValg, rensSkjema, sakTekst, sammeSak, sjekkTilSvar, tilSvar } from "./saken";
 import { eksempel, standard } from "./skjema";
 
 const idag = "2026-10-16";
@@ -116,4 +116,21 @@ describe("låst til kjøpet", () => {
 
 describe("bilen låst til kjøpet", () => {
   it("krever merke før betaling når oppslaget ikke fant bilen", () => expect(manglerForKjop({ reg: "AB 12345", cats: ["motor"] })).toBe("bil"));
+});
+
+describe("nyttPrecValg", () => {
+  const valg = [{ id: 1 }, { id: 2 }, { id: 3 }];
+  it("følger det anbefalte når brukeren ikke har valgt selv", () => {
+    expect(nyttPrecValg({ prec_id: 2, prec_selv: false }, valg)).toEqual({ endre: { prec_id: 1 }, utfall: "fulgt" });
+    expect(nyttPrecValg({ prec_id: 1, prec_selv: false }, valg)).toEqual({ endre: null, utfall: "fulgt" });
+  });
+  it("beholder brukerens eget valg når det fortsatt er i listen", () => {
+    expect(nyttPrecValg({ prec_id: 3, prec_selv: true }, valg)).toEqual({ endre: null, utfall: "beholdt" });
+  });
+  it("går til det anbefalte når brukerens valg er borte", () => {
+    expect(nyttPrecValg({ prec_id: 9, prec_selv: true }, valg)).toEqual({ endre: { prec_id: 1, prec_selv: false }, utfall: "borte" });
+  });
+  it("gjør ingenting uten en liste", () => {
+    expect(nyttPrecValg({ prec_id: 9, prec_selv: true }, [])).toEqual({ endre: null, utfall: "fulgt" });
+  });
 });

@@ -127,6 +127,13 @@
       "when": 1792246854671,
       "tag": "0017_sak",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792269152123,
+      "tag": "0018_vedtaksvalg",
+      "breakpoints": true
     }
   ]
 }

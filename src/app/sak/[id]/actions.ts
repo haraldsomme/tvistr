@@ -3,9 +3,10 @@
 // The paid case (tables sak and ordre): buying it, saving the form as the buyer types, and the
 // decisions the letter can cite. The decisions, after payment: the ranking in code, one Sonnet call for the
 // choice, the paragraph from the template (docs/vedtaksvalg.md). The chosen one comes first, then the
-// rest of the ranking's top ten, each with its likeness to the buyer's case. Nothing here reaches the browser before payment: no quote, no link.
+// rest of the ranking's top ten, each with its likeness to the buyer's case. The model's answer is kept
+// on the case (sak.vedtaksvalg), so the same answers never cost a second call. Nothing here reaches the browser before payment: no quote, no link.
 import { headers } from "next/headers";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { ordre, sak, vedtak } from "@/db/schema";
 import { rensSjekk, rensSvar } from "@/app/sak/rens";
@@ -25,10 +26,16 @@ import { hentBetaltSak } from "@/lib/sak/db";
 import { nyId } from "@/lib/sak/id";
 import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
 import { visSaksnummer } from "@/lib/vedtaksvalg/mal";
-import { UTVALG_I_TEKSTEN, type Vedtaksdetaljer, velgVedtak } from "@/lib/vedtaksvalg/valg";
+import { byggValg, type Endring, endringMot, fraLagret, grunnlagFor, type LagretSvar, type Modellsvar, sitaterFor, sporModellen, tilLagret, UTVALG_I_TEKSTEN, type Valggrunnlag, type Vedtaksdetaljer } from "@/lib/vedtaksvalg/valg";
 import { HELT_BREV_UTEN_BETALING } from "@/lib/vipps/profil";
 
-export type Funn = { ok: true; valg: Presedens[] } | { ok: false; melding: string };
+export type Funn = { ok: true; valg: Presedens[]; endring: Endring | null } | { ok: false; melding: string };
+
+// Model calls a case may make. Past it the stored answer stands while its decision is on the list,
+// else the ranking's first; the letter works either way.
+const MAKS_MODELLKALL_PER_SAK = 5;
+// Answers kept per case, so changing an answer back costs nothing.
+const LAGREDE_SVAR = 5;
 
 const forMange = lagGrense({ antall: 20, vinduMs: 60_000 });
 const forMangeKjop = lagGrense({ antall: 10, vinduMs: 60_000 });
@@ -37,7 +44,20 @@ const ipAdresse = async () => (await headers()).get("x-forwarded-for")?.split(",
 
 const SANKSJONSNAVN = new Set(["heving", "prisavslag", "retting", "erstatning", "omlevering"]);
 
-// The answers must be about the car and the faults the case was bought for.
+// Claims one of the case's model calls; false when they are used up. One statement, so two requests
+// at once cannot both take the last.
+async function tarModellkall(id: string): Promise<boolean> {
+  const rader = await db
+    .update(sak)
+    .set({ modellkall: sql`${sak.modellkall} + 1` })
+    .where(and(eq(sak.id, id), lt(sak.modellkall, MAKS_MODELLKALL_PER_SAK)))
+    .returning({ n: sak.modellkall });
+  return rader.length > 0;
+}
+
+// The answers must be about the car and the faults the case was bought for. One model call per set of
+// answers the case has not had before (sak.vedtaksvalg); the paragraphs are built anew each time, so
+// they always compare with the answers as they are now.
 export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<Funn> {
   if (forMange(await ipAdresse())) return { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
   try {
@@ -45,11 +65,11 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
     if (!lagret) return { ok: false, melding: "Brevet er ikke betalt." };
     const svar = rensSvar(inn.svar);
     if (!svar || !gjelderSaken(svar, lagret.skjema)) return { ok: false, melding: "Noe er galt med svarene. Prøv igjen." };
-    const { sak, kjoper } = byggSaken(svar);
+    const { sak: brukersak, kjoper } = byggSaken(svar);
 
     const alle = await hentAlle();
-    const { kandidater } = ranger(alle, sak);
-    if (!kandidater.length) return { ok: true, valg: [] };
+    const { kandidater } = ranger(alle, brukersak);
+    if (!kandidater.length) return { ok: true, valg: [], endring: null };
     const rader = await db
       .select({ id: vedtak.id, kildeUrl: vedtak.kildeUrl, utvalg: UTVALG_I_TEKSTEN, merke: vedtak.merke, modell: vedtak.modell, arsmodell: vedtak.arsmodell })
       .from(vedtak)
@@ -57,8 +77,32 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
     const detaljer = new Map<number, Vedtaksdetaljer>(rader.map((d) => [d.id, d]));
     const etterId = new Map(alle.map((k) => [k.id, k]));
     const bilnavn = await hentBilnavn();
+    const grunnlag: Valggrunnlag = { kjoper, sak: brukersak, kandidater, alle: etterId, detaljer };
+    const sitater = sitaterFor(grunnlag);
 
-    const svaret = await velgVedtak({ kjoper, sak, kandidater, alle: etterId, detaljer });
+    // The model's answer: stored for these very answers, else a new call while the case has calls left.
+    const noekkel = grunnlagFor(kjoper, kandidater);
+    const lagrede = lagret.vedtaksvalg?.svar ?? [];
+    const treff = lagrede.find((x) => x.grunnlag === noekkel);
+    let modellsvar: Modellsvar | null;
+    let nytt: LagretSvar | null = null;
+    let kilde: string;
+    let kostnad = 0;
+    if (treff) {
+      modellsvar = fraLagret(treff, kandidater, sitater);
+      kilde = "lagret";
+    } else if (await tarModellkall(lagret.id)) {
+      const spurt = await sporModellen({ ...grunnlag, rask: true });
+      modellsvar = spurt.svar;
+      kostnad = spurt.forbruk.kostnadUsd;
+      kilde = spurt.svar ? "nytt kall" : "kallet feilet";
+      if (spurt.svar) nytt = tilLagret(noekkel, spurt.svar, sitater);
+    } else {
+      modellsvar = fraLagret(lagrede[0], kandidater, sitater);
+      kilde = "tak nådd";
+    }
+    const svaret = byggValg(modellsvar, grunnlag);
+
     const presedens = (r: Rangert, avsnitt: string, anbefalt: boolean): Presedens => {
       const k: Kandidat = etterId.get(r.id)!;
       const egne = r.feil ? (avgjorendeFor(k.avgjorende, r.feil)?.sanksjoner ?? []) : [];
@@ -77,14 +121,27 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
         km: k.km,
         alder: k.alder,
         somDenEr: k.somDenEr,
-        likhet: likhet(r, sak),
+        likhet: likhet(r, brukersak),
         treff: r.treff,
       };
     };
-    console.info(`vedtaksvalg: ${etterId.get(svaret.r.id)?.saksnummer} (nivå ${svaret.niva}${svaret.fulgt ? "" : ", rangeringens førstevalg"}), $${svaret.forbruk.kostnadUsd.toFixed(3)}`);
-    return { ok: true, valg: [presedens(svaret.r, svaret.avsnitt, true), ...svaret.alternativer.map((a) => presedens(a.r, a.avsnitt, false))] };
+    const valg = [presedens(svaret.r, svaret.avsnitt, true), ...svaret.alternativer.map((a) => presedens(a.r, a.avsnitt, false))];
+
+    const liste = valg.map((v) => v.id);
+    const forrige = lagret.vedtaksvalg?.liste;
+    const endring = endringMot(forrige, liste, (id) => visSaksnummer(etterId.get(id)?.saksnummer ?? null));
+    if (nytt || liste.join() !== forrige?.join()) {
+      const svarene = nytt ? [nytt, ...lagrede].slice(0, LAGREDE_SVAR) : lagrede;
+      try {
+        await db.update(sak).set({ vedtaksvalg: { liste, svar: svarene } }).where(eq(sak.id, lagret.id));
+      } catch (e) {
+        console.error("vedtaksvalget ble ikke lagret", e instanceof Error ? e.message : e);
+      }
+    }
+    console.info(`vedtaksvalg: ${etterId.get(svaret.r.id)?.saksnummer} (nivå ${svaret.niva}, ${kilde}${svaret.fulgt ? "" : ", rangeringens førstevalg"}), $${kostnad.toFixed(3)}`);
+    return { ok: true, valg, endring };
   } catch (e) {
-    console.error("vedtaksvalget feilet", e);
+    console.error("vedtaksvalget feilet", e instanceof Error ? e.message : e);
     return { ok: false, melding: "Vi fant ikke lignende saker akkurat nå. Prøv igjen." };
   }
 }

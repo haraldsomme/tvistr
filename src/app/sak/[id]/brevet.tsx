@@ -61,7 +61,7 @@ export function Brevet({ s, sett, vedtak, onSteg, onVedtak, onToast }: { s: Skje
                 {vedtak.mangler ? (
                   <p className="hint">Legg inn overtakelsesdato og når du oppdaget feilen, så finner vi lignende saker.</p>
                 ) : !funn ? (
-                  <p className="hint">Finner lignende saker …</p>
+                  <p className="hint">{vedtak.endres ? "Svarene dine er endret. Vi finner vedtakene som ligner mest på nytt …" : "Finner lignende saker …"}</p>
                 ) : !funn.ok ? (
                   <div className="sugg">
                     <span>{funn.melding}</span>
@@ -72,8 +72,13 @@ export function Brevet({ s, sett, vedtak, onSteg, onVedtak, onToast }: { s: Skje
                 ) : !valgt ? (
                   <p className="hint">Vi fant ingen lignende sak med medhold. Brevet bygger på lovens vilkår.</p>
                 ) : (
-                  <div className="sugg">
+                  <div className="sugg" role={vedtak.endring?.byttetFra ? "status" : undefined}>
                     <span>
+                      {vedtak.endring?.byttetFra && (
+                        <>
+                          Svarene dine er endret, så brevet viser nå til den saken som ligner mest{vedtak.endring.byttetFra.saksnummer ? ` (før: sak ${vedtak.endring.byttetFra.saksnummer})` : ""}.{" "}
+                        </>
+                      )}
                       Brevet viser til <b>{valgt.saksnummer ? `sak ${valgt.saksnummer}` : "vedtaket"}</b> · {valgt.bil} ({valgt.anbefalt ? "anbefalt, " : ""}likhet {valgt.likhet} %)
                     </span>
                     <button type="button" className="btn sm" onClick={onVedtak}>

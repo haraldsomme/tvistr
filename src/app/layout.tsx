@@ -12,7 +12,7 @@ const serif = Source_Serif_4({ variable: "--font-serif", subsets: ["latin"], wei
 const plate = Barlow_Condensed({ variable: "--font-plate", subsets: ["latin"], weight: ["600"] });
 
 export const metadata: Metadata = {
-  title: "Tvistr",
+  title: "tvistr",
   description: "Sjekk gratis om du har en sak mot bilforhandleren, og få et ferdig reklamasjonsbrev.",
 };
 

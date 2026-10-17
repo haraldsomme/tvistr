@@ -3,21 +3,42 @@
 import { useEffect, useState } from "react";
 import { cap, tall } from "@/lib/app/format";
 import type { Presedens } from "@/lib/app/brev";
-import { husk } from "@/lib/app/kall";
-import { nokkel, sakTekst, tilSvar } from "@/lib/app/saken";
+import { trygt } from "@/lib/app/kall";
+import { nokkel, nyttPrecValg, type Precutfall, sakTekst, tilSvar } from "@/lib/app/saken";
 import type { Skjema } from "@/lib/app/skjema";
 import type { Kriterium, Treff } from "@/lib/matching/ranger";
 import { type Funn, finnVedtak } from "./actions";
 import type { Sett } from "./felt";
 
-// One model call per set of answers in this page session, however often the tabs are opened.
-const hent = (svar: NonNullable<ReturnType<typeof tilSvar>>, id: string) =>
-  husk(`${id}|${nokkel(svar)}`, () => finnVedtak({ id, svar }), "Vi fikk ikke kontakt. Prøv igjen.");
+// One request per set of answers at a time, however often the tabs are opened while it runs. A result
+// is not kept here: the server keeps the model's answers (sak.vedtaksvalg) and tells what changed since
+// the list the buyer last got, which a kept result would not.
+const underveis = new Map<string, Promise<Funn>>();
+const hent = (svar: NonNullable<ReturnType<typeof tilSvar>>, id: string) => {
+  const k = `${id}|${nokkel(svar)}`;
+  if (!underveis.has(k)) underveis.set(k, trygt(finnVedtak({ id, svar }), "Vi fikk ikke kontakt. Prøv igjen.").finally(() => underveis.delete(k)));
+  return underveis.get(k)!;
+};
+
+// A list as it arrived, and what it did to the decision the letter cites.
+type Hentet = {
+  n: string;
+  f: Funn;
+  utfall: Precutfall;
+  // The decision the letter cited before the new list replaced it; null when it still cites the same.
+  byttetFra: Presedens | null;
+  // The buyer's own pick, kept or gone (utfall).
+  egetValg: Presedens | null;
+};
 
 export type Vedtaksvalg = {
   // The dates are missing, so there is nothing to look up yet.
   mangler: boolean;
+  // A list for other answers was shown in this session: the answers changed and a new one is coming.
+  endres: boolean;
   funn: Funn | null;
+  // What changed since the list the buyer last got (finnVedtak), with what it did to the letter.
+  endring: (NonNullable<Extract<Funn, { ok: true }>["endring"]> & Omit<Hentet, "n" | "f">) | null;
   valg: Presedens[];
   valgt: Presedens | null;
   // The letter waits for the decision.
@@ -30,17 +51,25 @@ export type Vedtaksvalg = {
 export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean): Vedtaksvalg {
   const svar = tilSvar(s);
   const n = nokkel(svar);
-  const [funn, settFunn] = useState<{ n: string; f: Funn } | null>(null);
+  const [funn, settFunn] = useState<Hentet | null>(null);
   const [forsok, settForsok] = useState(0);
 
   useEffect(() => {
     if (!svar || !aktiv || !s.prec_on) return;
+    // This list is already shown, with its message.
+    if (funn?.n === n && funn.f.ok) return;
     let gjeldende = true;
     hent(svar, id).then((f) => {
       if (!gjeldende) return;
-      settFunn({ n, f });
-      // The picker starts on the decision the model chose.
-      if (f.ok && f.valg.length && !f.valg.some((v) => v.id === s.prec_id)) sett({ prec_id: f.valg[0].id });
+      // The letter follows the recommendation, unless the buyer picked another that is still on the list.
+      const { endre, utfall } = f.ok ? nyttPrecValg(s, f.valg) : { endre: null, utfall: "fulgt" as const };
+      settFunn((forrige) => {
+        const kjente = [...(f.ok ? f.valg : []), ...(forrige?.f.ok ? forrige.f.valg : [])];
+        const sak = (id: number | null) => kjente.find((v) => v.id === id) ?? null;
+        const byttet = f.ok && !!f.endring && s.prec_id !== null && endre?.prec_id !== undefined && endre.prec_id !== s.prec_id;
+        return { n, f, utfall, byttetFra: byttet ? sak(s.prec_id) : null, egetValg: utfall === "fulgt" ? null : sak(s.prec_id) };
+      });
+      if (endre) sett(endre);
     });
     return () => {
       gjeldende = false;
@@ -51,9 +80,12 @@ export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean): Ve
 
   const aktuell = funn && funn.n === n ? funn.f : null;
   const valg = aktuell?.ok ? aktuell.valg : [];
+  const endring = aktuell?.ok && aktuell.endring && funn ? { ...aktuell.endring, utfall: funn.utfall, byttetFra: funn.byttetFra, egetValg: funn.egetValg } : null;
   return {
     mangler: !svar,
+    endres: !!funn && funn.n !== n,
     funn: aktuell,
+    endring,
     valg,
     valgt: valg.find((v) => v.id === s.prec_id) ?? valg[0] ?? null,
     venter: !!svar && s.prec_on && (!aktuell || !aktuell.ok),
@@ -76,7 +108,7 @@ const TREFFTEKST: Record<Kriterium, Partial<Record<Treff, [Tone, string]>>> = {
 };
 const TEGN: Record<Tone, string> = { good: "✓", up: "↑", warn: "−" };
 
-function Kort({ v, plass, valgt, onVelg }: { v: Presedens; plass: number; valgt: boolean; onVelg: () => void }) {
+function Kort({ v, plass, valgt, ny, onVelg }: { v: Presedens; plass: number; valgt: boolean; ny: boolean; onVelg: () => void }) {
   const meta = [cap(v.gjaldt), v.km !== null ? `${tall(v.km)} km` : "", v.alder !== null ? `${v.alder} år gammel` : "", v.somDenEr ? "«som den er»" : ""].filter(Boolean).join(" · ");
   const brikker = (Object.keys(TREFFTEKST) as Kriterium[]).flatMap((k) => {
     const t = TREFFTEKST[k][v.treff[k]];
@@ -88,7 +120,10 @@ function Kort({ v, plass, valgt, onVelg }: { v: Presedens; plass: number; valgt:
       <span className="pp-b vk-b">
         <span className="vk-h">
           <span className="vk-n">
-            <em className={v.anbefalt ? "vk-anb" : undefined}>{v.anbefalt ? "Anbefalt" : `Nr. ${plass}`}</em>
+            <em className={v.anbefalt ? "vk-anb" : undefined}>
+              {v.anbefalt ? "Anbefalt" : `Nr. ${plass}`}
+              {ny && <span className="tag up vk-ny">Ny</span>}
+            </em>
             <b>{v.bil}</b>
             <span className="pp-d">
               {sakTekst(v.saksnummer, v.vedtaksdato?.slice(0, 4) ?? null)}
@@ -129,6 +164,29 @@ function Kort({ v, plass, valgt, onVelg }: { v: Presedens; plass: number; valgt:
   );
 }
 
+const sakNavn = (v: { saksnummer: string | null } | null) => (v?.saksnummer ? `sak ${v.saksnummer}` : "et annet vedtak");
+
+// Why the list changed and what it did to the letter, so new decisions on top are no surprise.
+function Endringsmelding({ endring, valg, valgt }: { endring: NonNullable<Vedtaksvalg["endring"]>; valg: Presedens[]; valgt: Presedens | null }) {
+  const anbefalt = valg[0];
+  const setninger = [
+    endring.nye.length
+      ? `Svarene dine er endret, så listen er oppdatert. ${endring.nye.length === valg.length ? "Alle" : `${endring.nye.length} av de ${valg.length}`} vedtakene som ligner mest, er nye.`
+      : "Svarene dine er endret, så listen er oppdatert.",
+    endring.forrigeAnbefalt ? `Vi anbefaler nå ${sakNavn(anbefalt)} (før: ${sakNavn(endring.forrigeAnbefalt)}).` : `Vi anbefaler fortsatt ${sakNavn(anbefalt)}.`,
+    endring.utfall === "beholdt"
+      ? `Brevet viser fortsatt til ${sakNavn(valgt)}, som du valgte selv.`
+      : endring.utfall === "borte"
+        ? `${endring.egetValg ? `${cap(sakNavn(endring.egetValg))}, som du valgte,` : "Vedtaket du valgte,"} er ikke lenger blant de ${valg.length}, så brevet viser nå til det anbefalte.`
+        : null,
+  ].filter(Boolean);
+  return (
+    <div className="sugg" role="status">
+      <span>{setninger.join(" ")}</span>
+    </div>
+  );
+}
+
 export function Vedtaksfane({ s, sett, vedtak, onBrevet }: { s: Skjema; sett: Sett; vedtak: Vedtaksvalg; onBrevet: () => void }) {
   const { funn, valg, valgt } = vedtak;
   return (
@@ -149,7 +207,7 @@ export function Vedtaksfane({ s, sett, vedtak, onBrevet }: { s: Skjema; sett: Se
       ) : vedtak.mangler ? (
         <p className="hint">Legg inn overtakelsesdato og når du oppdaget feilen, så finner vi lignende saker.</p>
       ) : !funn ? (
-        <p className="hint">Finner lignende saker …</p>
+        <p className="hint">{vedtak.endres ? "Svarene dine er endret. Vi finner vedtakene som ligner mest på nytt …" : "Finner lignende saker …"}</p>
       ) : !funn.ok ? (
         <div className="sugg">
           <span>{funn.melding}</span>
@@ -160,11 +218,14 @@ export function Vedtaksfane({ s, sett, vedtak, onBrevet }: { s: Skjema; sett: Se
       ) : !valg.length ? (
         <p className="hint">Vi fant ingen lignende sak med medhold. Brevet bygger på lovens vilkår.</p>
       ) : (
-        <div className="pp vk-l">
-          {valg.map((v, i) => (
-            <Kort key={v.id} v={v} plass={i + 1} valgt={v.id === valgt?.id} onVelg={() => sett({ prec_id: v.id, prec_on: true })} />
-          ))}
-        </div>
+        <>
+          {vedtak.endring && <Endringsmelding endring={vedtak.endring} valg={valg} valgt={valgt} />}
+          <div className="pp vk-l">
+            {valg.map((v, i) => (
+              <Kort key={v.id} v={v} plass={i + 1} valgt={v.id === valgt?.id} ny={!!vedtak.endring?.nye.includes(v.id)} onVelg={() => sett({ prec_id: v.id, prec_on: true, prec_selv: !v.anbefalt })} />
+            ))}
+          </div>
+        </>
       )}
       <div className="wcase-cta">
         <span />

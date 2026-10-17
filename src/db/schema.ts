@@ -19,6 +19,7 @@ import type { Lagret as Avgjorende } from "../lib/avgjorende/skjema";
 import type { Lagret as Feilvurdering } from "../lib/feilvurdering/skjema";
 import type { Sjekk } from "../lib/app/saken";
 import type { Skjema } from "../lib/app/skjema";
+import type { LagretSvar } from "../lib/vedtaksvalg/valg";
 
 export const kildeArkivEnum = pgEnum("kilde_arkiv", ["hist", "prod", "wp"]);
 export const dokumentStatusEnum = pgEnum("dokument_status", [
@@ -411,6 +412,11 @@ export const sak = pgTable("sak", {
   skjema: jsonb("skjema").$type<Skjema>().notNull(),
   // Null until an order for the case is paid.
   betalt: timestamp("betalt", { withTimezone: true }),
+  // The decision choice (finnVedtak): the list the buyer last got, the recommended first, and the
+  // last model answers by what the model read, so the same answers never cost a second call.
+  vedtaksvalg: jsonb("vedtaksvalg").$type<{ liste: number[]; svar: LagretSvar[] }>(),
+  // Model calls made for the case, against MAKS_MODELLKALL_PER_SAK.
+  modellkall: integer("modellkall").notNull().default(0),
   opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
   endret: timestamp("endret", { withTimezone: true }).notNull().defaultNow(),
 });

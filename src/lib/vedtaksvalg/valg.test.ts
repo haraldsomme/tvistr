@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import type { Rangert } from "@/lib/matching/ranger";
-import { alternativer, type Sitatvalg, tolkSvar } from "./valg";
+import { alternativer, endringMot, fraLagret, type Sitatvalg, tilLagret, tolkSvar } from "./valg";
 
 const feil = { id: "f1", hovedkategori: "motor", underkategori: "turbo", komponent: "turbo" } as AvledetFeil;
 const rangert = (id: number, niva: "A" | "B"): Rangert => ({ id, niva, feil: niva === "A" ? feil : null, hoved: null, rett: [], poengsum: 0, maks: 0, treff: {} as Rangert["treff"] });
@@ -49,4 +49,30 @@ describe("alternativer", () => {
   it("er tom med én kandidat", () => expect(alternativer([rangert(1, "A")], 1, s)).toEqual([]));
 
   it("hopper over kandidater uten sitater", () => expect(alternativer(fire, 1, new Map([[2, []], [3, sitater(1)], [4, sitater(2)]])).map((x) => x.r.id)).toEqual([3, 4]));
+});
+
+describe("tilLagret og fraLagret", () => {
+  it("lagrer sitatene som tekst og finner dem igjen når id-ene har flyttet seg", () => {
+    const lagret = tilLagret("g", { vedtak_id: 1, sitater: ["s3", "s1"] }, alle);
+    expect(lagret).toEqual({ grunnlag: "g", vedtakId: 1, sitater: ["Sitat 3 fra utvalgets vurdering.", "Sitat 1 fra utvalgets vurdering."] });
+    const flyttet = new Map([[1, sitater(3).reverse().map((s, i) => ({ ...s, id: `s${i + 1}` }))]]);
+    expect(fraLagret(lagret, kandidater, flyttet)).toEqual({ vedtak_id: 1, sitater: ["s1", "s3"] });
+  });
+
+  it("gir null når vedtaket ikke lenger er kandidat", () => {
+    expect(fraLagret({ grunnlag: "g", vedtakId: 9, sitater: [] }, kandidater, alle)).toBeNull();
+    expect(fraLagret(undefined, kandidater, alle)).toBeNull();
+  });
+});
+
+describe("endringMot", () => {
+  const nr = (id: number) => `${id}`;
+  it("er null første gang og når listen er den samme", () => {
+    expect(endringMot(undefined, [1, 2], nr)).toBeNull();
+    expect(endringMot([1, 2, 3], [1, 3, 2], nr)).toBeNull();
+  });
+  it("nevner det forrige anbefalte bare når det er byttet", () => {
+    expect(endringMot([1, 2, 3], [1, 2, 4], nr)).toEqual({ forrigeAnbefalt: null, nye: [4] });
+    expect(endringMot([1, 2, 3], [2, 1, 3], nr)).toEqual({ forrigeAnbefalt: { id: 1, saksnummer: "1" }, nye: [] });
+  });
 });

@@ -5,6 +5,7 @@ import { tall } from "@/lib/brev/format";
 import { GRATIS, PRIS } from "@/lib/pris";
 import { ALLE } from "@/lib/vurdering/statistikk";
 import { Bunn } from "./deler/bunn";
+import { DATO, EMNE, RESTEN, SAKSNR, SITAT, UTDRAG } from "./eksempelbrev";
 import { Hake, Pil } from "./deler/ikoner";
 import { Ordmerke } from "./deler/ordmerke";
 import { TilBrevet } from "./til-brevet";
@@ -33,10 +34,25 @@ const kort: CSSProperties = { display: "flex", flexDirection: "column", gap: 14,
 const hvit: CSSProperties = { background: "#FFFFFF", borderTop: "1px solid #E2E6EC", borderBottom: "1px solid #E2E6EC" };
 const lovtag: CSSProperties = { alignSelf: "flex-start", marginTop: 4, fontFamily: MONO, fontSize: 11, padding: "3px 9px", borderRadius: 999, background: "#E8EEFE", color: BLA };
 const brevH: CSSProperties = { fontWeight: 700, margin: "18px 0 6px" };
-const merket: CSSProperties = { background: "#E8EEFE", color: BLA, padding: "0 4px", borderRadius: 3 };
 const radGrid: CSSProperties = { display: "grid", gridTemplateColumns: "minmax(64px, .55fr) minmax(0, 1fr) minmax(0, 1fr)", gap: 12 };
 
-const Gronn = ({ s = 15, farge = "#1E7A4C" }: { s?: number; farge?: string }) => (
+// The made-up decision's number and quote, blacked out (eksempelbrev.ts).
+const sperre = (bredde: string) => <span aria-hidden="true" style={{ display: "inline-block", width: bredde, height: "0.9em", verticalAlign: "-0.1em", borderRadius: 2, background: "#1A1E24" }} />;
+function Sladdet({ tekst }: { tekst: string }) {
+  return tekst.split(new RegExp(`(${SAKSNR}|«${SITAT}»)`)).map((d, i) =>
+    d === SAKSNR ? (
+      <span key={i} role="img" aria-label="sladdet saksnummer">{sperre("3.6em")}</span>
+    ) : d === `«${SITAT}»` ? (
+      <span key={i} role="img" aria-label="sladdet sitat" style={{ whiteSpace: "nowrap" }}>
+        «{sperre("7em")} {sperre("4.5em")}»
+      </span>
+    ) : (
+      d
+    ),
+  );
+}
+
+const Gronn =({ s = 15, farge = "#1E7A4C" }: { s?: number; farge?: string }) => (
   <span style={{ color: farge, display: "inline-flex", flex: "none" }}>
     <Hake s={s} w={2.4} />
   </span>
@@ -187,19 +203,24 @@ export default async function Home() {
         <div className="hero-visual" style={{ flex: "1 1 440px", minWidth: 0, position: "relative", padding: "28px 0 0" }}>
           <div className="hero-bg" aria-hidden="true" style={{ position: "absolute", inset: "0 -20px 0 40px", borderRadius: 28, background: "#ECEFF3" }} />
           <div className="letter-pad" style={{ position: "relative", marginLeft: 28, background: "#FFFFFF", borderRadius: 6, boxShadow: "0 0 0 1px rgba(16,20,26,.04), 0 2px 4px rgba(16,20,26,.04), 0 40px 70px -34px rgba(16,20,26,.35)", padding: 40, fontFamily: "var(--f-doc)", fontSize: 14, lineHeight: 1.62, color: "#1A1E24" }}>
-            <div>Oslo, 16. oktober 2026</div>
-            <div style={{ fontWeight: 700, margin: "18px 0 12px" }}>Reklamasjon på mangel ved Volkswagen ID.4, reg.nr. EL 48213</div>
-            <p style={{ margin: "0 0 12px" }}>Bilen har en mangel, og jeg reklamerer med dette etter forbrukerkjøpsloven § 27.</p>
-            <div style={brevH}>Rettslig grunnlag</div>
-            <p style={{ margin: "0 0 12px" }}>
-              Feilen viste seg tre måneder etter overtakelsen. Etter <span style={merket}>§ 18 annet ledd</span> formodes den å ha eksistert ved leveringen.
-            </p>
-            <div style={brevH}>Krav</div>
-            <p style={{ margin: 0 }}>Jeg krever at mangelen rettes, jf. § 29, uten kostnad for meg og innen rimelig tid.</p>
-            <div style={brevH}>Praksis fra Forbrukerklageutvalget</div>
-            <p style={{ margin: 0 }}>
-              I <span style={merket}>sak 104368</span> sviktet drivlinjen på en brukt elbil etter ni måneder, og Forbrukerklageutvalget hevet kjøpet.
-            </p>
+            <div>{DATO}</div>
+            <div style={{ fontWeight: 700, margin: "18px 0 4px" }}>{EMNE}</div>
+            {UTDRAG.map((d, i) => {
+              const siste = i === UTDRAG.length - 1;
+              return (
+                <div key={d.overskrift}>
+                  <div style={{ ...brevH, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "baseline", gap: "4px 12px" }}>
+                    {d.overskrift}
+                    {d.merke && <span style={{ ...lovtag, alignSelf: "auto", marginTop: 0, fontWeight: 400 }}>{d.merke}</span>}
+                  </div>
+                  <p style={{ margin: 0, ...(siste && { maskImage: "linear-gradient(to bottom, #000 35%, transparent)", WebkitMaskImage: "linear-gradient(to bottom, #000 35%, transparent)" }) }}>
+                    <Sladdet tekst={d.setninger.join(" ")} />
+                  </p>
+                  {d.setninger.some((s) => s.includes(SITAT)) && <div style={{ marginTop: 6, fontFamily: MONO, fontSize: 11, color: "#5B6576" }}>Sladdet i eksempelet: saksnummer og ordrett sitat</div>}
+                </div>
+              );
+            })}
+            <div style={{ marginTop: 10, fontFamily: MONO, fontSize: 11.5, color: BLA }}>{RESTEN}</div>
           </div>
           <div className="float-plate" aria-hidden="true" style={{ position: "absolute", top: 4, right: -8, display: "flex", height: 46, border: "2px solid #1B1B1B", borderRadius: 7, background: "#FFFFFF", overflow: "hidden", boxShadow: "0 14px 28px -14px rgba(16,20,26,.45)", transform: "rotate(3deg)" }}>
             <div style={{ width: 26, background: "#1E4AA6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 4, paddingBottom: 5 }}>
@@ -210,7 +231,7 @@ export default async function Home() {
               </svg>
               <span style={{ color: "#FFFFFF", fontSize: 10, fontWeight: 700, lineHeight: 1 }}>N</span>
             </div>
-            <div style={{ padding: "0 14px", display: "flex", alignItems: "center", fontFamily: "var(--f-plate)", fontWeight: 600, fontSize: 27, letterSpacing: "0.07em", color: "#111111" }}>EL 48213</div>
+            <div style={{ padding: "0 14px", display: "flex", alignItems: "center", fontFamily: "var(--f-plate)", fontWeight: 600, fontSize: 27, letterSpacing: "0.07em", color: "#111111" }}>AB 12345</div>
           </div>
         </div>
       </section>

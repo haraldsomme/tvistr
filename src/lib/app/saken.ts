@@ -36,7 +36,7 @@ export function tilSvar(s: Skjema): Svar | null {
     km: heltall(s.c_km),
     ar: heltall(s.c_year),
     somDenEr: s.c_asis ? "ja" : "nei",
-    krav: s.k_main === "omlevering" ? "retting" : s.k_main === "retting" || s.k_main === "prisavslag" || s.k_main === "heving" ? s.k_main : null,
+    krav: s.k_main === "retting" || s.k_main === "prisavslag" || s.k_main === "heving" ? s.k_main : null,
     forsok: forsokTall(s.k_forsok),
     feil: feil.map((c) => ({ hoved: c, under: s.f_parts[c] ?? [], oppdaget: s.f_area[c].found, beskrivelse: s.f_catdesc[c]?.trim() || null, opplysning, verksted, rapport })),
   };
@@ -139,7 +139,10 @@ export function rensSkjema(inn: unknown, idag: string): Skjema | null {
   if (!erObjekt(inn) || JSON.stringify(inn).length > 64_000) return null;
   const s = standard(idag);
   const kjente = Object.fromEntries(Object.entries(inn).filter(([k]) => k in s));
-  return flett(s, kjente) as Skjema;
+  const ut = flett(s, kjente) as Skjema;
+  // Omlevering is no longer a claim (no decision gave a buyer another used car); a case saved with it
+  // claims retting, which the ranking already treated it as.
+  return ut.k_main === "omlevering" ? { ...ut, k_main: "retting" } : ut;
 }
 
 // A new purchase for another car or fault: a new letter from the check, keeping only the buyer.

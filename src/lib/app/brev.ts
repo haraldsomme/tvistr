@@ -3,14 +3,14 @@
 // decision is Tvistr's paragraph from the server (finnVedtak → mal.ts), never written here.
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { opplysningsfeil } from "@/lib/brev/feiltype";
-import { ANDRE_LOVER, LOVORD, RENTER_FRA_REKLAMASJON } from "@/lib/brev/paragrafer";
+import { ANDRE_LOVER, LOVORD, RENTER_FRA_REKLAMASJON, SELGER_BEVISER_UVESENTLIG, TILBUD_UTEN_OPPHOLD } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
 import type { Kriterium, Niva, Treff } from "@/lib/matching/ranger";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
 import { addDays, addMonths, dur, fmtD, parseD } from "./dato";
 import { regler, type Regler } from "./lov";
 import { forsokTall } from "./saken";
-import { DOCS, IMPACT, type Skjema, WS_SAYS, WS_WHO } from "./skjema";
+import { DOCS, IMPACT, type Skjema, SVAR, WS_SAYS, WS_WHO } from "./skjema";
 
 // Text, or a placeholder for a missing answer. Nothing in the body is emphasised: the headings are the
 // only bold text, as in a lawyer's letter.
@@ -64,11 +64,36 @@ function feilnavn(hoved: string, under: string[]): string {
   return navn.some((n) => /\bog\b|,/.test(n)) ? navn.join("; ") : listJoin(navn);
 }
 
-// The attachments, in the form's order. A workshop report the letter says is attached is always listed.
+// The attachments, in the form's order. A workshop report the letter says is attached is always listed,
+// and so are the receipts behind an expense claim (Forbrukerrådet: keep the receipts).
 export function vedlegg(s: Skjema): string[] {
   const ids = new Set(s.f_docs);
   if (s.ws === "rapport") ids.add("verksted");
+  if (harUtgifter(s)) ids.add("kvitt");
   return [...DOCS.filter(([id]) => ids.has(id)).map(([, navn]) => navn), ...s.files];
+}
+
+const harUtgifter = (s: Skjema) => s.k_exp && s.exp.some((x) => x.t || x.a);
+
+// A defect so serious the buyer need not accept a remedy first (§ 29 tredje ledd tredje punktum, from
+// 2024): only from the answers that show it.
+const alvorlig = (s: Skjema) => s.f_drivable === "nei" || s.f_impact.includes("sikkerhet") || (s.ws === "rapport" && s.ws_says.includes("frarader"));
+
+// Whether the seller is past the remedy for a price reduction or heving claimed first: the attempts the
+// law lets the buyer refuse more of (§ 30: two before 2024, one after), or a defect so serious.
+function forbiAvhjelp(s: Skjema, L: Regler): boolean {
+  const n = forsokTall(s.k_forsok);
+  return (n !== null && n >= (L.versjon === "før_2024" ? 2 : 1)) || (!!L.par("avhjelp_umiddelbart") && alvorlig(s));
+}
+
+// The answers that show the defect is serious, as sentences (for a price reduction claimed at once; for
+// heving they are among hevingsgrunner already).
+function alvorGrunner(s: Skjema): string[] {
+  const g: string[] = [];
+  if (s.f_drivable === "nei") g.push("Bilen kan ikke brukes.");
+  if (s.f_impact.includes("sikkerhet")) g.push("Feilen går ut over sikkerheten.");
+  if (s.ws === "rapport" && s.ws_says.includes("frarader")) g.push("Verkstedet fraråder videre bruk.");
+  return g;
 }
 
 const heltall = (s: string) => {
@@ -87,14 +112,37 @@ function hevingsgrunner(s: Skjema, L: Regler): string[] {
     const pst = Math.round((100 * kost) / pris);
     if (pst >= 5) g.push(`Utbedringen er anslått til kr ${s.k_cost.trim()}, som utgjør ${pst} % av kjøpesummen.`);
   }
+  // The attempts: two for the same defect before 2024 (old § 30 annet ledd), one after (§ 30 fjerde
+  // ledd), unless it is reasonable to give the seller another.
   const n = forsokTall(s.k_forsok);
-  if (n !== null && n >= 2) g.push(`Dere har forsøkt å rette feilen ${n >= 3 ? "tre eller flere" : "to"} ganger uten å lykkes, og har dermed ikke lenger rett til å rette, jf. ${L.par("retting")}.`);
-  else if (n === 1) g.push("Ett rettingsforsøk har ikke løst feilen.");
+  const ganger = n !== null && n >= 3 ? "tre eller flere ganger" : n === 2 ? "to ganger" : "";
+  if (L.versjon === "før_2024") {
+    if (n !== null && n >= 2) g.push(`Dere har forsøkt å rette feilen ${ganger} uten å lykkes, og har dermed ikke lenger rett til å rette, jf. ${L.par("avhjelp_avvise")}.`);
+    else if (n === 1) g.push("Ett rettingsforsøk har ikke løst feilen.");
+  } else if (n !== null && n >= 1) g.push(`Dere har forsøkt å rette feilen${ganger ? ` ${ganger}` : ""} uten å lykkes, og jeg kan derfor avvise videre retting, jf. ${L.par("avhjelp_avvise")}.`);
   if (s.f_drivable === "nei") g.push("Bilen kan ikke brukes.");
   if (s.f_impact.includes("sikkerhet")) g.push("Feilen går ut over sikkerheten.");
   if (s.ws === "rapport" && s.ws_says.includes("frarader")) g.push("Verkstedet fraråder videre bruk.");
   if (s.seller_said === "lovet") g.push("Bilen avviker fra det dere uttrykkelig opplyste før kjøpet.");
   return g;
+}
+
+// The law's answer to each objection the seller gave (SVAR, after Forbrukerrådet's «Vanlige spørsmål og
+// svar»), each sentence citing the table. «Som den er» has its own paragraph above, and a refusal without
+// reasons or «wait and see» need no answer. Nothing is claimed that the answers do not carry: wear is
+// only answered inside the presumption or with a report, lateness only with the law's limits.
+function svarPaInnvendinger(s: Skjema, L: Regler, k: { iFormodning: boolean; rettidig: boolean; ikkeSlitasje: boolean; firm: boolean }): string[] {
+  const har = (id: string) => s.f_prior && s.f_prior_svar.includes(id);
+  const ut: string[] = [];
+  if (har("slitasje")) {
+    if (k.iFormodning) ut.push("At dere viser til slitasje eller feil bruk, endrer ikke dette. Det er dere som må bevise at feilen ikke var til stede ved leveringen.");
+    else if (k.ikkeSlitasje) ut.push("Dere har vist til slitasje eller feil bruk. Verkstedrapporten fastslår at feilen ikke skyldes normal slitasje.");
+  }
+  if (har("produsent")) ut.push(`Kravet mitt retter seg mot dere som selger, jf. ${L.par("selger")}. Jeg kan gå mot et tidligere salgsledd, men har ingen plikt til det, jf. ${L.par("tidligere_ledd")}.`);
+  if (har("betaling")) ut.push(`Retting skal skje uten kostnad for meg, jf. ${L.par("avhjelp_vilkar")}${k.firm ? ", og jeg betaler ikke for den" : ""}.`);
+  if (har("garanti_ute")) ut.push(`At garantien er utløpt, har ikke betydning for kravet, som bygger på loven. En garanti «${LOVORD.garantiBegrenser}», jf. ${L.par("garanti_lov")}.`);
+  if (har("for_sent") && !k.rettidig) ut.push(`Fristen for å reklamere er aldri kortere enn to måneder fra jeg oppdaget mangelen, jf. ${L.par("reklamasjon")}. For en bil er den ytterste fristen fem år etter overtakelsen, jf. ${L.par("reklamasjon_5ar")}.`);
+  return ut;
 }
 
 // `presedens`: the decision the buyer chose, null without one (the law's sentence), or «venter» while
@@ -177,7 +225,8 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   if (s.f_prior) {
     const how = has("f_prior_how") ? ` ${s.f_prior_how === "oppmøte" ? "ved oppmøte" : `på ${s.f_prior_how}`}` : "";
     let p = `Jeg tok opp feilen med dere${how} ${has("f_prior_date") ? fmtD(s.f_prior_date) : "tidligere"}.`;
-    if (has("f_prior_resp")) p += ` Svaret jeg fikk, var at ${trimDot(s.f_prior_resp)}.`;
+    const svar = [...SVAR.filter(([id]) => s.f_prior_svar.includes(id)).map(([, , ord]) => ord), ...(has("f_prior_resp") ? [trimDot(s.f_prior_resp)] : [])];
+    if (svar.length) p += ` Svaret jeg fikk, var at ${listJoin(svar)}.`;
     p += tone(" Forholdet er ikke løst, og dette brevet bekrefter og utdyper reklamasjonen.", " Saken er fortsatt ikke løst. Dette brevet bekrefter og utdyper reklamasjonen, og jeg forventer nå en løsning.");
     B.push({ t: "p", tekst: [p] });
   }
@@ -186,21 +235,27 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   B.push({ t: "p", tekst: [`Etter ${L.lovRef("krav")} skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. ${tone("Når den ikke er det, foreligger det en mangel", "Det har den ikke, og bilen har derfor en mangel")}, jf. ${L.par("avvik")}.`] });
   // Before 2024 old § 17; from 2024 a general «som den er» is no agreed exception under § 15 annet ledd
   // (the wording the lawyer reviewed in the earlier letter).
-  if (s.c_asis)
+  // Also when the seller answered with «som den er» though the buyer did not tick it for the contract:
+  // the sentence then speaks of the reservation without saying the car was sold with it.
+  if (s.c_asis || s.f_prior_svar.includes("som_den_er")) {
+    const pastatt = !s.c_asis;
     B.push({
       t: "p",
       tekst: [
         L.versjon === "før_2024"
-          ? `${tone("Bilen ble solgt «som den er».", "At bilen ble solgt «som den er», fritar dere ikke uten videre for ansvar.")} Etter ${L.lovRef("forbehold")} har bilen likevel en mangel når den er ${LOVORD.dårligereStand}.`
-          : `${tone("Forbeholdet om at bilen ble solgt «som den er», er ikke", "Forbeholdet om at bilen ble solgt «som den er», endrer ikke dette. Det er ikke")} et avtalt unntak etter ${L.lovRef("forbehold")}. Unntaket fra ${LOVORD.kravTredjeFjerde} forutsetter at jeg ved inngåelsen av avtalen ${LOVORD.avtaltUnntak}.`,
+          ? `${pastatt ? "Et forbehold om at bilen selges «som den er», fritar dere ikke uten videre for ansvar." : tone("Bilen ble solgt «som den er».", "At bilen ble solgt «som den er», fritar dere ikke uten videre for ansvar.")} Etter ${L.lovRef("forbehold")} har bilen likevel en mangel når den er ${LOVORD.dårligereStand}.`
+          : `${pastatt ? "Et generelt forbehold om at bilen selges «som den er», er ikke" : tone("Forbeholdet om at bilen ble solgt «som den er», er ikke", "Forbeholdet om at bilen ble solgt «som den er», endrer ikke dette. Det er ikke")} et avtalt unntak etter ${L.lovRef("forbehold")}. Unntaket fra ${LOVORD.kravTredjeFjerde} forutsetter at jeg ved inngåelsen av avtalen ${LOVORD.avtaltUnntak}.`,
       ],
     });
+  }
   const del = parseD(s.c_delivery),
     found = parseD(s.f_found);
   const formodning = `Etter ${L.par("formodning")} skal en mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises.`;
   // Each fault on its own date, in calendar months as the law and the ranking count (tidsnivaFor):
   // the presumption only for the faults inside it, the five-year rule only between two and five years.
   // A fault in what the seller said or promised existed at the sale: no presumption for it.
+  const ikkeSlitasje = s.ws === "rapport" && s.ws_says.includes("ikke_slitasje");
+  let iFormodning = false;
   const datert = s.f_cats.map((c) => ({ c, d: s.f_area[c]?.found ?? "" })).filter((x) => x.d && s.c_delivery && x.d >= s.c_delivery && !opplysningsfeil(x.c, s.f_parts[x.c] ?? []));
   const ved = (xs: typeof datert) => listJoin(xs.map((x) => smaa(feilnavn(x.c, s.f_parts[x.c] ?? []))));
   if (s.c_delivery && datert.length) {
@@ -213,22 +268,29 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
         : inne.length === datert.length
           ? [`Feilene viste seg innen ${L.formodningTekst} etter overtakelsen.`, "feilene"]
           : [`${inne.length > 1 ? "Feilene" : "Feilen"} ved ${ved(inne)} viste seg innen ${L.formodningTekst} etter overtakelsen.`, inne.length > 1 ? "disse feilene" : "denne feilen"];
-      B.push({ t: "p", tekst: [`${hvem[0]} ${formodning} ${tone("Det er dermed dere som må bevise", "Bevisbyrden ligger hos dere. Dere må bevise")} at ${hvem[1]} ikke var til stede da jeg overtok bilen.`] });
+      // The exception (§ 18 annet ledd, «uforenlig med varens eller mangelens art») is the seller's usual
+      // answer for a used car: wear. It is only answered when the workshop report says it is not wear.
+      const unntak = ikkeSlitasje ? ` Formodningen er ikke ${LOVORD.uforenlig}, jf. ${L.par("formodning_unntak")}: verkstedrapporten fastslår at feilen ikke skyldes normal slitasje.` : "";
+      B.push({ t: "p", tekst: [`${hvem[0]} ${formodning} ${tone("Det er dermed dere som må bevise", "Bevisbyrden ligger hos dere. Dere må bevise")} at ${hvem[1]} ikke var til stede da jeg overtok bilen.${unntak}`] });
+      iFormodning = true;
     }
     if (sene.length) {
       const hvem = alene ? `Feilen viste seg ${dur(del!, parseD(sene[0].d)!)} etter overtakelsen.` : `${sene.length > 1 ? "Feilene" : "Feilen"} ved ${ved(sene)} viste seg mer enn to år etter overtakelsen.`;
       B.push({ t: "p", tekst: [`${hvem} En bil er ment å vare vesentlig lenger enn to år, og reklamasjonsfristen er derfor fem år, jf. ${L.par("reklamasjon_5ar")}.${tone("", " Dere kan ikke avvise reklamasjonen fordi det har gått mer enn to år.")}`] });
     }
   } else if ((!del || !found) && !s.f_cats.every((c) => opplysningsfeil(c, s.f_parts[c] ?? []))) B.push({ t: "p", tekst: [`En mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, jf. ${L.par("formodning")}.`] });
+  let rettidig = false;
   if (found) {
     const nr = (s.f_prior && parseD(s.f_prior_date)) || ld;
     const etterFemAr = !!del && nr > parseD(plussManeder(s.c_delivery, 60))!;
     // Timely only when it surely is: within two months of the discovery and five years of the handover,
     // and not dated before the discovery. Later than two months the letter claims nothing.
-    if (!etterFemAr && nr >= found && nr <= addMonths(found, 2)) B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen${tone(", og er dermed rettidig", ". Den er rettidig")} etter ${L.par("reklamasjon")}${tone("", ", og dere kan ikke avvise den som for sen")}.`] });
+    if (!etterFemAr && nr >= found && nr <= addMonths(found, 2)) rettidig = true;
+    if (rettidig) B.push({ t: "p", tekst: [`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen${tone(", og er dermed rettidig", ". Den er rettidig")} etter ${L.par("reklamasjon")}${tone("", ", og dere kan ikke avvise den som for sen")}.`] });
   }
   // Not when the complaint is that the promised warranty is missing.
   if (s.c_warranty && !s.f_cats.includes("garanti")) B.push({ t: "p", tekst: [`Bilen er også omfattet av garanti. ${tone("Garantien gjelder i tillegg til mine rettigheter etter loven og begrenser dem ikke.", "Garantien kommer i tillegg til mine rettigheter etter loven, og dere kan ikke bruke garantivilkårene til å begrense dem.")}`] });
+  for (const p of svarPaInnvendinger(s, L, { iFormodning, rettidig, ikkeSlitasje, firm })) B.push({ t: "p", tekst: [p] });
 
   if (s.prec_on) {
     if (presedens === "venter") {
@@ -248,22 +310,39 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   // dated, else this letter.
   const reklamert = s.f_prior ? (has("f_prior_date") ? fmtD(s.f_prior_date) : null) : fmtD(ld);
   const renter = `med tillegg av renter etter forsinkelsesrenteloven${RENTER_FRA_REKLAMASJON[L.versjon] ? ` fra den dag jeg reklamerte${reklamert ? `, ${reklamert}` : ""}` : ""}, jf. ${L.par("renter_heving")}`;
+  // A loaner: before 2024 a right when the repair keeps the buyer from the car for more than a week and
+  // the claim is reasonable (old § 30 tredje ledd); from 2024 a weight in whether the remedy is without
+  // significant inconvenience (§ 30 første ledd annet punktum).
+  const lanebil = () =>
+    L.versjon === "før_2024"
+      ? `Vil rettingen medføre at jeg i mer enn en uke blir avskåret fra å bruke bilen, ${tone("ber jeg om", "krever jeg")} at dere stiller en erstatningsbil til rådighet for deres regning, jf. ${L.par("erstatningsbil")}.`
+      : `Jeg ${tone("ber om", "forventer")} at dere stiller lånebil til disposisjon mens bilen er til reparasjon. Om rettingen skjer uten vesentlig ulempe for meg, skal det blant annet legges vekt på om dere stiller en erstatningsbil til rådighet, jf. ${L.par("erstatningsbil")}.`;
+  // Price reduction or heving claimed first while the seller may still offer a remedy (§ 29 tredje ledd):
+  // the letter says so, as Forbrukerrådet's template does, and keeps the claim for when no lawful remedy
+  // comes. From 2024 a defect the answers show is serious is claimed at once with the law's words.
+  const forbi = forbiAvhjelp(s, L);
+  const umiddelbart = !!L.par("avhjelp_umiddelbart") && alvorlig(s) && (forsokTall(s.k_forsok) ?? 0) < 1;
+  const tilbud = (krav: string) =>
+    `Jeg er kjent med at dere kan tilby å rette mangelen${TILBUD_UTEN_OPPHOLD[L.versjon] ? ", dersom det skjer uten opphold" : ""}, jf. ${L.par("avhjelp_tilbud")}. Rettingen må i så fall skje uten kostnad, uten vesentlig ulempe for meg og innen rimelig tid, jf. ${L.par("avhjelp_vilkar")}. ${tone(`Skjer ikke det, fastholder jeg kravet om ${krav}.`, `Skjer ikke det, står kravet om ${krav} fast.`)}`;
+  const straks = `Mangelen er etter sin art så alvorlig at det ikke er rimelig å forvente at jeg skal godta et tilbud om avhjelp, jf. ${L.par("avhjelp_umiddelbart")}.`;
+  // § 32 is cited in the same sentence before; this one says who must prove the exception.
+  const bevisbyrde = SELGER_BEVISER_UVESENTLIG[L.versjon] ? " Det er dere som har bevisbyrden for at mangelen er uvesentlig." : "";
   switch (s.k_main) {
     case "retting":
-      B.push({ t: "p", tekst: [`${tone("Mitt krav er", "Jeg krever")} at mangelen rettes, jf. ${L.par("retting")}. ${tone("Rettingen skal skje", "Etter loven skal rettingen skje")} uten kostnad for meg, innen rimelig tid og uten vesentlig ulempe for meg.${s.k_loaner ? ` Jeg ${tone("ber om", "forventer")} at dere stiller lånebil til disposisjon mens bilen er til reparasjon.` : ""}`] });
-      break;
-    case "omlevering":
-      B.push({ t: "p", tekst: [`${tone("Mitt krav er", "Jeg krever")} omlevering, det vil si en tilsvarende bil uten mangel, jf. ${L.par("retting")}. ${tone("Omleveringen skal skje", "Etter loven skal omleveringen skje")} uten kostnad for meg og innen rimelig tid.`] });
+      B.push({ t: "p", tekst: [`${tone("Mitt krav er", "Jeg krever")} at mangelen rettes, jf. ${L.par("retting")}. ${tone("Rettingen skal skje", "Etter loven skal rettingen skje")} uten kostnad for meg, innen rimelig tid og uten vesentlig ulempe for meg.${s.k_loaner ? ` ${lanebil()}` : ""}`] });
       break;
     case "prisavslag":
       B.push({ t: "p", tekst: [tone("Mitt krav er et forholdsmessig prisavslag på kr ", "Jeg krever et forholdsmessig prisavslag på kr "), v("k_amount", "beløp"), `, jf. ${L.par("prisavslag")}.${has("k_basis") ? ` Beløpet bygger på ${trimDot(s.k_basis)}.` : has("k_cost") ? ` Beløpet bygger på et overslag over utbedringskostnaden på kr ${s.k_cost.trim()}.` : ""}`] });
+      if (umiddelbart) B.push({ t: "p", tekst: [`${alvorGrunner(s).join(" ")} ${straks}`] });
+      else if (!forbi) B.push({ t: "p", tekst: [tilbud("prisavslag")] });
       break;
     case "heving": {
       const g = hevingsgrunner(s, L);
       B.push({
         t: "p",
         tekst: [
-          g.length ? `${g.join(" ")} Mangelen er derfor ikke uvesentlig, og jeg hever kjøpet, jf. ${L.par("heving")}. ` : `Mangelen er ikke uvesentlig, og jeg hever med dette kjøpet, jf. ${L.par("heving")}. `,
+          // Without a ground to skip the remedy the letter claims heving rather than declaring it.
+          `${g.length ? `${g.join(" ")} Mangelen er derfor ikke uvesentlig` : "Mangelen er ikke uvesentlig"}, og ${forbi ? (g.length ? "jeg hever kjøpet" : "jeg hever med dette kjøpet") : "jeg krever å heve kjøpet"}, jf. ${L.par("heving")}.${bevisbyrde} `,
           ...tone<Del[]>(
             ["Kjøpesummen på kr ", kjop, " skal da tilbakebetales mot at bilen leveres tilbake til dere"],
             ["Jeg krever kjøpesummen på kr ", kjop, " tilbakebetalt mot at bilen leveres tilbake til dere"],
@@ -272,21 +351,30 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
           tone("Jeg ber om at dere tar kontakt for å avtale tilbakelevering og oppgjør.", "Ta kontakt med meg for å avtale tilbakelevering og oppgjør."),
         ],
       });
+      if (umiddelbart) B.push({ t: "p", tekst: [straks] });
+      else if (!forbi) B.push({ t: "p", tekst: [tilbud("heving")] });
       break;
     }
     default:
       B.push({ t: "p", tekst: ["Jeg krever ", { ph: "velg krav i steg 4" }, "."] });
   }
-  if ((s.k_main === "retting" || s.k_main === "omlevering") && (s.k_alt === "prisavslag" || s.k_alt === "heving")) {
+  if (s.k_main === "retting" && (s.k_alt === "prisavslag" || s.k_alt === "heving")) {
     const g = s.k_alt === "heving" ? hevingsgrunner(s, L) : [];
     B.push({
       t: "p",
       tekst: [
-        `Dersom ${s.k_main} ikke skjer innen rimelig tid, ikke lykkes eller ikke er mulig, ${tone("vil jeg subsidiært kreve", "krever jeg subsidiært")} ${s.k_alt === "prisavslag" ? `et forholdsmessig prisavslag, jf. ${L.par("prisavslag")}.` : `å heve kjøpet, jf. ${L.par("heving")}.`}`,
+        `Dersom retting ikke skjer innen rimelig tid, ikke lykkes eller ikke er mulig, ${tone("vil jeg subsidiært kreve", "krever jeg subsidiært")} ${s.k_alt === "prisavslag" ? `et forholdsmessig prisavslag, jf. ${L.par("prisavslag")}.` : `å heve kjøpet, jf. ${L.par("heving")}.`}`,
         ...(g.length ? [` ${g.join(" ")} Mangelen er derfor ikke uvesentlig.`] : []),
+        ...(s.k_alt === "heving" ? [bevisbyrde] : []),
         ...(s.k_alt === "heving" ? [` Kjøpesummen skal i så fall tilbakebetales mot at bilen leveres tilbake, ${renter}.`] : []),
       ],
     });
+  }
+  // Forbrukerrådet's template: the seller may examine the defect and repair it. From 2024 the buyer must
+  // make the thing available (§ 30 annet ledd); before, the offer stands without a paragraph.
+  if (s.k_main) {
+    const hva = s.k_main === "heving" && (forbi || umiddelbart) ? "undersøkelse" : "undersøkelse og retting";
+    B.push({ t: "p", tekst: [`Bilen kan stilles til rådighet for ${hva} etter nærmere avtale${L.par("rad") ? `, jf. ${L.par("rad")}` : ""}.`] });
   }
   if (s.k_exp) {
     const it = s.exp.filter((x) => x.t || x.a);
@@ -318,10 +406,9 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
 function slutning(p: Presedens, s: Skjema, firm: boolean): string {
   const sider: Kriterium[] = ["km", "alder", "som_den_er"];
   const ikkeSvakere = sider.every((k) => p.treff[k] === "likt" || p.treff[k] === "mildere");
-  const krav = s.k_main === "omlevering" ? "retting" : s.k_main;
   const d = [p.niva === "A" ? "Saken gjaldt samme type feil som i min sak." : "Vedtaket avgjør det samme rettslige spørsmålet som denne saken reiser."];
   if (ikkeSvakere) d.push("Bilen i min sak var ikke i et svakere utgangspunkt.");
-  if (krav && p.utfall.includes(krav)) d.push(`Kjøperen fikk medhold i ${krav}, som er det jeg krever.`);
+  if (s.k_main && p.utfall.includes(s.k_main)) d.push(`Kjøperen fikk medhold i ${s.k_main}, som er det jeg krever.`);
   d.push(firm && ikkeSvakere ? "Min sak står minst like sterkt, og utfallet bør bli det samme." : "Min sak bør vurderes på samme måte.");
   return d.join(" ");
 }

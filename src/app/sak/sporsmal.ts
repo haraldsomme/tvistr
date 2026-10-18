@@ -49,7 +49,7 @@ export const SPORSMAL: Sporsmal[] = [
     opts: [["nei", "Nei"], ["ja", "Ja"], ["vetikke", "Vet ikke"]],
   },
   { id: "reg", type: "car", title: "Hvilken bil gjelder det?", hint: "Vi henter merke, modell og når bilen sist ble registrert. Har du ikke registreringsnummeret for hånden, kan du hoppe over." },
-  { id: "cats", type: "faults", title: "Hva er galt med bilen?", hint: "Velg ett eller flere områder, og deretter feilene du har lagt merke til." },
+  { id: "cats", type: "faults", title: "Hva gjelder reklamasjonen?", hint: "Velg alle områdene der du har funnet feil. Du kan velge flere." },
   {
     id: "known",
     type: "single",

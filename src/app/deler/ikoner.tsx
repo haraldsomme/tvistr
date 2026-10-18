@@ -118,7 +118,6 @@ export const Fold = () => (
 // The claim tiles (artifact ICO).
 export const KRAVIKON: Record<string, ReactNode> = {
   retting: <path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L4 16.8V20h3.2l5.3-5.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z" />,
-  omlevering: <path d="M4 8h13l-3-3M20 16H7l3 3" />,
   prisavslag: (
     <>
       <path d="M20.6 13.4l-7.2 7.2a1.9 1.9 0 0 1-2.8 0L3 13V3h10l7.6 7.6a1.9 1.9 0 0 1 0 2.8z" />

@@ -12,7 +12,7 @@ describe("paragraftabellene", () => {
     for (const v of VERSJONER)
       for (const p of POENG) {
         const par = paragraf(v, p);
-        expect(par === null || /^§§? \d+( [a-z])?( og \d+)?( (første|annet|tredje) ledd)?( bokstav [a-d])?( (første|annet) punktum)?$/.test(par), `${v} ${p}: ${par}`).toBe(true);
+        expect(par === null || /^§§? \d+( [a-z])?( og \d+)?( (første|annet|tredje|fjerde) ledd)?( bokstav [a-d])?( (første|annet|tredje) punktum)?$/.test(par), `${v} ${p}: ${par}`).toBe(true);
       }
   });
 
@@ -46,6 +46,27 @@ describe("paragraftabellene", () => {
   });
 });
 
+describe("avhjelp etter lovversjon (Lovdata og Prop. 49 LS, 2026-10-18)", () => {
+  it("to forsøk etter gamle § 30 annet ledd, ett etter § 30 fjerde ledd", () => {
+    expect(paragraf("før_2024", "avhjelp_avvise")).toBe("§ 30 annet ledd");
+    expect(paragraf("etter_2024", "avhjelp_avvise")).toBe("§ 30 fjerde ledd");
+  });
+  it("umiddelbar heving og plikten til å stille bilen til rådighet finnes bare fra 2024", () => {
+    expect(paragraf("før_2024", "avhjelp_umiddelbart")).toBeNull();
+    expect(paragraf("etter_2024", "avhjelp_umiddelbart")).toBe("§ 29 tredje ledd tredje punktum");
+    expect(paragraf("før_2024", "rad")).toBeNull();
+    expect(paragraf("etter_2024", "rad")).toBe("§ 30 annet ledd");
+  });
+  it("erstatningsbil: en rett etter gamle § 30 tredje ledd, et moment etter § 30 første ledd", () => {
+    expect(paragraf("før_2024", "erstatningsbil")).toBe("§ 30 tredje ledd");
+    expect(paragraf("etter_2024", "erstatningsbil")).toBe("§ 30 første ledd annet punktum");
+  });
+  it("unntaket fra formodningen flyttet fra annet til tredje punktum", () => {
+    expect(paragraf("før_2024", "formodning_unntak")).toBe("§ 18 annet ledd annet punktum");
+    expect(paragraf("etter_2024", "formodning_unntak")).toBe("§ 18 annet ledd tredje punktum");
+  });
+});
+
 describe("lovversjon", () => {
   it("skiller på 1. januar 2024", () => {
     expect(lovversjon("2023-12-31")).toBe("før_2024");
@@ -60,5 +81,9 @@ describe("lovord", () => {
   it("bruker lovens egne ord for vilkåret i § 15 annet ledd", () => {
     expect(LOVORD.avtaltUnntak).toContain("spesielt opplyst");
     expect(LOVORD.avtaltUnntak).toContain("uttrykkelig og særskilt aksepterte");
+  });
+  it("bruker lovens egne ord for alvorlig mangel og unntaket fra formodningen", () => {
+    expect(LOVORD.alvorligArt).toBe("etter sin art er så alvorlig at det ikke er rimelig å forvente at forbrukeren skal godta et tilbud om avhjelp");
+    expect(LOVORD.uforenlig).toBe("uforenlig med varens eller mangelens art");
   });
 });

@@ -11,6 +11,15 @@ import { Papir } from "./papir";
 import { ETIKETT, mangler } from "./steg";
 import type { Vedtaksvalg } from "./vedtaksfane";
 
+// What comes after the letter, from Forbrukertilsynet's pages (send-sak-til-mekling, updated 3.9.2026, and
+// behandling-forbrukerklageutvalget, updated 12.2.2026). The fee follows the court fee and changes yearly.
+const VIDERE = [
+  ["Mekling hos Forbrukertilsynet", "Du må først ha klaget til forhandleren og ta vare på dokumentasjonen. Gebyret er 0,2 rettsgebyr (269 kr i 2026), og ventetiden er for tiden 5–6 måneder. Du trenger forhandlerens fulle navn og adresse."],
+  ["Forbrukerklageutvalget", "Fører ikke meklingen frem, kan du sende saken til utvalget innen én måned. Det koster ett rettsgebyr. Vedtaket er bindende med mindre en av partene tar saken til tingretten innen én måned."],
+  ["Forhandleren er konkurs", "Meld kravet til konkursboet. Forbrukertilsynet kan ikke mekle."],
+  ["Forhandleren er enig, men betaler ikke", "Gå til namsmannen."],
+] as const;
+
 export function Brevet({ s, sett, vedtak, onSteg, onVedtak, onToast }: { s: Skjema; sett: Sett; vedtak: Vedtaksvalg; onSteg: (i: number) => void; onVedtak: () => void; onToast: (m: string) => void }) {
   const { funn, valgt, venter } = vedtak;
   const blokker = byggBrev(s, venter ? "venter" : valgt, idag());
@@ -141,6 +150,27 @@ export function Brevet({ s, sett, vedtak, onSteg, onVedtak, onToast }: { s: Skje
                 </div>
               )}
             </div>
+          </div>
+          <div className="block">
+            <div className="bt">
+              <h3>Hvis forhandleren avviser</h3>
+            </div>
+            <div className="miss">
+              {VIDERE.map(([t, d]) => (
+                <div key={t} className="mr">
+                  <span>
+                    {t}
+                    <small>{d}</small>
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="fine" style={{ marginTop: 10 }}>
+              Kilde: Forbrukertilsynet.{" "}
+              <a href="https://www.forbrukertilsynet.no/send-sak-til-mekling" target="_blank" rel="noopener noreferrer">
+                Send saken til mekling
+              </a>
+            </p>
           </div>
           <p className="fine d-fine">Brevet er en mal basert på forbrukerkjøpsloven og er ikke juridisk rådgivning. Forbrukerrådet gir gratis råd, og Forbrukertilsynet mekler hvis forhandleren avviser saken.</p>
         </div>

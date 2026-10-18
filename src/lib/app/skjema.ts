@@ -18,6 +18,8 @@ export type Skjema = {
   ws: string; ws_who: string; ws_name: string; ws_date: string; ws_says: string[]; ws_quote: string;
   seller_said: string; seller_txt: string;
   f_prior: boolean; f_prior_date: string; f_prior_how: string; f_prior_resp: string;
+  // What the seller answered, as SVAR ids: each common objection gets its answer in the letter.
+  f_prior_svar: string[];
   k_main: string; k_alt: string; k_amount: string; k_basis: string; k_loaner: boolean; k_exp: boolean; exp: Utgift[];
   // Optional, for the argument that the defect is not insignificant: how many times the seller has tried
   // to repair («0»–«3+», "" when not answered) and the estimated repair cost.
@@ -36,7 +38,7 @@ export const standard = (idag: string): Skjema => ({
   f_cats: [], f_parts: {}, f_area: {}, f_catdesc: {}, f_desc: "", f_docs: [], files: [],
   f_found: "", f_impact: [], f_known: "", f_cause: "", f_cause_check: "", f_sev: 0, f_drivable: "",
   ws: "", ws_who: "", ws_name: "", ws_date: "", ws_says: [], ws_quote: "", seller_said: "", seller_txt: "",
-  f_prior: false, f_prior_date: "", f_prior_how: "", f_prior_resp: "",
+  f_prior: false, f_prior_date: "", f_prior_how: "", f_prior_resp: "", f_prior_svar: [],
   k_main: "", k_alt: "ingen", k_amount: "", k_basis: "", k_loaner: false, k_exp: false, exp: [], k_forsok: "", k_cost: "", k_hold: false, k_hold_amt: "", k_days: "14",
   l_place: "", l_date: idag, l_tone: "saklig", prec_on: true, prec_id: null, prec_selv: false,
 });
@@ -79,7 +81,20 @@ export function impactToggle(list: string[], v: string, on: boolean): string[] {
   return on ? (v === IMPACT_SOLO ? [v] : [...out.filter((x) => x !== IMPACT_SOLO), v]) : out;
 }
 export const KNOWN = [["nei", "Nei"], ["opplyst", "Ble opplyst"], ["synlig", "Lett å se"]] as const;
-export const DOCS = [["kontrakt", "Kjøpekontrakt"], ["verksted", "Verkstedrapport"], ["tilstand", "Tilstandsrapport"], ["bilder", "Bilder og video"], ["korr", "Korrespondanse"], ["kvitt", "Kvitteringer"], ["annonse", "Salgsannonse"]] as const;
+export const DOCS = [["kontrakt", "Kjøpekontrakt"], ["verksted", "Verkstedrapport"], ["tilstand", "Tilstandsrapport"], ["bilder", "Bilder og video"], ["korr", "Korrespondanse"], ["kvitt", "Kvitteringer for utgifter"], ["annonse", "Salgsannonse"]] as const;
+// The seller's answer to an earlier complaint: [id, chip label, the letter's words after «Svaret jeg
+// fikk, var at»]. The common objections follow Forbrukerrådet's klageguide («Vanlige spørsmål og svar»);
+// brev.ts answers each with the law (svarPaInnvendinger).
+export const SVAR = [
+  ["slitasje", "Slitasje eller feil bruk", "feilen skyldes slitasje eller feil bruk"],
+  ["produsent", "Ta det med produsent, importør eller garanti", "jeg måtte ta saken med produsenten, importøren eller garantien"],
+  ["betaling", "Reparasjon mot betaling", "feilen kunne repareres mot betaling"],
+  ["garanti_ute", "Garantien er utløpt", "garantien er utløpt"],
+  ["for_sent", "Klagen kom for sent", "reklamasjonen kom for sent"],
+  ["som_den_er", "Bilen ble solgt «som den er»", "bilen ble solgt «som den er»"],
+  ["avvist", "Avviste uten begrunnelse", "reklamasjonen ble avvist"],
+  ["se_an", "Ville se an", "de ville se an utviklingen"],
+] as const;
 export const WS_WHO: Record<string, string> = { uavhengig: "et uavhengig verksted", selger: "deres eget verksted", merke: "et merkeverksted" };
 export const WS_SAYS: Record<string, string> = {
   bekrefter: "bekrefter feilen",

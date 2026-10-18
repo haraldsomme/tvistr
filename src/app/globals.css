@@ -153,21 +153,12 @@ input[type="date"].in{padding-right:12px}
 .seg{position:relative;display:flex;padding:4px;background:var(--sunken);border-radius:13px;gap:0}
 .seg label{position:relative;flex:1;z-index:1}
 .seg input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.seg span{display:block;text-align:center;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;color:var(--ink-2);transition:color .25s;white-space:nowrap}
+.seg span{display:block;text-align:center;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;color:var(--ink-2);transition:color .25s,background .2s;white-space:nowrap}
 .seg input:checked + span{color:var(--ink)}
 .seg input:focus-visible + span{outline:2px solid var(--accent);outline-offset:-2px}
+.seg label:hover input:not(:checked) + span{color:var(--ink);background:rgba(255,255,255,.55)}
 .seg .thumb{position:absolute;top:4px;bottom:4px;left:4px;border-radius:10px;background:var(--surface);box-shadow:var(--sh-xs),0 0 0 1px var(--line);transition:transform .4s var(--ease),width .4s var(--ease);z-index:0}
 
-/* chips */
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{position:relative}
-.chip input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.chip span{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);font-size:13.5px;font-weight:500;color:var(--ink-2);transition:all .25s var(--ease)}
-.chip span svg{width:0;height:12px;opacity:0;transition:all .25s var(--ease)}
-.chip:hover span{border-color:#B4BECB}
-.chip input:checked + span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.chip input:checked + span svg{width:12px;opacity:1}
-.chip input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
 
 /* switches */
 .sw{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:16px 0;cursor:pointer}
@@ -177,11 +168,13 @@ input[type="date"].in{padding-right:12px}
 .sw-d{font-size:13px;color:var(--muted);margin-top:3px;max-width:58ch;line-height:1.45}
 .tg{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:999px;background:var(--line-2);position:relative;cursor:pointer;margin:2px 0 0;transition:background .3s var(--ease)}
 .tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .35s var(--ease)}
+.sw:hover .tg:not(:checked){background:#B4BECB}
 .tg:checked{background:var(--accent)}
 .tg:checked::after{transform:translateX(18px)}
 
 .rv{display:grid;grid-template-rows:1fr;transition:grid-template-rows .45s var(--ease),opacity .35s}
-.rv > div{min-height:0;overflow:hidden}
+/* The clip is widened a little so focus rings and hover backgrounds at the edge are not cut. */
+.rv > div{min-height:0;overflow:hidden;margin-inline:-10px;padding-inline:10px}
 .rv.off{grid-template-rows:0fr;opacity:0}
 .rv-in{padding:4px 0 18px}
 
@@ -228,6 +221,7 @@ input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;b
 .note.warn svg{color:var(--warn)}
 
 .drop{position:relative;border:1.5px dashed var(--line-2);border-radius:14px;padding:24px;text-align:center;font-size:14px;color:var(--ink-2);background:var(--rail);transition:all .25s var(--ease)}
+.drop:hover{border-color:#B4BECB}
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
 .drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .drop small{display:block;font-size:12.5px;color:var(--muted);margin-top:4px}
@@ -452,9 +446,7 @@ input[type="date"].in::-webkit-calendar-picker-indicator{opacity:0;cursor:pointe
 /* ───── Fault question ───── */
 .fq{display:flex;flex-direction:column;gap:26px}
 .fq-sec{display:flex;flex-direction:column;gap:12px;animation:rise .35s var(--ease)}
-.fq-k{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .fq-h{font-size:17px;font-weight:600;letter-spacing:-.01em}
-.fq .q-chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 6px 16px -10px rgba(43,91,240,.6)}
 .fd-list{display:flex;flex-direction:column;gap:10px}
 .fd{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 14px 14px 20px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--sh-1);flex-wrap:wrap;animation:rise .35s var(--ease)}
 .fd-t{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 200px}
@@ -872,6 +864,9 @@ html,body{overflow-x:clip}
 #areaCards .block,#areaCards + .block{margin-top:14px}
 .area .bt span{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
 .area-g{margin-top:20px;row-gap:20px}
+.area .bt{align-items:center}
+.area .bt h3{display:flex;align-items:center;gap:14px}
+.area .bt .ico{flex:none;background:var(--accent);color:var(--accent-ink)}
 .cks{display:flex;flex-direction:column;gap:8px}
 .ck{position:relative;display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--line-2);border-radius:12px;font-size:14px;line-height:1.45;color:var(--ink-2);cursor:pointer;transition:border-color .2s,background .2s}
 .ck:hover{border-color:#B4BECB}
@@ -880,7 +875,7 @@ html,body{overflow-x:clip}
 .ck input:checked ~ .ck-b{background:var(--accent);border-color:var(--accent);color:#FFFFFF}
 .ck:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
 .ck input:focus-visible ~ .ck-b{outline:2px solid var(--accent);outline-offset:2px}
-.chips + .rv > div > .rv-in{padding-top:20px}
+.vl + .rv > div > .rv-in{padding-top:20px}
 .sub-h{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--line)}
 .fd-s{display:block;font-size:13px;color:var(--ink-2);margin-top:2px;line-height:1.4}
 /* ───── Free check: same page anatomy as the form (title + description, then white card) ───── */
@@ -892,16 +887,58 @@ html,body{overflow-x:clip}
 .q-body .q-opt{box-shadow:none}
 .q-foot{margin-top:26px}
 @media (max-width:620px){ .q-body{padding:20px 18px;border-radius:16px} }
-/* fault question: same chips, labels and headings as the form */
-.fq .q-chip,.q-body .q-chip{padding:9px 14px;font-size:13.5px;gap:8px}
-.fq .q-chip svg{width:0;height:12px;opacity:0;transition:all .25s var(--ease)}
-.fq .q-chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:none}
-.fq .q-chip[aria-pressed="true"] svg{width:12px;opacity:1}
+/* fault question */
+.q-body .q-chip{padding:9px 14px;font-size:13.5px;gap:8px}
 .fq{gap:22px}
-.fq-k{font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink-2)}
-.fq-h{font-size:15px;font-weight:600;letter-spacing:-.01em;padding-top:18px;border-top:1px solid var(--line)}
-.fq-k{display:flex;justify-content:space-between;gap:10px}
-.fq-e{font-style:normal;font-size:12px;font-weight:400;color:var(--muted)}
+.fq-h{font-size:16.5px;font-weight:600;letter-spacing:-.01em;padding-top:22px;border-top:1px solid var(--line)}
+/* fault checklist (mockup 4b, 4c on mobile): a card per category, its subcategories as rows under it */
+.fl{display:flex;flex-direction:column;gap:10px}
+.fl-c{border:1px solid var(--line-2);border-radius:16px;background:var(--surface);transition:border-color .2s,box-shadow .3s var(--ease)}
+.fl:not(.laast) .fl-c:not(.on):hover{border-color:#B4BECB}
+.fl-c.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 16px 34px -20px rgba(43,91,240,.45)}
+.fl-h{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border:0;border-radius:16px;background:none;text-align:left;color:var(--ink);user-select:none}
+.fl-c.on .ico{background:var(--accent);color:var(--accent-ink)}
+.fl-n{flex:1;min-width:0;font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.fl-cnt{font-size:13px;color:var(--ink-2)}
+.fl-box{width:20px;height:20px;flex:none;border-radius:6px;border:1.5px solid var(--line-2);background:var(--surface);display:grid;place-items:center;color:var(--accent-ink);transition:all .2s}
+.fl-box svg{opacity:0;transition:opacity .2s}
+[aria-checked="true"] > .fl-box{background:var(--accent);border-color:var(--accent)}
+[aria-checked="true"] > .fl-box svg{opacity:1}
+.fl-s{margin:0 16px;padding:12px 0 14px 52px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;animation:rise .35s var(--ease)}
+.fl-q{font-size:13.5px;color:var(--ink-2);padding:0 10px 4px}
+.fl-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:2px 8px}
+.fl-u{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 10px;border:0;border-radius:10px;background:transparent;text-align:left;font-size:14.5px;line-height:1.3;color:var(--ink-2);transition:background .15s;user-select:none}
+.fl:not(.laast) .fl-u:hover{background:var(--sunken)}
+.fl-u[aria-checked="true"],.fl:not(.laast) .fl-u[aria-checked="true"]:hover{background:var(--accent-soft);color:var(--ink)}
+.fl-h:disabled,.fl-u:disabled{cursor:default}
+.fl.laast .fl-u[aria-checked="false"]{opacity:.5}
+/* choice rows in the form: the defect list's boxes, square for several, round for one */
+.vl{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--vl-min,240px)),1fr));gap:2px 8px}
+.vl-r{position:relative;display:flex;align-items:flex-start;gap:12px;min-height:44px;padding:12px 14px;border-radius:10px;font-size:14.5px;line-height:1.35;color:var(--ink-2);cursor:pointer;transition:background .15s}
+.vl-r:hover{background:var(--sunken)}
+.vl-r:has(input:checked){background:var(--accent-soft);color:var(--ink)}
+.vl-r input{position:absolute;opacity:0;pointer-events:none}
+.vl-r .fl-box,.vl-r .rad{flex:none;margin-top:-1px;background:var(--surface)}
+.vl-r input:checked ~ .fl-box{background:var(--accent);border-color:var(--accent)}
+.vl-r input:checked ~ .fl-box svg{opacity:1}
+.vl-r input:checked ~ .rad{border-color:var(--accent)}
+.vl-r input:checked ~ .rad::after{transform:scale(1)}
+.vl-r input:focus-visible ~ .fl-box,.vl-r input:focus-visible ~ .rad{outline:2px solid var(--accent);outline-offset:2px}
+.vl-t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.vl-t small{font-size:13px;line-height:1.4;color:var(--muted)}
+@media (max-width:520px){
+  .fl{gap:8px}
+  .fl-c,.fl-h{border-radius:14px}
+  .fl-h{gap:12px;padding:12px 14px}
+  .fl-h .ico,.area .bt .ico{width:36px;height:36px;border-radius:10px}
+  .area .bt h3{gap:12px}
+  .fl-n{font-size:15px;line-height:1.3}
+  .fl-cnt{display:none}
+  .fl-s{margin:0 14px;padding:10px 0 12px;gap:4px}
+  .fl-q{padding:0 8px 4px}
+  .fl-g{grid-template-columns:minmax(0,1fr)}
+  .fl-u{padding:0 8px}
+}
 /* ───── One shell for the whole journey: the free check uses the writer's header bar ───── */
 .ob{padding-top:0}
 .ob-top{position:sticky;top:0;z-index:20;padding:14px 0;isolation:isolate}
@@ -919,10 +956,6 @@ html,body{overflow-x:clip}
 .letter{overflow-wrap:anywhere}
 .desk > *,.desk-l > *{min-width:0}
 /* Locked to the purchase: the chosen car and faults show, the rest are dimmed and cannot be picked. */
-.chip input:disabled{cursor:default}
-.chip input:disabled:not(:checked) + span{opacity:.45}
-.chip:hover input:disabled + span{border-color:var(--line-2)}
-.chip input:disabled:checked + span{border-color:var(--accent)}
 .in:disabled{background:var(--sunken);color:var(--ink-2);cursor:default}
 
 /* ───── Skjemaet: samme kolonner som brevet (300px + 32px + resten), stegboksen som brevets bokser ───── */

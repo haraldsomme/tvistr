@@ -5,7 +5,7 @@ import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { LOVORD } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
 import { addMonths, dayDiff, dur, fmtD, iso, parseD } from "./dato";
-import { regler } from "./lov";
+import { regler, type Regler } from "./lov";
 import type { Skjema } from "./skjema";
 
 export type Niva = "sterk" | "mulig" | "svak" | "utenfor" | "ukjent";
@@ -94,7 +94,7 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
         F.push({
           s: "bad",
           t: "Fristen er ute",
-          d: q.found! > fem ? `Feilen viste seg ${d} etter overtakelsen. Den absolutte fristen på fem år har gått ut, med mindre en garanti gir lengre frist.` : "Det er mer enn fem år siden du overtok bilen. Den absolutte fristen på fem år har gått ut, med mindre en garanti gir lengre frist.",
+          d: q.found! > fem ? `Feilen viste seg ${d} etter overtakelsen. Den absolutte fristen på fem år har gått ut, ${UNNTAK_FEM_AR}.` : `Det er mer enn fem år siden du overtok bilen. Den absolutte fristen på fem år har gått ut, ${UNNTAK_FEM_AR}.`,
           law: L.ref("reklamasjon_5ar"),
         });
       else if (q.opplysning)
@@ -128,8 +128,16 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
     } else F.push({ s: "warn", t: "Det har gått mer enn to måneder", d: "Du må reklamere innen rimelig tid etter at du oppdaget feilen. Send reklamasjonen så snart som mulig." });
   }
 
-  if (q.known === "opplyst") F.push({ s: "bad", t: "Du ble informert om feilen", d: "Du kan normalt ikke reklamere på en feil du kjente til da du kjøpte bilen." });
-  else if (q.known === "synlig") F.push({ s: "warn", t: "Feilen var synlig ved kjøpet", d: "Feil du måtte ha sett da du kjøpte bilen, kan være vanskelig å reklamere på." });
+  // Before 2024 old § 16 tredje ledd: nothing the buyer knew or must have known. From 2024 that rule is
+  // gone (Prop. 49 LS kap. 10.1.5); only an exception under § 15 annet ledd shuts out the defect, and what
+  // the buyer knew weighs in what they could reasonably expect (§ 15 tredje ledd bokstav b).
+  if (q.known === "opplyst") F.push(L.versjon === "før_2024" ? { s: "bad", t: "Du ble informert om feilen", d: "Du kan normalt ikke reklamere på en feil du kjente til da du kjøpte bilen." } : KJENT_ETTER_2024(L));
+  else if (q.known === "synlig")
+    F.push(
+      L.versjon === "før_2024"
+        ? { s: "warn", t: "Feilen var synlig ved kjøpet", d: "Feil du måtte ha sett da du kjøpte bilen, kan være vanskelig å reklamere på." }
+        : { s: "warn", t: "Feilen var synlig ved kjøpet", d: "Det du kunne se da du kjøpte bilen, kan påvirke hva du med rimelighet kunne forvente av den." },
+    );
   else if (q.known === "nei") F.push({ s: "good", t: "Feilen var ukjent ved kjøpet", d: "Du visste ikke om feilen da du kjøpte bilen." });
 
   if (q.cause === "uhell") F.push({ s: "bad", t: "Skade eller feil bruk", d: "Feil som skyldes uhell, skade eller feil bruk etter overtakelsen, regnes ikke som en mangel." });
@@ -156,11 +164,24 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   const alt = sev >= 4 ? "heving" : "prisavslag";
   const claim = sev === 1 ? "Krev at feilen rettes. Prisavslag kan være et alternativ hvis du kan leve med feilen." : `Krev at forhandleren retter feilen, med ${alt} som subsidiært krav hvis rettingen ikke lykkes.`;
   // Always a used car, so the advice is always to get the workshop's word in writing.
-  const docs = "Få et verksted til å beskrive feilen og årsaken skriftlig. Ta vare på kontrakt, bilder og kvitteringer.";
+  // Forbrukerrådet: a neutral expert, whose bill can be claimed back when the buyer wins.
+  const docs = "Få et verksted, helst et uavhengig, til å beskrive feilen og årsaken skriftlig. Utgiften til rapporten kan du kreve dekket som erstatning hvis du får medhold. Ta vare på kontrakt, annonse, bilder og kvitteringer.";
   // Without any date there is nothing to weigh yet.
   if (!q.delivery && !q.found) return { tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen.", factors: F, claim, alt, sendBy, docs };
   return { tier, ...TIER[tier], factors: F, claim, alt, sendBy, docs };
 }
+
+// § 27 annet ledd fjerde punktum (a warranty for longer) and fjerde ledd (the seller grossly negligent or
+// in bad faith), lovdata.no 2026-10-18.
+const UNNTAK_FEM_AR = "med mindre en garanti gir lengre frist, eller forhandleren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro";
+
+// A defect the buyer was told of, from 2024: it counts against the buyer only as an agreed exception.
+const KJENT_ETTER_2024 = (L: Regler): Faktor => ({
+  s: "warn",
+  t: "Du ble opplyst om feilen",
+  d: "Det teller mot deg bare hvis du ble spesielt opplyst om akkurat dette avviket og uttrykkelig godtok det. Det du visste, kan likevel påvirke hva du kunne forvente.",
+  law: L.ref("forbehold"),
+});
 
 const WS_FAKTOR = {
   rapport: (says: string[]): Faktor => ({
@@ -177,7 +198,10 @@ export function wsFactors(s: { ws?: string; ws_says?: string[]; seller_said?: st
   const F: Faktor[] = [];
   if (s.ws === "rapport" || s.ws === "uten" || s.ws === "nei") F.push(WS_FAKTOR[s.ws](s.ws_says ?? []));
   if (s.seller_said === "lovet") F.push({ s: "good", t: "Selger sa at bilen var fri for slike feil", d: "Det selger opplyste før kjøpet, er en del av avtalen. Avvik fra det er en mangel.", law: regler(s.dato).ref("uriktig") });
-  else if (s.seller_said === "opplyste") F.push({ s: "bad", t: "Selger opplyste om feilen", d: "Du kan normalt ikke reklamere på en feil selger fortalte om før kjøpet." });
+  else if (s.seller_said === "opplyste") {
+    const L = regler(s.dato);
+    F.push(L.versjon === "før_2024" ? { s: "bad", t: "Selger opplyste om feilen", d: "Du kan normalt ikke reklamere på en feil selger fortalte om før kjøpet." } : { ...KJENT_ETTER_2024(L), t: "Selger opplyste om feilen" });
+  }
   return F;
 }
 

@@ -7,7 +7,6 @@ import { Bryter, Felt, Seg, type StegProps, Vis } from "./felt";
 
 const KRAV = [
   ["retting", "Retting", "Forhandleren reparerer feilen uten kostnad for deg.", "retting"],
-  ["omlevering", "Omlevering", "Du får en tilsvarende bil uten feilen.", "retting"],
   ["prisavslag", "Prisavslag", "Du beholder bilen og får igjen et beløp som svarer til verdiforskjellen.", "prisavslag"],
   ["heving", "Heving", "Du leverer bilen tilbake og får kjøpesummen tilbake.", "heving"],
 ] as const;
@@ -60,7 +59,12 @@ export function Krav({ s, sett }: StegProps) {
               <Seg navn="k_forsok" verdi={s.k_forsok} valg={[["0", "Ingen"], ["1", "Én"], ["2", "To"], ["3+", "Tre eller flere"]]} onVelg={(k_forsok) => sett({ k_forsok: k_forsok === s.k_forsok ? "" : k_forsok })} />
             </div>
             <Felt s={s} sett={sett} k="k_cost" label={<>Anslått utbedringskostnad <em>valgfritt</em></>} klasse="c3" fmt="num" inputMode="numeric" placeholder="85 000" suffiks="kr" />
-            <div className="c3 hint">Et overslag fra verkstedet eller en takst. Brevet setter kostnaden mot kjøpesummen, og to eller flere mislykkede rettingsforsøk gir rett til å gå videre til prisavslag eller heving.</div>
+            <div className="c3 hint">
+              Et overslag fra verkstedet eller en takst. Brevet setter kostnaden mot kjøpesummen.{" "}
+              {L.versjon === "før_2024"
+                ? "For kjøp før 2024 har forhandleren normalt to forsøk på å rette samme feil."
+                : "Har forhandleren forsøkt å rette feilen én gang uten å lykkes, kan du normalt avvise flere forsøk og gå videre til prisavslag eller heving."}
+            </div>
           </div>
         </Vis>
         <Vis pa={s.k_main === "heving"}>
@@ -73,7 +77,7 @@ export function Krav({ s, sett }: StegProps) {
             </div>
           </div>
         </Vis>
-        <Vis pa={s.k_main === "retting" || s.k_main === "omlevering"}>
+        <Vis pa={s.k_main === "retting"}>
           <div className="rv-in">
             <div className="f">
               <span className="lb">Hvis kravet ikke oppfylles, krever jeg subsidiært</span>
@@ -82,7 +86,18 @@ export function Krav({ s, sett }: StegProps) {
           </div>
         </Vis>
         <Vis pa={s.k_main === "retting"}>
-          <Bryter s={s} sett={sett} k="k_loaner" tittel="Be om lånebil under reparasjonen" tekst="Loven gir ikke automatisk rett til lånebil, men utgifter til leiebil kan kreves dekket som erstatning." stil={{ borderTop: "1px solid var(--line)" }} />
+          <Bryter
+            s={s}
+            sett={sett}
+            k="k_loaner"
+            tittel="Be om lånebil under reparasjonen"
+            tekst={
+              L.versjon === "før_2024"
+                ? "For kjøp før 2024 kan du kreve lånebil hvis reparasjonen tar mer enn en uke og kravet er rimelig. Utgifter til leiebil kan også kreves dekket som erstatning."
+                : "Loven gir ikke automatisk rett til lånebil, men det teller om forhandleren tilbyr det. Utgifter til leiebil kan kreves dekket som erstatning."
+            }
+            stil={{ borderTop: "1px solid var(--line)" }}
+          />
         </Vis>
         <Bryter s={s} sett={sett} k="k_exp" tittel="Krev erstatning for utgifter" tekst="Feilsøking, slep, leiebil, taxi og andre dokumenterte tap som følge av mangelen." />
         <Vis pa={s.k_exp}>

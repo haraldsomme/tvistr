@@ -1,12 +1,13 @@
 // Steps 5–7: the faults (one card per area, locked to the purchase), the workshop and attachments (file
 // names only, nothing is uploaded), and what the seller said and any earlier complaint.
 import { useState } from "react";
-import { Fil, Fold, Hake, Lukk, Opplast } from "@/app/deler/ikoner";
+import { FeilIkon, FeilListe } from "@/app/deler/feilliste";
+import { Fil, Fold, Lukk, Opplast } from "@/app/deler/ikoner";
 import { relText } from "@/lib/app/dato";
-import { DOCS, IMPACT, impactToggle, KNOWN, type Omrade } from "@/lib/app/skjema";
+import { DOCS, IMPACT, impactToggle, KNOWN, type Omrade, SVAR } from "@/lib/app/skjema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { GRATIS, NYTT_KJOP } from "@/lib/pris";
-import { Bryter, Chips, Felt, Seg, type StegProps, Vis } from "./felt";
+import { Bryter, Felt, Seg, type StegProps, Valgliste, Vis } from "./felt";
 
 const TOM: Omrade = { found: "", impact: [], known: "" };
 const RAPPORT = [
@@ -27,17 +28,12 @@ function Omradekort({ s, sett, c, i, n }: StegProps & { c: string; i: number; n:
   return (
     <div className="block area">
       <div className="bt">
-        <h3>{h.navn}</h3>
+        <h3>
+          <FeilIkon id={c} />
+          {h.navn}
+        </h3>
         <span>{n > 1 ? `Feil ${i + 1} av ${n}` : ""}</span>
       </div>
-      {h.under.length > 0 && (
-        <div className="f">
-          <span className="lb">
-            Hva gjelder det? <em>{GRATIS ? "låst til saken" : "låst til kjøpet"}</em>
-          </span>
-          <Chips flere disabled navn={`${id}p`} verdi={s.f_parts[c] ?? []} valg={h.under.map((u) => [u.id, u.navn] as const)} onVelg={(v, pa) => sett({ f_parts: { ...s.f_parts, [c]: h.under.map((u) => u.id).filter((x) => (x === v ? pa : (s.f_parts[c] ?? []).includes(x))) } })} />
-        </div>
-      )}
       <div className="grid area-g">
         <div className="f c3">
           <label className="lb" htmlFor={`${id}f`}>
@@ -59,7 +55,7 @@ function Omradekort({ s, sett, c, i, n }: StegProps & { c: string; i: number; n:
           <span className="hint" style={{ margin: "-2px 0 4px" }}>
             Er feilen bare kosmetisk, velger du bare det.
           </span>
-          <Chips flere navn={`${id}i`} verdi={a.impact} valg={IMPACT.map(([v, l]) => [v, l] as const)} onVelg={(v, pa) => settA({ impact: impactToggle(a.impact, v, pa) })} />
+          <Valgliste flere navn={`${id}i`} verdi={a.impact} valg={IMPACT.map(([v, l, d]) => [v, l, d] as const)} onVelg={(v, pa) => settA({ impact: impactToggle(a.impact, v, pa) })} />
         </div>
         <div className="f c6">
           <span className="lb">Visste du om feilen da du kjøpte bilen?</span>
@@ -78,22 +74,12 @@ export function Feilen({ s, sett }: StegProps) {
       </div>
       <div className="block">
         <div className="bt">
-          <h3>Hvilke deler gjelder det?</h3>
+          <h3>Hva gjelder reklamasjonen?</h3>
           <span>{GRATIS ? "Låst til saken" : "Låst til kjøpet"}</span>
         </div>
-        <Chips
-          flere
-          disabled
-          navn="f_cats"
-          verdi={s.f_cats}
-          valg={HOVEDKATEGORIER.map((h) => [h.id, h.navn] as const)}
-          onVelg={(v, pa) => {
-            const cats = HOVEDKATEGORIER.map((h) => h.id).filter((x) => (x === v ? pa : s.f_cats.includes(x)));
-            sett({ f_cats: cats, f_area: pa && !s.f_area[v] ? { ...s.f_area, [v]: TOM } : s.f_area });
-          }}
-        />
+        <FeilListe valgt={s.f_cats} under={s.f_parts} />
         <div className="hint" style={{ marginTop: 12 }}>
-          Brevet gjelder feilene du valgte {GRATIS ? "før du åpnet brevet" : "før du betalte"}. Et brev om en annen feil krever {NYTT_KJOP}. Under hvert område kan du beskrive feilen og når du oppdaget den.
+          Brevet gjelder feilene du valgte {GRATIS ? "før du åpnet brevet" : "før du betalte"}. Et brev om en annen feil krever {NYTT_KJOP}. Under kan du beskrive hver feil og når du oppdaget den.
         </div>
       </div>
       <div id="areaCards">
@@ -119,7 +105,8 @@ export function Verksted({ s, sett }: StegProps) {
         <div className="bt">
           <h3>Er feilen undersøkt av et verksted?</h3>
         </div>
-        <Chips
+        <Valgliste
+          bredde={190}
           navn="ws"
           verdi={s.ws}
           valg={[["rapport", "Ja, og jeg har en rapport"], ["uten", "Ja, men uten rapport"], ["nei", "Nei"]]}
@@ -132,7 +119,7 @@ export function Verksted({ s, sett }: StegProps) {
             </Vis>
             <div className="f">
               <span className="lb">Hvem undersøkte bilen?</span>
-              <Chips navn="ws_who" verdi={s.ws_who} valg={[["uavhengig", "Uavhengig verksted"], ["selger", "Selgers eget verksted"], ["merke", "Merkeverksted"]]} onVelg={(ws_who) => sett({ ws_who })} />
+              <Valgliste bredde={190} navn="ws_who" verdi={s.ws_who} valg={[["uavhengig", "Uavhengig verksted"], ["selger", "Selgers eget verksted"], ["merke", "Merkeverksted"]]} onVelg={(ws_who) => sett({ ws_who })} />
             </div>
             <div className="grid" style={{ marginTop: 16 }}>
               <Felt s={s} sett={sett} k="ws_name" label="Verkstedets navn" klasse="c4" placeholder="Bilservice Sandvika AS" />
@@ -146,17 +133,7 @@ export function Verksted({ s, sett }: StegProps) {
                 <span className="hint" style={{ margin: "-2px 0 8px" }}>
                   Kryss bare av det rapporten faktisk sier. Forhandleren kan be om å få se den.
                 </span>
-                <div className="cks">
-                  {RAPPORT.map(([v, l]) => (
-                    <label key={v} className="ck">
-                      <input type="checkbox" checked={s.ws_says.includes(v)} onChange={(e) => sett({ ws_says: RAPPORT.map(([x]) => x).filter((x) => (x === v ? e.target.checked : s.ws_says.includes(x))) })} />
-                      <span className="ck-b" aria-hidden="true">
-                        <Hake />
-                      </span>
-                      <span>{l}</span>
-                    </label>
-                  ))}
-                </div>
+                <Valgliste flere bredde={9999} navn="ws_says" verdi={s.ws_says} valg={RAPPORT} onVelg={(v, pa) => sett({ ws_says: RAPPORT.map(([x]) => x).filter((x) => (x === v ? pa : s.ws_says.includes(x))) })} />
               </div>
               <div style={{ marginTop: 18 }}>
                 <Felt
@@ -181,7 +158,7 @@ export function Verksted({ s, sett }: StegProps) {
             <Fold />
           </span>
         </summary>
-        <Chips flere navn="f_docs" verdi={s.f_docs} valg={DOCS} onVelg={(v, pa) => sett({ f_docs: veksle(s.f_docs, v, pa) })} />
+        <Valgliste flere bredde={190} navn="f_docs" verdi={s.f_docs} valg={DOCS} onVelg={(v, pa) => sett({ f_docs: veksle(s.f_docs, v, pa) })} />
         <div style={{ marginTop: 16 }}>
           <div
             className={`drop${over ? " over" : ""}`}
@@ -232,7 +209,7 @@ export function Kontakt({ s, sett }: StegProps) {
         <span className="hint" style={{ display: "block", margin: "-6px 0 12px" }}>
           For eksempel i annonsen, kontrakten eller en melding.
         </span>
-        <Chips navn="seller_said" verdi={s.seller_said} valg={[["nei", "Nei"], ["lovet", "Ja, at bilen var fri for slike feil"], ["opplyste", "Ja, de opplyste om feilen"]]} onVelg={(seller_said) => sett({ seller_said })} />
+        <Valgliste bredde={9999} navn="seller_said" verdi={s.seller_said} valg={[["nei", "Nei"], ["lovet", "Ja, at bilen var fri for slike feil"], ["opplyste", "Ja, de opplyste om feilen"]]} onVelg={(seller_said) => sett({ seller_said })} />
         <Vis pa={s.seller_said === "lovet" || s.seller_said === "opplyste"}>
           <div className="rv-in">
             <Felt s={s} sett={sett} k="seller_txt" label={<>Hva sa selger? <em>så ordrett som mulig</em></>} flerlinje={84} placeholder="For eksempel: «Bilen er nylig gjennomgått og har ingen kjente feil»" />
@@ -248,7 +225,16 @@ export function Kontakt({ s, sett }: StegProps) {
               <span className="lb">Hvordan?</span>
               <Seg navn="f_prior_how" verdi={s.f_prior_how} valg={[["telefon", "Telefon"], ["e-post", "E-post"], ["oppmøte", "Oppmøte"]]} onVelg={(f_prior_how) => sett({ f_prior_how })} />
             </div>
-            <Felt s={s} sett={sett} k="f_prior_resp" label={<>Hva svarte forhandleren? <em>valgfritt</em></>} flerlinje={92} placeholder="For eksempel: de mente feilen skyldes normal slitasje" />
+            <div className="f c6">
+              <span className="lb">
+                Hva svarte forhandleren? <em>velg alt som passer</em>
+              </span>
+              <span className="hint" style={{ display: "block", margin: "0 0 8px" }}>
+                Brevet svarer på hver innvending med det loven sier.
+              </span>
+              <Valgliste flere bredde={190} navn="f_prior_svar" verdi={s.f_prior_svar} valg={SVAR.map(([v, l]) => [v, l] as const)} onVelg={(v, pa) => sett({ f_prior_svar: veksle(s.f_prior_svar, v, pa) })} />
+            </div>
+            <Felt s={s} sett={sett} k="f_prior_resp" label={<>Noe mer forhandleren sa? <em>valgfritt</em></>} flerlinje={92} placeholder="For eksempel: de mente bilen var for gammel" />
           </div>
         </Vis>
       </div>

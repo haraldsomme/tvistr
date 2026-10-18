@@ -23,7 +23,7 @@ const BETALER_FOR = GRATIS ? "som brevet skal gjelde" : "du betaler for";
 const FORDELER = [
   "Brev med lovhenvisninger tilpasset svarene dine",
   "Frister og bevisbyrde regnet ut fra datoene du oppgir",
-  "Krav om retting, omlevering, prisavslag, heving og erstatning",
+  "Krav om retting, prisavslag, heving og erstatning",
   "Svarene dine fra vurderingen er allerede fylt inn",
   "Kopier brevet og send det på e-post samme dag",
 ];

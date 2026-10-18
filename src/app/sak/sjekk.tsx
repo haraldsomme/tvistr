@@ -4,6 +4,7 @@
 // verdict. The answers stay in localStorage (tvistr-sjekk).
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { FeilListe } from "@/app/deler/feilliste";
 import { Merke } from "@/app/deler/merke";
 import { MaalVisning } from "@/app/maal-visning";
 import { Hake, Pil, Tilbake } from "@/app/deler/ikoner";
@@ -298,36 +299,7 @@ function Feilene({ a, settA }: Pick<Props, "a" | "settA">) {
     });
   return (
     <div className="fq">
-      <div className="fq-sec">
-        <div className="fq-k">
-          Hvilke deler gjelder det? <em className="fq-e">velg en eller flere</em>
-        </div>
-        <div className="q-chips">
-          {HOVEDKATEGORIER.map((h) => (
-            <button key={h.id} type="button" className="q-chip" aria-pressed={cats.includes(h.id)} onClick={() => veksle(h.id)}>
-              <Hake />
-              {h.navn}
-            </button>
-          ))}
-        </div>
-      </div>
-      {cats.map((c) => {
-        const h = HOVEDKATEGORIER.find((x) => x.id === c)!;
-        const sel = a.issues?.[c] ?? [];
-        return (
-          <div key={c} className="fq-sec">
-            <div className="fq-k">{h.navn} · Hva har du observert?</div>
-            <div className="q-chips">
-              {h.under.map((u) => (
-                <button key={u.id} type="button" className="q-chip" aria-pressed={sel.includes(u.id)} onClick={() => veksleUnder(c, u.id)}>
-                  <Hake />
-                  {u.navn}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+      <FeilListe valgt={cats} under={a.issues ?? {}} onKategori={veksle} onUnder={veksleUnder} />
       {cats.length > 0 && (
         <div className="fq-sec">
           <h3 className="fq-h">{cats.length > 1 ? "Når oppdaget du hver feil?" : "Når oppdaget du feilen?"}</h3>

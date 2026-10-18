@@ -1,4 +1,4 @@
-// The writer's form controls, as the artifact draws them (.f/.lb/.in, .sw/.tg, .chip, .seg, .rv).
+// The writer's form controls, as the artifact draws them (.f/.lb/.in, .sw/.tg, .vl, .seg, .rv).
 import type { ReactNode } from "react";
 import { Hake } from "@/app/deler/ikoner";
 import { FMT, type Format } from "@/lib/app/format";
@@ -66,18 +66,26 @@ export function Bryter({ s, sett, k, tittel, tekst, stil }: { s: Skjema; sett: S
   );
 }
 
-// One choice among chips (radio), or several (checkbox) when `flere`.
-export function Chips({ verdi, valg, onVelg, navn, flere, disabled }: { verdi: string | string[]; valg: readonly (readonly [string, string])[]; onVelg: (v: string, pa: boolean) => void; navn: string; flere?: boolean; disabled?: boolean }) {
+// Choices as rows with a box: several (checkbox) when `flere`, else one (radio), in the look of the
+// defect list (src/app/deler/feilliste.tsx). `bredde` is the narrowest column; one column when wider.
+export function Valgliste({ verdi, valg, onVelg, navn, flere, bredde = 240 }: { verdi: string | string[]; valg: readonly (readonly [string, string, string?])[]; onVelg: (v: string, pa: boolean) => void; navn: string; flere?: boolean; bredde?: number }) {
   return (
-    <div className="chips">
-      {valg.map(([v, l]) => {
+    <div className="vl" style={{ "--vl-min": `${bredde}px` } as React.CSSProperties}>
+      {valg.map(([v, l, d]) => {
         const pa = Array.isArray(verdi) ? verdi.includes(v) : verdi === v;
         return (
-          <label key={v} className="chip">
-            <input type={flere ? "checkbox" : "radio"} name={navn} value={v} checked={pa} disabled={disabled} onChange={(e) => onVelg(v, e.target.checked)} />
-            <span>
-              {flere && <Hake />}
+          <label key={v} className="vl-r">
+            <input type={flere ? "checkbox" : "radio"} name={navn} value={v} checked={pa} onChange={(e) => onVelg(v, e.target.checked)} />
+            {flere ? (
+              <span className="fl-box" aria-hidden="true">
+                <Hake />
+              </span>
+            ) : (
+              <span className="rad" aria-hidden="true" />
+            )}
+            <span className="vl-t">
               {l}
+              {d && <small>{d}</small>}
             </span>
           </label>
         );

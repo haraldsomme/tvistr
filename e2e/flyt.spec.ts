@@ -39,8 +39,8 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   await expect(page.getByText("Peugeot 308")).toBeVisible();
   await expect(page.locator("#qDelivery")).toHaveValue(dager(100));
   await page.getByRole("button", { name: "Neste" }).click();
-  await page.getByRole("button", { name: "Motor og eksos" }).click();
-  await page.getByRole("button", { name: "Turbo", exact: true }).click();
+  await page.getByRole("checkbox", { name: "Motor og eksos" }).click();
+  await page.getByRole("checkbox", { name: "Turbo", exact: true }).click();
   await page.getByLabel("Oppdaget: Motor og eksos").fill(dager(20));
   await page.getByRole("button", { name: "Neste" }).click();
   await velg(page, /^1 Nei Feilen var ukjent/);

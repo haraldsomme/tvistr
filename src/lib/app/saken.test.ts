@@ -22,7 +22,8 @@ describe("tilSvar", () => {
     expect(tilSvar({ ...eksempel(idag), k_forsok: "2" })!.forsok).toBe(2);
     expect(tilSvar({ ...eksempel(idag), k_forsok: "3+" })!.forsok).toBe(3);
   });
-  it("omlevering blir retting", () => expect(tilSvar({ ...eksempel(idag), k_main: "omlevering" })!.krav).toBe("retting"));
+  it("omlevering er ikke et krav for rangeringen", () => expect(tilSvar({ ...eksempel(idag), k_main: "omlevering" })!.krav).toBeNull());
+  it("en lagret sak med omlevering åpnes med retting", () => expect(rensSkjema({ ...eksempel(idag), k_main: "omlevering" }, idag)!.k_main).toBe("retting"));
   it("uten datoer gir null", () => expect(tilSvar(standard(idag))).toBeNull());
   it("feil uten dato tas ut", () => {
     const s = eksempel(idag);

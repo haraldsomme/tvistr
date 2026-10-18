@@ -18,10 +18,25 @@
 //               nr. 100 om renter ved forsinket betaling m.m. fra den dag forbrukeren reklamerte på
 //               mangelen.» The number is the same before 2024, but the day the interest runs from is
 //               verified for the current text only (RENTER_FRA_REKLAMASJON).
+//   avhjelp_*, formodning_unntak, garanti_lov, selger, tidligere_ledd  (2026-10-18)
+//               etter_2024 against lovdata.no: § 29 tredje ledd (the seller may offer a remedy; third
+//               punktum: an immediate price reduction or heving for a defect «så alvorlig»), § 30 første
+//               ledd (uten kostnad, uten vesentlig ulempe, rimelig tid; annet punktum: a replacement car
+//               weighs), annet ledd (the buyer makes the thing available), fjerde ledd (a new defect after
+//               a remedy: further remedy may be refused), § 18 annet ledd tredje punktum, § 18 a fjerde
+//               ledd, § 26 and § 35 (no amendment note: the same before 2024). § 32 now reads «med mindre
+//               selgeren beviser at mangelen er uvesentlig».
+//               før_2024 against Prop. 49 LS (2022–2023) kap. 11, which quotes the old text: § 29 tredje
+//               ledd (offer «uten opphold»), § 30 første ledd (uten kostnad), annet ledd («ikke rett til å
+//               foreta mer enn to avhjelpsforsøk for samme mangel»), tredje ledd (a replacement «i mer enn
+//               en uke», if reasonable), § 18 annet ledd annet punktum (the same exception), § 18 a
+//               fjerde ledd, and § 32 «unntatt når mangelen er uvesentlig». Old § 30 had no rule that the
+//               buyer makes the thing available (it is new in § 30 annet ledd), and no immediate remedy.
 // Applies to contracts made from 1 January 2024.
 //
 // A point with no certain number is `null`: the letter then names «forbrukerkjøpsloven» alone and
-// the point would be a known gap. None is a gap today.
+// the point would be a known gap. A `null` can also mean the rule did not exist in that version
+// (avhjelp_umiddelbart and rad before 2024); the letter then leaves the sentence out.
 
 export type Lovversjon = "før_2024" | "etter_2024";
 
@@ -44,6 +59,16 @@ export const POENG = [
   "erstatning",
   "tilbakehold", // the buyer may hold back payment to cover the claim
   "renter_heving", // interest on the purchase price the seller repays
+  "formodning_unntak", // the presumption does not apply when it is incompatible with the defect's nature
+  "garanti_lov", // a warranty does not limit the buyer's rights under the law
+  "selger", // the buyer's claims run against the seller
+  "tidligere_ledd", // the buyer may (not must) claim against an earlier seller in the chain
+  "avhjelp_tilbud", // the seller may offer a remedy, which blocks price reduction and heving
+  "avhjelp_umiddelbart", // a defect so serious the buyer need not accept a remedy
+  "avhjelp_vilkar", // a remedy without cost, without significant inconvenience, within reasonable time
+  "avhjelp_avvise", // when the buyer may refuse a further attempt at a remedy
+  "erstatningsbil", // a replacement car while the car is repaired
+  "rad", // the buyer makes the car available for the remedy
 ] as const;
 export type Poeng = (typeof POENG)[number];
 
@@ -69,6 +94,16 @@ export const PARAGRAFER: Record<Lovversjon, Record<Poeng, string | null>> = {
     erstatning: "§ 33",
     tilbakehold: "§ 28",
     renter_heving: "§ 50 annet ledd",
+    formodning_unntak: "§ 18 annet ledd annet punktum",
+    garanti_lov: "§ 18 a fjerde ledd",
+    selger: "§ 26",
+    tidligere_ledd: "§ 35 første ledd",
+    avhjelp_tilbud: "§ 29 tredje ledd",
+    avhjelp_umiddelbart: null,
+    avhjelp_vilkar: "§ 30 første ledd",
+    avhjelp_avvise: "§ 30 annet ledd",
+    erstatningsbil: "§ 30 tredje ledd",
+    rad: null,
   },
   etter_2024: {
     krav: "§ 15",
@@ -91,6 +126,16 @@ export const PARAGRAFER: Record<Lovversjon, Record<Poeng, string | null>> = {
     erstatning: "§ 33",
     tilbakehold: "§ 28",
     renter_heving: "§ 50 annet ledd",
+    formodning_unntak: "§ 18 annet ledd tredje punktum",
+    garanti_lov: "§ 18 a fjerde ledd",
+    selger: "§ 26",
+    tidligere_ledd: "§ 35 første ledd",
+    avhjelp_tilbud: "§ 29 tredje ledd",
+    avhjelp_umiddelbart: "§ 29 tredje ledd tredje punktum",
+    avhjelp_vilkar: "§ 30 første ledd",
+    avhjelp_avvise: "§ 30 fjerde ledd",
+    erstatningsbil: "§ 30 første ledd annet punktum",
+    rad: "§ 30 annet ledd",
   },
 };
 
@@ -113,7 +158,24 @@ export const LOVORD = {
   // Old § 17 første ledd bokstav a (før_2024), as Prop. 49 LS kap. 10.1.1 gives it. The subject is
   // changed from «forbrukeren» to «jeg», the rest is the same.
   dårligereStand: "i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers",
+  // § 29 tredje ledd tredje punktum (etter_2024), word for word after «hvis mangelen».
+  alvorligArt: "etter sin art er så alvorlig at det ikke er rimelig å forvente at forbrukeren skal godta et tilbud om avhjelp",
+  // § 18 annet ledd, the exception in both versions (Prop. 49 LS: «svarer fullt ut til nåværende annet
+  // punktum»).
+  uforenlig: "uforenlig med varens eller mangelens art",
+  // § 30 første ledd, both versions.
+  avhjelpVilkar: "uten kostnad, uten vesentlig ulempe for forbrukeren og innen rimelig tid",
+  // § 18 a fjerde ledd, both versions.
+  garantiBegrenser: "begrenser ikke forbrukerens rettigheter etter loven",
 } as const;
+
+// Who must prove the defect insignificant under § 32: only the current text says so outright
+// («med mindre selgeren beviser at mangelen er uvesentlig»); the old text («unntatt når mangelen er
+// uvesentlig») left it to the general rules.
+export const SELGER_BEVISER_UVESENTLIG: Record<Lovversjon, boolean> = { før_2024: false, etter_2024: true };
+
+// Before 2024 the seller's offer of a remedy had to come «uten opphold» (old § 29 tredje ledd).
+export const TILBUD_UTEN_OPPHOLD: Record<Lovversjon, boolean> = { før_2024: true, etter_2024: false };
 
 export function lovversjon(kjopsdato: string | null): Lovversjon {
   // Without a purchase date the current law is assumed, as in brukerNiva.

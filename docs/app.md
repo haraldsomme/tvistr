@@ -9,6 +9,7 @@ Appen er en React-port av artefakten «Bilreklamasjon», som eieren bygde utenfo
 | `/` | `src/app/page.tsx` | Forsiden. Antall vedtak leses fra `statistikk_kategori` ved bygging. |
 | `/sak` | `src/app/sak/sjekk.tsx`, `resultat.tsx` | Gratis sjekk: ett spørsmål per skjerm (`sporsmal.ts`), deretter vurderingen og tilbudet. |
 | `/sak/[id]` | `src/app/sak/[id]/page.tsx`, `skriver.tsx` | Brevet for en betalt sak, med fanene Skjema, Vurdering, Vedtak og Brevet. En ukjent id eller en sak som ikke er betalt gir 404. |
+| `/brevet` | `src/app/brevet/page.tsx` | Hva brevet inneholder, i ord (ikke et eksempelbrev). Lenket fra hero-kortet på forsiden. Hver påstand skal stemme med koden: rangeringen (`src/lib/matching`), sitatkontrollen (`src/lib/avgjorende`) og brevet (`src/lib/app/brev.ts`). |
 | `/vilkar`, `/personvern` | `src/app/vilkar/page.tsx`, `src/app/personvern/page.tsx` | Vilkår for kjøp og personvernerklæringen, i `Juridisk` (`src/app/deler/juridisk.tsx`). Hver påstand der skal stemme med koden; endres lagring, modellkall eller betaling, endres sidene. |
 | `/hvis-forhandleren-avviser` | `src/app/hvis-forhandleren-avviser/page.tsx` | Hva kjøperen kan gjøre hvis forhandleren avviser: mekling hos Forbrukertilsynet, Forbrukerklageutvalget, konkurs og namsmannen, i `Juridisk`. Lenket fra Brevet-fanen. Bare påstander fra Forbrukertilsynets sider; gebyrene følger rettsgebyret og må oppdateres hvert år. |
 

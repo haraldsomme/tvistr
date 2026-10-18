@@ -3,27 +3,17 @@ import Link from "next/link";
 import { MaalVisning } from "@/app/maal-visning";
 import { tall } from "@/lib/brev/format";
 import { GRATIS, PRIS } from "@/lib/pris";
-import { ALLE } from "@/lib/vurdering/statistikk";
+import { antallVedtak } from "@/lib/vurdering/antall";
 import { Bunn } from "./deler/bunn";
-import { DATO, EMNE, RESTEN, SAKSNR, SITAT, UTDRAG } from "./eksempelbrev";
+import { FANER } from "./eksempelbrev";
 import { Hake, Pil } from "./deler/ikoner";
+import { HeroBrev } from "./hero-brev";
 import { Ordmerke } from "./deler/ordmerke";
 import { TilBrevet } from "./til-brevet";
 
 // The landing page (the artifact's home view). The number of decisions is read from the database when
 // the site is built.
 export const dynamic = "force-static";
-
-// Without a database at build time the page is built without the number, not stopped.
-async function antallVedtak(): Promise<number | null> {
-  try {
-    const { lesStatistikk } = await import("@/lib/vurdering/statistikk-db");
-    return (await lesStatistikk()).get(ALLE)?.antallSaker ?? null;
-  } catch (e) {
-    console.error("antall vedtak ble ikke lest", e);
-    return null;
-  }
-}
 
 const MONO = "var(--f-mono)";
 const BLA = "#2B5BF0";
@@ -33,24 +23,6 @@ const ingress: CSSProperties = { margin: 0, fontSize: 16, lineHeight: 1.6, color
 const kort: CSSProperties = { display: "flex", flexDirection: "column", gap: 14, padding: 28, border: "1px solid transparent", borderRadius: 20, background: "#FFFFFF", boxShadow: "var(--sh-1)" };
 const hvit: CSSProperties = { background: "#FFFFFF", borderTop: "1px solid #E2E6EC", borderBottom: "1px solid #E2E6EC" };
 const lovtag: CSSProperties = { alignSelf: "flex-start", marginTop: 4, fontFamily: MONO, fontSize: 11, padding: "3px 9px", borderRadius: 999, background: "#E8EEFE", color: BLA };
-const brevH: CSSProperties = { fontWeight: 700, margin: "18px 0 6px" };
-const radGrid: CSSProperties = { display: "grid", gridTemplateColumns: "minmax(64px, .55fr) minmax(0, 1fr) minmax(0, 1fr)", gap: 12 };
-
-// The made-up decision's number and quote, blacked out (eksempelbrev.ts).
-const sperre = (bredde: string) => <span aria-hidden="true" style={{ display: "inline-block", width: bredde, height: "0.9em", verticalAlign: "-0.1em", borderRadius: 2, background: "#1A1E24" }} />;
-function Sladdet({ tekst }: { tekst: string }) {
-  return tekst.split(new RegExp(`(${SAKSNR}|«${SITAT}»)`)).map((d, i) =>
-    d === SAKSNR ? (
-      <span key={i} role="img" aria-label="sladdet saksnummer">{sperre("3.6em")}</span>
-    ) : d === `«${SITAT}»` ? (
-      <span key={i} role="img" aria-label="sladdet sitat" style={{ whiteSpace: "nowrap" }}>
-        «{sperre("7em")} {sperre("4.5em")}»
-      </span>
-    ) : (
-      d
-    ),
-  );
-}
 
 const Gronn =({ s = 15, farge = "#1E7A4C" }: { s?: number; farge?: string }) => (
   <span style={{ color: farge, display: "inline-flex", flex: "none" }}>
@@ -64,21 +36,6 @@ function Steg({ n, tittel, children }: { n: number; tittel: string; children: Re
       <span style={{ width: 34, height: 34, borderRadius: "50%", background: BLA, color: "#FFFFFF", display: "grid", placeItems: "center", fontFamily: MONO, fontSize: 13 }}>{n}</span>
       <h3 style={{ margin: "4px 0 0", fontSize: 19, fontWeight: 600, letterSpacing: "-0.015em" }}>{tittel}</h3>
       <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#455063" }}>{children}</p>
-    </div>
-  );
-}
-
-function Sammenligning({ felt, din, sak }: { felt: string; din: string; sak: string }) {
-  return (
-    <div style={{ ...radGrid, padding: "13px 0", borderTop: "1px solid #E2E6EC", fontSize: 13.5, lineHeight: 1.45, alignItems: "start" }}>
-      <span style={{ color: "#5B6576" }}>{felt}</span>
-      <span>{din}</span>
-      <span style={{ display: "flex", gap: 8, justifyContent: "space-between" }}>
-        <span>{sak}</span>
-        <span aria-label="Likt" style={{ color: "#1E7A4C" }}>
-          <Hake s={13} />
-        </span>
-      </span>
     </div>
   );
 }
@@ -200,39 +157,8 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="hero-visual" style={{ flex: "1 1 440px", minWidth: 0, position: "relative", padding: "28px 0 0" }}>
-          <div className="hero-bg" aria-hidden="true" style={{ position: "absolute", inset: "0 -20px 0 40px", borderRadius: 28, background: "#ECEFF3" }} />
-          <div className="letter-pad" style={{ position: "relative", marginLeft: 28, background: "#FFFFFF", borderRadius: 6, boxShadow: "0 0 0 1px rgba(16,20,26,.04), 0 2px 4px rgba(16,20,26,.04), 0 40px 70px -34px rgba(16,20,26,.35)", padding: 40, fontFamily: "var(--f-doc)", fontSize: 14, lineHeight: 1.62, color: "#1A1E24" }}>
-            <div>{DATO}</div>
-            <div style={{ fontWeight: 700, margin: "18px 0 4px" }}>{EMNE}</div>
-            {UTDRAG.map((d, i) => {
-              const siste = i === UTDRAG.length - 1;
-              return (
-                <div key={d.overskrift}>
-                  <div style={{ ...brevH, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "baseline", gap: "4px 12px" }}>
-                    {d.overskrift}
-                    {d.merke && <span style={{ ...lovtag, alignSelf: "auto", marginTop: 0, fontWeight: 400 }}>{d.merke}</span>}
-                  </div>
-                  <p style={{ margin: 0, ...(siste && { maskImage: "linear-gradient(to bottom, #000 35%, transparent)", WebkitMaskImage: "linear-gradient(to bottom, #000 35%, transparent)" }) }}>
-                    <Sladdet tekst={d.setninger.join(" ")} />
-                  </p>
-                  {d.setninger.some((s) => s.includes(SITAT)) && <div style={{ marginTop: 6, fontFamily: MONO, fontSize: 11, color: "#5B6576" }}>Sladdet i eksempelet: saksnummer og ordrett sitat</div>}
-                </div>
-              );
-            })}
-            <div style={{ marginTop: 10, fontFamily: MONO, fontSize: 11.5, color: BLA }}>{RESTEN}</div>
-          </div>
-          <div className="float-plate" aria-hidden="true" style={{ position: "absolute", top: 4, right: -8, display: "flex", height: 46, border: "2px solid #1B1B1B", borderRadius: 7, background: "#FFFFFF", overflow: "hidden", boxShadow: "0 14px 28px -14px rgba(16,20,26,.45)", transform: "rotate(3deg)" }}>
-            <div style={{ width: 26, background: "#1E4AA6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 4, paddingBottom: 5 }}>
-              <svg width="14" height="10" viewBox="0 0 22 16">
-                <rect width="22" height="16" fill="#BA0C2F" />
-                <path d="M0 8h22M8 0v16" stroke="#FFFFFF" strokeWidth="4" />
-                <path d="M0 8h22M8 0v16" stroke="#00205B" strokeWidth="2" />
-              </svg>
-              <span style={{ color: "#FFFFFF", fontSize: 10, fontWeight: 700, lineHeight: 1 }}>N</span>
-            </div>
-            <div style={{ padding: "0 14px", display: "flex", alignItems: "center", fontFamily: "var(--f-plate)", fontWeight: 600, fontSize: 27, letterSpacing: "0.07em", color: "#111111" }}>AB 12345</div>
-          </div>
+        <div style={{ flex: "1 1 420px", minWidth: 0, maxWidth: 540 }}>
+          <HeroBrev faner={FANER} />
         </div>
       </section>
 
@@ -264,42 +190,23 @@ export default async function Home() {
       <section id="saker" className="wrap" style={{ paddingTop: 104, paddingBottom: 104, display: "flex", flexWrap: "wrap", gap: 56, alignItems: "center" }}>
         <div style={{ flex: "1 1 400px", minWidth: 0, display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={kicker}>Vunnede saker</div>
-          <h2 style={h2}>Brevet viser til en sak som ligner din, og som forbrukeren vant</h2>
+          <h2 style={h2}>Brevet viser til en sak som ligner din, og som kjøperen vant</h2>
           <p style={{ ...ingress, maxWidth: "54ch" }}>
-            Forbrukerklageutvalget avgjør tvister mellom forbrukere og bilforhandlere, og vedtakene er offentlige. Vi sammenligner saken din med vunnede bilsaker og bruker den som ligner mest, med saksnummer og lenke til vedtaket.
+            Vedtakene fra Forbrukerklageutvalget er offentlige. Vi sammenligner saken din med {n !== null ? `${tall(n)} vedtak` : "vedtakene"} og bruker den som ligner mest, med saksnummer og lenke.
           </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 15, lineHeight: 1.5, color: "#455063" }}>
-            {["Bare ekte vedtak der forbrukeren fikk medhold mot en profesjonell selger", "Sammenlignet på feiltype, bilens alder og kjørelengde, tidspunkt og forbehold i kontrakten", "Brevet siterer utvalget og viser hvor din sak står like sterkt"].map((t) => (
-              <span key={t} style={{ display: "flex", gap: 12 }}>
-                <span style={{ marginTop: 3, display: "inline-flex" }}>
-                  <Gronn s={16} farge={BLA} />
-                </span>
-                {t}
-              </span>
-            ))}
-          </div>
-          {n !== null && <div style={{ fontFamily: MONO, fontSize: 12.5, color: "#5B6576", marginTop: 4 }}>Søker i {tall(n)} vedtak fra Forbrukerklageutvalget og Forbrukertvistutvalget</div>}
         </div>
-        <div style={{ flex: "1 1 460px", minWidth: 0, position: "relative", background: "#FFFFFF", border: "1px solid transparent", borderRadius: 22, padding: "26px 26px 22px", boxShadow: "var(--sh-1)" }}>
-          <span style={{ position: "absolute", top: -11, right: 22, fontFamily: MONO, fontSize: 11, padding: "3px 9px", borderRadius: 999, background: "#10141A", color: "#FFFFFF" }}>Eksempel</span>
-          <div style={{ ...radGrid, paddingBottom: 12, fontSize: 12, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#5B6576" }}>
-            <span />
-            <span>Din sak</span>
-            <span style={{ color: BLA }}>Sak 52074</span>
+        <div style={{ flex: "1 1 420px", minWidth: 0, background: "#FFFFFF", border: "1px solid transparent", borderRadius: 22, padding: 26, boxShadow: "var(--sh-1)", display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 600 }}>Sak 52074 · Peugeot 308 2014</div>
+              <div style={{ fontSize: 13.5, color: "#5B6576", marginTop: 2 }}>Vedtak 24. november 2025 · brukt, solgt «som den er»</div>
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 999, background: "#E4F3EA", color: "#1E7A4C" }}>Heving</span>
           </div>
-          <Sammenligning felt="Selger" din="Bilforhandler" sak="Bilforhandler" />
-          <Sammenligning felt="Bil" din="Brukt, fra 2015" sak="Brukt Peugeot 308 fra 2014" />
-          <Sammenligning felt="Feil" din="Motoren bruker mye olje" sak="Nesten 1 liter olje per 1 000 km" />
-          <Sammenligning felt="Kontrakt" din="«Som den er»" sak="«Som den står»" />
-          <Sammenligning felt="Oppdaget" din="Etter tre uker" sak="Etter to uker" />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap", marginTop: 4, padding: "16px 18px", borderRadius: 14, background: "#E4F3EA" }}>
-            <span style={{ fontSize: 14, lineHeight: 1.5, color: "#10141A" }}>
-              <b style={{ fontWeight: 600 }}>Forbrukeren vant.</b> Kjøpet ble hevet, og forhandleren betalte tilbake 84&nbsp;539&nbsp;kr.
-            </span>
-            <a href="https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-52074.pdf" target="_blank" rel="noopener" style={{ fontSize: 13, fontWeight: 550, whiteSpace: "nowrap", color: BLA }}>
-              Les vedtaket
-            </a>
-          </div>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55, color: "#455063" }}>Motoren brukte nesten én liter olje per 1 000 km. Kjøpet ble hevet, og forhandleren måtte betale tilbake 84&nbsp;539&nbsp;kr.</p>
+          <a href="https://vedtak-api.forbrukertilsynet.no/api/pdf/FKU-2025-52074.pdf" target="_blank" rel="noopener" style={{ fontSize: 14, fontWeight: 550, color: BLA }}>
+            Les vedtaket
+          </a>
         </div>
       </section>
 
@@ -321,7 +228,6 @@ export default async function Home() {
           </div>
           <div style={{ flex: "2 1 480px", minWidth: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
             <Krav navn="Retting" tekst="Gratis reparasjon" par="§ 29" />
-            <Krav navn="Omlevering" tekst="En tilsvarende bil" par="§ 29" />
             <Krav navn="Prisavslag" tekst="Penger tilbake, du beholder bilen" par="§ 31" />
             <Krav navn="Heving" tekst="Kjøpet går tilbake" par="§ 32" />
           </div>

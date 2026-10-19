@@ -69,11 +69,23 @@ describe("avstem", () => {
     expect(s.v.betalt).toBeInstanceOf(Date);
   });
 
-  it("gir saken ingen eier når betalingen ikke har en", async () => {
-    hentBetaling.mockResolvedValue(betaling("AUTHORIZED"));
+  it("gir saken ingen eier når betalingen ikke har en, og varsler uten persondata", async () => {
+    const varsel = vi.spyOn(console, "warn").mockImplementation(() => {});
+    hentBetaling.mockResolvedValue({ ...betaling("AUTHORIZED"), userDetails: { email: "kari@eksempel.no", firstName: "Kari", lastName: "Nordmann" } });
     await avstem("abcdefghijkm");
     const [[, s]] = batch.mock.calls[0] as unknown as [[unknown, { v: Record<string, unknown> }]];
     expect(s.v.vippsSub).toBeNull();
+    expect(varsel).toHaveBeenCalledWith("vipps: betalt uten sub", JSON.stringify({ ref: "abcdefghijkm" }));
+    expect(JSON.stringify(varsel.mock.calls)).not.toMatch(/kari|Kari|Nordmann/);
+    varsel.mockRestore();
+  });
+
+  it("varsler ikke når betalingen har en eier", async () => {
+    const varsel = vi.spyOn(console, "warn").mockImplementation(() => {});
+    hentBetaling.mockResolvedValue({ ...betaling("AUTHORIZED"), profile: { sub: "sub-1" } });
+    await avstem("abcdefghijkm");
+    expect(varsel).not.toHaveBeenCalled();
+    varsel.mockRestore();
   });
 
   it("sender ikke kvittering når et annet kall gjorde ordren betalt", async () => {

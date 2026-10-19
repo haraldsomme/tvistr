@@ -1,7 +1,7 @@
 // The verdict of the free check (artifact resultHTML): tier, law rows, «Lignende saker» from the
 // database, and the offer. Unlocking prefills the writer and opens it.
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Hake, InfoSirkel, Pil, Tilbake } from "@/app/deler/ikoner";
 import { Kjop } from "@/app/deler/kjop";
@@ -14,6 +14,7 @@ import { maal } from "@/lib/maling";
 import { type Kjopt, manglerForKjop, nokkel, sammeSak, sjekkTilSvar } from "@/lib/app/saken";
 import { evaluate } from "@/lib/app/vurdering";
 import { opplysningsfeil } from "@/lib/brev/feiltype";
+import { inneHint } from "@/lib/innlogging/navn";
 import { GRATIS, NYTT_KJOP, PRIS } from "@/lib/pris";
 import { mineKjop } from "./mine";
 import { type Lignende as LignendeSvar, vurderSaken } from "./vurdering";
@@ -21,6 +22,8 @@ import type { Tilstand } from "./sjekk";
 
 const PRISTEKST = GRATIS ? "Gratis" : `kr ${tall(PRIS)}`;
 const BETALER_FOR = GRATIS ? "som brevet skal gjelde" : "du betaler for";
+const ingen = () => () => {};
+
 const FORDELER = [
   "Brev med lovhenvisninger tilpasset svarene dine",
   "Frister og bevisbyrde regnet ut fra datoene du oppgir",
@@ -35,12 +38,16 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
   const opplysning = !!a.cats?.length && a.cats.every((c) => opplysningsfeil(c, a.issues?.[c] ?? []));
   // The case bought earlier is locked to its car and faults; this check may be about another.
   // Also the owner's other cases, from the account: the matching one is what «Åpne brevet» opens.
-  const [mine, settMine] = useState<Kjopt[]>([]);
+  const [mine, settMine] = useState<Kjopt[] | null>(null);
   useEffect(() => {
-    mineKjop().then(settMine, () => {});
+    mineKjop().then(settMine, () => settMine([]));
   }, []);
-  const funnet = [kjopt, ...mine].find((k) => sammeSak(a, k));
+  const funnet = [kjopt, ...(mine ?? [])].find((k) => sammeSak(a, k));
   const tilgang = !!funnet;
+  // Logged in (by the hint) and the account's cases not here yet: no pay button until we know this
+  // case is not bought already (kjop refuses a second purchase on the server too).
+  const inne = useSyncExternalStore(ingen, inneHint, () => false);
+  const henter = !tilgang && mine === null && inne;
   const mangler = manglerForKjop(a);
   const [visMangler, settVisMangler] = useState(false);
   const r = evaluate({ ...a, found: datoer[0], sist: datoer.at(-1), opplysning }, idag());
@@ -83,6 +90,11 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
     maal("kjop_klikket");
     settKjop(true);
   };
+  const venterPaKonto = (
+    <button type="button" className="btn pri" disabled aria-busy="true">
+      Sjekker kjøpene dine …
+    </button>
+  );
   // Without access the buyer pays with Vipps' own button; these are the texts in a trial (GRATIS).
   const knappetekst = tilgang ? "Åpne brevet" : kjopt.id ? "Åpne for denne saken" : "Åpne brevet";
   const knapper = (
@@ -216,6 +228,8 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
               {knappetekst}
               <Pil />
             </button>
+          ) : henter ? (
+            venterPaKonto
           ) : (
             <VippsKnapp onClick={apne} bred />
           )}
@@ -237,11 +251,14 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
                 Åpne brevet
                 <Pil />
               </button>
+            ) : henter ? (
+              venterPaKonto
             ) : (
               <VippsKnapp onClick={apne} />
             )}
           </div>
-          <Kjop sjekk={a} utvikling={utvikling} apen={kjop} onLukk={() => settKjop(false)} />
+          {/* Closed once the account shows the case is bought already. */}
+          <Kjop sjekk={a} utvikling={utvikling} apen={kjop && !tilgang} onLukk={() => settKjop(false)} />
         </>,
         document.body,
       )}

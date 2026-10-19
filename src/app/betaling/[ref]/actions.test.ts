@@ -37,8 +37,10 @@ const ordrerad = (o: Partial<Ordrerad> = {}): Ordrerad => ({ id: REF, sakId: "sa
 beforeEach(() => {
   vi.clearAllMocks();
   rader.ordre = ordrerad();
-  rader.sak = { skjema: { ...standard("2026-10-19"), c_make: "Volvo", c_reg: "AB 12345" }, vippsSub: "sub-1" };
+  rader.sak = { skjema: { ...standard("2026-10-19"), c_make: "Volvo", c_reg: "AB 12345", f_cats: ["motor"], f_parts: { motor: ["turbo"] } }, vippsSub: "sub-1" };
   innlogget.mockResolvedValue(null);
+  vi.unstubAllEnvs();
+  delete process.env.TVISTR_HELT_BREV_UTEN_BETALING;
 });
 
 const innloggetSvar = (r: Awaited<ReturnType<typeof sjekkBetaling>>) => (r.status === "betalt" ? r.bekreftelse.innlogget : null);
@@ -100,10 +102,48 @@ describe("sjekkBetaling: innlogget etter kjøpet", () => {
   });
 
   it("logger inn eieren av en sak fra utvikling", async () => {
+    process.env.TVISTR_HELT_BREV_UTEN_BETALING = "1";
     rader.ordre = ordrerad({ leverandor: "utvikling" });
     rader.sak = { ...(rader.sak as object), vippsSub: "utvikling" };
     expect(innloggetSvar(await sjekkBetaling(REF, HEMMELIG))).toBe(true);
     expect(avstem).not.toHaveBeenCalled();
     expect(lagOkt).toHaveBeenCalledWith("utvikling");
+  });
+});
+
+describe("sjekkBetaling: utviklingseieren", () => {
+  it.each([
+    ["uten flagget", () => {}],
+    ["i produksjon", () => ((process.env.TVISTR_HELT_BREV_UTEN_BETALING = "1"), vi.stubEnv("NODE_ENV", "production"))],
+  ])("logger aldri inn som «utvikling» %s", async (_, oppsett) => {
+    oppsett();
+    rader.ordre = ordrerad({ leverandor: "utvikling" });
+    rader.sak = { ...(rader.sak as object), vippsSub: "utvikling" };
+    innlogget.mockResolvedValue("utvikling");
+    const r = await sjekkBetaling(REF, HEMMELIG);
+    vi.unstubAllEnvs();
+    expect(innloggetSvar(r)).toBe(false);
+    expect(lagOkt).not.toHaveBeenCalled();
+    expect(tomt).not.toHaveBeenCalled();
+  });
+});
+
+describe("sjekkBetaling: hva bekreftelsen viser", () => {
+  it("gir eieren hele bekreftelsen", async () => {
+    rader.ordre = ordrerad({ kvitteringSendt: new Date() });
+    const r = await sjekkBetaling(REF, HEMMELIG);
+    expect(r).toMatchObject({ status: "betalt", bekreftelse: { innlogget: true, sakId: "sak222222222", sak: { id: "sak222222222", reg: "AB 12345", cats: ["motor"] }, bil: "Volvo", reg: "AB 12345", sendtTil: expect.stringMatching(/^k.*@/) } });
+  });
+
+  it.each([
+    ["uten innlogging", () => innlogget.mockResolvedValue(null)],
+    ["for en annen konto", () => innlogget.mockResolvedValue("sub-2")],
+  ])("viser bare betalingen %s", async (_, oppsett) => {
+    oppsett();
+    rader.ordre = ordrerad({ kvitteringSendt: new Date() });
+    const r = await sjekkBetaling(REF, "feil");
+    expect(r.status).toBe("betalt");
+    expect(r.status === "betalt" && r.bekreftelse).toEqual({ innlogget: false, sakId: "sak222222222", belopOre: 24900, betalt: expect.any(String) });
+    expect(JSON.stringify(r)).not.toMatch(/Volvo|AB 12345|motor|turbo|kari|@/);
   });
 });

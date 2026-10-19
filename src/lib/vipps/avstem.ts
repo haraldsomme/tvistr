@@ -48,6 +48,9 @@ export async function avstem(ref: string): Promise<Avstemt> {
   // The buyer's details from Vipps go into the form as it opens; the buyer cannot edit it before then.
   const [s] = await db.select({ skjema: sak.skjema }).from(sak).where(eq(sak.id, o.sakId)).limit(1);
   const na = new Date();
+  const sub = b.profile?.sub ?? null;
+  // A case without an owner opens for nobody; the warning lets support find it. Only the reference is logged.
+  if (!sub) console.warn("vipps: betalt uten sub", JSON.stringify({ ref }));
   const [vant] = await db.batch([
     db
       .update(ordre)
@@ -56,7 +59,7 @@ export async function avstem(ref: string): Promise<Avstemt> {
       .returning({ id: ordre.id }),
     db
       .update(sak)
-      .set({ betalt: na, vippsSub: b.profile?.sub ?? null, ...(s && { skjema: fyllKjoper(s.skjema, b.userDetails) }) })
+      .set({ betalt: na, vippsSub: sub, ...(s && { skjema: fyllKjoper(s.skjema, b.userDetails) }) })
       .where(and(eq(sak.id, o.sakId), isNull(sak.betalt))),
   ]);
   console.info("vipps: betalt", JSON.stringify({ ref }));

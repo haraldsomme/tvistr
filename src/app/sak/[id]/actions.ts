@@ -14,7 +14,7 @@ import { rensSjekk, rensSvar } from "@/app/sak/rens";
 import { hentAlle, hentBilnavn } from "@/app/sak/vedtak-db";
 import type { Presedens } from "@/lib/app/brev";
 import { idag } from "@/lib/app/dato";
-import { gjelderSaken, laas, manglerForKjop, nyttKjop, rensSkjema } from "@/lib/app/saken";
+import { gjelderSaken, kjopt, laas, manglerForKjop, nyttKjop, rensSkjema, sammeSak } from "@/lib/app/saken";
 import { standard } from "@/lib/app/skjema";
 import { komponentnavn } from "@/lib/feil/kategorier";
 import { innlogget, sha256hex } from "@/lib/innlogging/okt";
@@ -24,7 +24,7 @@ import { poengtekst } from "@/lib/matching/rett";
 import type { Kandidat } from "@/lib/matching/typer";
 import { GRATIS, PRIS } from "@/lib/pris";
 import { lagGrense } from "@/lib/rategrense";
-import { hentEgenSak, sisteBetalteSak } from "@/lib/sak/db";
+import { betalteSaker, hentEgenSak } from "@/lib/sak/db";
 import { nyId } from "@/lib/sak/id";
 import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
 import { visSaksnummer } from "@/lib/vedtaksvalg/mal";
@@ -165,7 +165,8 @@ export type Kjop = { ok: true; url: string } | { ok: false; melding: string };
 // attempt is a new case; one never paid is deleted after 30 days. In development
 // (TVISTR_HELT_BREV_UTEN_BETALING) the case is paid at once, with an order from «utvikling»; in a trial
 // (GRATIS) it is free, with an order «gratis» and no consent to give, since nothing is sold. The writer
-// starts from the check, keeping the buyer from the logged-in owner's newest paid case. The owner of the
+// starts from the check, keeping the buyer from the logged-in owner's newest paid case; an owner who
+// already has a paid case for this car and these faults is sent to it instead. The owner of the
 // new case is the Vipps account that pays (avstem), never the session. The return address carries a
 // secret `n` (only its hash is stored on the order) that logs the payer in once (sjekkBetaling).
 export async function kjop(inn: { sjekk: unknown; samtykke: unknown }): Promise<Kjop> {
@@ -184,7 +185,11 @@ export async function kjop(inn: { sjekk: unknown; samtykke: unknown }): Promise<
   try {
     const dag = idag();
     const sub = await innlogget();
-    const forrige = sub ? await sisteBetalteSak(sub) : null;
+    const mine = sub ? await betalteSaker(sub) : [];
+    // Nobody pays twice: a logged-in owner who has bought this car and these faults goes to that case.
+    const har = mine.find((r) => sammeSak(sjekk, kjopt(r.id, r.skjema)));
+    if (har) return { ok: true, url: `/sak/${har.id}` };
+    const forrige = mine[0];
     const skjema = nyttKjop(sjekk, (forrige && rensSkjema(forrige.skjema, dag)) || standard(dag), dag);
     const na = utenVipps ? new Date() : null;
     const leverandor = GRATIS ? "gratis" : utenVipps ? "utvikling" : "vipps";

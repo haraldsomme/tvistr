@@ -26,6 +26,7 @@ const { OKT, INNE, lagOkt, innlogget, loggUt, sha256hex } = await import("./okt"
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.unstubAllEnvs();
   lager.kaker.clear();
   lager.valg.clear();
   lager.rad = [];
@@ -67,6 +68,29 @@ describe("innlogget", () => {
     const na = new Date(params.find((p) => p !== sha256hex("token")) as string);
     expect(Math.abs(na.getTime() - Date.now())).toBeLessThan(5000);
     expect(params).toContain(sha256hex("token"));
+  });
+});
+
+describe("innlogget: utviklingseieren", () => {
+  const utvikling = () => {
+    lager.kaker.set(OKT, "token");
+    lager.rad = [{ sub: "utvikling" }];
+  };
+  it("gir «utvikling» bare i utvikling med flagget", async () => {
+    utvikling();
+    vi.stubEnv("TVISTR_HELT_BREV_UTEN_BETALING", "1");
+    expect(await innlogget()).toBe("utvikling");
+  });
+  it("gir null uten flagget", async () => {
+    utvikling();
+    vi.stubEnv("TVISTR_HELT_BREV_UTEN_BETALING", "");
+    expect(await innlogget()).toBeNull();
+  });
+  it("gir null i produksjon, også med flagget", async () => {
+    utvikling();
+    vi.stubEnv("TVISTR_HELT_BREV_UTEN_BETALING", "1");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(await innlogget()).toBeNull();
   });
 });
 

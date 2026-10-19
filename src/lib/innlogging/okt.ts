@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { db } from "@/db";
 import { innlogging } from "@/db/schema";
+import { HELT_BREV_UTEN_BETALING, UTVIKLINGSEIER } from "@/lib/vipps/profil";
 import { INNE, OKT } from "./navn";
 
 export { INNE, OKT };
@@ -24,8 +25,15 @@ export async function lagOkt(sub: string): Promise<void> {
   k.set(INNE, "1", felles);
 }
 
-// The sub of a live session, or null. Cached so one request asks the database once.
+// The sub of a live session, or null. Cached so one request asks the database once. A session for the
+// development owner (a purchase without Vipps) counts only in development, so outside it it opens no
+// case, lists none on Min side and gives no buyer details (hentEgenSak, /sak/[id], mineKjop, kjop).
 export const innlogget = cache(async (): Promise<string | null> => {
+  const sub = await oktensSub();
+  return sub === UTVIKLINGSEIER && !HELT_BREV_UTEN_BETALING() ? null : sub;
+});
+
+async function oktensSub(): Promise<string | null> {
   const token = (await cookies()).get(OKT)?.value;
   if (!token) return null;
   const [r] = await db
@@ -34,7 +42,7 @@ export const innlogget = cache(async (): Promise<string | null> => {
     .where(and(eq(innlogging.tokenHash, sha256hex(token)), gt(innlogging.utloper, new Date())))
     .limit(1);
   return r?.sub ?? null;
-});
+}
 
 export async function loggUt(): Promise<void> {
   const k = await cookies();

@@ -1,5 +1,5 @@
 // A paid case by its id, for the page and the server actions. Null for a malformed id, an unknown case
-// or one not yet paid: the three look the same to the browser. And the owner's newest paid case.
+// or one not yet paid: the three look the same to the browser. And the owner's paid cases.
 import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { type Sak, sak } from "@/db/schema";
@@ -12,15 +12,13 @@ export async function hentBetaltSak(id: unknown): Promise<Sak | null> {
   return r ?? null;
 }
 
-// The owner's newest paid case, or null.
-export async function sisteBetalteSak(sub: string): Promise<Sak | null> {
-  const [r] = await db
-    .select()
+// The owner's paid cases, newest first.
+export async function betalteSaker(sub: string): Promise<Pick<Sak, "id" | "skjema" | "betalt">[]> {
+  return db
+    .select({ id: sak.id, skjema: sak.skjema, betalt: sak.betalt })
     .from(sak)
     .where(and(eq(sak.vippsSub, sub), isNotNull(sak.betalt)))
-    .orderBy(desc(sak.betalt))
-    .limit(1);
-  return r ?? null;
+    .orderBy(desc(sak.betalt));
 }
 
 // A paid case that belongs to the logged-in Vipps account. Null when logged out, for another account,

@@ -5,7 +5,7 @@ import { erId } from "@/lib/sak/id";
 
 const hentAlle = vi.fn<() => Promise<unknown[]>>(async () => []);
 const hentEgenSak = vi.fn<(id: unknown) => Promise<Sak | null>>(async () => null);
-const sisteBetalteSak = vi.fn<(sub: string) => Promise<Sak | null>>(async () => null);
+const betalteSaker = vi.fn<(sub: string) => Promise<Sak[]>>(async () => []);
 const innlogget = vi.fn<() => Promise<string | null>>(async () => null);
 const batch = vi.fn<(q: unknown[]) => Promise<unknown[]>>(async () => []);
 const pris = vi.hoisted(() => ({ gratis: false }));
@@ -27,7 +27,7 @@ vi.mock("next/headers", () => ({
     ]),
 }));
 vi.mock("@/app/sak/vedtak-db", () => ({ hentAlle, hentBilnavn: async () => () => null }));
-vi.mock("@/lib/sak/db", () => ({ hentEgenSak, sisteBetalteSak }));
+vi.mock("@/lib/sak/db", () => ({ hentEgenSak, betalteSaker }));
 vi.mock("@/lib/innlogging/okt", async (orig) => ({ ...(await orig<typeof import("@/lib/innlogging/okt")>()), innlogget }));
 vi.mock("@/lib/matching/ranger", () => ({ ranger: () => ({ kandidater: kandidater.rader }), avgjorendeFor: () => undefined }));
 // The limits per address are tested on their own; here every call is from the same address.
@@ -79,7 +79,7 @@ const sjekk = { reg: "CD 67890", make: "Audi A4", year: "2019", cats: ["klima"],
 beforeEach(() => {
   vi.clearAllMocks();
   hentEgenSak.mockResolvedValue(null);
-  sisteBetalteSak.mockResolvedValue(null);
+  betalteSaker.mockResolvedValue([]);
   innlogget.mockResolvedValue(null);
   hentAlle.mockResolvedValue([]);
   kandidater.rader = [];
@@ -277,7 +277,7 @@ describe("kjop", () => {
 
   it("beholder kjøperen fra den innloggedes siste sak", async () => {
     innlogget.mockResolvedValue("sub-1");
-    sisteBetalteSak.mockImplementation(async (sub) => (sub === "sub-1" ? { ...betaltSak, vippsSub: "sub-1" } : null));
+    betalteSaker.mockImplementation(async (sub) => (sub === "sub-1" ? [{ ...betaltSak, vippsSub: "sub-1" }] : []));
     await kjop({ sjekk, samtykke: true });
     const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: { b_name: string; c_reg: string } } }]];
     expect([sakRad.v.skjema.b_name, sakRad.v.skjema.c_reg]).toEqual(["Kari", "CD 67890"]);
@@ -289,7 +289,30 @@ describe("kjop", () => {
     const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: { b_name: string } } }]];
     expect(sakRad.v.skjema.b_name).toBe("");
     expect(hentEgenSak).not.toHaveBeenCalled();
-    expect(sisteBetalteSak).not.toHaveBeenCalled();
+    expect(betalteSaker).not.toHaveBeenCalled();
+  });
+
+  describe("når den innlogede alt har kjøpt brevet", () => {
+    const kjopt = (o: Partial<Sak["skjema"]>): Sak => ({ ...betaltSak, id: "mmmmmmmmmmmm", vippsSub: "sub-1", skjema: { ...skjema, c_reg: "CD 67890", f_cats: ["klima"], f_parts: { klima: ["ac"] }, ...o } });
+    it.each([
+      ["med Vipps", "0"],
+      ["i utvikling", "1"],
+    ])("sender til saken uten ny betaling (%s)", async (_, flagg) => {
+      process.env.TVISTR_HELT_BREV_UTEN_BETALING = flagg;
+      innlogget.mockResolvedValue("sub-1");
+      betalteSaker.mockResolvedValue([kjopt({ c_reg: "ZZ 11111" }), kjopt({})]);
+      expect(await kjop({ sjekk, samtykke: true })).toEqual({ ok: true, url: "/sak/mmmmmmmmmmmm" });
+      expect(batch).not.toHaveBeenCalled();
+      expect(opprettBetaling).not.toHaveBeenCalled();
+    });
+
+    it("tar betalt for en annen feil på samme bil", async () => {
+      process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
+      innlogget.mockResolvedValue("sub-1");
+      betalteSaker.mockResolvedValue([kjopt({ f_parts: { klima: ["vifte"] } })]);
+      expect(await kjop({ sjekk, samtykke: true })).toEqual({ ok: true, url: "https://pay-mt.vipps.no/x" });
+      expect(batch).toHaveBeenCalledOnce();
+    });
   });
 
   it("krever samtykke til at angreretten går tapt", async () => {

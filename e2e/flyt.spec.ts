@@ -33,13 +33,8 @@ const velg = async (page: Page, navn: string | RegExp) => {
   await page.waitForTimeout(900);
 };
 
-test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
-  test.setTimeout(180_000);
-  await stubRegistre(page);
-  await page.goto("/");
-  await page.getByRole("link", { name: "Sjekk saken din gratis" }).first().click();
-  await expect(page).toHaveURL(/\/sak$/, { timeout: 30_000 });
-
+// The free check for AB 12345 with a turbo fault, up to the verdict. `forSiste` runs before the last answer.
+async function sjekkSaken(page: Page, forSiste: () => Promise<void> = async () => {}) {
   await velg(page, /En bilforhandler/);
   await velg(page, /Privat Jeg kjøpte/);
   await velg(page, "1 Nei");
@@ -55,7 +50,17 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   await page.getByRole("button", { name: "Neste" }).click();
   await velg(page, /^1 Nei Feilen var ukjent/);
   await velg(page, /Nei, den bare oppsto/);
+  await forSiste();
   await velg(page, /Ikke ennå/);
+}
+
+test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
+  test.setTimeout(240_000);
+  await stubRegistre(page);
+  await page.goto("/");
+  await page.getByRole("link", { name: "Sjekk saken din gratis" }).first().click();
+  await expect(page).toHaveURL(/\/sak$/, { timeout: 30_000 });
+  await sjekkSaken(page);
 
   await expect(page.locator(".verdict .vbadge")).toBeVisible();
   await expect(page.locator(".sim-cases .sim-c").first()).toBeVisible({ timeout: 30_000 });
@@ -70,8 +75,22 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   await expect(page).toHaveURL(/\/betaling\/[a-km-np-z2-9]{12}$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "Takk for handelen!" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByLabel("Kvittering")).toContainText("kr 249");
+  // The owner, logged in by the return address, gets the case itself.
+  await expect(page.getByLabel("Kvittering")).toContainText("AB 12345");
+  await expect(page.getByLabel("Lenken til saken")).toContainText("Du er logget inn");
   await expect(page.getByRole("link", { name: "Min side" }).first()).toBeVisible();
   await expect(page.getByLabel("Lenken til saken")).toContainText(/\/sak\/[a-km-np-z2-9]{12}/);
+  // Anyone else with the order number (it is in the receipt) sees only that it is paid.
+  const kvittering = page.url();
+  const fremmed = await browser.newPage();
+  await fremmed.goto(kvittering);
+  await expect(fremmed.getByRole("heading", { name: "Takk for handelen!" })).toBeVisible({ timeout: 30_000 });
+  await expect(fremmed.getByLabel("Kvittering")).toContainText("kr 249");
+  await expect(fremmed.getByLabel("Kvittering")).not.toContainText("AB 12345");
+  await expect(fremmed.locator("body")).not.toContainText(/Peugeot|Turbo|Du er logget inn/);
+  await expect(fremmed.getByRole("link", { name: "Logg inn med Vipps" })).toBeVisible();
+  expect(await fremmed.evaluate(() => localStorage.getItem("tvistr-sak"))).toBeNull();
+  await fremmed.close();
   await page.getByRole("link", { name: "Fortsett til brevet" }).click();
   await expect(page).toHaveURL(/\/sak\/[a-km-np-z2-9]{12}$/, { timeout: 30_000 });
   const lenke = page.url();
@@ -115,6 +134,31 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   await expect(kort.nth(1)).toContainText("Slik står det i brevet");
   await page.getByRole("tab", { name: "Brevet" }).click();
   await expect(page.locator(".l-prec")).not.toHaveText(for_);
+
+  // Logged in on a new device (no tvistr-sak): the check holds the pay button until the account's cases
+  // are in, then offers the bought case instead of a second purchase.
+  const { baseURL, viewport, userAgent, deviceScaleFactor, isMobile, hasTouch } = test.info().project.use;
+  const enhet = await browser.newContext({ baseURL, viewport, userAgent, deviceScaleFactor, isMobile, hasTouch });
+  await enhet.addCookies(await page.context().cookies());
+  const ny = await enhet.newPage();
+  await stubRegistre(ny);
+  await ny.goto("/sak");
+  await sjekkSaken(ny, async () => {
+    await ny.route((u) => u.pathname === "/sak", async (r) => {
+      if (r.request().method() === "POST") await new Promise((ferdig) => setTimeout(ferdig, 6000));
+      await r.continue();
+    });
+  });
+  // The pay buttons in the offer and the bar (the closed purchase dialog always holds one).
+  const betal = ny.locator(".offer vipps-mobilepay-button, .res-bar vipps-mobilepay-button");
+  await expect(ny.getByRole("button", { name: "Sjekker kjøpene dine …" }).first()).toBeVisible();
+  await expect(betal).toHaveCount(0);
+  const apne = ny.locator(".offer").getByRole("button", { name: "Åpne brevet" });
+  await expect(apne).toBeVisible({ timeout: 30_000 });
+  await expect(betal).toHaveCount(0);
+  await apne.click();
+  await expect(ny).toHaveURL(/\/sak\/[a-km-np-z2-9]{12}$/, { timeout: 30_000 });
+  await enhet.close();
 
   // Min side lists the case; "Åpne brevet" opens it; "Logg ut" ends the session and the link asks for login again.
   const id = lenke.split("/").pop()!;

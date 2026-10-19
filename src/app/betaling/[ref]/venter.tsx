@@ -1,14 +1,15 @@
 "use client";
 
 // Waits for Vipps' answer: asks the server every other second for a minute, then lets the buyer ask
-// again. A paid case is remembered in this browser (tvistr-sak), and the confirmation shows the receipt,
-// the link to the case and the next steps; the buyer goes on to the letter from there.
+// again. The owner's paid case is remembered in this browser (tvistr-sak), and the confirmation shows the receipt,
+// the link to the case and the next steps; the buyer goes on to the letter from there. Anyone else sees
+// only that the order is paid, with «Logg inn med Vipps» (sjekkBetaling).
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Hake, Kopier, Pil } from "@/app/deler/ikoner";
 import { tall } from "@/lib/app/format";
 import { skriv } from "@/lib/app/lagring";
-import { INNE } from "@/lib/innlogging/navn";
+import { inneHint } from "@/lib/innlogging/navn";
 import { maal } from "@/lib/maling";
 import { type Bekreftelse, sjekkBetaling } from "./actions";
 
@@ -41,12 +42,18 @@ export function Venter({ referanse, n }: { referanse: string; n: string | null }
   useEffect(() => {
     let stopp = false;
     let t: ReturnType<typeof setTimeout>;
-    async function sjekk(i: number) {
+    async function sjekk(i: number, igjen = false) {
       const r = await sjekkBetaling(referanse, n).catch(() => ({ status: "venter" }) as const);
       if (stopp) return;
       if (r.status === "betalt") {
+        // Of two polls with the secret at once (two tabs, React's double effect in development), the one
+        // that did not log in may be answered before the winner's cookie is here: ask once more.
+        if (n && !r.bekreftelse.innlogget && !igjen) {
+          t = setTimeout(() => sjekk(i, true), HVER_MS);
+          return;
+        }
         maal("betaling_fullfort");
-        skriv("tvistr-sak", r.bekreftelse.sak);
+        if (r.bekreftelse.innlogget) skriv("tvistr-sak", r.bekreftelse.sak);
         // The secret has done its job; keep it out of the address bar, history and copied links.
         if (n) window.history.replaceState(null, "", window.location.pathname);
         settBekreftelse(r.bekreftelse);
@@ -61,7 +68,7 @@ export function Venter({ referanse, n }: { referanse: string; n: string | null }
     };
   }, [referanse, n, runde]);
 
-  if (bekreftelse) return <Takk b={bekreftelse} referanse={referanse} />;
+  if (bekreftelse) return <Takk b={bekreftelse} referanse={referanse} medN={!!n} />;
 
   const { tittel, tekst } = TEKST[visning];
   return (
@@ -92,13 +99,16 @@ export function Venter({ referanse, n }: { referanse: string; n: string | null }
 const kort = { background: "#FFFFFF", border: "1px solid #E2E6EC", borderRadius: 16, padding: "18px 20px" } as const;
 const etikett = { fontSize: 12, fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase", color: "#7A8597", margin: "0 0 10px" } as const;
 
-function Takk({ b, referanse }: { b: Bekreftelse; referanse: string }) {
+function Takk({ b, referanse, medN }: { b: Bekreftelse; referanse: string; medN: boolean }) {
   // Shown only after the server's answer, so always in the browser.
-  const lenke = `${window.location.origin}/sak/${b.sak.id}`;
+  const lenke = `${window.location.origin}/sak/${b.sakId}`;
   const [kopiert, settKopiert] = useState(false);
+  // The case itself only for its owner; anyone else sees that the order is paid.
+  const eier = b.innlogget ? b : null;
   // The losing one of two racing polls can report false although the winner set the cookie, so the
-  // readable hint cookie counts too.
-  const inne = b.innlogget || document.cookie.split("; ").some((c) => c.startsWith(`${INNE}=`));
+  // readable hint cookie counts too, but only when this page came with the secret: a hint from an
+  // earlier login (perhaps another account) says nothing about this payment.
+  const inne = b.innlogget || (medN && inneHint());
   const kopier = () =>
     navigator.clipboard?.writeText(lenke).then(
       () => settKopiert(true),
@@ -114,16 +124,16 @@ function Takk({ b, referanse }: { b: Bekreftelse; referanse: string }) {
         </span>
         <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, letterSpacing: "-0.03em" }}>Takk for handelen!</h1>
         <p style={{ margin: 0, fontSize: 16, lineHeight: 1.55, color: tekstfarge }}>
-          Betalingen er bekreftet, og brevet for {b.bil || "bilen"} ({b.reg}) er klart til å fylles ut.
+          {eier ? `Betalingen er bekreftet, og brevet for ${eier.bil || "bilen"} (${eier.reg}) er klart til å fylles ut.` : "Betalingen er bekreftet, og brevet er klart til å fylles ut."}
         </p>
       </div>
 
       <section style={kort} aria-label="Lenken til saken">
         <p style={etikett}>Lenken til saken din</p>
         <p style={{ margin: "0 0 12px", fontSize: 15, lineHeight: 1.55, color: tekstfarge }}>
-          {b.sendtTil ? (
+          {eier?.sendtTil ? (
             <>
-              Vi har sendt lenken og kvitteringen til <b style={{ color: "#10141A" }}>{b.sendtTil}</b>, så du alltid finner saken igjen.
+              Vi har sendt lenken og kvitteringen til <b style={{ color: "#10141A" }}>{eier.sendtTil}</b>, så du alltid finner saken igjen.
             </>
           ) : (
             "Du finner saken igjen på Min side."
@@ -133,7 +143,7 @@ function Takk({ b, referanse }: { b: Bekreftelse; referanse: string }) {
           ) : (
             <>
               Logg inn med Vipps for å åpne saken.{" "}
-              <a className="btn" href={`/logg-inn?til=${encodeURIComponent(`/sak/${b.sak.id}`)}`}>
+              <a className="btn" href={`/logg-inn?til=${encodeURIComponent(`/sak/${b.sakId}`)}`}>
                 Logg inn med Vipps
               </a>
             </>
@@ -160,9 +170,7 @@ function Takk({ b, referanse }: { b: Bekreftelse; referanse: string }) {
       <section style={kort} aria-label="Kvittering">
         <p style={etikett}>Kvittering</p>
         <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "1fr auto", rowGap: 8, columnGap: 16, fontSize: 14, color: tekstfarge }}>
-          <dt>
-            Reklamasjonsbrev for bil, {b.bil} ({b.reg})
-          </dt>
+          <dt>{eier ? `Reklamasjonsbrev for bil, ${eier.bil} (${eier.reg})` : "Reklamasjonsbrev for bil"}</dt>
           <dd style={{ margin: 0, color: "#10141A" }}>kr {tall(b.belopOre / 100)}</dd>
           <dt>Betalt</dt>
           <dd style={{ margin: 0 }}>{b.belopOre ? `${dato} med Vipps` : dato}</dd>
@@ -172,7 +180,7 @@ function Takk({ b, referanse }: { b: Bekreftelse; referanse: string }) {
       </section>
 
       <div>
-        <Link href={`/sak/${b.sak.id}`} className="btn pri xl" style={{ textDecoration: "none" }}>
+        <Link href={`/sak/${b.sakId}`} className="btn pri xl" style={{ textDecoration: "none" }}>
           Fortsett til brevet
           <Pil />
         </Link>

@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { LoggUt } from "@/app/deler/logg-ut";
 import { Topp } from "@/app/deler/topp";
-import { db } from "@/db";
-import { sak } from "@/db/schema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { innlogget } from "@/lib/innlogging/okt";
+import { betalteSaker } from "@/lib/sak/db";
 
 export const metadata: Metadata = { title: "Min side – Tvistr", robots: { index: false, follow: false } };
 
@@ -30,11 +28,7 @@ function feilnavn(cats: string[], parts: Record<string, string[]>): string {
 export default async function Page() {
   const sub = await innlogget();
   if (!sub) redirect("/logg-inn?til=/min-side");
-  const saker = await db
-    .select({ id: sak.id, skjema: sak.skjema, betalt: sak.betalt })
-    .from(sak)
-    .where(and(eq(sak.vippsSub, sub), isNotNull(sak.betalt)))
-    .orderBy(desc(sak.betalt));
+  const saker = await betalteSaker(sub);
   const navn = saker[0]?.skjema.b_name;
   return (
     <div className="home" style={{ minHeight: "100vh", background: "#F5F6F8" }}>

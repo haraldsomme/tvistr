@@ -1,0 +1,2269 @@
+{
+  "id": "4d08a34f-adc3-4ad7-961b-71e7e5e4c9c4",
+  "prevId": "800f9366-d3f6-404b-8a5d-50e6e9a42dc9",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.hendelse": {
+      "name": "hendelse",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "okt": {
+          "name": "okt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hendelse": {
+          "name": "hendelse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kategorier": {
+          "name": "kategorier",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tidspunkt": {
+          "name": "tidspunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "hendelse_okt_idx": {
+          "name": "hendelse_okt_idx",
+          "columns": [
+            {
+              "expression": "okt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "hendelse_hendelse_idx": {
+          "name": "hendelse_hendelse_idx",
+          "columns": [
+            {
+              "expression": "hendelse",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.innlogging": {
+      "name": "innlogging",
+      "schema": "",
+      "columns": {
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "sub": {
+          "name": "sub",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "opprettet": {
+          "name": "opprettet",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "utloper": {
+          "name": "utloper",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "innlogging_sub_idx": {
+          "name": "innlogging_sub_idx",
+          "columns": [
+            {
+              "expression": "sub",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.innlogging_start": {
+      "name": "innlogging_start",
+      "schema": "",
+      "columns": {
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nonce": {
+          "name": "nonce",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verifier": {
+          "name": "verifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "til": {
+          "name": "til",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "opprettet": {
+          "name": "opprettet",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.kildedokument": {
+      "name": "kildedokument",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kilde_arkiv": {
+          "name": "kilde_arkiv",
+          "type": "kilde_arkiv",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kilde_url": {
+          "name": "kilde_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lokal_sti": {
+          "name": "lokal_sti",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sha256": {
+          "name": "sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "saksnummer": {
+          "name": "saksnummer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ar": {
+          "name": "ar",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hentet_tidspunkt": {
+          "name": "hentet_tidspunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "http_status": {
+          "name": "http_status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "er_bruktbil": {
+          "name": "er_bruktbil",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "klassifisering_begrunnelse": {
+          "name": "klassifisering_begrunnelse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "klassifisering_modell": {
+          "name": "klassifisering_modell",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kjoretoytype": {
+          "name": "kjoretoytype",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "dokument_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'hentet'"
+        },
+        "feilmelding": {
+          "name": "feilmelding",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tokens_inn": {
+          "name": "tokens_inn",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "tokens_ut": {
+          "name": "tokens_ut",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "kostnad_usd": {
+          "name": "kostnad_usd",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "kildedokument_status_idx": {
+          "name": "kildedokument_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "kildedokument_ar_idx": {
+          "name": "kildedokument_ar_idx",
+          "columns": [
+            {
+              "expression": "ar",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "kildedokument_kilde_url_unique": {
+          "name": "kildedokument_kilde_url_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "kilde_url"
+          ]
+        },
+        "kildedokument_sha256_unique": {
+          "name": "kildedokument_sha256_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "sha256"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.kildesak": {
+      "name": "kildesak",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kilde_arkiv": {
+          "name": "kilde_arkiv",
+          "type": "kilde_arkiv",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ekstern_id": {
+          "name": "ekstern_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "filter": {
+          "name": "filter",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "meta": {
+          "name": "meta",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "sak_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ny'"
+        },
+        "grunn": {
+          "name": "grunn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "forsok": {
+          "name": "forsok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "kildedokument_id": {
+          "name": "kildedokument_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "oppdatert": {
+          "name": "oppdatert",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "kildesak_status_idx": {
+          "name": "kildesak_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "kildesak_kildedokument_id_kildedokument_id_fk": {
+          "name": "kildesak_kildedokument_id_kildedokument_id_fk",
+          "tableFrom": "kildesak",
+          "tableTo": "kildedokument",
+          "columnsFrom": [
+            "kildedokument_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "kildesak_arkiv_id_uq": {
+          "name": "kildesak_arkiv_id_uq",
+          "nullsNotDistinct": false,
+          "columns": [
+            "kilde_arkiv",
+            "ekstern_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.kontrollfunn": {
+      "name": "kontrollfunn",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "vedtak_id": {
+          "name": "vedtak_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feil_id": {
+          "name": "feil_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sporsmal": {
+          "name": "sporsmal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sitat": {
+          "name": "sitat",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "begrunnelse": {
+          "name": "begrunnelse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tidspunkt": {
+          "name": "tidspunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "angret": {
+          "name": "angret",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "kontrollfunn_vedtak_id_vedtak_id_fk": {
+          "name": "kontrollfunn_vedtak_id_vedtak_id_fk",
+          "tableFrom": "kontrollfunn",
+          "tableTo": "vedtak",
+          "columnsFrom": [
+            "vedtak_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ordre": {
+      "name": "ordre",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "sak_id": {
+          "name": "sak_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "belop_ore": {
+          "name": "belop_ore",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "leverandor": {
+          "name": "leverandor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "transaksjon_id": {
+          "name": "transaksjon_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "opprettet": {
+          "name": "opprettet",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "oppdatert": {
+          "name": "oppdatert",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "betalt": {
+          "name": "betalt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kvittering_sendt": {
+          "name": "kvittering_sendt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "innlogging_hash": {
+          "name": "innlogging_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "ordre_sak_idx": {
+          "name": "ordre_sak_idx",
+          "columns": [
+            {
+              "expression": "sak_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ordre_sak_id_sak_id_fk": {
+          "name": "ordre_sak_id_sak_id_fk",
+          "tableFrom": "ordre",
+          "tableTo": "sak",
+          "columnsFrom": [
+            "sak_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sak": {
+      "name": "sak",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "vipps_sub": {
+          "name": "vipps_sub",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sjekk": {
+          "name": "sjekk",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "skjema": {
+          "name": "skjema",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "betalt": {
+          "name": "betalt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vedtaksvalg": {
+          "name": "vedtaksvalg",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "modellkall": {
+          "name": "modellkall",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "opprettet": {
+          "name": "opprettet",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "endret": {
+          "name": "endret",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "sak_vipps_sub_idx": {
+          "name": "sak_vipps_sub_idx",
+          "columns": [
+            {
+              "expression": "vipps_sub",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.statistikk_kategori": {
+      "name": "statistikk_kategori",
+      "schema": "",
+      "columns": {
+        "nokkel": {
+          "name": "nokkel",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "antall_saker": {
+          "name": "antall_saker",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "antall_medhold": {
+          "name": "antall_medhold",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "heving": {
+          "name": "heving",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prisavslag": {
+          "name": "prisavslag",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "retting": {
+          "name": "retting",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "erstatning": {
+          "name": "erstatning",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prisavslag_median_prosent": {
+          "name": "prisavslag_median_prosent",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alder_median": {
+          "name": "alder_median",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "km_median": {
+          "name": "km_median",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bygget": {
+          "name": "bygget",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.vedtak": {
+      "name": "vedtak",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kildedokument_id": {
+          "name": "kildedokument_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "saksnummer": {
+          "name": "saksnummer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vedtaksdato": {
+          "name": "vedtaksdato",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kilde_url": {
+          "name": "kilde_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "selger_type": {
+          "name": "selger_type",
+          "type": "selger_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "selger_navn": {
+          "name": "selger_navn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "selger_navn_norm": {
+          "name": "selger_navn_norm",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "selger_orgnr": {
+          "name": "selger_orgnr",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verksted_navn": {
+          "name": "verksted_navn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "klager_er_forbruker": {
+          "name": "klager_er_forbruker",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kjoretoytype": {
+          "name": "kjoretoytype",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "merke": {
+          "name": "merke",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "modell": {
+          "name": "modell",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "arsmodell": {
+          "name": "arsmodell",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "drivstoff": {
+          "name": "drivstoff",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "km_ved_kjop": {
+          "name": "km_ved_kjop",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kjopesum_nok": {
+          "name": "kjopesum_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alder_ved_kjop": {
+          "name": "alder_ved_kjop",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bruktimport": {
+          "name": "bruktimport",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kjopsdato": {
+          "name": "kjopsdato",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "overtakelsesdato": {
+          "name": "overtakelsesdato",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "forste_reklamasjon_dato": {
+          "name": "forste_reklamasjon_dato",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dager_til_reklamasjon": {
+          "name": "dager_til_reklamasjon",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "forbehold": {
+          "name": "forbehold",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "forbehold_tekst": {
+          "name": "forbehold_tekst",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "feiltyper": {
+          "name": "feiltyper",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "feil_beskrivelse": {
+          "name": "feil_beskrivelse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "utbedringskostnad_nok": {
+          "name": "utbedringskostnad_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bevistyper": {
+          "name": "bevistyper",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bevis_vektlagt": {
+          "name": "bevis_vektlagt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kravtyper": {
+          "name": "kravtyper",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prinsipalt_krav": {
+          "name": "prinsipalt_krav",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mangelsgrunnlag": {
+          "name": "mangelsgrunnlag",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tvistetema": {
+          "name": "tvistetema",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "krevd_prisavslag_nok": {
+          "name": "krevd_prisavslag_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "krevd_erstatning_nok": {
+          "name": "krevd_erstatning_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "krevd_totalt_nok": {
+          "name": "krevd_totalt_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "utfall": {
+          "name": "utfall",
+          "type": "utfall",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tilkjent_prisavslag_nok": {
+          "name": "tilkjent_prisavslag_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tilkjent_erstatning_nok": {
+          "name": "tilkjent_erstatning_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tilkjent_totalt_nok": {
+          "name": "tilkjent_totalt_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gebyr_tilkjent": {
+          "name": "gebyr_tilkjent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "enstemmig": {
+          "name": "enstemmig",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dissens": {
+          "name": "dissens",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lov": {
+          "name": "lov",
+          "type": "lov",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lovversjon": {
+          "name": "lovversjon",
+          "type": "lovversjon",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paragrafer": {
+          "name": "paragrafer",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sammendrag": {
+          "name": "sammendrag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "utvalgets_nokkelmomenter": {
+          "name": "utvalgets_nokkelmomenter",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fulltekst_renset": {
+          "name": "fulltekst_renset",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sitater": {
+          "name": "sitater",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "konfidens": {
+          "name": "konfidens",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trenger_kontroll": {
+          "name": "trenger_kontroll",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "kontroll_arsaker": {
+          "name": "kontroll_arsaker",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ai_modell": {
+          "name": "ai_modell",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prompt_versjon": {
+          "name": "prompt_versjon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tolket_tidspunkt": {
+          "name": "tolket_tidspunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tokens_inn": {
+          "name": "tokens_inn",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tokens_ut": {
+          "name": "tokens_ut",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "varighet_ms": {
+          "name": "varighet_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kostnad_usd": {
+          "name": "kostnad_usd",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "qa_status": {
+          "name": "qa_status",
+          "type": "qa_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ukontrollert'"
+        },
+        "qa_kommentar": {
+          "name": "qa_kommentar",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "qa_tidspunkt": {
+          "name": "qa_tidspunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "feilvurdering": {
+          "name": "feilvurdering",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "feilvurdering_versjon": {
+          "name": "feilvurdering_versjon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "feilvurdering_tidspunkt": {
+          "name": "feilvurdering_tidspunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "feilvurdering_kontroll": {
+          "name": "feilvurdering_kontroll",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "godtatte_kategorier": {
+          "name": "godtatte_kategorier",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "godtatte_underkategorier": {
+          "name": "godtatte_underkategorier",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "godtatte_niva": {
+          "name": "godtatte_niva",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sanksjoner": {
+          "name": "sanksjoner",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prisavslag_prosent": {
+          "name": "prisavslag_prosent",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rettingsforsok": {
+          "name": "rettingsforsok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "som_den_er": {
+          "name": "som_den_er",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dager_til_feil": {
+          "name": "dager_til_feil",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lovversjon_avledet": {
+          "name": "lovversjon_avledet",
+          "type": "lovversjon",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avgjorende": {
+          "name": "avgjorende",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avgjorende_versjon": {
+          "name": "avgjorende_versjon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avgjorende_tidspunkt": {
+          "name": "avgjorende_tidspunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avgjorende_kontroll": {
+          "name": "avgjorende_kontroll",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "vedtak_godtatte_kategorier_idx": {
+          "name": "vedtak_godtatte_kategorier_idx",
+          "columns": [
+            {
+              "expression": "godtatte_kategorier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "vedtak_godtatte_underkategorier_idx": {
+          "name": "vedtak_godtatte_underkategorier_idx",
+          "columns": [
+            {
+              "expression": "godtatte_underkategorier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "vedtak_godtatte_niva_idx": {
+          "name": "vedtak_godtatte_niva_idx",
+          "columns": [
+            {
+              "expression": "godtatte_niva",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "vedtak_utfall_idx": {
+          "name": "vedtak_utfall_idx",
+          "columns": [
+            {
+              "expression": "utfall",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "vedtak_vedtaksdato_idx": {
+          "name": "vedtak_vedtaksdato_idx",
+          "columns": [
+            {
+              "expression": "vedtaksdato",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "vedtak_selger_orgnr_idx": {
+          "name": "vedtak_selger_orgnr_idx",
+          "columns": [
+            {
+              "expression": "selger_orgnr",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "vedtak_selger_navn_norm_idx": {
+          "name": "vedtak_selger_navn_norm_idx",
+          "columns": [
+            {
+              "expression": "selger_navn_norm",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "vedtak_merke_idx": {
+          "name": "vedtak_merke_idx",
+          "columns": [
+            {
+              "expression": "merke",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "vedtak_kildedokument_id_kildedokument_id_fk": {
+          "name": "vedtak_kildedokument_id_kildedokument_id_fk",
+          "tableFrom": "vedtak",
+          "tableTo": "kildedokument",
+          "columnsFrom": [
+            "kildedokument_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "vedtak_kildedokument_id_unique": {
+          "name": "vedtak_kildedokument_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "kildedokument_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.vedtak_analyse": {
+      "name": "vedtak_analyse",
+      "schema": "",
+      "columns": {
+        "vedtak_id": {
+          "name": "vedtak_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "instruks_versjon": {
+          "name": "instruks_versjon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ai_modell": {
+          "name": "ai_modell",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "analysert_tidspunkt": {
+          "name": "analysert_tidspunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fulltekst_sha256": {
+          "name": "fulltekst_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raasvar_sha256": {
+          "name": "raasvar_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ikke_mangelssak": {
+          "name": "ikke_mangelssak",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ikke_mangelssak_grunn": {
+          "name": "ikke_mangelssak_grunn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lovversjon": {
+          "name": "lovversjon",
+          "type": "lovversjon",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "spor": {
+          "name": "spor",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "spor_vunnet": {
+          "name": "spor_vunnet",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "formodning_anvendt": {
+          "name": "formodning_anvendt",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dager_til_feil": {
+          "name": "dager_til_feil",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "forste_henvendelse_dato": {
+          "name": "forste_henvendelse_dato",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "forste_henvendelse_form": {
+          "name": "forste_henvendelse_form",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grunnlag": {
+          "name": "grunnlag",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "opplysning_skriftlig_for_klager": {
+          "name": "opplysning_skriftlig_for_klager",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "selger_bevis_finnes": {
+          "name": "selger_bevis_finnes",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sanksjon": {
+          "name": "sanksjon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bevis_utover_paregnelig": {
+          "name": "bevis_utover_paregnelig",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paragrafer_med_ledd": {
+          "name": "paragrafer_med_ledd",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feil": {
+          "name": "feil",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "opplysninger": {
+          "name": "opplysninger",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bevis": {
+          "name": "bevis",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "begrunnelse_sitater": {
+          "name": "begrunnelse_sitater",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "usikkerhet": {
+          "name": "usikkerhet",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kontroll_arsaker": {
+          "name": "kontroll_arsaker",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
+        },
+        "qa_status": {
+          "name": "qa_status",
+          "type": "qa_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ukontrollert'"
+        },
+        "qa_kommentar": {
+          "name": "qa_kommentar",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "qa_tidspunkt": {
+          "name": "qa_tidspunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "vedtak_analyse_spor_idx": {
+          "name": "vedtak_analyse_spor_idx",
+          "columns": [
+            {
+              "expression": "spor",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "vedtak_analyse_grunnlag_idx": {
+          "name": "vedtak_analyse_grunnlag_idx",
+          "columns": [
+            {
+              "expression": "grunnlag",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "vedtak_analyse_lovversjon_idx": {
+          "name": "vedtak_analyse_lovversjon_idx",
+          "columns": [
+            {
+              "expression": "lovversjon",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "vedtak_analyse_ikke_mangelssak_idx": {
+          "name": "vedtak_analyse_ikke_mangelssak_idx",
+          "columns": [
+            {
+              "expression": "ikke_mangelssak",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "vedtak_analyse_vedtak_id_vedtak_id_fk": {
+          "name": "vedtak_analyse_vedtak_id_vedtak_id_fk",
+          "tableFrom": "vedtak_analyse",
+          "tableTo": "vedtak",
+          "columnsFrom": [
+            "vedtak_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.vedtak_feil": {
+      "name": "vedtak_feil",
+      "schema": "",
+      "columns": {
+        "vedtak_id": {
+          "name": "vedtak_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feil_id": {
+          "name": "feil_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kategori": {
+          "name": "kategori",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "komponenter": {
+          "name": "komponenter",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vurdering": {
+          "name": "vurdering",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "samlet_utfall": {
+          "name": "samlet_utfall",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grunn": {
+          "name": "grunn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grunnlag": {
+          "name": "grunnlag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bevisgrunnlag": {
+          "name": "bevisgrunnlag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "spor": {
+          "name": "spor",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "spor_vunnet": {
+          "name": "spor_vunnet",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "a_variant": {
+          "name": "a_variant",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alvor": {
+          "name": "alvor",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dager_etter_levering": {
+          "name": "dager_etter_levering",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "viste_seg_presisjon": {
+          "name": "viste_seg_presisjon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "viste_seg_kilde": {
+          "name": "viste_seg_kilde",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "innen_formodningsfrist": {
+          "name": "innen_formodningsfrist",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "formodning": {
+          "name": "formodning",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "belop_tilkjent_nok": {
+          "name": "belop_tilkjent_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "har_skriftlig_opplysning": {
+          "name": "har_skriftlig_opplysning",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "har_sakkyndig_bevis": {
+          "name": "har_sakkyndig_bevis",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "vedtak_feil_kategori_idx": {
+          "name": "vedtak_feil_kategori_idx",
+          "columns": [
+            {
+              "expression": "kategori",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "vedtak_feil_vurdering_idx": {
+          "name": "vedtak_feil_vurdering_idx",
+          "columns": [
+            {
+              "expression": "vurdering",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "vedtak_feil_spor_idx": {
+          "name": "vedtak_feil_spor_idx",
+          "columns": [
+            {
+              "expression": "spor",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "vedtak_feil_spor_vunnet_idx": {
+          "name": "vedtak_feil_spor_vunnet_idx",
+          "columns": [
+            {
+              "expression": "spor_vunnet",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "vedtak_feil_vedtak_id_vedtak_analyse_vedtak_id_fk": {
+          "name": "vedtak_feil_vedtak_id_vedtak_analyse_vedtak_id_fk",
+          "tableFrom": "vedtak_feil",
+          "tableTo": "vedtak_analyse",
+          "columnsFrom": [
+            "vedtak_id"
+          ],
+          "columnsTo": [
+            "vedtak_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "vedtak_feil_vedtak_id_feil_id_pk": {
+          "name": "vedtak_feil_vedtak_id_feil_id_pk",
+          "columns": [
+            "vedtak_id",
+            "feil_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.dokument_status": {
+      "name": "dokument_status",
+      "schema": "public",
+      "values": [
+        "hentet",
+        "klassifisert",
+        "tolket",
+        "feilet"
+      ]
+    },
+    "public.kilde_arkiv": {
+      "name": "kilde_arkiv",
+      "schema": "public",
+      "values": [
+        "hist",
+        "prod",
+        "wp"
+      ]
+    },
+    "public.lov": {
+      "name": "lov",
+      "schema": "public",
+      "values": [
+        "forbrukerkjøpsloven",
+        "kjøpsloven",
+        "annet"
+      ]
+    },
+    "public.lovversjon": {
+      "name": "lovversjon",
+      "schema": "public",
+      "values": [
+        "før_2024",
+        "etter_2024",
+        "ukjent"
+      ]
+    },
+    "public.qa_status": {
+      "name": "qa_status",
+      "schema": "public",
+      "values": [
+        "ukontrollert",
+        "riktig",
+        "feil"
+      ]
+    },
+    "public.sak_status": {
+      "name": "sak_status",
+      "schema": "public",
+      "values": [
+        "ny",
+        "hentet",
+        "duplikat",
+        "ingen_dokument",
+        "hoppet_over",
+        "feilet"
+      ]
+    },
+    "public.selger_type": {
+      "name": "selger_type",
+      "schema": "public",
+      "values": [
+        "forhandler",
+        "privat",
+        "formidling",
+        "ukjent"
+      ]
+    },
+    "public.utfall": {
+      "name": "utfall",
+      "schema": "public",
+      "values": [
+        "medhold",
+        "delvis_medhold",
+        "ikke_medhold",
+        "avvist"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {
+    "public.vedtak_feil_sok": {
+      "columns": {
+        "vedtak_id": {
+          "name": "vedtak_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feil_id": {
+          "name": "feil_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kategori": {
+          "name": "kategori",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "komponenter": {
+          "name": "komponenter",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vurdering": {
+          "name": "vurdering",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "samlet_utfall": {
+          "name": "samlet_utfall",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grunn": {
+          "name": "grunn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grunnlag": {
+          "name": "grunnlag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bevisgrunnlag": {
+          "name": "bevisgrunnlag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "spor": {
+          "name": "spor",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "spor_vunnet": {
+          "name": "spor_vunnet",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "a_variant": {
+          "name": "a_variant",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alvor": {
+          "name": "alvor",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dager_etter_levering": {
+          "name": "dager_etter_levering",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "viste_seg_presisjon": {
+          "name": "viste_seg_presisjon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "viste_seg_kilde": {
+          "name": "viste_seg_kilde",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "innen_formodningsfrist": {
+          "name": "innen_formodningsfrist",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "formodning": {
+          "name": "formodning",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "belop_tilkjent_nok": {
+          "name": "belop_tilkjent_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "har_skriftlig_opplysning": {
+          "name": "har_skriftlig_opplysning",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "har_sakkyndig_bevis": {
+          "name": "har_sakkyndig_bevis",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "saksnummer": {
+          "name": "saksnummer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vedtaksdato": {
+          "name": "vedtaksdato",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kilde_url": {
+          "name": "kilde_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "selger_type": {
+          "name": "selger_type",
+          "type": "selger_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alder_ved_kjop": {
+          "name": "alder_ved_kjop",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "km_ved_kjop": {
+          "name": "km_ved_kjop",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kjopesum_nok": {
+          "name": "kjopesum_nok",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "utfall": {
+          "name": "utfall",
+          "type": "utfall",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lovversjon": {
+          "name": "lovversjon",
+          "type": "lovversjon",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ikke_mangelssak": {
+          "name": "ikke_mangelssak",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "name": "vedtak_feil_sok",
+      "schema": "public",
+      "isExisting": true,
+      "materialized": false
+    }
+  },
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

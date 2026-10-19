@@ -68,7 +68,7 @@ const { ordre, sak } = await import("@/db/schema");
 
 const idag = "2026-10-17";
 const skjema = { ...standard(idag), b_name: "Kari", c_reg: "AB 12345", c_make: "Volvo", c_model: "V60", c_year: "2017", f_cats: ["motor"], f_parts: { motor: ["turbo"] } };
-const betaltSak: Sak = { id: "abcdefghijkm", sjekk: {}, skjema, betalt: new Date(), vedtaksvalg: null, modellkall: 0, opprettet: new Date(), endret: new Date() };
+const betaltSak: Sak = { id: "abcdefghijkm", vippsSub: null, sjekk: {}, skjema, betalt: new Date(), vedtaksvalg: null, modellkall: 0, opprettet: new Date(), endret: new Date() };
 const svar = { kjopsdato: "2025-03-10", km: 120000, ar: 2017, somDenEr: "nei", krav: "retting", forsok: null, feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2025-04-01", beskrivelse: null, opplysning: null, verksted: null, rapport: null }] };
 const sjekk = { reg: "CD 67890", make: "Audi A4", year: "2019", cats: ["klima"], issues: { klima: ["ac"] }, fdates: { klima: "2026-09-01" }, _screen: "result", _i: 9 };
 

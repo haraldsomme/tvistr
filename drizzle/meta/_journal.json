@@ -141,6 +141,13 @@
       "when": 1792429945645,
       "tag": "0019_kvittering",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792434749261,
+      "tag": "0020_innlogging",
+      "breakpoints": true
     }
   ]
 }

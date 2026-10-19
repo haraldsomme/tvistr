@@ -404,22 +404,28 @@ export const hendelse = pgTable(
 );
 
 // A paid case: the check as it was at purchase and the letter writer's form, saved on every change
-// after. The id is random (src/lib/sak/id.ts) and is the only access control: whoever has the link
-// sees the case. Personal data, so left out of backups (scripts/backup-format.ts).
-export const sak = pgTable("sak", {
-  id: text("id").primaryKey(),
-  sjekk: jsonb("sjekk").$type<Sjekk>().notNull(),
-  skjema: jsonb("skjema").$type<Skjema>().notNull(),
-  // Null until an order for the case is paid.
-  betalt: timestamp("betalt", { withTimezone: true }),
-  // The decision choice (finnVedtak): the list the buyer last got, the recommended first, and the
-  // last model answers by what the model read, so the same answers never cost a second call.
-  vedtaksvalg: jsonb("vedtaksvalg").$type<{ liste: number[]; svar: LagretSvar[] }>(),
-  // Model calls made for the case, against MAKS_MODELLKALL_PER_SAK.
-  modellkall: integer("modellkall").notNull().default(0),
-  opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
-  endret: timestamp("endret", { withTimezone: true }).notNull().defaultNow(),
-});
+// after. The owner is the Vipps account that paid (`vippsSub`); the id (src/lib/sak/id.ts) is
+// random but is no longer the access. Personal data, so left out of backups (scripts/backup-format.ts).
+export const sak = pgTable(
+  "sak",
+  {
+    id: text("id").primaryKey(),
+    // The Vipps `sub` of the owner; null until a logged-in buyer pays for the case.
+    vippsSub: text("vipps_sub"),
+    sjekk: jsonb("sjekk").$type<Sjekk>().notNull(),
+    skjema: jsonb("skjema").$type<Skjema>().notNull(),
+    // Null until an order for the case is paid.
+    betalt: timestamp("betalt", { withTimezone: true }),
+    // The decision choice (finnVedtak): the list the buyer last got, the recommended first, and the
+    // last model answers by what the model read, so the same answers never cost a second call.
+    vedtaksvalg: jsonb("vedtaksvalg").$type<{ liste: number[]; svar: LagretSvar[] }>(),
+    // Model calls made for the case, against MAKS_MODELLKALL_PER_SAK.
+    modellkall: integer("modellkall").notNull().default(0),
+    opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
+    endret: timestamp("endret", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("sak_vipps_sub_idx").on(t.vippsSub)],
+);
 
 // One payment attempt for a case; Vipps gives each attempt its own reference, so a case may have
 // several. `id` is the reference sent to the payment provider (Vipps: 8–64 of [A-Za-z0-9-]).
@@ -442,9 +448,32 @@ export const ordre = pgTable(
     betalt: timestamp("betalt", { withTimezone: true }),
     // When the receipt with the link went to the buyer (src/lib/epost/kvittering.ts); null until then.
     kvitteringSendt: timestamp("kvittering_sendt", { withTimezone: true }),
+    // SHA-256 (hex) of the one-time secret on the return page.
+    innloggingHash: text("innlogging_hash"),
   },
   (t) => [index("ordre_sak_idx").on(t.sakId)],
 );
+
+// A login session: the cookie holds the token, only its SHA-256 (hex) is stored.
+export const innlogging = pgTable(
+  "innlogging",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    sub: text("sub").notNull(),
+    opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
+    utloper: timestamp("utloper", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("innlogging_sub_idx").on(t.sub)],
+);
+
+// The state of a login in progress with Vipps, until the callback.
+export const innloggingStart = pgTable("innlogging_start", {
+  state: text("state").primaryKey(),
+  nonce: text("nonce").notNull(),
+  verifier: text("verifier").notNull(),
+  til: text("til").notNull(),
+  opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export type Kildedokument = typeof kildedokument.$inferSelect;
 export type Vedtak = typeof vedtak.$inferSelect;
@@ -452,3 +481,5 @@ export type NyttVedtak = typeof vedtak.$inferInsert;
 export type NyVedtakAnalyse = typeof vedtakAnalyse.$inferInsert;
 export type NyVedtakFeil = typeof vedtakFeil.$inferInsert;
 export type Sak = typeof sak.$inferSelect;
+export type Innlogging = typeof innlogging.$inferSelect;
+export type InnloggingStart = typeof innloggingStart.$inferSelect;

@@ -1,9 +1,10 @@
+import { PgDialect } from "drizzle-orm/pg-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const lager = vi.hoisted(() => ({ kaker: new Map<string, string>(), valg: new Map<string, Record<string, unknown>>(), rad: [] as unknown[] }));
 const satt = vi.fn<(v: unknown) => void>();
 const slettet = vi.fn<() => void>();
-const valgt = vi.fn<() => void>();
+const valgt = vi.fn<(w: unknown) => void>();
 
 vi.mock("react", () => ({ cache: <T>(f: T) => f }));
 vi.mock("next/headers", () => ({
@@ -16,7 +17,7 @@ vi.mock("next/headers", () => ({
 vi.mock("@/db", () => ({
   db: {
     insert: () => ({ values: async (v: unknown) => satt(v) }),
-    select: () => ({ from: () => ({ where: () => ({ limit: async () => (valgt(), lager.rad) }) }) }),
+    select: () => ({ from: () => ({ where: (w: unknown) => ({ limit: async () => (valgt(w), lager.rad) }) }) }),
     delete: () => ({ where: async () => slettet() }),
   },
 }));
@@ -58,9 +59,14 @@ describe("innlogget", () => {
     expect(await innlogget()).toBeNull();
     expect(valgt).not.toHaveBeenCalled();
   });
-  it("gir null når økten er utløpt", async () => {
+  it("gir null når økten er utløpt, og spør bare om rader som ikke har utløpt", async () => {
     lager.kaker.set(OKT, "token");
     expect(await innlogget()).toBeNull();
+    const { sql, params } = new PgDialect().sqlToQuery(valgt.mock.calls[0][0] as never);
+    expect(sql).toMatch(/"utloper" > \$\d/);
+    const na = new Date(params.find((p) => p !== sha256hex("token")) as string);
+    expect(Math.abs(na.getTime() - Date.now())).toBeLessThan(5000);
+    expect(params).toContain(sha256hex("token"));
   });
 });
 

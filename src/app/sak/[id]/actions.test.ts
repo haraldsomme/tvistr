@@ -292,7 +292,7 @@ describe("kjop", () => {
     expect(betalteSaker).not.toHaveBeenCalled();
   });
 
-  describe("når den innlogede alt har kjøpt brevet", () => {
+  describe("når den innloggede alt har kjøpt brevet", () => {
     const kjopt = (o: Partial<Sak["skjema"]>): Sak => ({ ...betaltSak, id: "mmmmmmmmmmmm", vippsSub: "sub-1", skjema: { ...skjema, c_reg: "CD 67890", f_cats: ["klima"], f_parts: { klima: ["ac"] }, ...o } });
     it.each([
       ["med Vipps", "0"],

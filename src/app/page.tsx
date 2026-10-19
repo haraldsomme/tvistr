@@ -264,7 +264,7 @@ export default async function Home() {
           </Sporsmal>
           <Sporsmal q="Jeg kjøpte bilen av en privatperson. Kan jeg bruke dette?">Brevet er laget for kjøp fra forhandler. Ved kjøp mellom privatpersoner gjelder kjøpsloven, og reglene er strengere for deg som kjøper. Forbrukerrådet kan gi råd om slike saker.</Sporsmal>
           <Sporsmal q="Må forhandleren få reparere først?">Som hovedregel ja. Du kan likevel sette prisavslag eller heving som subsidiært krav, slik at det gjelder hvis rettingen ikke skjer innen rimelig tid eller ikke lykkes.</Sporsmal>
-          <Sporsmal q="Hva skjer med opplysningene jeg fyller inn?">Den gratis sjekken lagres bare i nettleseren din. Når du {GRATIS ? "åpner" : "kjøper"} brevet, lagrer vi saken hos oss, slik at du kan åpne den igjen med lenken du får. Alle som har lenken, kan åpne saken, så ikke del den med andre. Vedlegg lastes ikke opp. Bare filnavnene brukes i vedleggslisten.</Sporsmal>
+          <Sporsmal q="Hva skjer med opplysningene jeg fyller inn?">Den gratis sjekken lagres bare i nettleseren din. Når du {GRATIS ? "åpner" : "kjøper"} brevet, lagrer vi saken hos oss, slik at du kan åpne den igjen når du logger inn med Vipps-kontoen du betalte med. Brevene dine ligger på Min side. Vedlegg lastes ikke opp. Bare filnavnene brukes i vedleggslisten.</Sporsmal>
           <Sporsmal q="Er dette juridisk rådgivning?">Nei. Tvistr er en mal som bygger på forbrukerkjøpsloven. Er saken stor eller uvanlig, bør du snakke med Forbrukerrådet eller en advokat.</Sporsmal>
         </div>
       </section>

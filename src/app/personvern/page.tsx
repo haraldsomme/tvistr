@@ -17,7 +17,7 @@ export default function Personvern() {
         <ul>
           <li>Den gratis saksvurderingen lagres bare i nettleseren din.</li>
           <li>{GRATIS ? "Åpner" : "Kjøper"} du brevet, lagrer vi saken hos oss i {LAGRES_AR} år, slik at du kan åpne den igjen når du logger inn med Vipps.</li>
-          <li>Vi selger ikke opplysningene dine, og vi bruker bare én informasjonskapsel som holder deg innlogget, og ingen for sporing.</li>
+          <li>Vi selger ikke opplysningene dine, og vi bruker bare informasjonskapsler som trengs for innloggingen, og ingen for sporing.</li>
         </ul>
       </div>
 
@@ -54,7 +54,7 @@ export default function Personvern() {
         <>
           <h2>Innlogging</h2>
           <p>Du logger inn med Vipps for å åpne en betalt sak og Min side. Vipps MobilePay bekrefter da hvem du er, som selvstendig ansvarlig etter sin egen personvernerklæring. Vi får bare en id for Vipps-kontoen din, ikke navn, telefonnummer eller andre opplysninger. Id-en lagres på saken du betalte for, og i en økt så lenge du er innlogget.</p>
-          <p>Innloggingen bruker en informasjonskapsel som holder deg innlogget i 90 dager. Den inneholder en tilfeldig kode, og i databasen lagrer vi bare en envegs-hash av koden. I tillegg setter vi en liten merkelapp som bare sier at du har logget inn før, slik at siden kan foreslå innlogging. Begge er nødvendige for innloggingen, og ingen brukes til sporing. Når du logger ut, slettes økten fra databasen og kapslene fra nettleseren din. Økter som har gått ut, og påbegynte innlogginger som aldri ble fullført, slettes automatisk.</p>
+          <p>Innloggingen bruker tre informasjonskapsler. Den første holder deg innlogget i 90 dager. Den inneholder en tilfeldig kode, og i databasen lagrer vi bare en envegs-hash av koden. Den andre er en liten merkelapp, også i 90 dager, som bare sier at du har logget inn før, slik at siden kan foreslå innlogging. Den tredje settes bare mens du logger inn, varer i 10 minutter og slettes når Vipps har sendt deg tilbake. Alle er nødvendige for innloggingen, og ingen brukes til sporing. Når du logger ut, slettes økten fra databasen og kapslene fra nettleseren din. Økter som har gått ut, og påbegynte innlogginger som aldri ble fullført, slettes automatisk.</p>
         </>
       )}
 

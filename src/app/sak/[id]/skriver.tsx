@@ -58,10 +58,12 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
   return (
     <div className="shell" id="shell" data-wtab={fane} data-tier={r.tier}>
       <header className="wtop">
-        <Merke />
-        <Link href="/min-side" style={{ fontSize: 14, color: "#455063", textDecoration: "none", whiteSpace: "nowrap" }}>
-          ← Min side
-        </Link>
+        <div className="wleft" style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, justifySelf: "start" }}>
+          <Merke />
+          <Link href="/min-side" className="wback" aria-label="← Min side" style={{ fontSize: 14, color: "#455063", textDecoration: "none", whiteSpace: "nowrap" }}>
+            ←<span className="wback-t"> Min side</span>
+          </Link>
+        </div>
         <nav className="wtabs" role="tablist" aria-label="Brevet">
           {FANER.map(([id, navn], k) => (
             <button

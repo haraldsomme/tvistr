@@ -120,13 +120,11 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   const id = lenke.split("/").pop()!;
   await page.goto("/min-side");
   await expect(page.getByRole("heading", { name: "Dine brev" })).toBeVisible({ timeout: 30_000 });
-  const kortet = page.locator(`a[href$="/sak/${id}"]`).first();
-  await expect(kortet).toBeVisible();
-  await kortet.click();
+  const kortet = page.locator("section").filter({ has: page.locator(`a[href$="/sak/${id}"]`) }).last();
+  await expect(kortet).toContainText("AB 12345");
+  await kortet.getByRole("link", { name: "Åpne brevet" }).click();
   await expect(page).toHaveURL(new RegExp(`/sak/${id}$`), { timeout: 30_000 });
-  // The «← Min side» link is hidden on narrow screens (CSS), so the link is checked for its target only.
-  await expect(page.locator(`.wtop a[href="/min-side"]`)).toHaveCount(1);
-  await page.goto("/min-side");
+  await page.getByRole("link", { name: "← Min side" }).click();
   await expect(page).toHaveURL(/\/min-side$/);
   await page.getByRole("button", { name: "Logg ut" }).click();
   await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });

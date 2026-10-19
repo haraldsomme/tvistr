@@ -579,6 +579,8 @@ html,body{overflow-x:clip}
   #shell,#shell.final{grid-template-columns:minmax(0,1fr);padding-top:0;gap:0}
   .wtop{grid-template-columns:auto minmax(0,1fr) auto;gap:10px;padding:10px 0;margin-bottom:16px}
   .wtop .brand small,.wtools .saved{display:none}
+  .wback-t{display:none} .wback{font-size:20px!important;padding:0}
+  .wleft{gap:6px!important} .wtop{gap:6px} .wtabs button{padding:0 6px!important}
   .wtabs{width:100%}
   .wtabs button{flex:1;padding:0 8px;height:40px;font-size:14px}
   .wind{height:40px}

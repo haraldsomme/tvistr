@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { byttKode, innloggingsUrl, oppdag, pkce } from "./vipps-login";
 
 const BASE = "https://apitest.vipps.no";
@@ -23,14 +23,19 @@ async function signer(nokler: CryptoKeyPair, over: { aud?: string; iss?: string;
     .sign(nokler.privateKey);
 }
 
-beforeEach(async () => {
+// Key pairs are made once: the module caches the JWKS, so the served key must stay the same.
+let jwk: Record<string, unknown>;
+beforeAll(async () => {
+  nokkel = (await generateKeyPair("RS256")) as CryptoKeyPair;
+  annen = (await generateKeyPair("RS256")) as CryptoKeyPair;
+  jwk = { ...(await exportJWK(nokkel.publicKey)), kid: "k1", alg: "RS256", use: "sig" };
+});
+
+beforeEach(() => {
   vi.clearAllMocks();
   process.env.VIPPS_CLIENT_ID = "klient";
   process.env.VIPPS_CLIENT_SECRET = "hemmelig";
   process.env.VIPPS_BASE_URL = BASE;
-  nokkel = (await generateKeyPair("RS256")) as CryptoKeyPair;
-  annen = (await generateKeyPair("RS256")) as CryptoKeyPair;
-  const jwk = { ...(await exportJWK(nokkel.publicKey)), kid: "k1", alg: "RS256", use: "sig" };
   fetchMock.mockImplementation(async (url) => {
     const u = String(url);
     if (u.endsWith("openid-configuration")) return Response.json(disc);
@@ -71,14 +76,14 @@ describe("byttKode", () => {
   });
 
   it.each([
-    ["feil aud", () => signer(nokkel, { aud: "annen" })],
-    ["feil iss", () => signer(nokkel, { iss: "https://ond.no/" })],
-    ["utløpt exp", () => signer(nokkel, { exp: Math.floor(Date.now() / 1000) - 3600 })],
-    ["annen nonce", () => signer(nokkel, { nonce: "annen" })],
-    ["signatur fra annen nøkkel", () => signer(annen)],
-  ])("avviser %s", async (_n, lag) => {
+    ["feil aud", () => signer(nokkel, { aud: "annen" }), /"aud"/],
+    ["feil iss", () => signer(nokkel, { iss: "https://ond.no/" }), /"iss"/],
+    ["utløpt exp", () => signer(nokkel, { exp: Math.floor(Date.now() / 1000) - 3600 }), /"exp"/],
+    ["annen nonce", () => signer(nokkel, { nonce: "annen" }), /nonce/],
+    ["signatur fra annen nøkkel", () => signer(annen), /signature/],
+  ])("avviser %s", async (_n, lag, grunn) => {
     idToken = await lag();
-    await expect(bytt()).rejects.toThrow();
+    await expect(bytt()).rejects.toThrow(grunn);
   });
 });
 

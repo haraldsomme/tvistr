@@ -11,6 +11,7 @@ import { Hake, Pil, Tilbake } from "@/app/deler/ikoner";
 import { type Bil, Skilt } from "@/app/deler/skilt";
 import { addDays, idag, iso, relText } from "@/lib/app/dato";
 import { FMT, lcFirst, listJoin } from "@/lib/app/format";
+import { Konto } from "@/app/deler/konto";
 import { useKjopt, useLagret } from "@/lib/app/lagring";
 import type { Sjekk as Svar } from "@/lib/app/saken";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
@@ -118,11 +119,7 @@ export function Sjekk({ utvikling, fraStart }: { utvikling: boolean; fraStart: b
               Spørsmål {i + 1} av {tot}
             </span>
           )}
-          {kjopt.id && (
-            <button type="button" className="btn sm" onClick={() => router.push(`/sak/${kjopt.id}`)}>
-              Til brevet
-            </button>
-          )}
+          <Konto bareInne />
         </div>
         <div className="ob-prog" id="obProg" aria-hidden="true">
           <i style={{ width: skjerm === "q" ? `${((i + 1) / tot) * 100}%` : "100%" }} />

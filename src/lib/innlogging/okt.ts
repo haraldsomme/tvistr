@@ -6,9 +6,9 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { db } from "@/db";
 import { innlogging } from "@/db/schema";
+import { INNE, OKT } from "./navn";
 
-export const OKT = "tvistr_okt";
-export const INNE = "tvistr_inne";
+export { INNE, OKT };
 export const OKT_DAGER = 90;
 
 export const sha256hex = (s: string) => createHash("sha256").update(s).digest("hex");

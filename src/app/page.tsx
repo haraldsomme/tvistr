@@ -9,7 +9,7 @@ import { FANER } from "./eksempelbrev";
 import { Hake, Pil } from "./deler/ikoner";
 import { HeroBrev } from "./hero-brev";
 import { Ordmerke } from "./deler/ordmerke";
-import { TilBrevet } from "./til-brevet";
+import { Konto } from "./deler/konto";
 
 // The landing page (the artifact's home view). The number of decisions is read from the database when
 // the site is built.
@@ -123,7 +123,7 @@ export default async function Home() {
             <a href="#sporsmal">Spørsmål</a>
           </nav>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <TilBrevet />
+            <Konto />
             <Link href="/sak?start" className="btn-pri" style={{ border: 0, display: "inline-flex", alignItems: "center", gap: 8, height: 42, padding: "0 18px", borderRadius: 12, background: BLA, color: "#FFFFFF", fontSize: 14, fontWeight: 550, textDecoration: "none", whiteSpace: "nowrap" }}>
               Sjekk saken din
             </Link>

@@ -163,6 +163,11 @@ function Takk({ b, referanse }: { b: Bekreftelse; referanse: string }) {
           Fortsett til brevet
           <Pil />
         </Link>
+        <p style={{ margin: "12px 0 0", fontSize: 14 }}>
+          <Link href="/min-side" style={{ color: "#2B5BF0" }}>
+            Alle brevene dine finner du på Min side
+          </Link>
+        </p>
       </div>
     </div>
   );

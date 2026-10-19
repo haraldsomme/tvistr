@@ -2,6 +2,7 @@
 
 // The letter writer (artifact «writer»): tabs Skjema · Vurdering · Vedtak · Brevet, the steps rail and the form.
 // For a paid case: the page gives the stored form, and every change is saved back to the case.
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Merke } from "@/app/deler/merke";
 import { Frem, Hake, Tilbake } from "@/app/deler/ikoner";
@@ -58,6 +59,9 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
     <div className="shell" id="shell" data-wtab={fane} data-tier={r.tier}>
       <header className="wtop">
         <Merke />
+        <Link href="/min-side" style={{ fontSize: 14, color: "#455063", textDecoration: "none", whiteSpace: "nowrap" }}>
+          ← Min side
+        </Link>
         <nav className="wtabs" role="tablist" aria-label="Brevet">
           {FANER.map(([id, navn], k) => (
             <button

@@ -15,6 +15,7 @@ import { type Kjopt, manglerForKjop, nokkel, sammeSak, sjekkTilSvar } from "@/li
 import { evaluate } from "@/lib/app/vurdering";
 import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { GRATIS, NYTT_KJOP, PRIS } from "@/lib/pris";
+import { mineKjop } from "./mine";
 import { type Lignende as LignendeSvar, vurderSaken } from "./vurdering";
 import type { Tilstand } from "./sjekk";
 
@@ -33,7 +34,13 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
   const datoer = (a.cats ?? []).map((c) => a.fdates?.[c]).filter((d): d is string => !!d).sort();
   const opplysning = !!a.cats?.length && a.cats.every((c) => opplysningsfeil(c, a.issues?.[c] ?? []));
   // The case bought earlier is locked to its car and faults; this check may be about another.
-  const tilgang = sammeSak(a, kjopt);
+  // Also the owner's other cases, from the account: the matching one is what «Åpne brevet» opens.
+  const [mine, settMine] = useState<Kjopt[]>([]);
+  useEffect(() => {
+    mineKjop().then(settMine, () => {});
+  }, []);
+  const funnet = [kjopt, ...mine].find((k) => sammeSak(a, k));
+  const tilgang = !!funnet;
   const mangler = manglerForKjop(a);
   const [visMangler, settVisMangler] = useState(false);
   const r = evaluate({ ...a, found: datoer[0], sist: datoer.at(-1), opplysning }, idag());
@@ -71,7 +78,7 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
   }, []);
 
   const apne = () => {
-    if (tilgang) return router.push(`/sak/${kjopt.id}`);
+    if (funnet) return router.push(`/sak/${funnet.id}`);
     if (mangler) return settVisMangler(true);
     maal("kjop_klikket");
     settKjop(true);

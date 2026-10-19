@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Hake, Kopier, Pil } from "@/app/deler/ikoner";
 import { tall } from "@/lib/app/format";
 import { skriv } from "@/lib/app/lagring";
+import { INNE } from "@/lib/innlogging/navn";
 import { maal } from "@/lib/maling";
 import { type Bekreftelse, sjekkBetaling } from "./actions";
 
@@ -95,6 +96,9 @@ function Takk({ b, referanse }: { b: Bekreftelse; referanse: string }) {
   // Shown only after the server's answer, so always in the browser.
   const lenke = `${window.location.origin}/sak/${b.sak.id}`;
   const [kopiert, settKopiert] = useState(false);
+  // The losing one of two racing polls can report false although the winner set the cookie, so the
+  // readable hint cookie counts too.
+  const inne = b.innlogget || document.cookie.split("; ").some((c) => c.startsWith(`${INNE}=`));
   const kopier = () =>
     navigator.clipboard?.writeText(lenke).then(
       () => settKopiert(true),
@@ -122,9 +126,18 @@ function Takk({ b, referanse }: { b: Bekreftelse; referanse: string }) {
               Vi har sendt lenken og kvitteringen til <b style={{ color: "#10141A" }}>{b.sendtTil}</b>, så du alltid finner saken igjen.
             </>
           ) : (
-            "Ta vare på lenken. Den er den eneste veien tilbake til saken."
+            "Du finner saken igjen på Min side."
           )}{" "}
-          Lenken er tilgangen, så ikke del den med andre.
+          {inne ? (
+            "Du er logget inn. Neste gang logger du inn med Vipps."
+          ) : (
+            <>
+              Logg inn med Vipps for å åpne saken.{" "}
+              <a className="btn" href={`/logg-inn?til=${encodeURIComponent(`/sak/${b.sak.id}`)}`}>
+                Logg inn med Vipps
+              </a>
+            </>
+          )}
         </p>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <code style={{ flex: "1 1 240px", minWidth: 0, overflowWrap: "anywhere", fontSize: 13, background: "#F5F6F8", borderRadius: 10, padding: "10px 12px" }}>{lenke}</code>

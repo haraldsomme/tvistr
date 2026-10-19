@@ -55,7 +55,7 @@ export default function Vilkar() {
       )}
 
       <h2>Levering</h2>
-      <p>Brevet åpnes {GRATIS ? "når du trykker «Åpne brevet»" : "så snart betalingen er gjennomført"}. Saken får en egen lenke, og lenken er tilgangen til saken. Ta vare på den, og ikke del den med andre. Nettleseren du {GRATIS ? "åpnet brevet" : "kjøpte"} i, husker den siste saken.{!GRATIS && " Du får kvitteringen og lenken på e-post til adressen du deler i Vipps."}</p>
+      <p>Brevet åpnes {GRATIS ? "når du trykker «Åpne brevet»" : "så snart betalingen er gjennomført"}. Saken åpnes når du er logget inn med den Vipps-kontoen som {GRATIS ? "åpnet brevet" : "betalte"}. Du finner alle sakene dine på Min side.{!GRATIS && " Du får kvitteringen og lenken på e-post til adressen du deler i Vipps. Lenken i e-posten ber om den innloggingen."}</p>
       <p>
         Saken er tilgjengelig i {LAGRES_AR} år etter {GRATIS ? "at du åpnet brevet" : "kjøpet"}. Deretter slettes den, se <Link href="/personvern">personvernerklæringen</Link>.
       </p>

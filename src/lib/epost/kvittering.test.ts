@@ -37,6 +37,14 @@ describe("byggKvittering", () => {
     }
   });
 
+  it("sier at saken åpnes med Vipps-kontoen, og lenker til Min side", () => {
+    for (const t of [k.html, k.tekst]) {
+      expect(t).toContain("Vipps-kontoen du betalte med");
+      expect(t).toContain("https://tvistr.no/min-side");
+      expect(t).not.toContain("Lenken er tilgangen");
+    }
+  });
+
   it("escaper det kjøperen har skrevet", () => {
     expect(k.html).not.toContain("<308>");
     expect(k.html).toContain("&#60;308&#62;");

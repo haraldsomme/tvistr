@@ -16,8 +16,8 @@ export default function Personvern() {
       <div className="jur-kort">
         <ul>
           <li>Den gratis saksvurderingen lagres bare i nettleseren din.</li>
-          <li>{GRATIS ? "Åpner" : "Kjøper"} du brevet, lagrer vi saken hos oss i {LAGRES_AR} år, slik at du kan åpne den igjen med lenken din.</li>
-          <li>Vi selger ikke opplysningene dine, og vi bruker ikke informasjonskapsler (cookies).</li>
+          <li>{GRATIS ? "Åpner" : "Kjøper"} du brevet, lagrer vi saken hos oss i {LAGRES_AR} år, slik at du kan åpne den igjen når du logger inn med Vipps.</li>
+          <li>Vi selger ikke opplysningene dine, og vi bruker bare én informasjonskapsel som holder deg innlogget, og ingen for sporing.</li>
         </ul>
       </div>
 
@@ -41,12 +41,20 @@ export default function Personvern() {
         <li>navnene på vedleggene. Selve filene lastes ikke opp.</li>
       </ul>
       <p>Vi bruker opplysningene til å lage brevet og la deg komme tilbake til saken. Grunnlaget er avtalen med deg (personvernforordningen artikkel 6 nr. 1 bokstav b).</p>
-      <p>Saken har en tilfeldig lenke, og lenken er tilgangen. Alle som har lenken, kan åpne saken, så ikke del den med andre.</p>
-      <p>For å velge vedtaket brevet viser til, sender vi en del av saken til en språkmodell hos Anthropic: feilene og beskrivelsen din av dem, når de viste seg, kilometerstanden, bilens alder, kravet og om verkstedet eller selgeren har uttalt seg. Navn, adresse, kontaktopplysninger og registreringsnummer sendes ikke. Skriv derfor ikke personopplysninger i beskrivelsen av feilen.</p>
+            <p>For å velge vedtaket brevet viser til, sender vi en del av saken til en språkmodell hos Anthropic: feilene og beskrivelsen din av dem, når de viste seg, kilometerstanden, bilens alder, kravet og om verkstedet eller selgeren har uttalt seg. Navn, adresse, kontaktopplysninger og registreringsnummer sendes ikke. Skriv derfor ikke personopplysninger i beskrivelsen av feilen.</p>
       {!GRATIS && (
         <>
-          <p>Betalingen skjer hos Vipps MobilePay, som behandler betalingsopplysningene som selvstendig ansvarlig etter sin egen personvernerklæring. Vi får beløpet, statusen og en referanse til betalingen.</p>
+          <p>Betalingen skjer hos Vipps MobilePay, som behandler betalingsopplysningene som selvstendig ansvarlig etter sin egen personvernerklæring. Vi får beløpet, statusen og en referanse til betalingen. Vipps bekrefter også hvem du er når du logger inn.</p>
           <p>Når du betaler, ber vi Vipps om navnet, e-postadressen, telefonnummeret og adressen din. Du godkjenner delingen i Vipps-appen før du betaler. Vi fyller dem inn i brevet, der du kan endre dem, og sender kvitteringen og lenken til saken til e-postadressen. Vi lagrer dem bare i saken.</p>
+          <p>Vipps oppgir også en id for Vipps-kontoen din. Vi lagrer den på saken som eier, og bare den som logger inn med den kontoen, kan åpne saken.</p>
+        </>
+      )}
+
+      {!GRATIS && (
+        <>
+          <h2>Innlogging</h2>
+          <p>Du logger inn med Vipps for å åpne en betalt sak og Min side. Vipps MobilePay bekrefter da hvem du er, som selvstendig ansvarlig etter sin egen personvernerklæring. Vi får bare en id for Vipps-kontoen din, ikke navn, telefonnummer eller andre opplysninger. Id-en lagres på saken du betalte for, og i en økt så lenge du er innlogget.</p>
+          <p>Innloggingen bruker en informasjonskapsel som holder deg innlogget i 90 dager. Den inneholder en tilfeldig kode, og i databasen lagrer vi bare en envegs-hash av koden. I tillegg setter vi en liten merkelapp som bare sier at du har logget inn før, slik at siden kan foreslå innlogging. Begge er nødvendige for innloggingen, og ingen brukes til sporing. Når du logger ut, slettes økten fra databasen og kapslene fra nettleseren din. Økter som har gått ut, og påbegynte innlogginger som aldri ble fullført, slettes automatisk.</p>
         </>
       )}
 

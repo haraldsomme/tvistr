@@ -1,4 +1,5 @@
-// The receipt to the buyer after a Vipps payment: the link to the case (the only way back to it), the
+// The receipt to the buyer after a Vipps payment: the link to the case (opened by logging in with the
+// Vipps account that paid) and to Min side, the
 // next steps and what was bought. Sent once per order with Resend (resend.com, EU region); the address
 // is the one the buyer shared in Vipps and is not stored beyond the form. Never the letter itself: the
 // buyer sends that.
@@ -10,7 +11,9 @@ import { FIRMA } from "@/lib/firma";
 
 export type Kvittering = { ref: string; sakId: string; belopOre: number; betalt: Date; bil: string; reg: string };
 
-const url = (sakId: string) => `${(process.env.TVISTR_URL || "https://tvistr.no").replace(/\/$/, "")}/sak/${sakId}`;
+const rot = () => (process.env.TVISTR_URL || "https://tvistr.no").replace(/\/$/, "");
+const url = (sakId: string) => `${rot()}/sak/${sakId}`;
+const TILGANG = "Du åpner saken med Vipps-kontoen du betalte med. Alle brevene dine finner du også på Min side.";
 const dato = (d: Date) => d.toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Oslo" });
 const kr = (ore: number) => `kr ${tall(Math.round(ore / 100))}`;
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -19,6 +22,7 @@ const STEG = ["Sjekk opplysningene om deg (fylt inn fra Vipps) og legg inn forha
 
 export function byggKvittering(k: Kvittering): { emne: string; html: string; tekst: string } {
   const lenke = url(k.sakId);
+  const minSide = `${rot()}/min-side`;
   const vare = `Reklamasjonsbrev for bil – ${k.bil} (${k.reg})`;
   const selger = `${FIRMA.navn}, org.nr. ${FIRMA.orgnr}, ${FIRMA.adresse}`;
   const angrerett = "Du ba om at brevet ble åpnet med en gang, og angreretten gikk da tapt (angrerettloven § 22 bokstav n).";
@@ -29,7 +33,8 @@ export function byggKvittering(k: Kvittering): { emne: string; html: string; tek
     `Betalingen er bekreftet, og brevet for ${k.bil} (${k.reg}) er klart til å fylles ut.`,
     "",
     `Saken din: ${lenke}`,
-    "Ta vare på denne e-posten. Lenken er tilgangen til saken, så ikke del den med andre.",
+    TILGANG,
+    `Min side: ${minSide}`,
     "",
     "Neste steg:",
     ...STEG.map((s, i) => `${i + 1}. ${s}`),
@@ -56,7 +61,7 @@ export function byggKvittering(k: Kvittering): { emne: string; html: string; tek
 ${p(`Betalingen er bekreftet, og brevet for ${esc(k.bil)} (${esc(k.reg)}) er klart til å fylles ut.`)}
 <p style="margin:22px 0"><a href="${lenke}" style="display:inline-block;background:#2B5BF0;color:#FFFFFF;text-decoration:none;font-weight:600;padding:13px 22px;border-radius:12px">Åpne saken din</a></p>
 ${p(`Eller kopier lenken: <a href="${lenke}" style="color:#2B5BF0;word-break:break-all">${lenke}</a>`)}
-${p("Ta vare på denne e-posten. Lenken er tilgangen til saken, så ikke del den med andre.")}
+${p(`${TILGANG} <a href="${minSide}" style="color:#2B5BF0">Åpne Min side</a>`)}
 <h2 style="margin:24px 0 8px;font-size:16px;color:#10141A">Neste steg</h2>
 <ol style="margin:0 0 14px;padding-left:20px;font-size:15px;line-height:1.55;color:#455063">${STEG.map((s) => `<li>${s}</li>`).join("")}</ol>
 <h2 style="margin:24px 0 8px;font-size:16px;color:#10141A">Kvittering</h2>

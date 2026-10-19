@@ -1,11 +1,12 @@
 "use server";
 
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { ordre, sak } from "@/db/schema";
 import { type Kjopt, kjopt } from "@/lib/app/saken";
 import { mottaker } from "@/lib/epost/kvittering";
+import { innlogget, lagOkt, sha256hex } from "@/lib/innlogging/okt";
 import { lagGrense } from "@/lib/rategrense";
 import { erId } from "@/lib/sak/id";
 import { avstem } from "@/lib/vipps/avstem";
@@ -13,16 +14,40 @@ import { hentBetaling } from "@/lib/vipps/klient";
 import { maskerEpost } from "@/lib/vipps/kjoper";
 
 // What the confirmation shows. The address the receipt went to is masked: the page opens for anyone
-// with the reference.
-export type Bekreftelse = { sak: Kjopt; belopOre: number; betalt: string; bil: string; reg: string; sendtTil: string | null };
+// with the reference. `innlogget`: the browser is logged in as the case's owner.
+export type Bekreftelse = { sak: Kjopt; belopOre: number; betalt: string; bil: string; reg: string; sendtTil: string | null; innlogget: boolean };
 export type Betalingsstatus = { status: "betalt"; bekreftelse: Bekreftelse } | { status: "venter" } | { status: "avbrutt" } | { status: "ukjent" };
 
 const forMange = lagGrense({ antall: 60, vinduMs: 60_000 });
+// How long after payment the secret from the return address still logs in.
+const INNLOGGING_MS = 60 * 60_000;
+
+// Logs the payer in as the case's owner when `n` is the secret kjop put in the return address, the
+// order was paid within the hour, and no earlier call has used it. The secret is cleared in one
+// conditional statement, so of the polls that arrive together only one logs in. Never logs `n`.
+async function loggInnEier(ref: string, n: unknown, o: { betalt: Date | null; innloggingHash: string | null } | undefined, eier: string | null): Promise<boolean> {
+  if (!eier) return false;
+  if (typeof n === "string" && o?.innloggingHash && o.betalt && Date.now() - o.betalt.getTime() < INNLOGGING_MS) {
+    const hash = sha256hex(n);
+    if (hash === o.innloggingHash) {
+      const brukt = await db
+        .update(ordre)
+        .set({ innloggingHash: null })
+        .where(and(eq(ordre.id, ref), eq(ordre.innloggingHash, hash)))
+        .returning({ id: ordre.id });
+      if (brukt.length) {
+        await lagOkt(eier);
+        return true;
+      }
+    }
+  }
+  return (await innlogget()) === eier;
+}
 
 // The return page asks this until Vipps has an answer. A Vipps order is brought in line with Vipps
 // (avstem); one from development is paid already. A paid case gives the confirmation and what the
-// browser keeps of it (tvistr-sak); the link to it is the access.
-export async function sjekkBetaling(ref: unknown): Promise<Betalingsstatus> {
+// browser keeps of it (tvistr-sak); with the secret `n` from the return address it also logs the payer in.
+export async function sjekkBetaling(ref: unknown, n: unknown): Promise<Betalingsstatus> {
   if (!erId(ref)) return { status: "ukjent" };
   if (forMange((await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "ukjent")) return { status: "venter" };
   try {
@@ -32,10 +57,11 @@ export async function sjekkBetaling(ref: unknown): Promise<Betalingsstatus> {
     const a = vipps ? await avstem(ref) : o.status === "betalt" ? ({ status: "betalt", sakId: o.sakId } as const) : ({ status: "avbrutt" } as const);
     if (a.status !== "betalt") return a;
     const [[s], [etter]] = await Promise.all([
-      db.select({ skjema: sak.skjema }).from(sak).where(eq(sak.id, a.sakId)).limit(1),
-      db.select({ betalt: ordre.betalt, kvitteringSendt: ordre.kvitteringSendt }).from(ordre).where(eq(ordre.id, ref)).limit(1),
+      db.select({ skjema: sak.skjema, vippsSub: sak.vippsSub }).from(sak).where(eq(sak.id, a.sakId)).limit(1),
+      db.select({ betalt: ordre.betalt, kvitteringSendt: ordre.kvitteringSendt, innloggingHash: ordre.innloggingHash }).from(ordre).where(eq(ordre.id, ref)).limit(1),
     ]);
     if (!s) return { status: "ukjent" };
+    const erInnlogget = await loggInnEier(ref, n, etter, s.vippsSub);
     const epost = vipps && etter?.kvitteringSendt ? mottaker(await hentBetaling(ref).then((b) => b.userDetails?.email, () => undefined)) : undefined;
     return {
       status: "betalt",
@@ -46,6 +72,7 @@ export async function sjekkBetaling(ref: unknown): Promise<Betalingsstatus> {
         bil: [s.skjema.c_make, s.skjema.c_model].filter(Boolean).join(" "),
         reg: s.skjema.c_reg,
         sendtTil: epost ? maskerEpost(epost) : null,
+        innlogget: erInnlogget,
       },
     };
   } catch (e) {

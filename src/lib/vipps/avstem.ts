@@ -6,7 +6,8 @@
 // The letter is digital content delivered at once, so an approved payment is captured straight away
 // (ePayment has no direct capture), and the case opens only when the capture went through. A failed
 // capture leaves the order «opprettet» for the next call to try again. The call that makes the order
-// paid fills the buyer's details from Vipps into the form and sends the receipt with the link.
+// paid fills the buyer's details from Vipps into the form, makes the paying Vipps account the case's
+// owner (sak.vippsSub) and sends the receipt with the link.
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { ordre, sak } from "@/db/schema";
@@ -55,7 +56,7 @@ export async function avstem(ref: string): Promise<Avstemt> {
       .returning({ id: ordre.id }),
     db
       .update(sak)
-      .set({ betalt: na, ...(s && { skjema: fyllKjoper(s.skjema, b.userDetails) }) })
+      .set({ betalt: na, vippsSub: b.profile?.sub ?? null, ...(s && { skjema: fyllKjoper(s.skjema, b.userDetails) }) })
       .where(and(eq(sak.id, o.sakId), isNull(sak.betalt))),
   ]);
   console.info("vipps: betalt", JSON.stringify({ ref }));

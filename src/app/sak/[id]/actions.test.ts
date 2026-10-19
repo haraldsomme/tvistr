@@ -5,6 +5,8 @@ import { erId } from "@/lib/sak/id";
 
 const hentAlle = vi.fn<() => Promise<unknown[]>>(async () => []);
 const hentBetaltSak = vi.fn<(id: unknown) => Promise<Sak | null>>(async () => null);
+const sisteBetalteSak = vi.fn<(sub: string) => Promise<Sak | null>>(async () => null);
+const innlogget = vi.fn<() => Promise<string | null>>(async () => null);
 const batch = vi.fn<(q: unknown[]) => Promise<unknown[]>>(async () => []);
 const pris = vi.hoisted(() => ({ gratis: false }));
 // The claim on a model call (update … returning): a row while the case has calls left.
@@ -25,7 +27,8 @@ vi.mock("next/headers", () => ({
     ]),
 }));
 vi.mock("@/app/sak/vedtak-db", () => ({ hentAlle, hentBilnavn: async () => () => null }));
-vi.mock("@/lib/sak/db", () => ({ hentBetaltSak }));
+vi.mock("@/lib/sak/db", () => ({ hentBetaltSak, sisteBetalteSak }));
+vi.mock("@/lib/innlogging/okt", async (orig) => ({ ...(await orig<typeof import("@/lib/innlogging/okt")>()), innlogget }));
 vi.mock("@/lib/matching/ranger", () => ({ ranger: () => ({ kandidater: kandidater.rader }), avgjorendeFor: () => undefined }));
 // The limits per address are tested on their own; here every call is from the same address.
 vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => false }));
@@ -65,6 +68,7 @@ vi.mock("@/db", () => ({
 
 const { finnVedtak, kjop, lagreSak } = await import("./actions");
 const { ordre, sak } = await import("@/db/schema");
+const { sha256hex } = await import("@/lib/innlogging/okt");
 
 const idag = "2026-10-17";
 const skjema = { ...standard(idag), b_name: "Kari", c_reg: "AB 12345", c_make: "Volvo", c_model: "V60", c_year: "2017", f_cats: ["motor"], f_parts: { motor: ["turbo"] } };
@@ -75,6 +79,8 @@ const sjekk = { reg: "CD 67890", make: "Audi A4", year: "2019", cats: ["klima"],
 beforeEach(() => {
   vi.clearAllMocks();
   hentBetaltSak.mockResolvedValue(null);
+  sisteBetalteSak.mockResolvedValue(null);
+  innlogget.mockResolvedValue(null);
   hentAlle.mockResolvedValue([]);
   kandidater.rader = [];
   pris.gratis = false;
@@ -200,43 +206,63 @@ describe("finnVedtak: ett modellkall per sett med svar", () => {
 describe("kjop", () => {
   it("lagrer en ubetalt sak og en Vipps-ordre, og svarer med Vipps' side", async () => {
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
-    expect(await kjop({ sjekk, forrige: null, samtykke: true })).toEqual({ ok: true, url: "https://pay-mt.vipps.no/x" });
+    expect(await kjop({ sjekk, samtykke: true })).toEqual({ ok: true, url: "https://pay-mt.vipps.no/x" });
     const [[sakRad, ordreRad]] = batch.mock.calls[0] as unknown as [[{ v: Record<string, unknown> }, { v: Record<string, unknown> }]];
     expect(sakRad.v.betalt).toBeNull();
     expect(ordreRad.v).toMatchObject({ sakId: sakRad.v.id, belopOre: 24900, leverandor: "vipps", status: "opprettet", betalt: null });
+    expect(sakRad.v.vippsSub).toBeUndefined();
+    expect(ordreRad.v.innloggingHash).toMatch(/^[0-9a-f]{64}$/);
     const [p] = opprettBetaling.mock.calls[0];
-    expect(p).toEqual({ ref: ordreRad.v.id, belopOre: 24900, returnUrl: `https://tvistr.no/betaling/${ordreRad.v.id}`, beskrivelse: "Reklamasjonsbrev for bil" });
+    const returnUrl = new URL(p.returnUrl);
+    expect(`${returnUrl.origin}${returnUrl.pathname}`).toBe(`https://tvistr.no/betaling/${ordreRad.v.id}`);
+    const n = returnUrl.searchParams.get("n")!;
+    expect(p.returnUrl).toBe(`https://tvistr.no/betaling/${ordreRad.v.id}?n=${n}`);
+    expect(n).toMatch(/^[A-Za-z0-9_-]{32}$/);
+    expect(sha256hex(n)).toBe(ordreRad.v.innloggingHash);
+    expect(p).toMatchObject({ ref: ordreRad.v.id, belopOre: 24900, beskrivelse: "Reklamasjonsbrev for bil" });
+  });
+
+  it("lager en ny hemmelighet for hvert kjøp", async () => {
+    process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
+    await kjop({ sjekk, samtykke: true });
+    await kjop({ sjekk, samtykke: true });
+    const hash = (i: number) => (batch.mock.calls[i] as unknown as [[unknown, { v: { innloggingHash: string } }]])[0][1].v.innloggingHash;
+    expect(hash(0)).not.toBe(hash(1));
   });
 
   it("merker ordren som feilet når Vipps ikke svarer", async () => {
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
     opprettBetaling.mockRejectedValueOnce(new Error("nede"));
-    expect(await kjop({ sjekk, forrige: null, samtykke: true })).toEqual({ ok: false, melding: "Vi fikk ikke kontakt med Vipps. Prøv igjen." });
+    expect(await kjop({ sjekk, samtykke: true })).toEqual({ ok: false, melding: "Vi fikk ikke kontakt med Vipps. Prøv igjen." });
     expect(satt).toHaveBeenCalledWith(expect.objectContaining({ status: "feilet" }));
   });
 
   it("lagrer ingenting uten Vipps-nøkler", async () => {
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
     vipps.sattOpp = false;
-    expect(await kjop({ sjekk, forrige: null, samtykke: true })).toEqual({ ok: false, melding: "Betaling er ikke tilgjengelig akkurat nå." });
+    expect(await kjop({ sjekk, samtykke: true })).toEqual({ ok: false, melding: "Betaling er ikke tilgjengelig akkurat nå." });
     expect(batch).not.toHaveBeenCalled();
   });
 
   it("åpner saken gratis i prøveperioden, uten flagget og uten samtykke", async () => {
     pris.gratis = true;
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
-    const r = await kjop({ sjekk, forrige: null, samtykke: false });
+    const r = await kjop({ sjekk, samtykke: false });
     expect(r.ok).toBe(true);
     const [[sakRad, ordreRad]] = batch.mock.calls[0] as unknown as [[{ v: Record<string, unknown> }, { v: Record<string, unknown> }]];
     expect(sakRad.v.betalt).toBeInstanceOf(Date);
     expect(ordreRad.v).toMatchObject({ belopOre: 0, leverandor: "gratis", status: "betalt" });
+    expect(sakRad.v.vippsSub).toBeUndefined();
   });
 
   it("lagrer saken og en betalt ordre i utvikling, og sender til bekreftelsen", async () => {
-    const r = await kjop({ sjekk, forrige: null, samtykke: true });
+    const r = await kjop({ sjekk, samtykke: true });
     expect(opprettBetaling).not.toHaveBeenCalled();
     const [[sakRad, ordreRad]] = batch.mock.calls[0] as unknown as [[{ tabell: unknown; v: Record<string, unknown> }, { tabell: unknown; v: Record<string, unknown> }]];
-    expect(r).toEqual({ ok: true, url: `/betaling/${ordreRad.v.id}` });
+    expect(r.ok && r.url).toMatch(new RegExp(`^/betaling/${ordreRad.v.id}\\?n=[A-Za-z0-9_-]{32}$`));
+    const n = new URL(r.ok ? r.url : "", "https://tvistr.no").searchParams.get("n")!;
+    expect(sha256hex(n)).toBe(ordreRad.v.innloggingHash);
+    expect(sakRad.v.vippsSub).toBe("utvikling");
     expect(erId(sakRad.v.id)).toBe(true);
     expect(sakRad.tabell).toBe(sak);
     expect(sakRad.v).toMatchObject({ sjekk: { reg: "CD 67890", cats: ["klima"] } });
@@ -249,22 +275,32 @@ describe("kjop", () => {
     expect(ordreRad.v.id).not.toBe(sakRad.v.id);
   });
 
-  it("beholder kjøperen fra forrige sak", async () => {
-    hentBetaltSak.mockResolvedValue(betaltSak);
-    await kjop({ sjekk, forrige: betaltSak.id, samtykke: true });
+  it("beholder kjøperen fra den innloggedes siste sak", async () => {
+    innlogget.mockResolvedValue("sub-1");
+    sisteBetalteSak.mockImplementation(async (sub) => (sub === "sub-1" ? { ...betaltSak, vippsSub: "sub-1" } : null));
+    await kjop({ sjekk, samtykke: true });
     const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: { b_name: string; c_reg: string } } }]];
     expect([sakRad.v.skjema.b_name, sakRad.v.skjema.c_reg]).toEqual(["Kari", "CD 67890"]);
   });
 
+  it("ser bort fra en sak nettleseren sender", async () => {
+    hentBetaltSak.mockResolvedValue(betaltSak);
+    await kjop({ sjekk, forrige: betaltSak.id, samtykke: true } as Parameters<typeof kjop>[0]);
+    const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: { b_name: string } } }]];
+    expect(sakRad.v.skjema.b_name).toBe("");
+    expect(hentBetaltSak).not.toHaveBeenCalled();
+    expect(sisteBetalteSak).not.toHaveBeenCalled();
+  });
+
   it("krever samtykke til at angreretten går tapt", async () => {
-    expect(await kjop({ sjekk, forrige: null, samtykke: false })).toEqual({ ok: false, melding: "Kryss av for at brevet åpnes med en gang." });
+    expect(await kjop({ sjekk, samtykke: false })).toEqual({ ok: false, melding: "Kryss av for at brevet åpnes med en gang." });
     expect(batch).not.toHaveBeenCalled();
   });
 
   it("krever bil og feil", async () => {
-    expect((await kjop({ sjekk: { ...sjekk, reg: "" }, forrige: null, samtykke: true })).ok).toBe(false);
-    expect((await kjop({ sjekk: { ...sjekk, cats: ["ukjent"] }, forrige: null, samtykke: true })).ok).toBe(false);
-    expect((await kjop({ sjekk: "tull", forrige: null, samtykke: true })).ok).toBe(false);
+    expect((await kjop({ sjekk: { ...sjekk, reg: "" }, samtykke: true })).ok).toBe(false);
+    expect((await kjop({ sjekk: { ...sjekk, cats: ["ukjent"] }, samtykke: true })).ok).toBe(false);
+    expect((await kjop({ sjekk: "tull", samtykke: true })).ok).toBe(false);
     expect(batch).not.toHaveBeenCalled();
   });
 });

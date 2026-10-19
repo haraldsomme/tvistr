@@ -27,7 +27,7 @@ const STEG = ["Sjekk opplysningene om deg og legg inn forhandleren.", "Se vedtak
 
 const tekstfarge = "#455063";
 
-export function Venter({ referanse }: { referanse: string }) {
+export function Venter({ referanse, n }: { referanse: string; n: string | null }) {
   const [visning, settVisning] = useState<Visning>("venter");
   const [bekreftelse, settBekreftelse] = useState<Bekreftelse | null>(null);
   const [runde, settRunde] = useState(0);
@@ -40,23 +40,25 @@ export function Venter({ referanse }: { referanse: string }) {
   useEffect(() => {
     let stopp = false;
     let t: ReturnType<typeof setTimeout>;
-    async function sjekk(n: number) {
-      const r = await sjekkBetaling(referanse).catch(() => ({ status: "venter" }) as const);
+    async function sjekk(i: number) {
+      const r = await sjekkBetaling(referanse, n).catch(() => ({ status: "venter" }) as const);
       if (stopp) return;
       if (r.status === "betalt") {
         maal("betaling_fullfort");
         skriv("tvistr-sak", r.bekreftelse.sak);
+        // The secret has done its job; keep it out of the address bar, history and copied links.
+        if (n) window.history.replaceState(null, "", window.location.pathname);
         settBekreftelse(r.bekreftelse);
       } else if (r.status !== "venter") settVisning(r.status);
-      else if (n + 1 >= FORSOK) settVisning("lenge");
-      else t = setTimeout(() => sjekk(n + 1), HVER_MS);
+      else if (i + 1 >= FORSOK) settVisning("lenge");
+      else t = setTimeout(() => sjekk(i + 1), HVER_MS);
     }
     sjekk(0);
     return () => {
       stopp = true;
       clearTimeout(t);
     };
-  }, [referanse, runde]);
+  }, [referanse, n, runde]);
 
   if (bekreftelse) return <Takk b={bekreftelse} referanse={referanse} />;
 

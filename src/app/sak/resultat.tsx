@@ -234,7 +234,7 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
               <VippsKnapp onClick={apne} />
             )}
           </div>
-          <Kjop sjekk={a} forrige={kjopt.id || null} utvikling={utvikling} apen={kjop} onLukk={() => settKjop(false)} />
+          <Kjop sjekk={a} utvikling={utvikling} apen={kjop} onLukk={() => settKjop(false)} />
         </>,
         document.body,
       )}

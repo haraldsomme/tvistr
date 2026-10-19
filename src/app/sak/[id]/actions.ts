@@ -5,6 +5,7 @@
 // choice, the paragraph from the template (docs/vedtaksvalg.md). The chosen one comes first, then the
 // rest of the ranking's top ten, each with its likeness to the buyer's case. The model's answer is kept
 // on the case (sak.vedtaksvalg), so the same answers never cost a second call. Nothing here reaches the browser before payment: no quote, no link.
+import { randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
@@ -16,19 +17,20 @@ import { idag } from "@/lib/app/dato";
 import { gjelderSaken, laas, manglerForKjop, nyttKjop, rensSkjema } from "@/lib/app/saken";
 import { standard } from "@/lib/app/skjema";
 import { komponentnavn } from "@/lib/feil/kategorier";
+import { innlogget, sha256hex } from "@/lib/innlogging/okt";
 import { likhet } from "@/lib/matching/likhet";
 import { avgjorendeFor, type Rangert, ranger } from "@/lib/matching/ranger";
 import { poengtekst } from "@/lib/matching/rett";
 import type { Kandidat } from "@/lib/matching/typer";
 import { GRATIS, PRIS } from "@/lib/pris";
 import { lagGrense } from "@/lib/rategrense";
-import { hentBetaltSak } from "@/lib/sak/db";
+import { hentBetaltSak, sisteBetalteSak } from "@/lib/sak/db";
 import { nyId } from "@/lib/sak/id";
 import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
 import { visSaksnummer } from "@/lib/vedtaksvalg/mal";
 import { byggValg, type Endring, endringMot, fraLagret, grunnlagFor, type LagretSvar, type Modellsvar, sitaterFor, sporModellen, tilLagret, UTVALG_I_TEKSTEN, type Valggrunnlag, type Vedtaksdetaljer } from "@/lib/vedtaksvalg/valg";
 import { opprettBetaling, vippsSattOpp } from "@/lib/vipps/klient";
-import { HELT_BREV_UTEN_BETALING } from "@/lib/vipps/profil";
+import { HELT_BREV_UTEN_BETALING, UTVIKLINGSEIER } from "@/lib/vipps/profil";
 
 export type Funn = { ok: true; valg: Presedens[]; endring: Endring | null } | { ok: false; melding: string };
 
@@ -163,9 +165,10 @@ export type Kjop = { ok: true; url: string } | { ok: false; melding: string };
 // attempt is a new case; one never paid is deleted after 30 days. In development
 // (TVISTR_HELT_BREV_UTEN_BETALING) the case is paid at once, with an order from «utvikling»; in a trial
 // (GRATIS) it is free, with an order «gratis» and no consent to give, since nothing is sold. The writer
-// starts from the check, keeping the buyer from the previous case (`forrige`) so the browser need not
-// keep their details.
-export async function kjop(inn: { sjekk: unknown; forrige: unknown; samtykke: unknown }): Promise<Kjop> {
+// starts from the check, keeping the buyer from the logged-in owner's newest paid case. The owner of the
+// new case is the Vipps account that pays (avstem), never the session. The return address carries a
+// secret `n` (only its hash is stored on the order) that logs the payer in once (sjekkBetaling).
+export async function kjop(inn: { sjekk: unknown; samtykke: unknown }): Promise<Kjop> {
   const utenVipps = GRATIS || HELT_BREV_UTEN_BETALING();
   if (!utenVipps && !vippsSattOpp()) return { ok: false, melding: "Betaling er ikke tilgjengelig akkurat nå." };
   // The buyer has asked for the writer now and given up the right of withdrawal (angrerettloven § 22 n).
@@ -176,24 +179,28 @@ export async function kjop(inn: { sjekk: unknown; forrige: unknown; samtykke: un
   const id = nyId();
   const ordreId = nyId();
   const belopOre = GRATIS ? 0 : PRIS * 100;
+  const n = randomBytes(24).toString("base64url");
+  const retur = `/betaling/${ordreId}?n=${n}`;
   try {
     const dag = idag();
-    const forrige = await hentBetaltSak(inn.forrige);
+    const sub = await innlogget();
+    const forrige = sub ? await sisteBetalteSak(sub) : null;
     const skjema = nyttKjop(sjekk, (forrige && rensSkjema(forrige.skjema, dag)) || standard(dag), dag);
     const na = utenVipps ? new Date() : null;
     const leverandor = GRATIS ? "gratis" : utenVipps ? "utvikling" : "vipps";
     await db.batch([
-      db.insert(sak).values({ id, sjekk, skjema, betalt: na }),
-      db.insert(ordre).values({ id: ordreId, sakId: id, belopOre, leverandor, status: na ? "betalt" : "opprettet", betalt: na }),
+      // GRATIS gets no owner: the owner rule must be revisited before a trial is turned on again.
+      db.insert(sak).values({ id, sjekk, skjema, betalt: na, ...(leverandor === "utvikling" && { vippsSub: UTVIKLINGSEIER }) }),
+      db.insert(ordre).values({ id: ordreId, sakId: id, belopOre, leverandor, status: na ? "betalt" : "opprettet", betalt: na, innloggingHash: sha256hex(n) }),
     ]);
     console.info(`kjøp: ny sak (${leverandor})`);
-    if (utenVipps) return { ok: true, url: `/betaling/${ordreId}` };
+    if (utenVipps) return { ok: true, url: retur };
   } catch (e) {
     console.error("kjøpet feilet", e);
     return { ok: false, melding: "Vi fikk ikke lagret saken. Prøv igjen." };
   }
   try {
-    const { redirectUrl } = await opprettBetaling({ ref: ordreId, belopOre, returnUrl: `${await opprinnelse()}/betaling/${ordreId}`, beskrivelse: "Reklamasjonsbrev for bil" });
+    const { redirectUrl } = await opprettBetaling({ ref: ordreId, belopOre, returnUrl: `${await opprinnelse()}${retur}`, beskrivelse: "Reklamasjonsbrev for bil" });
     return { ok: true, url: redirectUrl };
   } catch (e) {
     console.error("vipps-betalingen ble ikke opprettet", e);

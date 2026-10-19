@@ -61,6 +61,21 @@ describe("avstem", () => {
     expect(sendKvittering).toHaveBeenCalledWith("abcdefghijkm", "kari@eksempel.no");
   });
 
+  it("gir saken eieren fra betalingen, i samme oppdatering som betalt", async () => {
+    hentBetaling.mockResolvedValue({ ...betaling("AUTHORIZED"), profile: { sub: "sub-1" } });
+    await avstem("abcdefghijkm");
+    const [[, s]] = batch.mock.calls[0] as unknown as [[unknown, { v: Record<string, unknown> }]];
+    expect(s.v).toMatchObject({ vippsSub: "sub-1" });
+    expect(s.v.betalt).toBeInstanceOf(Date);
+  });
+
+  it("gir saken ingen eier når betalingen ikke har en", async () => {
+    hentBetaling.mockResolvedValue(betaling("AUTHORIZED"));
+    await avstem("abcdefghijkm");
+    const [[, s]] = batch.mock.calls[0] as unknown as [[unknown, { v: Record<string, unknown> }]];
+    expect(s.v.vippsSub).toBeNull();
+  });
+
   it("sender ikke kvittering når et annet kall gjorde ordren betalt", async () => {
     hentBetaling.mockResolvedValue(betaling("AUTHORIZED", { captured: 24900 }));
     batch.mockResolvedValueOnce([[], []]);

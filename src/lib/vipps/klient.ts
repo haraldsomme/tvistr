@@ -15,6 +15,8 @@ export type Betaling = {
   aggregate: { authorizedAmount: Belop; cancelledAmount: Belop; capturedAmount: Belop; refundedAmount: Belop };
   // What the buyer shared (PROFIL), once the payment is approved.
   userDetails?: Kjoperdata;
+  // The buyer's Vipps id (the same `sub` as Vipps Login), once the payment is approved: the case's owner.
+  profile?: { sub?: string };
 };
 export type Kjoperdata = {
   email?: string;

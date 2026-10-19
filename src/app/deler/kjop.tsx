@@ -14,7 +14,7 @@ import { VippsKnapp } from "./vipps-knapp";
 
 const PRISTEKST = GRATIS ? "Gratis" : `kr ${tall(PRIS)}`;
 
-export function Kjop({ sjekk, forrige, apen, utvikling, onLukk }: { sjekk: Sjekk; forrige: string | null; apen: boolean; utvikling: boolean; onLukk: () => void }) {
+export function Kjop({ sjekk, apen, utvikling, onLukk }: { sjekk: Sjekk; apen: boolean; utvikling: boolean; onLukk: () => void }) {
   const [melding, settMelding] = useState<string | null>(null);
   const [venter, settVenter] = useState(false);
   // The right of withdrawal ends when the writer opens (angrerettloven § 22 n): the buyer must ask for that.
@@ -35,7 +35,7 @@ export function Kjop({ sjekk, forrige, apen, utvikling, onLukk }: { sjekk: Sjekk
 
   async function betal() {
     settVenter(true);
-    const r = await trygt(kjop({ sjekk, forrige, samtykke }), "Vi fikk ikke kontakt. Prøv igjen.");
+    const r = await trygt(kjop({ sjekk, samtykke }), "Vi fikk ikke kontakt. Prøv igjen.");
     // Vipps' page is opened as it is, in this window, and so is the confirmation; the button stays off
     // until the browser leaves.
     if (r.ok) return void (window.location.href = r.url);

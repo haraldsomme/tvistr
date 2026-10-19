@@ -4,7 +4,7 @@ import { standard } from "@/lib/app/skjema";
 import { erId } from "@/lib/sak/id";
 
 const hentAlle = vi.fn<() => Promise<unknown[]>>(async () => []);
-const hentBetaltSak = vi.fn<(id: unknown) => Promise<Sak | null>>(async () => null);
+const hentEgenSak = vi.fn<(id: unknown) => Promise<Sak | null>>(async () => null);
 const sisteBetalteSak = vi.fn<(sub: string) => Promise<Sak | null>>(async () => null);
 const innlogget = vi.fn<() => Promise<string | null>>(async () => null);
 const batch = vi.fn<(q: unknown[]) => Promise<unknown[]>>(async () => []);
@@ -27,7 +27,7 @@ vi.mock("next/headers", () => ({
     ]),
 }));
 vi.mock("@/app/sak/vedtak-db", () => ({ hentAlle, hentBilnavn: async () => () => null }));
-vi.mock("@/lib/sak/db", () => ({ hentBetaltSak, sisteBetalteSak }));
+vi.mock("@/lib/sak/db", () => ({ hentEgenSak, sisteBetalteSak }));
 vi.mock("@/lib/innlogging/okt", async (orig) => ({ ...(await orig<typeof import("@/lib/innlogging/okt")>()), innlogget }));
 vi.mock("@/lib/matching/ranger", () => ({ ranger: () => ({ kandidater: kandidater.rader }), avgjorendeFor: () => undefined }));
 // The limits per address are tested on their own; here every call is from the same address.
@@ -78,7 +78,7 @@ const sjekk = { reg: "CD 67890", make: "Audi A4", year: "2019", cats: ["klima"],
 
 beforeEach(() => {
   vi.clearAllMocks();
-  hentBetaltSak.mockResolvedValue(null);
+  hentEgenSak.mockResolvedValue(null);
   sisteBetalteSak.mockResolvedValue(null);
   innlogget.mockResolvedValue(null);
   hentAlle.mockResolvedValue([]);
@@ -97,13 +97,13 @@ describe("finnVedtak", () => {
   });
 
   it("avviser ugyldige svar", async () => {
-    hentBetaltSak.mockResolvedValue(betaltSak);
+    hentEgenSak.mockResolvedValue(betaltSak);
     expect((await finnVedtak({ id: betaltSak.id, svar: { ...svar, feil: [{ ...svar.feil[0], hoved: "ukjent" }] } })).ok).toBe(false);
     expect((await finnVedtak({ id: betaltSak.id, svar: { ...svar, kjopsdato: "2025-13-40" } })).ok).toBe(false);
   });
 
   it("avviser svar om en annen bil eller feil enn saken", async () => {
-    hentBetaltSak.mockResolvedValue(betaltSak);
+    hentEgenSak.mockResolvedValue(betaltSak);
     expect((await finnVedtak({ id: betaltSak.id, svar: { ...svar, ar: 2018 } })).ok).toBe(false);
     expect((await finnVedtak({ id: betaltSak.id, svar: { ...svar, feil: [{ ...svar.feil[0], hoved: "klima", under: [] }] } })).ok).toBe(false);
     expect((await finnVedtak({ id: betaltSak.id, svar: { ...svar, feil: [{ ...svar.feil[0], under: ["registerreim"] }] } })).ok).toBe(false);
@@ -111,7 +111,7 @@ describe("finnVedtak", () => {
   });
 
   it("gir en tom liste uten kandidater", async () => {
-    hentBetaltSak.mockResolvedValue(betaltSak);
+    hentEgenSak.mockResolvedValue(betaltSak);
     expect(await finnVedtak({ id: betaltSak.id, svar })).toEqual({ ok: true, valg: [], endring: null });
   });
 });
@@ -124,7 +124,7 @@ describe("finnVedtak: ett modellkall per sett med svar", () => {
   // The case as the database holds it after each call: what finnVedtak last wrote.
   const iBasen = () => {
     let rad: Sak = { ...betaltSak };
-    hentBetaltSak.mockImplementation(async () => rad);
+    hentEgenSak.mockImplementation(async () => rad);
     satt.mockImplementation((v: unknown) => {
       if ((v as Partial<Sak>).vedtaksvalg) rad = { ...rad, ...(v as Partial<Sak>) };
       return { where: () => Object.assign(Promise.resolve(undefined), { returning: returnering }) };
@@ -196,7 +196,7 @@ describe("finnVedtak: ett modellkall per sett med svar", () => {
     vedtakene(1, 2, 3);
     iBasen();
     for (let km = 1; km <= 6; km++) await finnVedtak({ id: betaltSak.id, svar: { ...svar, km } });
-    const lagret = (await hentBetaltSak(betaltSak.id))!.vedtaksvalg!;
+    const lagret = (await hentEgenSak(betaltSak.id))!.vedtaksvalg!;
     expect(lagret.svar).toHaveLength(5);
     await finnVedtak({ id: betaltSak.id, svar: { ...svar, km: 1 } });
     expect(sporModellen).toHaveBeenCalledTimes(7);
@@ -284,11 +284,11 @@ describe("kjop", () => {
   });
 
   it("ser bort fra en sak nettleseren sender", async () => {
-    hentBetaltSak.mockResolvedValue(betaltSak);
+    hentEgenSak.mockResolvedValue(betaltSak);
     await kjop({ sjekk, forrige: betaltSak.id, samtykke: true } as Parameters<typeof kjop>[0]);
     const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: { b_name: string } } }]];
     expect(sakRad.v.skjema.b_name).toBe("");
-    expect(hentBetaltSak).not.toHaveBeenCalled();
+    expect(hentEgenSak).not.toHaveBeenCalled();
     expect(sisteBetalteSak).not.toHaveBeenCalled();
   });
 
@@ -307,7 +307,7 @@ describe("kjop", () => {
 
 describe("lagreSak", () => {
   it("lagrer skjemaet, men bil og feil blir som kjøpt", async () => {
-    hentBetaltSak.mockResolvedValue(betaltSak);
+    hentEgenSak.mockResolvedValue(betaltSak);
     expect(await lagreSak({ id: betaltSak.id, skjema: { ...skjema, b_name: "Ola", c_reg: "ZZ 99999", c_year: "2024", f_cats: ["klima"], ukjent: 1 } })).toEqual({ ok: true });
     const lagret = (satt.mock.calls[0][0] as { skjema: Record<string, unknown> }).skjema;
     expect(lagret).toMatchObject({ b_name: "Ola", c_reg: "AB 12345", c_year: "2017", f_cats: ["motor"] });
@@ -320,7 +320,7 @@ describe("lagreSak", () => {
   });
 
   it("avviser noe som ikke er et skjema", async () => {
-    hentBetaltSak.mockResolvedValue(betaltSak);
+    hentEgenSak.mockResolvedValue(betaltSak);
     expect((await lagreSak({ id: betaltSak.id, skjema: [1, 2] })).ok).toBe(false);
     expect((await lagreSak({ id: betaltSak.id, skjema: { f_desc: "x".repeat(70_000) } })).ok).toBe(false);
     expect(satt).not.toHaveBeenCalled();

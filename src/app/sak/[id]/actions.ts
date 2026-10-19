@@ -24,7 +24,7 @@ import { poengtekst } from "@/lib/matching/rett";
 import type { Kandidat } from "@/lib/matching/typer";
 import { GRATIS, PRIS } from "@/lib/pris";
 import { lagGrense } from "@/lib/rategrense";
-import { hentBetaltSak, sisteBetalteSak } from "@/lib/sak/db";
+import { hentEgenSak, sisteBetalteSak } from "@/lib/sak/db";
 import { nyId } from "@/lib/sak/id";
 import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
 import { visSaksnummer } from "@/lib/vedtaksvalg/mal";
@@ -71,7 +71,7 @@ async function tarModellkall(id: string): Promise<boolean> {
 export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<Funn> {
   if (forMange(await ipAdresse())) return { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
   try {
-    const lagret = await hentBetaltSak(inn?.id);
+    const lagret = await hentEgenSak(inn?.id);
     if (!lagret) return { ok: false, melding: "Brevet er ikke betalt." };
     const svar = rensSvar(inn.svar);
     if (!svar || !gjelderSaken(svar, lagret.skjema)) return { ok: false, melding: "Noe er galt med svarene. Prøv igjen." };
@@ -213,7 +213,7 @@ export async function kjop(inn: { sjekk: unknown; samtykke: unknown }): Promise<
 export async function lagreSak(inn: { id: unknown; skjema: unknown }): Promise<{ ok: true } | { ok: false; melding: string }> {
   if (forMangeLagringer(await ipAdresse())) return { ok: false, melding: "For mange lagringer. Vent litt." };
   try {
-    const lagret = await hentBetaltSak(inn?.id);
+    const lagret = await hentEgenSak(inn?.id);
     if (!lagret) return { ok: false, melding: "Fant ikke saken." };
     const skjema = rensSkjema(inn.skjema, idag());
     if (!skjema) return { ok: false, melding: "Noe er galt med svarene." };

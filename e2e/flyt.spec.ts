@@ -18,6 +18,15 @@ async function stubRegistre(page: Page) {
   );
 }
 
+// Logged out, the link ends at our login page or at Vipps' authorize URL (Vipps may then answer with its own error page
+// when Login is not activated, so the request itself is checked).
+const tilInnlogging = async (page: Page, lenke: string) => {
+  const mal = /access-management-1\.0\/access\/oauth2\/auth|\/logg-inn/;
+  const sett = page.waitForRequest((r) => mal.test(r.url()), { timeout: 30_000 });
+  await page.goto(lenke).catch(() => {});
+  await sett;
+};
+
 const velg = async (page: Page, navn: string | RegExp) => {
   await page.getByRole("radio", { name: navn, exact: typeof navn === "string" }).click();
   // Auto-advance after the choice.
@@ -61,6 +70,7 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   await expect(page).toHaveURL(/\/betaling\/[a-km-np-z2-9]{12}$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "Takk for handelen!" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByLabel("Kvittering")).toContainText("kr 249");
+  await expect(page.getByRole("link", { name: "Min side" }).first()).toBeVisible();
   await expect(page.getByLabel("Lenken til saken")).toContainText(/\/sak\/[a-km-np-z2-9]{12}/);
   await page.getByRole("link", { name: "Fortsett til brevet" }).click();
   await expect(page).toHaveURL(/\/sak\/[a-km-np-z2-9]{12}$/, { timeout: 30_000 });
@@ -73,17 +83,12 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   await expect(page.locator("#c_reg")).toHaveAttribute("readonly", "");
   await expect(page.locator("#f_c_make")).toBeDisabled();
 
-  // The case is saved as the buyer types: the link opens it in another browser, without localStorage.
+  // The case is saved as the buyer types; the link alone no longer opens it: another browser must log in.
   await page.locator("#f_c_km").fill("125000");
   await page.waitForTimeout(1500);
   await expect(page.locator(".saved")).toHaveText("Lagret", { timeout: 15_000 });
   const annen = await browser.newPage();
-  await annen.goto(lenke);
-  await annen.getByRole("button", { name: /Neste: Forhandleren/ }).click();
-  await annen.getByRole("button", { name: /Neste: Bilen/ }).click();
-  await expect(annen.locator("#f_c_km")).toHaveValue(/125/);
-  await expect(annen.locator("#c_reg")).toHaveValue("AB 12345");
-  await expect(annen.locator("#f_c_make")).toBeDisabled();
+  await tilInnlogging(annen, lenke);
   await annen.close();
 
   await page.getByRole("tab", { name: "Brevet" }).click();
@@ -110,6 +115,23 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   await expect(kort.nth(1)).toContainText("Slik står det i brevet");
   await page.getByRole("tab", { name: "Brevet" }).click();
   await expect(page.locator(".l-prec")).not.toHaveText(for_);
+
+  // Min side lists the case; "Åpne brevet" opens it; "Logg ut" ends the session and the link asks for login again.
+  const id = lenke.split("/").pop()!;
+  await page.goto("/min-side");
+  await expect(page.getByRole("heading", { name: "Dine brev" })).toBeVisible({ timeout: 30_000 });
+  const kortet = page.locator(`a[href$="/sak/${id}"]`).first();
+  await expect(kortet).toBeVisible();
+  await kortet.click();
+  await expect(page).toHaveURL(new RegExp(`/sak/${id}$`), { timeout: 30_000 });
+  // The «← Min side» link is hidden on narrow screens (CSS), so the link is checked for its target only.
+  await expect(page.locator(`.wtop a[href="/min-side"]`)).toHaveCount(1);
+  await page.goto("/min-side");
+  await expect(page).toHaveURL(/\/min-side$/);
+  await page.getByRole("button", { name: "Logg ut" }).click();
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
+  await expect(page.getByRole("link", { name: "Logg inn" }).first()).toBeVisible();
+  await tilInnlogging(page, lenke);
 });
 
 test("brevet finnes bare for en betalt sak", async ({ page }) => {

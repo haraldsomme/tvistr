@@ -7,9 +7,9 @@ import { Hake, InfoSirkel, Pil, Tilbake } from "@/app/deler/ikoner";
 import { Kjop } from "@/app/deler/kjop";
 import { Lignende } from "@/app/deler/lignende";
 import { Lovrader } from "@/app/deler/lovrader";
+import { VippsKnapp } from "@/app/deler/vipps-knapp";
 import { idag } from "@/lib/app/dato";
 import { tall } from "@/lib/app/format";
-import { skriv } from "@/lib/app/lagring";
 import { maal } from "@/lib/maling";
 import { type Kjopt, manglerForKjop, nokkel, sammeSak, sjekkTilSvar } from "@/lib/app/saken";
 import { evaluate } from "@/lib/app/vurdering";
@@ -70,21 +70,14 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
     return () => io.disconnect();
   }, []);
 
-  // A purchase is a new case for this car and these faults, saved on the server; the browser keeps
-  // only which case it was.
-  function betalt(k: Kjopt) {
-    maal("betaling_fullfort");
-    skriv("tvistr-sak", k);
-    router.push(`/sak/${k.id}`);
-  }
-
   const apne = () => {
     if (tilgang) return router.push(`/sak/${kjopt.id}`);
     if (mangler) return settVisMangler(true);
     maal("kjop_klikket");
     settKjop(true);
   };
-  const knappetekst = tilgang ? "Åpne brevet" : kjopt.id ? (GRATIS ? "Åpne for denne saken" : "Lås opp for denne saken") : GRATIS ? "Åpne brevet" : "Lås opp brevet";
+  // Without access the buyer pays with Vipps' own button; these are the texts in a trial (GRATIS).
+  const knappetekst = tilgang ? "Åpne brevet" : kjopt.id ? "Åpne for denne saken" : "Åpne brevet";
   const knapper = (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
       <button type="button" className="btn" onClick={onTilbake}>
@@ -211,10 +204,14 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
               Brevet gjelder {a.make} ({a.reg}) og feilen du har valgt. Bilen og feilen kan ikke endres {GRATIS ? "etterpå" : "etter kjøpet"}.
             </p>
           )}
-          <button type="button" className="btn pri" onClick={apne}>
-            {knappetekst}
-            <Pil />
-          </button>
+          {tilgang || GRATIS ? (
+            <button type="button" className="btn pri" onClick={apne}>
+              {knappetekst}
+              <Pil />
+            </button>
+          ) : (
+            <VippsKnapp onClick={apne} bred />
+          )}
           <p className="fine" style={{ margin: 0 }}>
             {r.tier === "svak" ? "Usikker? Forbrukerrådet gir gratis råd før du bestemmer deg." : "Ikke juridisk rådgivning. Du bestemmer selv hva du sender."}
           </p>
@@ -228,12 +225,16 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
               <b>{tilgang ? "Du har tilgang" : PRISTEKST}</b>
               <span>Brev med en lignende sak kjøperen vant</span>
             </div>
-            <button type="button" className="btn pri" onClick={apne}>
-              {tilgang || GRATIS ? "Åpne brevet" : "Lås opp brevet"}
-              <Pil />
-            </button>
+            {tilgang || GRATIS ? (
+              <button type="button" className="btn pri" onClick={apne}>
+                Åpne brevet
+                <Pil />
+              </button>
+            ) : (
+              <VippsKnapp onClick={apne} />
+            )}
           </div>
-          <Kjop sjekk={a} forrige={kjopt.id || null} utvikling={utvikling} apen={kjop} onLukk={() => settKjop(false)} onBetalt={betalt} />
+          <Kjop sjekk={a} forrige={kjopt.id || null} utvikling={utvikling} apen={kjop} onLukk={() => settKjop(false)} />
         </>,
         document.body,
       )}

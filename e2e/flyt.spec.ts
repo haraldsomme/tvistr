@@ -1,7 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 
-// The whole flow: landing → check → verdict → unlock → the case's writer (/sak/[id]) → letter with a
-// decision. Needs the database (DATABASE_URL); the letter is free in the trial (GRATIS in src/lib/pris.ts), so the unlock needs no flag; the
+// The whole flow: landing → check → verdict → unlock → confirmation → the case's writer (/sak/[id]) → letter with a
+// decision. Needs the database (DATABASE_URL) and TVISTR_HELT_BREV_UTEN_BETALING=1 for the dev server, so the
+// Vipps button opens the case without the app (the payment itself is tested by hand, docs/app.md); the
 // vehicle and company registers are stubbed, the ranking and the model are real. Each run saves a case.
 
 const dager = (n: number) => {
@@ -52,8 +53,16 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   expect(await page.locator(".sim-cases .sim-c").count()).toBeLessThanOrEqual(3);
   await expect(page.locator(".sim-cases a")).toHaveCount(0);
 
-  await page.locator(".offer").getByRole("button", { name: "Åpne brevet" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Åpne brevet" }).click();
+  await page.locator(".offer vipps-mobilepay-button").click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByText("Jeg ber om at brevet åpnes med en gang").click();
+  await dialog.locator("vipps-mobilepay-button").click();
+  // The confirmation: the receipt, the link and the next steps, then on to the letter.
+  await expect(page).toHaveURL(/\/betaling\/[a-km-np-z2-9]{12}$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Takk for handelen!" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByLabel("Kvittering")).toContainText("kr 249");
+  await expect(page.getByLabel("Lenken til saken")).toContainText(/\/sak\/[a-km-np-z2-9]{12}/);
+  await page.getByRole("link", { name: "Fortsett til brevet" }).click();
   await expect(page).toHaveURL(/\/sak\/[a-km-np-z2-9]{12}$/, { timeout: 30_000 });
   const lenke = page.url();
 

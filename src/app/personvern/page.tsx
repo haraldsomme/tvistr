@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Personvern – Tvistr" };
 export default function Personvern() {
   const epost = <a href={`mailto:${FIRMA.epost}`}>{FIRMA.epost}</a>;
   return (
-    <Juridisk tittel="Personvernerklæring" oppdatert="17. oktober 2026">
+    <Juridisk tittel="Personvernerklæring" oppdatert="19. oktober 2026">
       <div className="jur-kort">
         <ul>
           <li>Den gratis saksvurderingen lagres bare i nettleseren din.</li>
@@ -43,7 +43,12 @@ export default function Personvern() {
       <p>Vi bruker opplysningene til å lage brevet og la deg komme tilbake til saken. Grunnlaget er avtalen med deg (personvernforordningen artikkel 6 nr. 1 bokstav b).</p>
       <p>Saken har en tilfeldig lenke, og lenken er tilgangen. Alle som har lenken, kan åpne saken, så ikke del den med andre.</p>
       <p>For å velge vedtaket brevet viser til, sender vi en del av saken til en språkmodell hos Anthropic: feilene og beskrivelsen din av dem, når de viste seg, kilometerstanden, bilens alder, kravet og om verkstedet eller selgeren har uttalt seg. Navn, adresse, kontaktopplysninger og registreringsnummer sendes ikke. Skriv derfor ikke personopplysninger i beskrivelsen av feilen.</p>
-      {!GRATIS && <p>Betalingen skjer hos Vipps MobilePay, som behandler betalingsopplysningene som selvstendig ansvarlig etter sin egen personvernerklæring. Vi får beløpet, statusen og en referanse til betalingen.</p>}
+      {!GRATIS && (
+        <>
+          <p>Betalingen skjer hos Vipps MobilePay, som behandler betalingsopplysningene som selvstendig ansvarlig etter sin egen personvernerklæring. Vi får beløpet, statusen og en referanse til betalingen.</p>
+          <p>Når du betaler, ber vi Vipps om navnet, e-postadressen, telefonnummeret og adressen din. Du godkjenner delingen i Vipps-appen før du betaler. Vi fyller dem inn i brevet, der du kan endre dem, og sender kvitteringen og lenken til saken til e-postadressen. Vi lagrer dem bare i saken.</p>
+        </>
+      )}
 
       <h2>Måling av bruken</h2>
       <p>Vi teller hvor mange som kommer gjennom hvert steg, for eksempel at en saksvurdering ble startet, hvilket nivå vurderingen fikk og hvilke feilkategorier som ble valgt. Hver økt får en tilfeldig id som forsvinner når du lukker fanen. Vi lagrer ikke IP-adresse, navn, registreringsnummer eller datoer.</p>
@@ -59,6 +64,11 @@ export default function Personvern() {
         <li>
           <b>Neon</b> lagrer databasen, på servere i London.
         </li>
+        {!GRATIS && (
+          <li>
+            <b>Resend Inc.</b> (USA) sender kvitteringen på e-post, fra servere i EU (Irland).
+          </li>
+        )}
         <li>
           <b>Anthropic PBC</b> (USA) leverer språkmodellen som velger vedtaket. Etter Anthropics vilkår for bedriftskunder brukes opplysningene ikke til å trene modellene deres.
         </li>

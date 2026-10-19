@@ -10,6 +10,7 @@ Appen er en React-port av artefakten «Bilreklamasjon», som eieren bygde utenfo
 | `/sak` | `src/app/sak/sjekk.tsx`, `resultat.tsx` | Gratis sjekk: ett spørsmål per skjerm (`sporsmal.ts`), deretter vurderingen og tilbudet. |
 | `/sak/[id]` | `src/app/sak/[id]/page.tsx`, `skriver.tsx` | Brevet for en betalt sak, med fanene Skjema, Vurdering, Vedtak og Brevet. En ukjent id eller en sak som ikke er betalt gir 404. |
 | `/brevet` | `src/app/brevet/page.tsx` | Hva brevet inneholder, i ord (ikke et eksempelbrev). Lenket fra hero-kortet på forsiden. Hver påstand skal stemme med koden: rangeringen (`src/lib/matching`), sitatkontrollen (`src/lib/avgjorende`) og brevet (`src/lib/app/brev.ts`). |
+| `/betaling/[ref]` | `src/app/betaling/[ref]/` | Retursiden fra Vipps: venter på svaret og viser bekreftelsen («Takk for handelen!», lenken til saken, neste steg og kvitteringen), med «Fortsett til brevet» (se «Betaling»). |
 | `/vilkar`, `/personvern` | `src/app/vilkar/page.tsx`, `src/app/personvern/page.tsx` | Vilkår for kjøp og personvernerklæringen, i `Juridisk` (`src/app/deler/juridisk.tsx`). Hver påstand der skal stemme med koden; endres lagring, modellkall eller betaling, endres sidene. |
 | `/hvis-forhandleren-avviser` | `src/app/hvis-forhandleren-avviser/page.tsx` | Hva kjøperen kan gjøre hvis forhandleren avviser: mekling hos Forbrukertilsynet, Forbrukerklageutvalget, konkurs og namsmannen, i `Juridisk`. Lenket fra Brevet-fanen. Bare påstander fra Forbrukertilsynets sider; gebyrene følger rettsgebyret og må oppdateres hvert år. |
 
@@ -40,23 +41,38 @@ Reglene for tid regnes i kalendermåneder fra overtakelsen, som i rangeringen (`
 
 ## Betaling
 
-Vipps er ikke koblet på. «Gå til betaling» kaller `kjop` (`src/app/sak/[id]/actions.ts`).
+Brevet koster kr 249 (`PRIS` i `src/lib/pris.ts`) og betales med Vipps MobilePay (ePayment API, `src/lib/vipps/`). Prøveperioden med gratis brev (`GRATIS`) varte fra 2026-10-17 til 2026-10-19. Står `GRATIS = true`, heter knappene «Åpne brevet», saken lagres som betalt med en ordre «gratis» på 0 kr, og pris, Vipps og angrerett er skjult i tilbudet, forsiden, vilkårene og personvernerklæringen.
 
-**Prøveperioden (fra 2026-10-17):** `GRATIS = true` i `src/lib/pris.ts`. Brevet er gratis for alle, også i produksjon:
-- Knappen heter «Åpne brevet», og det er ingen kryssboks. Ingenting selges, så det er ingen angrerett å gi fra seg.
-- `kjop` lagrer saken som betalt med en ordre fra leverandøren «gratis» på 0 kr. Flagget og `samtykke` betyr ingenting.
-- Pris, Vipps og angrerett er skjult bak `GRATIS` i tilbudet, forsiden, vilkårene og personvernerklæringen.
-- Settes `GRATIS = false`, gjelder reglene under.
+**Flyten:**
+1. I tilbudsboksen og i bunnlinjen på mobil står Vipps' egen knapp «Betal med Vipps» (`src/app/deler/vipps-knapp.tsx`, skriptet fra `cdn.vippsmobilepay.com`; knappen skal ikke tegnes om). Den åpner kjøpsvinduet (`src/app/deler/kjop.tsx`).
+2. I kjøpsvinduet virker knappen først når kjøperen har krysset av for at brevet åpnes med en gang og at angreretten da går tapt (angrerettloven § 22 bokstav n). `kjop` avviser kjøpet uten `samtykke: true`.
+3. `kjop` (`src/app/sak/[id]/actions.ts`) lagrer saken med `betalt` null og en ordre «opprettet» fra «vipps» på 24 900 øre. `ordre.id` er referansen hos Vipps. Deretter oppretter den betalingen (`WALLET`, `WEB_REDIRECT`) med `returnUrl` `/betaling/<ordre.id>` på samme vert som forespørselen, og ber om profildeling (`PROFIL` i `klient.ts`: navn, e-post, telefon og adresse). Kjøperen godkjenner delingen i appen før betalingen. `kjop` svarer med adressen kjøperen skal til (`url`). Nettleseren åpner Vipps' side uendret. Svarer ikke Vipps, blir ordren «feilet» og kjøperen kan prøve igjen.
+4. Vipps sender kjøperen til `/betaling/[ref]` (`src/app/betaling/[ref]/`), kanskje i en annen nettleser. Siden spør serveren (`sjekkBetaling`) hvert annet sekund i ett minutt. Er saken betalt, lagres den i `tvistr-sak`, og siden viser bekreftelsen: lenken til saken med «Kopier», hvor lenken er sendt (maskert, `k***@gmail.com`), neste steg og kvitteringen. «Fortsett til brevet» går til `/sak/[id]`. Er betalingen avbrutt eller utløpt, får kjøperen prøve igjen fra `/sak`.
+5. Et nytt forsøk gir en ny sak. En sak som aldri blir betalt, slettes etter 30 dager.
 
-- Knappen virker først når kjøperen har krysset av for at brevet åpnes med en gang og at angreretten da går tapt (angrerettloven § 22 bokstav n). `kjop` avviser kjøpet uten `samtykke: true`.
-- Med `TVISTR_HELT_BREV_UTEN_BETALING=1` (bare utenom produksjon) lagres saken som betalt med én gang, med en ordre fra leverandøren «utvikling». Kjøperen sendes til `/sak/[id]`.
-- Ellers sier den at betaling ikke er koblet til ennå, og ingenting lagres.
-- Skjemaet fylles fra sjekken på serveren (`nyttKjop` og `fraSjekk` i `src/lib/app/saken.ts`). Kjøperens navn og adresse hentes fra forrige betalte sak i samme nettleser.
+**Avstemming** (`avstem` i `src/lib/vipps/avstem.ts`) er det eneste som flytter en Vipps-ordre fra «opprettet». Den spør alltid Vipps (`GET /epayment/v1/payments/{ref}`) og stoler aldri på nettleseren eller webhooken:
+- `AUTHORIZED`: capture med en gang. Brevet er digitalt innhold som leveres straks, og ePayment har ikke direkte capture. Først når capture har gått gjennom, blir ordren «betalt» med `transaksjon_id` (pspReference), og saken får `betalt`. Feiler capture, forblir ordren «opprettet», og neste kall prøver igjen.
+- `ABORTED`, `EXPIRED`, `TERMINATED` eller en kansellert betaling: ordren blir «avbrutt».
+- Den tåler å kjøres flere ganger samtidig. Capture har en fast `Idempotency-Key` (`<ref>-capture`), og oppdateringene skjer med vilkår i én `db.batch`.
+- Bare kallet som gjør ordren betalt (`.returning()`), fyller kjøperen fra Vipps inn i skjemaet (`fyllKjoper` i `src/lib/vipps/kjoper.ts`: bare tomme felt, adressen bare samlet) og sender kvitteringen.
 
-Når Vipps kobles på:
-1. `kjop` lagrer saken med `betalt` null og en ordre med status «opprettet», og svarer med Vipps-adressen. `ordre.id` er referansen til Vipps.
-2. Vipps' tilbakekall setter `ordre.status`, `transaksjon_id` og `betalt` på ordren og på saken.
-3. Et nytt forsøk gir en ny ordre for samme sak.
+**Kvitteringen** (`src/lib/epost/kvittering.ts`) går på e-post med Resend (EU-region, avsender `kvittering@tvistr.no`, svar til `hei@tvistr.no`) til adressen kjøperen delte i Vipps. Den har lenken til saken (knapp og ren lenke, så kjøperen alltid finner saken igjen), neste steg og kvitteringen: selger med org.nr., dato, ordrenummer, vare, beløp, at foretaket ikke er mva-registrert, og at angreretten gikk tapt. Den sendes én gang per ordre: `ordre.kvittering_sendt` (migrasjon 0019) settes før sendingen og nullstilles hvis den feiler, og Resend får `Idempotency-Key: kvittering-<ref>`. Nattjobben sender kvitteringer som mangler, for ordrer betalt de siste 7 dagene; adressen hentes da fra Vipps igjen og lagres ikke utenfor skjemaet. Kvitteringen er aldri brevet; det sender kjøperen selv.
+
+Tre veier kaller den: retursiden, webhooken `POST /api/vipps` (signaturen sjekkes med `VIPPS_WEBHOOK_SECRET`, se `src/lib/vipps/signatur.ts`) og nattjobben `/api/slett-saker`. Nattjobben tar Vipps-ordrer som fortsatt er «opprettet» etter 15 minutter (`src/lib/vipps/uavklart.ts`).
+
+**Oppsett** (`.env.example`): `VIPPS_BASE_URL` (standard `https://apitest.vipps.no`; `https://api.vipps.no` i produksjon), `VIPPS_CLIENT_ID`, `VIPPS_CLIENT_SECRET`, `VIPPS_SUBSCRIPTION_KEY`, `VIPPS_MERCHANT_SERIAL_NUMBER` og `VIPPS_WEBHOOK_SECRET`. Mangler nøklene, svarer `kjop` at betaling ikke er tilgjengelig, og ingenting lagres. For e-posten: `RESEND_API_KEY`, `EPOST_FRA` og `TVISTR_URL` (lenken i e-posten; webhooken vet ikke kjøperens vert). Uten `RESEND_API_KEY` sendes ingen kvittering, og betalingen går som før. `EPOST_TEST_TIL` sender alle kvitteringer til utvikleren, men bare mens Vipps kjører mot testmiljøet, der testbrukerens e-post ikke er ekte.
+
+**Kundestøtte** (`scripts/vipps.ts`):
+- `npm run vipps -- webhook <https://vert/api/vipps>` registrerer webhooken for authorized, aborted, expired, terminated, captured, cancelled og refunded. Hemmeligheten i svaret legges i `VIPPS_WEBHOOK_SECRET`.
+- `webhooker` lister webhookene.
+- `status <ref>` viser betalingen og hendelsesloggen.
+- `avstem <ref>` avstemmer én ordre.
+- `refunder <ref>` refunderer hele beløpet og setter ordren til «refundert». Saken forblir åpen.
+- `kanseller <ref>` kansellerer en betaling som ikke er tatt capture på.
+
+**Utvikling:** Med `TVISTR_HELT_BREV_UTEN_BETALING=1` (bare utenom produksjon) går Vipps-knappen rett til bekreftelsen uten Vipps, med en betalt ordre fra «utvikling» og uten e-post. Den e2e-testen trenger dette. For å prøve Vipps lokalt fjerner du flagget. Den hele runden med webhook krever en offentlig `https`-adresse, for eksempel en preview på Vercel. Betalingen godkjennes i testappen Vipps MT.
+
+Skjemaet fylles fra sjekken på serveren (`nyttKjop` og `fraSjekk` i `src/lib/app/saken.ts`). Kjøperens navn og adresse hentes fra forrige betalte sak i samme nettleser.
 
 ## Brevet
 
@@ -109,9 +125,9 @@ Ikke med ennå: salg der en forhandler solgte for en privatperson (fkjl. § 1 an
 
 ## Måling
 
-`src/lib/maling.ts`: landing, sjekk_startet, resultat_vist (med nivå og kategorier), kjop_klikket, betaling_fullfort og brev_kopiert. Det lagres ingen persondata.
+`src/lib/maling.ts`: landing, sjekk_startet, resultat_vist (med nivå og kategorier), kjop_klikket, betaling_fullfort (fra retursiden `/betaling/[ref]`, eller fra kjøpsvinduet uten Vipps) og brev_kopiert. Det lagres ingen persondata.
 
 ## Tester
 
-- `npm test`: vurderingen per nivå og lovversjon, brevet (eksempelbrevet som snapshot, plassholdere og lovversjon), oversettelsen til rangeringen, `kjop`, `lagreSak` og `finnVedtak` (uten betalt sak, andre feil enn saken), låsen og id-ene, topp 10 (`alternativer`), likheten og lagringen.
-- `npx playwright test` (`e2e/flyt.spec.ts`): hele flyten på desktop og mobil, mot databasen og modellen. Testen sjekker også at lenken til saken åpner det lagrede skjemaet i en annen nettleser, og at en ukjent id og `/brev` gir 404. Krever `TVISTR_HELT_BREV_UTEN_BETALING=1`. Hver kjøring lagrer en testsak i `sak`.
+- `npm test`: Vipps-avstemmingen, webhook-signaturen og kjøperen fra Vipps (`src/lib/vipps/*.test.ts`), kvitteringen (`src/lib/epost/kvittering.test.ts`), vurderingen per nivå og lovversjon, brevet (eksempelbrevet som snapshot, plassholdere og lovversjon), oversettelsen til rangeringen, `kjop`, `lagreSak` og `finnVedtak` (uten betalt sak, andre feil enn saken), låsen og id-ene, topp 10 (`alternativer`), likheten og lagringen.
+- `npx playwright test` (`e2e/flyt.spec.ts`): hele flyten på desktop og mobil, mot databasen og modellen. Testen sjekker også at lenken til saken åpner det lagrede skjemaet i en annen nettleser, og at en ukjent id og `/brev` gir 404. Krever `TVISTR_HELT_BREV_UTEN_BETALING=1` for dev-serveren, slik at Vipps-knappen åpner saken uten appen. Selve betalingen prøves for hånd mot testmiljøet. Hver kjøring lagrer en testsak i `sak`.

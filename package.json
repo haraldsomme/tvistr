@@ -27,7 +27,8 @@
     "statistikk:bygg": "tsx --env-file=.env.local scripts/statistikk.ts",
     "ferdig:stikkprove": "tsx --env-file=.env.local scripts/ferdig-stikkprove.ts",
     "ferdig:dekning": "tsx --env-file=.env.local scripts/ferdig-dekning.ts",
-    "ferdig:simulert": "tsx --env-file=.env.local scripts/ferdig-simulert.ts"
+    "ferdig:simulert": "tsx --env-file=.env.local scripts/ferdig-simulert.ts",
+    "vipps": "tsx --env-file=.env.local scripts/vipps.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

@@ -1,0 +1,1 @@
+ALTER TABLE "ordre" ADD COLUMN "kvittering_sendt" timestamp with time zone;

@@ -433,13 +433,15 @@ export const ordre = pgTable(
     belopOre: integer("belop_ore").notNull(),
     // "gratis" (the trial, GRATIS in src/lib/pris.ts) | "utvikling" (TVISTR_HELT_BREV_UTEN_BETALING) | "vipps"
     leverandor: text("leverandor").notNull(),
-    // "opprettet" | "betalt" | "avbrutt" | "feilet"
+    // "opprettet" | "betalt" | "avbrutt" | "feilet" | "refundert"; only src/lib/vipps/avstem.ts moves a Vipps order on from «opprettet»
     status: text("status").notNull(),
     // The provider's id for the payment (Vipps pspReference), once there is one.
     transaksjonId: text("transaksjon_id"),
     opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
     oppdatert: timestamp("oppdatert", { withTimezone: true }).notNull().defaultNow(),
     betalt: timestamp("betalt", { withTimezone: true }),
+    // When the receipt with the link went to the buyer (src/lib/epost/kvittering.ts); null until then.
+    kvitteringSendt: timestamp("kvittering_sendt", { withTimezone: true }),
   },
   (t) => [index("ordre_sak_idx").on(t.sakId)],
 );

@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Vilkår – Tvistr" };
 // trial (GRATIS) nothing is sold, so price, payment and the right of withdrawal are left out.
 export default function Vilkar() {
   return (
-    <Juridisk tittel={GRATIS ? "Vilkår for bruk" : "Vilkår for kjøp"} oppdatert="17. oktober 2026">
+    <Juridisk tittel={GRATIS ? "Vilkår for bruk" : "Vilkår for kjøp"} oppdatert="19. oktober 2026">
       <div className="jur-kort">
         <ul>
           {GRATIS ? (
@@ -55,7 +55,7 @@ export default function Vilkar() {
       )}
 
       <h2>Levering</h2>
-      <p>Brevet åpnes {GRATIS ? "når du trykker «Åpne brevet»" : "så snart betalingen er gjennomført"}. Saken får en egen lenke, og lenken er tilgangen til saken. Ta vare på den, og ikke del den med andre. Nettleseren du {GRATIS ? "åpnet brevet" : "kjøpte"} i, husker den siste saken.</p>
+      <p>Brevet åpnes {GRATIS ? "når du trykker «Åpne brevet»" : "så snart betalingen er gjennomført"}. Saken får en egen lenke, og lenken er tilgangen til saken. Ta vare på den, og ikke del den med andre. Nettleseren du {GRATIS ? "åpnet brevet" : "kjøpte"} i, husker den siste saken.{!GRATIS && " Du får kvitteringen og lenken på e-post til adressen du deler i Vipps."}</p>
       <p>
         Saken er tilgjengelig i {LAGRES_AR} år etter {GRATIS ? "at du åpnet brevet" : "kjøpet"}. Deretter slettes den, se <Link href="/personvern">personvernerklæringen</Link>.
       </p>

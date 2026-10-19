@@ -134,6 +134,13 @@
       "when": 1792269152123,
       "tag": "0018_vedtaksvalg",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792429945645,
+      "tag": "0019_kvittering",
+      "breakpoints": true
     }
   ]
 }

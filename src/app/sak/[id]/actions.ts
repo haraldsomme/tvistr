@@ -13,7 +13,7 @@ import { rensSjekk, rensSvar } from "@/app/sak/rens";
 import { hentAlle, hentBilnavn } from "@/app/sak/vedtak-db";
 import type { Presedens } from "@/lib/app/brev";
 import { idag } from "@/lib/app/dato";
-import { gjelderSaken, type Kjopt, kjopt, laas, manglerForKjop, nyttKjop, rensSkjema } from "@/lib/app/saken";
+import { gjelderSaken, laas, manglerForKjop, nyttKjop, rensSkjema } from "@/lib/app/saken";
 import { standard } from "@/lib/app/skjema";
 import { komponentnavn } from "@/lib/feil/kategorier";
 import { likhet } from "@/lib/matching/likhet";
@@ -27,6 +27,7 @@ import { nyId } from "@/lib/sak/id";
 import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
 import { visSaksnummer } from "@/lib/vedtaksvalg/mal";
 import { byggValg, type Endring, endringMot, fraLagret, grunnlagFor, type LagretSvar, type Modellsvar, sitaterFor, sporModellen, tilLagret, UTVALG_I_TEKSTEN, type Valggrunnlag, type Vedtaksdetaljer } from "@/lib/vedtaksvalg/valg";
+import { opprettBetaling, vippsSattOpp } from "@/lib/vipps/klient";
 import { HELT_BREV_UTEN_BETALING } from "@/lib/vipps/profil";
 
 export type Funn = { ok: true; valg: Presedens[]; endring: Endring | null } | { ok: false; melding: string };
@@ -41,6 +42,13 @@ const forMange = lagGrense({ antall: 20, vinduMs: 60_000 });
 const forMangeKjop = lagGrense({ antall: 10, vinduMs: 60_000 });
 const forMangeLagringer = lagGrense({ antall: 120, vinduMs: 60_000 });
 const ipAdresse = async () => (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "ukjent";
+// Where the buyer is, for Vipps' return address: the address the request came to.
+async function opprinnelse() {
+  const h = await headers();
+  const vert = h.get("x-forwarded-host") ?? h.get("host");
+  if (!vert) throw new Error("mangler host");
+  return `${h.get("x-forwarded-proto") ?? (vert.startsWith("localhost") ? "http" : "https")}://${vert}`;
+}
 
 const SANKSJONSNAVN = new Set(["heving", "prisavslag", "retting", "erstatning", "omlevering"]);
 
@@ -146,36 +154,51 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
   }
 }
 
-export type Kjop = { ok: true; sak: Kjopt } | { ok: false; melding: string };
+// `url` is where the buyer goes: Vipps' page, or the confirmation (/betaling/[ref]) when no payment is needed.
+export type Kjop = { ok: true; url: string } | { ok: false; melding: string };
 
-// The pay button. In the trial (GRATIS) the case is opened at once, with a free order «gratis» and no
-// consent to give, since nothing is sold. Otherwise, until Vipps is connected, it only works in development
-// (TVISTR_HELT_BREV_UTEN_BETALING): the case is saved as paid at once, with an order from «utvikling». The writer starts from the check,
-// keeping the buyer from the previous case (`forrige`) so the browser need not keep their details.
-// With Vipps: save the case with `betalt` null and an order «opprettet», answer with Vipps' URL, and
-// let the callback set the order's status, `transaksjon_id` and the case's `betalt`.
+// The pay button. The case is saved unpaid (`betalt` null) with an order «opprettet» whose id is the
+// reference at Vipps, and the answer is Vipps' page, which sends the buyer back to the confirmation; the case opens when Vipps has the money
+// (src/lib/vipps/avstem.ts, from the return page /betaling/[ref], the webhook or the cron). A new
+// attempt is a new case; one never paid is deleted after 30 days. In development
+// (TVISTR_HELT_BREV_UTEN_BETALING) the case is paid at once, with an order from «utvikling»; in a trial
+// (GRATIS) it is free, with an order «gratis» and no consent to give, since nothing is sold. The writer
+// starts from the check, keeping the buyer from the previous case (`forrige`) so the browser need not
+// keep their details.
 export async function kjop(inn: { sjekk: unknown; forrige: unknown; samtykke: unknown }): Promise<Kjop> {
-  if (!GRATIS && !HELT_BREV_UTEN_BETALING()) return { ok: false, melding: "Betaling er ikke koblet til ennå." };
+  const utenVipps = GRATIS || HELT_BREV_UTEN_BETALING();
+  if (!utenVipps && !vippsSattOpp()) return { ok: false, melding: "Betaling er ikke tilgjengelig akkurat nå." };
   // The buyer has asked for the writer now and given up the right of withdrawal (angrerettloven § 22 n).
   if (!GRATIS && inn?.samtykke !== true) return { ok: false, melding: "Kryss av for at brevet åpnes med en gang." };
   if (forMangeKjop(await ipAdresse())) return { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
   const sjekk = rensSjekk(inn?.sjekk);
   if (!sjekk || manglerForKjop(sjekk)) return { ok: false, melding: "Saken mangler bil eller feil." };
+  const id = nyId();
+  const ordreId = nyId();
+  const belopOre = GRATIS ? 0 : PRIS * 100;
   try {
     const dag = idag();
     const forrige = await hentBetaltSak(inn.forrige);
     const skjema = nyttKjop(sjekk, (forrige && rensSkjema(forrige.skjema, dag)) || standard(dag), dag);
-    const id = nyId();
-    const na = new Date();
+    const na = utenVipps ? new Date() : null;
+    const leverandor = GRATIS ? "gratis" : utenVipps ? "utvikling" : "vipps";
     await db.batch([
       db.insert(sak).values({ id, sjekk, skjema, betalt: na }),
-      db.insert(ordre).values({ id: nyId(), sakId: id, belopOre: GRATIS ? 0 : PRIS * 100, leverandor: GRATIS ? "gratis" : "utvikling", status: "betalt", betalt: na }),
+      db.insert(ordre).values({ id: ordreId, sakId: id, belopOre, leverandor, status: na ? "betalt" : "opprettet", betalt: na }),
     ]);
-    console.info(`kjøp: ny sak (${GRATIS ? "gratis" : "utvikling"})`);
-    return { ok: true, sak: kjopt(id, skjema) };
+    console.info(`kjøp: ny sak (${leverandor})`);
+    if (utenVipps) return { ok: true, url: `/betaling/${ordreId}` };
   } catch (e) {
     console.error("kjøpet feilet", e);
     return { ok: false, melding: "Vi fikk ikke lagret saken. Prøv igjen." };
+  }
+  try {
+    const { redirectUrl } = await opprettBetaling({ ref: ordreId, belopOre, returnUrl: `${await opprinnelse()}/betaling/${ordreId}`, beskrivelse: "Reklamasjonsbrev for bil" });
+    return { ok: true, url: redirectUrl };
+  } catch (e) {
+    console.error("vipps-betalingen ble ikke opprettet", e);
+    await db.update(ordre).set({ status: "feilet", oppdatert: new Date() }).where(eq(ordre.id, ordreId)).catch(() => {});
+    return { ok: false, melding: "Vi fikk ikke kontakt med Vipps. Prøv igjen." };
   }
 }
 

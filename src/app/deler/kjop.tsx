@@ -1,26 +1,30 @@
-// The purchase modal (artifact #buy). In the trial (GRATIS) it opens the letter for free, with no consent
-// to give. Otherwise payment is a stub until Vipps is connected: kjop saves the case as paid in
-// development and says so otherwise.
+// The purchase modal (artifact #buy). The buyer gives up the right of withdrawal and pays with Vipps:
+// kjop saves the case and answers with Vipps' page, and Vipps sends them back to the confirmation
+// (/betaling/[ref]). In
+// development (TVISTR_HELT_BREV_UTEN_BETALING) the case opens without Vipps; in a trial (GRATIS) it is
+// free, with no consent to give.
 import { useEffect, useRef, useState } from "react";
 import { kjop } from "@/app/sak/[id]/actions";
 import { tall } from "@/lib/app/format";
-import type { Kjopt, Sjekk } from "@/lib/app/saken";
+import type { Sjekk } from "@/lib/app/saken";
 import { trygt } from "@/lib/app/kall";
 import { GRATIS, PRIS } from "@/lib/pris";
 import { Hake, InfoSirkel, Lukk } from "./ikoner";
+import { VippsKnapp } from "./vipps-knapp";
 
 const PRISTEKST = GRATIS ? "Gratis" : `kr ${tall(PRIS)}`;
 
-export function Kjop({ sjekk, forrige, apen, utvikling, onLukk, onBetalt }: { sjekk: Sjekk; forrige: string | null; apen: boolean; utvikling: boolean; onLukk: () => void; onBetalt: (k: Kjopt) => void }) {
+export function Kjop({ sjekk, forrige, apen, utvikling, onLukk }: { sjekk: Sjekk; forrige: string | null; apen: boolean; utvikling: boolean; onLukk: () => void }) {
   const [melding, settMelding] = useState<string | null>(null);
   const [venter, settVenter] = useState(false);
   // The right of withdrawal ends when the writer opens (angrerettloven § 22 n): the buyer must ask for that.
   const [samtykke, settSamtykke] = useState(false);
   const knapp = useRef<HTMLButtonElement>(null);
+  const avkrysning = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!apen) return;
-    const t = setTimeout(() => knapp.current?.focus(), 80);
+    const t = setTimeout(() => (knapp.current ?? avkrysning.current)?.focus(), 80);
     const esc = (e: KeyboardEvent) => e.key === "Escape" && onLukk();
     document.addEventListener("keydown", esc);
     return () => {
@@ -32,9 +36,11 @@ export function Kjop({ sjekk, forrige, apen, utvikling, onLukk, onBetalt }: { sj
   async function betal() {
     settVenter(true);
     const r = await trygt(kjop({ sjekk, forrige, samtykke }), "Vi fikk ikke kontakt. Prøv igjen.");
+    // Vipps' page is opened as it is, in this window, and so is the confirmation; the button stays off
+    // until the browser leaves.
+    if (r.ok) return void (window.location.href = r.url);
     settVenter(false);
-    if (r.ok) onBetalt(r.sak);
-    else settMelding(r.melding);
+    settMelding(r.melding);
   }
 
   return (
@@ -63,20 +69,24 @@ export function Kjop({ sjekk, forrige, apen, utvikling, onLukk, onBetalt }: { sj
         </div>
         <div className="demo-note">
           <InfoSirkel />
-          <span>{melding ?? (GRATIS ? "Brevet er gratis i en prøveperiode." : utvikling ? "Betaling er ikke koblet til ennå. I denne versjonen åpnes brevet direkte." : "Betaling er ikke koblet til ennå. Brevet kan ikke låses opp i denne versjonen.")}</span>
+          <span>{melding ?? (GRATIS ? "Brevet er gratis i en prøveperiode." : utvikling ? "Utvikling: brevet åpnes uten Vipps." : "Du betaler i Vipps-appen og deler navn, e-post og adresse til brevet. Lenken til saken sendes på e-post.")}</span>
         </div>
         {!GRATIS && (
           <label className="ck">
-            <input type="checkbox" checked={samtykke} onChange={(e) => settSamtykke(e.target.checked)} />
+            <input ref={avkrysning} type="checkbox" checked={samtykke} onChange={(e) => settSamtykke(e.target.checked)} />
             <span className="ck-b" aria-hidden="true">
               <Hake />
             </span>
             <span>Jeg ber om at brevet åpnes med en gang, og forstår at angreretten da går tapt.</span>
           </label>
         )}
-        <button ref={knapp} type="button" className="btn pri xl" onClick={betal} disabled={venter || (!GRATIS && !samtykke)}>
-          {GRATIS ? "Åpne brevet" : "Gå til betaling"}
-        </button>
+        {GRATIS ? (
+          <button ref={knapp} type="button" className="btn pri xl" onClick={betal} disabled={venter}>
+            Åpne brevet
+          </button>
+        ) : (
+          <VippsKnapp onClick={betal} deaktivert={venter || !samtykke} bred />
+        )}
         <p className="fine" style={{ margin: 0, textAlign: "center" }}>
           Svarene fra saksvurderingen fylles inn i brevet automatisk. Ved å {GRATIS ? "åpne brevet" : "betale"} godtar du{" "}
           <a href="/vilkar" target="_blank" rel="noopener" style={{ color: "var(--accent)" }}>

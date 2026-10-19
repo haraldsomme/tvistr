@@ -13,7 +13,17 @@ type Hvor = { where: () => Promise<undefined> & { returning: typeof returnering 
 const satt = vi.fn<(v: unknown) => Hvor>(() => ({ where: () => Object.assign(Promise.resolve(undefined), { returning: returnering }) }));
 const kandidater = vi.hoisted(() => ({ rader: [] as { id: number; niva: string; feil: null; rett: never[]; treff: object }[] }));
 const sporModellen = vi.fn(async () => ({ svar: { vedtak_id: 2, sitater: ["s1"] } as { vedtak_id: number; sitater: string[] } | null, modell: "m", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0.01 } }));
-vi.mock("next/headers", () => ({ headers: async () => new Map([["x-forwarded-for", "10.0.0.1"]]) }));
+const opprettBetaling = vi.fn<(p: { ref: string; belopOre: number; returnUrl: string; beskrivelse: string }) => Promise<{ redirectUrl: string; reference: string }>>(async () => ({ redirectUrl: "https://pay-mt.vipps.no/x", reference: "r" }));
+const vipps = vi.hoisted(() => ({ sattOpp: true }));
+vi.mock("@/lib/vipps/klient", () => ({ opprettBetaling, vippsSattOpp: () => vipps.sattOpp }));
+vi.mock("next/headers", () => ({
+  headers: async () =>
+    new Map([
+      ["x-forwarded-for", "10.0.0.1"],
+      ["host", "tvistr.no"],
+      ["x-forwarded-proto", "https"],
+    ]),
+}));
 vi.mock("@/app/sak/vedtak-db", () => ({ hentAlle, hentBilnavn: async () => () => null }));
 vi.mock("@/lib/sak/db", () => ({ hentBetaltSak }));
 vi.mock("@/lib/matching/ranger", () => ({ ranger: () => ({ kandidater: kandidater.rader }), avgjorendeFor: () => undefined }));
@@ -68,6 +78,7 @@ beforeEach(() => {
   hentAlle.mockResolvedValue([]);
   kandidater.rader = [];
   pris.gratis = false;
+  vipps.sattOpp = true;
   process.env.TVISTR_HELT_BREV_UTEN_BETALING = "1";
 });
 
@@ -187,9 +198,27 @@ describe("finnVedtak: ett modellkall per sett med svar", () => {
 });
 
 describe("kjop", () => {
-  it("er ikke koblet til uten flagget, og lagrer ingenting", async () => {
+  it("lagrer en ubetalt sak og en Vipps-ordre, og svarer med Vipps' side", async () => {
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
-    expect(await kjop({ sjekk, forrige: null, samtykke: true })).toEqual({ ok: false, melding: "Betaling er ikke koblet til ennå." });
+    expect(await kjop({ sjekk, forrige: null, samtykke: true })).toEqual({ ok: true, url: "https://pay-mt.vipps.no/x" });
+    const [[sakRad, ordreRad]] = batch.mock.calls[0] as unknown as [[{ v: Record<string, unknown> }, { v: Record<string, unknown> }]];
+    expect(sakRad.v.betalt).toBeNull();
+    expect(ordreRad.v).toMatchObject({ sakId: sakRad.v.id, belopOre: 24900, leverandor: "vipps", status: "opprettet", betalt: null });
+    const [p] = opprettBetaling.mock.calls[0];
+    expect(p).toEqual({ ref: ordreRad.v.id, belopOre: 24900, returnUrl: `https://tvistr.no/betaling/${ordreRad.v.id}`, beskrivelse: "Reklamasjonsbrev for bil" });
+  });
+
+  it("merker ordren som feilet når Vipps ikke svarer", async () => {
+    process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
+    opprettBetaling.mockRejectedValueOnce(new Error("nede"));
+    expect(await kjop({ sjekk, forrige: null, samtykke: true })).toEqual({ ok: false, melding: "Vi fikk ikke kontakt med Vipps. Prøv igjen." });
+    expect(satt).toHaveBeenCalledWith(expect.objectContaining({ status: "feilet" }));
+  });
+
+  it("lagrer ingenting uten Vipps-nøkler", async () => {
+    process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
+    vipps.sattOpp = false;
+    expect(await kjop({ sjekk, forrige: null, samtykke: true })).toEqual({ ok: false, melding: "Betaling er ikke tilgjengelig akkurat nå." });
     expect(batch).not.toHaveBeenCalled();
   });
 
@@ -203,22 +232,21 @@ describe("kjop", () => {
     expect(ordreRad.v).toMatchObject({ belopOre: 0, leverandor: "gratis", status: "betalt" });
   });
 
-  it("lagrer saken og en betalt ordre i utvikling", async () => {
+  it("lagrer saken og en betalt ordre i utvikling, og sender til bekreftelsen", async () => {
     const r = await kjop({ sjekk, forrige: null, samtykke: true });
-    expect(r.ok).toBe(true);
-    if (!r.ok) return;
-    expect(erId(r.sak.id)).toBe(true);
-    expect(r.sak).toMatchObject({ reg: "CD 67890", cats: ["klima"], parts: { klima: ["ac"] } });
+    expect(opprettBetaling).not.toHaveBeenCalled();
     const [[sakRad, ordreRad]] = batch.mock.calls[0] as unknown as [[{ tabell: unknown; v: Record<string, unknown> }, { tabell: unknown; v: Record<string, unknown> }]];
+    expect(r).toEqual({ ok: true, url: `/betaling/${ordreRad.v.id}` });
+    expect(erId(sakRad.v.id)).toBe(true);
     expect(sakRad.tabell).toBe(sak);
-    expect(sakRad.v).toMatchObject({ id: r.sak.id, sjekk: { reg: "CD 67890", cats: ["klima"] } });
+    expect(sakRad.v).toMatchObject({ sjekk: { reg: "CD 67890", cats: ["klima"] } });
     expect(sakRad.v.sjekk).not.toHaveProperty("_screen");
     expect(sakRad.v.betalt).toBeInstanceOf(Date);
     expect((sakRad.v.skjema as { c_make: string }).c_make).toBe("Audi");
     expect(ordreRad.tabell).toBe(ordre);
-    expect(ordreRad.v).toMatchObject({ sakId: r.sak.id, belopOre: 24900, leverandor: "utvikling", status: "betalt" });
+    expect(ordreRad.v).toMatchObject({ sakId: sakRad.v.id, belopOre: 24900, leverandor: "utvikling", status: "betalt" });
     expect(erId(ordreRad.v.id)).toBe(true);
-    expect(ordreRad.v.id).not.toBe(r.sak.id);
+    expect(ordreRad.v.id).not.toBe(sakRad.v.id);
   });
 
   it("beholder kjøperen fra forrige sak", async () => {

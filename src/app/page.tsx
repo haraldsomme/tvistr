@@ -5,8 +5,7 @@ import { tall } from "@/lib/brev/format";
 import { GRATIS, PRIS } from "@/lib/pris";
 import { antallVedtak } from "@/lib/vurdering/antall";
 import { Bunn } from "./deler/bunn";
-import { FANER } from "./eksempelbrev";
-import { Hake, Pil } from "./deler/ikoner";
+import { Pil } from "./deler/ikoner";
 import { HeroBrev } from "./hero-brev";
 import { LandingTopp } from "./landing-topp";
 
@@ -17,6 +16,16 @@ const MONO = "var(--f-mono)";
 const BLA = "#1F3A5F";
 const MORK = "#16294A";
 const SEKSJON = "clamp(64px, 8vw, 112px)";
+
+// The points beside the example letter; the number of each is the marker on the sheet (eksempelbrev.ts).
+const PUNKTER = [
+  "Dine opplysninger og datoene. Fristene regnes ut fra dem.",
+  "Feilen, slik du har beskrevet den.",
+  "Paragrafene slik loven gjaldt da du kjøpte bilen.",
+  "Et vedtak der kjøperen vant en lignende sak, med saksnummer og ordrett sitat.",
+  "Kravet ditt med hjemmel, og hva forhandleren må gjøre.",
+  "Svarfrist, og hva som skjer hvis forhandleren sier nei.",
+]
 
 const kicker: CSSProperties = { fontSize: 14, fontWeight: 600, color: BLA };
 const h2: CSSProperties = { margin: 0, fontSize: "clamp(32px, 3.8vw, 46px)", lineHeight: 1.1, fontWeight: 600, letterSpacing: "-0.035em", color: "#111515", textWrap: "balance" };
@@ -129,34 +138,26 @@ export default async function Home() {
       <LandingTopp />
 
       <main id="top" style={{ flex: 1 }}>
-        <section className="lp-in" style={{ paddingTop: "clamp(48px, 8vw, 104px)", paddingBottom: "clamp(64px, 8vw, 112px)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 460px), 1fr))", gap: "clamp(40px, 6vw, 80px)", alignItems: "center" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-            <span style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 8, padding: "6px 12px 6px 10px", borderRadius: 999, background: "#EBEFF5", fontSize: 14, fontWeight: 600, color: BLA }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: BLA }} />
-              Forbrukerkjøpsloven
-            </span>
-            <h1 style={{ margin: 0, fontSize: "clamp(40px, 5.4vw, 66px)", lineHeight: 1.04, fontWeight: 600, letterSpacing: "-0.04em", color: "#111515", textWrap: "balance" }}>Feil på bilen du kjøpte? Reklamer med loven og praksis på din side.</h1>
-            <p style={{ margin: 0, maxWidth: 560, fontSize: "clamp(17px, 1.5vw, 19px)", lineHeight: 1.6, color: "#465150", textWrap: "pretty" }}>
-              Sjekk gratis om du har en sak. Har du det, kan du få et reklamasjonsbrev med lovhenvisninger tilpasset saken din og et vedtak der kjøperen vant en lignende sak.
+        <section className="lp-in lp-hero" style={{ paddingTop: "clamp(40px, 7vw, 88px)", paddingBottom: "clamp(56px, 8vw, 104px)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <h1 style={{ margin: 0, fontSize: "clamp(26px, 2.7vw, 36px)", lineHeight: 1.1, fontWeight: 600, letterSpacing: "-0.035em", color: "#111515", textWrap: "balance" }}>Kjøpt bruktbil med feil eller mangler?</h1>
+            <p style={{ margin: 0, maxWidth: 520, fontSize: "clamp(17px, 1.5vw, 19px)", lineHeight: 1.6, color: "#465150", textWrap: "pretty" }}>
+              Sjekk gratis om du har en sak. Har du det, får du et ferdig reklamasjonsbrev som dette, fylt ut fra svarene dine.
             </p>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <Sjekk storrelse={56} />
-              <a className="lp-sek" href="#slik" style={{ height: 56, padding: "0 24px", boxSizing: "border-box", borderRadius: 14, display: "flex", alignItems: "center", fontSize: 16.5, fontWeight: 500, textDecoration: "none" }}>
-                Slik fungerer det
-              </a>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px 22px", paddingTop: 4 }}>
-              {["Gratis saksvurdering", "Ingen registrering", "Sjekken lagres bare i nettleseren din"].map((t) => (
-                <span key={t} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14.5, color: "#465150" }}>
-                  <span style={{ color: BLA, display: "inline-flex", flex: "none" }}>
-                    <Hake s={15} w={2.6} />
-                  </span>
-                  {t}
-                </span>
+            <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+              {PUNKTER.map((t, i) => (
+                <li key={t} style={{ display: "flex", alignItems: "flex-start", gap: 14, fontSize: 16.5, lineHeight: 1.45, color: "#111515" }}>
+                  <span style={{ flex: "none", width: 24, height: 24, marginTop: 1, borderRadius: "50%", background: BLA, color: "#FFFFFF", display: "grid", placeItems: "center", fontSize: 13, fontWeight: 600 }}>{i + 1}</span>
+                  <span style={{ textWrap: "pretty" }}>{t}</span>
+                </li>
               ))}
+            </ol>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12, paddingTop: 8 }}>
+              <Sjekk storrelse={56} />
+              <span style={{ fontSize: 14.5, color: "#465150" }}>{GRATIS ? "Saksvurderingen og brevet er gratis i en prøveperiode." : `Brevet koster kr ${tall(PRIS)}. Du betaler først etter vurderingen.`}</span>
             </div>
           </div>
-          <HeroBrev faner={FANER} />
+          <HeroBrev />
         </section>
 
         <section id="slik" style={{ background: "#FFFFFF", borderTop: "1px solid #E3E6E8", borderBottom: "1px solid #E3E6E8" }}>

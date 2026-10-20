@@ -1,7 +1,8 @@
 // The letter on paper (artifact toHTML), from the same blocks as the copied text.
+import type { ReactNode } from "react";
 import type { Blokk, Del } from "@/lib/app/brev";
 
-function Deler({ d }: { d: Del[] }) {
+export function Deler({ d }: { d: Del[] }) {
   return (
     <>
       {d.map((x, i) => (typeof x === "string" ? x : <span key={i} className="ph">{x.ph}</span>))}
@@ -9,7 +10,7 @@ function Deler({ d }: { d: Del[] }) {
   );
 }
 
-const Linjer = ({ l }: { l: Del[][] }) => (
+export const Linjer = ({ l }: { l: Del[][] }) => (
   <>
     {l.map((d, i) => (
       <span key={i}>
@@ -20,46 +21,71 @@ const Linjer = ({ l }: { l: Del[][] }) => (
   </>
 );
 
+// One block of the letter. The landing page draws the example letter from the same blocks.
+export function BlokkEl({ b }: { b: Blokk }) {
+  switch (b.t) {
+    case "addr":
+      return <p className="l-addr"><Linjer l={b.linjer} /></p>;
+    case "sign":
+      return <p className="l-sign"><Linjer l={b.linjer} /></p>;
+    case "date":
+      return <p className="l-date"><Deler d={b.tekst} /></p>;
+    case "subj":
+      return <p className="l-subj"><Deler d={b.tekst} /></p>;
+    case "h":
+      return <p className="l-h"><Deler d={b.tekst} /></p>;
+    case "p":
+      return <p><Deler d={b.tekst} /></p>;
+    case "ul":
+      return <ul className="l-ul">{b.punkter.map((d, j) => <li key={j}><Deler d={d} /></li>)}</ul>;
+    case "ol":
+      return <ol>{b.punkter.map((d, j) => <li key={j}><Deler d={d} /></li>)}</ol>;
+    case "prec":
+      return <div className="l-prec">{b.avsnitt.map((d, j) => <p key={j}><Deler d={d} /></p>)}</div>;
+    case "exp":
+      return (
+        <ul className="l-exp">
+          {b.rader.map(([a, c], j) => (
+            <li key={j}>
+              <span><Deler d={a} /></span>
+              <span>{c}</span>
+            </li>
+          ))}
+          <li className="tot">
+            <span>Sum</span>
+            <span>{b.sum}</span>
+          </li>
+        </ul>
+      );
+  }
+}
+
+// The sender on the left and the receiver on the right, on one line (a stacked pair when narrow).
+export function Adresser({ a, b }: { a: Blokk; b: Blokk }) {
+  if (a.t !== "addr" || b.t !== "addr") return null;
+  return (
+    <div className="l-adr2">
+      <div className="l-adr2-in">
+        <p className="l-addr"><Linjer l={a.linjer} /></p>
+        <p className="l-addr l-adr-b"><Linjer l={b.linjer} /></p>
+      </div>
+    </div>
+  );
+}
+
 export function Papir({ blokker, id }: { blokker: Blokk[]; id?: string }) {
+  const noder: ReactNode[] = [];
+  for (let i = 0; i < blokker.length; i++) {
+    const b = blokker[i];
+    const neste = blokker[i + 1];
+    if (b.t === "addr" && neste?.t === "addr") {
+      noder.push(<Adresser key={i} a={b} b={neste} />);
+      i++;
+    } else noder.push(<BlokkEl key={i} b={b} />);
+  }
   return (
     <article className="letter" id={id} aria-label="Reklamasjonsbrev" style={{ whiteSpace: "pre-line" }}>
-      {blokker.map((b, i) => {
-        switch (b.t) {
-          case "addr":
-            return <p key={i} className="l-addr"><Linjer l={b.linjer} /></p>;
-          case "sign":
-            return <p key={i} className="l-sign"><Linjer l={b.linjer} /></p>;
-          case "date":
-            return <p key={i} className="l-date"><Deler d={b.tekst} /></p>;
-          case "subj":
-            return <p key={i} className="l-subj"><Deler d={b.tekst} /></p>;
-          case "h":
-            return <p key={i} className="l-h"><Deler d={b.tekst} /></p>;
-          case "p":
-            return <p key={i}><Deler d={b.tekst} /></p>;
-          case "ul":
-            return <ul key={i} className="l-ul">{b.punkter.map((d, j) => <li key={j}><Deler d={d} /></li>)}</ul>;
-          case "ol":
-            return <ol key={i}>{b.punkter.map((d, j) => <li key={j}><Deler d={d} /></li>)}</ol>;
-          case "prec":
-            return <div key={i} className="l-prec">{b.avsnitt.map((d, j) => <p key={j}><Deler d={d} /></p>)}</div>;
-          case "exp":
-            return (
-              <ul key={i} className="l-exp">
-                {b.rader.map(([a, c], j) => (
-                  <li key={j}>
-                    <span><Deler d={a} /></span>
-                    <span>{c}</span>
-                  </li>
-                ))}
-                <li className="tot">
-                  <span>Sum</span>
-                  <span>{b.sum}</span>
-                </li>
-              </ul>
-            );
-        }
-      })}
+      {noder}
     </article>
   );
 }

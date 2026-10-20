@@ -22,7 +22,7 @@ describe("eksempelbrevet på forsiden", () => {
   });
   it("sladden er bare n-ord, og brevets egne ord står aldri i den", () => {
     const sladd = rader.flatMap((r) => (r.rad === "adresser" ? [] : r.deler.filter((d) => d.sladd).map((d) => d.t)));
-    expect(sladd).toHaveLength(8);
+    expect(sladd).toHaveLength(10);
     sladd.forEach((t) => expect(t).toMatch(/^n{2,6}( n{2,6})*$/));
   });
   it("sladden og det lesbare gir tilbake hele teksten", () => {
@@ -37,11 +37,18 @@ describe("eksempelbrevet på forsiden", () => {
     ]);
   });
   it("ord med n i seg blir ikke sladdet", () => expect(deler("en nnn nøkkel nn ann").map((d) => d.sladd)).toEqual([false, true, false, true, false]));
-  it("vedtaket er et ekte: 22/10322, Golf 2017 kjøpt i 2021 ved 35 500 km (vedtak.id 1869)", () => {
-    const t = synligTekst(rader).find((x) => x.startsWith("Det vises til"))!;
+  it("vedtaket er et ekte: 22/10322, Golf 2017 ved 35 500 km, oppdaget fem måneder etter kjøpet (vedtak.id 1869)", () => {
+    const t = synligTekst(rader).find((x) => x.startsWith("I Forbrukerklageutvalgets vedtak"))!;
     expect(t).toContain("vedtak i sak 22/10322 av 1. juni 2023");
-    expect(t).toContain("på en Volkswagen Golf 2017-modell kjøpt i 2021, som hadde gått 35 500 km ved kjøpet");
+    expect(t).toContain("prisavslag tilsvarende hele utbedringskostnaden for defekte sensorer i klimaanlegget på en Volkswagen Golf 2017-modell");
+    expect(t).toContain("Bilen hadde gått 35 500 km ved kjøpet, og feilen ble oppdaget fem måneder etter overtakelsen");
     expect(TEKST).not.toContain("48213");
+  });
+  it("sammenligningen med vedtaket stemmer med eksempelsaken: nyere bil, feilen viste seg tidligere, men ikke lavere km", () => {
+    expect(TEKST).toContain("Min bil er nyere, og feilen viste seg tidligere.");
+    expect(TEKST).not.toContain("gått mindre"); // 39 800 km against the decision's 35 500
+    expect(TEKST).toContain("årsmodell 2022");
+    expect(TEKST).toContain("Feilen viste seg tre måneder etter leveringen");
   });
   it("ingen plassholdere er synlige", () => expect(synligTekst(rader).join("\n")).not.toMatch(/\[[^\]]+\]/));
   it("lesbar andel: noe er sladdet, men mesteparten kan leses", () => {

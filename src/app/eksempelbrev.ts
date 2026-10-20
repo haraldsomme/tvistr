@@ -31,7 +31,11 @@ Feilen viste seg tre måneder etter leveringen. Etter § 18 annet ledd skal en m
 
 **Praksis fra Forbrukerklageutvalget**
 
-Det vises til Forbrukerklageutvalgets vedtak i sak 22/10322 av 1. juni 2023. Saken gjaldt svikt i klimaanleggets sensorer på en Volkswagen Golf 2017-modell kjøpt i 2021, som hadde gått 35 500 km ved kjøpet. Utvalget uttalte nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn.
+I Forbrukerklageutvalgets vedtak i sak 22/10322 av 1. juni 2023 fikk kjøperen medhold i prisavslag tilsvarende hele utbedringskostnaden for defekte sensorer i klimaanlegget på en Volkswagen Golf 2017-modell. Bilen hadde gått 35 500 km ved kjøpet, og feilen ble oppdaget fem måneder etter overtakelsen. Min bil er nyere, og feilen viste seg tidligere. Det er samme komponent: nnnnnn nnnnnn nnnnnn nnnnnn nn.
+
+Utvalget la til grunn at nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn. Forhandlerens innsigelser om at garantien var utløpt og at feilen ikke var til stede ved kjøpet, førte ikke frem.
+
+Kjøperen i den saken måtte selv sannsynliggjøre mangelen. nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn. Jeg kan ikke se noe som skiller min sak fra denne.
 
 **Krav**
 

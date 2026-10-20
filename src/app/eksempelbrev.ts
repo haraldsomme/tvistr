@@ -1,7 +1,9 @@
 // The example letter on the landing page. The text is written here, not drawn from the letter the app
-// writes (src/lib/app/brev.ts), and the case is made up: the buyer, the dealer and the decision it
-// refers to. Words made of n's (nn–nnnnnn) are the censored parts: they are drawn as grey bars and
-// are never read out.
+// writes (src/lib/app/brev.ts). The buyer and the dealer are made up; the decision it refers to is real:
+// 22/10322 of 1 June 2023, as it stands in the table `vedtak` (id 1869): a VW Golf 2017, bought in 2021
+// at 35 500 km, whose air-conditioning sensors failed; the committee found a manufacturing fault and
+// granted a price reduction (checked against the table 2026-10-20). Words made of n's (nn–nnnnnn) are
+// the censored parts: they are drawn as grey bars and are never read out.
 
 export const TEKST = `Kari Nordmann
 Storgata 12
@@ -29,7 +31,7 @@ Feilen viste seg tre måneder etter leveringen. Etter § 18 annet ledd skal en m
 
 **Praksis fra Forbrukerklageutvalget**
 
-Det vises til Forbrukerklageutvalgets vedtak i sak 48213 av 9. juni 2025. Saken gjaldt svikt i klimaanlegget på en Volkswagen Golf 2021-modell kjøpt i 2024, som hadde gått 35 500 km ved kjøpet. Utvalget uttalte nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn.
+Det vises til Forbrukerklageutvalgets vedtak i sak 22/10322 av 1. juni 2023. Saken gjaldt svikt i klimaanleggets sensorer på en Volkswagen Golf 2017-modell kjøpt i 2021, som hadde gått 35 500 km ved kjøpet. Utvalget uttalte nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn.
 
 **Krav**
 

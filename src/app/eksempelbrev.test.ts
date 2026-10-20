@@ -37,6 +37,12 @@ describe("eksempelbrevet på forsiden", () => {
     ]);
   });
   it("ord med n i seg blir ikke sladdet", () => expect(deler("en nnn nøkkel nn ann").map((d) => d.sladd)).toEqual([false, true, false, true, false]));
+  it("vedtaket er et ekte: 22/10322, Golf 2017 kjøpt i 2021 ved 35 500 km (vedtak.id 1869)", () => {
+    const t = synligTekst(rader).find((x) => x.startsWith("Det vises til"))!;
+    expect(t).toContain("vedtak i sak 22/10322 av 1. juni 2023");
+    expect(t).toContain("på en Volkswagen Golf 2017-modell kjøpt i 2021, som hadde gått 35 500 km ved kjøpet");
+    expect(TEKST).not.toContain("48213");
+  });
   it("ingen plassholdere er synlige", () => expect(synligTekst(rader).join("\n")).not.toMatch(/\[[^\]]+\]/));
   it("lesbar andel: noe er sladdet, men mesteparten kan leses", () => {
     const tegn = (x: string) => x.replace(/\s/g, "").length;

@@ -378,8 +378,6 @@ h1,h2,h3{text-wrap:balance}
 .hb-stempel{position:absolute;top:20px;right:22px;z-index:1;padding:5px 12px 4px;border:2px solid currentColor;border-radius:6px;color:rgba(170,52,44,.82);font-family:var(--f-ui);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;line-height:1.2;transform:rotate(-8deg);transform-origin:center;box-shadow:inset 0 0 0 1px rgba(170,52,44,.25);pointer-events:none;user-select:none}
 /* Censored text: filler drawn as one grey band per line, starting right after the legible words. */
 .hb-sladd{color:transparent;user-select:none;background-image:linear-gradient(#DDE1E4,#DDE1E4);background-size:100% .62em;background-position:0 55%;background-repeat:no-repeat;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-/* Where the sheet is narrow, the shorter run alone keeps the grey within two lines. */
-@container (max-width:560px){.hb-sladd-bred{display:none}}
 .hb-skjult{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .hb-ark .l-prec a{color:#1F3A5F}
 /* Landing page: links and buttons, with their hover states (the page itself is inline-styled). */

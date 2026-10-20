@@ -22,7 +22,7 @@ const PUNKTER = [
   "Dine opplysninger og datoene. Fristene regnes ut fra dem.",
   "Feilen, slik du har beskrevet den.",
   "Paragrafene slik loven gjaldt da du kjøpte bilen.",
-  "Et vedtak der kjøperen vant en lignende sak, med saksnummer og ordrett sitat.",
+  "Et vedtak der kjøperen vant en lignende sak, og hvorfor din sak står like sterkt.",
   "Kravet ditt med hjemmel, og hva forhandleren må gjøre.",
   "Svarfrist, og hva som skjer hvis forhandleren sier nei.",
 ]

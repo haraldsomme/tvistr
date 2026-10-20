@@ -1,55 +1,67 @@
-import { eksempelRader, fyll } from "./eksempelbrev";
-import { Adresser, BlokkEl } from "./sak/[id]/papir";
+import { type Del, eksempelRader } from "./eksempelbrev";
 
-// The example letter in the hero: the letter the buyer gets for a made-up case, simplified. Each of the
-// six sections the points beside the sheet name is one paragraph: legible from the top, and grey lines
-// for the rest at the bottom (the sections are in eksempelbrev.ts). A numbered marker in the margin ties
-// a section to its point. The component has no script: the sheet is part of the page when it is built.
+// The example letter in the hero: a made-up letter, with parts of it censored (the text is in
+// eksempelbrev.ts). A numbered marker in the margin ties a section to its point beside the sheet. The
+// component has no script: the sheet is part of the page when it is built.
 
-// Legible text, with the decision's address shown as the site's name.
-const Tekst = ({ t }: { t: string }) =>
-  t.split(/(https?:\/\/\S+)/).map((d, i) =>
-    i % 2 ? (
-      <a key={i} href={d} target="_blank" rel="noopener">{new URL(d).hostname}</a>
-    ) : (
-      d
-    ),
-  );
+// Amounts and distances do not break inside the number («259 900»).
+const tall = (t: string) => t.replace(/(\d) (?=\d{3}\b)/g, "$1\u00a0");
+
+const Linje = ({ d }: { d: Del[] }) => (
+  <>
+    {d.map((x, i) =>
+      x.sladd ? (
+        <span key={i} className="hb-sladd" aria-hidden="true">
+          {x.t}
+        </span>
+      ) : (
+        tall(x.t)
+      ),
+    )}
+  </>
+);
+
+const Adresse = ({ l, klasse }: { l: string[]; klasse?: string }) => (
+  <p className={`l-addr${klasse ? ` ${klasse}` : ""}`}>
+    {l.map((x, i) => (
+      <span key={i}>
+        {i > 0 && <br />}
+        {x}
+      </span>
+    ))}
+  </p>
+);
+
+const KLASSE = { dato: "l-date", emne: "l-subj", overskrift: "l-h", hilsen: "l-sign" } as const;
 
 export function HeroBrev() {
-  const rader = eksempelRader();
   return (
     <div className="hb">
       <span className="hb-stempel">Forenklet eksempel</span>
       <article className="letter hb-ark" aria-label="Eksempel på reklamasjonsbrev" style={{ whiteSpace: "pre-line" }}>
-        {rader.map((r, i) => {
+        {eksempelRader().map((r, i) => {
+          const nr = r.merke && (
+            <span className="hb-nr" aria-label={`Punkt ${r.merke}`}>
+              {r.merke}
+            </span>
+          );
           if (r.rad === "adresser")
             return (
               <div key={i} className="hb-rad">
-                {r.merke && <span className="hb-nr" aria-label={`Punkt ${r.merke}`}>{r.merke}</span>}
-                <Adresser a={r.a} b={r.b} />
+                {nr}
+                <div className="l-adr2">
+                  <div className="l-adr2-in">
+                    <Adresse l={r.a} />
+                    <Adresse l={r.b} klasse="l-adr-b" />
+                  </div>
+                </div>
               </div>
             );
-          // The attachments on one line, as the simplified example shows them.
-          if (r.rad === "blokk" && r.blokk.t === "ol") return <p key={i}>{r.blokk.punkter.map((d) => d.map((x) => (typeof x === "string" ? x : x.ph)).join("")).join(" · ")}</p>;
-          // The greeting and the name without the blank line the letter leaves for a handwritten signature.
-          if (r.rad === "blokk" && r.blokk.t === "sign") return <BlokkEl key={i} b={{ ...r.blokk, linjer: r.blokk.linjer.filter((l) => l.some((x) => typeof x !== "string" || x.trim())) }} />;
-          if (r.rad === "blokk") return <BlokkEl key={i} b={r.blokk} />;
           return (
             <div key={i} className="hb-rad">
-              {r.visMerke && <span className="hb-nr" aria-label={`Punkt ${r.merke}`}>{r.merke}</span>}
-              {r.overskrift && <p className="l-h">{r.overskrift}</p>}
-              <p>
-                <Tekst t={r.tekst} />
-                {r.skjult.kort > 0 && (
-                  <>
-                    {" "}
-                    <span className="hb-sladd" aria-hidden="true">{fyll(r.skjult.kort)}</span>
-                  </>
-                )}
-                {r.skjult.bred > 0 && (
-                  <span className="hb-sladd hb-sladd-bred" aria-hidden="true">{" "}{fyll(r.skjult.bred)}</span>
-                )}
+              {nr}
+              <p className={r.rad === "avsnitt" ? undefined : KLASSE[r.rad]}>
+                <Linje d={r.deler} />
               </p>
             </div>
           );

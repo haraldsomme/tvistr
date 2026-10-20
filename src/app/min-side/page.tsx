@@ -9,7 +9,7 @@ import { betalteSaker } from "@/lib/sak/db";
 
 export const metadata: Metadata = { title: "Min side – Tvistr", robots: { index: false, follow: false } };
 
-const kort = { background: "#FFFFFF", border: "1px solid #E2E6EC", borderRadius: 16, padding: "18px 20px" } as const;
+const kort = { background: "#FFFFFF", border: "1px solid #E3E6E8", borderRadius: 16, padding: "18px 20px" } as const;
 const lenke = { textDecoration: "none" } as const;
 
 // The faults of a case by name: the chosen subcategories, else the category.
@@ -31,18 +31,18 @@ export default async function Page() {
   const saker = await betalteSaker(sub);
   const navn = saker[0]?.skjema.b_name;
   return (
-    <div className="home" style={{ minHeight: "100vh", background: "#F5F6F8" }}>
+    <div className="home" style={{ minHeight: "100vh", background: "#F4F5F6" }}>
       <Topp />
       <main className="wrap">
         <div style={{ maxWidth: 600, margin: "0 auto", padding: "48px 0 64px", display: "flex", flexDirection: "column", gap: 20 }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, letterSpacing: "-0.03em" }}>Dine brev</h1>
-          <div style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", fontSize: 15, color: "#455063" }}>
-            <span>Innlogget med Vipps{navn ? <> · <b style={{ color: "#10141A" }}>{navn}</b></> : null}</span>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", fontSize: 15, color: "#465150" }}>
+            <span>Innlogget med Vipps{navn ? <> · <b style={{ color: "#111515" }}>{navn}</b></> : null}</span>
             <LoggUt />
           </div>
           {saker.length === 0 && (
             <section style={kort}>
-              <p style={{ margin: "0 0 12px", fontSize: 15, color: "#455063" }}>Du har ingen brev på denne Vipps-kontoen.</p>
+              <p style={{ margin: "0 0 12px", fontSize: 15, color: "#465150" }}>Du har ingen brev på denne Vipps-kontoen.</p>
               <Link href="/sak?start" className="btn pri" style={lenke}>
                 Sjekk en ny sak
               </Link>
@@ -57,8 +57,8 @@ export default async function Page() {
                   {bil || "Bil"}
                   {s.skjema.c_reg ? ` (${s.skjema.c_reg})` : ""}
                 </h2>
-                <p style={{ margin: "0 0 4px", fontSize: 15, color: "#455063" }}>{feilnavn(s.skjema.f_cats, s.skjema.f_parts)}</p>
-                <p style={{ margin: "0 0 14px", fontSize: 13, color: "#7A8597" }}>Kjøpt {dato}</p>
+                <p style={{ margin: "0 0 4px", fontSize: 15, color: "#465150" }}>{feilnavn(s.skjema.f_cats, s.skjema.f_parts)}</p>
+                <p style={{ margin: "0 0 14px", fontSize: 13, color: "#869190" }}>Kjøpt {dato}</p>
                 <Link href={`/sak/${s.id}`} className="btn pri" style={lenke}>
                   Åpne brevet
                 </Link>

@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Innlogging – Tvistr", robots: { in
 // the user on to Vipps, and a prefetching <Link> would start logins nobody asked for.
 export default function Page() {
   return (
-    <div className="home" style={{ minHeight: "100vh", background: "#F5F6F8" }}>
+    <div className="home" style={{ minHeight: "100vh", background: "#F4F5F6" }}>
       <Topp />
       <main className="wrap">
         <div style={{ maxWidth: 560, margin: "0 auto", padding: "64px 0", display: "flex", flexDirection: "column", gap: 16 }}>

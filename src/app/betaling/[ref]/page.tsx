@@ -14,7 +14,7 @@ export default async function Page({ params, searchParams }: PageProps<"/betalin
   const { n } = await searchParams;
   if (!erId(ref)) notFound();
   return (
-    <div className="home" style={{ minHeight: "100vh", background: "#F5F6F8" }}>
+    <div className="home" style={{ minHeight: "100vh", background: "#F4F5F6" }}>
       <Topp />
       <main className="wrap">
         <Venter referanse={ref} n={typeof n === "string" ? n : null} />

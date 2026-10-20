@@ -51,30 +51,30 @@ export function byggKvittering(k: Kvittering): { emne: string; html: string; tek
     `Spørsmål? Svar på denne e-posten eller skriv til ${FIRMA.epost}.`,
   ].join("\n");
 
-  const p = (t: string, stil = "") => `<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#455063;${stil}">${t}</p>`;
-  const rad = (a: string, b: string, stil = "") => `<tr><td style="padding:6px 0;color:#455063;${stil}">${a}</td><td style="padding:6px 0;text-align:right;color:#10141A;${stil}">${b}</td></tr>`;
-  const html = `<!doctype html><html lang="nb"><body style="margin:0;background:#F5F6F8;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+  const p = (t: string, stil = "") => `<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#465150;${stil}">${t}</p>`;
+  const rad = (a: string, b: string, stil = "") => `<tr><td style="padding:6px 0;color:#465150;${stil}">${a}</td><td style="padding:6px 0;text-align:right;color:#111515;${stil}">${b}</td></tr>`;
+  const html = `<!doctype html><html lang="nb"><body style="margin:0;background:#F4F5F6;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
 <div style="max-width:560px;margin:0 auto;padding:32px 16px">
 <div style="background:#FFFFFF;border-radius:16px;padding:28px">
-<div style="font-size:22px;font-weight:800;color:#10141A;margin-bottom:20px">tvistr</div>
-<h1 style="margin:0 0 12px;font-size:24px;color:#10141A">Takk for handelen!</h1>
+<div style="font-size:22px;font-weight:800;color:#111515;margin-bottom:20px">tvistr</div>
+<h1 style="margin:0 0 12px;font-size:24px;color:#111515">Takk for handelen!</h1>
 ${p(`Betalingen er bekreftet, og brevet for ${esc(k.bil)} (${esc(k.reg)}) er klart til å fylles ut.`)}
-<p style="margin:22px 0"><a href="${lenke}" style="display:inline-block;background:#2B5BF0;color:#FFFFFF;text-decoration:none;font-weight:600;padding:13px 22px;border-radius:12px">Åpne saken din</a></p>
-${p(`Eller kopier lenken: <a href="${lenke}" style="color:#2B5BF0;word-break:break-all">${lenke}</a>`)}
-${p(`${TILGANG} <a href="${minSide}" style="color:#2B5BF0">Åpne Min side</a>`)}
-<h2 style="margin:24px 0 8px;font-size:16px;color:#10141A">Neste steg</h2>
-<ol style="margin:0 0 14px;padding-left:20px;font-size:15px;line-height:1.55;color:#455063">${STEG.map((s) => `<li>${s}</li>`).join("")}</ol>
-<h2 style="margin:24px 0 8px;font-size:16px;color:#10141A">Kvittering</h2>
+<p style="margin:22px 0"><a href="${lenke}" style="display:inline-block;background:#1F3A5F;color:#FFFFFF;text-decoration:none;font-weight:600;padding:13px 22px;border-radius:12px">Åpne saken din</a></p>
+${p(`Eller kopier lenken: <a href="${lenke}" style="color:#1F3A5F;word-break:break-all">${lenke}</a>`)}
+${p(`${TILGANG} <a href="${minSide}" style="color:#1F3A5F">Åpne Min side</a>`)}
+<h2 style="margin:24px 0 8px;font-size:16px;color:#111515">Neste steg</h2>
+<ol style="margin:0 0 14px;padding-left:20px;font-size:15px;line-height:1.55;color:#465150">${STEG.map((s) => `<li>${s}</li>`).join("")}</ol>
+<h2 style="margin:24px 0 8px;font-size:16px;color:#111515">Kvittering</h2>
 <table style="width:100%;border-collapse:collapse;font-size:14px">
 ${rad("Selger", esc(selger))}
 ${rad("Dato", dato(k.betalt))}
 ${rad("Ordrenummer", k.ref)}
-${rad(esc(vare), kr(k.belopOre), "border-top:1px solid #E2E6EC")}
-${rad("<b>Totalt, betalt med Vipps</b>", `<b>${kr(k.belopOre)}</b>`, "border-top:1px solid #E2E6EC")}
+${rad(esc(vare), kr(k.belopOre), "border-top:1px solid #E3E6E8")}
+${rad("<b>Totalt, betalt med Vipps</b>", `<b>${kr(k.belopOre)}</b>`, "border-top:1px solid #E3E6E8")}
 </table>
 ${p(mva, "margin-top:14px;font-size:13px")}
 ${p(angrerett, "font-size:13px")}
-${p(`Spørsmål? Svar på denne e-posten eller skriv til <a href="mailto:${FIRMA.epost}" style="color:#2B5BF0">${FIRMA.epost}</a>.`, "font-size:13px")}
+${p(`Spørsmål? Svar på denne e-posten eller skriv til <a href="mailto:${FIRMA.epost}" style="color:#1F3A5F">${FIRMA.epost}</a>.`, "font-size:13px")}
 </div></div></body></html>`;
   return { emne: "Kvittering og lenke til saken din – Tvistr", html, tekst };
 }

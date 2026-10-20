@@ -16,14 +16,14 @@ export const metadata: Metadata = {
   description: "Hva reklamasjonsbrevet fra Tvistr inneholder: et ekte vedtak som ligner din sak, loven og fristene som gjelder deg, og kravet ditt.",
 };
 
-const BLA = "#2B5BF0";
+const BLA = "#1F3A5F";
 const kicker: CSSProperties = { fontFamily: "var(--f-mono)", fontSize: 12.5, color: BLA };
 const h2: CSSProperties = { margin: 0, fontSize: "clamp(26px, 3vw, 36px)", lineHeight: 1.1, letterSpacing: "-0.03em", fontWeight: 600 };
-const tekst: CSSProperties = { margin: 0, fontSize: 16, lineHeight: 1.65, color: "#455063", maxWidth: "62ch" };
+const tekst: CSSProperties = { margin: 0, fontSize: 16, lineHeight: 1.65, color: "#465150", maxWidth: "62ch" };
 
 function Del({ kort, tittel, children }: { kort: string; tittel: string; children: ReactNode }) {
   return (
-    <section style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 48, borderTop: "1px solid #CBD3DD" }}>
+    <section style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 48, borderTop: "1px solid #CDD5D2" }}>
       <div style={kicker}>{kort}</div>
       <h2 style={h2}>{tittel}</h2>
       {children}
@@ -45,7 +45,7 @@ const DELER: [string, string][] = [
 export default async function Brevet() {
   const n = await antallVedtak();
   return (
-    <div className="home" style={{ minHeight: "100vh", background: "#F5F6F8" }}>
+    <div className="home" style={{ minHeight: "100vh", background: "#F4F5F6" }}>
       <Topp />
       <main className="wrap" style={{ maxWidth: 820, paddingTop: 72, paddingBottom: 96, display: "flex", flexDirection: "column", gap: 48 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -83,9 +83,9 @@ export default async function Brevet() {
         <Del kort="03" tittel="Brevet, del for del">
           <div style={{ display: "flex", flexDirection: "column" }}>
             {DELER.map(([t, b]) => (
-              <div key={t} style={{ display: "flex", flexWrap: "wrap", gap: "4px 24px", padding: "16px 0", borderTop: "1px solid #E2E6EC" }}>
+              <div key={t} style={{ display: "flex", flexWrap: "wrap", gap: "4px 24px", padding: "16px 0", borderTop: "1px solid #E3E6E8" }}>
                 <div style={{ flex: "1 1 230px", fontWeight: 600, fontSize: 15.5 }}>{t}</div>
-                <div style={{ flex: "2 1 340px", fontSize: 15, lineHeight: 1.55, color: "#455063" }}>{b}</div>
+                <div style={{ flex: "2 1 340px", fontSize: 15, lineHeight: 1.55, color: "#465150" }}>{b}</div>
               </div>
             ))}
           </div>
@@ -94,7 +94,7 @@ export default async function Brevet() {
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 24, padding: "clamp(28px, 4vw, 44px)", borderRadius: 24, background: BLA, color: "#FFFFFF" }}>
           <div style={{ flex: "1 1 320px", display: "flex", flexDirection: "column", gap: 8 }}>
             <h2 style={{ margin: 0, fontSize: "clamp(24px, 3vw, 32px)", letterSpacing: "-0.03em", fontWeight: 600 }}>Sjekk saken din først</h2>
-            <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: "#D5E1F1" }}>Sjekken er gratis, tar rundt to minutter og krever ingen registrering.</p>
+            <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: "#D5DEEA" }}>Sjekken er gratis, tar rundt to minutter og krever ingen registrering.</p>
           </div>
           <Link href="/sak?start" style={{ display: "inline-flex", alignItems: "center", gap: 10, height: 54, padding: "0 24px", borderRadius: 14, background: "#FFFFFF", color: BLA, fontSize: 16, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>
             Sjekk saken din gratis

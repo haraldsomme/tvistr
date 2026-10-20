@@ -60,7 +60,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
       <header className="wtop">
         <div className="wleft" style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, justifySelf: "start" }}>
           <Merke />
-          <Link href="/min-side" className="wback" aria-label="← Min side" style={{ fontSize: 14, color: "#455063", textDecoration: "none", whiteSpace: "nowrap" }}>
+          <Link href="/min-side" className="wback" aria-label="← Min side" style={{ fontSize: 14, color: "#465150", textDecoration: "none", whiteSpace: "nowrap" }}>
             ←<span className="wback-t"> Min side</span>
           </Link>
         </div>

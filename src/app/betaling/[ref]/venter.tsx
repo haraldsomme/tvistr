@@ -27,7 +27,7 @@ const TEKST: Record<Visning, { tittel: string; tekst: string }> = {
 
 const STEG = ["Sjekk opplysningene om deg og legg inn forhandleren.", "Se vedtaket brevet viser til.", "Kopier brevet og send det til forhandleren."];
 
-const tekstfarge = "#455063";
+const tekstfarge = "#465150";
 
 export function Venter({ referanse, n }: { referanse: string; n: string | null }) {
   const [visning, settVisning] = useState<Visning>("venter");
@@ -96,8 +96,8 @@ export function Venter({ referanse, n }: { referanse: string; n: string | null }
   );
 }
 
-const kort = { background: "#FFFFFF", border: "1px solid #E2E6EC", borderRadius: 16, padding: "18px 20px" } as const;
-const etikett = { fontSize: 12, fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase", color: "#7A8597", margin: "0 0 10px" } as const;
+const kort = { background: "#FFFFFF", border: "1px solid #E3E6E8", borderRadius: 16, padding: "18px 20px" } as const;
+const etikett = { fontSize: 12, fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase", color: "#869190", margin: "0 0 10px" } as const;
 
 function Takk({ b, referanse, medN }: { b: Bekreftelse; referanse: string; medN: boolean }) {
   // Shown only after the server's answer, so always in the browser.
@@ -119,7 +119,7 @@ function Takk({ b, referanse, medN }: { b: Bekreftelse; referanse: string; medN:
   return (
     <div style={{ maxWidth: 600, margin: "0 auto", padding: "48px 0 64px", display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <span style={{ width: 44, height: 44, borderRadius: 22, background: "#E3F4EA", color: "#1E7A4C", display: "grid", placeItems: "center" }} aria-hidden="true">
+        <span style={{ width: 44, height: 44, borderRadius: 22, background: "#E4F3EA", color: "#155C39", display: "grid", placeItems: "center" }} aria-hidden="true">
           <Hake s={20} />
         </span>
         <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, letterSpacing: "-0.03em" }}>Takk for handelen!</h1>
@@ -133,7 +133,7 @@ function Takk({ b, referanse, medN }: { b: Bekreftelse; referanse: string; medN:
         <p style={{ margin: "0 0 12px", fontSize: 15, lineHeight: 1.55, color: tekstfarge }}>
           {eier?.sendtTil ? (
             <>
-              Vi har sendt lenken og kvitteringen til <b style={{ color: "#10141A" }}>{eier.sendtTil}</b>, så du alltid finner saken igjen.
+              Vi har sendt lenken og kvitteringen til <b style={{ color: "#111515" }}>{eier.sendtTil}</b>, så du alltid finner saken igjen.
             </>
           ) : (
             "Du finner saken igjen på Min side."
@@ -150,7 +150,7 @@ function Takk({ b, referanse, medN }: { b: Bekreftelse; referanse: string; medN:
           )}
         </p>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <code style={{ flex: "1 1 240px", minWidth: 0, overflowWrap: "anywhere", fontSize: 13, background: "#F5F6F8", borderRadius: 10, padding: "10px 12px" }}>{lenke}</code>
+          <code style={{ flex: "1 1 240px", minWidth: 0, overflowWrap: "anywhere", fontSize: 13, background: "#F4F5F6", borderRadius: 10, padding: "10px 12px" }}>{lenke}</code>
           <button type="button" className="btn" onClick={kopier}>
             <Kopier />
             {kopiert ? "Kopiert" : "Kopier"}
@@ -171,7 +171,7 @@ function Takk({ b, referanse, medN }: { b: Bekreftelse; referanse: string; medN:
         <p style={etikett}>Kvittering</p>
         <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "1fr auto", rowGap: 8, columnGap: 16, fontSize: 14, color: tekstfarge }}>
           <dt>{eier ? `Reklamasjonsbrev for bil, ${eier.bil} (${eier.reg})` : "Reklamasjonsbrev for bil"}</dt>
-          <dd style={{ margin: 0, color: "#10141A" }}>kr {tall(b.belopOre / 100)}</dd>
+          <dd style={{ margin: 0, color: "#111515" }}>kr {tall(b.belopOre / 100)}</dd>
           <dt>Betalt</dt>
           <dd style={{ margin: 0 }}>{b.belopOre ? `${dato} med Vipps` : dato}</dd>
           <dt>Ordrenummer</dt>
@@ -185,7 +185,7 @@ function Takk({ b, referanse, medN }: { b: Bekreftelse; referanse: string; medN:
           <Pil />
         </Link>
         <p style={{ margin: "12px 0 0", fontSize: 14 }}>
-          <Link href="/min-side" style={{ color: "#2B5BF0" }}>
+          <Link href="/min-side" style={{ color: "#1F3A5F" }}>
             Alle brevene dine finner du på Min side
           </Link>
         </p>

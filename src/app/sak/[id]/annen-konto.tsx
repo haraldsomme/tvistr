@@ -4,7 +4,7 @@ import { LoggUt } from "@/app/deler/logg-ut";
 // Shown to a logged-in user who does not own the case. Says nothing about the case itself.
 export function AnnenKonto() {
   return (
-    <div className="home" style={{ minHeight: "100vh", background: "#F5F6F8" }}>
+    <div className="home" style={{ minHeight: "100vh", background: "#F4F5F6" }}>
       <Topp />
       <main className="wrap">
         <div style={{ maxWidth: 560, margin: "0 auto", padding: "64px 0", display: "flex", flexDirection: "column", gap: 16 }}>

@@ -1,11 +1,20 @@
 // The letter on paper (artifact toHTML), from the same blocks as the copied text.
 import type { ReactNode } from "react";
-import type { Blokk, Del } from "@/lib/app/brev";
+import type { Blokk, Del } from "@/lib/app/brevtyper";
+
+// A placeholder, one of the buyer's answers (with its field, for marking and clicking), or a bar for
+// hidden text of about its length.
+function DelEl({ x }: { x: Del }) {
+  if (typeof x === "string") return x;
+  if ("ph" in x) return <span className="ph">{x.ph}</span>;
+  if ("felt" in x) return <span className="fe" data-felt={x.felt}>{x.tekst}</span>;
+  return <span className="sl" style={{ width: `${Math.min(x.skjult, 60)}ch` }} aria-label="Skjult tekst" />;
+}
 
 export function Deler({ d }: { d: Del[] }) {
   return (
     <>
-      {d.map((x, i) => (typeof x === "string" ? x : <span key={i} className="ph">{x.ph}</span>))}
+      {d.map((x, i) => <DelEl key={i} x={x} />)}
     </>
   );
 }

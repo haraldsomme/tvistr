@@ -12,7 +12,7 @@ import { db } from "@/db";
 import { ordre, sak, vedtak } from "@/db/schema";
 import { rensSjekk, rensSvar } from "@/app/sak/rens";
 import { hentAlle, hentBilnavn } from "@/app/sak/vedtak-db";
-import type { Presedens } from "@/lib/app/brev";
+import type { Presedens } from "@/lib/app/brevtyper";
 import { idag } from "@/lib/app/dato";
 import { gjelderSaken, kjopt, laas, manglerForKjop, nyttKjop, rensSkjema, sammeSak } from "@/lib/app/saken";
 import { standard } from "@/lib/app/skjema";

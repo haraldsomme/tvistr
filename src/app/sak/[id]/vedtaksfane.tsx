@@ -2,7 +2,7 @@
 // («Anbefalt»), each with its likeness to the buyer's case. The buyer picks the one the letter cites.
 import { useEffect, useState } from "react";
 import { cap, tall } from "@/lib/app/format";
-import type { Presedens } from "@/lib/app/brev";
+import type { Presedens } from "@/lib/app/brevtyper";
 import { trygt } from "@/lib/app/kall";
 import { nokkel, nyttPrecValg, type Precutfall, sakTekst, tilSvar } from "@/lib/app/saken";
 import type { Skjema } from "@/lib/app/skjema";

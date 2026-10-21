@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
-import { byggBrev, emne, type Presedens, tilTekst, vedlegg } from "./brev";
+import { byggBrev, emne, tilTekst, vedlegg } from "./brev";
+import type { Blokk, Presedens } from "./brevtyper";
 import { eksempel, standard, syncAreas } from "./skjema";
 
 const idag = "2026-10-16";
@@ -372,4 +373,18 @@ describe("slutningen etter vedtaket", () => {
     expect(tekst(eksempel(idag))).not.toContain("vurderes på samme måte");
     expect(tilTekst(byggBrev(syncAreas(eksempel(idag)), "venter", idag))).not.toContain("vurderes på samme måte");
   });
+});
+
+describe("feltmerker", () => {
+  const deler = (B: Blokk[]) => B.flatMap((b) => ("tekst" in b ? [b.tekst] : "linjer" in b ? b.linjer : "punkter" in b ? b.punkter : "avsnitt" in b ? b.avsnitt : b.rader.map((r) => r[0]))).flat();
+  const felt = (B: Blokk[], k: string) => deler(B).filter((d): d is { felt: string; tekst: string } => typeof d === "object" && "felt" in d && d.felt === k);
+  it("kjøperens svar er merket", () => {
+    const B = byggBrev(syncAreas(eksempel(idag)), PRES, idag);
+    expect(felt(B, "c_km")[0].tekst).toBe("38 500");
+    expect(felt(B, "b_name")[0].tekst).toBe("Kari Nordmann");
+    expect(felt(B, "c_reg").length).toBeGreaterThan(1);
+    expect(felt(B, "f_catdesc.hoyvolt")[0].tekst).toContain("40 kW");
+    expect(felt(B, "seller_txt")[0].tekst).toContain("full kapasitet");
+  });
+  it("ingen tomme merker", () => expect(deler(byggBrev(syncAreas(eksempel(idag)), PRES, idag)).every((d) => typeof d !== "object" || !("felt" in d) || d.felt && d.tekst)).toBe(true));
 });

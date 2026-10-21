@@ -6,13 +6,13 @@ import { LAGRES_AR, UFULLFORT_DAGER } from "@/lib/sak/lagringstid";
 
 export const metadata: Metadata = { title: "Personvern – Tvistr" };
 
-// The privacy statement. Every line must hold in the code: what the check sends (src/app/sak/rens.ts),
-// what a case stores (sak in src/db/schema.ts), what the model reads (src/lib/vedtaksvalg/kjoper.ts),
-// the measuring (src/lib/maling.ts) and the deletion (src/lib/sak/sletting.ts).
+// The privacy statement. Every line must hold in the code: what the questions send (forhandsvis in
+// src/app/sak/brevet-actions.ts), what a case stores (sak in src/db/schema.ts), what the model reads
+// (src/lib/vedtaksvalg/kjoper.ts), the measuring (src/lib/maling.ts) and the deletion (src/lib/sak/sletting.ts).
 export default function Personvern() {
   const epost = <a href={`mailto:${FIRMA.epost}`}>{FIRMA.epost}</a>;
   return (
-    <Juridisk tittel="Personvernerklæring" oppdatert="19. oktober 2026">
+    <Juridisk tittel="Personvernerklæring" oppdatert="21. oktober 2026">
       <div className="jur-kort">
         <ul>
           <li>Den gratis saksvurderingen lagres bare i nettleseren din.</li>
@@ -27,8 +27,8 @@ export default function Personvern() {
       </p>
 
       <h2>Den gratis saksvurderingen</h2>
-      <p>Svarene dine lagres i nettleseren din, slik at du kan fortsette senere. Vi lagrer dem ikke. Du sletter dem med «Start på nytt» eller ved å slette nettleserdataene for nettstedet.</p>
-      <p>For å finne lignende saker sender nettleseren deler av svarene til serveren vår: kjøpsdatoen, kilometerstanden, årsmodellen, feilene og når du oppdaget dem. De brukes bare til oppslaget og lagres ikke. Registreringsnummeret er ikke med.</p>
+      <p>Svarene dine lagres i nettleseren din, slik at du kan fortsette senere. Vi lagrer dem ikke. Du sletter dem ved å slette nettleserdataene for nettstedet.</p>
+      <p>For å vise brevet og finne lignende saker sender nettleseren svarene dine til serveren vår mens du fyller ut, også registreringsnummeret og det du skriver om feilen. De brukes bare til å lage forhåndsvisningen og lagres ikke.</p>
       <p>Trykker du «Hent bilen», sender vi registreringsnummeret til Statens vegvesen og henter merke, modell, årsmodell og datoen bilen sist ble registrert på en ny eier. Vi lagrer ikke oppslaget.</p>
 
       <h2>Når du {GRATIS ? "åpner" : "kjøper"} brevet</h2>
@@ -85,7 +85,7 @@ export default function Personvern() {
 
       <h2>Hvor lenge vi lagrer opplysningene</h2>
       <ul>
-        <li>Den gratis saksvurderingen ligger i nettleseren din til du starter på nytt eller sletter nettleserdataene.</li>
+        <li>Den gratis saksvurderingen ligger i nettleseren din til du starter en ny sak eller sletter nettleserdataene.</li>
         <li>
           {GRATIS ? "En sak" : "En betalt sak"} lagres i {LAGRES_AR} år etter {GRATIS ? "at du åpnet brevet" : "betalingen"}, slik at du har brevet hvis saken går videre til mekling eller Forbrukerklageutvalget. Deretter slettes den automatisk.
         </li>

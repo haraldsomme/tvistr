@@ -73,27 +73,27 @@ Har kjøperen en skriftlig verkstedrapport, ber instruksen modellen foretrekke b
 
 **Hvis svaret ikke holder** (ukjent vedtak, eller sitat-id-er vedtaket ikke har), brukes rangeringens førstevalg med de første sitatene. Det samme skjer om kallet feiler. Ingenting prøves på nytt.
 
-**Ti å velge mellom.** Fanen Vedtak i brevet viser modellens valg først («Anbefalt»). Deretter kommer resten av rangeringens topp 10 som har sitater, i rangeringens rekkefølge (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger vedtaket i fanen Vedtak. Brevfanen viser bare hvilket vedtak brevet viser til, med en knapp tilbake til fanen.
+**Ti å velge mellom.** Vinduet «Lignende vedtak» i den betalte saken (`vedtaksvindu.tsx`) viser modellens valg først («Anbefalt»). Deretter kommer resten av rangeringens topp 10 som har sitater, i rangeringens rekkefølge (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger vedtaket i vinduet, som raden «Vedtaket» under «Svarene dine» åpner. Raden viser hvilket vedtak brevet viser til.
 
-**Ett kall per sett med svar.** `finnVedtak` kalles første gang fanen Vedtak eller Brevet vises.
+**Ett kall per sett med svar.** Den betalte siden spør etter vedtakene bare mens ingen rad fra delene før betaling (Bilen, Kjøpet, Om feilen, Verksted, Hva selgeren sa, Sagt fra før og Kravet) er åpen, eller mens vinduet er åpent, 800 ms etter siste endring (`useVedtak` i `vedtaksvindu.tsx`, `skalHente` i `vedtak-hent.ts`). Mens kjøperen skriver i en slik rad, viser brevet vedtaket fra siste liste. Hvert nytt sett med svar som siden spør med, kan koste ett modellkall, og en sak har høyst fem.
 - **Lagring per sak:** `sak.vedtaksvalg` holder de fem siste modellsvarene (vedtak og sitater som tekst).
   - Nøkkelen er det modellen leser: `kjoper`, kandidatene i rekkefølge og `VEDTAKSVALG_VERSJON` (`grunnlagFor`).
-  - Samme svar gir det lagrede valget uten kall: omlasting, faner, en ny enhet, og endringer som tas tilbake.
+  - Samme svar gir det lagrede valget uten kall: omlasting, en ny enhet, og endringer som tas tilbake.
   - Avsnittene bygges alltid på nytt av malen, så sammenligningen stemmer med svarene slik de er nå.
 - **Tak og brudd:**
   - En sak kan gjøre fem kall (`sak.modellkall`, tatt atomisk). Deretter brukes det lagrede valget så lenge vedtaket står i listen, ellers rangeringens førstevalg.
   - Kallet har ett forsøk, én nettverksretry og 30 sekunder (`rask` i `kallVerktoy`). Feiler det, brukes rangeringens førstevalg, og ingenting lagres.
 - **Når listen endres:** `finnVedtak` sammenligner med listen kjøperen sist fikk (`sak.vedtaksvalg.liste`, `endringMot`) og sier hvilke vedtak som er nye og om det anbefalte er byttet.
   - Brevet følger det anbefalte. Unntaket er når kjøperen har valgt et annet selv (`prec_selv`) og det fortsatt står i listen (`nyttPrecValg`).
-  - Fanene sier fra om byttet, og kortene for nye vedtak er merket «Ny».
+  - Vinduet sier fra om byttet, og kortene for nye vedtak er merket «Ny».
   - Serverloggen viser for hvert valg om det var `lagret`, `nytt kall`, `tak nådd` eller `kallet feilet`.
 
 **Likhet.** Hvert vedtak har en prosent (`likhet` i `src/lib/matching/likhet.ts`): poengsummen fra rangeringen delt på det et vedtak kan få mot kjøperens svar.
 - Nevneren er summen av `likt`-poengene for kriteriene kjøperen har svart på, og den er lik for alle vedtak i saken. Underkategori teller bare når kjøperen har valgt en. Grunnlag og egen vurdering teller alltid.
 - En verdi vedtaket mangler, og feilkriteriene på nivå B, teller 0. Et vedtak om en annen feil havner derfor på høyst cirka 35 %.
-- «Strengere» for kjøperen gir delpoeng, som i rangeringen. I fanen vises det som en styrke («↑ Bilen hadde gått lenger enn din»).
+- «Strengere» for kjøperen gir delpoeng, som i rangeringen. I vinduet vises det som en styrke («↑ Bilen hadde gått lenger enn din»).
 - Prosenten synker med rangeringen på nivå A. Det anbefalte vedtaket kan ha lavere prosent enn nummer to, fordi modellen også leser beskrivelsen.
-- Fanen sier at prosenten ikke er en vinnersjanse.
+- Vinduet sier at prosenten ikke er en vinnersjanse.
 
 ## 3. Malen (`src/lib/vedtaksvalg/mal.ts`, kode)
 

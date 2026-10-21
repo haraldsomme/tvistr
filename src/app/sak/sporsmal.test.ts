@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { standardUtkast, type Utkast } from "@/lib/app/utkast";
-import { SKJERMER, synlige } from "./sporsmal";
+import { ENKELTVALG, SKJERMER, synlige } from "./sporsmal";
 
 const idag = "2026-10-21";
 const utkast = (u: Partial<Utkast> = {}, skjema: Partial<Utkast["skjema"]> = {}): Utkast => ({ ...standardUtkast(idag), ...u, skjema: { ...standardUtkast(idag).skjema, ...skjema } });
@@ -38,6 +38,12 @@ describe("SKJERMER", () => {
     expect(skjerm("omrader").ferdig(utkast({}, { f_cats, f_area: { motor: { found: "2026-09-01", impact: [], known: "" } } }))).toBe(false);
     expect(skjerm("omrader").ferdig(utkast({}, { f_cats, f_area: { motor: { found: "2026-09-01", impact: [], known: "" }, klima: { found: "", impact: [], known: "" } } }))).toBe(false);
     expect(skjerm("omrader").ferdig(utkast({}, { f_cats, f_area: { motor: { found: "2026-09-01", impact: [], known: "" }, klima: { found: "2026-09-02", impact: [], known: "" } } }))).toBe(true);
+  });
+  it("«som den er»: ja er et forbehold i skjemaet, vet ikke er det ikke", () => {
+    const ja = ENKELTVALG.forbehold.sett(utkast(), "ja");
+    expect([ja.asis, ja.skjema.c_asis]).toEqual(["ja", true]);
+    const vetikke = ENKELTVALG.forbehold.sett(utkast({}, { c_asis: true }), "vetikke");
+    expect([vetikke.asis, vetikke.skjema.c_asis]).toEqual(["vetikke", false]);
   });
   it("kravet trenger hovedkravet", () => {
     expect(skjerm("kravet").ferdig(utkast())).toBe(false);

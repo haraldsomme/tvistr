@@ -69,6 +69,7 @@ vi.mock("@/db", () => ({
 const { finnVedtak, kjop, lagreSak } = await import("./actions");
 const { ordre, sak } = await import("@/db/schema");
 const { sha256hex } = await import("@/lib/innlogging/okt");
+const { idag: dagIdag } = await import("@/lib/app/dato");
 
 const idag = "2026-10-17";
 const skjema = { ...standard(idag), b_name: "Kari", c_reg: "AB 12345", c_make: "Volvo", c_model: "V60", c_year: "2017", f_cats: ["motor"], f_parts: { motor: ["turbo"] } };
@@ -286,6 +287,12 @@ describe("kjop", () => {
     const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: Sak["skjema"] } }]];
     expect(sakRad.v.skjema.f_catdesc).toEqual(utkast.skjema.f_catdesc);
     expect([sakRad.v.skjema.d_name, sakRad.v.skjema.c_delivery, sakRad.v.skjema.f_area]).toEqual(["Bil AS", "2026-03-01", utkast.skjema.f_area]);
+  });
+
+  it("dateres i dag, ikke den dagen utkastet ble laget", async () => {
+    await kjop({ utkast: { ...utkast, skjema: { ...utkast.skjema, l_date: "2020-01-01" } }, samtykke: true });
+    const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: Sak["skjema"] } }]];
+    expect(sakRad.v.skjema.l_date).toBe(dagIdag());
   });
 
   it("avviser utkast uten feil", async () => {

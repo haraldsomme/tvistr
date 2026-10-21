@@ -193,7 +193,8 @@ export async function kjop(inn: { utkast: unknown; samtykke: unknown }): Promise
     const har = mine.find((r) => sammeSakSkjema(utkast.skjema, kjopt(r.id, r.skjema)));
     if (har) return { ok: true, url: `/sak/${har.id}` };
     const forrige = mine[0];
-    const skjema = tilKjop(utkast.skjema, forrige ? rensSkjema(forrige.skjema, dag) : null);
+    // The letter is dated the day it is bought, not the day the draft was started.
+    const skjema = { ...tilKjop(utkast.skjema, forrige ? rensSkjema(forrige.skjema, dag) : null), l_date: dag };
     const na = utenVipps ? new Date() : null;
     const leverandor = GRATIS ? "gratis" : utenVipps ? "utvikling" : "vipps";
     await db.batch([

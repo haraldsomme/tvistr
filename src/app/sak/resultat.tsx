@@ -1,5 +1,3 @@
-"use client";
-
 // The verdict after the last question (mockup «Sjekk saken», the result): the level, title and summary
 // of the verdict, the closest decision with medhold as a card, the purchase, the strength of the case
 // with its rows, and «Lignende saker». A case the owner has bought already is opened instead: the

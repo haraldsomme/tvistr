@@ -1,7 +1,8 @@
 import "server-only";
 // The letter before payment, built on the server so that the template text it hides never reaches
-// the browser: the saklig wording (the tone is chosen after payment), redacted by `sladd`, and in
-// place of the decision only the car and the outcome from its card, never its number, quote or link.
+// the browser: the defaults the buyer can change only after payment (the saklig tone, today's date,
+// a 14-day deadline), redacted by `sladd`, and in place of the decision only the car and the outcome
+// from its card, never its number, quote or link.
 import { liste } from "@/lib/brev/format";
 import type { Vedtakskort } from "@/lib/vurdering/vurdering";
 import { byggBrev } from "./brev";
@@ -13,7 +14,7 @@ import { syncAreas } from "./skjema";
 const venter = (b: Blokk) => b.t === "p" && b.tekst.length === 1 && typeof b.tekst[0] === "object" && "ph" in b.tekst[0] && b.tekst[0].ph === "lignende sak hentes";
 
 export function forhandsvisning(s: Skjema, kort: Vedtakskort | null, idag: string): Blokk[] {
-  const B = sladd(byggBrev({ ...syncAreas(s), l_tone: "saklig" }, kort ? "venter" : null, idag));
+  const B = sladd(byggBrev({ ...syncAreas(s), l_tone: "saklig", l_date: idag, k_days: "14" }, kort ? "venter" : null, idag));
   if (!kort) return B;
   const tekst: Del[] = [
     { skjult: 38 },

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { addDays, fmtD, parseD } from "./dato";
 import { forhandsvisning } from "./forhandsvisning";
 import { eksempel } from "./skjema";
 
@@ -22,6 +23,12 @@ describe("forhåndsvisningen", () => {
   });
 
   it("uten vedtak: lovsetningen, ingen praksis-overskrift", () => expect(JSON.stringify(forhandsvisning(eksempel(idag), null, idag))).not.toContain("Praksis fra"));
+
+  it("dagens dato og 14 dagers frist, uansett svar", () => {
+    const j = JSON.stringify(forhandsvisning({ ...eksempel(idag), l_date: "2020-01-01", k_days: "21" }, kort, idag));
+    expect(j).not.toContain("2020");
+    expect(j).toContain(fmtD(addDays(parseD(idag)!, 14)));
+  });
 
   it("alltid saklig tone", () => expect(JSON.stringify(forhandsvisning({ ...eksempel(idag), l_tone: "bestemt" }, null, idag))).toContain("Bilen har en mangel, og jeg"));
 });

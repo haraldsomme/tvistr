@@ -1,7 +1,9 @@
 // The Brevet tab (artifact step «Brev»): place, date and tone, the decision the letter cites (picked in
-// the Vedtak tab), copy buttons, the checklist and the letter on paper.
+// the Vedtak tab), copy buttons, the checklist and the letter on paper. The letter comes from the
+// server (fulltBrev), built from these answers with the car and the faults as bought.
 import { Kopier } from "@/app/deler/ikoner";
-import { byggBrev, emne, tilTekst } from "@/lib/app/brev";
+import { fulltBrev } from "@/app/sak/brevet-actions";
+import { useBrev } from "@/app/sak/flyt/bruk-brev";
 import { idag } from "@/lib/app/dato";
 import { datoavvik } from "@/lib/app/datoer";
 import { maal } from "@/lib/maling";
@@ -11,9 +13,13 @@ import { Papir } from "./papir";
 import { ETIKETT, mangler } from "./steg";
 import type { Vedtaksvalg } from "./vedtaksfane";
 
-export function Brevet({ s, sett, vedtak, onSteg, onVedtak, onToast }: { s: Skjema; sett: Sett; vedtak: Vedtaksvalg; onSteg: (i: number) => void; onVedtak: () => void; onToast: (m: string) => void }) {
+export function Brevet({ id, s, sett, vedtak, onSteg, onVedtak, onToast }: { id: string; s: Skjema; sett: Sett; vedtak: Vedtaksvalg; onSteg: (i: number) => void; onVedtak: () => void; onToast: (m: string) => void }) {
   const { funn, valgt, venter } = vedtak;
-  const blokker = byggBrev(s, venter ? "venter" : valgt, idag());
+  const presedens = venter ? "venter" : valgt;
+  const brev = useBrev(() => fulltBrev({ id, skjema: s, presedens }), JSON.stringify([id, s, presedens]));
+  // Copying waits for the letter built from the answers as they are now; after a failed call the
+  // letter shown is an older one.
+  const klar = brev.svar && !brev.venter && !brev.feil ? brev.svar : null;
   const avvik = datoavvik(s, idag());
 
   async function kopier(tekst: string, ok: string) {
@@ -90,16 +96,22 @@ export function Brevet({ s, sett, vedtak, onSteg, onVedtak, onToast }: { s: Skje
             )}
           </div>
           <div className="block d-copy" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button type="button" className="btn pri" disabled={venter} title={venter ? "Venter på den lignende saken" : undefined} onClick={() => {
+            <button type="button" className="btn pri" disabled={venter || !klar} title={venter ? "Venter på den lignende saken" : !klar ? "Brevet oppdateres" : undefined} onClick={() => {
+                if (!klar) return;
                 maal("brev_kopiert");
-                kopier(tilTekst(blokker), "Brevet er kopiert");
+                kopier(klar.tekst, "Brevet er kopiert");
               }}>
               <Kopier />
               Kopier brevet
             </button>
-            <button type="button" className="btn" onClick={() => kopier(emne(blokker), "Emnefeltet er kopiert")}>
+            <button type="button" className="btn" disabled={!klar} onClick={() => klar && kopier(klar.emne, "Emnefeltet er kopiert")}>
               Kopier emnefelt
             </button>
+            {brev.feil && (
+              <p className="hint" role="status">
+                {brev.feil}
+              </p>
+            )}
             {s.d_email.trim() && (
               <div>
                 <div className="hint" style={{ margin: "6px 0" }}>
@@ -150,7 +162,7 @@ export function Brevet({ s, sett, vedtak, onSteg, onVedtak, onToast }: { s: Skje
           </p>
         </div>
         <div className="paper d-paper">
-          <Papir blokker={blokker} id="letterFull" />
+          {brev.blokker ? <Papir blokker={brev.blokker} id="letterFull" /> : <p className="hint">Brevet hentes …</p>}
         </div>
       </div>
     </section>

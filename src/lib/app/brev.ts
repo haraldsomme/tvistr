@@ -1,6 +1,8 @@
-// The complaint letter, built in the browser from the writer's answers (the artifact's buildLetter).
-// Periods and paragraphs follow the law version of the purchase (lov.ts). The section citing a
-// decision is Tvistr's paragraph from the server (finnVedtak → mal.ts), never written here.
+import "server-only";
+// The complaint letter, built on the server from the writer's answers (the artifact's buildLetter;
+// sent to the browser by brevet-actions.ts, never as code). Periods and paragraphs follow the law
+// version of the purchase (lov.ts). The section citing a decision is Tvistr's paragraph from
+// finnVedtak (mal.ts), never written here.
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { ANDRE_LOVER, LOVORD, RENTER_FRA_REKLAMASJON, SELGER_BEVISER_UVESENTLIG, TILBUD_UTEN_OPPHOLD } from "@/lib/brev/paragrafer";

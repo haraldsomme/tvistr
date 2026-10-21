@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "sjekk:bunt": "tsx scripts/sjekk-bunt.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file=.env.local scripts/migrer.ts",
     "hent": "tsx --env-file=.env.local scripts/hent.ts",

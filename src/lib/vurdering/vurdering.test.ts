@@ -149,8 +149,8 @@ describe("kortene", () => {
 
   it("gir ingen kort uten vedtak på nivå A", () => expect(lignende({ svar: sak({ feil: [{ hoved: "fukt", under: ["lukt"], oppdaget: "2025-04-01" }] }), alle, statistikk: new Map(), bilnavn: () => null }).kort).toEqual([]));
 
-  it("nevner ikke modellen i serverhandlingen", () => {
-    const kilde = readFileSync("src/app/sak/vurdering.ts", "utf8");
+  it.each(["src/app/sak/vurdering.ts", "src/app/sak/lignende-db.ts"])("nevner ikke modellen i %s", (fil) => {
+    const kilde = readFileSync(fil, "utf8");
     expect(kilde).not.toMatch(/vedtaksvalg\/valg|@\/lib\/ai|velgVedtak|finnVedtak|anthropic/i);
   });
 });

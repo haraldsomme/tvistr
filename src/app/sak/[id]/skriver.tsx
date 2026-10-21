@@ -138,7 +138,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
         )}
         {fane === "case" && <Vurderingsfane s={s} r={r} lignende={lignende} brukes={s.prec_on ? s.prec_id : null} onSteg={tilSteg} onBrevet={() => tilFane("letter")} onSkjema={() => tilFane("form")} />}
         {fane === "prec" && <Vedtaksfane s={s} sett={sett} vedtak={vedtak} onBrevet={() => tilFane("letter")} />}
-        {fane === "letter" && <Brevet s={s} sett={sett} vedtak={vedtak} onSteg={tilSteg} onVedtak={() => tilFane("prec")} onToast={settToast} />}
+        {fane === "letter" && <Brevet id={id} s={s} sett={sett} vedtak={vedtak} onSteg={tilSteg} onVedtak={() => tilFane("prec")} onToast={settToast} />}
         {fane === "form" && (
           <div className="nav">
             <button type="button" className="btn gh" style={{ visibility: steg === 0 ? "hidden" : "visible" }} onClick={() => tilSteg(steg - 1)}>

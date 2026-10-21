@@ -1,5 +1,5 @@
-// The buyer's answers as the ranking reads them (vedtaksvalg/kjoper.ts, Svar): from the check before
-// payment and from the writer after. Only faults with a discovery date count, and nothing without the
+// The buyer's answers as the ranking reads them (vedtaksvalg/kjoper.ts, Svar): from the form, before
+// and after payment. Only faults with a discovery date count, and nothing without the
 // purchase (or handover) date.
 import type { RapportPunkt } from "@/lib/brev/rapport";
 import type { Kilde, Svar } from "@/lib/vedtaksvalg/kjoper";
@@ -39,20 +39,6 @@ export function tilSvar(s: Skjema): Svar | null {
     krav: s.k_main === "retting" || s.k_main === "prisavslag" || s.k_main === "heving" ? s.k_main : null,
     forsok: forsokTall(s.k_forsok),
     feil: feil.map((c) => ({ hoved: c, under: s.f_parts[c] ?? [], oppdaget: s.f_area[c].found, beskrivelse: s.f_catdesc[c]?.trim() || null, opplysning, verksted, rapport })),
-  };
-}
-
-export function sjekkTilSvar(a: Sjekk): Svar | null {
-  const feil = (a.cats ?? []).filter((c) => a.fdates?.[c]);
-  if (!a.delivery || !feil.length) return null;
-  return {
-    kjopsdato: a.delivery,
-    km: heltall(a.km),
-    ar: heltall(a.year),
-    somDenEr: a.asis === "ja" || a.asis === "nei" ? a.asis : null,
-    krav: null,
-    forsok: null,
-    feil: feil.map((c) => ({ hoved: c, under: a.issues?.[c] ?? [], oppdaget: a.fdates![c], beskrivelse: null, opplysning: null, verksted: null, rapport: null })),
   };
 }
 
@@ -99,17 +85,9 @@ export function fraSjekk(a: Sjekk, s: Skjema): Skjema {
 // «Sak 21/3494 · 2022», or «Vedtak 2022» when the decision has no case number.
 export const sakTekst = (saksnummer: string | null, ar: string | null) => (saksnummer ? `Sak ${saksnummer}${ar ? ` · ${ar}` : ""}` : `Vedtak${ar ? ` ${ar}` : ""}`);
 
-// A purchase is for one car and the faults chosen in the check; the writer cannot change them.
-// What the check still lacks before it can be bought: the registration number, the car, or a fault.
-export function manglerForKjop(a: Sjekk): "reg" | "bil" | "feil" | null {
-  if (!validReg(a.reg)) return "reg";
-  // The car is fixed at payment, so it must be known: from the register, or typed in the check.
-  if (!a.make?.trim()) return "bil";
-  if (!a.cats?.length) return "feil";
-  return null;
-}
-
-// The same for the draft's form.
+// A purchase is for one car and the faults chosen before payment; the writer cannot change them.
+// What the draft still lacks before it can be bought: the registration number, the car (from the
+// register, or typed), or a fault.
 export function manglerISkjema(s: Skjema): "reg" | "bil" | "feil" | null {
   if (!validReg(s.c_reg)) return "reg";
   if (!s.c_make.trim()) return "bil";
@@ -124,8 +102,7 @@ const feilsett = (cats: string[], parts: Record<string, string[] | undefined>) =
 export type Kjopt = { id: string; reg: string; cats: string[]; parts: Record<string, string[]> };
 export const kjopt = (id: string, s: Skjema): Kjopt => ({ id, reg: s.c_reg, cats: s.f_cats, parts: s.f_parts });
 
-// The check is about the car and the faults the case was bought for.
-export const sammeSak = (a: Sjekk, k: Kjopt) => !!k.id && a.reg === k.reg && feilsett(a.cats ?? [], a.issues ?? {}) === feilsett(k.cats, k.parts);
+// The draft is about the car and the faults the case was bought for.
 export const sammeSakSkjema = (s: Skjema, k: Kjopt) => !!k.id && s.c_reg === k.reg && feilsett(s.f_cats, s.f_parts) === feilsett(k.cats, k.parts);
 
 // What the writer shows locked (bilen.tsx, mangelen.tsx); the server keeps them as bought.

@@ -1,268 +1,142 @@
-// The verdict of the free check (artifact resultHTML): tier, law rows, «Lignende saker» from the
-// database, and the offer. Unlocking prefills the writer and opens it.
+"use client";
+
+// The verdict after the last question (mockup «Sjekk saken», the result): the level, title and summary
+// of the verdict, the closest decision with medhold as a card, the purchase, the strength of the case
+// with its rows, and «Lignende saker». A case the owner has bought already is opened instead: the
+// answers just given are not carried over.
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { Hake, InfoSirkel, Pil, Tilbake } from "@/app/deler/ikoner";
 import { Kjop } from "@/app/deler/kjop";
 import { Lignende } from "@/app/deler/lignende";
-import { Lovrader } from "@/app/deler/lovrader";
-import { VippsKnapp } from "@/app/deler/vipps-knapp";
-import { idag } from "@/lib/app/dato";
-import { tall } from "@/lib/app/format";
-import { maal } from "@/lib/maling";
-import { type Kjopt, manglerForKjop, nokkel, sammeSak, sjekkTilSvar } from "@/lib/app/saken";
-import { fraGammelSjekk } from "@/lib/app/utkast";
-import { evaluate } from "@/lib/app/vurdering";
-import { opplysningsfeil } from "@/lib/brev/feiltype";
+import { Styrke } from "@/app/sak/flyt/styrke";
+import type { Forhandsvist } from "@/app/sak/brevet-actions";
+import { cap, tall } from "@/lib/app/format";
+import { useKjopt } from "@/lib/app/lagring";
+import { type Kjopt, manglerISkjema, sakTekst, sammeSakSkjema } from "@/lib/app/saken";
+import type { Utkast } from "@/lib/app/utkast";
+import type { Resultat as Vurdering } from "@/lib/app/vurdering";
 import { inneHint } from "@/lib/innlogging/navn";
-import { GRATIS, NYTT_KJOP, PRIS } from "@/lib/pris";
+import { maal } from "@/lib/maling";
+import { GRATIS, PRIS } from "@/lib/pris";
 import { mineKjop } from "./mine";
-import { type Lignende as LignendeSvar, vurderSaken } from "./vurdering";
-import type { Tilstand } from "./sjekk";
 
 const PRISTEKST = GRATIS ? "Gratis" : `kr ${tall(PRIS)}`;
 const BETALER_FOR = GRATIS ? "som brevet skal gjelde" : "du betaler for";
 const ingen = () => () => {};
 
-const FORDELER = [
-  "Brev med lovhenvisninger tilpasset svarene dine",
-  "Frister og bevisbyrde regnet ut fra datoene du oppgir",
-  "Krav om retting, prisavslag, heving og erstatning",
-  "Svarene dine fra vurderingen er allerede fylt inn",
-  "Kopier brevet og send det på e-post samme dag",
-];
+type Lignende = NonNullable<Extract<Forhandsvist, { ok: true }>["lignende"]>;
 
-export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSporsmal }: { a: Tilstand; kjopt: Kjopt; utvikling: boolean; onTilbake: () => void; onOmStart: () => void; onTilSporsmal: (id: "reg" | "cats") => void }) {
+export function Resultat({ utkast, r, lignende, utvikling, onEndre, onTilSkjerm }: { utkast: Utkast; r: Vurdering; lignende: Lignende | null; utvikling: boolean; onEndre: () => void; onTilSkjerm: (id: string) => void }) {
   const router = useRouter();
-  const datoer = (a.cats ?? []).map((c) => a.fdates?.[c]).filter((d): d is string => !!d).sort();
-  const opplysning = !!a.cats?.length && a.cats.every((c) => opplysningsfeil(c, a.issues?.[c] ?? []));
-  // The case bought earlier is locked to its car and faults; this check may be about another.
-  // Also the owner's other cases, from the account: the matching one is what «Åpne brevet» opens.
+  const s = utkast.skjema;
+  // The case bought last in this browser, and the owner's cases from the account: one for the same car
+  // and faults is opened instead of bought again (kjop refuses a second purchase on the server too).
+  const [kjopt] = useKjopt();
   const [mine, settMine] = useState<Kjopt[] | null>(null);
   useEffect(() => {
     mineKjop().then(settMine, () => settMine([]));
   }, []);
-  const funnet = [kjopt, ...(mine ?? [])].find((k) => sammeSak(a, k));
-  const tilgang = !!funnet;
-  // Logged in (by the hint) and the account's cases not here yet: no pay button until we know this
-  // case is not bought already (kjop refuses a second purchase on the server too).
+  const funnet = [kjopt, ...(mine ?? [])].find((k) => sammeSakSkjema(s, k));
+  // Logged in (by the hint) and the account's cases not here yet: no pay button until we know.
   const inne = useSyncExternalStore(ingen, inneHint, () => false);
-  const henter = !tilgang && mine === null && inne;
-  const mangler = manglerForKjop(a);
-  const [visMangler, settVisMangler] = useState(false);
-  const r = evaluate({ ...a, found: datoer[0], sist: datoer.at(-1), opplysning }, idag());
-  const [lignende, settLignende] = useState<LignendeSvar | null>(null);
+  const henter = !funnet && mine === null && inne;
+  const mangler = manglerISkjema(s);
   const [kjop, settKjop] = useState(false);
-  const [unna, settUnna] = useState(false);
-  const tilbud = useRef<HTMLElement>(null);
-  const svar = r.tier === "utenfor" ? null : sjekkTilSvar(a);
-  const n = nokkel(svar);
 
-  useEffect(() => {
-    if (!svar) return;
-    let gjeldende = true;
-    vurderSaken(svar).then((x) => gjeldende && settLignende(x));
-    return () => {
-      gjeldende = false;
-    };
-    // `n` is the answers the cases are for: fetched again only when they change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n]);
-
-  const kategorier = (a.cats ?? []).flatMap((c) => [c, ...(a.issues?.[c] ?? []).map((u) => `${c}.${u}`)]);
+  const kategorier = s.f_cats.flatMap((c) => [c, ...(s.f_parts[c] ?? []).map((u) => `${c}.${u}`)]);
   useEffect(() => {
     if (r.tier !== "ukjent") maal("resultat_vist", { status: r.tier, kategorier });
     // Once per verdict shown.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [r.tier]);
 
-  useEffect(() => {
-    const el = tilbud.current;
-    if (!el || !("IntersectionObserver" in window)) return;
-    const io = new IntersectionObserver((es) => es.forEach((e) => settUnna(e.isIntersecting)), { threshold: 0.25 });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
   const apne = () => {
-    if (funnet) return router.push(`/sak/${funnet.id}`);
-    if (mangler) return settVisMangler(true);
     maal("kjop_klikket");
     settKjop(true);
   };
-  const venterPaKonto = (
-    <button type="button" className="btn pri" disabled aria-busy="true">
-      Sjekker kjøpene dine …
-    </button>
-  );
-  // Without access the buyer pays with Vipps' own button; these are the texts in a trial (GRATIS).
-  const knappetekst = tilgang ? "Åpne brevet" : kjopt.id ? "Åpne for denne saken" : "Åpne brevet";
-  const knapper = (
-    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-      <button type="button" className="btn" onClick={onTilbake}>
-        <Tilbake />
-        Endre svar
-      </button>
-      <button type="button" className="btn gh" onClick={onOmStart}>
-        Start på nytt
-      </button>
-    </div>
-  );
-
-  if (r.tier === "utenfor")
-    return (
-      <div className="res" style={{ gridTemplateColumns: "minmax(0,720px)", justifyContent: "center" }}>
-        <div className="res-main stag">
-          <div className="verdict t-utenfor">
-            <span className="vbadge">
-              <i />
-              {r.badge}
-            </span>
-            <h2>{r.title}</h2>
-            <p>{r.summary}</p>
-          </div>
-          <div className="nsteps">
-            <div className="offer-k">Dette kan du gjøre</div>
-            {r.advice!.map((t, i) => (
-              <div key={t} className="ns">
-                <b>Steg {i + 1}</b>
-                <span>{t}</span>
-              </div>
-            ))}
-          </div>
-          {knapper}
-        </div>
-      </div>
-    );
+  const k = lignende?.kort[0];
 
   return (
     <>
-      <div className="res">
-        <div className="res-main stag">
-          <div className={`verdict t-${r.tier}`}>
-            <span className="vbadge">
-              <i />
-              {r.badge}
-            </span>
-            <h2>{r.title}</h2>
-            <p>{r.summary}</p>
-            {r.pos && (
-              <div className="m3" aria-hidden="true">
-                <div className="m3-bar">
-                  <span />
-                  <span />
-                  <span />
-                  <i style={{ left: r.pos }} />
-                </div>
-                <div className="m3-l">
-                  <span>Svak</span>
-                  <span>Usikker</span>
-                  <span>Sterk</span>
-                </div>
-              </div>
-            )}
-          </div>
-          <Lovrader faktorer={r.factors} />
-          {lignende?.ok && <Lignende tall={lignende.tall} kort={lignende.kort} sammenligning={lignende.sammenligning} fot="I brevet viser vi til et vedtak som ligner saken din, og argumenterer for at din sak bør få samme utfall." />}
-          {knapper}
-          <p className="fine" style={{ margin: "4px 0 0" }}>
-            Vurderingen er veiledende og bygger bare på svarene dine. Den er ikke juridisk rådgivning.
-          </p>
-        </div>
-        <aside ref={tilbud} className="offer anim-f" aria-label="Brevet">
-          <div className="offer-k">{tilgang ? "Du har tilgang" : kjopt.id ? "Ny sak" : "Neste steg"}</div>
-          <h3>{r.tier === "svak" ? "Vil du reklamere likevel?" : "Skriv reklamasjonsbrevet"}</h3>
-          {!!kjopt.id && !tilgang && (
-            <div className="demo-note">
-              <InfoSirkel />
-              <span>
-                Brevet er låst opp for {kjopt.reg || "en annen bil"}. Et brev for en annen bil eller feil krever {NYTT_KJOP}.{" "}
-                <button type="button" className="lnk" onClick={() => router.push(`/sak/${kjopt.id}`)}>
-                  Åpne brevet for {kjopt.reg || "den bilen"}
-                </button>
-              </span>
-            </div>
-          )}
-          {!tilgang && (
-            <div className="price">
-              <b>{PRISTEKST}</b>
-              <span>{GRATIS ? "i prøveperioden" : "engangsbeløp"}</span>
-            </div>
-          )}
-          <ul className="feats">
-            <li>
-              <Hake s={13} />
-              <span>
-                <b style={{ color: "var(--ink)", fontWeight: 600 }}>Argumentasjon med et vedtak der kjøperen fikk medhold i en lignende sak</b>
-              </span>
-            </li>
-            {FORDELER.map((t) => (
-              <li key={t}>
-                <Hake s={13} />
-                <span>{t}</span>
-              </li>
+      <div className="fl-res">
+        <span className="fl-merkelapp" data-niva={r.tier}>
+          <i aria-hidden="true" />
+          {r.badge}
+        </span>
+        <h1>{r.title}</h1>
+        <p>{r.summary}</p>
+      </div>
+      {r.tier === "utenfor" ? (
+        <div className="fl-kjop">
+          <ul className="fl-rad">
+            {r.advice?.map((t) => (
+              <li key={t}>{t}</li>
             ))}
           </ul>
-          {visMangler && mangler && (
-            <div className="demo-note">
-              <InfoSirkel />
-              <span>
+          <button type="button" className="fl-lenke" onClick={onEndre}>
+            Endre svarene
+          </button>
+        </div>
+      ) : (
+        <>
+          {k && (
+            <div className="fl-kort">
+              <div className="fl-kort-h">
+                <span className="fl-kort-m">
+                  {sakTekst(k.saksnummer, k.ar)} · {k.bil}
+                </span>
+                <span className="fl-tag">{k.fikk[0] ? cap(k.fikk[0]) : "Medhold"}</span>
+              </div>
+              {k.feil && <p>{cap(k.feil)}</p>}
+            </div>
+          )}
+          <div className="fl-kjop">
+            {funnet ? (
+              <>
+                <p className="fl-varsel">Du har alt et brev for denne bilen og feilen. Svarene du har fylt inn nå, blir ikke overført.</p>
+                <button type="button" className="fl-cta" onClick={() => router.push(`/sak/${funnet.id}`)}>
+                  Åpne brevet
+                </button>
+              </>
+            ) : mangler ? (
+              <p className="fl-varsel">
                 {mangler === "reg"
                   ? `Legg inn registreringsnummeret først. Brevet gjelder bilen ${BETALER_FOR}.`
                   : mangler === "bil"
                     ? `Hent bilen fra Vegvesen eller skriv inn merke og modell først. Brevet gjelder bilen ${BETALER_FOR}, og den kan ikke endres etterpå.`
                     : `Velg hvilken feil det gjelder først. Brevet gjelder feilen ${BETALER_FOR}.`}{" "}
-                <button type="button" className="lnk" onClick={() => onTilSporsmal(mangler === "feil" ? "cats" : "reg")}>
+                <button type="button" className="lnk" onClick={() => onTilSkjerm(mangler === "feil" ? "feil" : "bilen")}>
                   {mangler === "feil" ? "Velg feilen" : "Legg inn bilen"}
                 </button>
-              </span>
-            </div>
-          )}
-          {!tilgang && !mangler && (
-            <p className="fine" style={{ margin: 0 }}>
-              Brevet gjelder {a.make} ({a.reg}) og feilen du har valgt. Bilen og feilen kan ikke endres {GRATIS ? "etterpå" : "etter kjøpet"}.
-            </p>
-          )}
-          {tilgang || GRATIS ? (
-            <button type="button" className="btn pri" onClick={apne}>
-              {knappetekst}
-              <Pil />
-            </button>
-          ) : henter ? (
-            venterPaKonto
-          ) : (
-            <VippsKnapp onClick={apne} bred />
-          )}
-          <p className="fine" style={{ margin: 0 }}>
-            {r.tier === "svak" ? "Usikker? Forbrukerrådet gir gratis råd før du bestemmer deg." : "Ikke juridisk rådgivning. Du bestemmer selv hva du sender."}
-          </p>
-        </aside>
-      </div>
-      {/* Outside the animated stage: a transform there would pin «fixed» to the stage. */}
-      {createPortal(
-        <>
-          <div className={`res-bar${unna ? " away" : ""}`}>
-            <div className="res-bar-t">
-              <b>{tilgang ? "Du har tilgang" : PRISTEKST}</b>
-              <span>Brev med en lignende sak kjøperen vant</span>
-            </div>
-            {tilgang || GRATIS ? (
-              <button type="button" className="btn pri" onClick={apne}>
-                Åpne brevet
-                <Pil />
-              </button>
+              </p>
             ) : henter ? (
-              venterPaKonto
+              <button type="button" className="fl-cta" aria-disabled="true" aria-busy="true">
+                Sjekker kjøpene dine …
+              </button>
             ) : (
-              <VippsKnapp onClick={apne} />
+              <>
+                <button type="button" className="fl-cta" onClick={apne}>
+                  Lås opp hele brevet · {PRISTEKST}
+                </button>
+                <span className="fl-fin">{GRATIS ? "Svarene dine er allerede fylt inn." : "Du betaler med Vipps. Svarene dine er allerede fylt inn."}</span>
+                <span className="fl-fin">
+                  Brevet gjelder {`${s.c_make} ${s.c_model}`.trim()} ({s.c_reg}) og feilen du har valgt. Bilen og feilen kan ikke endres {GRATIS ? "etterpå" : "etter kjøpet"}.
+                </span>
+              </>
             )}
+            <button type="button" className="fl-lenke" onClick={onEndre}>
+              Endre svarene
+            </button>
           </div>
-          {/* Closed once the account shows the case is bought already. */}
-          <Kjop utkast={fraGammelSjekk(a, idag())} utvikling={utvikling} apen={kjop && !tilgang} onLukk={() => settKjop(false)} />
-        </>,
-        document.body,
+        </>
       )}
+      <Styrke r={r} apen />
+      {r.tier !== "utenfor" && lignende && <Lignende tall={lignende.tall} kort={lignende.kort} sammenligning={lignende.sammenligning} fot="I brevet viser vi til et vedtak som ligner saken din, og argumenterer for at din sak bør få samme utfall." />}
+      <p className="fine" style={{ margin: 0 }}>
+        Vurderingen er veiledende og bygger bare på svarene dine. Den er ikke juridisk rådgivning.
+      </p>
+      {createPortal(<Kjop utkast={utkast} utvikling={utvikling} apen={kjop && !funnet && !mangler} onLukk={() => settKjop(false)} />, document.body)}
     </>
   );
 }

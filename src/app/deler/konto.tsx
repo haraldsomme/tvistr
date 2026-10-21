@@ -18,11 +18,10 @@ const STIL = {
 
 // The header's way to the account: Min side when logged in, else Logg inn. Decided in the browser from
 // the hint cookie (the pages themselves check the real session), so the pages around it stay static
-// (server snapshot: logged out). `bareInne` hides the logged-out link. «Logg inn» is a plain <a>: a
+// (server snapshot: logged out). «Logg inn» is a plain <a>: a
 // <Link> would prefetch the route handler /logg-inn, which starts a login.
-export function Konto({ bareInne = false, variant = "ramme", onVelgAction }: { bareInne?: boolean; variant?: keyof typeof STIL; onVelgAction?: () => void }) {
+export function Konto({ variant = "ramme", onVelgAction }: { variant?: keyof typeof STIL; onVelgAction?: () => void }) {
   const inne = useSyncExternalStore(ingen, inneHint, () => false);
-  if (bareInne && !inne) return null;
   const { className, style } = STIL[variant];
   return inne ? (
     <Link href="/min-side" className={className} style={style} onClick={onVelgAction}>

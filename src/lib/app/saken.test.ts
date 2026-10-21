@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fraSjekk, gjelderSaken, kjopt, laas, manglerForKjop, manglerISkjema, nyttPrecValg, rensSkjema, sakTekst, sammeSak, sammeSakSkjema, sjekkTilSvar, tilKjop, tilSvar } from "./saken";
+import { fraSjekk, gjelderSaken, kjopt, laas, manglerISkjema, nyttPrecValg, rensSkjema, sakTekst, sammeSakSkjema, tilKjop, tilSvar } from "./saken";
 import { eksempel, standard } from "./skjema";
 
 const idag = "2026-10-16";
@@ -33,15 +33,6 @@ describe("tilSvar", () => {
   it("selger sa ingenting", () => expect(tilSvar({ ...eksempel(idag), seller_said: "nei" })!.feil[0].opplysning).toBe("nei"));
 });
 
-describe("sjekkTilSvar", () => {
-  it("sjekkens svar", () => {
-    const s = sjekkTilSvar({ delivery: "2026-06-01", km: "120 000", year: "2014", asis: "vetikke", cats: ["motor"], issues: { motor: ["turbo"] }, fdates: { motor: "2026-09-01" } })!;
-    expect(s).toMatchObject({ kjopsdato: "2026-06-01", km: 120000, ar: 2014, somDenEr: null, krav: null });
-    expect(s.feil).toEqual([{ hoved: "motor", under: ["turbo"], oppdaget: "2026-09-01", beskrivelse: null, opplysning: null, verksted: null, rapport: null }]);
-  });
-  it("uten overtakelse gir null", () => expect(sjekkTilSvar({ cats: ["motor"], fdates: { motor: "2026-09-01" } })).toBeNull());
-});
-
 describe("fraSjekk", () => {
   const a = { seller: "forhandler", buyer: "privat", asis: "ja", reg: "AB 12345", make: "Peugeot 308", year: "2014", lastReg: "2026-06-01", km: "120 000", delivery: "2026-06-01", cats: ["motor"], issues: { motor: ["turbo"] }, fdates: { motor: "2026-09-01" }, known: "nei", cause: "slitasje", notified: "ja", notifiedDate: "2026-09-10" } as const;
   it("fyller skjemaet fra sjekken", () => {
@@ -71,20 +62,6 @@ describe("sakTekst", () => {
 });
 
 describe("låst til kjøpet", () => {
-  const a = { reg: "AB 12345", cats: ["motor"], issues: { motor: ["turbo"] } };
-  it("krever reg.nr. og en feil før betaling", () => {
-    expect(manglerForKjop({ cats: ["motor"] })).toBe("reg");
-    expect(manglerForKjop({ reg: "AB 12345", make: "Skoda", cats: [] })).toBe("feil");
-    expect(manglerForKjop({ ...a, make: "Skoda Octavia" })).toBeNull();
-  });
-  it("samme sak: samme bil og samme feil", () => {
-    const k = kjopt("abcdefghijkm", { ...standard(idag), c_reg: "AB 12345", f_cats: ["motor"], f_parts: { motor: ["turbo"] } });
-    expect(sammeSak(a, k)).toBe(true);
-    expect(sammeSak(a, { ...k, id: "" })).toBe(false);
-    expect(sammeSak({ ...a, reg: "CD 67890" }, k)).toBe(false);
-    expect(sammeSak({ ...a, cats: ["motor", "klima"] }, k)).toBe(false);
-    expect(sammeSak({ ...a, issues: { motor: ["registerreim"] } }, k)).toBe(false);
-  });
   it("bil og feil blir som kjøpt; resten kan endres", () => {
     const lagret = { ...standard(idag), c_reg: "AB 12345", c_make: "Volvo", c_model: "V60", c_year: "2017", f_cats: ["motor"], f_parts: { motor: ["turbo"] } };
     const ny = laas(lagret, { ...lagret, c_reg: "CD 67890", c_make: "Audi", c_model: "A4", c_year: "2020", f_cats: ["klima"], f_parts: { klima: ["ac"] }, c_km: "90 000", b_name: "Kari" });
@@ -132,10 +109,6 @@ describe("kjøpet fra skjemaet", () => {
     expect([ny.b_name, ny.b_email, ny.d_name]).toEqual(["Kari", "ny@eksempel.no", "X"]);
     expect(tilKjop({ ...standard(idag), d_name: "X" }, null).d_name).toBe("X");
   });
-});
-
-describe("bilen låst til kjøpet", () => {
-  it("krever merke før betaling når oppslaget ikke fant bilen", () => expect(manglerForKjop({ reg: "AB 12345", cats: ["motor"] })).toBe("bil"));
 });
 
 describe("nyttPrecValg", () => {

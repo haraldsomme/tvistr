@@ -1,6 +1,7 @@
 // The faults (chosen before payment, locked to the purchase after), one card per area, the workshop,
 // the attachments (file names only, nothing is uploaded), what the seller said and any earlier complaint.
-// The pieces without a panel (Feilvalg, Omrader, Vedlegg, SelgerSa, SagtFra) are blocks for a page to place.
+// All but Feilen (the paid case's locked list with its panel) are blocks for a page to place under its
+// own heading.
 import { useState } from "react";
 import { FeilIkon, FeilListe } from "@/app/deler/feilliste";
 import { Fil, Fold, Lukk, Opplast } from "@/app/deler/ikoner";
@@ -123,63 +124,55 @@ export function Feilen({ s, sett }: StegProps) {
   );
 }
 
+// «Er feilen undersøkt av et verksted?», asked by the page.
 export function Verksted({ s, sett }: StegProps) {
   return (
-    <section className="panel">
-      <div className="head">
-        <h2>Verksted</h2>
-        <p>En verkstedrapport og dokumentasjon gjør saken mye sterkere. Alt du krysser av for, føres opp i brevet.</p>
-      </div>
-      <div className="block">
-        <div className="bt">
-          <h3>Er feilen undersøkt av et verksted?</h3>
-        </div>
-        <Valgliste
-          bredde={190}
-          navn="ws"
-          verdi={s.ws}
-          valg={[["rapport", "Ja, og jeg har en rapport"], ["uten", "Ja, men uten rapport"], ["nei", "Nei"]]}
-          onVelg={(ws) => sett({ ws, ...(ws === "rapport" && !s.f_docs.includes("verksted") && { f_docs: [...s.f_docs, "verksted"] }) })}
-        />
-        <Vis pa={s.ws === "rapport" || s.ws === "uten"}>
-          <div className="rv-in">
-            <Vis pa={s.ws === "rapport"}>
-              <div className="sub-h">Rapporten fra verkstedet</div>
-            </Vis>
-            <div className="f">
-              <span className="lb">Hvem undersøkte bilen?</span>
-              <Valgliste bredde={190} navn="ws_who" verdi={s.ws_who} valg={[["uavhengig", "Uavhengig verksted"], ["selger", "Selgers eget verksted"], ["merke", "Merkeverksted"]]} onVelg={(ws_who) => sett({ ws_who })} />
-            </div>
-            <div className="grid" style={{ marginTop: 16 }}>
-              <Felt s={s} sett={sett} k="ws_name" label="Verkstedets navn" klasse="c4" placeholder="Bilservice Sandvika AS" />
-              <Vis pa={s.ws === "rapport"} klasse="c2">
-                <Felt s={s} sett={sett} k="ws_date" label="Dato for rapporten" type="date" />
-              </Vis>
-            </div>
-            <Vis pa={s.ws === "rapport"}>
-              <div className="f" style={{ marginTop: 18 }}>
-                <span className="lb">Hva sier rapporten?</span>
-                <span className="hint" style={{ margin: "-2px 0 8px" }}>
-                  Kryss bare av det rapporten faktisk sier. Forhandleren kan be om å få se den.
-                </span>
-                <Valgliste flere bredde={9999} navn="ws_says" verdi={s.ws_says} valg={RAPPORT} onVelg={(v, pa) => sett({ ws_says: RAPPORT.map(([x]) => x).filter((x) => (x === v ? pa : s.ws_says.includes(x))) })} />
-              </div>
-              <div style={{ marginTop: 18 }}>
-                <Felt
-                  s={s}
-                  sett={sett}
-                  k="ws_quote"
-                  label={<>Rapportens konklusjon, ordrett <em>valgfritt</em></>}
-                  flerlinje={96}
-                  placeholder="For eksempel: «Feilkoder viser defekt batterimodul. Feilen skyldes ikke ytre påvirkning.»"
-                  hint="Skriv av rapportens konklusjon ordrett, gjerne én til tre setninger. Legg ved rapporten når du sender brevet."
-                />
-              </div>
+    <div className="block">
+      <Valgliste
+        bredde={190}
+        navn="ws"
+        verdi={s.ws}
+        valg={[["rapport", "Ja, og jeg har en rapport"], ["uten", "Ja, men uten rapport"], ["nei", "Nei"]]}
+        onVelg={(ws) => sett({ ws, ...(ws === "rapport" && !s.f_docs.includes("verksted") && { f_docs: [...s.f_docs, "verksted"] }) })}
+      />
+      <Vis pa={s.ws === "rapport" || s.ws === "uten"}>
+        <div className="rv-in">
+          <Vis pa={s.ws === "rapport"}>
+            <div className="sub-h">Rapporten fra verkstedet</div>
+          </Vis>
+          <div className="f">
+            <span className="lb">Hvem undersøkte bilen?</span>
+            <Valgliste bredde={190} navn="ws_who" verdi={s.ws_who} valg={[["uavhengig", "Uavhengig verksted"], ["selger", "Selgers eget verksted"], ["merke", "Merkeverksted"]]} onVelg={(ws_who) => sett({ ws_who })} />
+          </div>
+          <div className="grid" style={{ marginTop: 16 }}>
+            <Felt s={s} sett={sett} k="ws_name" label="Verkstedets navn" klasse="c4" placeholder="Bilservice Sandvika AS" />
+            <Vis pa={s.ws === "rapport"} klasse="c2">
+              <Felt s={s} sett={sett} k="ws_date" label="Dato for rapporten" type="date" />
             </Vis>
           </div>
-        </Vis>
-      </div>
-    </section>
+          <Vis pa={s.ws === "rapport"}>
+            <div className="f" style={{ marginTop: 18 }}>
+              <span className="lb">Hva sier rapporten?</span>
+              <span className="hint" style={{ margin: "-2px 0 8px" }}>
+                Kryss bare av det rapporten faktisk sier. Forhandleren kan be om å få se den.
+              </span>
+              <Valgliste flere bredde={9999} navn="ws_says" verdi={s.ws_says} valg={RAPPORT} onVelg={(v, pa) => sett({ ws_says: RAPPORT.map(([x]) => x).filter((x) => (x === v ? pa : s.ws_says.includes(x))) })} />
+            </div>
+            <div style={{ marginTop: 18 }}>
+              <Felt
+                s={s}
+                sett={sett}
+                k="ws_quote"
+                label={<>Rapportens konklusjon, ordrett <em>valgfritt</em></>}
+                flerlinje={96}
+                placeholder="For eksempel: «Feilkoder viser defekt batterimodul. Feilen skyldes ikke ytre påvirkning.»"
+                hint="Skriv av rapportens konklusjon ordrett, gjerne én til tre setninger. Legg ved rapporten når du sender brevet."
+              />
+            </div>
+          </Vis>
+        </div>
+      </Vis>
+    </div>
   );
 }
 
@@ -233,15 +226,10 @@ export function Vedlegg({ s, sett }: StegProps) {
   );
 }
 
+// «Sa selger noe om denne feilen før kjøpet?», asked by the page.
 export function SelgerSa({ s, sett }: StegProps) {
   return (
     <div className="block">
-      <div className="bt">
-        <h3>Sa selger noe om denne feilen før kjøpet?</h3>
-      </div>
-      <span className="hint" style={{ display: "block", margin: "-6px 0 12px" }}>
-        For eksempel i annonsen, kontrakten eller en melding.
-      </span>
       <Valgliste bredde={9999} navn="seller_said" verdi={s.seller_said} valg={[["nei", "Nei"], ["lovet", "Ja, at bilen var fri for slike feil"], ["opplyste", "Ja, de opplyste om feilen"]]} onVelg={(seller_said) => sett({ seller_said })} />
       <Vis pa={s.seller_said === "lovet" || s.seller_said === "opplyste"}>
         <div className="rv-in">

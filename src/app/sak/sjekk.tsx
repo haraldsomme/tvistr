@@ -1,327 +1,244 @@
 "use client";
 
-// The free check (artifact «CASE CHECK»): one question per screen, auto-advance on a choice, then the
-// verdict. The answers stay in localStorage (tvistr-sjekk).
+// The flow before payment (mockup «Sjekk saken»): one question per screen on the left with the strength
+// of the case under it, the letter as the answers make it on the right (built and redacted on the
+// server, forhandsvis), then the verdict and the purchase. The draft stays in localStorage
+// (tvistr-utkast); nothing is saved on the server before kjop.
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { FeilListe } from "@/app/deler/feilliste";
-import { Merke } from "@/app/deler/merke";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { MaalVisning } from "@/app/maal-visning";
-import { Hake, Pil, Tilbake } from "@/app/deler/ikoner";
-import { type Bil, Skilt } from "@/app/deler/skilt";
-import { addDays, idag, iso, relText } from "@/lib/app/dato";
-import { FMT, lcFirst, listJoin } from "@/lib/app/format";
-import { Konto } from "@/app/deler/konto";
-import { useKjopt, useLagret } from "@/lib/app/lagring";
-import type { Sjekk as Svar } from "@/lib/app/saken";
-import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
+import { forhandsvis } from "@/app/sak/brevet-actions";
+import { useBrev } from "@/app/sak/flyt/bruk-brev";
+import { Brevrute } from "@/app/sak/flyt/brevrute";
+import { Oppsett } from "@/app/sak/flyt/oppsett";
+import { Styrke } from "@/app/sak/flyt/styrke";
+import { Topp } from "@/app/sak/flyt/topp";
+import { Bilen, Kjopet } from "@/app/sak/skjema/bilen";
+import type { Sett, StegProps } from "@/app/sak/skjema/felt";
+import { Krav } from "@/app/sak/skjema/krav";
+import { Feilvalg, Omrader, SagtFra, SelgerSa, Verksted } from "@/app/sak/skjema/mangelen";
+import { ETIKETT, FOR, har } from "@/app/sak/skjema/steg";
+import { idag } from "@/lib/app/dato";
+import { erObjekt, flett } from "@/lib/app/flett";
+import { useLagret } from "@/lib/app/lagring";
+import type { Sjekk as GammelSjekk } from "@/lib/app/saken";
+import { type Skjema, standard, syncAreas } from "@/lib/app/skjema";
+import { fraGammelSjekk, standardUtkast, type Utkast, utkastResultat } from "@/lib/app/utkast";
 import { Resultat } from "./resultat";
-import { anslag, type Sporsmal, synlige } from "./sporsmal";
+import { ENKELTVALG, synlige } from "./sporsmal";
 
-export type Tilstand = Svar & { _screen?: "q" | "result"; _i?: number };
+type Lagret = Utkast & { _i?: number; _screen?: "q" | "result" };
 
+const NOKKEL = "tvistr-utkast";
+const GAMMEL = "tvistr-sjekk";
 const ADV_MS = 750;
-const HURTIG = [["I dag", 0], ["I går", 1], ["For en uke siden", 7], ["For to uker siden", 14], ["For en måned siden", 30]] as const;
+type Nokkel = Parameters<typeof har>[1];
+// The field the peek bar names for a change of the per-area answers.
+const SOM: Record<string, Nokkel> = { f_area: "f_found", f_catdesc: "f_any_desc", f_desc: "f_any_desc" };
 
-export function Sjekk({ utvikling, fraStart }: { utvikling: boolean; fraStart: boolean }) {
+// The form inside the draft over the defaults, so a draft stored by an older version has every field.
+const medSkjema = (l: Lagret): Lagret => ({ ...l, skjema: flett(standard(idag()), erObjekt(l.skjema) ? l.skjema : {}) as Skjema });
+
+// The component of each screen that is not one choice (sporsmal.ts, ENKELTVALG).
+const STEG: Record<string, (p: StegProps) => ReactNode> = {
+  bilen: Bilen,
+  kjopet: (p) => <Kjopet {...p} medForbehold={false} />,
+  feil: Feilvalg,
+  omrader: Omrader,
+  verksted: Verksted,
+  selger_sa: SelgerSa,
+  sagt_fra: SagtFra,
+  kravet: Krav,
+};
+
+export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStart: boolean; ny: boolean }) {
   const router = useRouter();
-  const [a, settA, klar] = useLagret<Tilstand>("tvistr-sjekk", () => ({ _i: 0, cats: [], issues: {}, fdates: {} }));
-  const [kjopt] = useKjopt();
-  const [retning, settRetning] = useState<1 | -1>(1);
+  const [raa, settRaa, klar] = useLagret<Lagret>(NOKKEL, () => ({ ...standardUtkast(idag()), _i: 0 }));
+  const lagret = useMemo(() => medSkjema(raa), [raa]);
   const [adv, settAdv] = useState<string | null>(null);
+  // The field the buyer changed last, for the peek bar on narrow screens.
+  const [sist, settSist] = useState<Nokkel | null>(null);
   const tid = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const tittel = useRef<HTMLHeadingElement>(null);
 
-  const skjerm = a._screen ?? "q";
-  const vq = synlige(a);
-  const i = Math.min(a._i ?? 0, vq.length - 1);
-  const q = vq[i];
+  // What the server and the verdict get: the draft without the position.
+  const utkast = useMemo<Utkast>(() => ({ skjema: lagret.skjema, seller: lagret.seller, buyer: lagret.buyer, asis: lagret.asis }), [lagret]);
+  const dag = idag();
+  const s = syncAreas(utkast.skjema);
+  const r = utkastResultat(utkast, dag);
+  const vis = synlige(utkast);
+  const i = Math.min(lagret._i ?? 0, vis.length - 1);
+  const sk = vis[i];
+  const skjerm = lagret._screen ?? "q";
+  const brev = useBrev(() => forhandsvis({ utkast }), JSON.stringify(utkast));
+
+  const endre = useCallback((f: (l: Lagret) => Lagret) => settRaa((l) => f(medSkjema(l))), [settRaa]);
+  const sett: Sett = (patch) => {
+    endre((l) => ({ ...l, skjema: { ...l.skjema, ...patch } }));
+    const k = Object.keys(patch).map((k) => SOM[k] ?? k).find((k) => k in ETIKETT);
+    settSist((k as Nokkel | undefined) ?? null);
+  };
 
   const avbryt = useCallback(() => {
     clearTimeout(tid.current);
     settAdv(null);
   }, []);
-
   const neste = useCallback(() => {
     avbryt();
-    settRetning(1);
-    window.scrollTo({ top: 0 });
-    settA((f) => {
-      const v = synlige(f);
-      const n = Math.min(f._i ?? 0, v.length - 1);
-      const d = v[n];
-      if ((d?.terminal && d.terminal(f[d.id])) || n >= v.length - 1) return { ...f, _screen: "result" };
-      return { ...f, _i: n + 1 };
+    endre((l) => {
+      const v = synlige(l);
+      const n = Math.min(l._i ?? 0, v.length - 1);
+      if (!v[n].ferdig(l)) return l;
+      return n >= v.length - 1 ? { ...l, _screen: "result" } : { ...l, _i: n + 1 };
     });
-  }, [avbryt, settA]);
-
-  function tilbake() {
+  }, [avbryt, endre]);
+  const tilbake = () => {
     avbryt();
-    settRetning(-1);
-    window.scrollTo({ top: 0 });
-    if (skjerm === "result") {
-      const t = vq.findIndex((x) => x.terminal && x.terminal(a[x.id]));
-      return settA({ ...a, _screen: "q", _i: t >= 0 ? t : vq.length - 1 });
-    }
-    if (i > 0) settA({ ...a, _i: i - 1 });
-    else router.push("/");
-  }
-
-  const omStart = () => {
+    endre((l) => ({ ...l, _i: Math.max(0, Math.min(l._i ?? 0, synlige(l).length - 1) - 1) }));
+  };
+  const tilSkjerm = (id: string) => {
     avbryt();
-    settRetning(1);
-    settA({ _screen: "q", _i: 0, cats: [], issues: {}, fdates: {} });
+    endre((l) => ({ ...l, _screen: "q", _i: Math.max(0, synlige(l).findIndex((x) => x.id === id)) }));
   };
 
-  function velg(id: keyof Svar, v: string, nokkel: string) {
-    settA((f) => ({ ...f, [id]: v }));
+  // A choice goes on by itself once the screen is done (not for a case the letter does not cover).
+  function velg(id: string, v: string) {
+    const e = ENKELTVALG[id];
     avbryt();
-    settAdv(nokkel);
+    endre((l) => ({ ...l, ...e.sett(l, v) }));
+    if (!sk.ferdig(e.sett(utkast, v))) return;
+    settAdv(v);
     tid.current = setTimeout(neste, matchMedia("(prefers-reduced-motion: reduce)").matches ? 450 : ADV_MS);
   }
-
-  // 1–9 picks an answer, Enter goes on.
-  useEffect(() => {
-    if (skjerm !== "q" || !q) return;
-    const tast = (e: KeyboardEvent) => {
-      if (e.altKey || e.metaKey || e.ctrlKey || document.querySelector(".modal.open")) return;
-      const t = e.target as HTMLElement;
-      if (e.key === "Enter" && !t.closest("button")) {
-        e.preventDefault();
-        neste();
-      } else if (t.tagName !== "INPUT" && q.type === "single" && /^[1-9]$/.test(e.key)) {
-        const o = q.opts?.[+e.key - 1];
-        if (o) velg(q.id, o[0], o[0]);
-      }
-    };
-    document.addEventListener("keydown", tast);
-    return () => document.removeEventListener("keydown", tast);
-  });
-
   useEffect(() => () => clearTimeout(tid.current), []);
 
-  // From the front page: back to question 1 with the answers kept, before the stored position is
-  // painted. The parameter is dropped so a reload stays where the buyer is.
+  // Once the stored draft is read: a check from the old flow becomes the draft (unless there is one
+  // already) and is removed; `?ny` starts a new draft; `?start` (the front page) opens question 1 with
+  // the answers kept. The parameter is dropped so a reload stays where the buyer is.
   useLayoutEffect(() => {
-    if (!klar || !fraStart) return;
-    settA((f) => ({ ...f, _screen: "q", _i: 0 }));
-    router.replace("/sak");
-  }, [klar, fraStart, settA, router]);
+    if (!klar) return;
+    let gammel: unknown = null,
+      harUtkast = false;
+    try {
+      const g = localStorage.getItem(GAMMEL);
+      harUtkast = localStorage.getItem(NOKKEL) !== null;
+      if (g) gammel = JSON.parse(g);
+      localStorage.removeItem(GAMMEL);
+    } catch {}
+    if (erObjekt(gammel) && !harUtkast && !ny) settRaa({ ...fraGammelSjekk(gammel as GammelSjekk, idag()), _i: 0 });
+    if (ny) settRaa({ ...standardUtkast(idag()), _i: 0 });
+    else if (fraStart) settRaa((l) => ({ ...l, _screen: "q", _i: 0 }));
+    if (ny || fraStart) router.replace("/sak");
+  }, [klar, ny, fraStart, settRaa, router]);
 
-  const tot = Math.max(anslag(a), i + 1);
-  return (
-    <section className={`ob${skjerm === "result" ? " has-bar" : ""}`} aria-label="Saksvurdering">
-      {klar && skjerm === "q" && i === 0 && <MaalVisning hendelse="sjekk_startet" />}
-      <div className="ob-top">
-        <Merke />
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {skjerm === "q" && klar && (
-            <span className="kbd-hint">
-              Spørsmål {i + 1} av {tot}
-            </span>
-          )}
-          <Konto bareInne />
-        </div>
-        <div className="ob-prog" id="obProg" aria-hidden="true">
-          <i style={{ width: skjerm === "q" ? `${((i + 1) / tot) * 100}%` : "100%" }} />
-        </div>
-      </div>
-      <div className="ob-stage">
-        {klar && (
-          <div key={`${skjerm}-${i}`} className={retning < 0 ? "anim-b" : "anim-f"} style={{ width: "100%", display: "flex", justifyContent: "center" }}>
-            {skjerm === "result" ? (
-              <Resultat a={a} kjopt={kjopt} utvikling={utvikling} onTilSporsmal={(id) => settA((f) => ({ ...f, _screen: "q", _i: Math.max(0, synlige(f).findIndex((q) => q.id === id)) }))} onTilbake={tilbake} onOmStart={omStart} />
-            ) : (
-              <Sporsmalet q={q} a={a} settA={settA} adv={adv} siste={i === vq.length - 1} onVelg={velg} onNeste={neste} onTilbake={tilbake} />
-            )}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
+  // A new screen starts at the top, with its question focused (not on the first paint).
+  const forrige = useRef<string | null>(null);
+  const her = `${skjerm}-${i}`;
+  useEffect(() => {
+    if (!klar) return;
+    if (forrige.current !== null && forrige.current !== her) {
+      window.scrollTo({ top: 0 });
+      tittel.current?.focus({ preventScroll: true });
+    }
+    forrige.current = her;
+  }, [klar, her]);
 
-type Props = {
-  q: Sporsmal;
-  a: Tilstand;
-  settA: (f: (a: Tilstand) => Tilstand) => void;
-  adv: string | null;
-  siste: boolean;
-  onVelg: (id: keyof Svar, v: string, nokkel: string) => void;
-  onNeste: () => void;
-  onTilbake: () => void;
-};
+  // «x av N opplysninger»: the fields of the sections answered before payment.
+  const felt = FOR.flatMap((f) => f.felt);
+  const fylt = felt.filter((k) => har(s, k)).length;
+  const etikett = `${fylt} av ${felt.length} opplysninger fylt inn`;
 
-function Sporsmalet({ q, a, settA, adv, siste, onVelg, onNeste, onTilbake }: Props) {
-  const svar = a[q.id];
-  return (
-    <div className="q">
-      <h2>{q.title}</h2>
-      {q.hint && <p className="q-hint">{q.hint}</p>}
-      <div className="q-body">
-        {q.type === "single" && (
-          <div className="q-opts" role="radiogroup" aria-label={q.title}>
-            {q.opts!.map(([v, t, d], k) => (
-              <button key={v} type="button" role="radio" aria-checked={svar === v} className={`q-opt${svar === v ? " sel" : ""}${adv === v ? " adv" : ""}`} onClick={() => onVelg(q.id, v, v)}>
-                <span className="q-key">{k + 1}</span>
-                <span className="q-txt">
-                  <b>{t}</b>
-                  {d && <small>{d}</small>}
-                </span>
-                <span className="q-ok">
-                  <Hake s={13} />
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-        {q.type === "car" && <Bilen a={a} settA={settA} />}
-        {q.type === "date" && <Dato q={q} a={a} settA={settA} adv={adv} onVelg={onVelg} />}
-        {q.type === "faults" && <Feilene a={a} settA={settA} />}
-      </div>
-      <div className="q-foot">
-        <button type="button" className="btn gh" onClick={onTilbake}>
-          <Tilbake />
-          Tilbake
-        </button>
-        <div>
-          {adv && <span className="adv-hint">Går videre …</span>}
-          {q.type === "single" && (
-            <span className="kbd-hint">
-              <kbd>1</kbd>–<kbd>{q.opts!.length}</kbd> for å velge
-            </span>
-          )}
-          <button type="button" className="btn gh" onClick={onNeste}>
-            Hopp over
-          </button>
-          {(q.type !== "single" || svar !== undefined) && (
-            <button type="button" className="btn pri" onClick={onNeste}>
-              {siste ? "Se vurderingen" : "Neste"}
-              <Pil />
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+  const ferdig = sk.ferdig(utkast);
+  const siste = i === vis.length - 1;
+  const Steget = STEG[sk.id];
+  const valg = ENKELTVALG[sk.id];
 
-function Bilen({ a, settA }: Pick<Props, "a" | "settA">) {
-  const funnet: Bil | null = a.lastReg && a.make ? { make: a.make, model: "", year: a.year ?? "", lastReg: a.lastReg } : null;
-  return (
-    <div className="grid" style={{ maxWidth: 560 }}>
-      <div className="f c6">
-        <label className="lb" htmlFor="qReg">
-          Registreringsnummer
-        </label>
-        {/* The handover date starts as the day the car was registered on its current owner, unless the buyer changed it. */}
-        <Skilt id="qReg" verdi={a.reg ?? ""} funnet={funnet} onEndre={(reg) => settA((f) => ({ ...f, reg }))} onBil={(b) => settA((f) => ({ ...f, make: `${b.make} ${b.model}`.trim(), year: b.year, lastReg: b.lastReg, delivery: f.delivery && f.delivery !== f.lastReg ? f.delivery : b.lastReg || f.delivery }))} />
-      </div>
-      {/* Filled by «Hent bilen»; typed by hand when the register does not have the car. The car is fixed at payment. */}
-      <div className="f c4">
-        <label className="lb" htmlFor="qMake">
-          Merke og modell
-        </label>
-        <input className="in" id="qMake" placeholder="Volkswagen Golf" value={a.make ?? ""} onChange={(e) => settA((f) => ({ ...f, make: e.target.value }))} />
-      </div>
-      <div className="f c2">
-        <label className="lb" htmlFor="qYear">
-          Årsmodell
-        </label>
-        <input className="in mono" id="qYear" inputMode="numeric" placeholder="2016" value={a.year ?? ""} onChange={(e) => settA((f) => ({ ...f, year: FMT.year(e.target.value) }))} />
-      </div>
-      <div className="f c3">
-        <label className="lb" htmlFor="qDelivery">
-          Overtakelsesdato
-        </label>
-        <input className="in" type="date" id="qDelivery" max={idag()} value={a.delivery ?? ""} onChange={(e) => settA((f) => ({ ...f, delivery: e.target.value }))} />
-      </div>
-      <div className="f c3">
-        <label className="lb" htmlFor="qKm">
-          Km-stand ved overtakelse <em>valgfritt</em>
-        </label>
-        <div className="ad">
-          <input className="in" id="qKm" inputMode="numeric" placeholder="38 500" value={a.km ?? ""} onChange={(e) => settA((f) => ({ ...f, km: FMT.num(e.target.value) }))} />
-          <span className="sx">km</span>
-        </div>
-      </div>
-      {a.lastReg && a.delivery === a.lastReg && (
-        <p className="hint c6" style={{ margin: 0 }}>
-          Overtakelsesdatoen er fylt inn med datoen bilen sist ble registrert. Endre den hvis du fikk bilen en annen dag. Fristene regnes herfra.
-        </p>
-      )}
-    </div>
-  );
-}
-
-function Dato({ q, a, settA, adv, onVelg }: Pick<Props, "q" | "a" | "settA" | "adv" | "onVelg">) {
-  const v = (a[q.id] as string | undefined) ?? "";
-  return (
+  const venstre = !klar ? null : skjerm === "result" ? (
+    <Resultat utkast={utkast} r={r} lignende={brev.svar?.lignende ?? null} utvikling={utvikling} onEndre={() => tilSkjerm(vis.at(-1)!.id)} onTilSkjerm={tilSkjerm} />
+  ) : (
     <>
-      <div className="f q-datef">
-        <label className="lb" htmlFor="qDate">
-          Dato du sa fra
-        </label>
-        <input className="in q-date" type="date" id="qDate" max={idag()} value={v} onChange={(e) => settA((f) => ({ ...f, [q.id]: e.target.value }))} />
+      {i === 0 && <MaalVisning hendelse="sjekk_startet" />}
+      <div className="fl-frem">
+        <div className="fl-frem-l">
+          <span className="fl-frem-g">{sk.gruppe}</span>
+          <span>
+            Spørsmål {i + 1} av {vis.length}
+          </span>
+        </div>
+        <div className="fl-frem-s" aria-hidden="true">
+          {vis.map((x, j) => (
+            <span key={x.id} data-s={j < i ? "ferdig" : j === i ? "her" : undefined} />
+          ))}
+        </div>
       </div>
-      <div className="q-quick" role="group" aria-label="Hurtigvalg">
-        {HURTIG.map(([l, d]) => {
-          const dato = iso(addDays(new Date(), -d));
-          return (
-            <button key={l} type="button" className={`q-chip${adv === dato ? " adv" : ""}`} aria-pressed={v === dato} onClick={() => onVelg(q.id, dato, dato)}>
-              {l}
-            </button>
-          );
-        })}
+      <div className="fl-sp">
+        <h1 ref={tittel} tabIndex={-1}>
+          {sk.tittel}
+        </h1>
+        {sk.hint && <p>{sk.hint}</p>}
       </div>
-    </>
-  );
-}
-
-function Feilene({ a, settA }: Pick<Props, "a" | "settA">) {
-  const cats = a.cats ?? [];
-  const veksle = (c: string) =>
-    settA((f) => {
-      const valgt = new Set(f.cats ?? []);
-      if (valgt.has(c)) valgt.delete(c);
-      else valgt.add(c);
-      return { ...f, cats: HOVEDKATEGORIER.filter((h) => valgt.has(h.id)).map((h) => h.id) };
-    });
-  const veksleUnder = (c: string, u: string) =>
-    settA((f) => {
-      const valgt = new Set(f.issues?.[c] ?? []);
-      if (valgt.has(u)) valgt.delete(u);
-      else valgt.add(u);
-      const h = HOVEDKATEGORIER.find((x) => x.id === c)!;
-      return { ...f, issues: { ...f.issues, [c]: h.under.filter((x) => valgt.has(x.id)).map((x) => x.id) } };
-    });
-  return (
-    <div className="fq">
-      <FeilListe valgt={cats} under={a.issues ?? {}} onKategori={veksle} onUnder={veksleUnder} />
-      {cats.length > 0 && (
-        <div className="fq-sec">
-          <h3 className="fq-h">{cats.length > 1 ? "Når oppdaget du hver feil?" : "Når oppdaget du feilen?"}</h3>
-          <div className="fd-list">
-            {cats.map((c) => {
-              const h = HOVEDKATEGORIER.find((x) => x.id === c)!;
-              const d = a.fdates?.[c] ?? "";
-              const sett = (h.under.filter((u) => a.issues?.[c]?.includes(u.id)) ?? []).map((u) => lcFirst(u.navn));
+      <div className="fl-skjerm">
+        {valg ? (
+          <div className="fl-valg" role="radiogroup" aria-label={sk.tittel}>
+            {valg.valg.map(([v, t, d]) => {
+              const pa = valg.verdi(utkast) === v;
               return (
-                <div key={c} className="fd">
-                  <div className="fd-t">
-                    <b>{h.navn}</b>
-                    {sett.length > 0 && <span className="fd-s">{listJoin(sett).replace(/^./, (m) => m.toUpperCase())}</span>}
-                    <span className="fd-r">{relText(d, a.delivery)}</span>
-                  </div>
-                  <label className="fd-in">
-                    <span>Oppdaget</span>
-                    <input className="in" type="date" max={idag()} value={d} aria-label={`Oppdaget: ${h.navn}`} onChange={(e) => settA((f) => ({ ...f, fdates: { ...f.fdates, [c]: e.target.value } }))} />
-                  </label>
-                </div>
+                <button key={v} type="button" role="radio" aria-checked={pa} className="fl-valg-r" data-adv={adv === v || undefined} onClick={() => velg(sk.id, v)}>
+                  <span className="fl-valg-o" aria-hidden="true" />
+                  <span className="fl-valg-t">
+                    <b>{t}</b>
+                    {d && <small>{d}</small>}
+                  </span>
+                </button>
               );
             })}
           </div>
-        </div>
-      )}
-    </div>
+        ) : (
+          <Steget s={s} sett={sett} />
+        )}
+        {(sk.id === "selger" || sk.id === "kjoper") && r.tier === "utenfor" && (
+          <div className="fl-varsel" role="status">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 3l10 18H2zM12 10v4M12 17.5h.01" />
+            </svg>
+            <div>
+              <b>{r.title}</b>
+              <p>{r.summary}</p>
+              <ul>
+                {r.advice?.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="fl-nav">
+        {i > 0 && (
+          <button type="button" className="fl-tilbake" aria-label="Tilbake" onClick={tilbake}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M19 12H5M11 18l-6-6 6-6" />
+            </svg>
+          </button>
+        )}
+        <button type="button" className="fl-cta" aria-disabled={!ferdig} onClick={() => ferdig && neste()}>
+          {adv ? "Går videre …" : siste ? "Se vurderingen" : "Neste"}
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </button>
+      </div>
+      <Styrke r={r} apen={false} />
+    </>
+  );
+
+  const kikk = { tekst: sist && har(s, sist) ? `Lagt til i brevet: ${ETIKETT[sist]}` : "", fylt, totalt: felt.length };
+  return (
+    <Oppsett
+      topp={<Topp lagring="Lagret i nettleseren" />}
+      venstre={venstre}
+      brev={<Brevrute blokker={brev.blokker} venter={brev.venter} feil={brev.feil} etikett={etikett} />}
+      kikk={kikk}
+    />
   );
 }

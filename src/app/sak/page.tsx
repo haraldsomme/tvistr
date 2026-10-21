@@ -4,8 +4,9 @@ import { Sjekk } from "./sjekk";
 
 export const metadata: Metadata = { title: "Sjekk saken din – Tvistr" };
 
-// The free check and its verdict (sjekk.tsx). `?start` (the front page's buttons) opens it at question 1.
+// The questions, the letter as they make it, and the verdict before payment (sjekk.tsx). `?start` (the
+// front page's buttons) opens question 1 with the answers kept; `?ny` (the account menu) starts a new draft.
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const { start } = await searchParams;
-  return <Sjekk utvikling={HELT_BREV_UTEN_BETALING()} fraStart={start !== undefined} />;
+  const { start, ny } = await searchParams;
+  return <Sjekk utvikling={HELT_BREV_UTEN_BETALING()} fraStart={start !== undefined} ny={ny !== undefined} />;
 }

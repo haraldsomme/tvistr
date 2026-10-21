@@ -1,5 +1,5 @@
-// «Hva krever du?»: the claim, the alternative, expenses and holding back payment; and the deadline
-// for the dealer's answer (Svarfrist), set with the letter after payment.
+// «Hva krever du?» (asked by the page): the claim, the alternative, expenses and holding back payment;
+// and the deadline for the dealer's answer (Svarfrist), set with the letter after payment.
 import { Kravikon, Lukk, Pluss, Trekant } from "@/app/deler/ikoner";
 import { addDays, fmtD, idag, parseD } from "@/lib/app/dato";
 import { regler } from "@/lib/app/lov";
@@ -17,11 +17,7 @@ export function Krav({ s, sett }: StegProps) {
   const sum = s.exp.reduce((a, x) => a + (+x.a || 0), 0);
   const settUtgift = (i: number, p: Partial<{ t: string; a: number }>) => sett({ exp: s.exp.map((x, j) => (j === i ? { ...x, ...p } : x)) });
   return (
-    <section className="panel">
-      <div className="head">
-        <h2>Hva krever du?</h2>
-        <p>Forhandleren har normalt rett til å forsøke å rette feilen først. Prisavslag og heving blir aktuelt når retting ikke skjer, ikke lykkes eller ikke er mulig.</p>
-      </div>
+    <>
       <div className="tiles">
         {KRAV.map(([v, t, d, p]) => (
           <label key={v} className="tile">
@@ -140,7 +136,7 @@ export function Krav({ s, sett }: StegProps) {
           </div>
         </Vis>
       </div>
-    </section>
+    </>
   );
 }
 

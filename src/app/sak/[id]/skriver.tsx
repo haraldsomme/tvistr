@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Merke } from "@/app/deler/merke";
 import { Frem, Hake, Tilbake } from "@/app/deler/ikoner";
 import { idag } from "@/lib/app/dato";
+import { GRATIS, NYTT_KJOP } from "@/lib/pris";
 import { type Skjema, syncAreas } from "@/lib/app/skjema";
 import { type Lagring, useAutolagring } from "./autolagring";
 import { Bilen, Kjopet } from "@/app/sak/skjema/bilen";
@@ -23,8 +24,8 @@ import { useLignende, Vurderingsfane } from "./vurderingsfane";
 type Fane = "form" | "case" | "prec" | "letter";
 type Steg = (p: StegProps) => React.ReactNode;
 
-// The component for each section (ALLE), with the car locked and the «som den er» switch in Kjøpet. The
-// pieces that are blocks only get a panel with the section's name.
+// The component for each section (ALLE), with the car locked and the «som den er» switch in Kjøpet. All
+// but Deg, Forhandleren and Feilen are blocks only, and get a panel with the heading in HODE.
 const STEG: Record<string, Steg> = {
   deg: Deg,
   forhandleren: Forhandleren,
@@ -38,7 +39,16 @@ const STEG: Record<string, Steg> = {
   kravet: Krav,
   brevet: Brevvalg,
 };
-const UTEN_PANEL = new Set(["omrader", "selger_sa", "sagt_fra", "brevet"]);
+const HODE: Record<string, { tittel: string; tekst?: string }> = {
+  bilen: { tittel: "Bilen", tekst: `Brevet gjelder bilen ${GRATIS ? "du valgte" : "du betalte for"}. Et brev for en annen bil krever ${NYTT_KJOP}.` },
+  kjopet: { tittel: "Kjøpet", tekst: "Hent opplysningene fra kjøpekontrakten. Overtakelsesdatoen er utgangspunktet for alle fristene." },
+  omrader: { tittel: "Om feilen" },
+  verksted: { tittel: "Er feilen undersøkt av et verksted?", tekst: "En verkstedrapport gjør saken mye sterkere. Alt du krysser av for, føres opp i brevet." },
+  selger_sa: { tittel: "Sa selger noe om denne feilen før kjøpet?", tekst: "For eksempel i annonsen, kontrakten eller en melding." },
+  sagt_fra: { tittel: "Sagt fra før" },
+  kravet: { tittel: "Hva krever du?", tekst: "Forhandleren har normalt rett til å forsøke å rette feilen først. Prisavslag og heving blir aktuelt når retting ikke skjer, ikke lykkes eller ikke er mulig." },
+  brevet: { tittel: "Brevet" },
+};
 const LAGRING: Record<Lagring, string> = { lagret: "Lagret", lagrer: "Lagrer …", feil: "Ikke lagret, prøver igjen" };
 
 export function Skriver({ id, start }: { id: string; start: Skjema }) {
@@ -154,10 +164,11 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
       <form className="main" noValidate autoComplete="on" onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT" && e.preventDefault()}>
         {fane === "form" && (
           <div key={steg}>
-            {UTEN_PANEL.has(ALLE[steg].id) ? (
+            {HODE[ALLE[steg].id] ? (
               <section className="panel">
                 <div className="head">
-                  <h2>{ALLE[steg].navn}</h2>
+                  <h2>{HODE[ALLE[steg].id].tittel}</h2>
+                  {HODE[ALLE[steg].id].tekst && <p>{HODE[ALLE[steg].id].tekst}</p>}
                 </div>
                 <Steget s={s} sett={sett} />
               </section>

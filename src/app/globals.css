@@ -519,7 +519,7 @@ body:has(.fl-app){padding-left:0;padding-right:0;background:var(--fl-bg)}
 .fl-init{width:28px;height:28px;flex:none;border-radius:8px;background:var(--fl-accent);color:#FFFFFF;display:grid;place-items:center;font-size:12px;font-weight:600;letter-spacing:.02em}
 .fl-konto-e{display:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (min-width:560px){.fl-konto-e{display:block}}
-.fl-meny{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:320px;max-width:calc(100vw - 32px);padding:6px;display:flex;flex-direction:column;text-align:left;
+.fl-meny{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:320px;max-width:calc(100vw - 32px);max-height:calc(100vh - 88px);max-height:calc(100dvh - 88px);overflow-y:auto;overscroll-behavior:contain;padding:6px;display:flex;flex-direction:column;text-align:left;
   background:#FFFFFF;border:1px solid var(--fl-line);border-radius:14px;box-shadow:0 24px 48px -20px rgba(15,27,45,.35),0 2px 6px rgba(15,27,45,.06)}
 .fl-meny-h{padding:12px 12px 14px;margin-bottom:6px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--fl-sunken)}
 .fl-meny-navn{font-size:15px;font-weight:600;color:var(--fl-ink)}

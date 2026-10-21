@@ -1,4 +1,5 @@
-// Step 4, «Hva krever du?»: the claim, the alternative, expenses, holding back payment and the deadline.
+// «Hva krever du?»: the claim, the alternative, expenses and holding back payment; and the deadline
+// for the dealer's answer (Svarfrist), set with the letter after payment.
 import { Kravikon, Lukk, Pluss, Trekant } from "@/app/deler/ikoner";
 import { addDays, fmtD, idag, parseD } from "@/lib/app/dato";
 import { regler } from "@/lib/app/lov";
@@ -13,7 +14,6 @@ const KRAV = [
 
 export function Krav({ s, sett }: StegProps) {
   const L = regler(s.c_purchase || s.c_delivery);
-  const ld = parseD(s.l_date) ?? parseD(idag())!;
   const sum = s.exp.reduce((a, x) => a + (+x.a || 0), 0);
   const settUtgift = (i: number, p: Partial<{ t: string; a: number }>) => sett({ exp: s.exp.map((x, j) => (j === i ? { ...x, ...p } : x)) });
   return (
@@ -140,15 +140,21 @@ export function Krav({ s, sett }: StegProps) {
           </div>
         </Vis>
       </div>
-      <div className="block">
-        <div className="f">
-          <span className="lb">
-            Svarfrist for forhandleren <em>{s.k_days ? `svar innen ${fmtD(addDays(ld, +s.k_days))}` : ""}</em>
-          </span>
-          <Seg navn="k_days" verdi={s.k_days} valg={[["7", "7 dager"], ["14", "14 dager"], ["21", "21 dager"]]} onVelg={(k_days) => sett({ k_days })} />
-          <span className="hint">14 dager er vanlig og regnes som rimelig i de fleste saker.</span>
-        </div>
-      </div>
     </section>
+  );
+}
+
+export function Svarfrist({ s, sett }: StegProps) {
+  const ld = parseD(s.l_date) ?? parseD(idag())!;
+  return (
+    <div className="block">
+      <div className="f">
+        <span className="lb">
+          Svarfrist for forhandleren <em>{s.k_days ? `svar innen ${fmtD(addDays(ld, +s.k_days))}` : ""}</em>
+        </span>
+        <Seg navn="k_days" verdi={s.k_days} valg={[["7", "7 dager"], ["14", "14 dager"], ["21", "21 dager"]]} onVelg={(k_days) => sett({ k_days })} />
+        <span className="hint">14 dager er vanlig og regnes som rimelig i de fleste saker.</span>
+      </div>
+    </div>
   );
 }

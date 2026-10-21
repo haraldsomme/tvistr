@@ -1,11 +1,13 @@
-// Steps 1 and 2: the buyer (sender) and the dealer (recipient). The dealer is looked up in Brreg's
-// Enhetsregister (/api/firma) by name or organisation number.
+// The sections filled in after payment: the buyer (sender), the dealer (recipient) and the letter's own
+// settings. The dealer is looked up in Brreg's Enhetsregister (/api/firma) by name or organisation number.
 import { useEffect, useRef, useState } from "react";
 import { Hake } from "@/app/deler/ikoner";
 import { sted } from "@/lib/brev/format";
 import { FMT, orgValid } from "@/lib/app/format";
 import { type Forslag, tittel } from "@/lib/brreg";
-import { Felt, type StegProps } from "./felt";
+import { Felt, Seg, type StegProps } from "./felt";
+import { Svarfrist } from "./krav";
+import { Vedlegg } from "./mangelen";
 
 function fyll(f: Forslag) {
   return {
@@ -169,5 +171,25 @@ export function Forhandleren({ s, sett }: StegProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+// The letter's place, date and tone, the deadline for the answer and the attachments.
+export function Brevvalg({ s, sett }: StegProps) {
+  return (
+    <>
+      <div className="block d-set">
+        <div className="grid">
+          <Felt s={s} sett={sett} k="l_place" label="Sted" klasse="c3 m3" placeholder="Oslo" />
+          <Felt s={s} sett={sett} k="l_date" label="Dato" klasse="c3 m3" type="date" />
+          <div className="f c6">
+            <span className="lb">Tone</span>
+            <Seg navn="l_tone" verdi={s.l_tone} valg={[["saklig", "Saklig"], ["bestemt", "Bestemt"]]} onVelg={(l_tone) => sett({ l_tone })} />
+          </div>
+        </div>
+      </div>
+      <Svarfrist s={s} sett={sett} />
+      <Vedlegg s={s} sett={sett} />
+    </>
   );
 }

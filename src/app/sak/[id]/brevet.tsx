@@ -1,6 +1,6 @@
-// The Brevet tab (artifact step «Brev»): place, date and tone, the decision the letter cites (picked in
-// the Vedtak tab), copy buttons, the checklist and the letter on paper. The letter comes from the
-// server (fulltBrev), built from these answers with the car and the faults as bought.
+// The Brevet tab (artifact step «Brev»): the decision the letter cites (picked in the Vedtak tab), copy
+// buttons, the checklist and the letter on paper; place, date and tone are the form's step Brevet. The
+// letter comes from the server (fulltBrev), built from these answers with the car and the faults as bought.
 import { Kopier } from "@/app/deler/ikoner";
 import { fulltBrev } from "@/app/sak/brevet-actions";
 import { useBrev } from "@/app/sak/flyt/bruk-brev";
@@ -8,12 +8,12 @@ import { idag } from "@/lib/app/dato";
 import { datoavvik } from "@/lib/app/datoer";
 import { maal } from "@/lib/maling";
 import type { Skjema } from "@/lib/app/skjema";
-import { Bryter, Felt, Seg, type Sett } from "./felt";
+import { Bryter, type Sett } from "@/app/sak/skjema/felt";
 import { Papir } from "./papir";
-import { ETIKETT, mangler } from "./steg";
+import { ETIKETT, mangler } from "@/app/sak/skjema/steg";
 import type { Vedtaksvalg } from "./vedtaksfane";
 
-export function Brevet({ id, s, sett, vedtak, onSteg, onVedtak, onToast }: { id: string; s: Skjema; sett: Sett; vedtak: Vedtaksvalg; onSteg: (i: number) => void; onVedtak: () => void; onToast: (m: string) => void }) {
+export function Brevet({ id, s, sett, vedtak, onSteg, onVedtak, onToast }: { id: string; s: Skjema; sett: Sett; vedtak: Vedtaksvalg; onSteg: (id: string) => void; onVedtak: () => void; onToast: (m: string) => void }) {
   const { funn, valgt, venter } = vedtak;
   const presedens = venter ? "venter" : valgt;
   const brev = useBrev(() => fulltBrev({ id, skjema: s, presedens }), JSON.stringify([id, s, presedens]));
@@ -47,16 +47,6 @@ export function Brevet({ id, s, sett, vedtak, onSteg, onVedtak, onToast }: { id:
       </div>
       <div className="desk">
         <div className="desk-l">
-          <div className="block d-set">
-            <div className="grid">
-              <Felt s={s} sett={sett} k="l_place" label="Sted" klasse="c3 m3" placeholder="Oslo" />
-              <Felt s={s} sett={sett} k="l_date" label="Dato" klasse="c3 m3" type="date" />
-              <div className="f c6">
-                <span className="lb">Tone</span>
-                <Seg navn="l_tone" verdi={s.l_tone} valg={[["saklig", "Saklig"], ["bestemt", "Bestemt"]]} onVelg={(l_tone) => sett({ l_tone })} />
-              </div>
-            </div>
-          </div>
           <div className="block d-prec">
             <div className="bt">
               <h3>Vunnet sak i brevet</h3>
@@ -135,12 +125,12 @@ export function Brevet({ id, s, sett, vedtak, onSteg, onVedtak, onToast }: { id:
                 </div>
               ))}
               {rader.map((r) => (
-                  <div key={r.i} className="mr">
+                  <div key={r.id} className="mr">
                     <span>
                       {r.navn}
                       <small>{r.felt.map((k) => ETIKETT[k]).join(", ")}</small>
                     </span>
-                    <button type="button" className="btn sm" onClick={() => onSteg(r.i)}>
+                    <button type="button" className="btn sm" onClick={() => onSteg(r.id)}>
                       Fyll ut
                     </button>
                   </div>

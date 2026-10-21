@@ -1,5 +1,6 @@
-// Steps 5–7: the faults (one card per area, locked to the purchase), the workshop and attachments (file
-// names only, nothing is uploaded), and what the seller said and any earlier complaint.
+// The faults (chosen before payment, locked to the purchase after), one card per area, the workshop,
+// the attachments (file names only, nothing is uploaded), what the seller said and any earlier complaint.
+// The pieces without a panel (Feilvalg, Omrader, Vedlegg, SelgerSa, SagtFra) are blocks for a page to place.
 import { useState } from "react";
 import { FeilIkon, FeilListe } from "@/app/deler/feilliste";
 import { Fil, Fold, Lukk, Opplast } from "@/app/deler/ikoner";
@@ -65,6 +66,41 @@ function Omradekort({ s, sett, c, i, n }: StegProps & { c: string; i: number; n:
     </div>
   );
 }
+
+// The fault list to choose from, categories and parts kept in HOVEDKATEGORIER order.
+export function Feilvalg({ s, sett }: StegProps) {
+  const veksle = (c: string) => {
+    const valgt = new Set(s.f_cats);
+    if (valgt.has(c)) valgt.delete(c);
+    else valgt.add(c);
+    sett({ f_cats: HOVEDKATEGORIER.filter((h) => valgt.has(h.id)).map((h) => h.id) });
+  };
+  const veksleUnder = (c: string, u: string) => {
+    const valgt = new Set(s.f_parts[c] ?? []);
+    if (valgt.has(u)) valgt.delete(u);
+    else valgt.add(u);
+    const h = HOVEDKATEGORIER.find((x) => x.id === c)!;
+    sett({ f_parts: { ...s.f_parts, [c]: h.under.filter((x) => valgt.has(x.id)).map((x) => x.id) } });
+  };
+  return <FeilListe valgt={s.f_cats} under={s.f_parts} onKategori={veksle} onUnder={veksleUnder} />;
+}
+
+// One card per chosen area, then the fault in general.
+export function Omrader({ s, sett }: StegProps) {
+  return (
+    <>
+      <div id="areaCards">
+        {s.f_cats.map((c, i) => (
+          <Omradekort key={c} s={s} sett={sett} c={c} i={i} n={s.f_cats.length} />
+        ))}
+      </div>
+      <div className="block">
+        <Felt s={s} sett={sett} k="f_desc" label={<>Noe mer om feilen? <em>valgfritt</em></>} flerlinje={84} />
+      </div>
+    </>
+  );
+}
+
 export function Feilen({ s, sett }: StegProps) {
   return (
     <section className="panel">
@@ -82,23 +118,16 @@ export function Feilen({ s, sett }: StegProps) {
           Brevet gjelder feilene du valgte {GRATIS ? "før du åpnet brevet" : "før du betalte"}. Et brev om en annen feil krever {NYTT_KJOP}. Under kan du beskrive hver feil og når du oppdaget den.
         </div>
       </div>
-      <div id="areaCards">
-        {s.f_cats.map((c, i) => (
-          <Omradekort key={c} s={s} sett={sett} c={c} i={i} n={s.f_cats.length} />
-        ))}
-      </div>
+      <Omrader s={s} sett={sett} />
     </section>
   );
 }
 
 export function Verksted({ s, sett }: StegProps) {
-  const [over, settOver] = useState(false);
-  const leggTil = (filer: FileList | null) => filer && sett({ files: [...new Set([...s.files, ...[...filer].map((f) => f.name)])] });
-  const nd = s.f_docs.length + s.files.length;
   return (
     <section className="panel">
       <div className="head">
-        <h2>Verksted og vedlegg</h2>
+        <h2>Verksted</h2>
         <p>En verkstedrapport og dokumentasjon gjør saken mye sterkere. Alt du krysser av for, føres opp i brevet.</p>
       </div>
       <div className="block">
@@ -150,94 +179,102 @@ export function Verksted({ s, sett }: StegProps) {
           </div>
         </Vis>
       </div>
-      <details className="block fold" open>
-        <summary className="fold-s">
-          <h3>Dokumentasjon</h3>
-          <span className="fold-m">
-            <span>{nd ? `${nd} valgt` : "Føres opp som vedlegg"}</span>
-            <Fold />
-          </span>
-        </summary>
-        <Valgliste flere bredde={190} navn="f_docs" verdi={s.f_docs} valg={DOCS} onVelg={(v, pa) => sett({ f_docs: veksle(s.f_docs, v, pa) })} />
-        <div style={{ marginTop: 16 }}>
-          <div
-            className={`drop${over ? " over" : ""}`}
-            onDragEnter={(e) => (e.preventDefault(), settOver(true))}
-            onDragOver={(e) => (e.preventDefault(), settOver(true))}
-            onDragLeave={() => settOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              settOver(false);
-              leggTil(e.dataTransfer.files);
-            }}
-          >
-            <input type="file" multiple aria-label="Legg til vedlegg" onChange={(e) => (leggTil(e.target.files), (e.target.value = ""))} />
-            <Opplast />
-            <div style={{ marginTop: 6 }}>
-              <b style={{ fontWeight: 600, color: "var(--ink)" }}>Slipp filer her</b> eller klikk for å velge
-            </div>
-            <small>Bare filnavnene brukes i vedleggslisten. Filene lastes ikke opp.</small>
-          </div>
-          <div className="files">
-            {s.files.map((f, i) => (
-              <div key={f} className="file">
-                <Fil />
-                <span>{f}</span>
-                <button type="button" className="x" aria-label={`Fjern ${f}`} onClick={() => sett({ files: s.files.filter((_, j) => j !== i) })}>
-                  <Lukk s={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </details>
     </section>
   );
 }
 
-export function Kontakt({ s, sett }: StegProps) {
+// The attachments: documents to list in the letter and file names (nothing is uploaded).
+export function Vedlegg({ s, sett }: StegProps) {
+  const [over, settOver] = useState(false);
+  const leggTil = (filer: FileList | null) => filer && sett({ files: [...new Set([...s.files, ...[...filer].map((f) => f.name)])] });
+  const nd = s.f_docs.length + s.files.length;
   return (
-    <section className="panel">
-      <div className="head">
-        <h2>Kontakt med selger</h2>
-        <p>Hva selgeren sa før kjøpet, og om du allerede har sagt fra om feilen.</p>
-      </div>
-      <div className="block">
-        <div className="bt">
-          <h3>Sa selger noe om denne feilen før kjøpet?</h3>
-        </div>
-        <span className="hint" style={{ display: "block", margin: "-6px 0 12px" }}>
-          For eksempel i annonsen, kontrakten eller en melding.
+    <details className="block fold" open>
+      <summary className="fold-s">
+        <h3>Dokumentasjon</h3>
+        <span className="fold-m">
+          <span>{nd ? `${nd} valgt` : "Føres opp som vedlegg"}</span>
+          <Fold />
         </span>
-        <Valgliste bredde={9999} navn="seller_said" verdi={s.seller_said} valg={[["nei", "Nei"], ["lovet", "Ja, at bilen var fri for slike feil"], ["opplyste", "Ja, de opplyste om feilen"]]} onVelg={(seller_said) => sett({ seller_said })} />
-        <Vis pa={s.seller_said === "lovet" || s.seller_said === "opplyste"}>
-          <div className="rv-in">
-            <Felt s={s} sett={sett} k="seller_txt" label={<>Hva sa selger? <em>så ordrett som mulig</em></>} flerlinje={84} placeholder="For eksempel: «Bilen er nylig gjennomgått og har ingen kjente feil»" />
+      </summary>
+      <Valgliste flere bredde={190} navn="f_docs" verdi={s.f_docs} valg={DOCS} onVelg={(v, pa) => sett({ f_docs: veksle(s.f_docs, v, pa) })} />
+      <div style={{ marginTop: 16 }}>
+        <div
+          className={`drop${over ? " over" : ""}`}
+          onDragEnter={(e) => (e.preventDefault(), settOver(true))}
+          onDragOver={(e) => (e.preventDefault(), settOver(true))}
+          onDragLeave={() => settOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            settOver(false);
+            leggTil(e.dataTransfer.files);
+          }}
+        >
+          <input type="file" multiple aria-label="Legg til vedlegg" onChange={(e) => (leggTil(e.target.files), (e.target.value = ""))} />
+          <Opplast />
+          <div style={{ marginTop: 6 }}>
+            <b style={{ fontWeight: 600, color: "var(--ink)" }}>Slipp filer her</b> eller klikk for å velge
           </div>
-        </Vis>
+          <small>Bare filnavnene brukes i vedleggslisten. Filene lastes ikke opp.</small>
+        </div>
+        <div className="files">
+          {s.files.map((f, i) => (
+            <div key={f} className="file">
+              <Fil />
+              <span>{f}</span>
+              <button type="button" className="x" aria-label={`Fjern ${f}`} onClick={() => sett({ files: s.files.filter((_, j) => j !== i) })}>
+                <Lukk s={14} />
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="block">
-        <Bryter s={s} sett={sett} k="f_prior" tittel="Jeg har allerede sagt fra til forhandleren" tekst="Muntlig eller skriftlig. Det er datoen for første reklamasjon som teller for fristen." />
-        <Vis pa={s.f_prior}>
-          <div className="rv-in grid">
-            <Felt s={s} sett={sett} k="f_prior_date" label="Dato du sa fra" klasse="c3" type="date" />
-            <div className="f c3">
-              <span className="lb">Hvordan?</span>
-              <Seg navn="f_prior_how" verdi={s.f_prior_how} valg={[["telefon", "Telefon"], ["e-post", "E-post"], ["oppmøte", "Oppmøte"]]} onVelg={(f_prior_how) => sett({ f_prior_how })} />
-            </div>
-            <div className="f c6">
-              <span className="lb">
-                Hva svarte forhandleren? <em>velg alt som passer</em>
-              </span>
-              <span className="hint" style={{ display: "block", margin: "0 0 8px" }}>
-                Brevet svarer på hver innvending med det loven sier.
-              </span>
-              <Valgliste flere bredde={190} navn="f_prior_svar" verdi={s.f_prior_svar} valg={SVAR.map(([v, l]) => [v, l] as const)} onVelg={(v, pa) => sett({ f_prior_svar: veksle(s.f_prior_svar, v, pa) })} />
-            </div>
-            <Felt s={s} sett={sett} k="f_prior_resp" label={<>Noe mer forhandleren sa? <em>valgfritt</em></>} flerlinje={92} placeholder="For eksempel: de mente bilen var for gammel" />
+    </details>
+  );
+}
+
+export function SelgerSa({ s, sett }: StegProps) {
+  return (
+    <div className="block">
+      <div className="bt">
+        <h3>Sa selger noe om denne feilen før kjøpet?</h3>
+      </div>
+      <span className="hint" style={{ display: "block", margin: "-6px 0 12px" }}>
+        For eksempel i annonsen, kontrakten eller en melding.
+      </span>
+      <Valgliste bredde={9999} navn="seller_said" verdi={s.seller_said} valg={[["nei", "Nei"], ["lovet", "Ja, at bilen var fri for slike feil"], ["opplyste", "Ja, de opplyste om feilen"]]} onVelg={(seller_said) => sett({ seller_said })} />
+      <Vis pa={s.seller_said === "lovet" || s.seller_said === "opplyste"}>
+        <div className="rv-in">
+          <Felt s={s} sett={sett} k="seller_txt" label={<>Hva sa selger? <em>så ordrett som mulig</em></>} flerlinje={84} placeholder="For eksempel: «Bilen er nylig gjennomgått og har ingen kjente feil»" />
+        </div>
+      </Vis>
+    </div>
+  );
+}
+
+export function SagtFra({ s, sett }: StegProps) {
+  return (
+    <div className="block">
+      <Bryter s={s} sett={sett} k="f_prior" tittel="Jeg har allerede sagt fra til forhandleren" tekst="Muntlig eller skriftlig. Det er datoen for første reklamasjon som teller for fristen." />
+      <Vis pa={s.f_prior}>
+        <div className="rv-in grid">
+          <Felt s={s} sett={sett} k="f_prior_date" label="Dato du sa fra" klasse="c3" type="date" />
+          <div className="f c3">
+            <span className="lb">Hvordan?</span>
+            <Seg navn="f_prior_how" verdi={s.f_prior_how} valg={[["telefon", "Telefon"], ["e-post", "E-post"], ["oppmøte", "Oppmøte"]]} onVelg={(f_prior_how) => sett({ f_prior_how })} />
           </div>
-        </Vis>
-      </div>
-    </section>
+          <div className="f c6">
+            <span className="lb">
+              Hva svarte forhandleren? <em>velg alt som passer</em>
+            </span>
+            <span className="hint" style={{ display: "block", margin: "0 0 8px" }}>
+              Brevet svarer på hver innvending med det loven sier.
+            </span>
+            <Valgliste flere bredde={190} navn="f_prior_svar" verdi={s.f_prior_svar} valg={SVAR.map(([v, l]) => [v, l] as const)} onVelg={(v, pa) => sett({ f_prior_svar: veksle(s.f_prior_svar, v, pa) })} />
+          </div>
+          <Felt s={s} sett={sett} k="f_prior_resp" label={<>Noe mer forhandleren sa? <em>valgfritt</em></>} flerlinje={92} placeholder="For eksempel: de mente bilen var for gammel" />
+        </div>
+      </Vis>
+    </div>
   );
 }

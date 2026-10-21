@@ -8,7 +8,7 @@ import { type Lignende as LignendeSvar, vurderSaken } from "@/app/sak/vurdering"
 import { nokkel, tilSvar } from "@/lib/app/saken";
 import type { Skjema } from "@/lib/app/skjema";
 import type { Resultat } from "@/lib/app/vurdering";
-import { stegFor } from "./steg";
+import { stegFor } from "@/app/sak/skjema/steg";
 
 
 // «Lignende saker» for the writer's answers, fetched again (debounced) only when they change.
@@ -32,7 +32,7 @@ export function useLignende(s: Skjema): LignendeSvar | null {
   return t ? svar : null;
 }
 
-export function Vurderingsfane({ s, r, lignende, brukes, onSteg, onBrevet, onSkjema }: { s: Skjema; r: Resultat; lignende: LignendeSvar | null; brukes: number | null; onSteg: (i: number) => void; onBrevet: () => void; onSkjema: () => void }) {
+export function Vurderingsfane({ s, r, lignende, brukes, onSteg, onBrevet, onSkjema }: { s: Skjema; r: Resultat; lignende: LignendeSvar | null; brukes: number | null; onSteg: (id: string) => void; onBrevet: () => void; onSkjema: () => void }) {
   const mangler = !s.f_known || !s.c_delivery || !s.f_found;
   return (
     <section className="wcase" role="tabpanel" aria-label="Vurdering">

@@ -8,7 +8,7 @@ import { nokkel, nyttPrecValg, type Precutfall, sakTekst, tilSvar } from "@/lib/
 import type { Skjema } from "@/lib/app/skjema";
 import type { Kriterium, Treff } from "@/lib/matching/ranger";
 import { type Funn, finnVedtak } from "./actions";
-import type { Sett } from "./felt";
+import type { Sett } from "@/app/sak/skjema/felt";
 
 // One request per set of answers at a time, however often the tabs are opened while it runs. A result
 // is not kept here: the server keeps the model's answers (sak.vedtaksvalg) and tells what changed since

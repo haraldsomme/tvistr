@@ -1,5 +1,3 @@
-"use client";
-
 // «Lignende vedtak» (mockup, after payment): the ranking's top ten decisions with medhold, the model's
 // choice first («Anbefalt»), each with how it compares to the buyer's case and its likeness. The buyer
 // picks the one the letter cites; the pick applies on «Ferdig» and is dropped on «Avbryt».
@@ -15,6 +13,7 @@ import { nokkel, nyttPrecValg, type Precutfall, tilSvar } from "@/lib/app/saken"
 import type { Skjema } from "@/lib/app/skjema";
 import type { Kriterium, Treff } from "@/lib/matching/ranger";
 import { type Funn, finnVedtak } from "./actions";
+import { skalHente, VENT_MS } from "./vedtak-hent";
 
 // One request per set of answers at a time, however often the page asks while it runs. A result
 // is not kept here: the server keeps the model's answers (sak.vedtaksvalg) and tells what changed since
@@ -52,38 +51,45 @@ export type Vedtaksvalg = {
   provIgjen: () => void;
 };
 
-// The decisions for the case's answers, fetched whenever they change while the letter is to cite one.
-export function useVedtak(s: Skjema, sett: Sett, id: string): Vedtaksvalg {
+// The decisions for the case's answers, fetched a moment after they last changed while `aktiv` (no row
+// that changes them is open, or the dialog is). While a row is open the last list stands, so the
+// letter keeps citing its decision instead of waiting.
+export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean): Vedtaksvalg {
   const svar = tilSvar(s);
   const n = nokkel(svar);
   const [funn, settFunn] = useState<Hentet | null>(null);
   const [forsok, settForsok] = useState(0);
+  const hente = skalHente({ aktiv, harSvar: !!svar, precOn: s.prec_on, sistHentet: funn?.f.ok ? funn.n : null, nokkel: n });
 
   useEffect(() => {
-    if (!svar || !s.prec_on) return;
-    // This list is already shown, with its message.
-    if (funn?.n === n && funn.f.ok) return;
+    if (!hente || !svar) return;
     let gjeldende = true;
-    hent(svar, id).then((f) => {
-      if (!gjeldende) return;
-      // The letter follows the recommendation, unless the buyer picked another that is still on the list.
-      const { endre, utfall } = f.ok ? nyttPrecValg(s, f.valg) : { endre: null, utfall: "fulgt" as const };
-      settFunn((forrige) => {
-        const kjente = [...(f.ok ? f.valg : []), ...(forrige?.f.ok ? forrige.f.valg : [])];
-        const sak = (id: number | null) => kjente.find((v) => v.id === id) ?? null;
-        const byttet = f.ok && !!f.endring && s.prec_id !== null && endre?.prec_id !== undefined && endre.prec_id !== s.prec_id;
-        return { n, f, utfall, byttetFra: byttet ? sak(s.prec_id) : null, egetValg: utfall === "fulgt" ? null : sak(s.prec_id) };
-      });
-      if (endre) sett(endre);
-    });
+    const tid = setTimeout(
+      () =>
+        hent(svar, id).then((f) => {
+          if (!gjeldende) return;
+          // The letter follows the recommendation, unless the buyer picked another that is still on the list.
+          const { endre, utfall } = f.ok ? nyttPrecValg(s, f.valg) : { endre: null, utfall: "fulgt" as const };
+          settFunn((forrige) => {
+            const kjente = [...(f.ok ? f.valg : []), ...(forrige?.f.ok ? forrige.f.valg : [])];
+            const sak = (id: number | null) => kjente.find((v) => v.id === id) ?? null;
+            const byttet = f.ok && !!f.endring && s.prec_id !== null && endre?.prec_id !== undefined && endre.prec_id !== s.prec_id;
+            return { n, f, utfall, byttetFra: byttet ? sak(s.prec_id) : null, egetValg: utfall === "fulgt" ? null : sak(s.prec_id) };
+          });
+          if (endre) sett(endre);
+        }),
+      VENT_MS,
+    );
     return () => {
       gjeldende = false;
+      clearTimeout(tid);
     };
     // `n` stands for `svar`; `forsok` is «Prøv igjen».
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n, id, s.prec_on, forsok]);
+  }, [hente, n, id, forsok]);
 
-  const aktuell = funn && funn.n === n ? funn.f : null;
+  // The list for these answers, or while inactive the last one fetched.
+  const aktuell = funn && (funn.n === n || (!aktiv && funn.f.ok)) ? funn.f : null;
   const valg = aktuell?.ok ? aktuell.valg : [];
   const endring = aktuell?.ok && aktuell.endring && funn ? { ...aktuell.endring, utfall: funn.utfall, byttetFra: funn.byttetFra, egetValg: funn.egetValg } : null;
   return {

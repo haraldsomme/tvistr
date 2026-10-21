@@ -14,7 +14,7 @@ import { Oppsett } from "@/app/sak/flyt/oppsett";
 import { Styrke } from "@/app/sak/flyt/styrke";
 import { Topp } from "@/app/sak/flyt/topp";
 import type { Sett } from "@/app/sak/skjema/felt";
-import { ALLE, ETIKETT, ETTER, har, mangler, seksjonFor, stegFor } from "@/app/sak/skjema/steg";
+import { ALLE, ETIKETT, ETTER, FOR, har, mangler, seksjonFor, stegFor } from "@/app/sak/skjema/steg";
 import { idag } from "@/lib/app/dato";
 import { datoavvik } from "@/lib/app/datoer";
 import { tall } from "@/lib/app/format";
@@ -37,10 +37,12 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
   const sett: Sett = (patch) => settRaa((f) => ({ ...f, ...patch }));
   const r = skriverResultat(s, idag());
   const lignende = useLignende(s);
-  const vedtak = useVedtak(s, sett, id);
   // The sections answered after payment start open while they lack something.
   const [apen, settApen] = useState<ReadonlySet<string>>(() => new Set(ETTER.filter((st) => st.felt.some((k) => !har(start, k))).map((st) => st.id)));
   const [vindu, settVindu] = useState(false);
+  // The decisions are looked up while no row that changes them is open (the sections before payment;
+  // sender, recipient and the letter's settings do not), or while the dialog is.
+  const vedtak = useVedtak(s, sett, id, vindu || !FOR.some((st) => apen.has(st.id)));
   const [toast, settToast] = useState<string | null>(null);
 
   useEffect(() => {

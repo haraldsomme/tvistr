@@ -1,5 +1,3 @@
-"use client";
-
 // The letter pane (mockup «Sjekk saken»): the header with «Brevet ditt», the page's label and a bar
 // for how much of the letter is filled in, then the letter on an A4 sheet with one numbered bubble per
 // section. What the buyer just filled in is marked for a moment, and the pane follows it unless the

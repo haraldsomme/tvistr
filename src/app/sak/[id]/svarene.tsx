@@ -1,5 +1,3 @@
-"use client";
-
 // «Svarene dine» (mockup, after payment): one row per section of the form with what it says now and
 // «Endre». A row opens in place with the section's question and its fields, and «Ferdig» closes it.
 // The sections answered after payment come first. The car is locked to the purchase except its mileage,

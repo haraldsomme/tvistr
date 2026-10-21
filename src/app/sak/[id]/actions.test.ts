@@ -293,6 +293,16 @@ describe("kjop", () => {
     expect(batch).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["seller", "privat"],
+    ["seller", "leasing"],
+    ["buyer", "naering"],
+  ])("avviser en sak brevet ikke dekker (%s: %s)", async (felt, verdi) => {
+    expect(await kjop({ utkast: { ...utkast, [felt]: verdi }, samtykke: true })).toEqual({ ok: false, melding: "Saken dekkes ikke av brevet." });
+    expect(batch).not.toHaveBeenCalled();
+    expect(opprettBetaling).not.toHaveBeenCalled();
+  });
+
   it("beholder kjøperen fra den innloggedes siste sak", async () => {
     innlogget.mockResolvedValue("sub-1");
     betalteSaker.mockImplementation(async (sub) => (sub === "sub-1" ? [{ ...betaltSak, vippsSub: "sub-1" }] : []));

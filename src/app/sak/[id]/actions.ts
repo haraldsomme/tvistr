@@ -15,7 +15,7 @@ import { hentAlle, hentBilnavn } from "@/app/sak/vedtak-db";
 import type { Presedens } from "@/lib/app/brevtyper";
 import { idag } from "@/lib/app/dato";
 import { gjelderSaken, kjopt, laas, manglerISkjema, rensSkjema, sammeSakSkjema, tilKjop } from "@/lib/app/saken";
-import { utkastSvar } from "@/lib/app/utkast";
+import { utkastResultat, utkastSvar } from "@/lib/app/utkast";
 import { komponentnavn } from "@/lib/feil/kategorier";
 import { innlogget, sha256hex } from "@/lib/innlogging/okt";
 import { likhet } from "@/lib/matching/likhet";
@@ -179,6 +179,8 @@ export async function kjop(inn: { utkast: unknown; samtykke: unknown }): Promise
   const dag = idag();
   const utkast = rensUtkast(inn?.utkast, dag);
   if (!utkast || manglerISkjema(utkast.skjema)) return { ok: false, melding: "Saken mangler bil eller feil." };
+  // A private seller, leasing or a purchase through a firm is not a case the letter covers (evaluate).
+  if (utkastResultat(utkast, dag).tier === "utenfor") return { ok: false, melding: "Saken dekkes ikke av brevet." };
   const id = nyId();
   const ordreId = nyId();
   const belopOre = GRATIS ? 0 : PRIS * 100;

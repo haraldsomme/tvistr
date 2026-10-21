@@ -57,12 +57,16 @@ export function rensUtkast(inn: unknown, idag: string): Utkast | null {
   if (!erObjekt(inn)) return null;
   const skjema = rensSkjema(inn.skjema, idag);
   if (!skjema) return null;
-  for (const c of skjema.f_cats) {
+  // Each fault once, so the same case is recognised (sammeSakSkjema).
+  const f_cats = [...new Set(skjema.f_cats)];
+  const f_parts = { ...skjema.f_parts };
+  for (const c of f_cats) {
     const h = HOVEDKATEGORIER.find((k) => k.id === c);
-    const under: unknown = skjema.f_parts[c] ?? [];
+    const under: unknown = f_parts[c] ?? [];
     if (!h || !Array.isArray(under) || !under.every((u) => h.under.some((k) => k.id === u))) return null;
+    f_parts[c] = [...new Set(under as string[])];
   }
-  const u: Utkast = { skjema };
+  const u: Utkast = { skjema: { ...skjema, f_cats, f_parts } };
   const seller = valg<NonNullable<Utkast["seller"]>>(inn.seller, SELGERE),
     buyer = valg<NonNullable<Utkast["buyer"]>>(inn.buyer, KJOPERE),
     asis = valg<NonNullable<Utkast["asis"]>>(inn.asis, SOM_DEN_ER);

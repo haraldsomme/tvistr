@@ -21,6 +21,11 @@ describe("rensUtkast", () => {
     expect(u.skjema).not.toHaveProperty("ukjent");
     expect(u).toEqual({ skjema: u.skjema, seller: "forhandler", asis: "vetikke" });
   });
+  it("tar bort doble feil, så samme sak gjenkjennes", () => {
+    const u = rensUtkast({ skjema: { ...skjema, f_cats: ["motor", "motor"], f_parts: { motor: ["turbo", "turbo"] } } }, idag)!;
+    expect(u.skjema.f_cats).toEqual(["motor"]);
+    expect(u.skjema.f_parts).toEqual({ motor: ["turbo"] });
+  });
   it("avviser noe som ikke er et utkast", () => {
     expect(rensUtkast(null, idag)).toBeNull();
     expect(rensUtkast({ seller: "forhandler" }, idag)).toBeNull();

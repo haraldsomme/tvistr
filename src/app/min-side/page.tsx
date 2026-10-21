@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LoggUt } from "@/app/deler/logg-ut";
 import { Topp } from "@/app/deler/topp";
-import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
+import { feilnavn } from "@/lib/feil/kategorier";
 import { innlogget } from "@/lib/innlogging/okt";
 import { betalteSaker } from "@/lib/sak/db";
 
@@ -11,18 +11,6 @@ export const metadata: Metadata = { title: "Min side – Tvistr", robots: { inde
 
 const kort = { background: "#FFFFFF", border: "1px solid #E3E6E8", borderRadius: 16, padding: "18px 20px" } as const;
 const lenke = { textDecoration: "none" } as const;
-
-// The faults of a case by name: the chosen subcategories, else the category.
-function feilnavn(cats: string[], parts: Record<string, string[]>): string {
-  return cats
-    .flatMap((c) => {
-      const h = HOVEDKATEGORIER.find((x) => x.id === c);
-      if (!h) return [];
-      const valgt = (parts[c] ?? []).map((u) => h.under.find((x) => x.id === u)?.navn).filter((n): n is string => !!n);
-      return valgt.length ? valgt : [h.navn];
-    })
-    .join(", ");
-}
 
 // The owner's letters: every paid case on the logged-in Vipps account, newest first.
 export default async function Page() {

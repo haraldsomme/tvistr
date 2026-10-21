@@ -1,13 +1,17 @@
 // The letter on paper (artifact toHTML), from the same blocks as the copied text.
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import type { Blokk, Del } from "@/lib/app/brevtyper";
+
+// The fields whose text just changed, marked `fl-ny` (Brevrute); none elsewhere.
+export const NyeFelt = createContext<ReadonlySet<string>>(new Set());
 
 // A placeholder, one of the buyer's answers (with its field, for marking and clicking), or a bar for
 // hidden text of about its length.
 function DelEl({ x }: { x: Del }) {
+  const nye = useContext(NyeFelt);
   if (typeof x === "string") return x;
   if ("ph" in x) return <span className="ph">{x.ph}</span>;
-  if ("felt" in x) return <span className="fe" data-felt={x.felt}>{x.tekst}</span>;
+  if ("felt" in x) return <span className={nye.has(x.felt) ? "fe fl-ny" : "fe"} data-felt={x.felt}>{x.tekst}</span>;
   return <span className="sl" style={{ width: `${Math.min(x.skjult, 60)}ch` }} aria-label="Skjult tekst" />;
 }
 

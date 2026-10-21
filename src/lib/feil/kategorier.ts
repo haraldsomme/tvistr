@@ -226,3 +226,16 @@ export function komponentnavn(f: { komponent: string | null; hovedkategori: stri
   const u = h?.under.find((x) => x.id === f.underkategori);
   return (u?.navn ?? h?.navn ?? f.hovedkategori).toLowerCase();
 }
+
+// A case's faults by name: the chosen subcategories, else the category («Girkasse, Rust»). Used where
+// the owner's letters are listed (/min-side, the account menu).
+export function feilnavn(cats: string[], parts: Record<string, string[]>): string {
+  return cats
+    .flatMap((c) => {
+      const h = HOVEDKATEGORIER.find((x) => x.id === c);
+      if (!h) return [];
+      const valgt = (parts[c] ?? []).map((u) => h.under.find((x) => x.id === u)?.navn).filter((n): n is string => !!n);
+      return valgt.length ? valgt : [h.navn];
+    })
+    .join(", ");
+}

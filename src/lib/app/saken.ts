@@ -109,6 +109,14 @@ export function manglerForKjop(a: Sjekk): "reg" | "bil" | "feil" | null {
   return null;
 }
 
+// The same for the draft's form.
+export function manglerISkjema(s: Skjema): "reg" | "bil" | "feil" | null {
+  if (!validReg(s.c_reg)) return "reg";
+  if (!s.c_make.trim()) return "bil";
+  if (!s.f_cats.length) return "feil";
+  return null;
+}
+
 const feilsett = (cats: string[], parts: Record<string, string[] | undefined>) => JSON.stringify([...cats].sort().map((c) => [c, [...(parts[c] ?? [])].sort()]));
 
 // The last purchase as the browser keeps it (localStorage tvistr-sak): the case's id and the car and
@@ -118,6 +126,7 @@ export const kjopt = (id: string, s: Skjema): Kjopt => ({ id, reg: s.c_reg, cats
 
 // The check is about the car and the faults the case was bought for.
 export const sammeSak = (a: Sjekk, k: Kjopt) => !!k.id && a.reg === k.reg && feilsett(a.cats ?? [], a.issues ?? {}) === feilsett(k.cats, k.parts);
+export const sammeSakSkjema = (s: Skjema, k: Kjopt) => !!k.id && s.c_reg === k.reg && feilsett(s.f_cats, s.f_parts) === feilsett(k.cats, k.parts);
 
 // What the writer shows locked (bilen.tsx, mangelen.tsx); the server keeps them as bought.
 export const LAASTE_FELT = ["c_reg", "c_make", "c_model", "c_year", "f_cats", "f_parts"] as const satisfies readonly (keyof Skjema)[];
@@ -145,11 +154,11 @@ export function rensSkjema(inn: unknown, idag: string): Skjema | null {
   return ut.k_main === "omlevering" ? { ...ut, k_main: "retting" } : ut;
 }
 
-// A new purchase for another car or fault: a new letter from the check, keeping only the buyer.
-export function nyttKjop(a: Sjekk, gammel: Skjema, idag: string): Skjema {
-  const ny = standard(idag);
-  const kjoper = Object.fromEntries(Object.entries(gammel).filter(([k]) => k.startsWith("b_")));
-  return fraSjekk(a, { ...ny, ...kjoper });
+// The draft as bought: the buyer's name and address from the owner's newest case where the draft has none.
+export function tilKjop(ny: Skjema, gammel: Skjema | null): Skjema {
+  const ut: Record<string, unknown> = { ...ny };
+  for (const [k, v] of Object.entries(gammel ?? {})) if (k.startsWith("b_") && !ut[k]) ut[k] = v;
+  return ut as Skjema;
 }
 
 // Which decision the letter cites when a list arrives. The recommended one (first) unless the buyer

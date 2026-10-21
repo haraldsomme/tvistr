@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fraSjekk, gjelderSaken, kjopt, laas, manglerForKjop, nyttKjop, nyttPrecValg, rensSkjema, sakTekst, sammeSak, sjekkTilSvar, tilSvar } from "./saken";
+import { fraSjekk, gjelderSaken, kjopt, laas, manglerForKjop, manglerISkjema, nyttPrecValg, rensSkjema, sakTekst, sammeSak, sammeSakSkjema, sjekkTilSvar, tilKjop, tilSvar } from "./saken";
 import { eksempel, standard } from "./skjema";
 
 const idag = "2026-10-16";
@@ -108,10 +108,29 @@ describe("låst til kjøpet", () => {
     expect(rensSkjema([], idag)).toBeNull();
     expect(rensSkjema({ f_desc: "x".repeat(70_000) }, idag)).toBeNull();
   });
-  it("et nytt kjøp starter et nytt brev, men beholder kjøperen", () => {
-    const gammel = { ...standard(idag), b_name: "Kari", c_reg: "AB 12345", c_make: "Volvo", d_name: "Bil AS", f_cats: ["motor"] };
-    const ny = nyttKjop({ reg: "CD 67890", make: "Audi A4", cats: ["klima"], issues: { klima: ["ac"] }, fdates: { klima: "2026-09-01" } }, gammel, idag);
-    expect([ny.b_name, ny.c_reg, ny.c_make, ny.d_name, ny.f_cats]).toEqual(["Kari", "CD 67890", "Audi", "", ["klima"]]);
+});
+
+describe("kjøpet fra skjemaet", () => {
+  it("krever reg.nr., bilen og en feil før betaling", () => {
+    expect(manglerISkjema(standard(idag))).toBe("reg");
+    expect(manglerISkjema({ ...standard(idag), c_reg: "AB 12345" })).toBe("bil");
+    expect(manglerISkjema({ ...standard(idag), c_reg: "AB 12345", c_make: "Skoda" })).toBe("feil");
+    expect(manglerISkjema({ ...standard(idag), c_reg: "AB 12345", c_make: "Skoda", f_cats: ["motor"] })).toBeNull();
+    expect(manglerISkjema({ ...standard(idag), c_reg: "AB 12345", c_make: "  ", f_cats: ["motor"] })).toBe("bil");
+  });
+  it("samme sak: samme bil og samme feil", () => {
+    const s = { ...standard(idag), c_reg: "AB 12345", f_cats: ["motor"], f_parts: { motor: ["turbo", "olje"] } };
+    const k = kjopt("abcdefghijkm", { ...s, f_parts: { motor: ["olje", "turbo"] } });
+    expect(sammeSakSkjema(s, k)).toBe(true);
+    expect(sammeSakSkjema(s, { ...k, id: "" })).toBe(false);
+    expect(sammeSakSkjema({ ...s, c_reg: "CD 67890" }, k)).toBe(false);
+    expect(sammeSakSkjema({ ...s, f_cats: ["motor", "klima"] }, k)).toBe(false);
+    expect(sammeSakSkjema({ ...s, f_parts: { motor: ["registerreim"] } }, k)).toBe(false);
+  });
+  it("utkastet kjøpes, med kjøperen fra forrige sak der utkastet ikke har den", () => {
+    const ny = tilKjop({ ...standard(idag), d_name: "X", b_email: "ny@eksempel.no" }, { ...standard(idag), b_name: "Kari", b_email: "kari@eksempel.no", d_name: "Bil AS" });
+    expect([ny.b_name, ny.b_email, ny.d_name]).toEqual(["Kari", "ny@eksempel.no", "X"]);
+    expect(tilKjop({ ...standard(idag), d_name: "X" }, null).d_name).toBe("X");
   });
 });
 

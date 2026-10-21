@@ -74,7 +74,12 @@ const idag = "2026-10-17";
 const skjema = { ...standard(idag), b_name: "Kari", c_reg: "AB 12345", c_make: "Volvo", c_model: "V60", c_year: "2017", f_cats: ["motor"], f_parts: { motor: ["turbo"] } };
 const betaltSak: Sak = { id: "abcdefghijkm", vippsSub: null, sjekk: {}, skjema, betalt: new Date(), vedtaksvalg: null, modellkall: 0, opprettet: new Date(), endret: new Date() };
 const svar = { kjopsdato: "2025-03-10", km: 120000, ar: 2017, somDenEr: "nei", krav: "retting", forsok: null, feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2025-04-01", beskrivelse: null, opplysning: null, verksted: null, rapport: null }] };
-const sjekk = { reg: "CD 67890", make: "Audi A4", year: "2019", cats: ["klima"], issues: { klima: ["ac"] }, fdates: { klima: "2026-09-01" }, _screen: "result", _i: 9 };
+const utkast = {
+  skjema: { ...standard(idag), c_reg: "CD 67890", c_make: "Audi", c_model: "A4", c_year: "2019", c_delivery: "2026-03-01", f_cats: ["klima"], f_parts: { klima: ["ac"] }, f_area: { klima: { found: "2026-09-01", impact: [], known: "" } }, f_catdesc: { klima: "AC-en blåser varm luft" }, d_name: "Bil AS", ukjent: 1 },
+  seller: "forhandler",
+  asis: "vetikke",
+  _screen: "result",
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -206,7 +211,7 @@ describe("finnVedtak: ett modellkall per sett med svar", () => {
 describe("kjop", () => {
   it("lagrer en ubetalt sak og en Vipps-ordre, og svarer med Vipps' side", async () => {
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
-    expect(await kjop({ sjekk, samtykke: true })).toEqual({ ok: true, url: "https://pay-mt.vipps.no/x" });
+    expect(await kjop({ utkast, samtykke: true })).toEqual({ ok: true, url: "https://pay-mt.vipps.no/x" });
     const [[sakRad, ordreRad]] = batch.mock.calls[0] as unknown as [[{ v: Record<string, unknown> }, { v: Record<string, unknown> }]];
     expect(sakRad.v.betalt).toBeNull();
     expect(ordreRad.v).toMatchObject({ sakId: sakRad.v.id, belopOre: 24900, leverandor: "vipps", status: "opprettet", betalt: null });
@@ -224,8 +229,8 @@ describe("kjop", () => {
 
   it("lager en ny hemmelighet for hvert kjøp", async () => {
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
-    await kjop({ sjekk, samtykke: true });
-    await kjop({ sjekk, samtykke: true });
+    await kjop({ utkast, samtykke: true });
+    await kjop({ utkast, samtykke: true });
     const hash = (i: number) => (batch.mock.calls[i] as unknown as [[unknown, { v: { innloggingHash: string } }]])[0][1].v.innloggingHash;
     expect(hash(0)).not.toBe(hash(1));
   });
@@ -233,21 +238,21 @@ describe("kjop", () => {
   it("merker ordren som feilet når Vipps ikke svarer", async () => {
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
     opprettBetaling.mockRejectedValueOnce(new Error("nede"));
-    expect(await kjop({ sjekk, samtykke: true })).toEqual({ ok: false, melding: "Vi fikk ikke kontakt med Vipps. Prøv igjen." });
+    expect(await kjop({ utkast, samtykke: true })).toEqual({ ok: false, melding: "Vi fikk ikke kontakt med Vipps. Prøv igjen." });
     expect(satt).toHaveBeenCalledWith(expect.objectContaining({ status: "feilet" }));
   });
 
   it("lagrer ingenting uten Vipps-nøkler", async () => {
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
     vipps.sattOpp = false;
-    expect(await kjop({ sjekk, samtykke: true })).toEqual({ ok: false, melding: "Betaling er ikke tilgjengelig akkurat nå." });
+    expect(await kjop({ utkast, samtykke: true })).toEqual({ ok: false, melding: "Betaling er ikke tilgjengelig akkurat nå." });
     expect(batch).not.toHaveBeenCalled();
   });
 
   it("åpner saken gratis i prøveperioden, uten flagget og uten samtykke", async () => {
     pris.gratis = true;
     process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
-    const r = await kjop({ sjekk, samtykke: false });
+    const r = await kjop({ utkast, samtykke: false });
     expect(r.ok).toBe(true);
     const [[sakRad, ordreRad]] = batch.mock.calls[0] as unknown as [[{ v: Record<string, unknown> }, { v: Record<string, unknown> }]];
     expect(sakRad.v.betalt).toBeInstanceOf(Date);
@@ -256,7 +261,7 @@ describe("kjop", () => {
   });
 
   it("lagrer saken og en betalt ordre i utvikling, og sender til bekreftelsen", async () => {
-    const r = await kjop({ sjekk, samtykke: true });
+    const r = await kjop({ utkast, samtykke: true });
     expect(opprettBetaling).not.toHaveBeenCalled();
     const [[sakRad, ordreRad]] = batch.mock.calls[0] as unknown as [[{ tabell: unknown; v: Record<string, unknown> }, { tabell: unknown; v: Record<string, unknown> }]];
     expect(r.ok && r.url).toMatch(new RegExp(`^/betaling/${ordreRad.v.id}\\?n=[A-Za-z0-9_-]{32}$`));
@@ -265,27 +270,40 @@ describe("kjop", () => {
     expect(sakRad.v.vippsSub).toBe("utvikling");
     expect(erId(sakRad.v.id)).toBe(true);
     expect(sakRad.tabell).toBe(sak);
-    expect(sakRad.v).toMatchObject({ sjekk: { reg: "CD 67890", cats: ["klima"] } });
+    expect(sakRad.v).toMatchObject({ sjekk: { seller: "forhandler", buyer: "privat", asis: "vetikke", delivery: "2026-03-01", found: "2026-09-01" } });
     expect(sakRad.v.sjekk).not.toHaveProperty("_screen");
     expect(sakRad.v.betalt).toBeInstanceOf(Date);
     expect((sakRad.v.skjema as { c_make: string }).c_make).toBe("Audi");
+    expect(sakRad.v.skjema).not.toHaveProperty("ukjent");
     expect(ordreRad.tabell).toBe(ordre);
     expect(ordreRad.v).toMatchObject({ sakId: sakRad.v.id, belopOre: 24900, leverandor: "utvikling", status: "betalt" });
     expect(erId(ordreRad.v.id)).toBe(true);
     expect(ordreRad.v.id).not.toBe(sakRad.v.id);
   });
 
+  it("lagrer skjemaet fra utkastet", async () => {
+    await kjop({ utkast, samtykke: true });
+    const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: Sak["skjema"] } }]];
+    expect(sakRad.v.skjema.f_catdesc).toEqual(utkast.skjema.f_catdesc);
+    expect([sakRad.v.skjema.d_name, sakRad.v.skjema.c_delivery, sakRad.v.skjema.f_area]).toEqual(["Bil AS", "2026-03-01", utkast.skjema.f_area]);
+  });
+
+  it("avviser utkast uten feil", async () => {
+    expect((await kjop({ utkast: { ...utkast, skjema: { ...utkast.skjema, f_cats: [] } }, samtykke: true })).ok).toBe(false);
+    expect(batch).not.toHaveBeenCalled();
+  });
+
   it("beholder kjøperen fra den innloggedes siste sak", async () => {
     innlogget.mockResolvedValue("sub-1");
     betalteSaker.mockImplementation(async (sub) => (sub === "sub-1" ? [{ ...betaltSak, vippsSub: "sub-1" }] : []));
-    await kjop({ sjekk, samtykke: true });
+    await kjop({ utkast, samtykke: true });
     const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: { b_name: string; c_reg: string } } }]];
     expect([sakRad.v.skjema.b_name, sakRad.v.skjema.c_reg]).toEqual(["Kari", "CD 67890"]);
   });
 
   it("ser bort fra en sak nettleseren sender", async () => {
     hentEgenSak.mockResolvedValue(betaltSak);
-    await kjop({ sjekk, forrige: betaltSak.id, samtykke: true } as Parameters<typeof kjop>[0]);
+    await kjop({ utkast, forrige: betaltSak.id, samtykke: true } as Parameters<typeof kjop>[0]);
     const [[sakRad]] = batch.mock.calls[0] as unknown as [[{ v: { skjema: { b_name: string } } }]];
     expect(sakRad.v.skjema.b_name).toBe("");
     expect(hentEgenSak).not.toHaveBeenCalled();
@@ -301,29 +319,38 @@ describe("kjop", () => {
       process.env.TVISTR_HELT_BREV_UTEN_BETALING = flagg;
       innlogget.mockResolvedValue("sub-1");
       betalteSaker.mockResolvedValue([kjopt({ c_reg: "ZZ 11111" }), kjopt({})]);
-      expect(await kjop({ sjekk, samtykke: true })).toEqual({ ok: true, url: "/sak/mmmmmmmmmmmm" });
+      expect(await kjop({ utkast, samtykke: true })).toEqual({ ok: true, url: "/sak/mmmmmmmmmmmm" });
       expect(batch).not.toHaveBeenCalled();
       expect(opprettBetaling).not.toHaveBeenCalled();
+    });
+
+    it("samme bil og feil: lenken til den betalte saken", async () => {
+      innlogget.mockResolvedValue("sub-1");
+      betalteSaker.mockResolvedValue([kjopt({ b_name: "Kari" })]);
+      expect(await kjop({ utkast, samtykke: true })).toEqual({ ok: true, url: "/sak/mmmmmmmmmmmm" });
+      expect(batch).not.toHaveBeenCalled();
     });
 
     it("tar betalt for en annen feil på samme bil", async () => {
       process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
       innlogget.mockResolvedValue("sub-1");
       betalteSaker.mockResolvedValue([kjopt({ f_parts: { klima: ["vifte"] } })]);
-      expect(await kjop({ sjekk, samtykke: true })).toEqual({ ok: true, url: "https://pay-mt.vipps.no/x" });
+      expect(await kjop({ utkast, samtykke: true })).toEqual({ ok: true, url: "https://pay-mt.vipps.no/x" });
       expect(batch).toHaveBeenCalledOnce();
     });
   });
 
   it("krever samtykke til at angreretten går tapt", async () => {
-    expect(await kjop({ sjekk, samtykke: false })).toEqual({ ok: false, melding: "Kryss av for at brevet åpnes med en gang." });
+    expect(await kjop({ utkast, samtykke: false })).toEqual({ ok: false, melding: "Kryss av for at brevet åpnes med en gang." });
     expect(batch).not.toHaveBeenCalled();
   });
 
   it("krever bil og feil", async () => {
-    expect((await kjop({ sjekk: { ...sjekk, reg: "" }, samtykke: true })).ok).toBe(false);
-    expect((await kjop({ sjekk: { ...sjekk, cats: ["ukjent"] }, samtykke: true })).ok).toBe(false);
-    expect((await kjop({ sjekk: "tull", samtykke: true })).ok).toBe(false);
+    expect((await kjop({ utkast: { ...utkast, skjema: { ...utkast.skjema, c_reg: "" } }, samtykke: true })).ok).toBe(false);
+    expect((await kjop({ utkast: { ...utkast, skjema: { ...utkast.skjema, c_make: "" } }, samtykke: true })).ok).toBe(false);
+    expect((await kjop({ utkast: { ...utkast, skjema: { ...utkast.skjema, f_cats: ["ukjent"] } }, samtykke: true })).ok).toBe(false);
+    expect((await kjop({ utkast: "tull", samtykke: true })).ok).toBe(false);
+    expect((await kjop({ sjekk: { reg: "CD 67890", make: "Audi A4", cats: ["klima"] }, samtykke: true } as unknown as Parameters<typeof kjop>[0])).ok).toBe(false);
     expect(batch).not.toHaveBeenCalled();
   });
 });

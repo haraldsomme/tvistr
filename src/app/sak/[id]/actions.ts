@@ -10,12 +10,12 @@ import { headers } from "next/headers";
 import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { ordre, sak, vedtak } from "@/db/schema";
-import { rensSjekk, rensSvar } from "@/app/sak/rens";
+import { rensSvar, rensUtkast } from "@/app/sak/rens";
 import { hentAlle, hentBilnavn } from "@/app/sak/vedtak-db";
 import type { Presedens } from "@/lib/app/brevtyper";
 import { idag } from "@/lib/app/dato";
-import { gjelderSaken, kjopt, laas, manglerForKjop, nyttKjop, rensSkjema, sammeSak } from "@/lib/app/saken";
-import { standard } from "@/lib/app/skjema";
+import { gjelderSaken, kjopt, laas, manglerISkjema, rensSkjema, sammeSakSkjema, tilKjop } from "@/lib/app/saken";
+import { utkastSvar } from "@/lib/app/utkast";
 import { komponentnavn } from "@/lib/feil/kategorier";
 import { innlogget, sha256hex } from "@/lib/innlogging/okt";
 import { likhet } from "@/lib/matching/likhet";
@@ -164,38 +164,39 @@ export type Kjop = { ok: true; url: string } | { ok: false; melding: string };
 // (src/lib/vipps/avstem.ts, from the return page /betaling/[ref], the webhook or the cron). A new
 // attempt is a new case; one never paid is deleted after 30 days. In development
 // (TVISTR_HELT_BREV_UTEN_BETALING) the case is paid at once, with an order from «utvikling»; in a trial
-// (GRATIS) it is free, with an order «gratis» and no consent to give, since nothing is sold. The writer
-// starts from the check, keeping the buyer from the logged-in owner's newest paid case; an owner who
-// already has a paid case for this car and these faults is sent to it instead. The owner of the
+// (GRATIS) it is free, with an order «gratis» and no consent to give, since nothing is sold. The case
+// is the buyer's draft (the form filled in before payment), with the buyer's name and address from the
+// logged-in owner's newest paid case where the draft has none; an owner who already has a paid case for
+// this car and these faults is sent to it instead, and the draft is discarded. The owner of the
 // new case is the Vipps account that pays (avstem), never the session. The return address carries a
 // secret `n` (only its hash is stored on the order) that logs the payer in once (sjekkBetaling).
-export async function kjop(inn: { sjekk: unknown; samtykke: unknown }): Promise<Kjop> {
+export async function kjop(inn: { utkast: unknown; samtykke: unknown }): Promise<Kjop> {
   const utenVipps = GRATIS || HELT_BREV_UTEN_BETALING();
   if (!utenVipps && !vippsSattOpp()) return { ok: false, melding: "Betaling er ikke tilgjengelig akkurat nå." };
   // The buyer has asked for the writer now and given up the right of withdrawal (angrerettloven § 22 n).
   if (!GRATIS && inn?.samtykke !== true) return { ok: false, melding: "Kryss av for at brevet åpnes med en gang." };
   if (forMangeKjop(await ipAdresse())) return { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
-  const sjekk = rensSjekk(inn?.sjekk);
-  if (!sjekk || manglerForKjop(sjekk)) return { ok: false, melding: "Saken mangler bil eller feil." };
+  const dag = idag();
+  const utkast = rensUtkast(inn?.utkast, dag);
+  if (!utkast || manglerISkjema(utkast.skjema)) return { ok: false, melding: "Saken mangler bil eller feil." };
   const id = nyId();
   const ordreId = nyId();
   const belopOre = GRATIS ? 0 : PRIS * 100;
   const n = randomBytes(24).toString("base64url");
   const retur = `/betaling/${ordreId}?n=${n}`;
   try {
-    const dag = idag();
     const sub = await innlogget();
     const mine = sub ? await betalteSaker(sub) : [];
     // Nobody pays twice: a logged-in owner who has bought this car and these faults goes to that case.
-    const har = mine.find((r) => sammeSak(sjekk, kjopt(r.id, r.skjema)));
+    const har = mine.find((r) => sammeSakSkjema(utkast.skjema, kjopt(r.id, r.skjema)));
     if (har) return { ok: true, url: `/sak/${har.id}` };
     const forrige = mine[0];
-    const skjema = nyttKjop(sjekk, (forrige && rensSkjema(forrige.skjema, dag)) || standard(dag), dag);
+    const skjema = tilKjop(utkast.skjema, forrige ? rensSkjema(forrige.skjema, dag) : null);
     const na = utenVipps ? new Date() : null;
     const leverandor = GRATIS ? "gratis" : utenVipps ? "utvikling" : "vipps";
     await db.batch([
       // GRATIS gets no owner: the owner rule must be revisited before a trial is turned on again.
-      db.insert(sak).values({ id, sjekk, skjema, betalt: na, ...(leverandor === "utvikling" && { vippsSub: UTVIKLINGSEIER }) }),
+      db.insert(sak).values({ id, sjekk: utkastSvar(utkast), skjema, betalt: na, ...(leverandor === "utvikling" && { vippsSub: UTVIKLINGSEIER }) }),
       db.insert(ordre).values({ id: ordreId, sakId: id, belopOre, leverandor, status: na ? "betalt" : "opprettet", betalt: na, innloggingHash: sha256hex(n) }),
     ]);
     console.info(`kjøp: ny sak (${leverandor})`);

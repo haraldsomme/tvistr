@@ -1,9 +1,11 @@
 // The buyer's answers as the server actions take them from the browser: checked field by field, or
-// rejected whole. Shared by vurderSaken and finnVedtak; rensSjekk is the check as kjop saves it.
+// rejected whole. Shared by vurderSaken and finnVedtak; rensUtkast is the draft as kjop saves it.
 import { RAPPORT_PUNKTER, type RapportPunkt } from "@/lib/brev/rapport";
 import { erDato } from "@/lib/brev/tidslinje";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
-import type { Sjekk } from "@/lib/app/saken";
+import { erObjekt } from "@/lib/app/flett";
+import { rensSkjema } from "@/lib/app/saken";
+import type { Utkast } from "@/lib/app/utkast";
 import type { Kilde, Svar } from "@/lib/vedtaksvalg/kjoper";
 
 const KILDER = ["skriftlig", "muntlig", "nei"];
@@ -45,44 +47,27 @@ export function rensSvar(inn: unknown): Svar | null {
   return { kjopsdato: s.kjopsdato, km, ar, somDenEr, krav, forsok, feil };
 }
 
-const TEKSTFELT = ["seller", "buyer", "asis", "kjopsdato", "delivery", "found", "sist", "known", "cause", "notified", "notifiedDate", "km", "reg", "make", "year", "lastReg"] as const;
-const erTekst = (v: unknown): v is string => typeof v === "string" && v.length <= 200;
+const SELGERE = ["forhandler", "privat", "leasing"];
+const KJOPERE = ["privat", "naering"];
+const SOM_DEN_ER = ["ja", "nei", "vetikke"];
 
-// The check's answers, the screen state left out. Text fields are kept as typed (fraSjekk copies them
-// into the form); the faults must be known categories and subcategories.
-export function rensSjekk(inn: unknown): Sjekk | null {
-  if (!inn || typeof inn !== "object" || Array.isArray(inn)) return null;
-  const s = inn as Record<string, unknown>;
-  const ut: Record<string, unknown> = {};
-  for (const k of TEKSTFELT) {
-    if (s[k] === undefined) continue;
-    if (!erTekst(s[k])) return null;
-    ut[k] = s[k];
-  }
-  if (s.sev !== undefined) {
-    if (typeof s.sev !== "number" || !Number.isFinite(s.sev)) return null;
-    ut.sev = s.sev;
-  }
-  if (s.opplysning !== undefined) {
-    if (typeof s.opplysning !== "boolean") return null;
-    ut.opplysning = s.opplysning;
-  }
-  const cats = s.cats ?? [];
-  const issues = (s.issues ?? {}) as Record<string, unknown>;
-  const fdates = (s.fdates ?? {}) as Record<string, unknown>;
-  if (!Array.isArray(cats) || typeof issues !== "object" || typeof fdates !== "object") return null;
-  const utIssues: Record<string, string[]> = {};
-  const utFdates: Record<string, string> = {};
-  for (const c of cats) {
+// The draft as kjop saves it: the form through rensSkjema, its faults known categories and
+// subcategories, and the three check answers only from their lists (anything else is left out).
+export function rensUtkast(inn: unknown, idag: string): Utkast | null {
+  if (!erObjekt(inn)) return null;
+  const skjema = rensSkjema(inn.skjema, idag);
+  if (!skjema) return null;
+  for (const c of skjema.f_cats) {
     const h = HOVEDKATEGORIER.find((k) => k.id === c);
-    if (!h) return null;
-    const under = issues[c] ?? [];
-    if (!Array.isArray(under) || !under.every((u) => h.under.some((k) => k.id === u))) return null;
-    utIssues[c] = [...new Set(under as string[])];
-    if (fdates[c] !== undefined) {
-      if (!erDato(fdates[c])) return null;
-      utFdates[c] = fdates[c] as string;
-    }
+    const under: unknown = skjema.f_parts[c] ?? [];
+    if (!h || !Array.isArray(under) || !under.every((u) => h.under.some((k) => k.id === u))) return null;
   }
-  return { ...ut, cats: [...new Set(cats as string[])], issues: utIssues, fdates: utFdates } as Sjekk;
+  const u: Utkast = { skjema };
+  const seller = valg<NonNullable<Utkast["seller"]>>(inn.seller, SELGERE),
+    buyer = valg<NonNullable<Utkast["buyer"]>>(inn.buyer, KJOPERE),
+    asis = valg<NonNullable<Utkast["asis"]>>(inn.asis, SOM_DEN_ER);
+  if (seller) u.seller = seller;
+  if (buyer) u.buyer = buyer;
+  if (asis) u.asis = asis;
+  return u;
 }

@@ -12,6 +12,7 @@ import { idag } from "@/lib/app/dato";
 import { tall } from "@/lib/app/format";
 import { maal } from "@/lib/maling";
 import { type Kjopt, manglerForKjop, nokkel, sammeSak, sjekkTilSvar } from "@/lib/app/saken";
+import { fraGammelSjekk } from "@/lib/app/utkast";
 import { evaluate } from "@/lib/app/vurdering";
 import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { inneHint } from "@/lib/innlogging/navn";
@@ -258,7 +259,7 @@ export function Resultat({ a, kjopt, utvikling, onTilbake, onOmStart, onTilSpors
             )}
           </div>
           {/* Closed once the account shows the case is bought already. */}
-          <Kjop sjekk={a} utvikling={utvikling} apen={kjop && !tilgang} onLukk={() => settKjop(false)} />
+          <Kjop utkast={fraGammelSjekk(a, idag())} utvikling={utvikling} apen={kjop && !tilgang} onLukk={() => settKjop(false)} />
         </>,
         document.body,
       )}

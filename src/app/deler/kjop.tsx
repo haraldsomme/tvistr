@@ -1,20 +1,20 @@
 // The purchase modal (artifact #buy). The buyer gives up the right of withdrawal and pays with Vipps:
-// kjop saves the case and answers with Vipps' page, and Vipps sends them back to the confirmation
+// kjop saves the draft as the case and answers with Vipps' page, and Vipps sends them back to the confirmation
 // (/betaling/[ref]). In
 // development (TVISTR_HELT_BREV_UTEN_BETALING) the case opens without Vipps; in a trial (GRATIS) it is
 // free, with no consent to give.
 import { useEffect, useRef, useState } from "react";
 import { kjop } from "@/app/sak/[id]/actions";
 import { tall } from "@/lib/app/format";
-import type { Sjekk } from "@/lib/app/saken";
 import { trygt } from "@/lib/app/kall";
+import type { Utkast } from "@/lib/app/utkast";
 import { GRATIS, PRIS } from "@/lib/pris";
 import { Hake, InfoSirkel, Lukk } from "./ikoner";
 import { VippsKnapp } from "./vipps-knapp";
 
 const PRISTEKST = GRATIS ? "Gratis" : `kr ${tall(PRIS)}`;
 
-export function Kjop({ sjekk, apen, utvikling, onLukk }: { sjekk: Sjekk; apen: boolean; utvikling: boolean; onLukk: () => void }) {
+export function Kjop({ utkast, apen, utvikling, onLukk }: { utkast: Utkast; apen: boolean; utvikling: boolean; onLukk: () => void }) {
   const [melding, settMelding] = useState<string | null>(null);
   const [venter, settVenter] = useState(false);
   // The right of withdrawal ends when the writer opens (angrerettloven § 22 n): the buyer must ask for that.
@@ -35,7 +35,7 @@ export function Kjop({ sjekk, apen, utvikling, onLukk }: { sjekk: Sjekk; apen: b
 
   async function betal() {
     settVenter(true);
-    const r = await trygt(kjop({ sjekk, samtykke }), "Vi fikk ikke kontakt. Prøv igjen.");
+    const r = await trygt(kjop({ utkast, samtykke }), "Vi fikk ikke kontakt. Prøv igjen.");
     // Vipps' page is opened as it is, in this window, and so is the confirmation; the button stays off
     // until the browser leaves.
     if (r.ok) return void (window.location.href = r.url);

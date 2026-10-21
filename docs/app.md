@@ -74,14 +74,14 @@ Tre veier kaller den: retursiden, webhooken `POST /api/vipps` (signaturen sjekke
 
 **Utvikling:** Med `TVISTR_HELT_BREV_UTEN_BETALING=1` (bare utenom produksjon) går Vipps-knappen rett til bekreftelsen uten Vipps, med en betalt ordre fra «utvikling» og uten e-post. Saken får eieren «utvikling» (`UTVIKLINGSEIER`), og bekreftelsen logger nettleseren inn som den. En økt for «utvikling» gjelder bare i utvikling: i produksjon gir `innlogget` null for den, og retursiden logger aldri inn som den. Den e2e-testen trenger dette. For å prøve Vipps lokalt fjerner du flagget. Den hele runden med webhook krever en offentlig `https`-adresse, for eksempel en preview på Vercel. Betalingen godkjennes i testappen Vipps MT.
 
-Skjemaet fylles fra sjekken på serveren (`nyttKjop` og `fraSjekk` i `src/lib/app/saken.ts`). Kjøperens navn og adresse hentes fra den innloggedes nyeste betalte sak.
+Nettleseren sender utkastet (`Utkast` i `src/lib/app/utkast.ts`: skjemaet pluss svarene om selger, kjøper og «som den er»), og `kjop` lagrer skjemaet (`rensUtkast` i `src/app/sak/rens.ts`, `tilKjop` i `src/lib/app/saken.ts`). Kjøperens navn og adresse hentes fra den innloggedes nyeste betalte sak der utkastet ikke har dem. `sak.sjekk` er vurderingens svar (`utkastSvar`).
 
 ## Brevet
 
 Et kjøp gjelder én bil og feilene som er valgt i sjekken (område og underkategori):
-- Før betaling må sjekken ha registreringsnummer, merke og modell, og minst én feil (`manglerForKjop` i `src/lib/app/saken.ts`).
+- Før betaling må skjemaet ha registreringsnummer, merke og minst én feil (`manglerISkjema` i `src/lib/app/saken.ts`).
 - I brevet er bilen låst (registreringsnummer, merke, modell og årsmodell) og feilvalgene låst. Sjekken krever derfor bilen før betaling: hentet fra Vegvesen eller skrevet inn. Km-stand, datoer, beskrivelser, verksted og krav kan fortsatt endres. Understellsnummer er ikke med.
-- Velger kjøperen en annen bil eller feil i sjekken etter betaling, sier tilbudet at det krever et nytt kjøp (`sammeSak`). Et nytt kjøp starter et nytt brev og beholder bare kjøperens navn og adresse (`nyttKjop`).
+- Velger kjøperen en annen bil eller feil i sjekken etter betaling, sier tilbudet at det krever et nytt kjøp (`sammeSak`). Har den innloggede alt betalt for samme bil og feil (`sammeSakSkjema`), sendes kjøperen til den saken, og utkastet forkastes.
 - Låsen håndheves på serveren. `lagreSak` beholder de låste feltene slik de ble kjøpt (`LAASTE_FELT`, `laas`). `finnVedtak` avviser svar om en annen årsmodell eller andre feil enn saken (`gjelderSaken`).
 - Skjemaet lagres i saken mens kjøperen skriver (`useAutolagring` i `src/app/sak/[id]/autolagring.ts`):
   - Det lagres etter en pause på 0,8 sekunder, og med én gang når siden skjules.

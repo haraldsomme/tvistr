@@ -89,7 +89,7 @@ function rensPresedens(v: unknown): Presedens | "venter" | null | undefined {
   return { id, saksnummer, vedtaksdato, bil, utfall, avsnitt, kildeUrl, utvalg, anbefalt, niva, gjaldt, km, alder, somDenEr, likhet, treff: treff as Record<Kriterium, Treff> };
 }
 
-// `presedens` is the decision picked in the Vedtak tab, or «venter» while finnVedtak is still looking.
+// `presedens` is the decision picked in «Lignende vedtak», or «venter» while finnVedtak is still looking.
 export async function fulltBrev(inn: { id: unknown; skjema: unknown; presedens: unknown }): Promise<FulltBrev> {
   if (forMangeBrev(await ipAdresse())) return FOR_MANGE;
   try {

@@ -3,25 +3,35 @@
 import type { Skjema } from "@/lib/app/skjema";
 
 type Nokkel = keyof Skjema | "f_any_desc";
-export type Seksjon = { id: string; navn: string; felt: Nokkel[] };
+// `navn` names the section in lists, `tittel` and `hint` ask it: the question before payment
+// (sporsmal.ts) and the open row after (svarene.tsx) share them.
+export type Seksjon = { id: string; navn: string; tittel: string; hint?: string; felt: Nokkel[] };
 
 export const FOR: Seksjon[] = [
-  { id: "bilen", navn: "Bilen", felt: ["c_make", "c_model", "c_year", "c_reg", "c_km"] },
-  { id: "kjopet", navn: "Kjøpet", felt: ["c_purchase", "c_delivery", "c_price"] },
-  { id: "feilen", navn: "Feilen", felt: ["f_cats"] },
-  { id: "omrader", navn: "Om feilen", felt: ["f_found", "f_any_desc", "f_impact"] },
-  { id: "verksted", navn: "Verksted", felt: ["ws"] },
-  { id: "selger_sa", navn: "Hva selgeren sa", felt: ["seller_said"] },
-  { id: "sagt_fra", navn: "Sagt fra før", felt: [] },
-  { id: "kravet", navn: "Kravet", felt: ["k_main"] },
+  { id: "bilen", navn: "Bilen", tittel: "Hvilken bil gjelder det?", hint: "Vi henter merke, modell og når bilen sist ble registrert.", felt: ["c_make", "c_model", "c_year", "c_reg", "c_km"] },
+  { id: "kjopet", navn: "Kjøpet", tittel: "Kjøpet", hint: "Hent opplysningene fra kjøpekontrakten. Overtakelsesdatoen er utgangspunktet for alle fristene.", felt: ["c_purchase", "c_delivery", "c_price"] },
+  { id: "feilen", navn: "Feilen", tittel: "Hva gjelder reklamasjonen?", hint: "Velg alle områdene der du har funnet feil. Du kan velge flere.", felt: ["f_cats"] },
+  { id: "omrader", navn: "Om feilen", tittel: "Hva er feil med bilen?", hint: "Vær konkret og hold deg til fakta. En presis beskrivelse gjør det vanskeligere å avvise saken.", felt: ["f_found", "f_any_desc", "f_impact"] },
+  { id: "verksted", navn: "Verksted", tittel: "Er feilen undersøkt av et verksted?", hint: "En verkstedrapport gjør saken mye sterkere. Alt du krysser av for, føres opp i brevet.", felt: ["ws"] },
+  { id: "selger_sa", navn: "Hva selgeren sa", tittel: "Sa selger noe om denne feilen før kjøpet?", hint: "For eksempel i annonsen, kontrakten eller en melding.", felt: ["seller_said"] },
+  // No hint: the switch's own text says the date counts.
+  { id: "sagt_fra", navn: "Sagt fra før", tittel: "Har du sagt fra til forhandleren?", felt: [] },
+  {
+    id: "kravet",
+    navn: "Kravet",
+    tittel: "Hva krever du?",
+    hint: "Forhandleren har normalt rett til å forsøke å rette feilen først. Prisavslag og heving blir aktuelt når retting ikke skjer, ikke lykkes eller ikke er mulig.",
+    felt: ["k_main"],
+  },
 ];
 export const ETTER: Seksjon[] = [
-  { id: "deg", navn: "Deg", felt: ["b_name", "b_addr", "b_zip", "b_city", "b_phone", "b_email"] },
-  { id: "forhandleren", navn: "Forhandleren", felt: ["d_name", "d_org", "d_addr", "d_zip", "d_city"] },
-  { id: "brevet", navn: "Brevet", felt: ["k_days"] },
+  { id: "deg", navn: "Deg", tittel: "Deg", hint: "Du er avsender av brevet.", felt: ["b_name", "b_addr", "b_zip", "b_city", "b_phone", "b_email"] },
+  { id: "forhandleren", navn: "Forhandleren", tittel: "Forhandleren", hint: "Brevet går til forhandleren du kjøpte bilen av, også når feilen kommer fra fabrikken.", felt: ["d_name", "d_org", "d_addr", "d_zip", "d_city"] },
+  { id: "brevet", navn: "Brevet", tittel: "Brevet", hint: "Sted og dato, tonen, svarfristen og vedleggene.", felt: ["k_days"] },
 ];
 // All sections in the letter's order: sender and recipient, the content, then the letter's settings.
 export const ALLE: Seksjon[] = [...ETTER.slice(0, 2), ...FOR, ...ETTER.slice(2)];
+export const seksjon = (id: string): Seksjon => ALLE.find((s) => s.id === id)!;
 
 export const ETIKETT: Record<string, string> = {
   b_name: "Navn", b_addr: "Adresse", b_zip: "Postnr.", b_city: "Poststed", b_phone: "Telefon", b_email: "E-post",

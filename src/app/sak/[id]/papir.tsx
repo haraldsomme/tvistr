@@ -1,5 +1,6 @@
-// The letter on paper (artifact toHTML), from the same blocks as the copied text.
-import { createContext, useContext, type ReactNode } from "react";
+// The letter's blocks on paper (artifact toHTML), from the same blocks as the copied text: Brevrute and the
+// landing page place them on their own sheet.
+import { createContext, useContext } from "react";
 import type { Blokk, Del } from "@/lib/app/brevtyper";
 
 // The fields whose text just changed, marked `fl-ny` (Brevrute); none elsewhere.
@@ -83,22 +84,5 @@ export function Adresser({ a, b }: { a: Blokk; b: Blokk }) {
         <p className="l-addr l-adr-b"><Linjer l={b.linjer} /></p>
       </div>
     </div>
-  );
-}
-
-export function Papir({ blokker, id }: { blokker: Blokk[]; id?: string }) {
-  const noder: ReactNode[] = [];
-  for (let i = 0; i < blokker.length; i++) {
-    const b = blokker[i];
-    const neste = blokker[i + 1];
-    if (b.t === "addr" && neste?.t === "addr") {
-      noder.push(<Adresser key={i} a={b} b={neste} />);
-      i++;
-    } else noder.push(<BlokkEl key={i} b={b} />);
-  }
-  return (
-    <article className="letter" id={id} aria-label="Reklamasjonsbrev" style={{ whiteSpace: "pre-line" }}>
-      {noder}
-    </article>
   );
 }

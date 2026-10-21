@@ -164,7 +164,10 @@ export function Brevrute({ blokker, venter, feil, etikett, onFelt }: { blokker: 
   };
   const klikk = (e: MouseEvent) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>("[data-felt]");
-    if (el && onFelt) onFelt(el.dataset.felt!);
+    if (!el || !onFelt) return;
+    // A narrow screen's sheet closes, so the row the answer opens is in view.
+    ark?.lukk();
+    onFelt(el.dataset.felt!);
   };
 
   const pst = blokker ? andel(blokker) : 0;

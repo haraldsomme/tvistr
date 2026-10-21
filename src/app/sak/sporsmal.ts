@@ -2,6 +2,7 @@
 // answer that shapes the letter, in the letter's order. A screen is done when it has what the letter
 // and the verdict need; «Neste» waits for it. Private sales, leasing and purchases through a company are
 // not covered: their screen stays undone.
+import { seksjon } from "@/app/sak/skjema/steg";
 import { manglerISkjema } from "@/lib/app/saken";
 import type { Utkast } from "@/lib/app/utkast";
 
@@ -14,41 +15,34 @@ export type Skjerm = {
   ferdig: (u: Utkast) => boolean;
 };
 
+// The question of a screen that edits one of the form's sections, as the section asks it (steg.ts).
+const som = (id: string) => {
+  const { tittel, hint } = seksjon(id);
+  return { tittel, hint };
+};
+
 export const SKJERMER: Skjerm[] = [
   { id: "selger", gruppe: "Kjøpet", tittel: "Hvem kjøpte du bilen av?", hint: "Hvem som solgte bilen, avgjør hvilken lov som gjelder.", ferdig: (u) => u.seller === "forhandler" },
   { id: "kjoper", gruppe: "Kjøpet", tittel: "Kjøpte du bilen privat eller gjennom firma?", hint: "Som privatperson har du sterkere rettigheter.", vis: (u) => u.seller === "forhandler", ferdig: (u) => u.buyer === "privat" },
   {
     id: "bilen",
     gruppe: "Kjøpet",
-    tittel: "Hvilken bil gjelder det?",
-    hint: "Vi henter merke, modell og når bilen sist ble registrert.",
+    ...som("bilen"),
     ferdig: (u) => {
       const m = manglerISkjema(u.skjema);
       return m !== "reg" && m !== "bil";
     },
   },
-  { id: "kjopet", gruppe: "Kjøpet", tittel: "Kjøpet", hint: "Hent opplysningene fra kjøpekontrakten. Overtakelsesdatoen er utgangspunktet for alle fristene.", ferdig: (u) => !!(u.skjema.c_purchase || u.skjema.c_delivery) },
+  { id: "kjopet", gruppe: "Kjøpet", ...som("kjopet"), ferdig: (u) => !!(u.skjema.c_purchase || u.skjema.c_delivery) },
   { id: "forbehold", gruppe: "Kontrakten", tittel: "Står det «som den er» i kontrakten?", hint: "Se etter formuleringer som «solgt som den er» eller «som besiktiget».", ferdig: (u) => u.asis !== undefined },
-  { id: "feil", gruppe: "Feilen", tittel: "Hva gjelder reklamasjonen?", hint: "Velg alle områdene der du har funnet feil. Du kan velge flere.", ferdig: (u) => u.skjema.f_cats.length > 0 },
-  {
-    id: "omrader",
-    gruppe: "Feilen",
-    tittel: "Hva er feil med bilen?",
-    hint: "Vær konkret og hold deg til fakta. En presis beskrivelse gjør det vanskeligere å avvise saken.",
-    ferdig: (u) => u.skjema.f_cats.length > 0 && u.skjema.f_cats.every((c) => !!u.skjema.f_area[c]?.found),
-  },
+  { id: "feil", gruppe: "Feilen", ...som("feilen"), ferdig: (u) => u.skjema.f_cats.length > 0 },
+  { id: "omrader", gruppe: "Feilen", ...som("omrader"), ferdig: (u) => u.skjema.f_cats.length > 0 && u.skjema.f_cats.every((c) => !!u.skjema.f_area[c]?.found) },
   { id: "arsak", gruppe: "Feilen", tittel: "Kan feilen skyldes noe annet enn bilen selv?", ferdig: (u) => !!u.skjema.f_cause_check },
-  { id: "verksted", gruppe: "Feilen", tittel: "Er feilen undersøkt av et verksted?", hint: "En verkstedrapport gjør saken mye sterkere. Alt du krysser av for, føres opp i brevet.", ferdig: (u) => !!u.skjema.ws },
-  { id: "selger_sa", gruppe: "Kontrakten", tittel: "Sa selger noe om denne feilen før kjøpet?", hint: "For eksempel i annonsen, kontrakten eller en melding.", ferdig: (u) => !!u.skjema.seller_said },
+  { id: "verksted", gruppe: "Feilen", ...som("verksted"), ferdig: (u) => !!u.skjema.ws },
+  { id: "selger_sa", gruppe: "Kontrakten", ...som("selger_sa"), ferdig: (u) => !!u.skjema.seller_said },
   // Nothing is required, but the date once the buyer says they have complained.
-  { id: "sagt_fra", gruppe: "Kontrakten", tittel: "Har du sagt fra til forhandleren?", ferdig: (u) => !u.skjema.f_prior || !!u.skjema.f_prior_date },
-  {
-    id: "kravet",
-    gruppe: "Kravet",
-    tittel: "Hva krever du?",
-    hint: "Forhandleren har normalt rett til å forsøke å rette feilen først. Prisavslag og heving blir aktuelt når retting ikke skjer, ikke lykkes eller ikke er mulig.",
-    ferdig: (u) => !!u.skjema.k_main,
-  },
+  { id: "sagt_fra", gruppe: "Kontrakten", ...som("sagt_fra"), ferdig: (u) => !u.skjema.f_prior || !!u.skjema.f_prior_date },
+  { id: "kravet", gruppe: "Kravet", ...som("kravet"), ferdig: (u) => !!u.skjema.k_main },
 ];
 
 export const synlige = (u: Utkast) => SKJERMER.filter((s) => !s.vis || s.vis(u));

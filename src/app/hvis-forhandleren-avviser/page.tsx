@@ -3,7 +3,7 @@ import { Juridisk } from "@/app/deler/juridisk";
 
 export const metadata: Metadata = { title: "Hvis forhandleren avviser – Tvistr" };
 
-// What the buyer can do after the letter, linked from the Brevet tab. Every claim comes from Forbrukertilsynet's
+// What the buyer can do after the letter, linked from the paid case. Every claim comes from Forbrukertilsynet's
 // pages send-sak-til-mekling (updated 3.9.2026) and behandling-forbrukerklageutvalget (updated 12.2.2026).
 // The fees follow the court fee (rettsgebyret) and change every year.
 export default function HvisAvvist() {

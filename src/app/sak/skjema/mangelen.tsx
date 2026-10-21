@@ -1,14 +1,12 @@
 // The faults (chosen before payment, locked to the purchase after), one card per area, the workshop,
-// the attachments (file names only, nothing is uploaded), what the seller said and any earlier complaint.
-// All but Feilen (the paid case's locked list with its panel) are blocks for a page to place under its
-// own heading.
+// the attachments (file names only, nothing is uploaded), what the seller said and any earlier complaint,
+// as blocks for a page to place under its own heading.
 import { useState } from "react";
 import { FeilIkon, FeilListe } from "@/app/deler/feilliste";
 import { Fil, Fold, Lukk, Opplast } from "@/app/deler/ikoner";
 import { relText } from "@/lib/app/dato";
 import { DOCS, IMPACT, impactToggle, KNOWN, type Omrade, SVAR } from "@/lib/app/skjema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
-import { GRATIS, NYTT_KJOP } from "@/lib/pris";
 import { Bryter, Felt, Seg, type StegProps, Valgliste, Vis } from "./felt";
 
 const TOM: Omrade = { found: "", impact: [], known: "" };
@@ -99,28 +97,6 @@ export function Omrader({ s, sett }: StegProps) {
         <Felt s={s} sett={sett} k="f_desc" label={<>Noe mer om feilen? <em>valgfritt</em></>} flerlinje={84} />
       </div>
     </>
-  );
-}
-
-export function Feilen({ s, sett }: StegProps) {
-  return (
-    <section className="panel">
-      <div className="head">
-        <h2>Hva er feil med bilen?</h2>
-        <p>Vær konkret og hold deg til fakta. En presis beskrivelse gjør det vanskeligere å avvise saken.</p>
-      </div>
-      <div className="block">
-        <div className="bt">
-          <h3>Hva gjelder reklamasjonen?</h3>
-          <span>{GRATIS ? "Låst til saken" : "Låst til kjøpet"}</span>
-        </div>
-        <FeilListe valgt={s.f_cats} under={s.f_parts} />
-        <div className="hint" style={{ marginTop: 12 }}>
-          Brevet gjelder feilene du valgte {GRATIS ? "før du åpnet brevet" : "før du betalte"}. Et brev om en annen feil krever {NYTT_KJOP}. Under kan du beskrive hver feil og når du oppdaget den.
-        </div>
-      </div>
-      <Omrader s={s} sett={sett} />
-    </section>
   );
 }
 

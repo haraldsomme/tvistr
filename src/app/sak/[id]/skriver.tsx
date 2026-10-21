@@ -1,61 +1,46 @@
 "use client";
 
-// The letter writer (artifact «writer»): tabs Skjema · Vurdering · Vedtak · Brevet, the steps rail and the form.
-// For a paid case: the page gives the stored form, and every change is saved back to the case.
-import Link from "next/link";
+// The paid case (mockup, after payment): the same two panes as the flow before payment. Left: the
+// letter unlocked with its copy buttons, the checklist, «Svarene dine» with a row per section, the
+// strength of the case and «Lignende saker»; right: the whole letter from the server (fulltBrev),
+// built from these answers with the car and the faults as bought. Every change is saved to the case.
 import { useEffect, useState } from "react";
-import { Merke } from "@/app/deler/merke";
-import { Frem, Hake, Tilbake } from "@/app/deler/ikoner";
+import { Hake, Kopier } from "@/app/deler/ikoner";
+import { Lignende } from "@/app/deler/lignende";
+import { fulltBrev } from "@/app/sak/brevet-actions";
+import { Brevrute } from "@/app/sak/flyt/brevrute";
+import { useBrev } from "@/app/sak/flyt/bruk-brev";
+import { Oppsett } from "@/app/sak/flyt/oppsett";
+import { Styrke } from "@/app/sak/flyt/styrke";
+import { Topp } from "@/app/sak/flyt/topp";
+import type { Sett } from "@/app/sak/skjema/felt";
+import { ALLE, ETIKETT, ETTER, har, mangler, seksjonFor, stegFor } from "@/app/sak/skjema/steg";
 import { idag } from "@/lib/app/dato";
-import { GRATIS, NYTT_KJOP } from "@/lib/pris";
+import { datoavvik } from "@/lib/app/datoer";
+import { tall } from "@/lib/app/format";
 import { type Skjema, syncAreas } from "@/lib/app/skjema";
-import { type Lagring, useAutolagring } from "./autolagring";
-import { Bilen, Kjopet } from "@/app/sak/skjema/bilen";
-import type { StegProps } from "@/app/sak/skjema/felt";
-import { Krav } from "@/app/sak/skjema/krav";
-import { Feilen, Omrader, SagtFra, SelgerSa, Verksted } from "@/app/sak/skjema/mangelen";
-import { Brevvalg, Deg, Forhandleren } from "@/app/sak/skjema/partene";
-import { ALLE, har } from "@/app/sak/skjema/steg";
-import { Brevet } from "./brevet";
 import { skriverResultat } from "@/lib/app/vurdering";
-import { useVedtak, Vedtaksfane } from "./vedtaksfane";
-import { useLignende, Vurderingsfane } from "./vurderingsfane";
+import { maal } from "@/lib/maling";
+import { GRATIS, PRIS } from "@/lib/pris";
+import { type Lagring, useAutolagring } from "./autolagring";
+import { useLignende } from "./lignende";
+import { radId, Svarene } from "./svarene";
+import { useVedtak, Vedtaksvindu } from "./vedtaksvindu";
 
-type Fane = "form" | "case" | "prec" | "letter";
-type Steg = (p: StegProps) => React.ReactNode;
-
-// The component for each section (ALLE), with the car locked and the «som den er» switch in Kjøpet. All
-// but Deg, Forhandleren and Feilen are blocks only, and get a panel with the heading in HODE.
-const STEG: Record<string, Steg> = {
-  deg: Deg,
-  forhandleren: Forhandleren,
-  bilen: (p) => <Bilen {...p} laast />,
-  kjopet: (p) => <Kjopet {...p} medForbehold />,
-  feilen: Feilen,
-  omrader: Omrader,
-  verksted: Verksted,
-  selger_sa: SelgerSa,
-  sagt_fra: SagtFra,
-  kravet: Krav,
-  brevet: Brevvalg,
-};
-const HODE: Record<string, { tittel: string; tekst?: string }> = {
-  bilen: { tittel: "Bilen", tekst: `Brevet gjelder bilen ${GRATIS ? "du valgte" : "du betalte for"}. Et brev for en annen bil krever ${NYTT_KJOP}.` },
-  kjopet: { tittel: "Kjøpet", tekst: "Hent opplysningene fra kjøpekontrakten. Overtakelsesdatoen er utgangspunktet for alle fristene." },
-  omrader: { tittel: "Om feilen" },
-  verksted: { tittel: "Er feilen undersøkt av et verksted?", tekst: "En verkstedrapport gjør saken mye sterkere. Alt du krysser av for, føres opp i brevet." },
-  selger_sa: { tittel: "Sa selger noe om denne feilen før kjøpet?", tekst: "For eksempel i annonsen, kontrakten eller en melding." },
-  sagt_fra: { tittel: "Sagt fra før" },
-  kravet: { tittel: "Hva krever du?", tekst: "Forhandleren har normalt rett til å forsøke å rette feilen først. Prisavslag og heving blir aktuelt når retting ikke skjer, ikke lykkes eller ikke er mulig." },
-  brevet: { tittel: "Brevet" },
-};
-const LAGRING: Record<Lagring, string> = { lagret: "Lagret", lagrer: "Lagrer …", feil: "Ikke lagret, prøver igjen" };
+const LAGRING: Record<Lagring, string> = { lagret: "Lagret på kontoen din", lagrer: "Lagrer …", feil: "Ikke lagret, prøver igjen" };
+const ALLE_FELT = ALLE.flatMap((st) => st.felt);
 
 export function Skriver({ id, start }: { id: string; start: Skjema }) {
   const [raa, settRaa] = useState<Skjema>(start);
   const lagring = useAutolagring(id, raa);
-  const [fane, settFane] = useState<Fane>("form");
-  const [steg, settSteg] = useState(0);
+  const s = syncAreas(raa);
+  const sett: Sett = (patch) => settRaa((f) => ({ ...f, ...patch }));
+  const r = skriverResultat(s, idag());
+  const lignende = useLignende(s);
+  const vedtak = useVedtak(s, sett, id);
+  // The sections answered after payment start open while they lack something.
+  const [apen, settApen] = useState<ReadonlySet<string>>(() => new Set(ETTER.filter((st) => st.felt.some((k) => !har(start, k))).map((st) => st.id)));
+  const [vindu, settVindu] = useState(false);
   const [toast, settToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,143 +49,159 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const s = syncAreas(raa);
-  const sett = (patch: Partial<Skjema>) => settRaa((f) => ({ ...f, ...patch }));
-  const r = skriverResultat(s, idag());
-  const lignende = useLignende(s);
-  const vedtak = useVedtak(s, sett, id, fane === "prec" || fane === "letter");
+  const presedens = vedtak.venter ? "venter" : vedtak.valgt;
+  const brev = useBrev(() => fulltBrev({ id, skjema: s, presedens }), JSON.stringify([id, s, presedens]));
+  // Copying waits for the letter built from the answers as they are now; after a failed call the
+  // letter shown is an older one.
+  const klar = brev.svar && !brev.venter && !brev.feil ? brev.svar : null;
 
-  const tilFane = (t: Fane) => {
-    settFane(t);
-    window.scrollTo({ top: 0 });
+  const veksle = (sid: string, pa: boolean) =>
+    settApen((a) => {
+      const n = new Set(a);
+      if (pa) n.add(sid);
+      else n.delete(sid);
+      return n;
+    });
+  // Opens a section's row (the faults only show, they are locked) and brings it into view.
+  const tilRad = (sid: string) => {
+    if (sid !== "feilen") veksle(sid, true);
+    requestAnimationFrame(() => {
+      const el = document.getElementById(radId(sid));
+      el?.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      el?.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
+    });
   };
-  const tilSteg = (i: number) => {
-    settFane("form");
-    settSteg(Math.max(0, i));
-    window.scrollTo({ top: 0 });
-  };
 
-  const Steget = STEG[ALLE[steg].id];
-  const tilSeksjon = (id: string) => tilSteg(ALLE.findIndex((st) => st.id === id));
-  const status = ALLE.map((st) => ({ f: st.felt.filter((k) => har(s, k)).length, t: st.felt.length }));
-  const pst = Math.round((status.reduce((a, x) => a + x.f, 0) / status.reduce((a, x) => a + x.t, 0)) * 100);
-  const FANER: [Fane, string][] = [["form", "Skjema"], ["case", "Vurdering"], ["prec", "Vedtak"], ["letter", "Brevet"]];
+  async function kopier(tekst: string, ok: string) {
+    try {
+      await navigator.clipboard.writeText(tekst);
+      settToast(ok);
+    } catch {
+      const el = document.querySelector(".fl-ark");
+      if (el) {
+        const rg = document.createRange();
+        rg.selectNodeContents(el);
+        getSelection()?.removeAllRanges();
+        getSelection()?.addRange(rg);
+      }
+      settToast("Kopiering ble blokkert. Teksten er markert, trykk Ctrl/Cmd + C.");
+    }
+  }
 
-  return (
-    <div className="shell" id="shell" data-wtab={fane} data-tier={r.tier}>
-      <header className="wtop">
-        <div className="wleft" style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, justifySelf: "start" }}>
-          <Merke />
-          <Link href="/min-side" className="wback" aria-label="← Min side" style={{ fontSize: 14, color: "#465150", textDecoration: "none", whiteSpace: "nowrap" }}>
-            ←<span className="wback-t"> Min side</span>
-          </Link>
-        </div>
-        <nav className="wtabs" role="tablist" aria-label="Brevet">
-          {FANER.map(([id, navn], k) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={fane === id}
-              tabIndex={fane === id ? 0 : -1}
-              onClick={() => tilFane(id)}
-              onKeyDown={(e) => {
-                const n = e.key === "ArrowRight" ? (k + 1) % FANER.length : e.key === "ArrowLeft" ? (k + FANER.length - 1) % FANER.length : -1;
-                if (n < 0) return;
-                e.preventDefault();
-                tilFane(FANER[n][0]);
-                (e.currentTarget.parentElement?.children[n] as HTMLElement | undefined)?.focus();
-              }}
-            >
-              {id === "case" && <i className="tdot" aria-hidden="true" />}
-              {navn}
-            </button>
-          ))}
-        </nav>
-        <div className="wtools">
-          <div className={`saved ${lagring}`} role="status">
-            <i />
-            <span>{LAGRING[lagring]}</span>
-          </div>
-        </div>
-      </header>
+  const rader = mangler(s);
+  const avvik = datoavvik(s, idag());
+  const nMangler = rader.reduce((a, x) => a + x.felt.length, 0);
+  const etikett = nMangler ? `${nMangler} ${nMangler === 1 ? "opplysning" : "opplysninger"} mangler` : "Klart til å sendes";
 
-      <aside className="rail">
-        <nav className="steps" aria-label="Steg">
-          {ALLE.map((st, i) => {
-            const ferdig = status[i].f === status[i].t;
-            return (
-              <button key={st.id} type="button" className={`st${ferdig && i !== steg ? " done" : ""}`} aria-current={i === steg ? "step" : undefined} aria-label={`${st.navn}, ${status[i].f} av ${status[i].t} felt utfylt`} onClick={() => tilSteg(i)}>
-                <span className="st-i">{ferdig && i !== steg ? <Hake /> : i + 1}</span>
-                <span className="st-t">
-                  <span className="st-n">
-                    <span className="st-l">{st.navn}</span>
-                    <span className="st-s">{st.navn}</span>
-                  </span>
-                  <span className="st-m">{ferdig ? "Fullført" : `${status[i].f} av ${status[i].t} felt`}</span>
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-        <div className="overall">
-          <div className="overall-top">
-            <span>Utfylt</span>
-            <b>{pst} %</b>
-          </div>
-          <div className="meter">
-            <i style={{ width: `${pst}%` }} />
-          </div>
-          <button type="button" className="ov-case" onClick={() => tilFane("case")}>
-            <span>Saksstyrke</span>
-            <span className="tchip">
-              <i className="tdot" aria-hidden="true" />
-              <span>{r.badge}</span>
+  const venstre = (
+    <>
+      <div className="fl-apnet">
+        <div className="fl-res">
+          <span className="fl-betalt">
+            <span aria-hidden="true">
+              <Hake s={11} />
             </span>
+            {GRATIS ? "Åpnet" : `Betalt · kr ${tall(PRIS)}`}
+          </span>
+          <h1>Brevet er låst opp</h1>
+          <p>Hele brevet er fylt ut med svarene dine. Endre svarene under, så oppdateres brevet med en gang.</p>
+        </div>
+        <div className="fl-kopi">
+          <button
+            type="button"
+            className="fl-cta"
+            disabled={vedtak.venter || !klar}
+            title={vedtak.venter ? "Venter på den lignende saken" : brev.feil ? "Brevet oppdateres ikke akkurat nå" : !klar ? "Brevet oppdateres" : undefined}
+            onClick={() => {
+              if (!klar) return;
+              maal("brev_kopiert");
+              kopier(klar.tekst, "Brevet er kopiert");
+            }}
+          >
+            <Kopier />
+            Kopier brevet
+          </button>
+          <button type="button" className="fl-knapp fl-knapp-s" disabled={!klar} onClick={() => klar && kopier(klar.emne, "Emnefeltet er kopiert")}>
+            Kopier emnefelt
           </button>
         </div>
-      </aside>
-
-      <form className="main" noValidate autoComplete="on" onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT" && e.preventDefault()}>
-        {fane === "form" && (
-          <div key={steg}>
-            {HODE[ALLE[steg].id] ? (
-              <section className="panel">
-                <div className="head">
-                  <h2>{HODE[ALLE[steg].id].tittel}</h2>
-                  {HODE[ALLE[steg].id].tekst && <p>{HODE[ALLE[steg].id].tekst}</p>}
-                </div>
-                <Steget s={s} sett={sett} />
-              </section>
-            ) : (
-              <Steget s={s} sett={sett} />
-            )}
-          </div>
+      </div>
+      <p className="fl-hjelp">
+        Lim inn brevet i en e-post til forhandleren, eller skriv det ut og send det rekommandert. Legg ved vedleggene som står i brevet.
+        {s.d_email.trim() && (
+          <>
+            {" "}
+            Send til <b>{s.d_email.trim()}</b>.
+          </>
         )}
-        {fane === "case" && <Vurderingsfane s={s} r={r} lignende={lignende} brukes={s.prec_on ? s.prec_id : null} onSteg={tilSeksjon} onBrevet={() => tilFane("letter")} onSkjema={() => tilFane("form")} />}
-        {fane === "prec" && <Vedtaksfane s={s} sett={sett} vedtak={vedtak} onBrevet={() => tilFane("letter")} />}
-        {fane === "letter" && <Brevet id={id} s={s} sett={sett} vedtak={vedtak} onSteg={tilSeksjon} onVedtak={() => tilFane("prec")} onToast={settToast} />}
-        {fane === "form" && (
-          <div className="nav">
-            <button type="button" className="btn gh" style={{ visibility: steg === 0 ? "hidden" : "visible" }} onClick={() => tilSteg(steg - 1)}>
-              <Tilbake />
-              <span>Tilbake</span>
-            </button>
-            <div className="nav-mid" aria-hidden="true">
-              {ALLE.map((st, i) => (
-                <span key={st.id} className={`pip${i === steg ? " on" : status[i].f === status[i].t ? " done" : ""}`} />
-              ))}
+      </p>
+      {(avvik.length > 0 || rader.length > 0) && (
+        <section className="fl-sjekk" aria-label="Sjekkliste">
+          <h2>Sjekkliste</h2>
+          {avvik.map((a) => (
+            <div key={a} className="fl-sjekk-r">
+              <span className="fl-sjekk-a">Sjekk</span>
+              <span className="fl-sjekk-t">{a}</span>
             </div>
-            <button type="button" className="btn pri" onClick={() => (steg === ALLE.length - 1 ? tilFane("letter") : tilSteg(steg + 1))}>
-              <span>{steg === ALLE.length - 1 ? "Se brevet" : `Neste: ${ALLE[steg + 1].navn}`}</span>
-              <Frem />
-            </button>
-          </div>
-        )}
-      </form>
+          ))}
+          {rader.map((x) => (
+            <div key={x.id} className="fl-sjekk-r">
+              <span className="fl-sjekk-t">
+                {x.navn}
+                <small>{x.felt.map((k) => ETIKETT[k]).join(", ")}</small>
+              </span>
+              <button type="button" className="fl-knapp" onClick={() => tilRad(x.id)}>
+                Fyll ut
+              </button>
+            </div>
+          ))}
+        </section>
+      )}
+      <Svarene s={s} sett={sett} apen={apen} settApen={veksle} vedtak={vedtak} onVedtak={() => settVindu(true)} />
+      <Styrke r={r} apen onEndre={(f) => tilRad(stegFor(f.t))} />
+      {lignende?.ok && (
+        <Lignende
+          tall={lignende.tall}
+          kort={lignende.kort}
+          sammenligning={lignende.sammenligning}
+          brukes={s.prec_on ? s.prec_id : null}
+          fot={
+            <>
+              {s.prec_on ? "Brevet viser til saken du har valgt, og forklarer hvorfor du har krav på samme resultat." : "Du har slått av henvisningen til en lignende sak i brevet."}{" "}
+              <button type="button" className="lnk" onClick={() => settVindu(true)}>
+                Velg vedtak
+              </button>
+            </>
+          }
+        />
+      )}
+      <p className="fine" style={{ margin: 0 }}>
+        Brevet er en mal basert på forbrukerkjøpsloven og er ikke juridisk rådgivning. Forbrukerrådet gir gratis råd, og Forbrukertilsynet mekler hvis forhandleren avviser saken.{" "}
+        <a href="/hvis-forhandleren-avviser" target="_blank" rel="noopener">
+          Hva du kan gjøre hvis forhandleren avviser
+        </a>
+      </p>
+      <Vedtaksvindu apen={vindu} vedtak={vedtak} s={s} sett={sett} onLukk={() => settVindu(false)} />
       <div className={`toast${toast ? " on" : ""}`} role="status" aria-live="polite">
         {toast}
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <Oppsett
+      topp={<Topp lagring={LAGRING[lagring]} aktivSak={id} />}
+      venstre={venstre}
+      brev={
+        <Brevrute
+          blokker={brev.blokker}
+          venter={brev.venter}
+          feil={brev.feil}
+          etikett={etikett}
+          onFelt={(felt) => (felt.startsWith("vedtak.") ? settVindu(true) : tilRad(seksjonFor(felt)))}
+        />
+      }
+      kikk={{ tekst: etikett, fylt: ALLE_FELT.length - nMangler, totalt: ALLE_FELT.length }}
+    />
   );
 }

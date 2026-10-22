@@ -43,8 +43,8 @@ const Adresse = ({ l, klasse }: { l: string[]; klasse?: string }) => (
 export function HeroBrev() {
   return (
     <div className="hb">
-      <span className="hb-stempel">Forenklet eksempel</span>
       <article className="letter hb-ark" aria-label="Eksempel på reklamasjonsbrev" style={{ whiteSpace: "pre-line" }}>
+        <span className="hb-stempel">Forenklet eksempel</span>
         <div className="hb-rad">
           <Nr n={1} />
           <div className="l-adr2">
@@ -74,7 +74,7 @@ export function HeroBrev() {
         <Rad k="l-h">Vedlegg</Rad>
         <Rad>Kjøpekontrakt · Verkstedrapport · Overslag på utbedring · <S>nnnnnn nnnnnn nnnnnn nnnnnn nn</S></Rad>
       </article>
-      <p className="hb-skjult">Eksempelbrevet er forenklet, og deler av det er sladdet. Du får hele brevet.</p>
+      <p className="hb-note">Eksempelbrevet er forenklet, og deler av det er sladdet. Du får hele brevet.</p>
     </div>
   );
 }

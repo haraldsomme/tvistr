@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Konto } from "./deler/konto";
 import { Ordmerke } from "./deler/ordmerke";
 
-// The header of the landing page: anchors to the sections, the account link and the check button.
+// The header of the landing page: anchors to the sections and the account link.
 // From 1100px the links sit in the bar; below it they fold into a menu (the switch is in CSS, `.lp-wide`
 // and `.lp-narrow`). Below 560px «Logg inn» moves from the bar into the menu.
 
@@ -38,9 +37,6 @@ export function LandingTopp() {
           <span className="lp-login">
             <Konto variant="lenke" />
           </span>
-          <Link href="/sak?start" className="lp-pri" style={{ height: 44, padding: "0 18px", borderRadius: 12, display: "flex", alignItems: "center", fontSize: 15, fontWeight: 500, whiteSpace: "nowrap", textDecoration: "none" }}>
-            Sjekk saken din
-          </Link>
           <button
             type="button"
             className="lp-narrow lp-burger"

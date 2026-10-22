@@ -136,3 +136,9 @@ export const Skiltband = () => (
     <b>N</b>
   </div>
 );
+export const Bruker = (p: P) => (
+  <Svg {...p}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4.5 20.5c1.2-3.8 4.1-5.5 7.5-5.5s6.3 1.7 7.5 5.5" />
+  </Svg>
+);

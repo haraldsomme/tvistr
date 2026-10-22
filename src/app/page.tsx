@@ -114,14 +114,11 @@ function Sporsmal({ q, apen, children }: { q: string; apen?: boolean; children: 
   );
 }
 
-const Sjekk = ({ storrelse, hvit }: { storrelse: number; hvit?: boolean }) => (
+const Sjekk = ({ storrelse, skygge }: { storrelse: number; skygge: string }) => (
   <Link
     href="/sak?start"
-    className={hvit ? "lp-hvit" : "lp-pri"}
-    style={{
-      height: storrelse, padding: hvit ? "0 28px" : "0 26px", borderRadius: 14, display: "flex", alignItems: "center", gap: 10, fontSize: hvit ? 17 : 16.5, fontWeight: hvit ? 600 : 500, textDecoration: "none", whiteSpace: "nowrap",
-      ...(hvit ? { marginTop: 10 } : { boxShadow: "0 12px 28px -14px rgba(31,58,95,.7)" }),
-    }}
+    className="lp-pri"
+    style={{ height: storrelse, padding: storrelse > 56 ? "0 28px" : "0 26px", borderRadius: 14, display: "flex", alignItems: "center", gap: 10, fontSize: storrelse > 56 ? 17 : 16.5, fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap", boxShadow: skygge }}
   >
     Sjekk saken din gratis
     <Pil />
@@ -136,24 +133,37 @@ export default async function Home() {
       <LandingTopp />
 
       <main id="top" style={{ flex: 1 }}>
-        <section className="lp-in lp-hero" style={{ paddingTop: "clamp(40px, 7vw, 88px)", paddingBottom: "clamp(56px, 8vw, 104px)" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            <h1 style={{ margin: 0, fontSize: "clamp(26px, 2.7vw, 36px)", lineHeight: 1.1, fontWeight: 600, letterSpacing: "-0.035em", color: "#111515", textWrap: "balance" }}>Kjøpt bruktbil med feil eller mangler?</h1>
-            <p style={{ margin: 0, maxWidth: 520, fontSize: "clamp(17px, 1.5vw, 19px)", lineHeight: 1.6, color: "#465150", textWrap: "pretty" }}>
-              Sjekk gratis om du har en sak. Har du det, får du et ferdig reklamasjonsbrev som dette, fylt ut fra svarene dine.
-            </p>
-            <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+        <section className="lp-in lp-hero" style={{ paddingTop: "clamp(40px, 6vw, 88px)", paddingBottom: "clamp(64px, 8vw, 112px)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <h1 style={{ margin: 0, fontSize: "clamp(28px, 3vw, 38px)", lineHeight: 1.1, fontWeight: 600, letterSpacing: "-0.035em", color: "#111515", textWrap: "balance" }}>Kjøpt bruktbil med feil eller mangler?</h1>
+              <p style={{ margin: 0, fontSize: "clamp(17px, 1.4vw, 18.5px)", lineHeight: 1.6, color: "#465150", textWrap: "pretty" }}>
+                Sjekk gratis om du har en sak. Har du det, får du et ferdig reklamasjonsbrev som dette, fylt ut fra svarene dine.
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 420 }}>
+              <Link
+                href="/sak?start"
+                className="lp-pri lp-cta"
+                style={{ height: 60, padding: "0 22px 0 26px", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em", textDecoration: "none", whiteSpace: "nowrap", boxShadow: "0 1px 0 rgba(255,255,255,.4) inset, 0 14px 30px -16px rgba(214,150,30,.75)" }}
+              >
+                Sjekk saken din gratis
+                <span style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(15,27,45,.08)", display: "grid", placeItems: "center", flex: "none" }}>
+                  <Pil s={17} w={2.2} />
+                </span>
+              </Link>
+              <span style={{ padding: "2px 4px 0", fontSize: 15, color: "#111515" }}>
+                Ferdig reklamasjonsbrev, kun <span style={{ fontWeight: 600 }}>kr {tall(PRIS)}</span>
+              </span>
+            </div>
+            <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", borderBottom: "1px solid #E3E6E8" }}>
               {PUNKTER.map((t, i) => (
-                <li key={t} style={{ display: "flex", alignItems: "flex-start", gap: 14, fontSize: 16.5, lineHeight: 1.45, color: "#111515" }}>
-                  <span style={{ flex: "none", width: 24, height: 24, marginTop: 1, borderRadius: "50%", background: BLA, color: "#FFFFFF", display: "grid", placeItems: "center", fontSize: 13, fontWeight: 600 }}>{i + 1}</span>
+                <li key={t} style={{ display: "grid", gridTemplateColumns: "28px minmax(0, 1fr)", gap: 14, alignItems: "baseline", padding: "13px 0", borderTop: "1px solid #E3E6E8", fontSize: 15.5, lineHeight: 1.5, color: "#2A3433" }}>
+                  <span style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 500, color: BLA }}>{String(i + 1).padStart(2, "0")}</span>
                   <span style={{ textWrap: "pretty" }}>{t}</span>
                 </li>
               ))}
             </ol>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12, paddingTop: 8 }}>
-              <Sjekk storrelse={56} />
-              <span style={{ fontSize: 14.5, color: "#465150" }}>Brevet koster kr {tall(PRIS)}. Du betaler først etter vurderingen.</span>
-            </div>
           </div>
           <HeroBrev />
         </section>
@@ -277,7 +287,7 @@ export default async function Home() {
           <div style={{ maxWidth: 1200, margin: "0 auto", padding: "clamp(56px, 7vw, 96px) clamp(24px, 5vw, 64px)", borderRadius: 32, background: BLA, display: "flex", flexDirection: "column", alignItems: "center", gap: 18, textAlign: "center" }}>
             <h2 style={{ margin: 0, fontSize: "clamp(34px, 4.4vw, 54px)", lineHeight: 1.06, fontWeight: 600, letterSpacing: "-0.04em", color: "#FFFFFF" }}>Sjekk saken din i dag</h2>
             <p style={{ margin: 0, maxWidth: 520, fontSize: 18, lineHeight: 1.6, color: "#D5DEEA", textWrap: "pretty" }}>Jo før du sier fra, jo sterkere står du. Saksvurderingen tar rundt to minutter og er gratis.</p>
-            <Sjekk storrelse={58} hvit />
+            <Sjekk storrelse={58} skygge="0 14px 30px -14px rgba(0,0,0,.45)" />
           </div>
         </section>
       </main>

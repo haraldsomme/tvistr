@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { inneHint } from "@/lib/innlogging/navn";
+import { Bruker } from "./ikoner";
 
 const ramme = { height: 42, padding: "0 16px", borderRadius: 12, border: "1px solid #CDD5D2", background: "#FFFFFF", color: "#465150", fontSize: 14, fontWeight: 550, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", textDecoration: "none" } as const;
 // On the landing page: a plain link in the header, and a row in the dropdown menu on narrow screens.
@@ -28,7 +29,8 @@ export function Konto({ variant = "ramme", onVelgAction }: { variant?: keyof typ
   const inne = useInne();
   const { className, style } = STIL[variant];
   return inne ? (
-    <Link href="/min-side" className={className} style={style} onClick={onVelgAction}>
+    <Link href="/min-side" className={className} style={{ ...style, gap: 8 }} onClick={onVelgAction}>
+      <Bruker s={18} />
       Min side
     </Link>
   ) : (

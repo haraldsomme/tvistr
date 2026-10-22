@@ -61,14 +61,17 @@ function sladdDeler(inn: Del[]): Del[] {
       }
     }
   }
-  // Drop the empty pieces and merge neighbouring hidden runs.
-  return ut.reduce<Del[]>((acc, d) => {
-    const forrige = acc.at(-1);
-    if (typeof d === "string" ? d === "" : "skjult" in d && d.skjult === 0) return acc;
-    if (typeof d === "object" && "skjult" in d && typeof forrige === "object" && "skjult" in forrige) acc[acc.length - 1] = { skjult: forrige.skjult + d.skjult };
-    else acc.push(d);
-    return acc;
-  }, []);
+  // Drop the empty pieces and merge neighbouring hidden runs, then send each run's length only roughly
+  // (up to the nearest ten), so the exact length of the hidden text does not leave the server either.
+  return ut
+    .reduce<Del[]>((acc, d) => {
+      const forrige = acc.at(-1);
+      if (typeof d === "string" ? d === "" : "skjult" in d && d.skjult === 0) return acc;
+      if (typeof d === "object" && "skjult" in d && typeof forrige === "object" && "skjult" in forrige) acc[acc.length - 1] = { skjult: forrige.skjult + d.skjult };
+      else acc.push(d);
+      return acc;
+    }, [])
+    .map((d) => (typeof d === "object" && "skjult" in d ? { skjult: Math.ceil(d.skjult / 10) * 10 } : d));
 }
 
 // Block for block, so an index means the same block before and after.

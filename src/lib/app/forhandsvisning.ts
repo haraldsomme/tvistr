@@ -17,7 +17,7 @@ export function forhandsvisning(s: Skjema, kort: Vedtakskort | null, idag: strin
   const B = sladd(byggBrev({ ...syncAreas(s), l_tone: "saklig", l_date: idag, k_days: "14" }, kort ? "venter" : null, idag));
   if (!kort) return B;
   const tekst: Del[] = [
-    { skjult: 38 },
+    { skjult: 40 },
     " ",
     { felt: "vedtak.bil", tekst: kort.bil },
     ". ",

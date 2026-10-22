@@ -72,9 +72,20 @@ describe("forhandsvis", () => {
     expect(await forhandsvis({ utkast: { skjema } })).toEqual({ ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." });
   });
 
-  it("gir en melding når databasen feiler", async () => {
+  it("gir brevet uten lignende saker når databasen feiler", async () => {
+    const logg = vi.spyOn(console, "error").mockImplementation(() => {});
     lignendeFor.mockRejectedValueOnce(new Error("nede"));
-    expect(await forhandsvis({ utkast: { skjema } })).toEqual({ ok: false, melding: "Noe gikk galt. Prøv igjen." });
+    const r = await forhandsvis({ utkast: { skjema } });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.lignende).toBeNull();
+    expect(r.blokker.length).toBeGreaterThan(0);
+    // Without a card the letter has no decision to name.
+    expect(JSON.stringify(r.blokker)).not.toContain("Toyota RAV4 2019");
+    // Only the error's message is logged, never the answers.
+    expect(logg).toHaveBeenCalledWith(expect.any(String), "nede");
+    expect(JSON.stringify(logg.mock.calls)).not.toContain(skjema.c_reg);
+    logg.mockRestore();
   });
 });
 

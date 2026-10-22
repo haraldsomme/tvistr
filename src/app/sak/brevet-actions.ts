@@ -36,8 +36,15 @@ export async function forhandsvis(inn: { utkast: unknown }): Promise<Forhandsvis
   if (!utkast) return { ok: false, melding: "Noe er galt med svarene. Prøv igjen." };
   try {
     const svar = utkastTilSvar(utkast);
-    // A case the letter does not cover gets no decisions to compare with.
-    const lignende = svar && utkastResultat(utkast, dag).tier !== "utenfor" ? await lignendeFor(svar) : null;
+    // A case the letter does not cover gets no decisions to compare with. When the database fails, the
+    // preview is built without them (only the error's message is logged, never the answers).
+    const lignende =
+      svar && utkastResultat(utkast, dag).tier !== "utenfor"
+        ? await lignendeFor(svar).catch((e: unknown) => {
+            console.error("lignende saker feilet", e instanceof Error ? e.message : String(e));
+            return null;
+          })
+        : null;
     return { ok: true, blokker: forhandsvisning(utkast.skjema, lignende?.kort[0] ?? null, dag), lignende };
   } catch (e) {
     console.error("forhåndsvisningen feilet", e instanceof Error ? e.message : e);
@@ -54,7 +61,7 @@ const tekstEllerNull = (v: unknown, maks: number): v is string | null => v === n
 const tallEllerNull = (v: unknown): v is number | null => v === null || (typeof v === "number" && Number.isFinite(v));
 const boolEllerNull = (v: unknown): v is boolean | null => v === null || typeof v === "boolean";
 
-// The decision the letter cites, as the browser sends it back from finnVedtak: «venter», none, or a
+// The decision the letter cites, as the browser sends it back from «Lignende vedtak»: «venter», none, or a
 // Presedens checked field by field. Undefined when it is anything else. Only the known fields are kept.
 function rensPresedens(v: unknown): Presedens | "venter" | null | undefined {
   if (v === null || v === "venter") return v;
@@ -89,7 +96,7 @@ function rensPresedens(v: unknown): Presedens | "venter" | null | undefined {
   return { id, saksnummer, vedtaksdato, bil, utfall, avsnitt, kildeUrl, utvalg, anbefalt, niva, gjaldt, km, alder, somDenEr, likhet, treff: treff as Record<Kriterium, Treff> };
 }
 
-// `presedens` is the decision picked in «Lignende vedtak», or «venter» while finnVedtak is still looking.
+// `presedens` is the decision picked in «Lignende vedtak», or «venter» while the list is still being fetched.
 export async function fulltBrev(inn: { id: unknown; skjema: unknown; presedens: unknown }): Promise<FulltBrev> {
   if (forMangeBrev(await ipAdresse())) return FOR_MANGE;
   try {

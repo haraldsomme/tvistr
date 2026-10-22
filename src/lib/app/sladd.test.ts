@@ -47,6 +47,12 @@ describe("sladd", () => {
     });
   });
 
+  it("skjult lengde er omtrentlig: rundet opp til nærmeste ti", () => {
+    const lengder = [...json.matchAll(/"skjult":(\d+)/g)].map((m) => Number(m[1]));
+    expect(lengder.length).toBeGreaterThan(0);
+    for (const n of lengder) expect(n % 10).toBe(0);
+  });
+
   it("forkortelser deler ikke setninger", () => {
     const [p] = sladd([{ t: "p", tekst: ["Jeg krever retting, jf. § 29 første ledd. Rettingen skal skje uten kostnad."] }]);
     expect(p.t === "p" && p.tekst[0]).toBe("Jeg krever retting, jf. § 29 første ledd. ");
@@ -56,12 +62,12 @@ describe("sladd", () => {
 
   it("senere setninger skjules, svarene i dem står", () => {
     const [p] = sladd([{ t: "p", tekst: ["Første setning her. Andre ", { felt: "c_reg", tekst: "EL 1" }, " setning. Tredje."] }]);
-    expect(p).toEqual({ t: "p", tekst: ["Første setning her. ", { skjult: 6 }, { felt: "c_reg", tekst: "EL 1" }, { skjult: 17 }] });
+    expect(p).toEqual({ t: "p", tekst: ["Første setning her. ", { skjult: 10 }, { felt: "c_reg", tekst: "EL 1" }, { skjult: 20 }] });
   });
 
   it("én setning: første halvdel av ordene står", () => {
     const [p] = sladd([{ t: "p", tekst: ["en to tre fire fem"] }]);
-    expect(p).toEqual({ t: "p", tekst: ["en to tre ", { skjult: 8 }] });
+    expect(p).toEqual({ t: "p", tekst: ["en to tre ", { skjult: 10 }] });
   });
 
   it("bare svar og plassholdere er uendret, og andre blokker går rett gjennom", () => {
@@ -75,6 +81,6 @@ describe("sladd", () => {
 
   it("prec skjules avsnitt for avsnitt", () => {
     const [p] = sladd([{ t: "prec", avsnitt: [["Én to. Tre fire."], ["fem seks"]] }]);
-    expect(p).toEqual({ t: "prec", avsnitt: [["Én to. ", { skjult: 9 }], ["fem ", { skjult: 4 }]] });
+    expect(p).toEqual({ t: "prec", avsnitt: [["Én to. ", { skjult: 10 }], ["fem ", { skjult: 10 }]] });
   });
 });

@@ -50,27 +50,10 @@ export function BlokkEl({ b }: { b: Blokk }) {
       return <p className="l-h"><Deler d={b.tekst} /></p>;
     case "p":
       return <p><Deler d={b.tekst} /></p>;
-    case "ul":
-      return <ul className="l-ul">{b.punkter.map((d, j) => <li key={j}><Deler d={d} /></li>)}</ul>;
     case "ol":
       return <ol>{b.punkter.map((d, j) => <li key={j}><Deler d={d} /></li>)}</ol>;
     case "prec":
       return <div className="l-prec">{b.avsnitt.map((d, j) => <p key={j}><Deler d={d} /></p>)}</div>;
-    case "exp":
-      return (
-        <ul className="l-exp">
-          {b.rader.map(([a, c], j) => (
-            <li key={j}>
-              <span><Deler d={a} /></span>
-              <span>{c}</span>
-            </li>
-          ))}
-          <li className="tot">
-            <span>Sum</span>
-            <span>{b.sum}</span>
-          </li>
-        </ul>
-      );
   }
 }
 

@@ -141,7 +141,7 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   await expect(prec).toContainText("http");
   await expect(brev).toContainText("Praksis fra");
   // The letter's own conclusion after the decision's paragraph.
-  await expect(brev).toContainText(/Min sak bør vurderes på samme måte|Min sak står minst like sterkt/);
+  await expect(brev).toContainText("Min sak bør derfor vurderes på samme måte");
   const for_ = await prec.innerText();
 
   // «Vedtaket» opens «Lignende vedtak»: up to ten, the recommended first; another pick changes the letter on «Ferdig».

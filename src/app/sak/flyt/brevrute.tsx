@@ -18,13 +18,10 @@ function delerAv(b: Blokk): Del[][] {
     case "addr":
     case "sign":
       return b.linjer;
-    case "ul":
     case "ol":
       return b.punkter;
     case "prec":
       return b.avsnitt;
-    case "exp":
-      return b.rader.map(([d]) => d);
     default:
       return [b.tekst];
   }

@@ -64,7 +64,7 @@ export function oppsummering(id: string, skjema: Skjema): string {
   }
 }
 
-const LAAST_BIL = "Bilen er låst fordi brevet gjelder bilen du betalte for. Km-stand kan du endre her, overtakelsesdatoen under Kjøpet.";
+const LAAST_BIL = "Bilen er låst fordi brevet gjelder bilen du betalte for. Km-stand kan du endre her, kjøpsdatoen under Kjøpet.";
 
 // The fields of each row that opens, with the car locked and the «som den er» switch in Kjøpet.
 const STEG: Record<string, (p: StegProps) => ReactNode> = {

@@ -35,6 +35,11 @@ describe("evaluate", () => {
 
 describe("wsFactors", () => {
   it("rapport som sier levering", () => expect(wsFactors({ ws: "rapport", ws_says: ["levering"] })[0].s).toBe("good"));
+  it("uten rapport: nøytral, og sier om svarene står i brevet", () => {
+    expect(wsFactors({ ws: "uten", ws_says: ["bekrefter"] })[0]).toMatchObject({ s: "info", t: "Verkstedet har sett på feilen" });
+    expect(wsFactors({ ws: "uten", ws_says: ["bekrefter"] })[0].d).toContain("står i brevet");
+    expect(wsFactors({ ws: "uten", ws_says: [] })[0].d).toContain("Kryss av");
+  });
   it("selger opplyste om feilen før 2024: rødt (gamle § 16 tredje ledd)", () => expect(wsFactors({ seller_said: "opplyste", c_purchase: "2023-06-01" }).some((f) => f.s === "bad")).toBe(true));
   it("selger opplyste om feilen fra 2024: gult, bare et avtalt unntak teller (§ 15 annet ledd)", () => {
     const f = wsFactors({ seller_said: "opplyste", c_delivery: "2024-06-01" }).find((x) => x.t === "Selger opplyste om feilen")!;

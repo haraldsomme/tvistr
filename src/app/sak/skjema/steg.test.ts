@@ -49,7 +49,7 @@ describe("stegFor", () => {
     ["Alvorlig feil", "virkning"],
     ["Verkstedrapport støtter saken", "verksted"],
     ["Ingen verkstedrapport ennå", "verksted"],
-    ["Be om en skriftlig rapport", "verksted"],
+    ["Verkstedet har sett på feilen", "verksted"],
     ["Du sa fra i tide", "sagt_fra"],
     ["Du er i tide", "sagt_fra"],
     ["Det har gått mer enn to måneder", "sagt_fra"],

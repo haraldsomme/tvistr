@@ -9,7 +9,7 @@ export type Seksjon = { id: string; navn: string; tittel: string; hint?: string;
 
 export const FOR: Seksjon[] = [
   { id: "bilen", navn: "Bilen", tittel: "Hvilken bil gjelder det?", hint: "Vi henter merke, modell og når bilen sist ble registrert.", felt: ["c_make", "c_model", "c_year", "c_reg", "c_km"] },
-  { id: "kjopet", navn: "Kjøpet", tittel: "Kjøpet", hint: "Hent opplysningene fra kjøpekontrakten. Overtakelsesdatoen er utgangspunktet for alle fristene.", felt: ["c_delivery", "c_price"] },
+  { id: "kjopet", navn: "Kjøpet", tittel: "Kjøpet", hint: "Hent opplysningene fra kjøpekontrakten. Kjøpsdatoen er utgangspunktet for alle fristene.", felt: ["c_delivery", "c_price"] },
   { id: "feilen", navn: "Feilen", tittel: "Hva gjelder reklamasjonen?", hint: "Velg alle områdene der du har funnet feil. Du kan velge flere.", felt: ["f_cats"] },
   { id: "omrader", navn: "Om feilen", tittel: "Hva er feil med bilen?", hint: "Vær konkret og hold deg til fakta. En presis beskrivelse gjør det vanskeligere å avvise saken.", felt: ["f_found", "f_any_desc"] },
   { id: "virkning", navn: "Hvordan feilen påvirker deg", tittel: "Hvordan påvirker feilene deg?", hint: "Velg alt som passer. Er feilen bare kosmetisk, velger du bare det.", felt: ["f_impact"] },
@@ -28,7 +28,7 @@ export const FOR: Seksjon[] = [
 export const ETTER: Seksjon[] = [
   { id: "deg", navn: "Deg", tittel: "Deg", hint: "Du er avsender av brevet.", felt: ["b_name", "b_addr", "b_zip", "b_city", "b_phone", "b_email"] },
   { id: "forhandleren", navn: "Forhandleren", tittel: "Forhandleren", hint: "Brevet går til forhandleren du kjøpte bilen av, også når feilen kommer fra fabrikken.", felt: ["d_name", "d_org", "d_addr", "d_zip", "d_city"] },
-  { id: "brevet", navn: "Vedlegg", tittel: "Hva legger du ved brevet?", hint: "Verkstedrapporten og kvitteringene for utgiftene føres opp av seg selv.", felt: [] },
+  { id: "brevet", navn: "Vedlegg", tittel: "Hva legger du ved brevet?", hint: "Verkstedrapporten er krysset av når du har en. Fjern krysset hvis du ikke legger den ved. Kvitteringene for utgiftene føres opp av seg selv.", felt: [] },
 ];
 // All sections in the letter's order: sender and recipient, the content, then the letter's settings.
 export const ALLE: Seksjon[] = [...ETTER.slice(0, 2), ...FOR, ...ETTER.slice(2)];
@@ -37,7 +37,7 @@ export const seksjon = (id: string): Seksjon => ALLE.find((s) => s.id === id)!;
 export const ETIKETT: Record<string, string> = {
   b_name: "Navn", b_addr: "Adresse", b_zip: "Postnr.", b_city: "Poststed", b_phone: "Telefon", b_email: "E-post",
   d_name: "Firmanavn", d_org: "Org.nr.", d_addr: "Adresse", d_zip: "Postnr.", d_city: "Poststed",
-  c_make: "Merke", c_model: "Modell", c_year: "Årsmodell", c_reg: "Reg.nr.", c_purchase: "Kjøpsdato", c_delivery: "Overtakelsesdato", c_price: "Kjøpesum", c_km: "Km-stand",
+  c_make: "Merke", c_model: "Modell", c_year: "Årsmodell", c_reg: "Reg.nr.", c_purchase: "Kjøpsdato", c_delivery: "Kjøpsdato", c_price: "Kjøpesum", c_km: "Km-stand",
   f_cats: "Deler", f_found: "Dato oppdaget", f_any_desc: "Beskrivelse av feilen", f_impact: "Hvordan feilen påvirker deg", ws: "Verkstedundersøkelse", seller_said: "Hva selger sa før kjøpet", k_main: "Hovedkrav", k_forsok: "Rettingsforsøk", k_cost: "Utbedringskostnad",
 };
 

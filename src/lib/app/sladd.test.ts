@@ -74,7 +74,7 @@ describe("sladd", () => {
     const inn = [
       { t: "p" as const, tekst: [{ felt: "c_reg", tekst: "EL 1" }, { ph: "kjøpesum" }] },
       { t: "h" as const, tekst: ["Mangelen ved bilen. Krav og frister"] },
-      { t: "ul" as const, punkter: [["Lang tekst i et punkt. Med to setninger."]] },
+      { t: "ol" as const, punkter: [["Lang tekst i et punkt. Med to setninger."]] },
     ];
     expect(sladd(inn)).toEqual(inn);
   });

@@ -175,9 +175,6 @@ input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;b
 .l-subj{font-weight:700;margin:0 0 .1em!important}
 .l-h{font-weight:700;margin:1.6em 0 .1em!important}
 .letter ol{margin:0 0 .95em;padding-left:1.3em}
-.l-exp{list-style:none;padding:0;margin:0 0 .95em;max-width:28em}
-.l-exp li{display:flex;justify-content:space-between;gap:16px;padding:.15em 0;font-variant-numeric:tabular-nums}
-.l-exp li.tot{margin-top:.3em;padding-top:.3em;border-top:1px solid var(--paper-ink)}
 .l-sign{margin-top:2.2em!important}
 .ph{background:var(--ph-bg);color:var(--ph-ink);border-radius:3px;padding:.05em .35em;font-size:.92em;white-space:nowrap}
 
@@ -286,8 +283,6 @@ details.fold > summary h3{font-size:15px;font-weight:600;letter-spacing:-.01em}
 .fold-c{transition:transform .3s var(--ease);color:var(--ink-2)}
 details.fold[open] .fold-c{transform:rotate(180deg)}
 details.fold[open] > summary{margin-bottom:16px}
-.letter ul.l-ul{margin:0 0 .95em;padding-left:1.2em;list-style-type:"–  "}
-.letter ul.l-ul li{margin:.3em 0}
 
 /* ───── Multi-choice + auto-advance ───── */
 

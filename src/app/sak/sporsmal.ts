@@ -34,7 +34,7 @@ export const SKJERMER: Skjerm[] = [
   },
   // Never blocks: the purchase needs the reg.nr. and the make, and the result says so with a link back.
   { id: "bilen", gruppe: "Kjøpet", ...som("bilen"), ferdig: () => true },
-  { id: "kjopet", gruppe: "Kjøpet", ...som("kjopet"), ferdig: (u) => !!(u.skjema.c_purchase || u.skjema.c_delivery), mangler: () => "Legg inn når du overtok bilen." },
+  { id: "kjopet", gruppe: "Kjøpet", ...som("kjopet"), ferdig: (u) => !!(u.skjema.c_purchase || u.skjema.c_delivery), mangler: () => "Legg inn når du kjøpte bilen." },
   { id: "forbehold", gruppe: "Kontrakten", tittel: "Står det «som den er» i kontrakten?", hint: "Se etter formuleringer som «solgt som den er» eller «som besiktiget».", ferdig: (u) => u.asis !== undefined, mangler: () => "Velg et svar." },
   { id: "feil", gruppe: "Feilen", ...som("feilen"), ferdig: (u) => u.skjema.f_cats.length > 0, mangler: () => "Velg minst én feil." },
   {

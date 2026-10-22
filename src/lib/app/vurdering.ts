@@ -95,7 +95,7 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
         F.push({ s: "good", t: `Feilen viste seg innen ${L.formodningTekst}`, d: `Feilen viste seg ${d} etter overtakelsen. Da regnes den som hovedregel for å ha vært der fra start, og det er forhandleren som må bevise noe annet.`, law: L.ref("formodning") });
       else F.push({ s: "warn", t: `Mer enn ${q.found! > plussManeder(q.delivery!, 24) ? "to år" : L.formodningTekst} etter overtakelsen`, d: "Du er innenfor femårsfristen for bil, men må selv sannsynliggjøre at feilen skyldes forhold ved leveringen.", law: L.ref("reklamasjon_5ar") });
     }
-  } else if (!fremtid) F.push({ s: "warn", t: "Datoene mangler", d: "Uten overtakelsesdato og dato for når feilen ble oppdaget, kan vi ikke vurdere fristene. Vurderingen er derfor foreløpig." });
+  } else if (!fremtid) F.push({ s: "warn", t: "Datoene mangler", d: "Uten kjøpsdato og dato for når feilen ble oppdaget, kan vi ikke vurdere fristene. Vurderingen er derfor foreløpig." });
 
   // Dates that cannot all be right.
   const avvik = [
@@ -158,7 +158,11 @@ const WS_FAKTOR = {
     t: "Verkstedrapport støtter saken",
     d: says.includes("levering") ? "Rapporten sier at feilen var til stede ved levering. Det er sterk dokumentasjon. Legg den ved brevet." : says.length ? "Legg ved rapporten når du sender brevet." : "Kryss av hva rapporten sier, så bruker vi det i brevet.",
   }),
-  uten: (): Faktor => ({ s: "info", t: "Be om en skriftlig rapport", d: "Verkstedet har sett på bilen. En skriftlig rapport som beskriver feilen og årsaken, gjør saken sterkere." }),
+  uten: (says: string[]): Faktor => ({
+    s: "info",
+    t: "Verkstedet har sett på feilen",
+    d: `${says.length ? "Det verkstedet sa, står i brevet." : "Kryss av hva verkstedet sa, så bruker vi det i brevet."} En skriftlig rapport gjør saken sterkere, og forhandleren kan be om å se den.`,
+  }),
   nei: (): Faktor => ({ s: "info", t: "Ingen verkstedrapport ennå", d: "En rapport fra et uavhengig verksted som beskriver feilen og årsaken, gjør saken mye sterkere." }),
 };
 

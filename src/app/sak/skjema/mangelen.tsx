@@ -3,7 +3,7 @@
 // complaint, as blocks for a page to place under its own heading.
 import { FeilIkon, FeilListe } from "@/app/deler/feilliste";
 import { relText } from "@/lib/app/dato";
-import { DOCS_VALG, IKKE_SVART, IMPACT, impactToggle, type Omrade, SVAR, svarToggle } from "@/lib/app/skjema";
+import { docsValg, IKKE_SVART, IMPACT, impactToggle, type Omrade, SVAR, svarToggle } from "@/lib/app/skjema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { Felt, Kortliste, type StegProps, Valgliste, Vis } from "./felt";
 
@@ -16,6 +16,14 @@ const RAPPORT = [
   ["ikke_slitasje", "Feilen er ikke normal slitasje"],
   ["frarader", "Fraråder bruk av bilen"],
   ["kostnad", "Inneholder et kostnadsoverslag"],
+] as const;
+// What the workshop said without a report: the same answers, in the past tense, and no estimate.
+const SAGT = [
+  ["bekrefter", "Bekreftet feilen"],
+  ["aarsak", "Fant årsaken"],
+  ["levering", "Feilen har utviklet seg over tid eller var til stede ved levering"],
+  ["ikke_slitasje", "Feilen er ikke normal slitasje"],
+  ["frarader", "Frarådet bruk av bilen"],
 ] as const;
 const veksle = (liste: string[], v: string, pa: boolean) => (pa ? [...liste.filter((x) => x !== v), v] : liste.filter((x) => x !== v));
 
@@ -101,6 +109,8 @@ export function Virkning({ s, sett }: StegProps) {
 
 // «Er feilen undersøkt av et verksted?», asked by the page.
 export function Verksted({ s, sett }: StegProps) {
+  const rapport = s.ws === "rapport";
+  const valg = rapport ? RAPPORT : SAGT;
   return (
     <div className="block">
       <Kortliste
@@ -111,7 +121,15 @@ export function Verksted({ s, sett }: StegProps) {
           ["uten", "Ja, men uten rapport", "Verkstedet har sett på bilen"],
           ["nei", "Nei"],
         ]}
-        onVelg={(ws) => sett({ ws })}
+        // A report is ticked as an attachment when the buyer says they have one; they can untick it.
+        // Without a report there is no estimate to keep.
+        onVelg={(ws) =>
+          sett({
+            ws,
+            f_docs: ws === s.ws ? s.f_docs : veksle(s.f_docs, "verksted", ws === "rapport"),
+            ws_says: ws === "uten" ? s.ws_says.filter((x) => x !== "kostnad") : s.ws_says,
+          })
+        }
       />
       <Vis pa={s.ws === "rapport" || s.ws === "uten"}>
         <div className="rv-in">
@@ -121,15 +139,21 @@ export function Verksted({ s, sett }: StegProps) {
           <div className="grid">
             <Felt s={s} sett={sett} k="ws_name" label="Verkstedets navn" klasse="c4" placeholder="Bilservice Sandvika AS" />
           </div>
-          <Vis pa={s.ws === "rapport"}>
-            <div className="f" style={{ marginTop: 18 }}>
-              <span className="lb">Hva sier rapporten?</span>
-              <span className="hint" style={{ margin: "-2px 0 8px" }}>
-                Kryss bare av det rapporten faktisk sier. Forhandleren kan be om å få se den.
-              </span>
-              <Kortliste flere navn="Hva sier rapporten?" verdi={s.ws_says} valg={RAPPORT} onVelg={(v, pa) => sett({ ws_says: RAPPORT.map(([x]) => x).filter((x) => (x === v ? pa : s.ws_says.includes(x))) })} />
-            </div>
-            <div style={{ marginTop: 18 }}>
+          <div className="f" style={{ marginTop: 18 }}>
+            <span className="lb">{rapport ? "Hva sier rapporten?" : "Hva sa verkstedet?"}</span>
+            <span className="hint" style={{ margin: "-2px 0 8px" }}>
+              {rapport ? "Kryss bare av det rapporten faktisk sier. Forhandleren kan be om å få se den." : "Kryss bare av det verkstedet faktisk sa. Forhandleren kan kontakte verkstedet."}
+            </span>
+            <Kortliste
+              flere
+              navn={rapport ? "Hva sier rapporten?" : "Hva sa verkstedet?"}
+              verdi={s.ws_says}
+              valg={valg}
+              onVelg={(v, pa) => sett({ ws_says: valg.map(([x]) => x).filter((x) => (x === v ? pa : s.ws_says.includes(x))) })}
+            />
+          </div>
+          <div style={{ marginTop: 18 }}>
+            {rapport ? (
               <Felt
                 s={s}
                 sett={sett}
@@ -139,8 +163,18 @@ export function Verksted({ s, sett }: StegProps) {
                 placeholder="For eksempel: «Feilkoder viser defekt batterimodul. Feilen skyldes ikke ytre påvirkning.»"
                 hint="Skriv av rapportens konklusjon ordrett, gjerne én til tre setninger. Legg ved rapporten når du sender brevet."
               />
-            </div>
-          </Vis>
+            ) : (
+              <Felt
+                s={s}
+                sett={sett}
+                k="ws_quote"
+                label={<>Hva verkstedet sa, med dine ord <em>valgfritt</em></>}
+                flerlinje={96}
+                placeholder="For eksempel: «En battericelle er defekt. Det er ikke vanlig slitasje på en bil med så lav kjørelengde.»"
+                hint="Gjengi så nøyaktig du kan det verkstedet sa, gjerne én til tre setninger."
+              />
+            )}
+          </div>
         </div>
       </Vis>
     </div>
@@ -151,7 +185,7 @@ export function Verksted({ s, sett }: StegProps) {
 export function Vedlegg({ s, sett }: StegProps) {
   return (
     <div className="block">
-      <Valgliste flere bredde={190} navn="f_docs" verdi={s.f_docs} valg={DOCS_VALG} onVelg={(v, pa) => sett({ f_docs: veksle(s.f_docs, v, pa) })} />
+      <Valgliste flere bredde={190} navn="f_docs" verdi={s.f_docs} valg={docsValg(s)} onVelg={(v, pa) => sett({ f_docs: veksle(s.f_docs, v, pa) })} />
     </div>
   );
 }
@@ -190,8 +224,8 @@ export function SagtFra({ s, sett }: StegProps) {
         navn="Har du sagt fra til forhandleren?"
         verdi={s.f_prior ? "ja" : "nei"}
         valg={[
-          ["ja", "Ja, jeg har sagt fra", "Muntlig eller skriftlig"],
           ["nei", "Nei, ikke ennå", "Brevet blir reklamasjonen din"],
+          ["ja", "Ja, jeg har sagt fra", "Muntlig eller skriftlig"],
         ]}
         onVelg={(v) => sett({ f_prior: v === "ja" })}
       />

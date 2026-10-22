@@ -9,9 +9,8 @@ export type Del = string | { ph: string } | { felt: string; tekst: string } | { 
 export type Blokk =
   | { t: "addr" | "sign"; linjer: Del[][] }
   | { t: "date" | "subj" | "h" | "p"; tekst: Del[] }
-  | { t: "ul" | "ol"; punkter: Del[][] }
-  | { t: "prec"; avsnitt: Del[][] }
-  | { t: "exp"; rader: [Del[], string][]; sum: string };
+  | { t: "ol"; punkter: Del[][] }
+  | { t: "prec"; avsnitt: Del[][] };
 
 // One of the (up to ten) decisions the letter can cite, as finnVedtak returns it after payment.
 export type Presedens = {

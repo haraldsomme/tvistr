@@ -63,19 +63,19 @@ export function eksempel(idag: string): Skjema {
     ws: "rapport", ws_name: "Volkswagen Sandvika", ws_says: ["bekrefter", "aarsak", "ikke_slitasje"],
     seller_said: "lovet", seller_txt: "Batteriet har full kapasitet",
     f_prior: true, f_prior_date: d(12), f_prior_svar: ["se_an"],
-    f_docs: ["kontrakt", "bilder"],
+    f_docs: ["kontrakt", "verksted", "bilder"],
     k_main: "retting", k_alt: "heving", k_exp: true, exp: [{ t: "Feilsøking hos merkeverksted", a: 1890 }, { t: "Leiebil i tre dager", a: 2850 }],
   };
 }
 
-// [id, chip label, hint, severity 1–5, the letter's words]
+// [id, chip label, hint, severity 1–5, the letter's words after «Feilen»]
 export const IMPACT = [
-  ["kosmetisk", "Bare kosmetisk", "Synlig, men påvirker ikke bruken", 1, "feilen er synlig"],
-  ["plagsom", "Plagsom", "Lyd, lukt, vibrasjoner eller annet som irriterer", 2, "feilen er plagsom i daglig bruk"],
-  ["bruk", "Påvirker bruken", "Du merker det når du kjører, eller må unngå noe", 3, "feilen merkes under kjøring og begrenser hvordan bilen kan brukes"],
-  ["palitelig", "Ikke til å stole på", "Svikter av og til, for eksempel ved start eller rekkevidde", 4, "bilen ikke er til å stole på"],
-  ["sikkerhet", "Går ut over sikkerheten", "For eksempel bremser, styring eller varsellamper", 4, "feilen går ut over sikkerheten"],
-  ["stopp", "Kan ikke brukes", "Den står, eller er ikke trygg å kjøre", 5, "bilen ikke kan brukes"],
+  ["kosmetisk", "Bare kosmetisk", "Synlig, men påvirker ikke bruken", 1, "er synlig"],
+  ["plagsom", "Plagsom", "Lyd, lukt, vibrasjoner eller annet som irriterer", 2, "er plagsom i daglig bruk"],
+  ["bruk", "Påvirker bruken", "Du merker det når du kjører, eller må unngå noe", 3, "merkes under kjøring og begrenser hvordan bilen kan brukes"],
+  ["palitelig", "Ikke til å stole på", "Svikter av og til, for eksempel ved start eller rekkevidde", 4, "gjør at bilen bare kan brukes i begrenset grad, og at jeg ikke kan stole på den i vanlig bruk"],
+  ["sikkerhet", "Går ut over sikkerheten", "For eksempel bremser, styring eller varsellamper", 4, "går ut over sikkerheten"],
+  ["stopp", "Kan ikke brukes", "Den står, eller er ikke trygg å kjøre", 5, "gjør at bilen ikke kan brukes"],
 ] as const;
 // «Bare kosmetisk» rules out the other choices.
 export const IMPACT_SOLO = "kosmetisk";
@@ -84,18 +84,21 @@ export function impactToggle(list: string[], v: string, on: boolean): string[] {
   return on ? (v === IMPACT_SOLO ? [v] : [...out.filter((x) => x !== IMPACT_SOLO), v]) : out;
 }
 export const DOCS = [["kontrakt", "Kjøpekontrakt"], ["verksted", "Verkstedrapport"], ["tilstand", "Tilstandsrapport"], ["bilder", "Bilder og video"], ["korr", "Korrespondanse"], ["kvitt", "Kvitteringer for utgifter"], ["annonse", "Salgsannonse"]] as const;
-// The documents the buyer ticks: the workshop report and the receipts are listed from other answers (vedlegg).
-export const DOCS_VALG = DOCS.filter(([id]) => id !== "verksted" && id !== "kvitt");
-// The attachments, in the form's order. A workshop report the letter says is attached is always listed,
-// and so are the receipts behind an expense claim (Forbrukerrådet: keep the receipts).
+// The documents the buyer ticks: the workshop report only when they have one (ticked when they say so,
+// see Verksted), the receipts are listed from the expense claim (vedlegg).
+export const docsValg = (s: Skjema) => DOCS.filter(([id]) => id !== "kvitt" && (id !== "verksted" || s.ws === "rapport"));
+// The letter says the report «følger vedlagt» only when the buyer has one and ticked it.
+export const rapportVedlagt = (s: Skjema) => s.ws === "rapport" && s.f_docs.includes("verksted");
+// The attachments, in the form's order, and the receipts behind an expense claim (Forbrukerrådet: keep
+// the receipts).
 export function vedlegg(s: Skjema): string[] {
   const ids = new Set(s.f_docs);
-  if (s.ws === "rapport") ids.add("verksted");
+  if (!rapportVedlagt(s)) ids.delete("verksted");
   if (s.k_exp && s.exp.some((x) => x.t || x.a)) ids.add("kvitt");
   return DOCS.filter(([id]) => ids.has(id)).map(([, navn]) => navn);
 }
-// The seller's answer to an earlier complaint: [id, chip label, the letter's words after «Svaret jeg
-// fikk, var at»]. The common objections follow Forbrukerrådet's klageguide («Vanlige spørsmål og svar»);
+// The seller's answer to an earlier complaint: [id, chip label, the letter's words after «svarte dere
+// at»; «avvist» is written «avviste dere reklamasjonen»]. The common objections follow Forbrukerrådet's klageguide («Vanlige spørsmål og svar»);
 // brev.ts answers each with the law (svarPaInnvendinger).
 export const SVAR = [
   ["slitasje", "Slitasje eller feil bruk", "feilen skyldes slitasje eller feil bruk"],
@@ -105,7 +108,7 @@ export const SVAR = [
   ["for_sent", "Klagen kom for sent", "reklamasjonen kom for sent"],
   ["som_den_er", "Bilen ble solgt «som den er»", "bilen ble solgt «som den er»"],
   ["avvist", "Avviste uten begrunnelse", "reklamasjonen ble avvist"],
-  ["se_an", "Ville se an", "de ville se an utviklingen"],
+  ["se_an", "Ville se an", "dere ville se an utviklingen"],
 ] as const;
 // The dealer has not answered: rules out the answers in SVAR, and the letter says so.
 export const IKKE_SVART = "ikke_svart";
@@ -120,6 +123,14 @@ export const WS_SAYS: Record<string, string> = {
   ikke_slitasje: "fastslår at feilen ikke skyldes normal slitasje",
   frarader: "fraråder videre bruk av bilen",
   kostnad: "inneholder et kostnadsoverslag for utbedring",
+};
+// What a workshop said without a report, after «Verkstedet har»; `opplyst` are joined after «opplyst meg om».
+export const WS_SAGT: Record<string, { gjort?: string; opplyst?: string }> = {
+  bekrefter: { gjort: "bekreftet feilen" },
+  aarsak: { gjort: "funnet årsaken til den" },
+  levering: { opplyst: "at feilen har utviklet seg over tid og var til stede ved leveringen" },
+  ikke_slitasje: { opplyst: "at feilen ikke skyldes normal slitasje" },
+  frarader: { gjort: "frarådet videre bruk av bilen" },
 };
 
 const sevOf = (arr: string[]) => Math.max(0, ...arr.map((k) => IMPACT.find((x) => x[0] === k)?.[3] ?? 0));

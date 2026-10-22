@@ -7,7 +7,7 @@ const B: Blokk[] = [
   { t: "subj", tekst: ["Reklamasjon på mangel ved ", { felt: "c_make", tekst: "Volkswagen" }, ", reg.nr. ", { felt: "c_reg", tekst: "EL 48213" }] },
   { t: "p", tekst: ["Kilometerstand ", { felt: "c_km", tekst: "84 000" }, " km. ", { skjult: 40 }] },
   { t: "h", tekst: ["Mangelen"] },
-  { t: "ul", punkter: [[{ felt: "f_catdesc.motor", tekst: "Motoren banker." }], [{ ph: "Beskrivelse" }]] },
+  { t: "p", tekst: [{ felt: "f_catdesc.motor", tekst: "Motoren banker." }, " ", { ph: "Beskrivelse" }] },
   { t: "h", tekst: ["Krav"] },
   { t: "p", tekst: ["Jeg krever retting. ", { felt: "c_reg", tekst: "EL 48213" }] },
 ];

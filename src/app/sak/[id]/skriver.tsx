@@ -40,20 +40,11 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
   // The sections answered after payment start open while they lack something.
   const [apen, settApen] = useState<ReadonlySet<string>>(() => new Set(ETTER.filter((st) => st.felt.some((k) => !har(start, k))).map((st) => st.id)));
   const [vindu, settVindu] = useState(false);
-  // The dialog's switch «Vis til en lignende sak», staged until «Ferdig» like the pick; null while closed.
-  const [precUtkast, settPrecUtkast] = useState<boolean | null>(null);
-  const apneVindu = () => {
-    settPrecUtkast(null);
-    settVindu(true);
-  };
-  const lukkVindu = () => {
-    settVindu(false);
-    settPrecUtkast(null);
-  };
+  const apneVindu = () => settVindu(true);
+  const lukkVindu = () => settVindu(false);
   // The decisions are looked up while no row that changes them is open (the sections before payment;
-  // sender, recipient and the letter's settings do not), or while the dialog is, also when its switch is
-  // only staged on.
-  const vedtak = useVedtak(s, sett, id, vindu || !FOR.some((st) => apen.has(st.id)), precUtkast ?? s.prec_on);
+  // sender, recipient and the attachments do not), or while the dialog is.
+  const vedtak = useVedtak(s, sett, id, vindu || !FOR.some((st) => apen.has(st.id)));
   const [toast, settToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -142,12 +133,6 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
       </div>
       <p className="fl-hjelp">
         Lim inn brevet i en e-post til forhandleren, eller skriv det ut og send det rekommandert. Legg ved vedleggene som står i brevet.
-        {s.d_email.trim() && (
-          <>
-            {" "}
-            Send til <b>{s.d_email.trim()}</b>.
-          </>
-        )}
       </p>
       {(avvik.length > 0 || rader.length > 0) && (
         <section className="fl-sjekk" aria-label="Sjekkliste">
@@ -178,10 +163,10 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
           tall={lignende.tall}
           kort={lignende.kort}
           sammenligning={lignende.sammenligning}
-          brukes={s.prec_on ? s.prec_id : null}
+          brukes={s.prec_id}
           fot={
             <>
-              {s.prec_on ? "Brevet viser til saken du har valgt, og forklarer hvorfor du har krav på samme resultat." : "Du har slått av henvisningen til en lignende sak i brevet."}{" "}
+              Brevet viser til saken du har valgt, og forklarer hvorfor du har krav på samme resultat.{" "}
               <button type="button" className="lnk" onClick={apneVindu}>
                 Velg vedtak
               </button>
@@ -195,7 +180,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
           Hva du kan gjøre hvis forhandleren avviser
         </a>
       </p>
-      {vindu && <Vedtaksvindu vedtak={vedtak} s={s} sett={sett} precOn={precUtkast ?? s.prec_on} settPrecOn={settPrecUtkast} onLukk={lukkVindu} />}
+      {vindu && <Vedtaksvindu vedtak={vedtak} sett={sett} onLukk={lukkVindu} />}
       <div className={`toast${toast ? " on" : ""}`} role="status" aria-live="polite">
         {toast}
       </div>

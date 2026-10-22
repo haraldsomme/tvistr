@@ -5,7 +5,7 @@ import { eksempel, syncAreas } from "./skjema";
 import { evaluate, skriverResultat, wsFactors } from "./vurdering";
 
 const idag = "2026-10-16";
-const base = { seller: "forhandler", buyer: "privat", asis: "nei", known: "nei", cause: "nei", notified: "nei" } as const;
+const base = { seller: "forhandler", buyer: "privat", asis: "nei", notified: "nei" } as const;
 const har = (r: ReturnType<typeof evaluate>, t: string) => r.factors.some((f) => f.t === t);
 
 describe("evaluate", () => {
@@ -18,7 +18,6 @@ describe("evaluate", () => {
   });
   it("innen seks måneder før 2024", () => expect(har(evaluate({ ...base, delivery: "2023-06-01", found: "2023-09-01" }, idag), "Feilen viste seg innen seks måneder")).toBe(true));
   it("grensen 1.1.2024", () => expect(har(evaluate({ ...base, delivery: "2024-01-01", found: "2024-09-01" }, idag), "Feilen viste seg innen to år")).toBe(true));
-  it("svak ved uhell", () => expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-10-01", cause: "uhell" }, idag).tier).toBe("svak"));
   it("fristen er ute", () => expect(har(evaluate({ ...base, delivery: "2020-01-01", found: "2026-01-01" }, idag), "Fristen er ute")).toBe(true));
   it.each(["privat", "leasing"] as const)("utenfor: selger %s", (s) => expect(evaluate({ seller: s }, idag).tier).toBe("utenfor"));
   it("utenfor: næring", () => expect(evaluate({ seller: "forhandler", buyer: "naering" }, idag).tier).toBe("utenfor"));
@@ -28,14 +27,6 @@ describe("evaluate", () => {
     expect(evaluate({ ...base, asis: "ja", delivery: "2023-06-01", found: "2023-07-01" }, idag).factors.find((f) => f.t === "Solgt «som den er»")?.law).toBe("forbrkjl. § 17 første ledd bokstav a"));
   it("som den er fra 2024 bruker § 15 annet ledd", () =>
     expect(evaluate({ ...base, asis: "ja", delivery: "2024-06-01", found: "2024-07-01" }, idag).factors.find((f) => f.t === "Solgt «som den er»")?.law).toBe("forbrkjl. § 15 annet ledd"));
-  it("kjent feil før 2024 er rødt, fra 2024 gult", () => {
-    expect(evaluate({ ...base, known: "opplyst", delivery: "2023-06-01", found: "2023-07-01" }, idag).factors.find((f) => f.t === "Du ble informert om feilen")?.s).toBe("bad");
-    const r = evaluate({ ...base, known: "opplyst", delivery: "2026-06-01", found: "2026-10-01" }, idag);
-    expect(r.factors.find((f) => f.t === "Du ble opplyst om feilen")?.s).toBe("warn");
-    expect(r.tier).toBe("mulig");
-  });
-  it("synlig feil fra 2024 knyttes til hva du kunne forvente", () =>
-    expect(evaluate({ ...base, known: "synlig", delivery: "2026-06-01", found: "2026-10-01" }, idag).factors.find((f) => f.t === "Feilen var synlig ved kjøpet")?.d).toContain("med rimelighet kunne forvente"));
   it("fristen ute nevner unntaket for grov uaktsomhet og uredelighet", () =>
     expect(evaluate({ ...base, delivery: "2020-01-01", found: "2026-01-01" }, idag).factors.find((f) => f.t === "Fristen er ute")?.d).toContain("grovt uaktsomt eller i strid med redelighet og god tro"));
   it("sender innen to måneder: i tide til fristen", () =>

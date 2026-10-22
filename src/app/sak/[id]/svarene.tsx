@@ -7,13 +7,13 @@ import { Opp } from "@/app/deler/ikoner";
 import { Bilen, Kjopet } from "@/app/sak/skjema/bilen";
 import type { Sett, StegProps } from "@/app/sak/skjema/felt";
 import { Krav } from "@/app/sak/skjema/krav";
-import { Omrader, SagtFra, SelgerSa, Verksted } from "@/app/sak/skjema/mangelen";
-import { Brevvalg, Deg, Forhandleren } from "@/app/sak/skjema/partene";
+import { Omrader, SagtFra, SelgerSa, Vedlegg, Verksted, Virkning } from "@/app/sak/skjema/mangelen";
+import { Deg, Forhandleren } from "@/app/sak/skjema/partene";
 import { ETTER, FOR, type Seksjon } from "@/app/sak/skjema/steg";
 import { fmtD } from "@/lib/app/dato";
 import { cap } from "@/lib/app/format";
 import { sakNavn, sakTekst } from "@/lib/app/saken";
-import { type Skjema, syncAreas } from "@/lib/app/skjema";
+import { IMPACT, type Skjema, syncAreas, vedlegg } from "@/lib/app/skjema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import type { Vedtaksvalg } from "./vedtaksvindu";
 
@@ -31,7 +31,7 @@ export function oppsummering(id: string, skjema: Skjema): string {
     case "forhandleren":
       return ledd(s.d_name.trim(), s.d_org && `org.nr. ${s.d_org}`);
     case "brevet":
-      return ledd([s.l_place.trim(), s.l_date && fmtD(s.l_date)].filter(Boolean).join(", "), s.l_tone && `${cap(s.l_tone)} tone`, s.k_days && `svarfrist ${s.k_days} dager`);
+      return ledd(vedlegg(s).join(", "));
     case "bilen":
       return ledd(`${s.c_make} ${s.c_model} ${s.c_year}`.trim(), s.c_reg);
     case "kjopet":
@@ -48,13 +48,15 @@ export function oppsummering(id: string, skjema: Skjema): string {
           .join(", "),
       );
     case "omrader":
-      return ledd(s.f_found && `Oppdaget ${fmtD(s.f_found)}`, [...s.f_cats.map((c) => s.f_catdesc[c] ?? ""), s.f_desc].map((t) => t.trim()).find(Boolean));
+      return ledd(s.f_found && `Oppdaget ${fmtD(s.f_found)}`, s.f_cats.map((c) => (s.f_catdesc[c] ?? "").trim()).find(Boolean));
+    case "virkning":
+      return ledd(IMPACT.filter(([v]) => s.f_impact.includes(v)).map(([, navn]) => navn).join(", "));
     case "verksted":
       return ledd(WS[s.ws], s.ws !== "nei" && s.ws_name.trim());
     case "selger_sa":
       return ledd(SAGT[s.seller_said]);
     case "sagt_fra":
-      return s.f_prior ? ledd(s.f_prior_date ? `Ja, ${fmtD(s.f_prior_date)}` : "Ja", s.f_prior_how) : "Nei";
+      return s.f_prior ? (s.f_prior_date ? `Ja, ${fmtD(s.f_prior_date)}` : "Ja") : "Nei";
     case "kravet":
       return s.k_main ? `${cap(s.k_main)}${s.k_alt && s.k_alt !== "ingen" ? `, ellers ${s.k_alt}` : ""}` : IKKE;
     default:
@@ -68,10 +70,11 @@ const LAAST_BIL = "Bilen er låst fordi brevet gjelder bilen du betalte for. Km-
 const STEG: Record<string, (p: StegProps) => ReactNode> = {
   deg: Deg,
   forhandleren: Forhandleren,
-  brevet: Brevvalg,
+  brevet: Vedlegg,
   bilen: (p) => <Bilen {...p} laast />,
   kjopet: (p) => <Kjopet {...p} medForbehold />,
   omrader: Omrader,
+  virkning: Virkning,
   verksted: Verksted,
   selger_sa: SelgerSa,
   sagt_fra: SagtFra,
@@ -87,7 +90,6 @@ const Laas = () => (
 
 // What the letter cites, for the row «Vedtaket».
 function vedtakTekst(s: Skjema, v: Vedtaksvalg): string {
-  if (!s.prec_on) return "Brevet viser ikke til et vedtak";
   if (v.mangler) return "Legg inn datoene først";
   if (!v.funn) return "Finner lignende saker …";
   if (!v.funn.ok) return "Fikk ikke hentet vedtakene";
@@ -97,7 +99,7 @@ function vedtakTekst(s: Skjema, v: Vedtaksvalg): string {
 
 // When a new list changed the decision the letter cites, as the dialog says it (Endringsmelding).
 export function vedtakEndret(s: Skjema, v: Vedtaksvalg): string | null {
-  if (!s.prec_on || !v.endring || !v.valgt || (!v.endring.byttetFra && v.endring.utfall !== "borte")) return null;
+  if (!v.endring || !v.valgt || (!v.endring.byttetFra && v.endring.utfall !== "borte")) return null;
   return `Endret: brevet viser nå til ${sakNavn(v.valgt)}`;
 }
 

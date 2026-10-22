@@ -69,7 +69,7 @@ const skjema = { ...standard(idag), b_name: "Kari", c_reg: "AB 12345", c_make: "
 const betaltSak: Sak = { id: "abcdefghijkm", vippsSub: null, sjekk: {}, skjema, betalt: new Date(), vedtaksvalg: null, modellkall: 0, opprettet: new Date(), endret: new Date() };
 const svar = { kjopsdato: "2025-03-10", km: 120000, ar: 2017, somDenEr: "nei", krav: "retting", forsok: null, feil: [{ hoved: "motor", under: ["turbo"], oppdaget: "2025-04-01", beskrivelse: null, opplysning: null, verksted: null, rapport: null }] };
 const utkast = {
-  skjema: { ...standard(idag), c_reg: "CD 67890", c_make: "Audi", c_model: "A4", c_year: "2019", c_delivery: "2026-03-01", f_cats: ["klima"], f_parts: { klima: ["ac"] }, f_area: { klima: { found: "2026-09-01", impact: [], known: "" } }, f_catdesc: { klima: "AC-en blåser varm luft" }, d_name: "Bil AS", ukjent: 1 },
+  skjema: { ...standard(idag), c_reg: "CD 67890", c_make: "Audi", c_model: "A4", c_year: "2019", c_delivery: "2026-03-01", f_cats: ["klima"], f_parts: { klima: ["ac"] }, f_area: { klima: { found: "2026-09-01" } }, f_catdesc: { klima: "AC-en blåser varm luft" }, d_name: "Bil AS", ukjent: 1 },
   seller: "forhandler",
   asis: "vetikke",
   _screen: "result",
@@ -370,7 +370,7 @@ describe("lagreSak", () => {
   it("avviser noe som ikke er et skjema", async () => {
     hentEgenSak.mockResolvedValue(betaltSak);
     expect((await lagreSak({ id: betaltSak.id, skjema: [1, 2] })).ok).toBe(false);
-    expect((await lagreSak({ id: betaltSak.id, skjema: { f_desc: "x".repeat(70_000) } })).ok).toBe(false);
+    expect((await lagreSak({ id: betaltSak.id, skjema: { b_name: "x".repeat(70_000) } })).ok).toBe(false);
     expect(satt).not.toHaveBeenCalled();
   });
 });

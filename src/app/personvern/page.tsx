@@ -37,7 +37,7 @@ export default function Personvern() {
         <li>opplysninger om forhandleren</li>
         <li>bilen, registreringsnummeret, datoene, prisen og kilometerstanden</li>
         <li>beskrivelsen av feilene, det verkstedet og selgeren har sagt, og kravet ditt</li>
-        <li>navnene på vedleggene. Selve filene lastes ikke opp.</li>
+        <li>hvilke dokumenter du legger ved. Selve dokumentene lastes ikke opp.</li>
       </ul>
       <p>Vi bruker opplysningene til å lage brevet og la deg komme tilbake til saken. Grunnlaget er avtalen med deg (personvernforordningen artikkel 6 nr. 1 bokstav b).</p>
       <p>For å velge vedtaket brevet viser til, sender vi en del av saken til en språkmodell hos Anthropic: feilene og beskrivelsen din av dem, når de viste seg, kilometerstanden, bilens alder, kravet og om verkstedet eller selgeren har uttalt seg. Navn, adresse, kontaktopplysninger og registreringsnummer sendes ikke. Skriv derfor ikke personopplysninger i beskrivelsen av feilen.</p>

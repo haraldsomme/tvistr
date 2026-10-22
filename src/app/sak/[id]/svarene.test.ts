@@ -27,6 +27,5 @@ describe("vedtakEndret", () => {
     expect(vedtakEndret(s, valg(endring({})))).toBeNull();
     expect(vedtakEndret(s, valg(endring({ utfall: "beholdt" })))).toBeNull();
     expect(vedtakEndret(s, valg(null))).toBeNull();
-    expect(vedtakEndret({ ...s, prec_on: false }, valg(endring({ byttetFra: v(1, "22/1") })))).toBeNull();
   });
 });

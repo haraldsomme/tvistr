@@ -5,13 +5,17 @@ import type { RapportPunkt } from "@/lib/brev/rapport";
 import type { Kilde, Svar } from "@/lib/vedtaksvalg/kjoper";
 import { erObjekt, flett } from "./flett";
 import { validReg } from "./format";
-import { type Skjema, standard } from "./skjema";
+import { IMPACT_SOLO, type Skjema, standard } from "./skjema";
 
 // What the writer's workshop ticks mean in the ranking's words.
 const WS_TIL_PUNKT: Record<string, RapportPunkt> = { bekrefter: "bekrefter", aarsak: "arsak", levering: "til_stede", ikke_slitasje: "ikke_slitasje", frarader: "frarader", kostnad: "overslag" };
 
-// «3+» counts as three: the legal point «tapt retting» asks for two or more (matching/rett.ts).
-export const forsokTall = (s: string): number | null => (s === "" ? null : s === "3+" ? 3 : Number(s));
+// «2+» counts as two and an older «3+» as three: the legal point «tapt retting» asks for two or more
+// (matching/rett.ts).
+export const forsokTall = (s: string): number | null => {
+  const n = Number.parseInt(s, 10);
+  return Number.isNaN(n) ? null : n;
+};
 
 // The digits of a typed number («38 500» → 38500), null when there are none.
 export const heltall = (s: string | undefined) => {
@@ -84,10 +88,27 @@ export function rensSkjema(inn: unknown, idag: string): Skjema | null {
   if (!erObjekt(inn) || JSON.stringify(inn).length > 64_000) return null;
   const s = standard(idag);
   const kjente = Object.fromEntries(Object.entries(inn).filter(([k]) => k in s));
-  const ut = flett(s, kjente) as Skjema;
+  const ut = fraEldre(inn, flett(s, kjente) as Skjema);
   // Omlevering is no longer a claim (no decision gave a buyer another used car); a case saved with it
   // claims retting, which the ranking already treated it as.
   return ut.k_main === "omlevering" ? { ...ut, k_main: "retting" } : ut;
+}
+
+// A case saved before the form was slimmed asked the impact per fault and had a general description
+// beside each fault's: the impacts become one list, and the description follows the first fault's.
+function fraEldre(inn: Record<string, unknown>, s: Skjema): Skjema {
+  const ut = { ...s };
+  if (!ut.f_impact.length) {
+    const imp = Object.values(ut.f_area as Record<string, unknown>).flatMap((a) => (erObjekt(a) && Array.isArray(a.impact) ? a.impact.filter((x): x is string => typeof x === "string") : []));
+    ut.f_impact = [...new Set(imp.length > 1 ? imp.filter((x) => x !== IMPACT_SOLO) : imp)];
+  }
+  const desc = typeof inn.f_desc === "string" ? inn.f_desc.trim() : "";
+  const c = ut.f_cats[0];
+  if (desc && c) {
+    const her = (ut.f_catdesc[c] ?? "").trim();
+    ut.f_catdesc = { ...ut.f_catdesc, [c]: her ? `${her.replace(/[.]$/, "")}. ${desc}` : desc };
+  }
+  return ut;
 }
 
 // The draft as bought: the buyer's name and address from the owner's newest case where the draft has none.

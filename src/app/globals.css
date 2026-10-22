@@ -411,7 +411,7 @@ html,body{overflow-x:clip}
 .ck input:checked ~ .ck-b{background:var(--accent);border-color:var(--accent);color:#FFFFFF}
 .ck:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
 .ck input:focus-visible ~ .ck-b{outline:2px solid var(--accent);outline-offset:2px}
-.vl + .rv > div > .rv-in{padding-top:20px}
+.vl + .rv > div > .rv-in,.fl + .rv > div > .rv-in{padding-top:20px}
 .sub-h{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--line)}
 /* fault checklist (mockup 4b, 4c on mobile): a card per category, its subcategories as rows under it */
 .fl{display:flex;flex-direction:column;gap:10px}
@@ -422,6 +422,10 @@ html,body{overflow-x:clip}
 .fl-c.on .ico{background:var(--accent);color:var(--accent-ink)}
 .fl-n{flex:1;min-width:0;font-size:15.5px;font-weight:600;letter-spacing:-.01em}
 .fl-cnt{font-size:13px;color:var(--ink-2)}
+.fl-n small{display:block;margin-top:2px;font-size:13px;font-weight:400;letter-spacing:0;color:var(--ink-2)}
+.fl-h .rad{flex:none}
+[aria-checked="true"] > .rad{border-color:var(--accent)}
+[aria-checked="true"] > .rad::after{transform:scale(1)}
 .fl-box{width:20px;height:20px;flex:none;border-radius:6px;border:1.5px solid var(--line-2);background:var(--surface);display:grid;place-items:center;color:var(--accent-ink);transition:all .2s}
 .fl-box svg{opacity:0;transition:opacity .2s}
 [aria-checked="true"] > .fl-box{background:var(--accent);border-color:var(--accent)}

@@ -5,7 +5,7 @@ import { ETTER, FOR, mangler, seksjonFor, stegFor } from "./steg";
 const idag = "2026-10-21";
 
 describe("seksjonene", () => {
-  it("før betaling, i brevets rekkefølge", () => expect(FOR.map((s) => s.id)).toEqual(["bilen", "kjopet", "feilen", "omrader", "verksted", "selger_sa", "sagt_fra", "kravet"]));
+  it("før betaling, i brevets rekkefølge", () => expect(FOR.map((s) => s.id)).toEqual(["bilen", "kjopet", "feilen", "omrader", "virkning", "verksted", "selger_sa", "sagt_fra", "kravet"]));
   it("etter betaling", () => expect(ETTER.map((s) => s.id)).toEqual(["deg", "forhandleren", "brevet"]));
 
   it.each([
@@ -15,17 +15,14 @@ describe("seksjonene", () => {
     ["f_parts.motor", "feilen"],
     ["f_catdesc.motor", "omrader"],
     ["f_area.motor.found", "omrader"],
-    ["f_desc", "omrader"],
+    ["f_impact", "virkning"],
     ["ws_quote", "verksted"],
     ["seller_txt", "selger_sa"],
     ["f_prior_date", "sagt_fra"],
     ["b_name", "deg"],
-    ["d_contact", "forhandleren"],
-    ["k_hold_amt", "kravet"],
+    ["d_zip", "forhandleren"],
+    ["k_forsok", "kravet"],
     ["exp.0", "kravet"],
-    ["k_days", "brevet"],
-    ["l_tone", "brevet"],
-    ["files.0", "brevet"],
     ["f_docs", "brevet"],
   ])("seksjonFor(%s) → %s", (felt, id) => expect(seksjonFor(felt)).toBe(id));
 
@@ -49,7 +46,7 @@ describe("stegFor", () => {
     ["Én av feilene viste seg senere", "omrader"],
     ["Feilen var ukjent ved kjøpet", "omrader"],
     ["Skade eller feil bruk", "omrader"],
-    ["Alvorlig feil", "omrader"],
+    ["Alvorlig feil", "virkning"],
     ["Verkstedrapport støtter saken", "verksted"],
     ["Ingen verkstedrapport ennå", "verksted"],
     ["Be om en skriftlig rapport", "verksted"],

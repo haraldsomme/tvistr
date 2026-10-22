@@ -5,25 +5,23 @@ import { ENKELTVALG, SKJERMER, synlige } from "./sporsmal";
 const idag = "2026-10-21";
 const utkast = (u: Partial<Utkast> = {}, skjema: Partial<Utkast["skjema"]> = {}): Utkast => ({ ...standardUtkast(idag), ...u, skjema: { ...standardUtkast(idag).skjema, ...skjema } });
 const skjerm = (id: string) => SKJERMER.find((s) => s.id === id)!;
-const ALLE = ["selger", "kjoper", "bilen", "kjopet", "forbehold", "feil", "omrader", "arsak", "verksted", "selger_sa", "sagt_fra", "kravet"];
+const ALLE = ["selger", "bilen", "kjopet", "forbehold", "feil", "omrader", "virkning", "verksted", "selger_sa", "sagt_fra", "kravet"];
 
 describe("SKJERMER", () => {
-  it("forhandler og privat kjøper: alle tolv, i rekkefølge", () => {
+  it("alle elleve, i rekkefølge", () => {
     expect(synlige(utkast({ seller: "forhandler", buyer: "privat" })).map((s) => s.id)).toEqual(ALLE);
     expect(SKJERMER.map((s) => s.id)).toEqual(ALLE);
   });
-  it("kjøp fra privatperson går ikke videre", () => {
-    expect(SKJERMER[0].ferdig(utkast({ seller: "privat" }))).toBe(false);
-    expect(SKJERMER[0].ferdig(utkast({ seller: "leasing" }))).toBe(false);
-    expect(SKJERMER[0].ferdig(utkast({ seller: "forhandler" }))).toBe(true);
+  it("to valg: bare kjøp fra forhandler går videre", () => {
+    expect(ENKELTVALG.selger.valg.map(([v]) => v)).toEqual(["forhandler", "privat"]);
+    const etter = (v: string) => SKJERMER[0].ferdig(ENKELTVALG.selger.sett(utkast(), v));
+    expect(["forhandler", "privat"].map(etter)).toEqual([true, false]);
+    expect(SKJERMER[0].mangler!(ENKELTVALG.selger.sett(utkast(), "privat"))).toBe("Brevet gjelder bare kjøp fra en forhandler.");
   });
-  it("kjøp gjennom firma går ikke videre", () => {
-    expect(skjerm("kjoper").ferdig(utkast({ seller: "forhandler", buyer: "naering" }))).toBe(false);
-    expect(skjerm("kjoper").ferdig(utkast({ seller: "forhandler", buyer: "privat" }))).toBe(true);
-  });
-  it("kjøperen spørres bare ved kjøp fra forhandler", () => {
-    for (const seller of [undefined, "privat", "leasing"] as const) expect(synlige(utkast({ seller })).map((s) => s.id)).not.toContain("kjoper");
-    expect(synlige(utkast({ seller: "forhandler" })).map((s) => s.id)).toContain("kjoper");
+  it("forhandler gir privat kjøper", () => {
+    expect(ENKELTVALG.selger.sett(utkast(), "forhandler")).toMatchObject({ seller: "forhandler", buyer: "privat" });
+    expect(ENKELTVALG.selger.sett(utkast({ seller: "forhandler", buyer: "privat" }), "privat")).toMatchObject({ seller: "privat", buyer: undefined });
+    expect(ENKELTVALG.selger.verdi(utkast({ seller: "leasing" }))).toBeUndefined();
   });
   it("bilen stopper ikke: kjøpet krever den i stedet", () => {
     expect(skjerm("bilen").ferdig(utkast())).toBe(true);
@@ -42,15 +40,19 @@ describe("SKJERMER", () => {
   });
   it("om feilen: hvert område trenger datoen det ble oppdaget", () => {
     const f_cats = ["motor", "klima"];
-    expect(skjerm("omrader").ferdig(utkast({}, { f_cats, f_area: { motor: { found: "2026-09-01", impact: [], known: "" } } }))).toBe(false);
-    expect(skjerm("omrader").ferdig(utkast({}, { f_cats, f_area: { motor: { found: "2026-09-01", impact: [], known: "" }, klima: { found: "", impact: [], known: "" } } }))).toBe(false);
-    expect(skjerm("omrader").ferdig(utkast({}, { f_cats, f_area: { motor: { found: "2026-09-01", impact: [], known: "" }, klima: { found: "2026-09-02", impact: [], known: "" } } }))).toBe(true);
+    expect(skjerm("omrader").ferdig(utkast({}, { f_cats, f_area: { motor: { found: "2026-09-01" } } }))).toBe(false);
+    expect(skjerm("omrader").ferdig(utkast({}, { f_cats, f_area: { motor: { found: "2026-09-01" }, klima: { found: "" } } }))).toBe(false);
+    expect(skjerm("omrader").ferdig(utkast({}, { f_cats, f_area: { motor: { found: "2026-09-01" }, klima: { found: "2026-09-02" } } }))).toBe(true);
   });
   it("«som den er»: ja er et forbehold i skjemaet, vet ikke er det ikke", () => {
     const ja = ENKELTVALG.forbehold.sett(utkast(), "ja");
     expect([ja.asis, ja.skjema.c_asis]).toEqual(["ja", true]);
     const vetikke = ENKELTVALG.forbehold.sett(utkast({}, { c_asis: true }), "vetikke");
     expect([vetikke.asis, vetikke.skjema.c_asis]).toEqual(["vetikke", false]);
+  });
+  it("virkningen trenger minst ett svar", () => {
+    expect(skjerm("virkning").ferdig(utkast())).toBe(false);
+    expect(skjerm("virkning").ferdig(utkast({}, { f_impact: ["plagsom"] }))).toBe(true);
   });
   it("kravet trenger hovedkravet", () => {
     expect(skjerm("kravet").ferdig(utkast())).toBe(false);

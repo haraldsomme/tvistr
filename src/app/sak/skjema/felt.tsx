@@ -93,6 +93,40 @@ export function Valgliste({ verdi, valg, onVelg, navn, flere, bredde = 240 }: { 
   );
 }
 
+// Choices as cards like the defect list (src/app/deler/feilliste.tsx): several (a box) when `flere`,
+// else one (a circle), each with an optional icon and a line under its name.
+export function Kortliste({ verdi, valg, onVelg, navn, flere, ikon }: { verdi: string | string[]; valg: readonly (readonly [string, string, string?])[]; onVelg: (v: string, pa: boolean) => void; navn: string; flere?: boolean; ikon?: (v: string) => ReactNode }) {
+  return (
+    <div className="fl" role={flere ? "group" : "radiogroup"} aria-label={navn}>
+      {valg.map(([v, l, d]) => {
+        const pa = Array.isArray(verdi) ? verdi.includes(v) : verdi === v;
+        return (
+          <div key={v} className={`fl-c${pa ? " on" : ""}`}>
+            <button type="button" role={flere ? "checkbox" : "radio"} aria-checked={pa} className="fl-h" onClick={() => onVelg(v, flere ? !pa : true)}>
+              {ikon && (
+                <span className="ico" aria-hidden="true">
+                  {ikon(v)}
+                </span>
+              )}
+              <span className="fl-n">
+                {l}
+                {d && <small>{d}</small>}
+              </span>
+              {flere ? (
+                <span className="fl-box" aria-hidden="true">
+                  <Hake />
+                </span>
+              ) : (
+                <span className="rad" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Seg({ verdi, valg, onVelg, navn }: { verdi: string; valg: readonly (readonly [string, string])[]; onVelg: (v: string) => void; navn: string }) {
   return (
     <div className="seg">

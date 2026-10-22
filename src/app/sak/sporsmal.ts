@@ -1,4 +1,4 @@
-// The screens before payment (mockup «Sjekk saken»), one per screen: who sold and bought, then every
+// The screens before payment (mockup «Sjekk saken»), one per screen: who sold and how, then every
 // answer that shapes the letter, in the letter's order. A screen is done when it has what the letter
 // and the verdict need; «Neste» waits for it and says what is missing (`mangler`). The car never blocks:
 // the purchase asks for it instead (manglerISkjema). Private sales, leasing and purchases through a
@@ -29,21 +29,12 @@ export const SKJERMER: Skjerm[] = [
     gruppe: "Kjøpet",
     tittel: "Hvem kjøpte du bilen av?",
     hint: "Hvem som solgte bilen, avgjør hvilken lov som gjelder.",
-    ferdig: (u) => u.seller === "forhandler",
+    ferdig: (u) => u.seller === "forhandler" && u.buyer === "privat",
     mangler: (u) => (u.seller ? "Brevet gjelder bare kjøp fra en forhandler." : "Velg hvem du kjøpte bilen av."),
-  },
-  {
-    id: "kjoper",
-    gruppe: "Kjøpet",
-    tittel: "Kjøpte du bilen privat eller gjennom firma?",
-    hint: "Som privatperson har du sterkere rettigheter.",
-    vis: (u) => u.seller === "forhandler",
-    ferdig: (u) => u.buyer === "privat",
-    mangler: (u) => (u.buyer ? "Brevet gjelder bare kjøp som privatperson." : "Velg om du kjøpte bilen privat eller gjennom firma."),
   },
   // Never blocks: the purchase needs the reg.nr. and the make, and the result says so with a link back.
   { id: "bilen", gruppe: "Kjøpet", ...som("bilen"), ferdig: () => true },
-  { id: "kjopet", gruppe: "Kjøpet", ...som("kjopet"), ferdig: (u) => !!(u.skjema.c_purchase || u.skjema.c_delivery), mangler: () => "Legg inn kjøpsdatoen eller overtakelsesdatoen." },
+  { id: "kjopet", gruppe: "Kjøpet", ...som("kjopet"), ferdig: (u) => !!(u.skjema.c_purchase || u.skjema.c_delivery), mangler: () => "Legg inn når du overtok bilen." },
   { id: "forbehold", gruppe: "Kontrakten", tittel: "Står det «som den er» i kontrakten?", hint: "Se etter formuleringer som «solgt som den er» eller «som besiktiget».", ferdig: (u) => u.asis !== undefined, mangler: () => "Velg et svar." },
   { id: "feil", gruppe: "Feilen", ...som("feilen"), ferdig: (u) => u.skjema.f_cats.length > 0, mangler: () => "Velg minst én feil." },
   {
@@ -53,7 +44,7 @@ export const SKJERMER: Skjerm[] = [
     ferdig: (u) => u.skjema.f_cats.length > 0 && u.skjema.f_cats.every((c) => !!u.skjema.f_area[c]?.found),
     mangler: (u) => (u.skjema.f_cats.length ? "Legg inn når du oppdaget feilen for hver feil." : "Velg minst én feil først."),
   },
-  { id: "arsak", gruppe: "Feilen", tittel: "Kan feilen skyldes noe annet enn bilen selv?", ferdig: (u) => !!u.skjema.f_cause_check, mangler: () => "Velg et svar." },
+  { id: "virkning", gruppe: "Feilen", ...som("virkning"), ferdig: (u) => u.skjema.f_impact.length > 0, mangler: () => "Velg minst ett svar." },
   { id: "verksted", gruppe: "Feilen", ...som("verksted"), ferdig: (u) => !!u.skjema.ws, mangler: () => "Velg om feilen er undersøkt av et verksted." },
   { id: "selger_sa", gruppe: "Kontrakten", ...som("selger_sa"), ferdig: (u) => !!u.skjema.seller_said, mangler: () => "Velg hva selgeren sa." },
   // Nothing is required, but the date once the buyer says they have complained.
@@ -68,37 +59,19 @@ export type Valg = readonly [verdi: string, tittel: string, tekst?: string];
 // The screens answered with one choice: the choices, the answer, and the draft with a new answer.
 // They go on by themselves once answered.
 export const ENKELTVALG: Record<string, { valg: readonly Valg[]; verdi: (u: Utkast) => string | undefined; sett: (u: Utkast, v: string) => Utkast }> = {
+  // The buyer is taken to have bought for private use: the flow does not ask.
   selger: {
     valg: [
       ["forhandler", "En bilforhandler", "Merkeforhandler, bilforretning eller bruktbilforhandler"],
       ["privat", "En privatperson", "For eksempel via en annonse på nett"],
-      ["leasing", "Bilen er leaset", "Du betaler leie og eier ikke bilen"],
     ],
-    verdi: (u) => u.seller,
-    sett: (u, v) => ({ ...u, seller: v as Utkast["seller"] }),
-  },
-  kjoper: {
-    valg: [
-      ["privat", "Privat", "Jeg kjøpte bilen til eget bruk"],
-      ["naering", "Gjennom firma", "Bilen står på et firma eller ble kjøpt i næring"],
-    ],
-    verdi: (u) => u.buyer,
-    sett: (u, v) => ({ ...u, buyer: v as Utkast["buyer"] }),
+    verdi: (u) => (u.seller === "forhandler" || u.seller === "privat" ? u.seller : undefined),
+    sett: (u, v) => ({ ...u, seller: v as Utkast["seller"], buyer: v === "forhandler" ? "privat" : undefined }),
   },
   // «Vet ikke» is kept beside the form, which only knows yes or no.
   forbehold: {
     valg: [["ja", "Ja"], ["nei", "Nei"], ["vetikke", "Vet ikke"]],
     verdi: (u) => u.asis,
     sett: (u, v) => ({ ...u, asis: v as Utkast["asis"], skjema: { ...u.skjema, c_asis: v === "ja" } }),
-  },
-  arsak: {
-    valg: [
-      ["nei", "Nei, den bare oppsto", "Uten uhell eller feil bruk"],
-      ["slitasje", "Det kan være vanlig slitasje", "For eksempel bremseklosser eller dekk"],
-      ["uhell", "Uhell, skade eller feil bruk", "For eksempel en kollisjon eller feil drivstoff"],
-      ["vetikke", "Vet ikke"],
-    ],
-    verdi: (u) => u.skjema.f_cause_check || undefined,
-    sett: (u, v) => ({ ...u, skjema: { ...u.skjema, f_cause_check: v } }),
   },
 };

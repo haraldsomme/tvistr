@@ -9,9 +9,10 @@ export type Seksjon = { id: string; navn: string; tittel: string; hint?: string;
 
 export const FOR: Seksjon[] = [
   { id: "bilen", navn: "Bilen", tittel: "Hvilken bil gjelder det?", hint: "Vi henter merke, modell og når bilen sist ble registrert.", felt: ["c_make", "c_model", "c_year", "c_reg", "c_km"] },
-  { id: "kjopet", navn: "Kjøpet", tittel: "Kjøpet", hint: "Hent opplysningene fra kjøpekontrakten. Overtakelsesdatoen er utgangspunktet for alle fristene.", felt: ["c_purchase", "c_delivery", "c_price"] },
+  { id: "kjopet", navn: "Kjøpet", tittel: "Kjøpet", hint: "Hent opplysningene fra kjøpekontrakten. Overtakelsesdatoen er utgangspunktet for alle fristene.", felt: ["c_delivery", "c_price"] },
   { id: "feilen", navn: "Feilen", tittel: "Hva gjelder reklamasjonen?", hint: "Velg alle områdene der du har funnet feil. Du kan velge flere.", felt: ["f_cats"] },
-  { id: "omrader", navn: "Om feilen", tittel: "Hva er feil med bilen?", hint: "Vær konkret og hold deg til fakta. En presis beskrivelse gjør det vanskeligere å avvise saken.", felt: ["f_found", "f_any_desc", "f_impact"] },
+  { id: "omrader", navn: "Om feilen", tittel: "Hva er feil med bilen?", hint: "Vær konkret og hold deg til fakta. En presis beskrivelse gjør det vanskeligere å avvise saken.", felt: ["f_found", "f_any_desc"] },
+  { id: "virkning", navn: "Hvordan feilen påvirker deg", tittel: "Hvordan påvirker feilene deg?", hint: "Velg alt som passer. Er feilen bare kosmetisk, velger du bare det.", felt: ["f_impact"] },
   { id: "verksted", navn: "Verksted", tittel: "Er feilen undersøkt av et verksted?", hint: "En verkstedrapport gjør saken mye sterkere. Alt du krysser av for, føres opp i brevet.", felt: ["ws"] },
   { id: "selger_sa", navn: "Hva selgeren sa", tittel: "Sa selger noe om denne feilen før kjøpet?", hint: "For eksempel i annonsen, kontrakten eller en melding.", felt: ["seller_said"] },
   // No hint: the switch's own text says the date counts.
@@ -27,7 +28,7 @@ export const FOR: Seksjon[] = [
 export const ETTER: Seksjon[] = [
   { id: "deg", navn: "Deg", tittel: "Deg", hint: "Du er avsender av brevet.", felt: ["b_name", "b_addr", "b_zip", "b_city", "b_phone", "b_email"] },
   { id: "forhandleren", navn: "Forhandleren", tittel: "Forhandleren", hint: "Brevet går til forhandleren du kjøpte bilen av, også når feilen kommer fra fabrikken.", felt: ["d_name", "d_org", "d_addr", "d_zip", "d_city"] },
-  { id: "brevet", navn: "Brevet", tittel: "Brevet", hint: "Sted og dato, tonen, svarfristen og vedleggene.", felt: ["k_days"] },
+  { id: "brevet", navn: "Vedlegg", tittel: "Hva legger du ved brevet?", hint: "Verkstedrapporten og kvitteringene for utgiftene føres opp av seg selv.", felt: [] },
 ];
 // All sections in the letter's order: sender and recipient, the content, then the letter's settings.
 export const ALLE: Seksjon[] = [...ETTER.slice(0, 2), ...FOR, ...ETTER.slice(2)];
@@ -37,11 +38,11 @@ export const ETIKETT: Record<string, string> = {
   b_name: "Navn", b_addr: "Adresse", b_zip: "Postnr.", b_city: "Poststed", b_phone: "Telefon", b_email: "E-post",
   d_name: "Firmanavn", d_org: "Org.nr.", d_addr: "Adresse", d_zip: "Postnr.", d_city: "Poststed",
   c_make: "Merke", c_model: "Modell", c_year: "Årsmodell", c_reg: "Reg.nr.", c_purchase: "Kjøpsdato", c_delivery: "Overtakelsesdato", c_price: "Kjøpesum", c_km: "Km-stand",
-  f_cats: "Deler", f_found: "Dato oppdaget", f_any_desc: "Beskrivelse av feilen", f_impact: "Hvordan feilen påvirker deg", ws: "Verkstedundersøkelse", seller_said: "Hva selger sa før kjøpet", k_main: "Hovedkrav", k_days: "Svarfrist", k_forsok: "Rettingsforsøk", k_cost: "Utbedringskostnad",
+  f_cats: "Deler", f_found: "Dato oppdaget", f_any_desc: "Beskrivelse av feilen", f_impact: "Hvordan feilen påvirker deg", ws: "Verkstedundersøkelse", seller_said: "Hva selger sa før kjøpet", k_main: "Hovedkrav", k_forsok: "Rettingsforsøk", k_cost: "Utbedringskostnad",
 };
 
 export function har(s: Skjema, k: Nokkel): boolean {
-  if (k === "f_any_desc") return !!s.f_desc.trim() || s.f_cats.some((c) => (s.f_catdesc[c] ?? "").trim());
+  if (k === "f_any_desc") return s.f_cats.some((c) => (s.f_catdesc[c] ?? "").trim());
   const v = s[k];
   return Array.isArray(v) ? v.length > 0 : typeof v === "string" ? v.trim() !== "" : v !== false && v !== null && v !== undefined;
 }
@@ -56,7 +57,7 @@ const ANDRE: [RegExp, string][] = [
   [/^c_/, "kjopet"],
   [/^f_parts$/, "feilen"],
   [/^f_prior/, "sagt_fra"],
-  [/^(f_docs|files)$/, "brevet"],
+  [/^f_docs$/, "brevet"],
   [/^f_/, "omrader"],
   [/^ws/, "verksted"],
   [/^seller/, "selger_sa"],
@@ -75,6 +76,7 @@ const STEG_FOR: [RegExp, string][] = [
   [/verksted|rapport/i, "verksted"],
   [/^Du sa fra|^Du har sagt fra|^Du er i tide|^Det har gått mer enn to måneder/, "sagt_fra"],
   [/[Ss]elger/, "selger_sa"],
+  [/^Alvorlig feil|^Kosmetisk feil/, "virkning"],
   [/som den er|^Fristen|^Datoene|^Sjekk datoene|^Mer enn .* etter overtakelsen|før overtakelsen/, "kjopet"],
 ];
 export const stegFor = (tittel: string) => STEG_FOR.find(([re]) => re.test(tittel))?.[1] ?? "omrader";

@@ -20,11 +20,8 @@ export type Sjekksvar = {
   // The first and the last day a fault was noticed, when there are several.
   found?: string;
   sist?: string;
-  known?: "nei" | "opplyst" | "synlig";
-  cause?: "nei" | "slitasje" | "uhell" | "vetikke";
   notified?: "ja" | "nei";
   notifiedDate?: string;
-  km?: string;
   sev?: number;
   // Every fault is in what the seller said or promised (opplysningsfeil).
   opplysning?: boolean;
@@ -120,23 +117,6 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
     else F.push({ s: "warn", t: "Det har gått mer enn to måneder", d: "Du må reklamere innen rimelig tid etter at du oppdaget feilen. Send reklamasjonen så snart som mulig." });
   }
 
-  // Before 2024 old § 16 tredje ledd: nothing the buyer knew or must have known. From 2024 that rule is
-  // gone (Prop. 49 LS kap. 10.1.5); only an exception under § 15 annet ledd shuts out the defect, and what
-  // the buyer knew weighs in what they could reasonably expect (§ 15 tredje ledd bokstav b).
-  if (q.known === "opplyst") F.push(L.versjon === "før_2024" ? { s: "bad", t: "Du ble informert om feilen", d: "Du kan normalt ikke reklamere på en feil du kjente til da du kjøpte bilen." } : KJENT_ETTER_2024(L));
-  else if (q.known === "synlig")
-    F.push(
-      L.versjon === "før_2024"
-        ? { s: "warn", t: "Feilen var synlig ved kjøpet", d: "Feil du måtte ha sett da du kjøpte bilen, kan være vanskelig å reklamere på." }
-        : { s: "warn", t: "Feilen var synlig ved kjøpet", d: "Det du kunne se da du kjøpte bilen, kan påvirke hva du med rimelighet kunne forvente av den." },
-    );
-  else if (q.known === "nei") F.push({ s: "good", t: "Feilen var ukjent ved kjøpet", d: "Du visste ikke om feilen da du kjøpte bilen." });
-
-  if (q.cause === "uhell") F.push({ s: "bad", t: "Skade eller feil bruk", d: "Feil som skyldes uhell, skade eller feil bruk etter overtakelsen, regnes ikke som en mangel." });
-  else if (q.cause === "slitasje") F.push({ s: "warn", t: "Kan være vanlig slitasje", d: `Normal slitasje er ikke en mangel. Det avhenger av bilens alder${q.km ? `, kilometerstand (${q.km} km)` : ""} og hva du kunne forvente.` });
-  else if (q.cause === "vetikke") F.push({ s: "info", t: "Årsaken er uklar", d: "En verkstedrapport som beskriver feilen og årsaken, gjør saken mye sterkere." });
-  else if (q.cause === "nei") F.push({ s: "good", t: "Feilen skyldes bilen", d: "Feilen har oppstått uten uhell eller feil bruk." });
-
   // Before 2024 «som den er» is judged by old § 17; from 2024 a general clause is no agreed exception
   // under § 15 annet ledd, so it does not weaken the case.
   if (q.asis === "ja")
@@ -162,7 +142,9 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
 // in bad faith), lovdata.no 2026-10-18.
 const UNNTAK_FEM_AR = "med mindre en garanti gir lengre frist, eller forhandleren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro";
 
-// A defect the buyer was told of, from 2024: it counts against the buyer only as an agreed exception.
+// A defect the seller told of, from 2024: it counts against the buyer only as an agreed exception. Before
+// 2024 (old § 16 tredje ledd) nothing the buyer knew; from 2024 what the buyer knew weighs in what they
+// could reasonably expect (§ 15 tredje ledd bokstav b, Prop. 49 LS kap. 10.1.5).
 const KJENT_ETTER_2024 = (L: Regler): Faktor => ({
   s: "warn",
   t: "Du ble opplyst om feilen",
@@ -199,15 +181,12 @@ export const writerQ = (s: Skjema): Sjekksvar => ({
   seller: "forhandler",
   buyer: "privat",
   asis: s.c_asis ? "ja" : "nei",
-  km: s.c_km,
   kjopsdato: s.c_purchase || s.c_delivery,
   delivery: s.c_delivery,
   found: s.f_found,
   opplysning: s.f_cats.length > 0 && s.f_cats.every((c) => opplysningsfeil(c, s.f_parts[c] ?? [])),
   sist: s.f_cats.map((c) => s.f_area[c]?.found).filter((d): d is string => !!d).sort().at(-1),
   sev: s.f_sev,
-  known: (s.f_known || undefined) as Sjekksvar["known"],
-  cause: (s.f_cause || undefined) as Sjekksvar["cause"],
   notified: s.f_prior ? "ja" : "nei",
   notifiedDate: s.f_prior_date,
 });

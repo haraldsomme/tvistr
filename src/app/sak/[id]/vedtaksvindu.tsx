@@ -1,10 +1,10 @@
 // «Lignende vedtak» (mockup, after payment): the ranking's top ten decisions with medhold, the model's
 // choice first («Anbefalt»), each with how it compares to the buyer's case and its likeness. The buyer
-// picks the one the letter cites; the pick and the switch apply on «Ferdig» and are dropped on «Avbryt».
+// picks the one the letter cites; the pick applies on «Ferdig» and is dropped on «Avbryt».
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Hake, Lukk } from "@/app/deler/ikoner";
-import { Bryter, type Sett } from "@/app/sak/skjema/felt";
+import type { Sett } from "@/app/sak/skjema/felt";
 import { fmtD } from "@/lib/app/dato";
 import { cap, tall } from "@/lib/app/format";
 import type { Presedens } from "@/lib/app/brevtyper";
@@ -54,14 +54,13 @@ export type Vedtaksvalg = {
 // that changes them is open, or the dialog is). Each new set of answers costs one of the case's model
 // calls, so not while the buyer is typing in such a row, where the last list stands and the letter
 // keeps citing its decision, and not again for a list already shown. A failed set is fetched again
-// when the lookup becomes active again, and on «Prøv igjen». `precOn` is the switch as the dialog shows
-// it, which may be staged on before the letter's own (`s.prec_on`) is.
-export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean, precOn = s.prec_on): Vedtaksvalg {
+// when the lookup becomes active again, and on «Prøv igjen».
+export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean): Vedtaksvalg {
   const svar = tilSvar(s);
   const n = JSON.stringify(svar);
   const [funn, settFunn] = useState<Hentet | null>(null);
   const [forsok, settForsok] = useState(0);
-  const hente = aktiv && !!svar && precOn && (!funn?.f.ok || funn.n !== n);
+  const hente = aktiv && !!svar && (!funn?.f.ok || funn.n !== n);
 
   useEffect(() => {
     if (!hente || !svar) return;
@@ -101,7 +100,7 @@ export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean, pre
     endring,
     valg,
     valgt: valg.find((v) => v.id === s.prec_id) ?? valg[0] ?? null,
-    venter: !!svar && s.prec_on && (!aktuell || !aktuell.ok),
+    venter: !!svar && (!aktuell || !aktuell.ok),
     provIgjen: () => settForsok((f) => f + 1),
   };
 }
@@ -194,10 +193,9 @@ function Endringsmelding({ endring, valg, valgt }: { endring: NonNullable<Vedtak
 }
 
 // The dialog, mounted afresh on each opening (the page renders it only while open), so a dropped pick is
-// gone the next time. `precOn` is the staged switch, kept by the page so the list can be looked up while
-// it is on. Every way out closes the <dialog> (Escape too), which puts focus back where it was, and its
+// gone the next time. Every way out closes the <dialog> (Escape too), which puts focus back where it was, and its
 // close event tells the page; the page behind does not scroll (globals.css).
-export function Vedtaksvindu({ vedtak, s, sett, precOn, settPrecOn, onLukk }: { vedtak: Vedtaksvalg; s: Skjema; sett: Sett; precOn: boolean; settPrecOn: (pa: boolean) => void; onLukk: () => void }) {
+export function Vedtaksvindu({ vedtak, sett, onLukk }: { vedtak: Vedtaksvalg; sett: Sett; onLukk: () => void }) {
   const { funn, valg, valgt } = vedtak;
   // The staged pick; null follows the letter.
   const [plukk, settPlukk] = useState<number | null>(null);
@@ -212,9 +210,7 @@ export function Vedtaksvindu({ vedtak, s, sett, precOn, settPrecOn, onLukk }: { 
   }, []);
 
   const ferdig = () => {
-    const endre: Partial<Skjema> = precOn !== s.prec_on ? { prec_on: precOn } : {};
-    if (precOn && markert && markert.id !== valgt?.id) Object.assign(endre, { prec_id: markert.id, prec_selv: !markert.anbefalt });
-    if (Object.keys(endre).length) sett(endre);
+    if (markert && markert.id !== valgt?.id) sett({ prec_id: markert.id, prec_selv: !markert.anbefalt });
     lukk();
   };
 
@@ -233,16 +229,7 @@ export function Vedtaksvindu({ vedtak, s, sett, precOn, settPrecOn, onLukk }: { 
           </button>
         </div>
         <div className="fl-vindu-k">
-          <Bryter
-            s={{ ...s, prec_on: precOn }}
-            sett={(p) => p.prec_on !== undefined && settPrecOn(p.prec_on)}
-            k="prec_on"
-            tittel="Vis til en lignende sak"
-            tekst="Brevet sammenligner saken din med et vedtak fra Forbrukerklageutvalget der forbrukeren fikk medhold."
-          />
-          {!precOn ? (
-            <p className="fl-melding">Du har slått av henvisningen til en lignende sak i brevet.</p>
-          ) : vedtak.mangler ? (
+          {vedtak.mangler ? (
             <p className="fl-melding">Legg inn overtakelsesdato og når du oppdaget feilen, så finner vi lignende saker.</p>
           ) : !funn ? (
             <p className="fl-melding" role="status">

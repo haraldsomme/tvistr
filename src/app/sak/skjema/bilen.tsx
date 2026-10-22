@@ -1,6 +1,7 @@
 // The car and the purchase, as blocks for a page to place under its own heading. Before payment the
 // plate is looked up at Statens vegvesen and make, model and year can be typed; after payment (`laast`)
 // the car is the one bought for, and only the mileage can be filled in.
+import { useState } from "react";
 import { type Bil, Skilt } from "@/app/deler/skilt";
 import { fmtD } from "@/lib/app/dato";
 import { regler } from "@/lib/app/lov";
@@ -35,30 +36,39 @@ export function Bilen({ s, sett, laast }: StegProps & { laast?: boolean }) {
 }
 
 // Without `medForbehold` the «som den er» switch is left out (the question flow asks it on its own).
+// The handover date is asked; the purchase date only when the buyer says it was another day.
 export function Kjopet({ s, sett, medForbehold }: StegProps & { medForbehold?: boolean }) {
+  const [annenDag, settAnnenDag] = useState(() => !!s.c_purchase && s.c_purchase !== s.c_delivery);
   const d = s.c_lastreg;
-  const brukt = d && s.c_delivery === d && s.c_purchase === d;
   return (
     <>
       <div className="block">
         <div className="grid">
-          <Felt s={s} sett={sett} k="c_purchase" label="Kjøpsdato" klasse="c3" type="date" />
           <Felt s={s} sett={sett} k="c_delivery" label="Overtakelsesdato" klasse="c3" type="date" />
-          {d && !brukt && (
+          <Felt s={s} sett={sett} k="c_price" label="Kjøpesum" klasse="c3" fmt="num" inputMode="numeric" placeholder="329 900" suffiks="kr" />
+          {d && s.c_delivery !== d && (
             <div className="c6 sugg">
               <span>
-                Bilen ble registrert på ny eier <b>{fmtD(d)}</b>. Var det da du kjøpte og overtok den?
+                Bilen ble registrert på ny eier <b>{fmtD(d)}</b>. Var det da du overtok den?
               </span>
-              <button type="button" className="btn sm" onClick={() => sett({ c_purchase: d, c_delivery: d })}>
+              <button type="button" className="btn sm" onClick={() => sett({ c_delivery: d })}>
                 Bruk datoen
               </button>
             </div>
           )}
-          <Felt s={s} sett={sett} k="c_price" label="Kjøpesum" klasse="c3" fmt="num" inputMode="numeric" placeholder="329 900" suffiks="kr" />
+          {annenDag ? (
+            <Felt s={s} sett={sett} k="c_purchase" label="Kjøpsdato" klasse="c3" type="date" hint="Datoen du skrev under kontrakten." />
+          ) : (
+            <p className="hint c6" style={{ margin: 0 }}>
+              <button type="button" className="lnk" onClick={() => settAnnenDag(true)}>
+                Kjøpte du bilen en annen dag enn du overtok den?
+              </button>
+            </p>
+          )}
         </div>
       </div>
-      <div className="block">
-        {medForbehold && (
+      {medForbehold && (
+        <div className="block">
           <Bryter
             s={s}
             sett={sett}
@@ -70,9 +80,8 @@ export function Kjopet({ s, sett, medForbehold }: StegProps & { medForbehold?: b
                 : "Fra 2024 er et generelt forbehold ikke nok. Det gjelder bare egenskaper du ble spesielt opplyst om og uttrykkelig godtok."
             }
           />
-        )}
-        <Bryter s={s} sett={sett} k="c_warranty" tittel="Bilen har garanti" tekst="Fabrikkgaranti, bruktbilgaranti eller lignende. Garantien kommer i tillegg til rettighetene dine etter loven." />
-      </div>
+        </div>
+      )}
     </>
   );
 }

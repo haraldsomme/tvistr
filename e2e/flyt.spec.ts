@@ -29,47 +29,45 @@ const tilInnlogging = async (page: Page, lenke: string) => {
   await sett;
 };
 
-// The screen for the buyer is shown once a dealer sold the car: 11 screens before that, 12 after.
-const sporsmal = (page: Page, n: number) => expect(page.locator(".fl-frem-l")).toContainText(new RegExp(`Spørsmål ${n} av ${n === 1 ? 11 : 12}$`));
+const sporsmal = (page: Page, n: number) => expect(page.locator(".fl-frem-l")).toContainText(new RegExp(`Spørsmål ${n} av 11$`));
 // A screen of one choice goes on by itself.
 const velg = async (page: Page, navn: string | RegExp, neste: number) => {
   await page.getByRole("radio", { name: navn, exact: typeof navn === "string" }).click();
   await sporsmal(page, neste);
 };
-// A choice in a list of rows (the radio itself is hidden under its label).
-const rad = (page: Page, tekst: string) => page.locator("label.vl-r").filter({ hasText: new RegExp(`^${tekst}$`) }).click();
 const neste = async (page: Page, n: number) => {
   await page.getByRole("button", { name: "Neste", exact: true }).click();
   await sporsmal(page, n);
 };
 
-// The twelve screens before payment for AB 12345 with a turbo fault found 20 days ago, up to the verdict.
+// The eleven screens before payment for AB 12345 with a turbo fault found 20 days ago, up to the verdict.
 async function sjekkSaken(page: Page) {
   await sporsmal(page, 1);
   await velg(page, /En bilforhandler/, 2);
-  await velg(page, /Privat Jeg kjøpte/, 3);
   await page.locator("#c_reg").fill("AB 12345");
   await page.getByRole("button", { name: "Hent bilen" }).click();
-  await expect(page.getByText("Peugeot 308")).toBeVisible();
+  // On the screen: once logged in, the account menu also names the earlier cases for this car.
+  await expect(page.locator(".fl-skjerm").getByText("Peugeot 308")).toBeVisible();
   await page.locator("#f_c_km").fill("120000");
-  await neste(page, 4);
+  await neste(page, 3);
   // The handover date starts as the day the car was registered on its owner.
   await expect(page.locator("#f_c_delivery")).toHaveValue(dager(100));
-  await neste(page, 5);
-  await velg(page, "Nei", 6);
+  await neste(page, 4);
+  await velg(page, "Nei", 5);
   await page.getByRole("checkbox", { name: "Motor og eksos" }).click();
   await page.getByRole("checkbox", { name: "Turbo", exact: true }).click();
-  await neste(page, 7);
+  await neste(page, 6);
   await page.getByLabel("Når oppdaget du feilen?").fill(dager(20));
+  await neste(page, 7);
+  await page.getByRole("checkbox", { name: /Påvirker bruken/ }).click();
   await neste(page, 8);
-  await velg(page, /Nei, den bare oppsto/, 9);
-  await rad(page, "Nei");
+  await page.getByRole("radio", { name: /^Nei/ }).click();
+  await neste(page, 9);
+  await page.getByRole("radio", { name: /^Nei/ }).click();
   await neste(page, 10);
-  await rad(page, "Nei");
+  // Not told the dealer yet: the default.
   await neste(page, 11);
-  // Not told the dealer yet: nothing to fill in.
-  await neste(page, 12);
-  await page.locator("label.tile").filter({ hasText: "Retting" }).click();
+  await page.getByRole("radio", { name: /^Retting/ }).click();
   await page.getByRole("button", { name: "Se vurderingen" }).click();
   await expect(page.locator(".fl-res h1")).toBeVisible();
 }

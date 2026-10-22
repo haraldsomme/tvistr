@@ -17,7 +17,7 @@ import { Topp } from "@/app/sak/flyt/topp";
 import { Bilen, Kjopet } from "@/app/sak/skjema/bilen";
 import type { Sett, StegProps } from "@/app/sak/skjema/felt";
 import { Krav } from "@/app/sak/skjema/krav";
-import { Feilvalg, Omrader, SagtFra, SelgerSa, Verksted } from "@/app/sak/skjema/mangelen";
+import { Feilvalg, Omrader, SagtFra, SelgerSa, Verksted, Virkning } from "@/app/sak/skjema/mangelen";
 import { ETIKETT, FOR, har } from "@/app/sak/skjema/steg";
 import { idag } from "@/lib/app/dato";
 import { erObjekt, flett } from "@/lib/app/flett";
@@ -33,7 +33,7 @@ const NOKKEL = "tvistr-utkast";
 const ADV_MS = 750;
 type Nokkel = Parameters<typeof har>[1];
 // The field the peek bar names for a change of the per-area answers.
-const SOM: Record<string, Nokkel> = { f_area: "f_found", f_catdesc: "f_any_desc", f_desc: "f_any_desc" };
+const SOM: Record<string, Nokkel> = { f_area: "f_found", f_catdesc: "f_any_desc" };
 
 // The form inside the draft over the defaults, so a draft stored by an older version has every field.
 const medSkjema = (l: Lagret): Lagret => ({ ...l, skjema: flett(standard(idag()), erObjekt(l.skjema) ? l.skjema : {}) as Skjema });
@@ -44,6 +44,7 @@ const STEG: Record<string, (p: StegProps) => ReactNode> = {
   kjopet: (p) => <Kjopet {...p} medForbehold={false} />,
   feil: Feilvalg,
   omrader: Omrader,
+  virkning: Virkning,
   verksted: Verksted,
   selger_sa: SelgerSa,
   sagt_fra: SagtFra,
@@ -195,7 +196,7 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
           <Steget s={s} sett={sett} />
         )}
         {/* Only where this screen's own answer puts the case outside what the letter covers. */}
-        {((sk.id === "selger" && !!utkast.seller && utkast.seller !== "forhandler") || (sk.id === "kjoper" && utkast.buyer === "naering")) && (
+        {sk.id === "selger" && r.tier === "utenfor" && (
           <div className="fl-varsel" role="status">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 3l10 18H2zM12 10v4M12 17.5h.01" />

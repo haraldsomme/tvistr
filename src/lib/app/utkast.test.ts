@@ -5,7 +5,7 @@ import { standardUtkast, type Utkast, utkastResultat, utkastSvar, utkastTilSvar 
 const idag = "2026-10-21";
 const s0 = standard(idag);
 const gammel: Utkast = {
-  skjema: { ...s0, c_reg: "AB 12345", c_make: "Peugeot", c_model: "308", c_year: "2014", c_delivery: "2025-03-15", f_cats: ["motor"], f_parts: { motor: ["turbo"] }, f_area: { motor: { found: "2025-08-20", impact: [], known: "" } } },
+  skjema: { ...s0, c_reg: "AB 12345", c_make: "Peugeot", c_model: "308", c_year: "2014", c_delivery: "2025-03-15", f_cats: ["motor"], f_parts: { motor: ["turbo"] }, f_area: { motor: { found: "2025-08-20" } } },
   asis: "vetikke",
   seller: "forhandler",
 };

@@ -95,6 +95,13 @@ export const Opp = (p: P) => (
 
 // The claim tiles (artifact ICO).
 export const KRAVIKON: Record<string, ReactNode> = {
+  // No alternative claim.
+  ingen: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12h8" />
+    </>
+  ),
   retting: <path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L4 16.8V20h3.2l5.3-5.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z" />,
   prisavslag: (
     <>

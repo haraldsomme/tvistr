@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gjelderSaken, kjopt, laas, manglerISkjema, nyttPrecValg, rensSkjema, sakTekst, sammeSakSkjema, tilKjop, tilSvar } from "./saken";
+import { forsokTall, gjelderSaken, kjopt, laas, manglerISkjema, nyttPrecValg, rensSkjema, sakTekst, sammeSakSkjema, tilKjop, tilSvar } from "./saken";
 import { eksempel, standard } from "./skjema";
 
 const idag = "2026-10-16";
@@ -27,7 +27,7 @@ describe("tilSvar", () => {
   it("uten datoer gir null", () => expect(tilSvar(standard(idag))).toBeNull());
   it("feil uten dato tas ut", () => {
     const s = eksempel(idag);
-    const svar = tilSvar({ ...s, f_cats: ["hoyvolt", "motor"], f_area: { ...s.f_area, motor: { found: "", impact: [], known: "" } } })!;
+    const svar = tilSvar({ ...s, f_cats: ["hoyvolt", "motor"], f_area: { ...s.f_area, motor: { found: "" } } })!;
     expect(svar.feil.map((f) => f.hoved)).toEqual(["hoyvolt"]);
   });
   it("selger sa ingenting", () => expect(tilSvar({ ...eksempel(idag), seller_said: "nei" })!.feil[0].opplysning).toBe("nei"));
@@ -63,6 +63,7 @@ describe("låst til kjøpet", () => {
     expect(gjelderSaken({ ...svar, feil: [{ ...svar.feil[0], hoved: "motor" }] }, s)).toBe(false);
     expect(gjelderSaken({ ...svar, feil: [{ ...svar.feil[0], under: ["annet"] }] }, s)).toBe(false);
   });
+  it("rettingsforsøk som tall", () => expect(["", "0", "1", "2", "2+", "3+"].map(forsokTall)).toEqual([null, 0, 1, 2, 2, 3]));
   it("rensSkjema: bare kjente felt av riktig type", () => {
     const s = rensSkjema({ b_name: "Kari", c_asis: "ja", ukjent: 1 }, idag)!;
     expect(s.b_name).toBe("Kari");
@@ -70,7 +71,14 @@ describe("låst til kjøpet", () => {
     expect(s).not.toHaveProperty("ukjent");
     expect(rensSkjema(null, idag)).toBeNull();
     expect(rensSkjema([], idag)).toBeNull();
-    expect(rensSkjema({ f_desc: "x".repeat(70_000) }, idag)).toBeNull();
+    expect(rensSkjema({ b_name: "x".repeat(70_000) }, idag)).toBeNull();
+  });
+  it("rensSkjema: en eldre sak får virkningen samlet og beskrivelsen etter den første feilen", () => {
+    const f_area = { motor: { found: "2026-09-01", impact: ["kosmetisk", "bruk"], known: "nei" }, klima: { found: "2026-09-02", impact: ["sikkerhet"], known: "" } };
+    const s = rensSkjema({ f_cats: ["motor", "klima"], f_area, f_catdesc: { motor: "Bank i motoren." }, f_desc: "Lampen lyser" }, idag)!;
+    expect(s.f_impact).toEqual(["bruk", "sikkerhet"]);
+    expect(s.f_catdesc.motor).toBe("Bank i motoren. Lampen lyser");
+    expect(rensSkjema({ f_cats: ["motor"], f_area, f_impact: ["plagsom"] }, idag)!.f_impact).toEqual(["plagsom"]);
   });
 });
 

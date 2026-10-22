@@ -15,7 +15,6 @@ export function datoavvik(s: Skjema, idag: string): string[] {
     ["Kjøpsdatoen", s.c_purchase],
     ["Overtakelsesdatoen", s.c_delivery],
     ["Datoen du sa fra", s.f_prior ? s.f_prior_date : ""],
-    ["Datoen for verkstedrapporten", s.ws === "rapport" ? s.ws_date : ""],
     ...funnet.map((x) => [`Datoen feilen (${navn(x.c).toLowerCase()}) ble oppdaget`, x.d]),
   ].filter(([, d]) => d && d > idag);
   for (const [hva] of fremtid) ut.push(`${hva} er frem i tid.`);

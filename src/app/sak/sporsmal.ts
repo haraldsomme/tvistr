@@ -1,9 +1,9 @@
 // The screens before payment (mockup «Sjekk saken»), one per screen: who sold and bought, then every
 // answer that shapes the letter, in the letter's order. A screen is done when it has what the letter
-// and the verdict need; «Neste» waits for it. Private sales, leasing and purchases through a company are
-// not covered: their screen stays undone.
+// and the verdict need; «Neste» waits for it and says what is missing (`mangler`). The car never blocks:
+// the purchase asks for it instead (manglerISkjema). Private sales, leasing and purchases through a
+// company are not covered: their screen stays undone.
 import { seksjon } from "@/app/sak/skjema/steg";
-import { manglerISkjema } from "@/lib/app/saken";
 import type { Utkast } from "@/lib/app/utkast";
 
 export type Skjerm = {
@@ -13,6 +13,8 @@ export type Skjerm = {
   hint?: string;
   vis?: (u: Utkast) => boolean;
   ferdig: (u: Utkast) => boolean;
+  // One line under the buttons when «Neste» is pressed on a screen that is not done.
+  mangler?: (u: Utkast) => string;
 };
 
 // The question of a screen that edits one of the form's sections, as the section asks it (steg.ts).
@@ -22,27 +24,41 @@ const som = (id: string) => {
 };
 
 export const SKJERMER: Skjerm[] = [
-  { id: "selger", gruppe: "Kjøpet", tittel: "Hvem kjøpte du bilen av?", hint: "Hvem som solgte bilen, avgjør hvilken lov som gjelder.", ferdig: (u) => u.seller === "forhandler" },
-  { id: "kjoper", gruppe: "Kjøpet", tittel: "Kjøpte du bilen privat eller gjennom firma?", hint: "Som privatperson har du sterkere rettigheter.", vis: (u) => u.seller === "forhandler", ferdig: (u) => u.buyer === "privat" },
   {
-    id: "bilen",
+    id: "selger",
     gruppe: "Kjøpet",
-    ...som("bilen"),
-    ferdig: (u) => {
-      const m = manglerISkjema(u.skjema);
-      return m !== "reg" && m !== "bil";
-    },
+    tittel: "Hvem kjøpte du bilen av?",
+    hint: "Hvem som solgte bilen, avgjør hvilken lov som gjelder.",
+    ferdig: (u) => u.seller === "forhandler",
+    mangler: (u) => (u.seller ? "Brevet gjelder bare kjøp fra en forhandler." : "Velg hvem du kjøpte bilen av."),
   },
-  { id: "kjopet", gruppe: "Kjøpet", ...som("kjopet"), ferdig: (u) => !!(u.skjema.c_purchase || u.skjema.c_delivery) },
-  { id: "forbehold", gruppe: "Kontrakten", tittel: "Står det «som den er» i kontrakten?", hint: "Se etter formuleringer som «solgt som den er» eller «som besiktiget».", ferdig: (u) => u.asis !== undefined },
-  { id: "feil", gruppe: "Feilen", ...som("feilen"), ferdig: (u) => u.skjema.f_cats.length > 0 },
-  { id: "omrader", gruppe: "Feilen", ...som("omrader"), ferdig: (u) => u.skjema.f_cats.length > 0 && u.skjema.f_cats.every((c) => !!u.skjema.f_area[c]?.found) },
-  { id: "arsak", gruppe: "Feilen", tittel: "Kan feilen skyldes noe annet enn bilen selv?", ferdig: (u) => !!u.skjema.f_cause_check },
-  { id: "verksted", gruppe: "Feilen", ...som("verksted"), ferdig: (u) => !!u.skjema.ws },
-  { id: "selger_sa", gruppe: "Kontrakten", ...som("selger_sa"), ferdig: (u) => !!u.skjema.seller_said },
+  {
+    id: "kjoper",
+    gruppe: "Kjøpet",
+    tittel: "Kjøpte du bilen privat eller gjennom firma?",
+    hint: "Som privatperson har du sterkere rettigheter.",
+    vis: (u) => u.seller === "forhandler",
+    ferdig: (u) => u.buyer === "privat",
+    mangler: (u) => (u.buyer ? "Brevet gjelder bare kjøp som privatperson." : "Velg om du kjøpte bilen privat eller gjennom firma."),
+  },
+  // Never blocks: the purchase needs the reg.nr. and the make, and the result says so with a link back.
+  { id: "bilen", gruppe: "Kjøpet", ...som("bilen"), ferdig: () => true },
+  { id: "kjopet", gruppe: "Kjøpet", ...som("kjopet"), ferdig: (u) => !!(u.skjema.c_purchase || u.skjema.c_delivery), mangler: () => "Legg inn kjøpsdatoen eller overtakelsesdatoen." },
+  { id: "forbehold", gruppe: "Kontrakten", tittel: "Står det «som den er» i kontrakten?", hint: "Se etter formuleringer som «solgt som den er» eller «som besiktiget».", ferdig: (u) => u.asis !== undefined, mangler: () => "Velg et svar." },
+  { id: "feil", gruppe: "Feilen", ...som("feilen"), ferdig: (u) => u.skjema.f_cats.length > 0, mangler: () => "Velg minst én feil." },
+  {
+    id: "omrader",
+    gruppe: "Feilen",
+    ...som("omrader"),
+    ferdig: (u) => u.skjema.f_cats.length > 0 && u.skjema.f_cats.every((c) => !!u.skjema.f_area[c]?.found),
+    mangler: (u) => (u.skjema.f_cats.length ? "Legg inn når du oppdaget feilen for hver feil." : "Velg minst én feil først."),
+  },
+  { id: "arsak", gruppe: "Feilen", tittel: "Kan feilen skyldes noe annet enn bilen selv?", ferdig: (u) => !!u.skjema.f_cause_check, mangler: () => "Velg et svar." },
+  { id: "verksted", gruppe: "Feilen", ...som("verksted"), ferdig: (u) => !!u.skjema.ws, mangler: () => "Velg om feilen er undersøkt av et verksted." },
+  { id: "selger_sa", gruppe: "Kontrakten", ...som("selger_sa"), ferdig: (u) => !!u.skjema.seller_said, mangler: () => "Velg hva selgeren sa." },
   // Nothing is required, but the date once the buyer says they have complained.
-  { id: "sagt_fra", gruppe: "Kontrakten", ...som("sagt_fra"), ferdig: (u) => !u.skjema.f_prior || !!u.skjema.f_prior_date },
-  { id: "kravet", gruppe: "Kravet", ...som("kravet"), ferdig: (u) => !!u.skjema.k_main },
+  { id: "sagt_fra", gruppe: "Kontrakten", ...som("sagt_fra"), ferdig: (u) => !u.skjema.f_prior || !!u.skjema.f_prior_date, mangler: () => "Legg inn når du sa fra." },
+  { id: "kravet", gruppe: "Kravet", ...som("kravet"), ferdig: (u) => !!u.skjema.k_main, mangler: () => "Velg et krav." },
 ];
 
 export const synlige = (u: Utkast) => SKJERMER.filter((s) => !s.vis || s.vis(u));

@@ -100,6 +100,15 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
     avbryt();
     endre((l) => ({ ...l, _screen: "q", _i: Math.max(0, synlige(l).findIndex((x) => x.id === id)) }));
   };
+  // «Start på nytt»: a new draft from question 1, as `/sak?ny`.
+  const nyttUtkast = () => {
+    avbryt();
+    settSist(null);
+    settRaa({ ...standardUtkast(idag()), _i: 0 });
+  };
+  // «Neste» pressed on a screen that is not done: the screen it was pressed on, so the line under the
+  // buttons says what is missing until the screen is done or another one opens.
+  const [trykket, settTrykket] = useState<string | null>(null);
 
   // A choice goes on by itself once the screen is done (not for a case the letter does not cover).
   function velg(id: string, v: string) {
@@ -154,7 +163,7 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
   const valg = ENKELTVALG[sk.id];
 
   const venstre = !klar ? null : skjerm === "result" ? (
-    <Resultat utkast={utkast} r={r} lignende={brev.svar?.lignende ?? null} utvikling={utvikling} onEndre={() => tilSkjerm(vis.at(-1)!.id)} onTilSkjerm={tilSkjerm} />
+    <Resultat utkast={utkast} r={r} lignende={brev.svar?.lignende ?? null} utvikling={utvikling} onEndre={() => tilSkjerm(vis.at(-1)!.id)} onNy={nyttUtkast} onTilSkjerm={tilSkjerm} tittel={tittel} />
   ) : (
     <>
       {i === 0 && <MaalVisning hendelse="sjekk_startet" />}
@@ -222,12 +231,15 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
             </svg>
           </button>
         )}
-        <button type="button" className="fl-cta" aria-disabled={!ferdig} onClick={() => ferdig && neste()}>
+        <button type="button" className="fl-cta" aria-disabled={!ferdig} onClick={() => (ferdig ? neste() : settTrykket(her))}>
           {adv ? "Går videre …" : siste ? "Se vurderingen" : "Neste"}
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 12h14M13 6l6 6-6 6" />
           </svg>
         </button>
+        <p className="fl-mangler" role="status">
+          {trykket === her && !ferdig ? sk.mangler?.(utkast) : null}
+        </p>
       </div>
       <Styrke r={r} apen={false} />
     </>

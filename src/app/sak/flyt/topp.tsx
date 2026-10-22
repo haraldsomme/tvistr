@@ -15,9 +15,10 @@ export function Topp({ lagring, aktivSak }: { lagring: string; aktivSak?: string
         <Ordmerke size={26} color="var(--fl-ink)" />
       </Link>
       <span className="fl-fyll" />
-      <span className="fl-lagring" data-tilstand={tilstand(lagring)} role="status">
+      {/* Below 960px the words show only while saving or after a failure (globals.css). */}
+      <span className="fl-lagring" data-tilstand={tilstand(lagring)} role="status" title={lagring}>
         <span aria-hidden="true" />
-        {lagring}
+        <span className="fl-lagring-t">{lagring}</span>
       </span>
       <Kontomeny aktivSak={aktivSak} />
     </header>

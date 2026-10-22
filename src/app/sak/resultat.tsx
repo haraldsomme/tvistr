@@ -3,7 +3,7 @@
 // with its rows, and «Lignende saker». A case the owner has bought already is opened instead: the
 // answers just given are not carried over.
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { type RefObject, useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Kjop } from "@/app/deler/kjop";
 import { Lignende } from "@/app/deler/lignende";
@@ -23,9 +23,40 @@ const PRISTEKST = GRATIS ? "Gratis" : `kr ${tall(PRIS)}`;
 const BETALER_FOR = GRATIS ? "som brevet skal gjelde" : "du betaler for";
 const ingen = () => () => {};
 
+// «Endre svarene» goes back to the last question; «Start på nytt» replaces the draft with a new one.
+const Lenker = ({ onEndre, onNy }: { onEndre: () => void; onNy: () => void }) => (
+  <div className="fl-lenker">
+    <button type="button" className="fl-lenke" onClick={onEndre}>
+      Endre svarene
+    </button>
+    <button type="button" className="fl-lenke" onClick={onNy}>
+      Start på nytt
+    </button>
+  </div>
+);
+
 type Lignende = NonNullable<Extract<Forhandsvist, { ok: true }>["lignende"]>;
 
-export function Resultat({ utkast, r, lignende, utvikling, onEndre, onTilSkjerm }: { utkast: Utkast; r: Vurdering; lignende: Lignende | null; utvikling: boolean; onEndre: () => void; onTilSkjerm: (id: string) => void }) {
+export function Resultat({
+  utkast,
+  r,
+  lignende,
+  utvikling,
+  onEndre,
+  onNy,
+  onTilSkjerm,
+  tittel,
+}: {
+  utkast: Utkast;
+  r: Vurdering;
+  lignende: Lignende | null;
+  utvikling: boolean;
+  onEndre: () => void;
+  onNy: () => void;
+  onTilSkjerm: (id: string) => void;
+  // The heading, focused when the result opens (as each question's is).
+  tittel: RefObject<HTMLHeadingElement | null>;
+}) {
   const router = useRouter();
   const s = utkast.skjema;
   // The case bought last in this browser, and the owner's cases from the account: one for the same car
@@ -62,7 +93,9 @@ export function Resultat({ utkast, r, lignende, utvikling, onEndre, onTilSkjerm 
           <i aria-hidden="true" />
           {r.badge}
         </span>
-        <h1>{r.title}</h1>
+        <h1 ref={tittel} tabIndex={-1}>
+          {r.title}
+        </h1>
         <p>{r.summary}</p>
       </div>
       {r.tier === "utenfor" ? (
@@ -72,9 +105,7 @@ export function Resultat({ utkast, r, lignende, utvikling, onEndre, onTilSkjerm 
               <li key={t}>{t}</li>
             ))}
           </ul>
-          <button type="button" className="fl-lenke" onClick={onEndre}>
-            Endre svarene
-          </button>
+          <Lenker onEndre={onEndre} onNy={onNy} />
         </div>
       ) : (
         <>
@@ -98,16 +129,18 @@ export function Resultat({ utkast, r, lignende, utvikling, onEndre, onTilSkjerm 
                 </button>
               </>
             ) : mangler ? (
-              <p className="fl-varsel">
-                {mangler === "reg"
-                  ? `Legg inn registreringsnummeret først. Brevet gjelder bilen ${BETALER_FOR}.`
-                  : mangler === "bil"
-                    ? `Hent bilen fra Vegvesen eller skriv inn merke og modell først. Brevet gjelder bilen ${BETALER_FOR}, og den kan ikke endres etterpå.`
-                    : `Velg hvilken feil det gjelder først. Brevet gjelder feilen ${BETALER_FOR}.`}{" "}
+              <div className="fl-varsel fl-varsel-stabel">
+                <span>
+                  {mangler === "reg"
+                    ? `Legg inn registreringsnummeret først. Brevet gjelder bilen ${BETALER_FOR}.`
+                    : mangler === "bil"
+                      ? `Hent bilen fra Vegvesen eller skriv inn merke og modell først. Brevet gjelder bilen ${BETALER_FOR}, og den kan ikke endres etterpå.`
+                      : `Velg hvilken feil det gjelder først. Brevet gjelder feilen ${BETALER_FOR}.`}
+                </span>
                 <button type="button" className="lnk" onClick={() => onTilSkjerm(mangler === "feil" ? "feil" : "bilen")}>
                   {mangler === "feil" ? "Velg feilen" : "Legg inn bilen"}
                 </button>
-              </p>
+              </div>
             ) : henter ? (
               <button type="button" className="fl-cta" aria-disabled="true" aria-busy="true">
                 Sjekker kjøpene dine …
@@ -123,9 +156,7 @@ export function Resultat({ utkast, r, lignende, utvikling, onEndre, onTilSkjerm 
                 </span>
               </>
             )}
-            <button type="button" className="fl-lenke" onClick={onEndre}>
-              Endre svarene
-            </button>
+            <Lenker onEndre={onEndre} onNy={onNy} />
           </div>
         </>
       )}

@@ -25,9 +25,16 @@ describe("SKJERMER", () => {
     for (const seller of [undefined, "privat", "leasing"] as const) expect(synlige(utkast({ seller })).map((s) => s.id)).not.toContain("kjoper");
     expect(synlige(utkast({ seller: "forhandler" })).map((s) => s.id)).toContain("kjoper");
   });
-  it("bilen trenger reg.nr. og merke", () => {
-    expect(skjerm("bilen").ferdig(utkast({}, { c_reg: "AB 12345" }))).toBe(false);
-    expect(skjerm("bilen").ferdig(utkast({}, { c_reg: "AB 12345", c_make: "Skoda" }))).toBe(true);
+  it("bilen stopper ikke: kjøpet krever den i stedet", () => {
+    expect(skjerm("bilen").ferdig(utkast())).toBe(true);
+    expect(skjerm("bilen").ferdig(utkast({}, { c_reg: "AB 12345" }))).toBe(true);
+  });
+  it("hver skjerm som kan stoppe, sier hva som mangler", () => {
+    for (const sk of SKJERMER) if (sk.id !== "bilen") expect(sk.mangler?.(utkast())).toMatch(/\.$/);
+    expect(skjerm("feil").mangler!(utkast())).toBe("Velg minst én feil.");
+    expect(skjerm("omrader").mangler!(utkast({}, { f_cats: ["motor"] }))).toBe("Legg inn når du oppdaget feilen for hver feil.");
+    expect(skjerm("selger").mangler!(utkast())).toBe("Velg hvem du kjøpte bilen av.");
+    expect(skjerm("kravet").mangler!(utkast())).toBe("Velg et krav.");
   });
   it("feilen trenger minst én kategori", () => {
     expect(skjerm("feil").ferdig(utkast())).toBe(false);

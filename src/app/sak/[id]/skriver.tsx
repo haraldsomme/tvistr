@@ -40,9 +40,20 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
   // The sections answered after payment start open while they lack something.
   const [apen, settApen] = useState<ReadonlySet<string>>(() => new Set(ETTER.filter((st) => st.felt.some((k) => !har(start, k))).map((st) => st.id)));
   const [vindu, settVindu] = useState(false);
+  // The dialog's switch «Vis til en lignende sak», staged until «Ferdig» like the pick; null while closed.
+  const [precUtkast, settPrecUtkast] = useState<boolean | null>(null);
+  const apneVindu = () => {
+    settPrecUtkast(null);
+    settVindu(true);
+  };
+  const lukkVindu = () => {
+    settVindu(false);
+    settPrecUtkast(null);
+  };
   // The decisions are looked up while no row that changes them is open (the sections before payment;
-  // sender, recipient and the letter's settings do not), or while the dialog is.
-  const vedtak = useVedtak(s, sett, id, vindu || !FOR.some((st) => apen.has(st.id)));
+  // sender, recipient and the letter's settings do not), or while the dialog is, also when its switch is
+  // only staged on.
+  const vedtak = useVedtak(s, sett, id, vindu || !FOR.some((st) => apen.has(st.id)), precUtkast ?? s.prec_on);
   const [toast, settToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -159,7 +170,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
           ))}
         </section>
       )}
-      <Svarene s={s} sett={sett} apen={apen} settApen={veksle} vedtak={vedtak} onVedtak={() => settVindu(true)} />
+      <Svarene s={s} sett={sett} apen={apen} settApen={veksle} vedtak={vedtak} onVedtak={apneVindu} />
       <Styrke r={r} apen onEndre={(f) => tilRad(stegFor(f.t))} />
       {lignende?.ok && (
         <Lignende
@@ -170,7 +181,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
           fot={
             <>
               {s.prec_on ? "Brevet viser til saken du har valgt, og forklarer hvorfor du har krav på samme resultat." : "Du har slått av henvisningen til en lignende sak i brevet."}{" "}
-              <button type="button" className="lnk" onClick={() => settVindu(true)}>
+              <button type="button" className="lnk" onClick={apneVindu}>
                 Velg vedtak
               </button>
             </>
@@ -183,7 +194,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
           Hva du kan gjøre hvis forhandleren avviser
         </a>
       </p>
-      <Vedtaksvindu apen={vindu} vedtak={vedtak} s={s} sett={sett} onLukk={() => settVindu(false)} />
+      <Vedtaksvindu apen={vindu} vedtak={vedtak} s={s} sett={sett} precOn={precUtkast ?? s.prec_on} settPrecOn={settPrecUtkast} onLukk={lukkVindu} />
       <div className={`toast${toast ? " on" : ""}`} role="status" aria-live="polite">
         {toast}
       </div>
@@ -200,7 +211,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
           venter={brev.venter}
           feil={brev.feil}
           etikett={etikett}
-          onFelt={(felt) => (felt.startsWith("vedtak.") ? settVindu(true) : tilRad(seksjonFor(felt)))}
+          onFelt={(felt) => (felt.startsWith("vedtak.") ? apneVindu() : tilRad(seksjonFor(felt)))}
         />
       }
       kikk={{ tekst: etikett, fylt: ALLE_FELT.length - nMangler, totalt: ALLE_FELT.length }}

@@ -44,7 +44,7 @@ export function Kjop({ utkast, apen, utvikling, onLukk }: { utkast: Utkast; apen
   }
 
   return (
-    <div className={`modal${apen ? " open" : ""}`} aria-hidden={!apen} onClick={(e) => e.target === e.currentTarget && onLukk()}>
+    <div className={`modal${apen ? " open" : ""}`} aria-hidden={!apen} inert={!apen} onClick={(e) => e.target === e.currentTarget && onLukk()}>
       <div className="modal-in" role="dialog" aria-modal="true" aria-labelledby="buyTitle">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div>

@@ -11,7 +11,7 @@ import { Brevvalg, Deg, Forhandleren } from "@/app/sak/skjema/partene";
 import { ETTER, FOR, type Seksjon } from "@/app/sak/skjema/steg";
 import { fmtD } from "@/lib/app/dato";
 import { cap } from "@/lib/app/format";
-import { sakTekst } from "@/lib/app/saken";
+import { sakNavn, sakTekst } from "@/lib/app/saken";
 import { type Skjema, syncAreas } from "@/lib/app/skjema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { GRATIS } from "@/lib/pris";
@@ -62,7 +62,7 @@ export function oppsummering(id: string, skjema: Skjema): string {
   }
 }
 
-const LAAST_BIL = `Bilen er låst fordi brevet gjelder bilen ${GRATIS ? "du valgte" : "du betalte for"}. Overtakelsesdato og km-stand kan du endre.`;
+const LAAST_BIL = `Bilen er låst fordi brevet gjelder bilen ${GRATIS ? "du valgte" : "du betalte for"}. Km-stand kan du endre her, overtakelsesdatoen under Kjøpet.`;
 
 // The fields of each row that opens, with the car locked and the «som den er» switch in Kjøpet.
 const STEG: Record<string, (p: StegProps) => ReactNode> = {
@@ -93,6 +93,12 @@ function vedtakTekst(s: Skjema, v: Vedtaksvalg): string {
   if (!v.funn.ok) return "Fikk ikke hentet vedtakene";
   if (!v.valgt) return "Ingen lignende sak med medhold";
   return [sakTekst(v.valgt.saksnummer, v.valgt.vedtaksdato?.slice(0, 4) ?? null), v.valgt.bil, v.valgt.anbefalt && "Anbefalt"].filter(Boolean).join(" · ");
+}
+
+// When a new list changed the decision the letter cites, as the dialog says it (Endringsmelding).
+export function vedtakEndret(s: Skjema, v: Vedtaksvalg): string | null {
+  if (!s.prec_on || !v.endring || !v.valgt || (!v.endring.byttetFra && v.endring.utfall !== "borte")) return null;
+  return `Endret: brevet viser nå til ${sakNavn(v.valgt)}`;
 }
 
 // The row's element id, for scrolling to it from the letter, the checklist and the verdict.
@@ -159,6 +165,7 @@ function Rad({ sk, s, sett, pa, settApen }: { sk: Seksjon; s: Skjema; sett: Sett
 }
 
 export function Svarene({ s, sett, apen, settApen, vedtak, onVedtak }: { s: Skjema; sett: Sett; apen: ReadonlySet<string>; settApen: (id: string, pa: boolean) => void; vedtak: Vedtaksvalg; onVedtak: () => void }) {
+  const endret = vedtakEndret(s, vedtak);
   return (
     <section className="fl-svarene" aria-labelledby="svareneTittel">
       <h2 id="svareneTittel">Svarene dine</h2>
@@ -172,6 +179,7 @@ export function Svarene({ s, sett, apen, settApen, vedtak, onVedtak }: { s: Skje
             <span className="fl-svar-t">
               <span className="fl-svar-n">Vedtaket</span>
               <span className="fl-svar-v">{vedtakTekst(s, vedtak)}</span>
+              {endret && <span className="fl-svar-endret">{endret}</span>}
             </span>
             <span className="fl-svar-e">Endre</span>
           </button>

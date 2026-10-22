@@ -84,6 +84,8 @@ export function fraSjekk(a: Sjekk, s: Skjema): Skjema {
 
 // «Sak 21/3494 · 2022», or «Vedtak 2022» when the decision has no case number.
 export const sakTekst = (saksnummer: string | null, ar: string | null) => (saksnummer ? `Sak ${saksnummer}${ar ? ` · ${ar}` : ""}` : `Vedtak${ar ? ` ${ar}` : ""}`);
+// «sak 21/3494» in a sentence, or «et annet vedtak» without a case number.
+export const sakNavn = (v: { saksnummer: string | null } | null) => (v?.saksnummer ? `sak ${v.saksnummer}` : "et annet vedtak");
 
 // A purchase is for one car and the faults chosen before payment; the writer cannot change them.
 // What the draft still lacks before it can be bought: the registration number, the car (from the

@@ -31,7 +31,7 @@ export default async function Page() {
           {saker.length === 0 && (
             <section style={kort}>
               <p style={{ margin: "0 0 12px", fontSize: 15, color: "#465150" }}>Du har ingen brev på denne Vipps-kontoen.</p>
-              <Link href="/sak?start" className="btn pri" style={lenke}>
+              <Link href="/sak?ny" className="btn pri" style={lenke}>
                 Sjekk en ny sak
               </Link>
             </section>
@@ -55,7 +55,7 @@ export default async function Page() {
           })}
           {saker.length > 0 && (
             <div>
-              <Link href="/sak?start" className="btn" style={lenke}>
+              <Link href="/sak?ny" className="btn" style={lenke}>
                 Sjekk en ny sak
               </Link>
             </div>

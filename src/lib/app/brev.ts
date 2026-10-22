@@ -281,7 +281,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
       B.push({ t: "p", tekst: [{ ph: "lignende sak hentes" }] });
     } else if (presedens) {
       B.push({ t: "h", tekst: [`Praksis fra ${presedens.utvalg}`] });
-      B.push({ t: "prec", avsnitt: [[presedens.avsnitt], ...(presedens.kildeUrl ? [[`Vedtaket er offentlig tilgjengelig på ${presedens.kildeUrl}`]] : [])] });
+      B.push({ t: "prec", avsnitt: [[{ felt: "vedtak.avsnitt", tekst: presedens.avsnitt }], ...(presedens.kildeUrl ? [[`Vedtaket er offentlig tilgjengelig på ${presedens.kildeUrl}`]] : [])] });
       B.push({ t: "p", tekst: [slutning(presedens, s, firm)] });
     } else B.push({ t: "p", tekst: [LOVSETNING] });
   }

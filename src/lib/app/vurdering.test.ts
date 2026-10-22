@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dur, parseD, relText } from "./dato";
+import { dur, fmtD, parseD, relText } from "./dato";
 import { regler } from "./lov";
 import { eksempel, syncAreas } from "./skjema";
 import { evaluate, skriverResultat, wsFactors } from "./vurdering";
@@ -38,14 +38,15 @@ describe("evaluate", () => {
     expect(evaluate({ ...base, known: "synlig", delivery: "2026-06-01", found: "2026-10-01" }, idag).factors.find((f) => f.t === "Feilen var synlig ved kjøpet")?.d).toContain("med rimelighet kunne forvente"));
   it("fristen ute nevner unntaket for grov uaktsomhet og uredelighet", () =>
     expect(evaluate({ ...base, delivery: "2020-01-01", found: "2026-01-01" }, idag).factors.find((f) => f.t === "Fristen er ute")?.d).toContain("grovt uaktsomt eller i strid med redelighet og god tro"));
-  it("sender innen to måneder gir sendBy", () => expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-10-01" }, idag).sendBy).toBe("2026-12-01"));
+  it("sender innen to måneder: i tide til fristen", () =>
+    expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-10-01" }, idag).factors.find((f) => f.t === "Du er i tide")?.d).toContain(fmtD(parseD("2026-12-01")!)));
 });
 
 describe("wsFactors", () => {
   it("rapport som sier levering", () => expect(wsFactors({ ws: "rapport", ws_says: ["levering"] })[0].s).toBe("good"));
-  it("selger opplyste om feilen før 2024: rødt (gamle § 16 tredje ledd)", () => expect(wsFactors({ seller_said: "opplyste", dato: "2023-06-01" }).some((f) => f.s === "bad")).toBe(true));
+  it("selger opplyste om feilen før 2024: rødt (gamle § 16 tredje ledd)", () => expect(wsFactors({ seller_said: "opplyste", c_purchase: "2023-06-01" }).some((f) => f.s === "bad")).toBe(true));
   it("selger opplyste om feilen fra 2024: gult, bare et avtalt unntak teller (§ 15 annet ledd)", () => {
-    const f = wsFactors({ seller_said: "opplyste", dato: "2024-06-01" }).find((x) => x.t === "Selger opplyste om feilen")!;
+    const f = wsFactors({ seller_said: "opplyste", c_delivery: "2024-06-01" }).find((x) => x.t === "Selger opplyste om feilen")!;
     expect(f.s).toBe("warn");
     expect(f.d).toContain("spesielt opplyst om akkurat dette avviket og uttrykkelig godtok det");
     expect(f.law).toBe("forbrkjl. § 15 annet ledd");

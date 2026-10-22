@@ -1,8 +1,6 @@
 // Bump the version whenever a prompt or schema changes, so `tolk --på-nytt` can find old output.
 export const KLASSIFISERING_VERSJON = "klassifiser-v1";
 export const TOLKNING_VERSJON = "tolk-v4";
-// The practice paragraph (src/lib/praksis/prompt.ts): prompt, tool schema and verifier rules together.
-export const PRAKSIS_VERSJON = "praksis-v1";
 
 export const KLASSIFISERING_SYSTEM = `Du klassifiserer vedtak fra Forbrukerklageutvalget og Forbrukertvistutvalget.
 

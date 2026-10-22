@@ -16,8 +16,6 @@ const MEDHOLD = new Set(["medhold", "delvis_medhold"]);
 
 // Figures for fewer decisions than this are not shown (docs/app.md).
 export const MIN_SAKER = 5;
-// The median price reduction needs at least this many decisions with a known share.
-export const MIN_PRISAVSLAG = 10;
 // The key of the row for the whole set.
 export const ALLE = "alle";
 
@@ -29,28 +27,15 @@ export type Statistikkrad = {
   prisavslag: number;
   retting: number;
   erstatning: number;
-  prisavslagMedianProsent: number | null;
-  alderMedian: number | null;
-  kmMedian: number | null;
 };
 
 // One decision as the count reads it.
 export type Tellevedtak = {
   id: number;
   utfall: string | null;
-  alder: number | null;
-  km: number | null;
-  prisavslagProsent: number | null;
   sanksjoner: string[] | null;
   feil: AvledetFeil[];
   avgjorende: Avgjorende | null;
-};
-
-export const median = (xs: number[]): number | null => {
-  if (!xs.length) return null;
-  const s = [...xs].sort((a, b) => a - b);
-  const m = Math.floor(s.length / 2);
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
 
 // What the buyer got for this defect alone: the extraction's answer when there is one, otherwise the
@@ -62,8 +47,8 @@ export function sanksjonerFor(v: Tellevedtak, f: AvledetFeil): string[] {
   return medhold.length === 1 && medhold[0].id === f.id ? (v.sanksjoner ?? []) : [];
 }
 
-type Samler = { saker: Set<number>; medhold: Set<number>; sanksjon: Record<Extract<Sanksjon, "heving" | "prisavslag" | "retting" | "erstatning">, Set<number>>; prosent: Map<number, number>; alder: Map<number, number>; km: Map<number, number> };
-const ny = (): Samler => ({ saker: new Set(), medhold: new Set(), sanksjon: { heving: new Set(), prisavslag: new Set(), retting: new Set(), erstatning: new Set() }, prosent: new Map(), alder: new Map(), km: new Map() });
+type Samler = { saker: Set<number>; medhold: Set<number>; sanksjon: Record<Extract<Sanksjon, "heving" | "prisavslag" | "retting" | "erstatning">, Set<number>> };
+const ny = (): Samler => ({ saker: new Set(), medhold: new Set(), sanksjon: { heving: new Set(), prisavslag: new Set(), retting: new Set(), erstatning: new Set() } });
 
 export function byggStatistikk(vedtak: Tellevedtak[]): Statistikkrad[] {
   const per = new Map<string, Samler>();
@@ -83,9 +68,6 @@ export function byggStatistikk(vedtak: Tellevedtak[]): Statistikkrad[] {
         s.medhold.add(v.id);
         const sanksjoner = sanksjonerFor(v, f);
         for (const x of ["heving", "prisavslag", "retting", "erstatning"] as const) if (sanksjoner.includes(x)) s.sanksjon[x].add(v.id);
-        if (sanksjoner.includes("prisavslag") && v.prisavslagProsent !== null) s.prosent.set(v.id, v.prisavslagProsent);
-        if (v.alder !== null) s.alder.set(v.id, v.alder);
-        if (v.km !== null) s.km.set(v.id, v.km);
       }
     }
   }
@@ -97,9 +79,6 @@ export function byggStatistikk(vedtak: Tellevedtak[]): Statistikkrad[] {
     prisavslag: s.sanksjon.prisavslag.size,
     retting: s.sanksjon.retting.size,
     erstatning: s.sanksjon.erstatning.size,
-    prisavslagMedianProsent: s.prosent.size >= MIN_PRISAVSLAG ? median([...s.prosent.values()]) : null,
-    alderMedian: median([...s.alder.values()]),
-    kmMedian: median([...s.km.values()]),
   });
   return [rad(ALLE, alle), ...[...per].sort(([a], [b]) => a.localeCompare(b)).map(([k, s]) => rad(k, s))];
 }

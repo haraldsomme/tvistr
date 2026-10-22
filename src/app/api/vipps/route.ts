@@ -9,7 +9,7 @@ const forMange = lagGrense({ antall: 300, vinduMs: 60_000 });
 // from the message; the state comes from Vipps itself (src/lib/vipps/avstem.ts). An error answer makes
 // Vipps try again later.
 export async function POST(request: Request) {
-  if (forMange(ipFra(request))) return new Response(null, { status: 429 });
+  if (forMange(ipFra(request.headers))) return new Response(null, { status: 429 });
   const hemmelighet = process.env.VIPPS_WEBHOOK_SECRET;
   const body = await request.text();
   const url = new URL(request.url);

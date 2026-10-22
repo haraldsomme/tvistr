@@ -6,6 +6,7 @@
 // (tvistr-utkast); nothing is saved on the server before kjop.
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Pil } from "@/app/deler/ikoner";
 import { MaalVisning } from "@/app/maal-visning";
 import { forhandsvis } from "@/app/sak/brevet-actions";
 import { useBrev } from "@/app/sak/flyt/bruk-brev";
@@ -21,16 +22,14 @@ import { ETIKETT, FOR, har } from "@/app/sak/skjema/steg";
 import { idag } from "@/lib/app/dato";
 import { erObjekt, flett } from "@/lib/app/flett";
 import { useLagret } from "@/lib/app/lagring";
-import type { Sjekk as GammelSjekk } from "@/lib/app/saken";
 import { type Skjema, standard, syncAreas } from "@/lib/app/skjema";
-import { fraGammelSjekk, standardUtkast, type Utkast, utkastResultat } from "@/lib/app/utkast";
+import { standardUtkast, type Utkast, utkastResultat } from "@/lib/app/utkast";
 import { Resultat } from "./resultat";
 import { ENKELTVALG, synlige } from "./sporsmal";
 
 type Lagret = Utkast & { _i?: number; _screen?: "q" | "result" };
 
 const NOKKEL = "tvistr-utkast";
-const GAMMEL = "tvistr-sjekk";
 const ADV_MS = 750;
 type Nokkel = Parameters<typeof har>[1];
 // The field the peek bar names for a change of the per-area answers.
@@ -121,20 +120,10 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
   }
   useEffect(() => () => clearTimeout(tid.current), []);
 
-  // Once the stored draft is read: a check from the old flow becomes the draft (unless there is one
-  // already) and is removed; `?ny` starts a new draft; `?start` (the front page) opens question 1 with
-  // the answers kept. The parameter is dropped so a reload stays where the buyer is.
+  // Once the stored draft is read: `?ny` starts a new draft; `?start` (the front page) opens question 1
+  // with the answers kept. The parameter is dropped so a reload stays where the buyer is.
   useLayoutEffect(() => {
     if (!klar) return;
-    let gammel: unknown = null,
-      harUtkast = false;
-    try {
-      const g = localStorage.getItem(GAMMEL);
-      harUtkast = localStorage.getItem(NOKKEL) !== null;
-      if (g) gammel = JSON.parse(g);
-      localStorage.removeItem(GAMMEL);
-    } catch {}
-    if (erObjekt(gammel) && !harUtkast && !ny) settRaa({ ...fraGammelSjekk(gammel as GammelSjekk, idag()), _i: 0 });
     if (ny) settRaa({ ...standardUtkast(idag()), _i: 0 });
     else if (fraStart) settRaa((l) => ({ ...l, _screen: "q", _i: 0 }));
     if (ny || fraStart) router.replace("/sak");
@@ -233,9 +222,7 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
         )}
         <button type="button" className="fl-cta" aria-disabled={!ferdig} onClick={() => (ferdig ? neste() : settTrykket(her))}>
           {adv ? "Går videre …" : siste ? "Se vurderingen" : "Neste"}
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
+          <Pil s={17} w={2.2} />
         </button>
         <p className="fl-mangler" role="status">
           {trykket === her && !ferdig ? sk.mangler?.(utkast) : null}

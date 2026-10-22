@@ -6,10 +6,10 @@
 //   npm run tolk -- [--grense N] [--spredt] [--på-nytt] [--samtidig 6] [--id 12,34]
 
 import { parseArgs } from "node:util";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../src/db";
 import { kildedokument, vedtak, type NyttVedtak } from "../src/db/schema";
-import { AvvistAvModellError, erKontofeil, kallVerktoy, type Forbruk } from "../src/lib/ai/klient";
+import { erKontofeil, kallVerktoy, kjorMedKontostopp, spredtOrden, type Forbruk } from "../src/lib/ai/klient";
 import { KONTROLL_SYSTEM, TOLKNING_SYSTEM, TOLKNING_VERSJON, tolkningBruker } from "../src/lib/ai/prompter";
 import { fraModell, KONTROLL_SKJEMA, SITATFELT, TOLKNING_SKJEMA, type Tolkning } from "../src/lib/ai/skjema";
 import { normaliserFirmanavn, normaliserMerke, normaliserOrgnr, normaliserParagrafer } from "../src/lib/normalisering";
@@ -51,12 +51,7 @@ async function tolkDokument(dok: { id: number; lokalSti: string; kildeUrl: strin
   const t = fraModell(svar.input);
 
   // Redaction, first pass: identifiers from the model plus fixed patterns.
-  const id: Identifikatorer = {
-    klager: t.personopplysninger.klager,
-    personer: t.personopplysninger.personer,
-    adresser: t.personopplysninger.adresser,
-    andre: t.personopplysninger.andre,
-  };
+  const id: Identifikatorer = { ...t.personopplysninger };
   const selgerErFirma = t.selger_type !== "privat" && !!t.selger_navn;
   let fulltekst = rens(tekst, id, { selgerErFirma });
 
@@ -188,11 +183,7 @@ async function main() {
         ider?.length ? inArray(kildedokument.id, ider) : undefined,
       ),
     )
-    .orderBy(
-      ...(args.spredt
-        ? [sql`row_number() over (partition by ${kildedokument.ar} order by md5(${kildedokument.id}::text))`, kildedokument.ar]
-        : [kildedokument.id]),
-    )
+    .orderBy(...spredtOrden(args.spredt))
     .limit(grense);
 
   console.log(`Tolker ${dokumenter.length} vedtak (${TOLKNING_VERSJON}).`);
@@ -208,9 +199,7 @@ async function main() {
     } catch (e) {
       if (erKontofeil(e)) throw e;
       feil++;
-      if (process.env.TOLK_DEBUG) console.error((e as Error).stack);
-      const melding = e instanceof AvvistAvModellError ? e.message : (e as Error).message;
-      await db.update(kildedokument).set({ feilmelding: `tolking: ${melding}`.slice(0, 500) }).where(eq(kildedokument.id, dok.id));
+      await db.update(kildedokument).set({ feilmelding: `tolking: ${(e as Error).message}`.slice(0, 500) }).where(eq(kildedokument.id, dok.id));
     }
     ferdig++;
     if (ferdig % 10 === 0 || ferdig === dokumenter.length) {
@@ -219,11 +208,4 @@ async function main() {
   });
 }
 
-main().catch((e) => {
-  if (erKontofeil(e)) {
-    console.error(`STOPP: ${(e as Error).message.slice(0, 200)}\nKjør skriptet på nytt når kontoen er i orden; det fortsetter der det slapp.`);
-    process.exit(3);
-  }
-  console.error(e);
-  process.exit(1);
-});
+kjorMedKontostopp(main);

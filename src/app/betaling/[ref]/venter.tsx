@@ -7,6 +7,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Hake, Kopier, Pil } from "@/app/deler/ikoner";
+import { Melding } from "@/app/deler/juridisk";
+import { fmtD } from "@/lib/app/dato";
 import { tall } from "@/lib/app/format";
 import { skriv } from "@/lib/app/lagring";
 import { inneHint } from "@/lib/innlogging/navn";
@@ -72,27 +74,23 @@ export function Venter({ referanse, n }: { referanse: string; n: string | null }
 
   const { tittel, tekst } = TEKST[visning];
   return (
-    <div style={{ maxWidth: 560, margin: "0 auto", padding: "64px 0", display: "flex", flexDirection: "column", gap: 16 }} aria-live="polite">
-      <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, letterSpacing: "-0.03em" }}>{tittel}</h1>
-      <p style={{ margin: 0, fontSize: 16, lineHeight: 1.55, color: tekstfarge }}>{tekst}</p>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        {visning === "lenge" && (
-          <button type="button" className="btn pri" onClick={prov}>
-            Sjekk igjen
-          </button>
-        )}
-        {visning === "avbrutt" && (
-          <Link href="/sak" className="btn pri" style={{ textDecoration: "none" }}>
-            Prøv igjen
-          </Link>
-        )}
-        {visning === "ukjent" && (
-          <Link href="/sak" className="btn" style={{ textDecoration: "none" }}>
-            Til saksvurderingen
-          </Link>
-        )}
-      </div>
-    </div>
+    <Melding tittel={tittel} tekst={tekst} aria-live="polite">
+      {visning === "lenge" && (
+        <button type="button" className="btn pri" onClick={prov}>
+          Sjekk igjen
+        </button>
+      )}
+      {visning === "avbrutt" && (
+        <Link href="/sak" className="btn pri" style={{ textDecoration: "none" }}>
+          Prøv igjen
+        </Link>
+      )}
+      {visning === "ukjent" && (
+        <Link href="/sak" className="btn" style={{ textDecoration: "none" }}>
+          Til saksvurderingen
+        </Link>
+      )}
+    </Melding>
   );
 }
 
@@ -114,7 +112,7 @@ function Takk({ b, referanse, medN }: { b: Bekreftelse; referanse: string; medN:
       () => settKopiert(true),
       () => {},
     );
-  const dato = new Date(b.betalt).toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" });
+  const dato = fmtD(new Date(b.betalt));
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto", padding: "48px 0 64px", display: "flex", flexDirection: "column", gap: 20 }}>

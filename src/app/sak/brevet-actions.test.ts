@@ -9,7 +9,7 @@ const grense = vi.hoisted(() => ({ full: false }));
 vi.mock("next/headers", () => ({ headers: async () => new Map([["x-forwarded-for", "10.0.0.1"]]) }));
 vi.mock("@/lib/sak/db", () => ({ hentEgenSak }));
 vi.mock("@/app/sak/lignende-db", () => ({ lignendeFor }));
-vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => grense.full }));
+vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => grense.full, ipFra: () => "10.0.0.1" }));
 
 const { forhandsvis, fulltBrev } = await import("./brevet-actions");
 const { idag } = await import("@/lib/app/dato");

@@ -14,7 +14,8 @@ import { laas, rensSkjema } from "@/lib/app/saken";
 import { syncAreas } from "@/lib/app/skjema";
 import { utkastResultat, utkastTilSvar } from "@/lib/app/utkast";
 import type { Kriterium, Treff } from "@/lib/matching/ranger";
-import { lagGrense } from "@/lib/rategrense";
+import { SANKSJONER } from "@/lib/feilvurdering/skjema";
+import { ipFra, lagGrense } from "@/lib/rategrense";
 import { hentEgenSak } from "@/lib/sak/db";
 import { lignendeFor } from "./lignende-db";
 import { rensUtkast } from "./rens";
@@ -26,7 +27,7 @@ export type FulltBrev = { ok: true; blokker: Blokk[]; tekst: string; emne: strin
 // The letter is fetched again as the buyer types (debounced in the browser).
 const forMangeForhandsvisninger = lagGrense({ antall: 120, vinduMs: 60_000 });
 const forMangeBrev = lagGrense({ antall: 120, vinduMs: 60_000 });
-const ipAdresse = async () => (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "ukjent";
+const ipAdresse = async () => ipFra(await headers());
 const FOR_MANGE: Feil = { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
 
 export async function forhandsvis(inn: { utkast: unknown }): Promise<Forhandsvist> {
@@ -52,7 +53,6 @@ export async function forhandsvis(inn: { utkast: unknown }): Promise<Forhandsvis
   }
 }
 
-const SANKSJONER = ["heving", "prisavslag", "retting", "erstatning", "omlevering"];
 const KRITERIER: readonly string[] = ["underkategori", "tidsniva", "km", "alder", "som_den_er", "krav", "egen_vurdering", "grunnlag"] satisfies Kriterium[];
 const TREFF: readonly string[] = ["likt", "strengere", "mildere", "delvis", "ulikt", "ukjent", "ikke_oppgitt"] satisfies Treff[];
 

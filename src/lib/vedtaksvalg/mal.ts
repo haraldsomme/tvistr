@@ -1,4 +1,4 @@
-import { liste } from "@/lib/brev/format";
+import { liste, tall } from "@/lib/brev/format";
 
 // The paragraph that cites the decision, filled from fields and verified quotes only. Nothing about
 // the decision is written in free prose, so it cannot claim what the decision did not say.
@@ -29,7 +29,6 @@ export const MIN_KM_ANDEL = 0.9;
 // «FKU-2026-117158» is the archive's id; the decision itself says «sak 117158».
 export const visSaksnummer = (s: string | null) => s?.replace(/^FKU-\d{4}-(\d+)(?:-\d+)?$/, "$1") ?? null;
 export const visDato = (iso: string | null) => (iso && /^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${Number(iso.slice(8))}.${Number(iso.slice(5, 7))}.${iso.slice(0, 4)}` : null);
-const visKm = (km: number) => new Intl.NumberFormat("nb-NO").format(km);
 const sitert = (s: string) => `«${s}»${/[.!?]$/.test(s) ? "" : "."}`;
 
 function henvisning(v: Malvedtak): string {
@@ -42,7 +41,7 @@ function bilen(v: Malvedtak): string {
   const navn = [v.merke, v.modell].filter(Boolean).join(" ");
   const bil = v.bil ? `en ${v.bil}` : navn ? `en ${navn}` : "en bil";
   const ar = v.arsmodell && !v.bil ? ` av årsmodell ${v.arsmodell}` : "";
-  const km = v.km !== null ? ` som hadde gått ${visKm(v.km)} km ved kjøpet` : "";
+  const km = v.km !== null ? ` som hadde gått ${tall(v.km)} km ved kjøpet` : "";
   return `${bil}${ar}${km}${v.somDenEr ? ", solgt «som den er»" : ""}`;
 }
 
@@ -51,7 +50,7 @@ function bilen(v: Malvedtak): string {
 export function sammenligning(k: Kjoperbil, v: Malvedtak): string | null {
   const deler: string[] = [];
   if (k.alder !== null && v.alder !== null && v.alder - k.alder >= MIN_ALDERSFORSKJELL) deler.push(`var yngre (${k.alder} mot ${v.alder} år)`);
-  if (k.km !== null && v.km !== null && k.km <= v.km * MIN_KM_ANDEL) deler.push(`hadde gått kortere (${visKm(k.km)} mot ${visKm(v.km)} km)`);
+  if (k.km !== null && v.km !== null && k.km <= v.km * MIN_KM_ANDEL) deler.push(`hadde gått kortere (${tall(k.km)} mot ${tall(v.km)} km)`);
   if (k.somDenEr === false && v.somDenEr === true) deler.push("var ikke solgt «som den er»");
   return deler.length ? `Bilen i foreliggende sak ${liste(deler)}.` : null;
 }

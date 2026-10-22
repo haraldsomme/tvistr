@@ -7,7 +7,6 @@ import {
   jsonb,
   pgEnum,
   pgTable,
-  pgView,
   primaryKey,
   serial,
   text,
@@ -17,8 +16,8 @@ import {
 import { sql } from "drizzle-orm";
 import type { Lagret as Avgjorende } from "../lib/avgjorende/skjema";
 import type { Lagret as Feilvurdering } from "../lib/feilvurdering/skjema";
-import type { Sjekk } from "../lib/app/saken";
 import type { Skjema } from "../lib/app/skjema";
+import type { Sjekksvar } from "../lib/app/vurdering";
 import type { LagretSvar } from "../lib/vedtaksvalg/valg";
 
 export const kildeArkivEnum = pgEnum("kilde_arkiv", ["hist", "prod", "wp"]);
@@ -312,42 +311,6 @@ export const vedtakFeil = pgTable(
   ],
 );
 
-// Created in drizzle/0007_pass2_view.sql. Joins the decision fields in instead of copying them,
-// so they cannot drift from `vedtak`.
-export const vedtakFeilSok = pgView("vedtak_feil_sok", {
-  vedtakId: integer("vedtak_id").notNull(),
-  feilId: text("feil_id").notNull(),
-  kategori: text("kategori").notNull(),
-  komponenter: text("komponenter").array().notNull(),
-  vurdering: text("vurdering").notNull(),
-  samletUtfall: text("samlet_utfall"),
-  grunn: text("grunn"),
-  grunnlag: text("grunnlag"),
-  bevisgrunnlag: text("bevisgrunnlag"),
-  spor: text("spor").array().notNull(),
-  sporVunnet: text("spor_vunnet").array().notNull(),
-  aVariant: text("a_variant"),
-  alvor: text("alvor").array().notNull(),
-  dagerEtterLevering: integer("dager_etter_levering"),
-  visteSegPresisjon: text("viste_seg_presisjon").notNull(),
-  visteSegKilde: text("viste_seg_kilde"),
-  innenFormodningsfrist: boolean("innen_formodningsfrist"),
-  formodning: text("formodning").notNull(),
-  belopTilkjentNok: integer("belop_tilkjent_nok"),
-  harSkriftligOpplysning: boolean("har_skriftlig_opplysning").notNull(),
-  harSakkyndigBevis: boolean("har_sakkyndig_bevis").notNull(),
-  saksnummer: text("saksnummer"),
-  vedtaksdato: date("vedtaksdato"),
-  kildeUrl: text("kilde_url").notNull(),
-  selgerType: selgerTypeEnum("selger_type"),
-  alderVedKjop: integer("alder_ved_kjop"),
-  kmVedKjop: integer("km_ved_kjop"),
-  kjopesumNok: integer("kjopesum_nok"),
-  utfall: utfallEnum("utfall"),
-  lovversjon: lovversjonEnum("lovversjon").notNull(),
-  ikkeMangelssak: boolean("ikke_mangelssak").notNull(),
-}).existing();
-
 // What the safety net in the letter's choice of decision found against the full text
 // (src/lib/vedtaksvalg/funn.ts): a defect not named or not judged on its own (`samlet` is set on it),
 // or a quote that is not the committee's standpoint (the quote is removed). The imports apply the
@@ -381,10 +344,6 @@ export const statistikkKategori = pgTable("statistikk_kategori", {
   prisavslag: integer("prisavslag").notNull(),
   retting: integer("retting").notNull(),
   erstatning: integer("erstatning").notNull(),
-  // Median price reduction as a share of the price, null under ten decisions.
-  prisavslagMedianProsent: doublePrecision("prisavslag_median_prosent"),
-  alderMedian: doublePrecision("alder_median"),
-  kmMedian: doublePrecision("km_median"),
   bygget: timestamp("bygget", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -412,7 +371,7 @@ export const sak = pgTable(
     id: text("id").primaryKey(),
     // The Vipps `sub` of the owner; null until a logged-in buyer pays for the case.
     vippsSub: text("vipps_sub"),
-    sjekk: jsonb("sjekk").$type<Sjekk>().notNull(),
+    sjekk: jsonb("sjekk").$type<Sjekksvar>().notNull(),
     skjema: jsonb("skjema").$type<Skjema>().notNull(),
     // Null until an order for the case is paid.
     betalt: timestamp("betalt", { withTimezone: true }),
@@ -437,7 +396,7 @@ export const ordre = pgTable(
       .notNull()
       .references(() => sak.id, { onDelete: "cascade" }),
     belopOre: integer("belop_ore").notNull(),
-    // "gratis" (the trial, GRATIS in src/lib/pris.ts) | "utvikling" (TVISTR_HELT_BREV_UTEN_BETALING) | "vipps"
+    // "gratis" (orders from the earlier free trial) | "utvikling" (TVISTR_HELT_BREV_UTEN_BETALING) | "vipps"
     leverandor: text("leverandor").notNull(),
     // "opprettet" | "betalt" | "avbrutt" | "feilet" | "refundert"; only src/lib/vipps/avstem.ts moves a Vipps order on from «opprettet»
     status: text("status").notNull(),
@@ -475,11 +434,5 @@ export const innloggingStart = pgTable("innlogging_start", {
   opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export type Kildedokument = typeof kildedokument.$inferSelect;
-export type Vedtak = typeof vedtak.$inferSelect;
 export type NyttVedtak = typeof vedtak.$inferInsert;
-export type NyVedtakAnalyse = typeof vedtakAnalyse.$inferInsert;
-export type NyVedtakFeil = typeof vedtakFeil.$inferInsert;
 export type Sak = typeof sak.$inferSelect;
-export type Innlogging = typeof innlogging.$inferSelect;
-export type InnloggingStart = typeof innloggingStart.$inferSelect;

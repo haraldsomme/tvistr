@@ -3,15 +3,11 @@
 //
 //   npm run ferdig:dekning
 
-import { sql } from "drizzle-orm";
-import { db } from "../src/db";
-import { vedtak } from "../src/db/schema";
+import { hentAlle } from "../src/app/sak/vedtak-db";
 import { plussManeder, tidsnivaFor } from "../src/lib/brev/tidslinje";
 import { HOVEDKATEGORIER, type VisteSegValg } from "../src/lib/feil/kategorier";
-import type { AvledetFeil } from "../src/lib/feilvurdering/skjema";
-import { GRUNNFILTER } from "../src/lib/matching/grunnfilter";
 import { ranger } from "../src/lib/matching/ranger";
-import type { Brukersak, Kandidat, Krav } from "../src/lib/matching/typer";
+import type { Brukersak, Krav } from "../src/lib/matching/typer";
 
 const KRAV_DEKNING = 0.9;
 // Months from purchase to discovery for each «viste seg» choice.
@@ -31,23 +27,7 @@ const PROFILER = [
 const KRAV: Krav[] = ["retting", "prisavslag", "heving"];
 
 async function main() {
-  const alle: Kandidat[] = await db
-    .select({
-      id: vedtak.id,
-      saksnummer: vedtak.saksnummer,
-      vedtaksdato: vedtak.vedtaksdato,
-      km: vedtak.kmVedKjop,
-      alder: vedtak.alderVedKjop,
-      somDenEr: vedtak.somDenEr,
-      sanksjoner: vedtak.sanksjoner,
-      mangelsgrunnlag: vedtak.mangelsgrunnlag,
-      paragrafer: vedtak.paragrafer,
-      tvistetema: vedtak.tvistetema,
-      feil: sql<AvledetFeil[]>`coalesce(${vedtak.feilvurdering}->'feil', '[]'::jsonb)`,
-      avgjorende: vedtak.avgjorende,
-    })
-    .from(vedtak)
-    .where(GRUNNFILTER);
+  const alle = await hentAlle();
   const telling = { A: 0, B: 0, lovsetning: 0 };
   const uten: string[] = [];
   for (const h of HOVEDKATEGORIER)

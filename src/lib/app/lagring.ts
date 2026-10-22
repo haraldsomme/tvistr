@@ -7,16 +7,6 @@ import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { erObjekt, flett } from "./flett";
 import type { Kjopt } from "./saken";
 
-// The stored value, merged over the defaults for objects; the defaults when missing, corrupt or of
-// another shape.
-export function les<T>(nokkel: string, standard: () => T): T {
-  try {
-    return tolk(localStorage.getItem(nokkel) ?? "", standard);
-  } catch {
-    return standard();
-  }
-}
-
 export function skriv(nokkel: string, v: unknown): void {
   minne.set(nokkel, JSON.stringify(v));
   try {
@@ -44,7 +34,9 @@ function abonner(f: () => void) {
   return () => void lyttere.delete(f);
 }
 
-function tolk<T>(r: string, standard: () => T): T {
+// The stored value, merged over the defaults for objects; the defaults when missing, corrupt or of
+// another shape.
+export function tolk<T>(r: string, standard: () => T): T {
   const s = standard();
   if (!r) return s;
   try {

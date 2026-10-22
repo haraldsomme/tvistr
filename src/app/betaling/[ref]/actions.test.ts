@@ -15,9 +15,9 @@ const vilkar = vi.fn<(w: unknown) => void>();
 const satt = vi.fn<(v: unknown) => void>();
 
 vi.mock("next/headers", () => ({ headers: async () => new Map([["x-forwarded-for", "10.0.0.1"]]) }));
-vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => false }));
+vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => false, ipFra: () => "10.0.0.1" }));
 vi.mock("@/lib/vipps/avstem", () => ({ avstem }));
-vi.mock("@/lib/vipps/klient", () => ({ hentBetaling: async () => ({ userDetails: { email: "kari@eksempel.no" } }) }));
+vi.mock("@/lib/vipps/klient", () => ({ hentBetaling: async () => ({ userDetails: { email: "kari@eksempel.no" } }), vippsBase: () => "https://apitest.vipps.no" }));
 vi.mock("@/lib/innlogging/okt", async (orig) => ({ ...(await orig<typeof import("@/lib/innlogging/okt")>()), lagOkt, innlogget }));
 vi.mock("@/db", async () => {
   const { ordre } = await import("@/db/schema");

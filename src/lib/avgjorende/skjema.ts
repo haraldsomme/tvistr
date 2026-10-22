@@ -2,7 +2,7 @@
 // the committee rested that conclusion on. It is read when the letter cites the decision
 // (src/lib/vedtaksvalg), so the model need not read the full text. The defect ids are the
 // feilvurdering's. Bump the version when the instruction or the answer changes.
-import { SANKSJONER, type Sanksjon } from "@/lib/feilvurdering/skjema";
+import type { Sanksjon } from "@/lib/feilvurdering/skjema";
 import { RETTSLIGE_POENG, type RettsligPoeng } from "@/lib/matching/rett";
 
 export const AVGJORENDE_VERSJON = "avgjorende-v5";
@@ -26,7 +26,6 @@ export const BEVIS = [
   "klagers_forklaring",
   "utvalgets_skjonn",
 ] as const;
-export { SANKSJONER };
 
 export type Bevis = (typeof BEVIS)[number];
 

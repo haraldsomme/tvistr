@@ -13,9 +13,8 @@ export function trygtMal(til: unknown): string {
   return new URL(til, "http://tvistr.invalid").host === "tvistr.invalid" ? til : MIN_SIDE;
 }
 
-// The same rule as opprinnelse() in src/app/sak/[id]/actions.ts, for a route handler's request.
-export function opprinnelse(request: Request): string {
-  const h = request.headers;
+// The site's own origin, from a route handler's request.headers or a server function's headers().
+export function opprinnelse(h: Headers): string {
   const vert = h.get("x-forwarded-host") ?? h.get("host");
   if (!vert) throw new Error("mangler host");
   return `${h.get("x-forwarded-proto") ?? (vert.startsWith("localhost") ? "http" : "https")}://${vert}`;

@@ -12,7 +12,7 @@ export async function mineKjop(): Promise<Kjopt[]> {
   return (await betalteSaker(sub)).map((r) => kjopt(r.id, r.skjema));
 }
 
-export type MittBrev = { id: string; bil: string; reg: string; feil: string; dato: string };
+export type MittBrev = { id: string; bil: string; reg: string; feil: string; dato: string; betalt: Date | null };
 
 // The account menu: the owner's name (the newest case's that has one) and one row per paid case,
 // newest first, as /min-side lists them. Empty when logged out.
@@ -29,6 +29,7 @@ export async function mineBrev(): Promise<{ navn: string | null; brev: MittBrev[
       feil: feilnavn(r.skjema.f_cats, r.skjema.f_parts),
       // The day of payment in Norway, whatever the server's time zone.
       dato: r.betalt ? r.betalt.toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Oslo" }) : "",
+      betalt: r.betalt,
     })),
   };
 }

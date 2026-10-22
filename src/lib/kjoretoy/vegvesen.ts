@@ -2,12 +2,6 @@
 // (https://autosys-kjoretoy-api.atlas.vegvesen.no). The key (VEGVESEN_API_KEY) stays on the server.
 // The registration number is the user's own and is only passed on, never stored.
 
-function erDato(v: unknown): v is string {
-  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
-  const d = new Date(`${v}T00:00:00Z`);
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
-}
-
 const URL_OPPSLAG = "https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata";
 
 export type Kjoretoy = {
@@ -18,8 +12,6 @@ export type Kjoretoy = {
   // The year the vehicle was first registered, anywhere. The registry has no model-year field; this
   // is the closest, and can be a year off the model year.
   ar: number | null;
-  // Registered abroad before it was registered in Norway. Left out when the registry does not tell.
-  bruktimportert?: boolean;
 };
 
 // `eierFra` is the day the vehicle was registered on its current owner, which is usually the buyer
@@ -62,12 +54,7 @@ export function lesKjoretoy(json: unknown): Kjoretoy | null {
   if (!merke || !regnr) return null;
   const dato = k?.godkjenning?.forstegangsGodkjenning?.forstegangRegistrertDato ?? k?.forstegangsregistrering?.registrertForstegangNorgeDato;
   const ar = Number(dato?.slice(0, 4));
-  // ponytail: three months between the two dates counts as imported used; a new car is registered here
-  // within days. Check against the registry's import field if it ever turns up in the API.
-  const forst = k?.godkjenning?.forstegangsGodkjenning?.forstegangRegistrertDato;
-  const norge = k?.forstegangsregistrering?.registrertForstegangNorgeDato;
-  const dager = forst && norge ? (Date.parse(norge) - Date.parse(forst)) / 86_400_000 : NaN;
-  return { regnr, merke: penMerke(merke), modell, ar: ar > 1900 ? ar : null, ...(!Number.isNaN(dager) && { bruktimportert: dager > 90 }) };
+  return { regnr, merke: penMerke(merke), modell, ar: ar > 1900 ? ar : null };
 }
 
 // The registry writes the day with a time and an offset («2024-06-04T10:23:02.673+02:00»). The day
@@ -75,7 +62,7 @@ export function lesKjoretoy(json: unknown): Kjoretoy | null {
 export function lesEierFra(json: unknown): string | null {
   const tid = (json as Svar | null)?.kjoretoydataListe?.[0]?.registrering?.registrertForstegangPaEierskap;
   const dag = typeof tid === "string" ? tid.slice(0, 10) : "";
-  return erDato(dag) ? dag : null;
+  return /^\d{4}-\d{2}-\d{2}$/.test(dag) ? dag : null;
 }
 
 export async function hentKjoretoy(regnr: string): Promise<Oppslag> {

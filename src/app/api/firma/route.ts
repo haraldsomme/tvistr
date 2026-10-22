@@ -6,6 +6,6 @@ import { sokForhandler } from "@/lib/brreg";
 const forMange = lagGrense({ antall: 60, vinduMs: 60_000 });
 
 export async function GET(request: Request) {
-  if (forMange(ipFra(request))) return Response.json({ forslag: [], feil: true }, { status: 429 });
+  if (forMange(ipFra(request.headers))) return Response.json({ forslag: [], feil: true }, { status: 429 });
   return Response.json(await sokForhandler(new URL(request.url).searchParams.get("q") ?? ""));
 }

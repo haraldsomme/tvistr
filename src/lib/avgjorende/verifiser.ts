@@ -2,8 +2,9 @@
 // defects) reject the whole answer; everything else is corrected or dropped, with the reason in
 // `kontroll`. Quotes and provisions must be found in the committee's own assessment, so a fact the
 // committee only recounted cannot pass as its reasoning.
-import { finnesIFulltekst, fulltekstVarianter, normaliser } from "@/lib/feilvurdering/verifiser";
-import { type AvgjorendeFeil, BEVIS, FORBEHOLD, LOVVERSJON, POENG, SANKSJONER, type Svar } from "./skjema";
+import { SANKSJONER } from "@/lib/feilvurdering/skjema";
+import { erListe, finnesIFulltekst, fulltekstVarianter, normaliser } from "@/lib/feilvurdering/verifiser";
+import { type AvgjorendeFeil, BEVIS, FORBEHOLD, LOVVERSJON, POENG, type Svar } from "./skjema";
 
 const MAKS_AVGJORENDE = 1000;
 const MAKS_SITATER = 3;
@@ -35,8 +36,7 @@ export function signaturdato(fulltekst: string): string | null {
 
 export type Lest = { ok: true; svar: Svar; kontroll: string[] } | { ok: false; feil: string };
 
-const iListe = <T extends string>(liste: readonly T[], v: unknown): v is T => typeof v === "string" && (liste as readonly string[]).includes(v);
-const liste = <T extends string>(lovlige: readonly T[], v: unknown) => (Array.isArray(v) ? [...new Set(v.filter((x): x is T => iListe(lovlige, x)))] : []);
+const liste = <T extends string>(lovlige: readonly T[], v: unknown) => (Array.isArray(v) ? [...new Set(v.filter((x): x is T => erListe(lovlige, x)))] : []);
 const tekster = (v: unknown) => (Array.isArray(v) ? [...new Set(v.filter((x): x is string => typeof x === "string").map((x) => x.trim()).filter(Boolean))] : []);
 const ELLIPSE = /…|\.\.\./;
 
@@ -121,7 +121,7 @@ export function lesSvar(raa: unknown, forventetId: number, fulltekst: string, me
   for (const r of Array.isArray(o.rettslige_sitater) ? (o.rettslige_sitater as unknown[]) : []) {
     const x = (r ?? {}) as Record<string, unknown>;
     const sitat = typeof x.sitat === "string" ? x.sitat.trim() : "";
-    if (!iListe(POENG, x.poeng)) kontroll.push(`rettslig poeng ${String(x.poeng)} ukjent, droppet`);
+    if (!erListe(POENG, x.poeng)) kontroll.push(`rettslig poeng ${String(x.poeng)} ukjent, droppet`);
     else if (rettslige_sitater.some((y) => y.poeng === x.poeng)) continue;
     else if (sitat && sitatHolder(sitat, String(x.poeng))) rettslige_sitater.push({ poeng: x.poeng, sitat });
   }
@@ -131,8 +131,8 @@ export function lesSvar(raa: unknown, forventetId: number, fulltekst: string, me
       vedtak_id: forventetId,
       selger_svarte,
       bil,
-      forbehold: iListe(FORBEHOLD, o.forbehold) ? o.forbehold : "ukjent",
-      lovversjon_brukt: iListe(LOVVERSJON, o.lovversjon_brukt) ? o.lovversjon_brukt : "ukjent",
+      forbehold: erListe(FORBEHOLD, o.forbehold) ? o.forbehold : "ukjent",
+      lovversjon_brukt: erListe(LOVVERSJON, o.lovversjon_brukt) ? o.lovversjon_brukt : "ukjent",
       rettslige_sitater,
       feil,
     },

@@ -22,7 +22,8 @@ vi.mock("@/db", () => ({
   },
 }));
 
-const { OKT, INNE, lagOkt, innlogget, loggUt, sha256hex } = await import("./okt");
+const { OKT, INNE } = await import("./navn");
+const { lagOkt, innlogget, loggUt, sha256hex } = await import("./okt");
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -21,5 +21,3 @@ export const VEKTER = {
   // The candidates the model chooses from, level A before B.
   kandidater: 10,
 };
-
-export type Vekter = typeof VEKTER;

@@ -4,7 +4,7 @@
 import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { LOVORD } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
-import { addMonths, dayDiff, dur, fmtD, iso, parseD } from "./dato";
+import { addMonths, dayDiff, dur, fmtD, parseD } from "./dato";
 import { regler, type Regler } from "./lov";
 import type { Skjema } from "./skjema";
 
@@ -34,13 +34,8 @@ export type Resultat = {
   badge: string;
   title: string;
   summary: string;
-  pos?: string;
   advice?: string[];
   factors: Faktor[];
-  claim?: string;
-  alt?: "heving" | "prisavslag";
-  sendBy?: string | null;
-  docs?: string;
 };
 
 const UTENFOR = {
@@ -62,9 +57,9 @@ const UTENFOR = {
 };
 
 const TIER = {
-  sterk: { badge: "Sterk sak", title: "Du har trolig en god sak", summary: "Ut fra svarene dine taler det meste for deg. Send en skriftlig reklamasjon så snart som mulig.", pos: "84%" },
-  mulig: { badge: "Mulig sak", title: "Du kan ha en sak, men noe bør avklares", summary: "Noen forhold kan svekke saken. Se punktene under. En verkstedrapport eller annen dokumentasjon kan gjøre den sterkere.", pos: "50%" },
-  svak: { badge: "Svak sak", title: "Saken ser vanskelig ut", summary: "Ett eller flere forhold taler tydelig mot deg. Du kan likevel reklamere, men vurder å få gratis råd fra Forbrukerrådet først.", pos: "16%" },
+  sterk: { badge: "Sterk sak", title: "Du har trolig en god sak", summary: "Ut fra svarene dine taler det meste for deg. Send en skriftlig reklamasjon så snart som mulig." },
+  mulig: { badge: "Mulig sak", title: "Du kan ha en sak, men noe bør avklares", summary: "Noen forhold kan svekke saken. Se punktene under. En verkstedrapport eller annen dokumentasjon kan gjøre den sterkere." },
+  svak: { badge: "Svak sak", title: "Saken ser vanskelig ut", summary: "Ett eller flere forhold taler tydelig mot deg. Du kan likevel reklamere, men vurder å få gratis råd fra Forbrukerrådet først." },
 };
 
 export function evaluate(q: Sjekksvar, idag: string): Resultat {
@@ -114,7 +109,6 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   if (!ute && !q.opplysning && del && fd && q.sist && fd >= del && q.found! <= plussManeder(q.delivery!, L.formodningMnd) && q.sist > plussManeder(q.delivery!, L.formodningMnd))
     F.push({ s: "warn", t: "Én av feilene viste seg senere", d: `Én av feilene viste seg mer enn ${L.formodningTekst} etter overtakelsen. For den må du selv sannsynliggjøre at den skyldes forhold ved leveringen.` });
 
-  let sendBy: string | null = null;
   if (!ute && fd && fd >= (del ?? fd)) {
     const lim = addMonths(fd, 2),
       nd = parseD(q.notifiedDate);
@@ -122,10 +116,8 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
       if (nd <= lim) F.push({ s: "good", t: "Du sa fra i tide", d: `Du sa fra ${dayDiff(fd, nd) <= 0 ? "samme dag som" : `${dur(fd, nd)} etter at`} du oppdaget feilen. Reklamasjon innen to måneder er alltid rettidig.`, law: L.ref("reklamasjon") });
       else F.push({ s: "warn", t: "Du sa fra etter mer enn to måneder", d: "Det kan fortsatt være innen rimelig tid, men forhandleren kan bestride det. Bekreft reklamasjonen skriftlig nå." });
     } else if (q.notified === "ja" && !nd) F.push({ s: "info", t: "Du har sagt fra", d: "Bekreft reklamasjonen skriftlig, så har du dokumentasjon på datoen." });
-    else if (today <= lim) {
-      sendBy = iso(lim);
-      F.push({ s: "good", t: "Du er i tide", d: `Sender du reklamasjonen innen ${fmtD(lim)}, er den alltid rettidig.`, law: L.ref("reklamasjon") });
-    } else F.push({ s: "warn", t: "Det har gått mer enn to måneder", d: "Du må reklamere innen rimelig tid etter at du oppdaget feilen. Send reklamasjonen så snart som mulig." });
+    else if (today <= lim) F.push({ s: "good", t: "Du er i tide", d: `Sender du reklamasjonen innen ${fmtD(lim)}, er den alltid rettidig.`, law: L.ref("reklamasjon") });
+    else F.push({ s: "warn", t: "Det har gått mer enn to måneder", d: "Du må reklamere innen rimelig tid etter at du oppdaget feilen. Send reklamasjonen så snart som mulig." });
   }
 
   // Before 2024 old § 16 tredje ledd: nothing the buyer knew or must have known. From 2024 that rule is
@@ -161,14 +153,9 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   const bad = F.filter((f) => f.s === "bad").length,
     warn = F.filter((f) => f.s === "warn").length;
   const tier = bad ? "svak" : warn === 0 ? "sterk" : warn <= 2 ? "mulig" : "svak";
-  const alt = sev >= 4 ? "heving" : "prisavslag";
-  const claim = sev === 1 ? "Krev at feilen rettes. Prisavslag kan være et alternativ hvis du kan leve med feilen." : `Krev at forhandleren retter feilen, med ${alt} som subsidiært krav hvis rettingen ikke lykkes.`;
-  // Always a used car, so the advice is always to get the workshop's word in writing.
-  // Forbrukerrådet: a neutral expert, whose bill can be claimed back when the buyer wins.
-  const docs = "Få et verksted, helst et uavhengig, til å beskrive feilen og årsaken skriftlig. Utgiften til rapporten kan du kreve dekket som erstatning hvis du får medhold. Ta vare på kontrakt, annonse, bilder og kvitteringer.";
   // Without any date there is nothing to weigh yet.
-  if (!q.delivery && !q.found) return { tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen.", factors: F, claim, alt, sendBy, docs };
-  return { tier, ...TIER[tier], factors: F, claim, alt, sendBy, docs };
+  if (!q.delivery && !q.found) return { tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen.", factors: F };
+  return { tier, ...TIER[tier], factors: F };
 }
 
 // § 27 annet ledd fjerde punktum (a warranty for longer) and fjerde ledd (the seller grossly negligent or
@@ -194,12 +181,13 @@ const WS_FAKTOR = {
 };
 
 // What the writer adds to the verdict: the workshop and what the seller said before the sale.
-export function wsFactors(s: { ws?: string; ws_says?: string[]; seller_said?: string; dato?: string }): Faktor[] {
+export function wsFactors(s: { ws?: string; ws_says?: string[]; seller_said?: string; c_purchase?: string; c_delivery?: string }): Faktor[] {
   const F: Faktor[] = [];
+  const dato = s.c_purchase || s.c_delivery;
   if (s.ws === "rapport" || s.ws === "uten" || s.ws === "nei") F.push(WS_FAKTOR[s.ws](s.ws_says ?? []));
-  if (s.seller_said === "lovet") F.push({ s: "good", t: "Selger sa at bilen var fri for slike feil", d: "Det selger opplyste før kjøpet, er en del av avtalen. Avvik fra det er en mangel.", law: regler(s.dato).ref("uriktig") });
+  if (s.seller_said === "lovet") F.push({ s: "good", t: "Selger sa at bilen var fri for slike feil", d: "Det selger opplyste før kjøpet, er en del av avtalen. Avvik fra det er en mangel.", law: regler(dato).ref("uriktig") });
   else if (s.seller_said === "opplyste") {
-    const L = regler(s.dato);
+    const L = regler(dato);
     F.push(L.versjon === "før_2024" ? { s: "bad", t: "Selger opplyste om feilen", d: "Du kan normalt ikke reklamere på en feil selger fortalte om før kjøpet." } : { ...KJENT_ETTER_2024(L), t: "Selger opplyste om feilen" });
   }
   return F;
@@ -224,7 +212,8 @@ export const writerQ = (s: Skjema): Sjekksvar => ({
   notifiedDate: s.f_prior_date,
 });
 
-export function skriverResultat(s: Skjema, idag: string): Resultat {
-  const r = evaluate(writerQ(s), idag);
-  return { ...r, factors: [...r.factors, ...wsFactors({ ...s, dato: s.c_purchase || s.c_delivery })] };
+// `q`: the verdict's answers when they are not only the writer's (the draft's, utkast.ts).
+export function skriverResultat(s: Skjema, idag: string, q: Sjekksvar = writerQ(s)): Resultat {
+  const r = evaluate(q, idag);
+  return { ...r, factors: [...r.factors, ...wsFactors(s)] };
 }

@@ -11,7 +11,7 @@ import { lagOkt } from "@/lib/innlogging/okt";
 import { byttKode } from "@/lib/innlogging/vipps-login";
 
 export async function GET(request: Request) {
-  const base = opprinnelse(request);
+  const base = opprinnelse(request.headers);
   const p = new URL(request.url).searchParams;
   const state = p.get("state");
   const kode = p.get("code");

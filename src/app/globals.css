@@ -30,9 +30,6 @@ button{cursor:pointer}
 h1,h2,h3{text-wrap:balance;margin:0}
 
 /* ───── Word mark ───── */
-.brand{display:flex;align-items:center;gap:11px}
-.brand b{display:block;font-weight:650;font-size:16px;letter-spacing:-.015em}
-.brand small{display:block;font-size:12px;color:var(--muted)}
 
 /* ───── The form ───── */
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -203,7 +200,6 @@ input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;b
 .home{margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)))}
 .home section[id]{scroll-margin-top:84px}
 .home button{cursor:pointer;font-family:inherit}
-.brand-btn{border:0;background:none;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer;border-radius:12px}
 @media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
 
 h1,h2,h3{text-wrap:balance}
@@ -281,13 +277,6 @@ h1,h2,h3{text-wrap:balance}
 .sugg{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:var(--accent-soft);font-size:13.5px;line-height:1.45;color:var(--ink-2);animation:rise .4s var(--ease)}
 .sugg[hidden]{display:none!important}
 .sugg b{color:var(--ink);font-weight:600}
-.ac-wrap{position:relative}
-.ac{position:absolute;left:0;right:0;top:100%;margin-top:6px;z-index:40;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh-2);padding:6px;display:flex;flex-direction:column;max-height:320px;overflow:auto}
-.ac[hidden]{display:none!important}
-.ac-o{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border:0;background:none;border-radius:10px;text-align:left;width:100%;min-height:44px}
-.ac-o:hover,.ac-o.on{background:var(--sunken)}
-.ac-o b{font-size:14.5px;font-weight:600}
-.ac-o span{font-size:12.5px;color:var(--muted)}
 #dealerHint svg{color:var(--good);vertical-align:-2px}
 textarea.cd-in{min-height:84px}
 details.fold > summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:28px}
@@ -338,10 +327,14 @@ html,body{overflow-x:clip}
 @media (max-width:900px){.facs{border-radius:18px}.facs{padding:6px 20px}}
 
 /* purchase modal */
-.modal{position:fixed;inset:0;z-index:60;background:rgba(17,21,21,.32);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:grid;place-items:center;padding:20px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px));opacity:0;pointer-events:none;transition:opacity .3s}
-.modal.open{opacity:1;pointer-events:auto}
+/* A <dialog> that is itself the full-screen overlay, so ::backdrop draws nothing; it fades in and out. */
+.modal{position:fixed;inset:0;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;color:inherit;background:rgba(17,21,21,.32);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:grid;place-items:center;padding:20px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px));opacity:0;transition:opacity .3s,overlay .3s allow-discrete,display .3s allow-discrete}
+.modal:not([open]){display:none}
+.modal[open]{opacity:1}
+.modal::backdrop,.fl-vindu::backdrop{background:none}
 .modal-in{width:min(460px,100%);background:var(--surface);border-radius:24px;padding:28px;box-shadow:0 40px 80px -30px rgba(17,21,21,.45);display:flex;flex-direction:column;gap:18px;transform:translateY(16px) scale(.98);transition:transform .45s var(--ease)}
-.modal.open .modal-in{transform:none}
+.modal[open] .modal-in{transform:none}
+@starting-style{.modal[open]{opacity:0}.modal[open] .modal-in{transform:translateY(16px) scale(.98)}}
 .order{border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .order div{display:flex;justify-content:space-between;gap:12px;padding:14px 16px;font-size:14.5px;border-bottom:1px solid var(--line)}
 .order div:last-child{border-bottom:0;background:var(--rail);font-weight:600}
@@ -367,7 +360,7 @@ html,body{overflow-x:clip}
 .sim-bar i:nth-child(2){animation-delay:.12s}.sim-bar i:nth-child(3){animation-delay:.24s}.sim-bar i:nth-child(4){animation-delay:.36s}
 @keyframes simgrow{from{transform:scaleX(0);opacity:.3}to{transform:none;opacity:1}}
 .sim-bar i,.sim-leg i{display:block;border-radius:8px}
-.o0{background:var(--accent)}.o1{background:#7A8FAB}.o2{background:#A9B6CA}.o3{background:#D3DAE4}.o4{background:#EBEFF5}
+.o0{background:var(--accent)}.o1{background:#7A8FAB}.o2{background:#A9B6CA}.o3{background:#D3DAE4}
 .sim-leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink-2)}
 .sim-leg span{display:inline-flex;align-items:center;gap:7px}
 .sim-leg i{width:9px;height:9px;border-radius:3px}
@@ -423,7 +416,7 @@ html,body{overflow-x:clip}
 /* fault checklist (mockup 4b, 4c on mobile): a card per category, its subcategories as rows under it */
 .fl{display:flex;flex-direction:column;gap:10px}
 .fl-c{border:1px solid var(--line-2);border-radius:16px;background:var(--surface);transition:border-color .2s,box-shadow .3s var(--ease)}
-.fl:not(.laast) .fl-c:not(.on):hover{border-color:#AEB9B6}
+.fl .fl-c:not(.on):hover{border-color:#AEB9B6}
 .fl-c.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 16px 34px -20px rgba(31,58,95,.45)}
 .fl-h{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border:0;border-radius:16px;background:none;text-align:left;color:var(--ink);user-select:none}
 .fl-c.on .ico{background:var(--accent);color:var(--accent-ink)}
@@ -437,10 +430,8 @@ html,body{overflow-x:clip}
 .fl-q{font-size:13.5px;color:var(--ink-2);padding:0 10px 4px}
 .fl-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:2px 8px}
 .fl-u{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 10px;border:0;border-radius:10px;background:transparent;text-align:left;font-size:14.5px;line-height:1.3;color:var(--ink-2);transition:background .15s;user-select:none}
-.fl:not(.laast) .fl-u:hover{background:var(--sunken)}
-.fl-u[aria-checked="true"],.fl:not(.laast) .fl-u[aria-checked="true"]:hover{background:var(--accent-soft);color:var(--ink)}
-.fl-h:disabled,.fl-u:disabled{cursor:default}
-.fl.laast .fl-u[aria-checked="false"]{opacity:.5}
+.fl .fl-u:hover{background:var(--sunken)}
+.fl-u[aria-checked="true"],.fl .fl-u[aria-checked="true"]:hover{background:var(--accent-soft);color:var(--ink)}
 /* choice rows in the form: the defect list's boxes, square for several, round for one */
 .vl{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--vl-min,240px)),1fr));gap:2px 8px}
 .vl-r{position:relative;display:flex;align-items:flex-start;gap:12px;min-height:44px;padding:12px 14px;border-radius:10px;font-size:14.5px;line-height:1.35;color:var(--ink-2);cursor:pointer;transition:background .15s}
@@ -469,8 +460,7 @@ html,body{overflow-x:clip}
   .fl-u{padding:0 8px}
 }
 /* The selected segment is styled directly instead of with the artifact's JS-placed sliding indicator. */
-.seg input:checked + span{background:var(--surface);box-shadow:var(--sh-xs),0 0 0 1px var(--line)}
-.seg input:checked + span{border-radius:10px}
+.seg input:checked + span{background:var(--surface);box-shadow:var(--sh-xs),0 0 0 1px var(--line);border-radius:10px}
 /* A long link in the letter (the decision's address) must wrap, not widen the paper past the screen. */
 .letter{overflow-wrap:anywhere}
 /* Locked to the purchase: the chosen car and faults show, the rest are dimmed and cannot be picked. */
@@ -515,13 +505,16 @@ body:has(.fl-app){padding-left:0;padding-right:0;background:var(--fl-bg)}
 .fl-vipps{font-weight:700;color:#FF5B24}
 
 /* account menu */
-.fl-konto{position:relative;flex:none}
+.fl-konto{flex:none}
 .fl-konto-k{padding:0 10px 0 5px;gap:9px;max-width:260px}
 .fl-init{width:28px;height:28px;flex:none;border-radius:8px;background:var(--fl-accent);color:#FFFFFF;display:grid;place-items:center;font-size:12px;font-weight:600;letter-spacing:.02em}
 .fl-konto-e{display:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (min-width:560px){.fl-konto-e{display:block}}
-.fl-meny{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:320px;max-width:calc(100vw - 32px);max-height:calc(100vh - 88px);max-height:calc(100dvh - 88px);overflow-y:auto;overscroll-behavior:contain;padding:6px;display:flex;flex-direction:column;text-align:left;
+/* A popover, so placed against the screen: under the account button, which ends the sticky 64px header
+   at its right padding (.fl-topp), 8px below the 40px button. */
+.fl-meny{position:fixed;inset:auto;right:max(clamp(16px,3vw,32px),env(safe-area-inset-right,0px));top:60px;margin:0;color:inherit;width:320px;max-width:calc(100vw - 32px);max-height:calc(100vh - 88px);max-height:calc(100dvh - 88px);overflow-y:auto;overscroll-behavior:contain;padding:6px;display:flex;flex-direction:column;text-align:left;
   background:#FFFFFF;border:1px solid var(--fl-line);border-radius:14px;box-shadow:0 24px 48px -20px rgba(15,27,45,.35),0 2px 6px rgba(15,27,45,.06)}
+.fl-meny:not(:popover-open){display:none}
 .fl-meny-h{padding:12px 12px 14px;margin-bottom:6px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--fl-sunken)}
 .fl-meny-navn{font-size:15px;font-weight:600;color:var(--fl-ink)}
 .fl-meny-s{font-size:13px;font-weight:400;color:var(--fl-muted)}
@@ -571,6 +564,7 @@ body:has(.fl-app){padding-left:0;padding-right:0;background:var(--fl-bg)}
 .fl-ikon{width:44px;height:44px;flex:none;border:1px solid var(--fl-line-2);border-radius:12px;background:#FFFFFF;color:var(--fl-ink);display:grid;place-items:center;cursor:pointer}
 .fl-ikon:hover{border-color:var(--fl-accent)}
 .fl-rull{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:transparent transparent;padding:clamp(16px,3vw,40px) clamp(12px,3vw,40px) 80px}
+@media (prefers-reduced-motion: no-preference){.fl-rull{scroll-behavior:smooth}}
 .fl-rull:hover{scrollbar-color:#B8C2CF transparent}
 .letter.fl-ark{width:210mm;max-width:100%;margin:0;padding:32px 22px 32px 46px;background:#FFFFFF;border-radius:4px;color:var(--fl-ink);font-size:16px;line-height:1.75;
   box-shadow:0 1px 2px rgba(15,27,45,.06),0 24px 48px -32px rgba(15,27,45,.3)}
@@ -750,7 +744,10 @@ body:has(.fl-app){padding-left:0;padding-right:0;background:var(--fl-bg)}
 .fl-ferdig:hover{background:var(--fl-accent-hi)}
 
 /* «Lignende vedtak»: the dialog with the top ten */
-.fl-vindu{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:32px;background:rgba(15,27,45,.5);color:var(--fl-ink);font-family:var(--f-ui)}
+/* A <dialog>, the overlay itself; while it is open the page behind does not scroll. */
+.fl-vindu{position:fixed;inset:0;z-index:90;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;display:flex;align-items:center;justify-content:center;padding:32px;background:rgba(15,27,45,.5);color:var(--fl-ink);font-family:var(--f-ui)}
+.fl-vindu:not([open]){display:none}
+body:has(.fl-vindu[open]){overflow:hidden}
 .fl-vindu-i{width:760px;max-width:100%;max-height:min(860px,100%);display:flex;flex-direction:column;overflow:hidden;border-radius:22px;background:var(--fl-bg);box-shadow:0 40px 80px -30px rgba(15,27,45,.55);outline:none}
 .fl-vindu-h{flex:none;display:flex;align-items:flex-start;gap:16px;padding:24px 32px 20px;border-bottom:1px solid var(--fl-line);background:#FFFFFF}
 .fl-vindu-h>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}

@@ -8,7 +8,6 @@ const hentEgenSak = vi.fn<(id: unknown) => Promise<Sak | null>>(async () => null
 const betalteSaker = vi.fn<(sub: string) => Promise<Sak[]>>(async () => []);
 const innlogget = vi.fn<() => Promise<string | null>>(async () => null);
 const batch = vi.fn<(q: unknown[]) => Promise<unknown[]>>(async () => []);
-const pris = vi.hoisted(() => ({ gratis: false }));
 // The claim on a model call (update … returning): a row while the case has calls left.
 const returnering = vi.fn(async () => [{ n: 1 }]);
 type Hvor = { where: () => Promise<undefined> & { returning: typeof returnering } };
@@ -31,7 +30,7 @@ vi.mock("@/lib/sak/db", () => ({ hentEgenSak, betalteSaker }));
 vi.mock("@/lib/innlogging/okt", async (orig) => ({ ...(await orig<typeof import("@/lib/innlogging/okt")>()), innlogget }));
 vi.mock("@/lib/matching/ranger", () => ({ ranger: () => ({ kandidater: kandidater.rader }), avgjorendeFor: () => undefined }));
 // The limits per address are tested on their own; here every call is from the same address.
-vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => false }));
+vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => false, ipFra: () => "10.0.0.1" }));
 vi.mock("@/lib/matching/likhet", () => ({ likhet: () => 50 }));
 // The ranking and the template are tested on their own; here only which answer is used, and when a call is made.
 vi.mock("@/lib/vedtaksvalg/valg", async (orig) => {
@@ -51,12 +50,6 @@ vi.mock("@/lib/vedtaksvalg/valg", async (orig) => {
     },
   };
 });
-vi.mock("@/lib/pris", () => ({
-  PRIS: 249,
-  get GRATIS() {
-    return pris.gratis;
-  },
-}));
 vi.mock("@/db", () => ({
   db: {
     batch,
@@ -89,7 +82,6 @@ beforeEach(() => {
   innlogget.mockResolvedValue(null);
   hentAlle.mockResolvedValue([]);
   kandidater.rader = [];
-  pris.gratis = false;
   vipps.sattOpp = true;
   process.env.TVISTR_HELT_BREV_UTEN_BETALING = "1";
 });
@@ -248,17 +240,6 @@ describe("kjop", () => {
     vipps.sattOpp = false;
     expect(await kjop({ utkast, samtykke: true })).toEqual({ ok: false, melding: "Betaling er ikke tilgjengelig akkurat nå." });
     expect(batch).not.toHaveBeenCalled();
-  });
-
-  it("åpner saken gratis i prøveperioden, uten flagget og uten samtykke", async () => {
-    pris.gratis = true;
-    process.env.TVISTR_HELT_BREV_UTEN_BETALING = "0";
-    const r = await kjop({ utkast, samtykke: false });
-    expect(r.ok).toBe(true);
-    const [[sakRad, ordreRad]] = batch.mock.calls[0] as unknown as [[{ v: Record<string, unknown> }, { v: Record<string, unknown> }]];
-    expect(sakRad.v.betalt).toBeInstanceOf(Date);
-    expect(ordreRad.v).toMatchObject({ belopOre: 0, leverandor: "gratis", status: "betalt" });
-    expect(sakRad.v.vippsSub).toBeUndefined();
   });
 
   it("lagrer saken og en betalt ordre i utvikling, og sender til bekreftelsen", async () => {

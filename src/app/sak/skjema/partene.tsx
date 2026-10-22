@@ -1,5 +1,6 @@
 // The sections filled in after payment: the buyer (sender), the dealer (recipient) and the letter's own
-// settings, as blocks for a page to place under its own heading. The dealer is looked up in Brreg's Enhetsregister (/api/firma) by name or organisation number.
+// settings, as blocks for a page to place under its own heading. The dealer is looked up in Brreg's
+// Enhetsregister (/api/firma) by name or organisation number; the names found are the input's datalist.
 import { useEffect, useRef, useState } from "react";
 import { Hake } from "@/app/deler/ikoner";
 import { sted } from "@/lib/brev/format";
@@ -45,7 +46,6 @@ export function Deg({ s, sett }: StegProps) {
 
 export function Forhandleren({ s, sett }: StegProps) {
   const [treff, settTreff] = useState<Forslag[]>([]);
-  const [aktiv, settAktiv] = useState(-1);
   const [fylt, settFylt] = useState(false);
   const sekvens = useRef(0);
   const tid = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -58,6 +58,9 @@ export function Forhandleren({ s, sett }: StegProps) {
   };
 
   function skrivNavn(v: string) {
+    // A name picked from the list fills in the rest.
+    const f = treff.find((t) => tittel(t.navn) === v);
+    if (f) return velg(f);
     sett({ d_name: v });
     settFylt(false);
     clearTimeout(tid.current);
@@ -65,10 +68,7 @@ export function Forhandleren({ s, sett }: StegProps) {
     if (v.trim().length < 3) return settTreff([]);
     tid.current = setTimeout(async () => {
       const r = await sok(v);
-      if (n === sekvens.current) {
-        settTreff(r.slice(0, 6));
-        settAktiv(-1);
-      }
+      if (n === sekvens.current) settTreff(r.slice(0, 6));
     }, 250);
   }
 
@@ -85,49 +85,16 @@ export function Forhandleren({ s, sett }: StegProps) {
   return (
     <div className="block">
       <div className="grid">
-        <div className="f c4 ac-wrap">
+        <div className="f c4">
           <label className="lb" htmlFor="f_d_name">
             Firmanavn
           </label>
-          <input
-            className="in"
-            id="f_d_name"
-            value={s.d_name}
-            autoComplete="off"
-            role="combobox"
-            aria-autocomplete="list"
-            aria-expanded={treff.length > 0}
-            aria-controls="dealerAc"
-            placeholder="Søk etter forhandleren"
-            onChange={(e) => skrivNavn(e.target.value)}
-            onBlur={() => setTimeout(() => settTreff([]), 120)}
-            onKeyDown={(e) => {
-              if (!treff.length) return;
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                settAktiv((a) => Math.min(treff.length - 1, a + 1));
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                settAktiv((a) => Math.max(0, a - 1));
-              } else if (e.key === "Enter" && aktiv >= 0) {
-                e.preventDefault();
-                velg(treff[aktiv]);
-              } else if (e.key === "Escape") settTreff([]);
-            }}
-          />
-          {treff.length > 0 && (
-            <div className="ac" id="dealerAc" role="listbox" onMouseDown={(e) => e.preventDefault()}>
-              {treff.map((f, i) => (
-                <button key={f.orgnr} type="button" role="option" aria-selected={i === aktiv} className={`ac-o${i === aktiv ? " on" : ""}`} onClick={() => velg(f)}>
-                  <b>{tittel(f.navn)}</b>
-                  <span>
-                    Org.nr. {FMT.org(f.orgnr)}
-                    {f.adresse && ` · ${sted(f.adresse.poststed)}`}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
+          <input className="in" id="f_d_name" list="dealerAc" value={s.d_name} autoComplete="off" placeholder="Søk etter forhandleren" onChange={(e) => skrivNavn(e.target.value)} />
+          <datalist id="dealerAc">
+            {treff.map((f) => (
+              <option key={f.orgnr} value={tittel(f.navn)} label={`Org.nr. ${FMT.org(f.orgnr)}${f.adresse ? ` · ${sted(f.adresse.poststed)}` : ""}`} />
+            ))}
+          </datalist>
         </div>
         <div className="f c2">
           <label className="lb" htmlFor="f_d_org">

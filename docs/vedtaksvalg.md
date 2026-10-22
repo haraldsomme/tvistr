@@ -75,7 +75,7 @@ Har kjøperen en skriftlig verkstedrapport, ber instruksen modellen foretrekke b
 
 **Ti å velge mellom.** Vinduet «Lignende vedtak» i den betalte saken (`vedtaksvindu.tsx`) viser modellens valg først («Anbefalt»). Deretter kommer resten av rangeringens topp 10 som har sitater, i rangeringens rekkefølge (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger vedtaket i vinduet, som raden «Vedtaket» under «Svarene dine» åpner. Raden viser hvilket vedtak brevet viser til.
 
-**Ett kall per sett med svar.** Den betalte siden spør etter vedtakene bare mens ingen rad fra delene før betaling (Bilen, Kjøpet, Om feilen, Verksted, Hva selgeren sa, Sagt fra før og Kravet) er åpen, eller mens vinduet er åpent, 800 ms etter siste endring (`useVedtak` i `vedtaksvindu.tsx`, `skalHente` i `vedtak-hent.ts`). Mens kjøperen skriver i en slik rad, viser brevet vedtaket fra siste liste. Hvert nytt sett med svar som siden spør med, kan koste ett modellkall, og en sak har høyst fem.
+**Ett kall per sett med svar.** Den betalte siden spør etter vedtakene bare mens ingen rad fra delene før betaling (Bilen, Kjøpet, Om feilen, Verksted, Hva selgeren sa, Sagt fra før og Kravet) er åpen, eller mens vinduet er åpent, 800 ms etter siste endring (`useVedtak` i `vedtaksvindu.tsx`). Mens kjøperen skriver i en slik rad, viser brevet vedtaket fra siste liste. Hvert nytt sett med svar som siden spør med, kan koste ett modellkall, og en sak har høyst fem.
 - **Lagring per sak:** `sak.vedtaksvalg` holder de fem siste modellsvarene (vedtak og sitater som tekst).
   - Nøkkelen er det modellen leser: `kjoper`, kandidatene i rekkefølge og `VEDTAKSVALG_VERSJON` (`grunnlagFor`).
   - Samme svar gir det lagrede valget uten kall: omlasting, en ny enhet, og endringer som tas tilbake.
@@ -138,9 +138,9 @@ Svarene ligger i `data/avgjorende/` og brukes ved hver import. Funn som logges i
 
 **Rekkefølge ved ny kjøring:**
 1. `npm run avgjorende:hent`
-2. arbeidsflyten `scripts/workflows/avgjorende.js`
-3. `npm run standpunkt:hent` og `scripts/workflows/standpunkt.js`
-4. `npm run rettslig:hent` og `scripts/workflows/rettslig.js`
+2. arbeidsflyten `scripts/workflows/uttrekk.js` med oppgave `avgjorende`
+3. `npm run standpunkt:hent` og `uttrekk.js` med oppgave `standpunkt`
+4. `npm run rettslig:hent` og `uttrekk.js` med oppgave `rettslig`
 5. `npm run avgjorende:importer`
 
 ## Hvorfor det ikke er kontroll per brev

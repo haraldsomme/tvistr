@@ -4,7 +4,7 @@ import type { Rangert } from "@/lib/matching/ranger";
 import { alternativer, endringMot, fraLagret, type Sitatvalg, tilLagret, tolkSvar } from "./valg";
 
 const feil = { id: "f1", hovedkategori: "motor", underkategori: "turbo", komponent: "turbo" } as AvledetFeil;
-const rangert = (id: number, niva: "A" | "B"): Rangert => ({ id, niva, feil: niva === "A" ? feil : null, hoved: null, rett: [], poengsum: 0, maks: 0, treff: {} as Rangert["treff"] });
+const rangert = (id: number, niva: "A" | "B"): Rangert => ({ id, niva, feil: niva === "A" ? feil : null, hoved: null, rett: [], poengsum: 0, treff: {} as Rangert["treff"] });
 const sitater = (n: number): Sitatvalg[] => Array.from({ length: n }, (_, i) => ({ id: `s${i + 1}`, tekst: `Sitat ${i + 1} fra utvalgets vurdering.`, feil }));
 
 const kandidater = [rangert(1, "A"), rangert(2, "B")];

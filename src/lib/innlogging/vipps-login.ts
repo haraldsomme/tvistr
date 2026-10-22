@@ -3,14 +3,14 @@
 // Errors are logged with the endpoint and status, never a code, token or secret.
 import { createHash, randomBytes } from "node:crypto";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { vippsBase } from "@/lib/vipps/klient";
 
 type Oppdagelse = { authorization_endpoint: string; token_endpoint: string; jwks_uri: string; issuer: string };
 
 function oppsett() {
   const e = process.env;
-  const base = (e.VIPPS_BASE_URL || "https://apitest.vipps.no").replace(/\/$/, "");
   if (!e.VIPPS_CLIENT_ID || !e.VIPPS_CLIENT_SECRET) throw new Error("Vipps er ikke satt opp (VIPPS_* i miljøet)");
-  return { base, id: e.VIPPS_CLIENT_ID, hemmelig: e.VIPPS_CLIENT_SECRET };
+  return { base: vippsBase(), id: e.VIPPS_CLIENT_ID, hemmelig: e.VIPPS_CLIENT_SECRET };
 }
 
 // Kept in the instance for an hour, per base URL.

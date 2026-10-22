@@ -1,4 +1,4 @@
-import { HOVEDKATEGORIER, komponenttype, VISTE_SEG_VALG } from "@/lib/feil/kategorier";
+import { erOpplysning, HOVEDKATEGORIER, VISTE_SEG_VALG } from "@/lib/feil/kategorier";
 import { lovversjon } from "@/lib/brev/paragrafer";
 import { RAPPORT_PUNKTER, type RapportPunkt } from "@/lib/brev/rapport";
 import { tidsnivaFor } from "@/lib/brev/tidslinje";
@@ -91,7 +91,7 @@ export function byggSaken(s: Svar): { sak: Brukersak; kjoper: Kjoper } {
         beskrivelse: f.beskrivelse,
         // In the words of the interval the buyer used to choose, so the model reads what it read before.
         viste_seg: VISTE_SEG_VALG.find((t) => t.id === tider[i].intervall)!.navn,
-        formodningsregelen_gjelder: komponenttype(f.hoved, f.under[0] ?? null) === "opplysning" ? null : sak.kategorier[i].niva === 1,
+        formodningsregelen_gjelder: erOpplysning(f.hoved, f.under[0] ?? null) ? null : sak.kategorier[i].niva === 1,
         ...(tider[i].intervall === "over_24_mnd" && {
           reklamasjonsfrist:
             "Feilen viste seg mer enn to år etter kjøpet. Etter fkjl. § 27 er fristen da fem år, men bare for deler som er ment å vare vesentlig lenger enn to år; kjøperen må også vise at feilen fantes ved levering.",

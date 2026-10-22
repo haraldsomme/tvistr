@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fraSjekk, gjelderSaken, kjopt, laas, manglerISkjema, nyttPrecValg, rensSkjema, sakTekst, sammeSakSkjema, tilKjop, tilSvar } from "./saken";
+import { gjelderSaken, kjopt, laas, manglerISkjema, nyttPrecValg, rensSkjema, sakTekst, sammeSakSkjema, tilKjop, tilSvar } from "./saken";
 import { eksempel, standard } from "./skjema";
 
 const idag = "2026-10-16";
@@ -31,19 +31,6 @@ describe("tilSvar", () => {
     expect(svar.feil.map((f) => f.hoved)).toEqual(["hoyvolt"]);
   });
   it("selger sa ingenting", () => expect(tilSvar({ ...eksempel(idag), seller_said: "nei" })!.feil[0].opplysning).toBe("nei"));
-});
-
-describe("fraSjekk", () => {
-  const a = { seller: "forhandler", buyer: "privat", asis: "ja", reg: "AB 12345", make: "Peugeot 308", year: "2014", lastReg: "2026-06-01", km: "120 000", delivery: "2026-06-01", cats: ["motor"], issues: { motor: ["turbo"] }, fdates: { motor: "2026-09-01" }, known: "nei", cause: "slitasje", notified: "ja", notifiedDate: "2026-09-10" } as const;
-  it("fyller skjemaet fra sjekken", () => {
-    const s = fraSjekk({ ...a, cats: [...a.cats], issues: { motor: [...a.issues.motor] }, fdates: { ...a.fdates } }, standard(idag));
-    expect(s).toMatchObject({ c_make: "Peugeot", c_model: "308", c_year: "2014", c_reg: "AB 12345", c_km: "120 000", c_delivery: "2026-06-01", c_lastreg: "2026-06-01", c_asis: true, f_cats: ["motor"], f_parts: { motor: ["turbo"] }, f_cause_check: "slitasje", f_prior: true, f_prior_date: "2026-09-10", k_main: "retting", k_alt: "prisavslag" });
-    expect(s.f_area.motor).toEqual({ found: "2026-09-01", impact: [], known: "nei" });
-  });
-  it("overskriver ikke det som er fylt inn", () => {
-    const s = fraSjekk({ make: "Peugeot 308", cats: [] }, { ...standard(idag), c_make: "Volvo", k_main: "heving" });
-    expect([s.c_make, s.k_main]).toEqual(["Volvo", "heving"]);
-  });
 });
 
 describe("rettinger etter gjennomgangen", () => {

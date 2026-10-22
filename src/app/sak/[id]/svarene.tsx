@@ -3,6 +3,7 @@
 // The sections answered after payment come first. The car is locked to the purchase except its mileage,
 // the faults are locked altogether, and «Vedtaket» opens the dialog where the decision is picked.
 import type { ReactNode } from "react";
+import { Opp } from "@/app/deler/ikoner";
 import { Bilen, Kjopet } from "@/app/sak/skjema/bilen";
 import type { Sett, StegProps } from "@/app/sak/skjema/felt";
 import { Krav } from "@/app/sak/skjema/krav";
@@ -14,7 +15,6 @@ import { cap } from "@/lib/app/format";
 import { sakNavn, sakTekst } from "@/lib/app/saken";
 import { type Skjema, syncAreas } from "@/lib/app/skjema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
-import { GRATIS } from "@/lib/pris";
 import type { Vedtaksvalg } from "./vedtaksvindu";
 
 const IKKE = "Ikke fylt ut";
@@ -62,7 +62,7 @@ export function oppsummering(id: string, skjema: Skjema): string {
   }
 }
 
-const LAAST_BIL = `Bilen er låst fordi brevet gjelder bilen ${GRATIS ? "du valgte" : "du betalte for"}. Km-stand kan du endre her, overtakelsesdatoen under Kjøpet.`;
+const LAAST_BIL = "Bilen er låst fordi brevet gjelder bilen du betalte for. Km-stand kan du endre her, overtakelsesdatoen under Kjøpet.";
 
 // The fields of each row that opens, with the car locked and the «som den er» switch in Kjøpet.
 const STEG: Record<string, (p: StegProps) => ReactNode> = {
@@ -136,9 +136,7 @@ function Rad({ sk, s, sett, pa, settApen }: { sk: Seksjon; s: Skjema; sett: Sett
           {pa ? <span className="fl-svar-q">{sk.tittel}</span> : <span className="fl-svar-v" data-tom={tekst === IKKE || undefined}>{tekst}</span>}
         </span>
         {pa ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M6 15l6-6 6 6" />
-          </svg>
+          <Opp s={18} />
         ) : (
           <span className="fl-svar-e">Endre</span>
         )}

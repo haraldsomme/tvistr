@@ -10,7 +10,7 @@ import { innlogget } from "@/lib/innlogging/okt";
 import { innloggingsUrl, pkce } from "@/lib/innlogging/vipps-login";
 
 export async function GET(request: Request) {
-  const base = opprinnelse(request);
+  const base = opprinnelse(request.headers);
   const til = trygtMal(new URL(request.url).searchParams.get("til") ?? undefined);
   if (await innlogget()) return NextResponse.redirect(new URL(til, base), 302);
   try {

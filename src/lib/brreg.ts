@@ -9,43 +9,24 @@ const FORMER = "AS,ASA,ANS,DA,NUF";
 export type Forslag = {
   orgnr: string;
   navn: string;
-  kommune: string | null;
-  bransje: string | null;
-  // The industry code, e.g. «47.810» (SN2025) or «45.111» (SN2007) for the sale of cars: the first of
-  // the company's up to three codes that is the sale of vehicles, otherwise its main code.
-  naeringskode: string | null;
-  status: "konkurs" | "avvikling" | null;
   adresse: Adresse | null; // where mail goes
-  forretningsadresse: string | null; // one line
 };
 
-type BrregAdresse = { adresse?: string[]; postnummer?: string; poststed?: string; kommune?: string };
+type BrregAdresse = { adresse?: string[]; postnummer?: string; poststed?: string };
 
-export type BrregEnhet = {
+type BrregEnhet = {
   organisasjonsnummer: string;
   navn: string;
   organisasjonsform?: { kode: string };
-  naeringskode1?: { kode?: string; beskrivelse: string };
-  naeringskode2?: { kode?: string; beskrivelse: string };
-  naeringskode3?: { kode?: string; beskrivelse: string };
   forretningsadresse?: BrregAdresse;
   postadresse?: BrregAdresse;
-  konkurs?: boolean;
-  underAvvikling?: boolean;
 };
 
-// The sale of vehicles: SN2007 (45.1 cars, 45.4 motorcycles) and SN2025, which Brreg uses from 2025
-// (47.81 retail and 46.71 wholesale of motor vehicles, 47.83 motorcycles). Large dealers often have
-// repair (95.31) as their main code and the sale as their second.
-const BILHANDEL = ["45.1", "45.4", "47.81", "46.71", "47.83"];
-export const erBilhandel = (kode: string) => BILHANDEL.some((k) => kode.startsWith(k));
-
 // Nine digits, written with or without spaces. null for anything else.
-export function orgnrFra(s: string): string | null {
+function orgnrFra(s: string): string | null {
   const r = s.replace(/\s/g, "");
   return /^\d{9}$/.test(r) ? r : null;
 }
-
 
 // Mail goes to the postal address when the company has registered one, otherwise to the business address.
 function adresseFra(e: BrregEnhet): Adresse | null {
@@ -56,26 +37,7 @@ function adresseFra(e: BrregEnhet): Adresse | null {
   return null;
 }
 
-function enLinje(a: BrregAdresse | undefined): string | null {
-  const linjer = (a?.adresse ?? []).map((l) => l.trim()).filter(Boolean);
-  return a?.postnummer && a.poststed ? [...linjer, `${a.postnummer} ${tittel(a.poststed)}`].join(", ") : null;
-}
-
-export const tilForslag = (e: BrregEnhet): Forslag => {
-  const kode = [e.naeringskode1, e.naeringskode2, e.naeringskode3].find((k) => k?.kode && erBilhandel(k.kode)) ?? e.naeringskode1;
-  return {
-    orgnr: e.organisasjonsnummer,
-    navn: e.navn,
-    kommune: e.forretningsadresse?.kommune ?? null,
-    bransje: kode?.beskrivelse ?? null,
-    naeringskode: kode?.kode ?? null,
-    status: e.konkurs ? "konkurs" : e.underAvvikling ? "avvikling" : null,
-    adresse: adresseFra(e),
-    forretningsadresse: enLinje(e.forretningsadresse),
-  };
-};
-
-// A suggestion as the dealer of the letter.
+const tilForslag = (e: BrregEnhet): Forslag => ({ orgnr: e.organisasjonsnummer, navn: e.navn, adresse: adresseFra(e) });
 
 const TIDSGRENSE = 4000;
 

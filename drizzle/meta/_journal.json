@@ -148,6 +148,13 @@
       "when": 1792434749261,
       "tag": "0020_innlogging",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792689241603,
+      "tag": "0021_statistikk_uten_median",
+      "breakpoints": true
     }
   ]
 }

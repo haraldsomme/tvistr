@@ -4,6 +4,7 @@
 // the right from 960px, the letter pane sticky under the header. Narrower, the letter is a bottom
 // sheet behind a peek bar that shows what was just added and how much is filled in.
 import { createContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Dokument, Opp } from "@/app/deler/ikoner";
 
 // Set while the letter is a bottom sheet: Brevrute draws its close button from it.
 export const Ark = createContext<{ lukk: () => void } | null>(null);
@@ -52,9 +53,7 @@ export function Oppsett({ topp, venstre, brev, kikk }: { topp: ReactNode; venstr
         </section>
         <button ref={knapp} type="button" className="fl-kikk" onClick={() => settApen(true)} aria-expanded={ute} aria-label={`Brevet ditt${kikk.tekst ? `, ${kikk.tekst}` : ""}. ${kikk.fylt} av ${kikk.totalt} fylt inn. Åpne brevet.`}>
           <span className="fl-kikk-i" aria-hidden="true">
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4" />
-            </svg>
+            <Dokument s={19} />
           </span>
           <span className="fl-kikk-t">
             <span className="fl-kikk-l">
@@ -67,9 +66,7 @@ export function Oppsett({ topp, venstre, brev, kikk }: { topp: ReactNode; venstr
               <span style={{ width: `${pst}%` }} />
             </span>
           </span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475467" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M6 15l6-6 6 6" />
-          </svg>
+          <Opp style={{ color: "#475467" }} />
         </button>
       </div>
     </div>

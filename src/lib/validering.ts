@@ -22,34 +22,6 @@ export function sitatFinnes(sitat: string, tekst: string): boolean {
   return deler.length > 0 && deler.every((d) => t.includes(d));
 }
 
-// Finds an amount (whole kroner) written in the text, e.g. 115000 as "115 000,-" or "kr 115.000",
-// and returns a short verbatim excerpt around it, or null if the amount does not occur.
-export function beloepUtdrag(tekst: string, belop: number, ordFoer = 12, ordEtter = 5): string | null {
-  const siffer = String(Math.round(belop));
-  const grupper = siffer.replace(/\B(?=(\d{3})+(?!\d))/g, "\u0001").split("\u0001");
-  const monster = new RegExp(`(?<!\\d)(?<!\\d[\\s.\\u00A0])${grupper.join("[\\s.\\u00A0]?")}(?![\\d]|[.,]\\d{3})`, "u");
-  const m = monster.exec(tekst);
-  if (!m) return null;
-  const ord = [...tekst.matchAll(/\S+/g)].map((x) => ({ fra: x.index!, til: x.index! + x[0].length }));
-  const i = ord.findIndex((o) => o.til > m.index);
-  const j = ord.findIndex((o) => o.fra >= m.index + m[0].length);
-  const start = ord[Math.max(0, i - ordFoer)].fra;
-  const slutt = ord[Math.min(ord.length - 1, (j === -1 ? ord.length : j) + ordEtter - 1)].til;
-  return tekst.slice(start, slutt);
-}
-
-// Verbatim excerpt around the first match of `monster` (same shape as beloepUtdrag).
-export function tekstUtdrag(tekst: string, monster: RegExp, ordFoer = 10, ordEtter = 8): string | null {
-  const m = monster.exec(tekst);
-  if (!m) return null;
-  const ord = [...tekst.matchAll(/\S+/g)].map((x) => ({ fra: x.index!, til: x.index! + x[0].length }));
-  const i = ord.findIndex((o) => o.til > m.index);
-  const j = ord.findIndex((o) => o.fra >= m.index + m[0].length);
-  const start = ord[Math.max(0, i - ordFoer)].fra;
-  const slutt = ord[Math.min(ord.length - 1, (j === -1 ? ord.length : j) + ordEtter - 1)].til;
-  return tekst.slice(start, slutt);
-}
-
 // A total without its own quote is backed by its parts' quotes when it equals one part or the
 // sum of the parts that have values.
 function totalSitat(t: Tolkning, felt: "krevd_totalt_nok" | "tilkjent_totalt_nok", total: number): string | null {

@@ -17,13 +17,15 @@ import { idag } from "@/lib/app/dato";
 import { gjelderSaken, kjopt, laas, manglerISkjema, rensSkjema, sammeSakSkjema, tilKjop } from "@/lib/app/saken";
 import { utkastResultat, utkastSvar } from "@/lib/app/utkast";
 import { komponentnavn } from "@/lib/feil/kategorier";
+import { SANKSJONER } from "@/lib/feilvurdering/skjema";
+import { opprinnelse } from "@/lib/innlogging/flyt";
 import { innlogget, sha256hex } from "@/lib/innlogging/okt";
 import { likhet } from "@/lib/matching/likhet";
 import { avgjorendeFor, type Rangert, ranger } from "@/lib/matching/ranger";
 import { poengtekst } from "@/lib/matching/rett";
 import type { Kandidat } from "@/lib/matching/typer";
-import { GRATIS, PRIS } from "@/lib/pris";
-import { lagGrense } from "@/lib/rategrense";
+import { PRIS } from "@/lib/pris";
+import { ipFra, lagGrense } from "@/lib/rategrense";
 import { betalteSaker, hentEgenSak } from "@/lib/sak/db";
 import { nyId } from "@/lib/sak/id";
 import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
@@ -43,16 +45,7 @@ const LAGREDE_SVAR = 5;
 const forMange = lagGrense({ antall: 20, vinduMs: 60_000 });
 const forMangeKjop = lagGrense({ antall: 10, vinduMs: 60_000 });
 const forMangeLagringer = lagGrense({ antall: 120, vinduMs: 60_000 });
-const ipAdresse = async () => (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "ukjent";
-// Where the buyer is, for Vipps' return address: the address the request came to.
-async function opprinnelse() {
-  const h = await headers();
-  const vert = h.get("x-forwarded-host") ?? h.get("host");
-  if (!vert) throw new Error("mangler host");
-  return `${h.get("x-forwarded-proto") ?? (vert.startsWith("localhost") ? "http" : "https")}://${vert}`;
-}
-
-const SANKSJONSNAVN = new Set(["heving", "prisavslag", "retting", "erstatning", "omlevering"]);
+const ipAdresse = async () => ipFra(await headers());
 
 // Claims one of the case's model calls; false when they are used up. One statement, so two requests
 // at once cannot both take the last.
@@ -121,7 +114,7 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
         saksnummer: visSaksnummer(k.saksnummer),
         vedtaksdato: k.vedtaksdato,
         bil: k.avgjorende?.bil ?? bilnavn(k.id) ?? "Bil",
-        utfall: (egne.length ? egne : (k.sanksjoner ?? [])).filter((x) => SANKSJONSNAVN.has(x)),
+        utfall: (egne.length ? egne : (k.sanksjoner ?? [])).filter((x) => (SANKSJONER as readonly string[]).includes(x)),
         avsnitt,
         kildeUrl: detaljer.get(k.id)?.kildeUrl ?? null,
         utvalg: detaljer.get(k.id)?.utvalg ?? "Forbrukerklageutvalget",
@@ -163,18 +156,17 @@ export type Kjop = { ok: true; url: string } | { ok: false; melding: string };
 // reference at Vipps, and the answer is Vipps' page, which sends the buyer back to the confirmation; the case opens when Vipps has the money
 // (src/lib/vipps/avstem.ts, from the return page /betaling/[ref], the webhook or the cron). A new
 // attempt is a new case; one never paid is deleted after 30 days. In development
-// (TVISTR_HELT_BREV_UTEN_BETALING) the case is paid at once, with an order from «utvikling»; in a trial
-// (GRATIS) it is free, with an order «gratis» and no consent to give, since nothing is sold. The case
+// (TVISTR_HELT_BREV_UTEN_BETALING) the case is paid at once, with an order from «utvikling». The case
 // is the buyer's draft (the form filled in before payment), with the buyer's name and address from the
 // logged-in owner's newest paid case where the draft has none; an owner who already has a paid case for
 // this car and these faults is sent to it instead, and the draft is discarded. The owner of the
 // new case is the Vipps account that pays (avstem), never the session. The return address carries a
 // secret `n` (only its hash is stored on the order) that logs the payer in once (sjekkBetaling).
 export async function kjop(inn: { utkast: unknown; samtykke: unknown }): Promise<Kjop> {
-  const utenVipps = GRATIS || HELT_BREV_UTEN_BETALING();
+  const utenVipps = HELT_BREV_UTEN_BETALING();
   if (!utenVipps && !vippsSattOpp()) return { ok: false, melding: "Betaling er ikke tilgjengelig akkurat nå." };
   // The buyer has asked for the writer now and given up the right of withdrawal (angrerettloven § 22 n).
-  if (!GRATIS && inn?.samtykke !== true) return { ok: false, melding: "Kryss av for at brevet åpnes med en gang." };
+  if (inn?.samtykke !== true) return { ok: false, melding: "Kryss av for at brevet åpnes med en gang." };
   if (forMangeKjop(await ipAdresse())) return { ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." };
   const dag = idag();
   const utkast = rensUtkast(inn?.utkast, dag);
@@ -183,7 +175,7 @@ export async function kjop(inn: { utkast: unknown; samtykke: unknown }): Promise
   if (utkastResultat(utkast, dag).tier === "utenfor") return { ok: false, melding: "Saken dekkes ikke av brevet." };
   const id = nyId();
   const ordreId = nyId();
-  const belopOre = GRATIS ? 0 : PRIS * 100;
+  const belopOre = PRIS * 100;
   const n = randomBytes(24).toString("base64url");
   const retur = `/betaling/${ordreId}?n=${n}`;
   try {
@@ -196,10 +188,9 @@ export async function kjop(inn: { utkast: unknown; samtykke: unknown }): Promise
     // The letter is dated the day it is bought, not the day the draft was started.
     const skjema = { ...tilKjop(utkast.skjema, forrige ? rensSkjema(forrige.skjema, dag) : null), l_date: dag };
     const na = utenVipps ? new Date() : null;
-    const leverandor = GRATIS ? "gratis" : utenVipps ? "utvikling" : "vipps";
+    const leverandor = utenVipps ? "utvikling" : "vipps";
     await db.batch([
-      // GRATIS gets no owner: the owner rule must be revisited before a trial is turned on again.
-      db.insert(sak).values({ id, sjekk: utkastSvar(utkast), skjema, betalt: na, ...(leverandor === "utvikling" && { vippsSub: UTVIKLINGSEIER }) }),
+      db.insert(sak).values({ id, sjekk: utkastSvar(utkast), skjema, betalt: na, ...(utenVipps && { vippsSub: UTVIKLINGSEIER }) }),
       db.insert(ordre).values({ id: ordreId, sakId: id, belopOre, leverandor, status: na ? "betalt" : "opprettet", betalt: na, innloggingHash: sha256hex(n) }),
     ]);
     console.info(`kjøp: ny sak (${leverandor})`);
@@ -209,7 +200,7 @@ export async function kjop(inn: { utkast: unknown; samtykke: unknown }): Promise
     return { ok: false, melding: "Vi fikk ikke lagret saken. Prøv igjen." };
   }
   try {
-    const { redirectUrl } = await opprettBetaling({ ref: ordreId, belopOre, returnUrl: `${await opprinnelse()}${retur}`, beskrivelse: "Reklamasjonsbrev for bil" });
+    const { redirectUrl } = await opprettBetaling({ ref: ordreId, belopOre, returnUrl: `${opprinnelse(await headers())}${retur}`, beskrivelse: "Reklamasjonsbrev for bil" });
     return { ok: true, url: redirectUrl };
   } catch (e) {
     console.error("vipps-betalingen ble ikke opprettet", e);

@@ -12,7 +12,7 @@ const sak = (under: string[], svar: Partial<Brukersak> = {}): Brukersak => ({
   forsok: null,
   ...svar,
 });
-const rangert = (niva: "A" | "B", poengsum: number): Rangert => ({ id: 1, niva, feil: null, hoved: niva === "A" ? "motor" : null, rett: [], poengsum, maks: 0, treff: {} as Rangert["treff"] });
+const rangert = (niva: "A" | "B", poengsum: number): Rangert => ({ id: 1, niva, feil: null, hoved: niva === "A" ? "motor" : null, rett: [], poengsum, treff: {} as Rangert["treff"] });
 
 describe("likhet", () => {
   // Alle besvart: underkategori 4, tidsnivå 4, km 3, alder 2, «som den er» 2, krav 2, egen vurdering 4, grunnlag 4.

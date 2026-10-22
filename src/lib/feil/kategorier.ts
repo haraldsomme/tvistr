@@ -2,17 +2,10 @@
 // same ids are what the feilvurdering agents file each accepted defect under (src/lib/feilvurdering).
 
 export type Underkategori = { id: string; navn: string };
-export type Hovedkategori = {
-  id: string;
-  kode: string;
-  navn: string;
-  under: Underkategori[];
-};
 
-export const HOVEDKATEGORIER: Hovedkategori[] = [
+export const HOVEDKATEGORIER: { id: string; navn: string; under: Underkategori[] }[] = [
   {
     id: "motor",
-    kode: "01",
     navn: "Motor og eksos",
     under: [
       { id: "turbo", navn: "Turbo" },
@@ -27,7 +20,6 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "drivlinje",
-    kode: "02",
     navn: "Girkasse, clutch og drivlinje",
     under: [
       { id: "girkasse", navn: "Girkasse" },
@@ -37,7 +29,6 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "understell",
-    kode: "03",
     navn: "Bremser, understell og styring",
     under: [
       { id: "bremser", navn: "Bremser" },
@@ -48,7 +39,6 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "karosseri",
-    kode: "04",
     navn: "Rust, lakk og karosseri",
     under: [
       { id: "rust", navn: "Rust" },
@@ -58,7 +48,6 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "fukt",
-    kode: "05",
     navn: "Fukt og interiør",
     under: [
       { id: "fukt", navn: "Fukt og vannlekkasje" },
@@ -68,7 +57,6 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "elektrisk",
-    kode: "06",
     navn: "Elektrisk og elektronikk",
     under: [
       { id: "infotainment", navn: "Infotainment, navigasjon, kamera" },
@@ -83,7 +71,6 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "klima",
-    kode: "07",
     navn: "Klimaanlegg og varme",
     under: [
       { id: "ac", navn: "AC" },
@@ -93,7 +80,6 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "hoyvolt",
-    kode: "08",
     navn: "Høyvoltbatteri og lading (elbil og hybrid)",
     under: [
       { id: "kapasitet", navn: "Kapasitet og rekkevidde" },
@@ -103,7 +89,6 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "utstyr",
-    kode: "09",
     navn: "Utstyr ikke som lovet",
     under: [
       { id: "utstyr", navn: "Utstyr mangler eller virker ikke" },
@@ -114,7 +99,6 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "service",
-    kode: "10",
     navn: "Service ikke utført som opplyst",
     under: [
       { id: "service", navn: "Service ikke utført" },
@@ -123,7 +107,6 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "historikk",
-    kode: "11",
     navn: "Bilens historikk",
     under: [
       { id: "skade", navn: "Skade og kollisjon" },
@@ -140,13 +123,11 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
   {
     id: "garanti",
-    kode: "12",
     navn: "Garanti ikke som lovet",
     under: [],
   },
   {
     id: "vet_ikke",
-    kode: "13",
     navn: "Vet ikke ennå",
     under: [
       { id: "varsellampe", navn: "Varsellampe" },
@@ -157,56 +138,30 @@ export const HOVEDKATEGORIER: Hovedkategori[] = [
   },
 ];
 
-// What kind of part a subcategory is. The committee reasons alike about parts of one kind (wear
-// parts, expensive main parts, safety systems), so a decision about one may be carried over to
-// another of the same kind (src/lib/matching/ranger.ts, step 3). «Vet ikke ennå» names symptoms,
-// not parts, and has no kind.
-export const KOMPONENTTYPER = {
-  slitedel: ["drivlinje.clutch", "understell.bremser", "understell.demping", "understell.hjullager", "elektrisk.startbatteri", "utstyr.dekk", "motor.eksos", "motor.registerreim", "karosseri.rust"],
-  forbrenning: ["motor.turbo", "drivlinje.girkasse", "drivlinje.firehjul", "motor.drivstoff", "motor.olje", "motor.kjoling", "motor.utslipp", "motor.annet_motor"],
-  hoyvolt: ["hoyvolt.kapasitet", "hoyvolt.lading", "hoyvolt.hybrid"],
-  sikkerhet: ["elektrisk.sikkerhet", "understell.styring"],
-  klima: ["klima.ac", "klima.varme", "klima.parkeringsvarmer"],
-  karosseri: ["karosseri.lakk", "karosseri.ruter", "fukt.fukt", "fukt.lukt", "fukt.interior"],
-  elektronikk: ["elektrisk.infotainment", "elektrisk.lys", "elektrisk.annet_el"],
-  // Decided on what the seller said or kept back, not on what wear the buyer must expect.
-  opplysning: [
-    ...["skade", "km", "bruk", "import", "ombygging", "eu", "pant"].map((u) => `historikk.${u}`),
-    "service.service",
-    "service.servicehefte",
-    "utstyr.utstyr",
-    "utstyr.nokler",
-    "utstyr.utstyrsniva",
-    "garanti",
-  ],
-} as const;
-export type Komponenttype = keyof typeof KOMPONENTTYPER;
-const TYPE_AV = new Map(Object.entries(KOMPONENTTYPER).flatMap(([t, ider]) => ider.map((i) => [i, t as Komponenttype] as const)));
+// The subcategories decided on what the seller said or kept back, not on what wear the buyer must
+// expect: the car's profile and the presumption do not count for them (src/lib/matching/ranger.ts,
+// src/lib/brev/feiltype.ts). The warranty has no subcategories and is one itself.
+const OPPLYSNING = new Set([
+  ...["skade", "km", "bruk", "import", "ombygging", "eu", "pant"].map((u) => `historikk.${u}`),
+  "service.service",
+  "service.servicehefte",
+  "utstyr.utstyr",
+  "utstyr.nokler",
+  "utstyr.utstyrsniva",
+  "garanti",
+]);
 
-// The kind of a subcategory, or of a main category whose subcategories all share one kind.
-export function komponenttype(hoved: string, under: string | null): Komponenttype | null {
-  if (under) return TYPE_AV.get(`${hoved}.${under}`) ?? null;
+// Whether a subcategory is about what the seller said, or, without one, a main category whose
+// subcategories all are.
+export function erOpplysning(hoved: string, under: string | null): boolean {
+  if (under) return OPPLYSNING.has(`${hoved}.${under}`);
   const h = HOVEDKATEGORIER.find((x) => x.id === hoved);
-  if (!h) return null;
-  if (!h.under.length) return TYPE_AV.get(hoved) ?? null;
-  const typer = new Set(h.under.map((u) => TYPE_AV.get(`${hoved}.${u.id}`)));
-  return typer.size === 1 ? ([...typer][0] ?? null) : null;
+  if (!h) return false;
+  return h.under.length ? h.under.every((u) => OPPLYSNING.has(`${hoved}.${u.id}`)) : OPPLYSNING.has(hoved);
 }
 
 // What the buyer ticked: main category id → subcategory ids (possibly none).
 export type Feilvalg = Record<string, string[]>;
-
-// Drops ids that are not in the list, so a request from outside the form cannot inject anything.
-export function rensFeilvalg(valg: unknown): Feilvalg {
-  if (!valg || typeof valg !== "object") return {};
-  const ut: Feilvalg = {};
-  for (const h of HOVEDKATEGORIER) {
-    const under = (valg as Record<string, unknown>)[h.id];
-    if (!Array.isArray(under)) continue;
-    ut[h.id] = h.under.filter((u) => under.includes(u.id)).map((u) => u.id);
-  }
-  return ut;
-}
 
 // The three intervals the buyer used to choose from. The form now asks for the day the defect was
 // discovered (src/lib/brev/tidslinje.ts works out the time level from it); the intervals remain only

@@ -53,11 +53,11 @@ describe("trygtMal", () => {
 
 describe("opprinnelse", () => {
   it("bruker videresendt vert og protokoll", () => {
-    expect(opprinnelse(sporring("/", { host: "intern", "x-forwarded-host": "tvistr.no", "x-forwarded-proto": "https" }))).toBe("https://tvistr.no");
+    expect(opprinnelse(sporring("/", { host: "intern", "x-forwarded-host": "tvistr.no", "x-forwarded-proto": "https" }).headers)).toBe("https://tvistr.no");
   });
   it("gir https uten protokoll, og http for localhost", () => {
-    expect(opprinnelse(sporring("/", { host: "tvistr.no" }))).toBe("https://tvistr.no");
-    expect(opprinnelse(sporring("/", { host: "localhost:3000" }))).toBe("http://localhost:3000");
+    expect(opprinnelse(sporring("/", { host: "tvistr.no" }).headers)).toBe("https://tvistr.no");
+    expect(opprinnelse(sporring("/", { host: "localhost:3000" }).headers)).toBe("http://localhost:3000");
   });
 });
 

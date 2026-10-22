@@ -21,7 +21,7 @@ import { tall } from "@/lib/app/format";
 import { type Skjema, syncAreas } from "@/lib/app/skjema";
 import { skriverResultat } from "@/lib/app/vurdering";
 import { maal } from "@/lib/maling";
-import { GRATIS, PRIS } from "@/lib/pris";
+import { PRIS } from "@/lib/pris";
 import { type Lagring, useAutolagring } from "./autolagring";
 import { useLignende } from "./lignende";
 import { radId, Svarene } from "./svarene";
@@ -80,7 +80,8 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
     if (sid !== "feilen") veksle(sid, true);
     requestAnimationFrame(() => {
       const el = document.getElementById(radId(sid));
-      el?.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      // Smoothly unless the reader prefers less motion (html in globals.css).
+      el?.scrollIntoView({ block: "start" });
       el?.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
     });
   };
@@ -114,7 +115,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
             <span aria-hidden="true">
               <Hake s={11} />
             </span>
-            {GRATIS ? "Åpnet" : `Betalt · kr ${tall(PRIS)}`}
+            Betalt · kr {tall(PRIS)}
           </span>
           <h1>Brevet er låst opp</h1>
           <p>Hele brevet er fylt ut med svarene dine. Endre svarene under, så oppdateres brevet med en gang.</p>
@@ -194,7 +195,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
           Hva du kan gjøre hvis forhandleren avviser
         </a>
       </p>
-      <Vedtaksvindu apen={vindu} vedtak={vedtak} s={s} sett={sett} precOn={precUtkast ?? s.prec_on} settPrecOn={settPrecUtkast} onLukk={lukkVindu} />
+      {vindu && <Vedtaksvindu vedtak={vedtak} s={s} sett={sett} precOn={precUtkast ?? s.prec_on} settPrecOn={settPrecUtkast} onLukk={lukkVindu} />}
       <div className={`toast${toast ? " on" : ""}`} role="status" aria-live="polite">
         {toast}
       </div>

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { vedtak } from "@/db/schema";
-import { type Forbruk, kallVerktoy, MODELL } from "@/lib/ai/klient";
+import { type Forbruk, kallVerktoy } from "@/lib/ai/klient";
 import { komponentnavn } from "@/lib/feil/kategorier";
 import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import { avgjorendeFor, type Niva, type Rangert } from "@/lib/matching/ranger";
@@ -174,7 +174,6 @@ export async function sporModellen(opts: Valggrunnlag & { rask?: boolean }): Pro
       bruker: `Kjøperens sak:\n${JSON.stringify(opts.kjoper)}\n\nKandidatene:\n${JSON.stringify(opts.kandidater.map((r) => kandidattekst(r, opts.alle.get(r.id)!, opts.detaljer.get(r.id), sitater.get(r.id)!)))}`,
       effort: "low",
       maksTokens: 2000,
-      modell: MODELL,
       rask: opts.rask,
     });
     return { svar: kall.input, modell: kall.modell, forbruk: kall.forbruk };

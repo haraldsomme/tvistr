@@ -13,7 +13,7 @@ const FEIL = {
 // Make, model and year for one registration number, and the day it was registered on its current
 // owner (a suggestion for the purchase date). Nothing is stored.
 export async function GET(request: Request) {
-  if (forMange(ipFra(request))) {
+  if (forMange(ipFra(request.headers))) {
     return Response.json({ feil: "Du har gjort mange oppslag på kort tid. Vent et minutt og prøv igjen." }, { status: 429 });
   }
   const oppslag = await hentKjoretoy(new URL(request.url).searchParams.get("regnr")?.slice(0, 20) ?? "");

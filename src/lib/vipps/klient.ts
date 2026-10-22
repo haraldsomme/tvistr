@@ -30,22 +30,14 @@ export type Kjoperdata = {
 // the receipt is sent to. The buyer consents in the app; without consent the payment fails.
 export const PROFIL = "name email phoneNumber address";
 
-export class VippsFeil extends Error {
-  constructor(
-    readonly endepunkt: string,
-    readonly status: number,
-    readonly svar: string,
-  ) {
-    super(`Vipps ${endepunkt}: ${status}`);
-  }
-}
+// The test environment unless VIPPS_BASE_URL says otherwise; production keys do not work there.
+export const vippsBase = () => (process.env.VIPPS_BASE_URL || "https://apitest.vipps.no").replace(/\/$/, "");
 
 function oppsett() {
   const e = process.env;
-  // The test environment unless VIPPS_BASE_URL says otherwise; production keys do not work there.
-  const v = { base: e.VIPPS_BASE_URL || "https://apitest.vipps.no", id: e.VIPPS_CLIENT_ID, hemmelig: e.VIPPS_CLIENT_SECRET, nokkel: e.VIPPS_SUBSCRIPTION_KEY, msn: e.VIPPS_MERCHANT_SERIAL_NUMBER };
-  if (!v.base || !v.id || !v.hemmelig || !v.nokkel || !v.msn) throw new Error("Vipps er ikke satt opp (VIPPS_* i miljøet)");
-  return { ...v, base: v.base.replace(/\/$/, "") } as { base: string; id: string; hemmelig: string; nokkel: string; msn: string };
+  const v = { base: vippsBase(), id: e.VIPPS_CLIENT_ID, hemmelig: e.VIPPS_CLIENT_SECRET, nokkel: e.VIPPS_SUBSCRIPTION_KEY, msn: e.VIPPS_MERCHANT_SERIAL_NUMBER };
+  if (!v.id || !v.hemmelig || !v.nokkel || !v.msn) throw new Error("Vipps er ikke satt opp (VIPPS_* i miljøet)");
+  return v as { base: string; id: string; hemmelig: string; nokkel: string; msn: string };
 }
 
 export const vippsSattOpp = () => {
@@ -73,10 +65,10 @@ async function token(): Promise<string> {
   return t.access_token;
 }
 
-async function feil(endepunkt: string, r: Response): Promise<VippsFeil> {
+async function feil(endepunkt: string, r: Response): Promise<Error> {
   const svar = (await r.text().catch(() => "")).slice(0, 2_000);
   console.error("vipps-feil", JSON.stringify({ endepunkt, status: r.status, svar }));
-  return new VippsFeil(endepunkt, r.status, svar);
+  return new Error(`Vipps ${endepunkt}: ${r.status}`);
 }
 
 // One API call. `nokkel` is the Idempotency-Key: the same key gives Vipps' first answer again.

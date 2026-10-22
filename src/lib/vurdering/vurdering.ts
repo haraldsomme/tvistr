@@ -1,7 +1,7 @@
 // «Lignende saker» on the verdict page: the counted figures for the buyer's categories and the three
 // closest decisions with medhold, as fields only (no quotes, no link). Code and database only: nothing
 // here reaches the model, and nothing promises an outcome.
-import { liste, smaa, tall } from "@/lib/brev/format";
+import { liste, smaa } from "@/lib/brev/format";
 import { HOVEDKATEGORIER, komponentnavn } from "@/lib/feil/kategorier";
 import { avgjorendeFor, ranger } from "@/lib/matching/ranger";
 import type { Kandidat } from "@/lib/matching/typer";
@@ -9,12 +9,11 @@ import { byggSaken, type Svar } from "@/lib/vedtaksvalg/kjoper";
 import { MIN_ALDERSFORSKJELL, MIN_KM_ANDEL, visSaksnummer } from "@/lib/vedtaksvalg/mal";
 import { MIN_SAKER, type Statistikkrad } from "./statistikk";
 
-// «Lignende saker»: the figures for one of the buyer's categories. `tall` is null when there are fewer
-// than MIN_SAKER decisions; the block then only says that decisions exist.
+// «Lignende saker»: the figures for one of the buyer's categories with at least MIN_SAKER decisions.
 export type Tallblokk = {
   nokkel: string;
   tema: string;
-  tall: { saker: number; medhold: number; heving: number; prisavslag: number; retting: number; erstatning: number; prisavslagMedian: number | null } | null;
+  tall: { saker: number; medhold: number; heving: number; prisavslag: number; retting: number; erstatning: number };
 };
 
 // A category as «saker om …» names it, where the form's name does not read as a noun phrase.
@@ -33,7 +32,7 @@ const TEMA: Record<string, string> = {
 };
 
 // The subcategory when exactly one is chosen and it has enough decisions, else the main category; a
-// category with no decision at all gives no block.
+// category with fewer than MIN_SAKER decisions gives no block.
 export function tallblokker(s: { feil: { hoved: string; under: string[] }[] }, statistikk: Map<string, Statistikkrad>): Tallblokk[] {
   const ut: Tallblokk[] = [];
   for (const f of s.feil) {
@@ -42,37 +41,15 @@ export function tallblokker(s: { feil: { hoved: string; under: string[] }[] }, s
     const under = f.under.length === 1 ? statistikk.get(`${f.hoved}.${f.under[0]}`) : undefined;
     const hoved = statistikk.get(f.hoved);
     const valgt = under && under.antallSaker >= MIN_SAKER ? { rad: under, navn: h.under.find((u) => u.id === f.under[0])!.navn } : hoved ? { rad: hoved, navn: h.navn } : null;
-    if (!valgt || !valgt.rad.antallSaker) continue;
+    if (!valgt || valgt.rad.antallSaker < MIN_SAKER) continue;
     const r = valgt.rad;
     ut.push({
       nokkel: r.nokkel,
       tema: TEMA[r.nokkel] ?? smaa(valgt.navn),
-      tall:
-        r.antallSaker >= MIN_SAKER
-          ? { saker: r.antallSaker, medhold: r.antallMedhold, heving: r.heving, prisavslag: r.prisavslag, retting: r.retting, erstatning: r.erstatning, prisavslagMedian: r.prisavslagMedianProsent === null ? null : Math.round(r.prisavslagMedianProsent) }
-          : null,
+      tall: { saker: r.antallSaker, medhold: r.antallMedhold, heving: r.heving, prisavslag: r.prisavslag, retting: r.retting, erstatning: r.erstatning },
     });
   }
   return ut;
-}
-
-// The sentences of a block, the same on the screen and in the tests.
-export function tallsetninger(b: Tallblokk): string[] {
-  if (!b.tall) return [`Vi har vedtak om ${b.tema}.`];
-  const t = b.tall;
-  const utfall = (
-    [
-      ["heving", t.heving],
-      ["prisavslag", t.prisavslag],
-      ["retting", t.retting],
-      ["erstatning", t.erstatning],
-    ] as const
-  ).filter(([, n]) => n > 0);
-  return [
-    `Utvalget har behandlet ${tall(t.saker)} saker om ${b.tema} i brukte biler kjøpt fra forhandler. I ${tall(t.medhold)} av dem fikk kjøperen medhold.`,
-    ...(t.medhold && utfall.length ? [`Kjøperen fikk ${liste(utfall.map(([navn, n]) => `${navn} i ${tall(n)}`))} av sakene med medhold.`] : []),
-    ...(t.prisavslagMedian !== null ? [`Prisavslagene lå typisk på ${t.prisavslagMedian} % av kjøpesummen.`] : []),
-  ];
 }
 
 // One of «Saker som ligner din»: fields only, no quotes and no link. `fikk`: what the buyer got, in lower case.

@@ -2,10 +2,10 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { MaalVisning } from "@/app/maal-visning";
 import { tall } from "@/lib/brev/format";
-import { GRATIS, PRIS } from "@/lib/pris";
+import { PRIS } from "@/lib/pris";
 import { antallVedtak } from "@/lib/vurdering/antall";
 import { Bunn } from "./deler/bunn";
-import { Pil } from "./deler/ikoner";
+import { Pil, Pluss } from "./deler/ikoner";
 import { HeroBrev } from "./hero-brev";
 import { LandingTopp } from "./landing-topp";
 
@@ -17,7 +17,7 @@ const BLA = "#1F3A5F";
 const MORK = "#16294A";
 const SEKSJON = "clamp(64px, 8vw, 112px)";
 
-// The points beside the example letter; the number of each is the marker on the sheet (eksempelbrev.ts).
+// The points beside the example letter; the number of each is the marker on the sheet (hero-brev.tsx).
 const PUNKTER = [
   "Dine opplysninger og datoene. Fristene regnes ut fra dem.",
   "Feilen, slik du har beskrevet den.",
@@ -106,9 +106,7 @@ function Sporsmal({ q, apen, children }: { q: string; apen?: boolean; children: 
       <summary style={{ minHeight: 68, padding: "18px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, fontSize: 17.5, fontWeight: 600, letterSpacing: "-0.01em", color: "#111515" }}>
         <span>{q}</span>
         <span className="lp-pm" aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
+          <Pluss s={14} w={2.6} />
         </span>
       </summary>
       <p style={{ margin: 0, padding: "0 52px 24px 0", fontSize: 16, lineHeight: 1.65, color: "#465150", textWrap: "pretty" }}>{children}</p>
@@ -154,7 +152,7 @@ export default async function Home() {
             </ol>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12, paddingTop: 8 }}>
               <Sjekk storrelse={56} />
-              <span style={{ fontSize: 14.5, color: "#465150" }}>{GRATIS ? "Saksvurderingen og brevet er gratis i en prøveperiode." : `Brevet koster kr ${tall(PRIS)}. Du betaler først etter vurderingen.`}</span>
+              <span style={{ fontSize: 14.5, color: "#465150" }}>Brevet koster kr {tall(PRIS)}. Du betaler først etter vurderingen.</span>
             </div>
           </div>
           <HeroBrev />
@@ -164,7 +162,7 @@ export default async function Home() {
           <div className="lp-in" style={{ paddingTop: SEKSJON, paddingBottom: SEKSJON, display: "flex", flexDirection: "column", gap: 48 }}>
             <div style={{ maxWidth: 720 }}>
               <Overskrift merke="Slik fungerer det" tittel="Fra spørsmål til ferdig brev">
-                {GRATIS ? "Saksvurderingen og brevet er gratis i en prøveperiode. Svarene dine fylles inn i brevet." : "Saksvurderingen er gratis. Du betaler bare hvis du vil ha brevet, og da er svarene dine allerede fylt inn."}
+                Saksvurderingen er gratis. Du betaler bare hvis du vil ha brevet, og da er svarene dine allerede fylt inn.
               </Overskrift>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 16 }}>
@@ -175,7 +173,7 @@ export default async function Home() {
                 Du får vite om saken ser sterk ut, hvilke frister som gjelder, og vunnede saker som ligner din.
               </Steg>
               <Steg n={3} tittel="Skriv og send brevet">
-                {GRATIS ? "Åpne brevet" : "Lås opp brevet"} og få et brev som viser til en vunnet sak og argumenterer for at du bør få samme resultat.
+                Lås opp brevet og få et brev som viser til en vunnet sak og argumenterer for at du bør få samme resultat.
               </Steg>
             </div>
           </div>
@@ -257,7 +255,7 @@ export default async function Home() {
             </div>
             <div className="lp-faq" style={{ flex: "2 1 min(100%, 560px)", minWidth: 0, display: "flex", flexDirection: "column", borderTop: "1px solid #E3E7E5" }}>
               <Sporsmal apen q="Hva koster det?">
-                {GRATIS ? "Saksvurderingen og brevet er gratis i en prøveperiode." : `Saksvurderingen er gratis. Brevet koster kr ${tall(PRIS)} som engangsbeløp, og du betaler først etter at du har sett vurderingen.`}
+                Saksvurderingen er gratis. Brevet koster kr {tall(PRIS)} som engangsbeløp, og du betaler først etter at du har sett vurderingen.
               </Sporsmal>
               <Sporsmal q="Hvor kommer de vunnede sakene fra?">
                 Fra vedtak i Forbrukerklageutvalget og forløperen Forbrukertvistutvalget, som Forbrukertilsynet publiserer. Brevet oppgir saksnummer og lenke, så forhandleren kan lese vedtaket selv. Hver sak vurderes konkret, så en lignende sak er et sterkt argument, men ingen garanti for samme utfall.
@@ -268,7 +266,7 @@ export default async function Home() {
               <Sporsmal q="Jeg kjøpte bilen av en privatperson. Kan jeg bruke dette?">Brevet er laget for kjøp fra forhandler. Ved kjøp mellom privatpersoner gjelder kjøpsloven, og reglene er strengere for deg som kjøper. Forbrukerrådet kan gi råd om slike saker.</Sporsmal>
               <Sporsmal q="Må forhandleren få reparere først?">Som hovedregel ja. Du kan likevel sette prisavslag eller heving som subsidiært krav, slik at det gjelder hvis rettingen ikke skjer innen rimelig tid eller ikke lykkes.</Sporsmal>
               <Sporsmal q="Hva skjer med opplysningene jeg fyller inn?">
-                Den gratis sjekken lagres bare i nettleseren din. Når du {GRATIS ? "åpner" : "kjøper"} brevet, lagrer vi saken hos oss, slik at du kan åpne den igjen når du logger inn med Vipps-kontoen du betalte med. Brevene dine ligger på Min side. Vedlegg lastes ikke opp. Bare filnavnene brukes i vedleggslisten.
+                Den gratis sjekken lagres bare i nettleseren din. Når du kjøper brevet, lagrer vi saken hos oss, slik at du kan åpne den igjen når du logger inn med Vipps-kontoen du betalte med. Brevene dine ligger på Min side. Vedlegg lastes ikke opp. Bare filnavnene brukes i vedleggslisten.
               </Sporsmal>
               <Sporsmal q="Er dette juridisk rådgivning?">Nei. Tvistr er en mal som bygger på forbrukerkjøpsloven. Er saken stor eller uvanlig, bør du snakke med Forbrukerrådet eller en advokat.</Sporsmal>
             </div>

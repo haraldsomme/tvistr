@@ -42,7 +42,7 @@ export function finnesIFulltekst(tekst: string, varianter: string[]): boolean {
   });
 }
 
-const erListe = <T extends string>(liste: readonly T[], v: unknown): v is T => typeof v === "string" && (liste as readonly string[]).includes(v);
+export const erListe = <T extends string>(liste: readonly T[], v: unknown): v is T => typeof v === "string" && (liste as readonly string[]).includes(v);
 const tekstEllerNull = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const heltallEllerNull = (v: unknown) => (Number.isInteger(v) && (v as number) >= 0 ? (v as number) : null);
 

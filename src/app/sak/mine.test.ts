@@ -54,7 +54,7 @@ describe("mineBrev", () => {
     ];
     expect(await mineBrev()).toEqual({
       navn: "Kari Nordmann",
-      brev: [{ id: "a".repeat(12), bil: "Toyota RAV4", reg: "EL 98765", feil: "Girkasse", dato: "14. aug. 2026" }],
+      brev: [{ id: "a".repeat(12), bil: "Toyota RAV4", reg: "EL 98765", feil: "Girkasse", dato: "14. aug. 2026", betalt: new Date("2026-08-14T10:00:00Z") }],
     });
     expect(hvor).toHaveBeenCalledWith({ and: [{ eq: "sub-1" }, { notNull: true }] });
   });

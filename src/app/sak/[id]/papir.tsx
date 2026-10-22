@@ -35,7 +35,7 @@ export const Linjer = ({ l }: { l: Del[][] }) => (
   </>
 );
 
-// One block of the letter. The landing page draws the example letter from the same blocks.
+// One block of the letter.
 export function BlokkEl({ b }: { b: Blokk }) {
   switch (b.t) {
     case "addr":

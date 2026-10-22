@@ -2,7 +2,7 @@
 // the cards depend on changes.
 import { useEffect, useState } from "react";
 import { type Lignende, vurderSaken } from "@/app/sak/vurdering";
-import { nokkel, tilSvar } from "@/lib/app/saken";
+import { tilSvar } from "@/lib/app/saken";
 import type { Skjema } from "@/lib/app/skjema";
 
 export function useLignende(s: Skjema): Lignende | null {
@@ -10,7 +10,7 @@ export function useLignende(s: Skjema): Lignende | null {
   // Only what the cards depend on: a description typed in the form does not fetch them again.
   const fullt = tilSvar(s);
   const t = fullt && { ...fullt, krav: null, feil: fullt.feil.map((f) => ({ ...f, beskrivelse: null })) };
-  const n = nokkel(t);
+  const n = JSON.stringify(t);
   useEffect(() => {
     if (!t) return;
     let gjeldende = true;

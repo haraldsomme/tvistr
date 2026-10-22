@@ -9,8 +9,3 @@ export async function lesPdfTekst(sti: string): Promise<{ tekst: string; sider: 
   return { tekst, sider: totalPages };
 }
 
-// The opening part used for classification: the summary ("Saken gjelder" / "Kort oppsummering")
-// and roughly the first page.
-export function innledning(tekst: string, tegn = 5000): string {
-  return tekst.slice(0, tegn);
-}

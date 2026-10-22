@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { ordre, sak } from "@/db/schema";
 import { tall } from "@/lib/app/format";
 import { FIRMA } from "@/lib/firma";
+import { vippsBase } from "@/lib/vipps/klient";
 
 export type Kvittering = { ref: string; sakId: string; belopOre: number; betalt: Date; bil: string; reg: string };
 
@@ -82,7 +83,7 @@ ${p(`Spørsmål? Svar på denne e-posten eller skriv til <a href="mailto:${FIRMA
 // While Vipps runs against its test environment, the test user's address is not a real one:
 // EPOST_TEST_TIL sends every receipt to the developer instead. It has no effect against production.
 export function mottaker(epost: string | undefined): string | undefined {
-  const test = (process.env.VIPPS_BASE_URL || "https://apitest.vipps.no").includes("apitest");
+  const test = vippsBase().includes("apitest");
   return (test && process.env.EPOST_TEST_TIL) || epost;
 }
 

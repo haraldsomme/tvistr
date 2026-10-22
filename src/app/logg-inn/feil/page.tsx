@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Topp } from "@/app/deler/topp";
+import { Melding, Side } from "@/app/deler/juridisk";
 
 export const metadata: Metadata = { title: "Innlogging – Tvistr", robots: { index: false, follow: false } };
 
@@ -7,18 +7,12 @@ export const metadata: Metadata = { title: "Innlogging – Tvistr", robots: { in
 // the user on to Vipps, and a prefetching <Link> would start logins nobody asked for.
 export default function Page() {
   return (
-    <div className="home" style={{ minHeight: "100vh", background: "#F4F5F6" }}>
-      <Topp />
-      <main className="wrap">
-        <div style={{ maxWidth: 560, margin: "0 auto", padding: "64px 0", display: "flex", flexDirection: "column", gap: 16 }}>
-          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, letterSpacing: "-0.03em" }}>Innloggingen ble ikke fullført</h1>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <a href="/logg-inn" className="btn pri" style={{ textDecoration: "none" }}>
-              Prøv igjen
-            </a>
-          </div>
-        </div>
-      </main>
-    </div>
+    <Side>
+      <Melding tittel="Innloggingen ble ikke fullført">
+        <a href="/logg-inn" className="btn pri" style={{ textDecoration: "none" }}>
+          Prøv igjen
+        </a>
+      </Melding>
+    </Side>
   );
 }

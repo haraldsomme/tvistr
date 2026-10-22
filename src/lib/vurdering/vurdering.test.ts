@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import type { AvgjorendeFeil } from "@/lib/avgjorende/skjema";
 import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import type { Kandidat } from "@/lib/matching/typer";
-import { byggStatistikk, MIN_PRISAVSLAG, type Statistikkrad, type Tellevedtak } from "./statistikk";
+import { byggStatistikk, type Statistikkrad, type Tellevedtak } from "./statistikk";
 import type { Svar } from "@/lib/vedtaksvalg/kjoper";
-import { bilnavnFra, lignende, tallblokker, tallsetninger } from "./vurdering";
+import { bilnavnFra, lignende, tallblokker } from "./vurdering";
 
 // The model must never be reached before payment.
 const velgVedtak = vi.fn();
@@ -25,16 +25,13 @@ const rad = (nokkel: string, n: number, m: number, r: Partial<Statistikkrad> = {
   prisavslag: 0,
   retting: 0,
   erstatning: 0,
-  prisavslagMedianProsent: null,
-  alderMedian: null,
-  kmMedian: null,
   ...r,
 });
 
 
 describe("tallene", () => {
   const statistikk = new Map([
-    ["motor", rad("motor", 1009, 401, { heving: 81, prisavslag: 51, retting: 8, prisavslagMedianProsent: 16.7 })],
+    ["motor", rad("motor", 1009, 401, { heving: 81, prisavslag: 51, retting: 8 })],
     ["motor.turbo", rad("motor.turbo", 138, 54, { heving: 7 })],
     ["motor.eksos", rad("motor.eksos", 4, 2)],
     ["hoyvolt", rad("hoyvolt", 4, 1)],
@@ -42,24 +39,17 @@ describe("tallene", () => {
 
   it("bruker underkategorien når den har minst fem saker", () => {
     const [b] = tallblokker(sak(), statistikk);
-    expect(b.nokkel).toBe("motor.turbo");
-    expect(tallsetninger(b)).toEqual([
-      "Utvalget har behandlet 138 saker om turbo i brukte biler kjøpt fra forhandler. I 54 av dem fikk kjøperen medhold.",
-      "Kjøperen fikk heving i 7 av sakene med medhold.",
-    ]);
+    expect(b).toEqual({ nokkel: "motor.turbo", tema: "turbo", tall: { saker: 138, medhold: 54, heving: 7, prisavslag: 0, retting: 0, erstatning: 0 } });
   });
 
   it("faller tilbake til hovedkategorien under fem saker, og ved flere underkategorier", () => {
     expect(tallblokker(sak({ feil: [{ hoved: "motor", under: ["eksos"], oppdaget: "2025-04-01" }] }), statistikk)[0].nokkel).toBe("motor");
     expect(tallblokker(sak({ feil: [{ hoved: "motor", under: ["turbo", "eksos"], oppdaget: "2025-04-01" }] }), statistikk)[0].nokkel).toBe("motor");
-    expect(tallsetninger(tallblokker(sak({ feil: [{ hoved: "motor", under: [], oppdaget: "2025-04-01" }] }), statistikk)[0]).at(-1)).toBe("Prisavslagene lå typisk på 17 % av kjøpesummen.");
+    expect(tallblokker(sak({ feil: [{ hoved: "motor", under: [], oppdaget: "2025-04-01" }] }), statistikk)[0].tall).toMatchObject({ saker: 1009, heving: 81 });
   });
 
-  it("viser ingen tall under fem saker, og ingenting uten saker", () => {
-    const [b] = tallblokker(sak({ feil: [{ hoved: "hoyvolt", under: [], oppdaget: "2025-04-01" }] }), statistikk);
-    expect(b.tall).toBeNull();
-    expect(tallsetninger(b)).toEqual(["Vi har vedtak om høyvoltbatteri og lading (elbil og hybrid)."]);
-    expect(tallsetninger(b).join(" ")).not.toMatch(/\d/);
+  it("gir ingen blokk under fem saker, og ingenting uten saker", () => {
+    expect(tallblokker(sak({ feil: [{ hoved: "hoyvolt", under: [], oppdaget: "2025-04-01" }] }), statistikk)).toEqual([]);
     expect(tallblokker(sak({ feil: [{ hoved: "fukt", under: [], oppdaget: "2025-04-01" }] }), statistikk)).toEqual([]);
   });
 });
@@ -67,13 +57,13 @@ describe("tallene", () => {
 describe("tellingen", () => {
   const feil = (id: string, under: string, utfall: AvledetFeil["utfall"]): AvledetFeil =>
     ({ id, hovedkategori: "motor", underkategori: under, komponent: null, utfall, samlet: false, avslagsgrunn: null, bevisgrunnlag: null, dager_etter_levering: null, viste_seg: "ukjent", formodning: "ikke_nevnt", sitat: null, tidsniva: 1 }) as AvledetFeil;
-  const v = (id: number, utfall: string, f: AvledetFeil[], r: Partial<Tellevedtak> = {}): Tellevedtak => ({ id, utfall, alder: 10, km: 100_000, prisavslagProsent: null, sanksjoner: null, feil: f, avgjorende: null, ...r });
+  const v = (id: number, utfall: string, f: AvledetFeil[], r: Partial<Tellevedtak> = {}): Tellevedtak => ({ id, utfall, sanksjoner: null, feil: f, avgjorende: null, ...r });
 
   it("teller vedtak der utvalget vurderte feilen, og medhold for feilen", () => {
     const rader = byggStatistikk([
       v(1, "medhold", [feil("a", "turbo", "medhold")], { sanksjoner: ["heving"] }),
       v(2, "ikke_medhold", [feil("a", "turbo", "avvist")]),
-      v(3, "delvis_medhold", [feil("a", "turbo", "ikke_vurdert"), feil("b", "olje", "medhold")], { sanksjoner: ["prisavslag"], prisavslagProsent: 10 }),
+      v(3, "delvis_medhold", [feil("a", "turbo", "ikke_vurdert"), feil("b", "olje", "medhold")], { sanksjoner: ["prisavslag"] }),
       v(4, "avvist", [feil("a", "turbo", "avvist")]),
     ]);
     const turbo = rader.find((r) => r.nokkel === "motor.turbo")!;
@@ -89,12 +79,6 @@ describe("tellingen", () => {
     expect(rader.find((r) => r.nokkel === "motor.turbo")).toMatchObject({ retting: 1, heving: 0 });
     // Two defects with medhold and no extraction for this one: what it got alone cannot be told.
     expect(rader.find((r) => r.nokkel === "motor.olje")).toMatchObject({ retting: 0, heving: 0 });
-  });
-
-  it("gir median prisavslag først fra ti vedtak", () => {
-    const mange = (n: number) => byggStatistikk(Array.from({ length: n }, (_, i) => v(i, "medhold", [feil("a", "turbo", "medhold")], { sanksjoner: ["prisavslag"], prisavslagProsent: i + 1 })));
-    expect(mange(MIN_PRISAVSLAG - 1).find((r) => r.nokkel === "motor.turbo")!.prisavslagMedianProsent).toBeNull();
-    expect(mange(MIN_PRISAVSLAG).find((r) => r.nokkel === "motor.turbo")!.prisavslagMedianProsent).toBe(5.5);
   });
 });
 

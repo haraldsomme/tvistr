@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ANDRE_LOVER, jf, LOVORD, lovRef, lovversjon, PARAGRAFER, paragraf, POENG, RENTER_FRA_REKLAMASJON } from "./paragrafer";
+import { ANDRE_LOVER, LOVORD, lovRef, lovversjon, PARAGRAFER, paragraf, POENG, RENTER_FRA_REKLAMASJON } from "./paragrafer";
 
 const VERSJONER = ["før_2024", "etter_2024"] as const;
 
@@ -32,17 +32,14 @@ describe("paragraftabellene", () => {
   });
 
   it("nevner bare forbrukerkjøpsloven når nummeret er et gap", () => {
-    const original = PARAGRAFER.etter_2024.garanti;
-    PARAGRAFER.etter_2024.garanti = null;
+    const original = PARAGRAFER.etter_2024.garanti_lov;
+    PARAGRAFER.etter_2024.garanti_lov = null;
     try {
-      expect(lovRef("etter_2024", "garanti")).toBe("forbrukerkjøpsloven");
-      expect(jf("etter_2024", "garanti")).toBe("");
-      expect(jf("etter_2024", "krav", "garanti")).toBe(", jf. § 15");
+      expect(lovRef("etter_2024", "garanti_lov")).toBe("forbrukerkjøpsloven");
     } finally {
-      PARAGRAFER.etter_2024.garanti = original;
+      PARAGRAFER.etter_2024.garanti_lov = original;
     }
     expect(lovRef("etter_2024", "avvik")).toBe("forbrukerkjøpsloven § 16 første ledd bokstav a");
-    expect(jf("etter_2024", "krav", "garanti")).toBe(", jf. § 15 og § 18 a");
   });
 });
 
@@ -82,8 +79,7 @@ describe("lovord", () => {
     expect(LOVORD.avtaltUnntak).toContain("spesielt opplyst");
     expect(LOVORD.avtaltUnntak).toContain("uttrykkelig og særskilt aksepterte");
   });
-  it("bruker lovens egne ord for alvorlig mangel og unntaket fra formodningen", () => {
-    expect(LOVORD.alvorligArt).toBe("etter sin art er så alvorlig at det ikke er rimelig å forvente at forbrukeren skal godta et tilbud om avhjelp");
+  it("bruker lovens egne ord for unntaket fra formodningen", () => {
     expect(LOVORD.uforenlig).toBe("uforenlig med varens eller mangelens art");
   });
 });

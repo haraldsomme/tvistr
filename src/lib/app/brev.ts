@@ -5,28 +5,27 @@ import "server-only";
 // finnVedtak (mal.ts), never written here.
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { opplysningsfeil } from "@/lib/brev/feiltype";
+import { liste, tall } from "@/lib/brev/format";
 import { ANDRE_LOVER, LOVORD, RENTER_FRA_REKLAMASJON, SELGER_BEVISER_UVESENTLIG, TILBUD_UTEN_OPPHOLD } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
 import type { Kriterium } from "@/lib/matching/ranger";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
 import type { Blokk, Del, Presedens } from "./brevtyper";
 import { addDays, addMonths, dur, fmtD, parseD } from "./dato";
+import { lcFirst } from "./format";
 import { regler, type Regler } from "./lov";
-import { forsokTall } from "./saken";
+import { forsokTall, heltall } from "./saken";
 import { DOCS, IMPACT, type Skjema, SVAR, WS_SAYS, WS_WHO } from "./skjema";
 
 type Tekstfelt = { [K in keyof Skjema]: Skjema[K] extends string ? K : never }[keyof Skjema];
 
-const NB = new Intl.NumberFormat("nb-NO");
-const kr = (n: number) => `kr ${NB.format(n)}`;
+const kr = (n: number) => `kr ${tall(n)}`;
 const sentence = (s: string) => (/[.!?]$/.test(s.trim()) ? s.trim() : `${s.trim()}.`);
 const trimDot = (s: string) => s.trim().replace(/[.]$/, "");
 const unquote = (s: string) => trimDot(s.trim().replace(/^[«"]|[»"]$/g, ""));
-const listJoin = (a: string[]) => (a.length < 2 ? (a[0] ?? "") : `${a.slice(0, -1).join(", ")} og ${a[a.length - 1]}`);
-const smaa = (s: string) => (/^[A-ZÆØÅ0-9]{2}/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1));
 // One of the buyer's answers as written in the letter, tagged with its field; nothing when empty.
 const fe = (felt: string, tekst: string): Del => (tekst ? { felt, tekst } : "");
-// listJoin and join(" ") over parts, so a tagged answer stays its own part.
+// liste and join(" ") over parts, so a tagged answer stays its own part.
 const listJoinD = (a: Del[][]): Del[] => a.flatMap((x, i) => [...(i === 0 ? [] : i === a.length - 1 ? [" og "] : [", "]), ...x]);
 const joinD = (a: Del[][]): Del[] => a.flatMap((x, i) => [...(i ? [" "] : []), ...x]);
 
@@ -34,9 +33,9 @@ const joinD = (a: Del[][]): Del[] => a.flatMap((x, i) => [...(i ? [" "] : []), .
 function feilnavn(hoved: string, under: string[]): string {
   const h = HOVEDKATEGORIER.find((x) => x.id === hoved);
   if (!h) return hoved;
-  const navn = under.map((u) => h.under.find((x) => x.id === u)?.navn ?? u).map((n, i) => (i ? smaa(n) : n));
+  const navn = under.map((u) => h.under.find((x) => x.id === u)?.navn ?? u).map((n, i) => (i ? lcFirst(n) : n));
   if (!navn.length) return h.navn;
-  return navn.some((n) => /\bog\b|,/.test(n)) ? navn.join("; ") : listJoin(navn);
+  return navn.some((n) => /\bog\b|,/.test(n)) ? navn.join("; ") : liste(navn);
 }
 
 // The attachments, in the form's order. A workshop report the letter says is attached is always listed,
@@ -52,7 +51,7 @@ const harUtgifter = (s: Skjema) => s.k_exp && s.exp.some((x) => x.t || x.a);
 
 // A defect so serious the buyer need not accept a remedy first (§ 29 tredje ledd tredje punktum, from
 // 2024): only from the answers that show it.
-const alvorlig = (s: Skjema) => s.f_drivable === "nei" || s.f_impact.includes("sikkerhet") || (s.ws === "rapport" && s.ws_says.includes("frarader"));
+const alvorlig = (s: Skjema) => alvorGrunner(s).length > 0;
 
 // Whether the seller is past the remedy for a price reduction or heving claimed first: the attempts the
 // law lets the buyer refuse more of (§ 30: two before 2024, one after), or a defect so serious.
@@ -70,11 +69,6 @@ function alvorGrunner(s: Skjema): string[] {
   if (s.ws === "rapport" && s.ws_says.includes("frarader")) g.push("Verkstedet fraråder videre bruk.");
   return g;
 }
-
-const heltall = (s: string) => {
-  const d = s.replace(/\D/g, "");
-  return d ? Number(d) : null;
-};
 
 // Why the defect is not insignificant (fkjl. § 32), from the answers only: each sentence has a field
 // behind it, and none is written without one. The repair cost is left out under 5 % of the price,
@@ -95,9 +89,7 @@ function hevingsgrunner(s: Skjema, L: Regler): Del[][] {
     if (n !== null && n >= 2) g.push([`Dere har forsøkt å rette feilen ${ganger} uten å lykkes, og har dermed ikke lenger rett til å rette, jf. ${L.par("avhjelp_avvise")}.`]);
     else if (n === 1) g.push(["Ett rettingsforsøk har ikke løst feilen."]);
   } else if (n !== null && n >= 1) g.push([`Dere har forsøkt å rette feilen${ganger ? ` ${ganger}` : ""} uten å lykkes, og jeg kan derfor avvise videre retting, jf. ${L.par("avhjelp_avvise")}.`]);
-  if (s.f_drivable === "nei") g.push(["Bilen kan ikke brukes."]);
-  if (s.f_impact.includes("sikkerhet")) g.push(["Feilen går ut over sikkerheten."]);
-  if (s.ws === "rapport" && s.ws_says.includes("frarader")) g.push(["Verkstedet fraråder videre bruk."]);
+  g.push(...alvorGrunner(s).map((x) => [x]));
   if (s.seller_said === "lovet") g.push(["Bilen avviker fra det dere uttrykkelig opplyste før kjøpet."]);
   return g;
 }
@@ -188,14 +180,14 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
     .filter((k) => !(k === "stopp" && s.f_drivable === "nei") && !(k === "palitelig" && s.f_drivable === "delvis") && !(k === "bruk" && (s.f_drivable === "nei" || s.f_drivable === "delvis")))
     .map((k) => IMPACT.find((x) => x[0] === k)?.[4])
     .filter((x): x is NonNullable<typeof x> => !!x);
-  if (imp.length) ex.push(`Konsekvensen er at ${listJoin(imp)}.`);
+  if (imp.length) ex.push(`Konsekvensen er at ${liste(imp)}.`);
   if (ex.length) B.push({ t: "p", tekst: [ex.join(" ")] });
 
   if (s.ws === "rapport" || s.ws === "uten") {
     const p: Del[] = [`Bilen er undersøkt av ${WS_WHO[s.ws_who] ?? "et verksted"}`, ...(has("ws_name") ? [", ", fe("ws_name", s.ws_name.trim())] : []), "."];
     if (s.ws === "rapport") {
       const says = s.ws_says.map((k) => WS_SAYS[k]).filter(Boolean);
-      p.push(" Verkstedrapporten", ...(has("ws_date") ? [" datert ", fe("ws_date", fmtD(s.ws_date))] : []), ` ${says.length ? listJoin(says) : "beskriver feilen"}.`);
+      p.push(" Verkstedrapporten", ...(has("ws_date") ? [" datert ", fe("ws_date", fmtD(s.ws_date))] : []), ` ${says.length ? liste(says) : "beskriver feilen"}.`);
       if (has("ws_quote")) p.push(" Rapportens konklusjon er: «", fe("ws_quote", unquote(s.ws_quote)), "».");
       p.push(" Rapporten følger vedlagt.");
     }
@@ -240,7 +232,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   const ikkeSlitasje = s.ws === "rapport" && s.ws_says.includes("ikke_slitasje");
   let iFormodning = false;
   const datert = s.f_cats.map((c) => ({ c, d: s.f_area[c]?.found ?? "" })).filter((x) => x.d && s.c_delivery && x.d >= s.c_delivery && !opplysningsfeil(x.c, s.f_parts[x.c] ?? []));
-  const ved = (xs: typeof datert) => listJoinD(xs.map((x) => [fe(`f_parts.${x.c}`, smaa(feilnavn(x.c, s.f_parts[x.c] ?? [])))]));
+  const ved = (xs: typeof datert) => listJoinD(xs.map((x) => [fe(`f_parts.${x.c}`, lcFirst(feilnavn(x.c, s.f_parts[x.c] ?? [])))]));
   if (s.c_delivery && datert.length) {
     const inne = datert.filter((x) => x.d <= plussManeder(s.c_delivery, L.formodningMnd));
     const sene = datert.filter((x) => x.d > plussManeder(s.c_delivery, 24) && x.d <= plussManeder(s.c_delivery, 60));

@@ -8,12 +8,12 @@ import { parseArgs } from "node:util";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../src/db";
 import { kildedokument } from "../src/db/schema";
-import { erKontofeil, kallVerktoy } from "../src/lib/ai/klient";
+import { erKontofeil, kallVerktoy, kjorMedKontostopp, spredtOrden } from "../src/lib/ai/klient";
 import { KLASSIFISERING_SYSTEM, KLASSIFISERING_VERSJON } from "../src/lib/ai/prompter";
 import { fraModell, KLASSIFISERING_SKJEMA, type Klassifisering } from "../src/lib/ai/skjema";
 import { kjorParallelt } from "../src/lib/parallell";
 import { rens, TOM_ID } from "../src/lib/personvern/rens";
-import { innledning, lesPdfTekst } from "../src/lib/tekst/pdf";
+import { lesPdfTekst } from "../src/lib/tekst/pdf";
 
 const { values: args } = parseArgs({
   options: {
@@ -31,12 +31,7 @@ async function main() {
     .select({ id: kildedokument.id, lokalSti: kildedokument.lokalSti, kostnadUsd: kildedokument.kostnadUsd, tokensInn: kildedokument.tokensInn, tokensUt: kildedokument.tokensUt })
     .from(kildedokument)
     .where(and(inArray(kildedokument.status, [...statuser]), sql`${kildedokument.lokalSti} is not null`))
-    // --spredt takes documents round-robin across years, in a stable pseudo-random order.
-    .orderBy(
-      ...(args.spredt
-        ? [sql`row_number() over (partition by ${kildedokument.ar} order by md5(${kildedokument.id}::text))`, kildedokument.ar]
-        : [kildedokument.id]),
-    )
+    .orderBy(...spredtOrden(args.spredt))
     .limit(grense);
 
   console.log(`Klassifiserer ${dokumenter.length} dokumenter (${KLASSIFISERING_VERSJON}).`);
@@ -51,7 +46,8 @@ async function main() {
       const svar = await kallVerktoy<Klassifisering>({
         system: KLASSIFISERING_SYSTEM,
         verktoy: { name: "klassifiser_vedtak", description: "Registrer hva vedtaket gjelder.", input_schema: KLASSIFISERING_SKJEMA },
-        bruker: `<vedtak_start>\n${innledning(tekst)}\n</vedtak_start>`,
+        // The summary ("Saken gjelder" / "Kort oppsummering") and roughly the first page.
+        bruker: `<vedtak_start>\n${tekst.slice(0, 5000)}\n</vedtak_start>`,
         effort: "low",
         maksTokens: 4000,
       });
@@ -86,11 +82,4 @@ async function main() {
   });
 }
 
-main().catch((e) => {
-  if (erKontofeil(e)) {
-    console.error(`STOPP: ${(e as Error).message.slice(0, 200)}\nKjør skriptet på nytt når kontoen er i orden; det fortsetter der det slapp.`);
-    process.exit(3);
-  }
-  console.error(e);
-  process.exit(1);
-});
+kjorMedKontostopp(main);

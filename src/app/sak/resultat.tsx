@@ -3,9 +3,10 @@
 // with its rows, and «Lignende saker». A case the owner has bought already is opened instead: the
 // answers just given are not carried over.
 import { useRouter } from "next/navigation";
-import { type RefObject, useEffect, useState, useSyncExternalStore } from "react";
+import { type RefObject, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Kjop } from "@/app/deler/kjop";
+import { useInne } from "@/app/deler/konto";
 import { Lignende } from "@/app/deler/lignende";
 import { Styrke } from "@/app/sak/flyt/styrke";
 import type { Forhandsvist } from "@/app/sak/brevet-actions";
@@ -14,14 +15,10 @@ import { useKjopt } from "@/lib/app/lagring";
 import { type Kjopt, manglerISkjema, sakTekst, sammeSakSkjema } from "@/lib/app/saken";
 import type { Utkast } from "@/lib/app/utkast";
 import type { Resultat as Vurdering } from "@/lib/app/vurdering";
-import { inneHint } from "@/lib/innlogging/navn";
 import { maal } from "@/lib/maling";
-import { GRATIS, PRIS } from "@/lib/pris";
+import { PRIS } from "@/lib/pris";
 import { mineKjop } from "./mine";
 
-const PRISTEKST = GRATIS ? "Gratis" : `kr ${tall(PRIS)}`;
-const BETALER_FOR = GRATIS ? "som brevet skal gjelde" : "du betaler for";
-const ingen = () => () => {};
 
 // «Endre svarene» goes back to the last question; «Start på nytt» replaces the draft with a new one.
 const Lenker = ({ onEndre, onNy }: { onEndre: () => void; onNy: () => void }) => (
@@ -68,7 +65,7 @@ export function Resultat({
   }, []);
   const funnet = [kjopt, ...(mine ?? [])].find((k) => sammeSakSkjema(s, k));
   // Logged in (by the hint) and the account's cases not here yet: no pay button until we know.
-  const inne = useSyncExternalStore(ingen, inneHint, () => false);
+  const inne = useInne();
   const henter = !funnet && mine === null && inne;
   const mangler = manglerISkjema(s);
   const [kjop, settKjop] = useState(false);
@@ -132,10 +129,10 @@ export function Resultat({
               <div className="fl-varsel fl-varsel-stabel">
                 <span>
                   {mangler === "reg"
-                    ? `Legg inn registreringsnummeret først. Brevet gjelder bilen ${BETALER_FOR}.`
+                    ? "Legg inn registreringsnummeret først. Brevet gjelder bilen du betaler for."
                     : mangler === "bil"
-                      ? `Hent bilen fra Vegvesen eller skriv inn merke og modell først. Brevet gjelder bilen ${BETALER_FOR}, og den kan ikke endres etterpå.`
-                      : `Velg hvilken feil det gjelder først. Brevet gjelder feilen ${BETALER_FOR}.`}
+                      ? "Hent bilen fra Vegvesen eller skriv inn merke og modell først. Brevet gjelder bilen du betaler for, og den kan ikke endres etterpå."
+                      : "Velg hvilken feil det gjelder først. Brevet gjelder feilen du betaler for."}
                 </span>
                 <button type="button" className="lnk" onClick={() => onTilSkjerm(mangler === "feil" ? "feil" : "bilen")}>
                   {mangler === "feil" ? "Velg feilen" : "Legg inn bilen"}
@@ -148,11 +145,11 @@ export function Resultat({
             ) : (
               <>
                 <button type="button" className="fl-cta" onClick={apne}>
-                  Lås opp hele brevet · {PRISTEKST}
+                  Lås opp hele brevet · kr {tall(PRIS)}
                 </button>
-                <span className="fl-fin">{GRATIS ? "Svarene dine er allerede fylt inn." : "Du betaler med Vipps. Svarene dine er allerede fylt inn."}</span>
+                <span className="fl-fin">Du betaler med Vipps. Svarene dine er allerede fylt inn.</span>
                 <span className="fl-fin">
-                  Brevet gjelder {`${s.c_make} ${s.c_model}`.trim()} ({s.c_reg}) og feilen du har valgt. Bilen og feilen kan ikke endres {GRATIS ? "etterpå" : "etter kjøpet"}.
+                  Brevet gjelder {`${s.c_make} ${s.c_model}`.trim()} ({s.c_reg}) og feilen du har valgt. Bilen og feilen kan ikke endres etter kjøpet.
                 </span>
               </>
             )}

@@ -1,5 +1,5 @@
 // The buyer's defects as a checklist (mockup 4b, 4c on mobile): one card per main category, and
-// under a chosen card its subcategories as rows to tick. Locked, it shows what the case holds.
+// under a chosen card its subcategories as rows to tick.
 import { Hake } from "@/app/deler/ikoner";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 
@@ -34,37 +34,34 @@ const SPORSMAL: Record<string, string> = {
   vet_ikke: "Hva merker du?",
 };
 
+// A category's icon; the car (karosseri) also stands for the account without a name (kontomeny.tsx).
+export const FeilSymbol = ({ id, s = 19, w = 1.8 }: { id: string; s?: number; w?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d={IKON[id]} />
+  </svg>
+);
+
 // The category's icon in its tile, also on the form's card for each defect.
 export function FeilIkon({ id }: { id: string }) {
   return (
     <span className="ico" aria-hidden="true">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d={IKON[id]} />
-      </svg>
+      <FeilSymbol id={id} />
     </span>
   );
 }
 
-type Props = {
-  valgt: string[];
-  under: Record<string, string[]>;
-  // Without these the list is locked, and shows only the chosen categories.
-  onKategori?: (c: string) => void;
-  onUnder?: (c: string, u: string) => void;
-};
+type Props = { valgt: string[]; under: Record<string, string[]>; onKategori: (c: string) => void; onUnder: (c: string, u: string) => void };
 
 export function FeilListe({ valgt, under, onKategori, onUnder }: Props) {
-  const laast = !onKategori;
-  const kategorier = laast ? HOVEDKATEGORIER.filter((h) => valgt.includes(h.id)) : HOVEDKATEGORIER;
   return (
-    <div className={`fl${laast ? " laast" : ""}`}>
-      {kategorier.map((h) => {
+    <div className="fl">
+      {HOVEDKATEGORIER.map((h) => {
         const pa = valgt.includes(h.id);
         const sel = under[h.id] ?? [];
         const n = h.under.filter((u) => sel.includes(u.id)).length;
         return (
           <div key={h.id} className={`fl-c${pa ? " on" : ""}`}>
-            <button type="button" role="checkbox" aria-checked={pa} className="fl-h" disabled={laast} onClick={() => onKategori?.(h.id)}>
+            <button type="button" role="checkbox" aria-checked={pa} className="fl-h" onClick={() => onKategori(h.id)}>
               <FeilIkon id={h.id} />
               <span className="fl-n">{h.navn}</span>
               {pa && n > 0 && <span className="fl-cnt">{n} valgt</span>}
@@ -77,7 +74,7 @@ export function FeilListe({ valgt, under, onKategori, onUnder }: Props) {
                 <span className="fl-q">{SPORSMAL[h.id] ?? "Hva gjelder det?"}</span>
                 <div className="fl-g" role="group" aria-label={h.navn}>
                   {h.under.map((u) => (
-                    <button key={u.id} type="button" role="checkbox" aria-checked={sel.includes(u.id)} className="fl-u" disabled={laast} onClick={() => onUnder?.(h.id, u.id)}>
+                    <button key={u.id} type="button" role="checkbox" aria-checked={sel.includes(u.id)} className="fl-u" onClick={() => onUnder(h.id, u.id)}>
                       <span className="fl-box" aria-hidden="true">
                         <Hake />
                       </span>

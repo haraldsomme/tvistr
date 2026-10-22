@@ -1,13 +1,12 @@
 "use client";
 
-// The last resort for an error nothing else caught. The draft is kept in localStorage (tvistr-utkast, or
-// an old check in tvistr-sjekk) and a paid case on the server, so loading the page again continues where
+// The last resort for an error nothing else caught. The draft is kept in localStorage (tvistr-utkast)
+// and a paid case on the server, so loading the page again continues where
 // the buyer was. «Start på nytt» clears the draft; the last purchase (tvistr-sak) is kept, so a buyer who
 // has paid keeps the way back to the case.
 function startPaNytt() {
   try {
     localStorage.removeItem("tvistr-utkast");
-    localStorage.removeItem("tvistr-sjekk");
   } catch {}
   window.location.reload();
 }

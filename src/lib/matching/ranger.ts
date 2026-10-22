@@ -1,9 +1,9 @@
 import type { Lagret as Avgjorende } from "@/lib/avgjorende/skjema";
 import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
-import { komponenttype } from "@/lib/feil/kategorier";
+import { erOpplysning } from "@/lib/feil/kategorier";
 import { type RettsligPoeng, rettsligePoeng } from "./rett";
 import type { Brukersak, Kandidat, Kategorisvar } from "./typer";
-import { VEKTER, type Vekter } from "./vekter";
+import { VEKTER } from "./vekter";
 
 // Picks the decisions the letter can cite (docs/vedtaksvalg.md). Two levels:
 //   A  the same defect: same subcategory, judged by the committee on its own (not together with
@@ -30,7 +30,6 @@ export type Rangert = {
   hoved: string | null;
   rett: RettsligPoeng[];
   poengsum: number;
-  maks: number;
   treff: Record<Kriterium, Treff>;
 };
 
@@ -40,33 +39,34 @@ export type Rangering = {
   perNiva: Record<Niva, number>;
 };
 
-type Vurdert = { treff: Treff; poeng: number; maks: number };
+type Vurdert = { treff: Treff; poeng: number };
 
-const IKKE_OPPGITT: Vurdert = { treff: "ikke_oppgitt", poeng: 0, maks: 0 };
-const ukjent = (maks: number): Vurdert => ({ treff: "ukjent", poeng: 0, maks });
+const IKKE_OPPGITT: Vurdert = { treff: "ikke_oppgitt", poeng: 0 };
+const UKJENT: Vurdert = { treff: "ukjent", poeng: 0 };
 const intervall = (x: number | null, grenser: readonly number[]) => (x === null ? null : grenser.filter((g) => x >= g).length);
 
 // Higher is harder for the buyer (later defect, more km, older car). Null in the decision is unknown,
 // null from the user leaves the criterion out.
-function retning(bruker: number | null, vedtak: number | null, v: { likt: number; naer: number }): Vurdert {
+function retning(bruker: number | null, vedtak: number | null, p: { likt: number; naer: number }): Vurdert {
   if (bruker === null) return IKKE_OPPGITT;
-  if (vedtak === null) return ukjent(v.likt);
-  if (vedtak === bruker) return { treff: "likt", poeng: v.likt, maks: v.likt };
-  return vedtak > bruker ? { treff: "strengere", poeng: v.naer, maks: v.likt } : { treff: "mildere", poeng: 0, maks: v.likt };
+  if (vedtak === null) return UKJENT;
+  if (vedtak === bruker) return { treff: "likt", poeng: p.likt };
+  return vedtak > bruker ? { treff: "strengere", poeng: p.naer } : { treff: "mildere", poeng: 0 };
 }
 
 // Whether the decision matches; null when the decision lacks the value.
 function ja(likt: boolean | null, poeng: number): Vurdert {
-  if (likt === null) return ukjent(poeng);
-  return likt ? { treff: "likt", poeng, maks: poeng } : { treff: "ulikt", poeng: 0, maks: poeng };
+  if (likt === null) return UKJENT;
+  return likt ? { treff: "likt", poeng } : { treff: "ulikt", poeng: 0 };
 }
 
 // What the committee rested the defect on, against what the user has. A win on the seller's statement
 // or an expert report is easier than the user's case when the user has neither. A concealed fact
 // (§ 16 b) needs no statement, so the seller's silence matches it.
 function grunnlag(k: Kandidat, f: AvledetFeil, kat: Kategorisvar, poeng: number): Vurdert {
-  const likt: Vurdert = { treff: "likt", poeng, maks: poeng };
-  const har = (x: boolean | null): Vurdert => (x === null ? IKKE_OPPGITT : x ? likt : { treff: "mildere", poeng: 0, maks: poeng });
+  const likt: Vurdert = { treff: "likt", poeng };
+  const mildere: Vurdert = { treff: "mildere", poeng: 0 };
+  const har = (x: boolean | null): Vurdert => (x === null ? IKKE_OPPGITT : x ? likt : mildere);
   switch (f.bevisgrunnlag) {
     case "selgers_opplysning":
       return k.mangelsgrunnlag?.includes("tilbakeholdt_opplysning") && !k.mangelsgrunnlag.includes("feil_opplysninger") ? likt : har(kat.opplysning);
@@ -74,12 +74,12 @@ function grunnlag(k: Kandidat, f: AvledetFeil, kat: Kategorisvar, poeng: number)
       return har(kat.verksted);
     case "formodning_ikke_motbevist":
       // The presumption helps the user only within the presumption period.
-      return kat.niva === 1 ? likt : { treff: "mildere", poeng: 0, maks: poeng };
+      return kat.niva === 1 ? likt : mildere;
     case "utvalgets_skjonn":
       return likt;
     default:
       // Admitted, undisputed or not stated: the committee did not weigh the evidence.
-      return ukjent(poeng);
+      return UKJENT;
   }
 }
 
@@ -89,45 +89,44 @@ const IKKE_DROFTET = new Set(["erkjent_av_selger", "uomtvistet"]);
 const paGaranti = (k: Kandidat, f: AvledetFeil) => !!k.paragrafer?.includes("fkjl § 18a") && /garanti/i.test(f.sitat ?? "");
 
 // Points for the decision, and for the defect when there is one to compare.
-function vurder(k: Kandidat, f: AvledetFeil | null, kat: Kategorisvar | null, sak: Brukersak, v: Vekter): Pick<Rangert, "poengsum" | "maks" | "treff"> {
+function vurder(k: Kandidat, f: AvledetFeil | null, kat: Kategorisvar | null, sak: Brukersak): Pick<Rangert, "poengsum" | "treff"> {
   // «Som den er» is harder for the buyer; as numbers, true > false.
   const sde = (x: boolean | null) => (x === null ? null : Number(x));
   const flereFeil = k.feil.filter((x) => x.utfall === "medhold").length > 1;
   const vurdert: Record<Kriterium, Vurdert> = {
     underkategori:
-      !f || !kat?.under.length ? IKKE_OPPGITT : ja(f.underkategori === null ? null : kat.under.includes(f.underkategori), v.underkategori.likt),
-    tidsniva: !f || !kat ? IKKE_OPPGITT : retning(kat.niva, f.tidsniva, v.tidsniva),
-    km: retning(intervall(sak.km, v.kmGrenser), intervall(k.km, v.kmGrenser), v.km),
-    alder: retning(intervall(sak.alder, v.alderGrenser), intervall(k.alder, v.alderGrenser), v.alder),
-    som_den_er: retning(sde(sak.somDenEr), sde(k.somDenEr), v.som_den_er),
+      !f || !kat?.under.length ? IKKE_OPPGITT : ja(f.underkategori === null ? null : kat.under.includes(f.underkategori), VEKTER.underkategori.likt),
+    tidsniva: !f || !kat ? IKKE_OPPGITT : retning(kat.niva, f.tidsniva, VEKTER.tidsniva),
+    km: retning(intervall(sak.km, VEKTER.kmGrenser), intervall(k.km, VEKTER.kmGrenser), VEKTER.km),
+    alder: retning(intervall(sak.alder, VEKTER.alderGrenser), intervall(k.alder, VEKTER.alderGrenser), VEKTER.alder),
+    som_den_er: retning(sde(sak.somDenEr), sde(k.somDenEr), VEKTER.som_den_er),
     // What the committee granted, not what the buyer claimed; in part when other defects shared it.
     krav:
       sak.krav === null
         ? IKKE_OPPGITT
         : !k.sanksjoner?.length
-          ? ukjent(v.krav.likt)
+          ? UKJENT
           : !k.sanksjoner.includes(sak.krav)
-            ? { treff: "ulikt", poeng: 0, maks: v.krav.likt }
+            ? { treff: "ulikt", poeng: 0 }
             : flereFeil
-              ? { treff: "delvis", poeng: v.krav.naer, maks: v.krav.likt }
-              : { treff: "likt", poeng: v.krav.likt, maks: v.krav.likt },
+              ? { treff: "delvis", poeng: VEKTER.krav.naer }
+              : { treff: "likt", poeng: VEKTER.krav.likt },
     // The committee weighed this defect itself: not together with others, not admitted or undisputed.
-    egen_vurdering: !f ? IKKE_OPPGITT : ja(!f.samlet && !IKKE_DROFTET.has(f.bevisgrunnlag ?? ""), v.egen_vurdering.likt),
-    grunnlag: !f || !kat ? IKKE_OPPGITT : grunnlag(k, f, kat, v.grunnlag.likt),
+    egen_vurdering: !f ? IKKE_OPPGITT : ja(!f.samlet && !IKKE_DROFTET.has(f.bevisgrunnlag ?? ""), VEKTER.egen_vurdering.likt),
+    grunnlag: !f || !kat ? IKKE_OPPGITT : grunnlag(k, f, kat, VEKTER.grunnlag.likt),
   };
   const verdier = Object.values(vurdert);
   return {
     poengsum: verdier.reduce((s, x) => s + x.poeng, 0),
-    maks: verdier.reduce((s, x) => s + x.maks, 0),
     treff: Object.fromEntries(Object.entries(vurdert).map(([n, x]) => [n, x.treff])) as Record<Kriterium, Treff>,
   };
 }
 
 // The car in the decision is not easier for the buyer on km, age or «som den er». Unknown is not easier.
-function profilOk(k: Kandidat, sak: Brukersak, v: Vekter): boolean {
+function profilOk(k: Kandidat, sak: Brukersak): boolean {
   const mild = (b: number | null, x: number | null) => b !== null && x !== null && x < b;
-  if (mild(intervall(sak.km, v.kmGrenser), intervall(k.km, v.kmGrenser))) return false;
-  if (mild(intervall(sak.alder, v.alderGrenser), intervall(k.alder, v.alderGrenser))) return false;
+  if (mild(intervall(sak.km, VEKTER.kmGrenser), intervall(k.km, VEKTER.kmGrenser))) return false;
+  if (mild(intervall(sak.alder, VEKTER.alderGrenser), intervall(k.alder, VEKTER.alderGrenser))) return false;
   return !(sak.somDenEr === true && k.somDenEr !== true);
 }
 
@@ -143,14 +142,14 @@ export function sammeFeil(f: AvledetFeil, kat: Kategorisvar): boolean {
 export const avgjorendeFor = (a: Avgjorende | null, f: AvledetFeil) => a?.feil.find((x) => x.id === f.id) ?? null;
 
 // Whether an accepted defect makes the decision level A against one of the buyer's categories.
-export function nivaA(k: Kandidat, f: AvledetFeil, kat: Kategorisvar, sak: Brukersak, v: Vekter = VEKTER): boolean {
+export function nivaA(k: Kandidat, f: AvledetFeil, kat: Kategorisvar, sak: Brukersak): boolean {
   if (f.utfall !== "medhold" || !sammeFeil(f, kat)) return false;
   if (kat.hoved !== "garanti" && paGaranti(k, f)) return false;
   const a = avgjorendeFor(k.avgjorende, f);
   if (!a || a.sitater.length < MIN_SITATER_A || f.samlet || a.samlet_med.length) return false;
   // From v4: the assessment names this defect and found it a defect on its own.
   if (a.nevnt_i_vurderingen === false || a.vurdert_for_seg === false) return false;
-  return komponenttype(f.hovedkategori, f.underkategori) === "opplysning" || profilOk(k, sak, v);
+  return erOpplysning(f.hovedkategori, f.underkategori) || profilOk(k, sak);
 }
 
 // The buyer's legal points the decision settled. From v4 each needs the committee's own sentence for it.
@@ -160,30 +159,30 @@ export function rettFor(k: Kandidat, sak: Brukersak): RettsligPoeng[] {
   return sitert ? rett.filter((p) => sitert.some((s) => s.poeng === p)) : rett;
 }
 
-function plasser(k: Kandidat, sak: Brukersak, v: Vekter): Rangert | null {
+function plasser(k: Kandidat, sak: Brukersak): Rangert | null {
   const rett = rettFor(k, sak);
   let best: Rangert | null = null;
   for (const kat of sak.kategorier)
     for (const f of k.feil) {
-      if (!nivaA(k, f, kat, sak, v)) continue;
-      const r: Rangert = { id: k.id, niva: "A", feil: f, hoved: kat.hoved, rett, ...vurder(k, f, kat, sak, v) };
+      if (!nivaA(k, f, kat, sak)) continue;
+      const r: Rangert = { id: k.id, niva: "A", feil: f, hoved: kat.hoved, rett, ...vurder(k, f, kat, sak) };
       if (!best || r.poengsum > best.poengsum) best = r;
     }
   if (best) return best;
   const harSitat = !!k.avgjorende?.rettslige_sitater?.length || !!k.avgjorende?.feil.some((a) => a.sitater.length);
-  return rett.length && harSitat ? { id: k.id, niva: "B", feil: null, hoved: null, rett, ...vurder(k, null, null, sak, v) } : null;
+  return rett.length && harSitat ? { id: k.id, niva: "B", feil: null, hoved: null, rett, ...vurder(k, null, null, sak) } : null;
 }
 
 // One decision published twice («FKU-2025-55355» and «FKU-2025-55355-2») counts once.
 const sakskode = (k: Kandidat) => k.saksnummer?.replace(/^(FKU-\d{4}-\d+)-\d+$/, "$1") ?? `id:${k.id}`;
 
 // Level A first, then B; within A by points, within B by the number of the buyer's legal points hit.
-export function ranger(alle: Kandidat[], sak: Brukersak, v: Vekter = VEKTER): Rangering {
+export function ranger(alle: Kandidat[], sak: Brukersak): Rangering {
   const etterId = new Map(alle.map((k) => [k.id, k]));
   const dato = (r: Rangert) => etterId.get(r.id)!.vedtaksdato ?? "";
   const sett = new Set<string>();
   const plassert = alle
-    .map((k) => plasser(k, sak, v))
+    .map((k) => plasser(k, sak))
     .filter((r): r is Rangert => r !== null)
     .sort(
       (a, b) =>
@@ -200,5 +199,5 @@ export function ranger(alle: Kandidat[], sak: Brukersak, v: Vekter = VEKTER): Ra
     });
   const perNiva: Record<Niva, number> = { A: 0, B: 0 };
   for (const r of plassert) perNiva[r.niva]++;
-  return { kandidater: plassert.slice(0, v.kandidater), perNiva };
+  return { kandidater: plassert.slice(0, VEKTER.kandidater), perNiva };
 }

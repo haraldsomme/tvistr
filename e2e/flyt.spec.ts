@@ -6,16 +6,17 @@ import { expect, type Page, test } from "@playwright/test";
 // case without the app (the payment itself is tested by hand, docs/app.md); the vehicle and company
 // registers are stubbed, the ranking and the model are real. Each run saves a case.
 
+// The local date n days ago, YYYY-MM-DD (Swedish writes dates that way).
 const dager = (n: number) => {
   const d = new Date();
   d.setDate(d.getDate() - n);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return d.toLocaleDateString("sv-SE");
 };
 
 async function stubRegistre(page: Page) {
   await page.route("**/api/kjoretoy?**", (r) => r.fulfill({ json: { kjoretoy: { regnr: "AB 12345", merke: "Peugeot", modell: "308", ar: 2014 }, eierFra: dager(100) } }));
   await page.route("**/api/firma?**", (r) =>
-    r.fulfill({ json: { forslag: [{ orgnr: "923456783", navn: "BILHUSET VEST AS", kommune: null, bransje: null, naeringskode: null, status: null, adresse: { linjer: ["INDUSTRIVEIEN 4"], postnummer: "1337", poststed: "SANDVIKA" }, forretningsadresse: null }] } }),
+    r.fulfill({ json: { forslag: [{ orgnr: "923456783", navn: "BILHUSET VEST AS", adresse: { linjer: ["INDUSTRIVEIEN 4"], postnummer: "1337", poststed: "SANDVIKA" } }] } }),
   );
 }
 

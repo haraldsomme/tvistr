@@ -6,10 +6,6 @@ import type { Kilde, Svar } from "@/lib/vedtaksvalg/kjoper";
 import { erObjekt, flett } from "./flett";
 import { validReg } from "./format";
 import { type Skjema, standard } from "./skjema";
-import type { Sjekksvar } from "./vurdering";
-
-// The check's state: the verdict's answers plus the car and the faults.
-export type Sjekk = Sjekksvar & { reg?: string; make?: string; year?: string; lastReg?: string; cats?: string[]; issues?: Record<string, string[]>; fdates?: Record<string, string> };
 
 // What the writer's workshop ticks mean in the ranking's words.
 const WS_TIL_PUNKT: Record<string, RapportPunkt> = { bekrefter: "bekrefter", aarsak: "arsak", levering: "til_stede", ikke_slitasje: "ikke_slitasje", frarader: "frarader", kostnad: "overslag" };
@@ -17,7 +13,8 @@ const WS_TIL_PUNKT: Record<string, RapportPunkt> = { bekrefter: "bekrefter", aar
 // «3+» counts as three: the legal point «tapt retting» asks for two or more (matching/rett.ts).
 export const forsokTall = (s: string): number | null => (s === "" ? null : s === "3+" ? 3 : Number(s));
 
-const heltall = (s: string | undefined) => {
+// The digits of a typed number («38 500» → 38500), null when there are none.
+export const heltall = (s: string | undefined) => {
   const d = (s ?? "").replace(/\D/g, "");
   return d ? Number(d) : null;
 };
@@ -40,46 +37,6 @@ export function tilSvar(s: Skjema): Svar | null {
     forsok: forsokTall(s.k_forsok),
     feil: feil.map((c) => ({ hoved: c, under: s.f_parts[c] ?? [], oppdaget: s.f_area[c].found, beskrivelse: s.f_catdesc[c]?.trim() || null, opplysning, verksted, rapport })),
   };
-}
-
-// For change detection: finnVedtak and vurderSaken are called again only when this changes.
-export const nokkel = (v: Svar | null) => JSON.stringify(v);
-
-// The writer prefilled from the check when the buyer unlocks it (artifact prefill). What the writer
-// already has is kept.
-export function fraSjekk(a: Sjekk, s: Skjema): Skjema {
-  const ut = { ...s, f_parts: { ...s.f_parts }, f_area: { ...s.f_area } };
-  const sett = <K extends keyof Skjema>(k: K, v: Skjema[K] | undefined) => {
-    if (v !== undefined && v !== "" && !(typeof ut[k] === "string" && ut[k])) ut[k] = v;
-  };
-  if (a.make) {
-    const [merke, ...modell] = a.make.trim().split(/\s+/);
-    sett("c_make", merke);
-    sett("c_model", modell.join(" "));
-  }
-  sett("c_year", a.year);
-  sett("c_km", a.km);
-  sett("c_reg", a.reg);
-  sett("c_lastreg", a.lastReg);
-  sett("c_delivery", a.delivery);
-  if (a.asis) ut.c_asis = a.asis === "ja";
-  if (a.cats?.length) {
-    ut.f_cats = [...a.cats];
-    for (const c of a.cats) {
-      ut.f_parts[c] ??= [...(a.issues?.[c] ?? [])];
-      ut.f_area[c] ??= { found: a.fdates?.[c] ?? "", impact: [], known: a.known ?? "" };
-    }
-  }
-  sett("f_cause_check", a.cause);
-  if (a.notified === "ja") {
-    ut.f_prior = true;
-    sett("f_prior_date", a.notifiedDate);
-  }
-  if (!ut.k_main) {
-    ut.k_main = "retting";
-    ut.k_alt = "prisavslag";
-  }
-  return ut;
 }
 
 // «Sak 21/3494 · 2022», or «Vedtak 2022» when the decision has no case number.

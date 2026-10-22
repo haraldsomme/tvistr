@@ -7,7 +7,7 @@ import { ordre, sak } from "@/db/schema";
 import { type Kjopt, kjopt } from "@/lib/app/saken";
 import { mottaker } from "@/lib/epost/kvittering";
 import { innlogget, lagOkt, sha256hex } from "@/lib/innlogging/okt";
-import { lagGrense } from "@/lib/rategrense";
+import { ipFra, lagGrense } from "@/lib/rategrense";
 import { erId } from "@/lib/sak/id";
 import { avstem } from "@/lib/vipps/avstem";
 import { hentBetaling } from "@/lib/vipps/klient";
@@ -54,7 +54,7 @@ async function loggInnEier(ref: string, n: unknown, o: { betalt: Date | null; in
 // only to the owner, see Bekreftelse); with the secret `n` from the return address it also logs the payer in.
 export async function sjekkBetaling(ref: unknown, n: unknown): Promise<Betalingsstatus> {
   if (!erId(ref)) return { status: "ukjent" };
-  if (forMange((await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "ukjent")) return { status: "venter" };
+  if (forMange(ipFra(await headers()))) return { status: "venter" };
   try {
     const [o] = await db.select().from(ordre).where(eq(ordre.id, ref)).limit(1);
     if (!o) return { status: "ukjent" };

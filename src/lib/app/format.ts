@@ -1,13 +1,16 @@
 // How the form formats what is typed (artifact FMT), and the plate check.
+import { tall } from "@/lib/brev/format";
+
+export { tall };
+
 const digits = (s: string) => s.replace(/\D/g, "");
-const NB = new Intl.NumberFormat("nb-NO");
 
 export const FMT = {
   zip: (v: string) => digits(v).slice(0, 4),
   year: (v: string) => digits(v).slice(0, 4),
   num: (v: string) => {
     const d = digits(v).slice(0, 9);
-    return d ? NB.format(+d) : "";
+    return d ? tall(+d) : "";
   },
   org: (v: string) => digits(v).slice(0, 9).replace(/(\d{3})(?=\d)/g, "$1 "),
   phone: (v: string) => {
@@ -38,7 +41,5 @@ export function orgValid(o: string): boolean | null {
   return c === +d[8];
 }
 
-export const tall = (n: number) => NB.format(n);
-export const listJoin = (a: string[]) => (a.length < 2 ? (a[0] ?? "") : `${a.slice(0, -1).join(", ")} og ${a[a.length - 1]}`);
 export const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 export const lcFirst = (x: string) => (/^[A-ZÆØÅ0-9]{2}/.test(x) ? x : x.charAt(0).toLowerCase() + x.slice(1));

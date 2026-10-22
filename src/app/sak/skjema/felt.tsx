@@ -25,7 +25,6 @@ export function Felt(p: {
   prefiks?: string;
   hint?: ReactNode;
   flerlinje?: number;
-  maks?: number;
   disabled?: boolean;
 }) {
   const id = `f_${p.k}`;
@@ -34,7 +33,7 @@ export function Felt(p: {
   const input = p.flerlinje ? (
     <textarea {...felles} style={{ minHeight: p.flerlinje }} onChange={(e) => endre(e.target.value)} />
   ) : (
-    <input {...felles} type={p.type ?? "text"} inputMode={p.inputMode} autoComplete={p.autoComplete} maxLength={p.maks} onChange={(e) => endre(e.target.value)} />
+    <input {...felles} type={p.type ?? "text"} inputMode={p.inputMode} autoComplete={p.autoComplete} onChange={(e) => endre(e.target.value)} />
   );
   return (
     <div className={`f ${p.klasse ?? "c6"}`}>

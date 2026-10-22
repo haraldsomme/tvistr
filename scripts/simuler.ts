@@ -7,13 +7,11 @@
 //   FILTER=Turbo,Rust npm run simuler -- <utfil>    only cases whose name contains one of these
 
 import { writeFileSync } from "node:fs";
-import { inArray, sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
+import { hentAlle } from "../src/app/sak/vedtak-db";
 import { db } from "../src/db";
 import { vedtak } from "../src/db/schema";
-import type { AvledetFeil } from "../src/lib/feilvurdering/skjema";
-import { GRUNNFILTER } from "../src/lib/matching/grunnfilter";
 import { ranger } from "../src/lib/matching/ranger";
-import type { Kandidat } from "../src/lib/matching/typer";
 import { byggSaken } from "../src/lib/vedtaksvalg/kjoper";
 import { LOVSETNING, UTVALG_I_TEKSTEN, type Vedtaksdetaljer, velgVedtak } from "../src/lib/vedtaksvalg/valg";
 import { SAKER, type Sim } from "./simulerte-saker";
@@ -22,23 +20,7 @@ async function main() {
   const utfil = process.argv[2];
   if (!utfil) throw new Error("Oppgi utfil.");
   const utenModell = !!process.env.UTEN_MODELL;
-  const alle: Kandidat[] = await db
-    .select({
-      id: vedtak.id,
-      saksnummer: vedtak.saksnummer,
-      vedtaksdato: vedtak.vedtaksdato,
-      km: vedtak.kmVedKjop,
-      alder: vedtak.alderVedKjop,
-      somDenEr: vedtak.somDenEr,
-      sanksjoner: vedtak.sanksjoner,
-      mangelsgrunnlag: vedtak.mangelsgrunnlag,
-      paragrafer: vedtak.paragrafer,
-      tvistetema: vedtak.tvistetema,
-      feil: sql<AvledetFeil[]>`coalesce(${vedtak.feilvurdering}->'feil', '[]'::jsonb)`,
-      avgjorende: vedtak.avgjorende,
-    })
-    .from(vedtak)
-    .where(GRUNNFILTER);
+  const alle = await hentAlle();
   const etterId = new Map(alle.map((k) => [k.id, k]));
 
   async function kjor(x: Sim) {

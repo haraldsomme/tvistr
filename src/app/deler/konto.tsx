@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { inneHint } from "@/lib/innlogging/navn";
 
-const ingen = () => () => {};
 const ramme = { height: 42, padding: "0 16px", borderRadius: 12, border: "1px solid #CDD5D2", background: "#FFFFFF", color: "#465150", fontSize: 14, fontWeight: 550, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", textDecoration: "none" } as const;
 // On the landing page: a plain link in the header, and a row in the dropdown menu on narrow screens.
 const lenke = { height: 44, padding: "0 14px", borderRadius: 12, fontSize: 15, fontWeight: 500, color: "#111515", whiteSpace: "nowrap", display: "flex", alignItems: "center", textDecoration: "none" } as const;
@@ -20,8 +19,13 @@ const STIL = {
 // the hint cookie (the pages themselves check the real session), so the pages around it stay static
 // (server snapshot: logged out). «Logg inn» is a plain <a>: a
 // <Link> would prefetch the route handler /logg-inn, which starts a login.
+// Whether this browser logged in, by the hint cookie; logged out on the server and the first render.
+// Here and not in navn.ts, which the server imports (okt.ts) and so cannot hold a client hook.
+const ingen = () => () => {};
+export const useInne = () => useSyncExternalStore(ingen, inneHint, () => false);
+
 export function Konto({ variant = "ramme", onVelgAction }: { variant?: keyof typeof STIL; onVelgAction?: () => void }) {
-  const inne = useSyncExternalStore(ingen, inneHint, () => false);
+  const inne = useInne();
   const { className, style } = STIL[variant];
   return inne ? (
     <Link href="/min-side" className={className} style={style} onClick={onVelgAction}>

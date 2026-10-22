@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Topp } from "@/app/deler/topp";
+import { Side } from "@/app/deler/juridisk";
 import { erId } from "@/lib/sak/id";
 import { Venter } from "./venter";
 
@@ -14,11 +14,8 @@ export default async function Page({ params, searchParams }: PageProps<"/betalin
   const { n } = await searchParams;
   if (!erId(ref)) notFound();
   return (
-    <div className="home" style={{ minHeight: "100vh", background: "#F4F5F6" }}>
-      <Topp />
-      <main className="wrap">
-        <Venter referanse={ref} n={typeof n === "string" ? n : null} />
-      </main>
-    </div>
+    <Side>
+      <Venter referanse={ref} n={typeof n === "string" ? n : null} />
+    </Side>
   );
 }

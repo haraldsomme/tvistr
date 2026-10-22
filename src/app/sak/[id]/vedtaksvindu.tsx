@@ -9,18 +9,17 @@ import { fmtD } from "@/lib/app/dato";
 import { cap, tall } from "@/lib/app/format";
 import type { Presedens } from "@/lib/app/brevtyper";
 import { trygt } from "@/lib/app/kall";
-import { nokkel, nyttPrecValg, type Precutfall, sakNavn, tilSvar } from "@/lib/app/saken";
+import { nyttPrecValg, type Precutfall, sakNavn, tilSvar } from "@/lib/app/saken";
 import type { Skjema } from "@/lib/app/skjema";
 import type { Kriterium, Treff } from "@/lib/matching/ranger";
 import { type Funn, finnVedtak } from "./actions";
-import { skalHente, VENT_MS } from "./vedtak-hent";
 
 // One request per set of answers at a time, however often the page asks while it runs. A result
 // is not kept here: the server keeps the model's answers (sak.vedtaksvalg) and tells what changed since
 // the list the buyer last got, which a kept result would not.
 const underveis = new Map<string, Promise<Funn>>();
 const hent = (svar: NonNullable<ReturnType<typeof tilSvar>>, id: string) => {
-  const k = `${id}|${nokkel(svar)}`;
+  const k = `${id}|${JSON.stringify(svar)}`;
   if (!underveis.has(k)) underveis.set(k, trygt(finnVedtak({ id, svar }), "Vi fikk ikke kontakt. Prøv igjen.").finally(() => underveis.delete(k)));
   return underveis.get(k)!;
 };
@@ -51,16 +50,18 @@ export type Vedtaksvalg = {
   provIgjen: () => void;
 };
 
-// The decisions for the case's answers, fetched a moment after they last changed while `aktiv` (no row
-// that changes them is open, or the dialog is). While a row is open the last list stands, so the
-// letter keeps citing its decision instead of waiting. `precOn` is the switch as the dialog shows it,
-// which may be staged on before the letter's own (`s.prec_on`) is.
+// The decisions for the case's answers, fetched 800 ms after they last changed while `aktiv` (no row
+// that changes them is open, or the dialog is). Each new set of answers costs one of the case's model
+// calls, so not while the buyer is typing in such a row, where the last list stands and the letter
+// keeps citing its decision, and not again for a list already shown. A failed set is fetched again
+// when the lookup becomes active again, and on «Prøv igjen». `precOn` is the switch as the dialog shows
+// it, which may be staged on before the letter's own (`s.prec_on`) is.
 export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean, precOn = s.prec_on): Vedtaksvalg {
   const svar = tilSvar(s);
-  const n = nokkel(svar);
+  const n = JSON.stringify(svar);
   const [funn, settFunn] = useState<Hentet | null>(null);
   const [forsok, settForsok] = useState(0);
-  const hente = skalHente({ aktiv, harSvar: !!svar, precOn, sistHentet: funn?.f.ok ? funn.n : null, nokkel: n });
+  const hente = aktiv && !!svar && precOn && (!funn?.f.ok || funn.n !== n);
 
   useEffect(() => {
     if (!hente || !svar) return;
@@ -79,7 +80,7 @@ export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean, pre
           });
           if (endre) sett(endre);
         }),
-      VENT_MS,
+      800,
     );
     return () => {
       gjeldende = false;
@@ -192,51 +193,34 @@ function Endringsmelding({ endring, valg, valgt }: { endring: NonNullable<Vedtak
   );
 }
 
-type VinduProps = { vedtak: Vedtaksvalg; s: Skjema; sett: Sett; precOn: boolean; settPrecOn: (pa: boolean) => void; onLukk: () => void };
-
-// `precOn` is the staged switch, kept by the page so the list can be looked up while it is on.
-export function Vedtaksvindu({ apen, ...p }: VinduProps & { apen: boolean }) {
-  // Mounted afresh on each opening, so a dropped pick is gone the next time.
-  return apen ? <Vindu {...p} /> : null;
-}
-
-function Vindu({ vedtak, s, sett, precOn, settPrecOn, onLukk }: VinduProps) {
+// The dialog, mounted afresh on each opening (the page renders it only while open), so a dropped pick is
+// gone the next time. `precOn` is the staged switch, kept by the page so the list can be looked up while
+// it is on. Every way out closes the <dialog> (Escape too), which puts focus back where it was, and its
+// close event tells the page; the page behind does not scroll (globals.css).
+export function Vedtaksvindu({ vedtak, s, sett, precOn, settPrecOn, onLukk }: { vedtak: Vedtaksvalg; s: Skjema; sett: Sett; precOn: boolean; settPrecOn: (pa: boolean) => void; onLukk: () => void }) {
   const { funn, valg, valgt } = vedtak;
   // The staged pick; null follows the letter.
   const [plukk, settPlukk] = useState<number | null>(null);
   const markert = valg.find((v) => v.id === plukk) ?? valgt;
+  const vindu = useRef<HTMLDialogElement>(null);
   const boks = useRef<HTMLDivElement>(null);
-  // The latest close, so a new closure from the page does not run the effect below again.
-  const lukk = useRef(onLukk);
-  useEffect(() => {
-    lukk.current = onLukk;
-  });
+  const lukk = () => vindu.current?.close();
 
-  // Focus moves into the dialog and back where it was; the page behind does not scroll; Escape cancels.
   useEffect(() => {
-    const for_ = document.activeElement as HTMLElement | null;
+    vindu.current?.showModal();
     boks.current?.focus({ preventScroll: true });
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && lukk.current();
-    document.addEventListener("keydown", esc);
-    return () => {
-      document.removeEventListener("keydown", esc);
-      document.body.style.overflow = overflow;
-      for_?.focus({ preventScroll: true });
-    };
   }, []);
 
   const ferdig = () => {
     const endre: Partial<Skjema> = precOn !== s.prec_on ? { prec_on: precOn } : {};
     if (precOn && markert && markert.id !== valgt?.id) Object.assign(endre, { prec_id: markert.id, prec_selv: !markert.anbefalt });
     if (Object.keys(endre).length) sett(endre);
-    onLukk();
+    lukk();
   };
 
   return createPortal(
-    <div className="fl-vindu" onMouseDown={(e) => e.target === e.currentTarget && onLukk()}>
-      <div ref={boks} className="fl-vindu-i" role="dialog" aria-modal="true" aria-labelledby="vedtakTittel" tabIndex={-1}>
+    <dialog ref={vindu} className="fl-vindu" aria-labelledby="vedtakTittel" onClose={onLukk} onMouseDown={(e) => e.target === e.currentTarget && lukk()}>
+      <div ref={boks} className="fl-vindu-i" tabIndex={-1}>
         <div className="fl-vindu-h">
           <div>
             <h2 id="vedtakTittel">Lignende vedtak</h2>
@@ -244,7 +228,7 @@ function Vindu({ vedtak, s, sett, precOn, settPrecOn, onLukk }: VinduProps) {
               {valg.length ? `${valg.length} vedtak` : "Vedtak"} fra Forbrukerklageutvalget der kjøperen fikk medhold. Det øverste ligner mest på saken din, og det er det vi anbefaler. Vedtaket du velger, brukes i brevet.
             </p>
           </div>
-          <button type="button" className="fl-ikon" aria-label="Lukk" onClick={onLukk}>
+          <button type="button" className="fl-ikon" aria-label="Lukk" onClick={lukk}>
             <Lukk />
           </button>
         </div>
@@ -288,7 +272,7 @@ function Vindu({ vedtak, s, sett, precOn, settPrecOn, onLukk }: VinduProps) {
           )}
         </div>
         <div className="fl-vindu-f">
-          <button type="button" className="fl-knapp fl-knapp-s" onClick={onLukk}>
+          <button type="button" className="fl-knapp fl-knapp-s" onClick={lukk}>
             Avbryt
           </button>
           <button type="button" className="fl-ferdig" onClick={ferdig}>
@@ -296,7 +280,7 @@ function Vindu({ vedtak, s, sett, precOn, settPrecOn, onLukk }: VinduProps) {
           </button>
         </div>
       </div>
-    </div>,
+    </dialog>,
     document.body,
   );
 }

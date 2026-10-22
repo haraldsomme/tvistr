@@ -1,47 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { HOVEDKATEGORIER, KOMPONENTTYPER, komponenttype, rensFeilvalg } from "./kategorier";
+import { erOpplysning, HOVEDKATEGORIER } from "./kategorier";
 
 describe("HOVEDKATEGORIER", () => {
-  it("har unike id-er og koder, og unike underkategorier per hovedkategori", () => {
+  it("har unike id-er, og unike underkategorier per hovedkategori", () => {
     expect(new Set(HOVEDKATEGORIER.map((h) => h.id)).size).toBe(HOVEDKATEGORIER.length);
-    expect(new Set(HOVEDKATEGORIER.map((h) => h.kode)).size).toBe(HOVEDKATEGORIER.length);
     for (const h of HOVEDKATEGORIER) expect(new Set(h.under.map((u) => u.id)).size).toBe(h.under.length);
   });
-
 });
 
-describe("rensFeilvalg", () => {
-  it("beholder kjente valg og dropper resten", () => {
-    expect(
-      rensFeilvalg({
-        motor: ["turbo", "finnes_ikke"],
-        garanti: [],
-        ukjent: ["x"],
-      }),
-    ).toEqual({ motor: ["turbo"], garanti: [] });
+describe("erOpplysning", () => {
+  it("gjelder det selgeren sa eller lovet, ikke deler som svikter", () => {
+    expect(erOpplysning("historikk", "km")).toBe(true);
+    expect(erOpplysning("utstyr", "utstyr")).toBe(true);
+    expect(erOpplysning("utstyr", "dekk")).toBe(false);
+    expect(erOpplysning("motor", "turbo")).toBe(false);
+    expect(erOpplysning("vet_ikke", "lyd")).toBe(false);
   });
 
-  it("tåler søppel", () => {
-    expect(rensFeilvalg(null)).toEqual({});
-    expect(rensFeilvalg("motor")).toEqual({});
-    expect(rensFeilvalg({ motor: "turbo" })).toEqual({});
-  });
-});
-
-describe("komponenttype", () => {
-  it("gir hver underkategori én type, unntatt symptomene under «vet ikke ennå»", () => {
-    const ider = Object.values(KOMPONENTTYPER).flat();
-    expect(new Set(ider).size).toBe(ider.length);
-    for (const h of HOVEDKATEGORIER)
-      for (const u of h.under) expect([h.id, u.id, komponenttype(h.id, u.id) !== null]).toEqual([h.id, u.id, h.id !== "vet_ikke"]);
-  });
-
-  it("gir en hovedkategori en type bare når alle underkategoriene har samme", () => {
-    expect(komponenttype("fukt", null)).toBe("karosseri");
-    expect(komponenttype("historikk", null)).toBe("opplysning");
-    expect(komponenttype("garanti", null)).toBe("opplysning");
-    expect(komponenttype("motor", null)).toBeNull();
-    expect(komponenttype("vet_ikke", null)).toBeNull();
+  it("gjelder en hovedkategori bare når alle underkategoriene gjør det", () => {
+    expect(erOpplysning("historikk", null)).toBe(true);
+    expect(erOpplysning("service", null)).toBe(true);
+    expect(erOpplysning("garanti", null)).toBe(true);
+    expect(erOpplysning("utstyr", null)).toBe(false);
+    expect(erOpplysning("motor", null)).toBe(false);
+    expect(erOpplysning("vet_ikke", null)).toBe(false);
+    expect(erOpplysning("finnes_ikke", null)).toBe(false);
   });
 });
-

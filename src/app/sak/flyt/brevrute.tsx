@@ -3,6 +3,7 @@
 // section. What the buyer just filled in is marked for a moment, and the pane follows it unless the
 // reader is scrolling the letter themselves.
 import { useContext, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { Fold } from "@/app/deler/ikoner";
 import { Adresser, BlokkEl, NyeFelt } from "@/app/sak/[id]/papir";
 import type { Blokk, Del } from "@/lib/app/brevtyper";
 import { Ark } from "./oppsett";
@@ -107,11 +108,12 @@ function forsteNye(c: HTMLElement | null, felt: ReadonlySet<string>): HTMLElemen
   return [...(c?.querySelectorAll<HTMLElement>("[data-felt]") ?? [])].find((el) => felt.has(el.dataset.felt!)) ?? null;
 }
 
-// Scrolls the pane so the part stands a little above the middle, as in the mockup.
-function rullTil(c: HTMLElement | null, el: HTMLElement, myk: boolean) {
+// Scrolls the pane so the part stands a little above the middle, as in the mockup (smoothly unless the
+// reader prefers less motion: `.fl-rull` in globals.css).
+function rullTil(c: HTMLElement | null, el: HTMLElement) {
   if (!c) return;
   const top = c.scrollTop + el.getBoundingClientRect().top - c.getBoundingClientRect().top - c.clientHeight * 0.28;
-  c.scrollTo({ top: Math.max(0, top), behavior: myk ? "smooth" : "auto" });
+  c.scrollTo({ top: Math.max(0, top) });
 }
 
 export function Brevrute({ blokker, venter, feil, etikett, onFelt }: { blokker: Blokk[] | null; venter: boolean; feil: string | null; etikett: string; onFelt?: (felt: string) => void }) {
@@ -141,7 +143,7 @@ export function Brevrute({ blokker, venter, feil, etikett, onFelt }: { blokker: 
       if (roligBevegelse() || Date.now() - lest.current < LESER_MS) settVisHopp(true);
       else {
         settVisHopp(false);
-        rullTil(rull.current, el, true);
+        rullTil(rull.current, el);
       }
     });
     const tid = setTimeout(() => settNye(new Set()), MERKET_MS);
@@ -158,7 +160,7 @@ export function Brevrute({ blokker, venter, feil, etikett, onFelt }: { blokker: 
     settVisHopp(false);
     lest.current = 0;
     const el = mal.current ? forsteNye(rull.current, new Set([mal.current])) : null;
-    if (el) rullTil(rull.current, el, !roligBevegelse());
+    if (el) rullTil(rull.current, el);
   };
   const klikk = (e: MouseEvent) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>("[data-felt]");
@@ -183,9 +185,7 @@ export function Brevrute({ blokker, venter, feil, etikett, onFelt }: { blokker: 
         </div>
         {ark && (
           <button type="button" className="fl-ikon" onClick={ark.lukk} aria-label="Lukk brevet">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+            <Fold w={2.2} />
           </button>
         )}
       </div>

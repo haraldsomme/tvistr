@@ -68,19 +68,10 @@ function Omradekort({ s, sett, c, i, n }: StegProps & { c: string; i: number; n:
 
 // The fault list to choose from, categories and parts kept in HOVEDKATEGORIER order.
 export function Feilvalg({ s, sett }: StegProps) {
-  const veksle = (c: string) => {
-    const valgt = new Set(s.f_cats);
-    if (valgt.has(c)) valgt.delete(c);
-    else valgt.add(c);
-    sett({ f_cats: HOVEDKATEGORIER.filter((h) => valgt.has(h.id)).map((h) => h.id) });
-  };
-  const veksleUnder = (c: string, u: string) => {
-    const valgt = new Set(s.f_parts[c] ?? []);
-    if (valgt.has(u)) valgt.delete(u);
-    else valgt.add(u);
-    const h = HOVEDKATEGORIER.find((x) => x.id === c)!;
-    sett({ f_parts: { ...s.f_parts, [c]: h.under.filter((x) => valgt.has(x.id)).map((x) => x.id) } });
-  };
+  // The one clicked flips; the others stay as they are.
+  const veksle = (c: string) => sett({ f_cats: HOVEDKATEGORIER.map((h) => h.id).filter((x) => (x === c) !== s.f_cats.includes(x)) });
+  const veksleUnder = (c: string, u: string) =>
+    sett({ f_parts: { ...s.f_parts, [c]: HOVEDKATEGORIER.find((x) => x.id === c)!.under.map((x) => x.id).filter((x) => (x === u) !== (s.f_parts[c] ?? []).includes(x)) } });
   return <FeilListe valgt={s.f_cats} under={s.f_parts} onKategori={veksle} onUnder={veksleUnder} />;
 }
 
@@ -163,7 +154,7 @@ export function Vedlegg({ s, sett }: StegProps) {
         <h3>Dokumentasjon</h3>
         <span className="fold-m">
           <span>{nd ? `${nd} valgt` : "Føres opp som vedlegg"}</span>
-          <Fold />
+          <Fold className="fold-c" />
         </span>
       </summary>
       <Valgliste flere bredde={190} navn="f_docs" verdi={s.f_docs} valg={DOCS} onVelg={(v, pa) => sett({ f_docs: veksle(s.f_docs, v, pa) })} />

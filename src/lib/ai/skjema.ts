@@ -249,16 +249,6 @@ export const TOLKNING_SKJEMA = objekt({
 });
 
 const UKJENT_ER_NULL = new Set(["kjoretoytype", "drivstoff", "lov", "prinsipalt_krav"]);
-const LISTEFELT = new Set([
-  "forbehold",
-  "feiltyper",
-  "bevistyper",
-  "kravtyper",
-  "mangelsgrunnlag",
-  "tvistetema",
-  "paragrafer",
-  "utvalgets_nokkelmomenter",
-]);
 // Values outside the fixed vocabulary are dropped instead of failing the whole decision.
 const LISTEVERDIER: Record<string, readonly string[]> = {
   forbehold: FORBEHOLD,
@@ -268,6 +258,7 @@ const LISTEVERDIER: Record<string, readonly string[]> = {
   mangelsgrunnlag: MANGELSGRUNNLAG,
   tvistetema: TVISTETEMA,
 };
+const LISTEFELT = new Set([...Object.keys(LISTEVERDIER), "paragrafer", "utvalgets_nokkelmomenter"]);
 
 function tomTilNull<T extends Record<string, unknown>>(o: T, toppniva: boolean): T {
   return Object.fromEntries(

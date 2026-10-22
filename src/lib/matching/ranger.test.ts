@@ -219,12 +219,11 @@ describe("ranger: poeng", () => {
     expect([1, 2, 3].map((id) => finn(ranger(kand, med(false)), id).treff.grunnlag)).toEqual(["mildere", "mildere", "likt"]);
   });
 
-  it("trekker fra i maks det brukeren ikke har oppgitt, og det som ikke finnes på nivå B", () => {
+  it("holder utenfor det brukeren ikke har oppgitt, og det som ikke finnes på nivå B", () => {
     const x = ranger([kandidat(1)], sak()).kandidater[0];
     expect(x.treff.krav).toBe("ikke_oppgitt");
     expect(x.treff.som_den_er).toBe("ikke_oppgitt");
     const b = ranger([rettslig(1)], sak({ krav: "heving" })).kandidater[0];
     expect(b.treff.underkategori).toBe("ikke_oppgitt");
-    expect(b.maks).toBe(2);
   });
 });

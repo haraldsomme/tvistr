@@ -42,16 +42,11 @@ export type Lovversjon = "før_2024" | "etter_2024";
 
 export const POENG = [
   "krav", // what the thing must be like
-  "avtale", // what the thing must be like: what follows from the contract
   "avvik", // defect: not as § 15 requires
-  "tilbakeholdt", // defect: the seller kept back information
   "uriktig", // defect: the thing does not match what the seller said
   "forbehold", // what a reservation like «som den er» does
   "formodning", // a defect that shows itself early is presumed to have existed at delivery
-  "garanti",
   "reklamasjon", // notice of a defect
-  "reklamasjon_frister", // the two limits together, as the form's notices name them
-  "reklamasjon_2ar", // the two-year limit
   "reklamasjon_5ar", // the five-year limit
   "retting",
   "prisavslag",
@@ -75,18 +70,11 @@ export type Poeng = (typeof POENG)[number];
 export const PARAGRAFER: Record<Lovversjon, Record<Poeng, string | null>> = {
   før_2024: {
     krav: "§ 15",
-    avtale: "§ 15 første ledd",
     avvik: "§ 16 første ledd bokstav a",
-    tilbakeholdt: "§ 16 første ledd bokstav b",
     uriktig: "§ 16 første ledd bokstav c",
     forbehold: "§ 17 første ledd bokstav a",
     formodning: "§ 18 annet ledd",
-    // Not cited as the ground of a defect: a warranty not delivered is a breach of the contract
-    // (avtale, avvik) and of what the seller said (uriktig). Kept for the table's completeness.
-    garanti: "§ 18 a",
     reklamasjon: "§ 27 første ledd",
-    reklamasjon_frister: "§ 27 annet ledd",
-    reklamasjon_2ar: "§ 27 annet ledd første punktum",
     reklamasjon_5ar: "§ 27 annet ledd annet punktum",
     retting: "§§ 29 og 30",
     prisavslag: "§ 31",
@@ -107,18 +95,13 @@ export const PARAGRAFER: Record<Lovversjon, Record<Poeng, string | null>> = {
   },
   etter_2024: {
     krav: "§ 15",
-    avtale: "§ 15 første ledd",
     avvik: "§ 16 første ledd bokstav a",
-    tilbakeholdt: "§ 16 første ledd bokstav b",
     uriktig: "§ 16 første ledd bokstav c",
     // § 17 is now about wrong installation. A reservation is an agreed exception only under § 15
     // annet ledd.
     forbehold: "§ 15 annet ledd",
     formodning: "§ 18 annet ledd",
-    garanti: "§ 18 a",
     reklamasjon: "§ 27 første ledd",
-    reklamasjon_frister: "§ 27 annet ledd",
-    reklamasjon_2ar: "§ 27 annet ledd første punktum",
     reklamasjon_5ar: "§ 27 annet ledd annet punktum",
     retting: "§§ 29 og 30",
     prisavslag: "§ 31",
@@ -158,13 +141,9 @@ export const LOVORD = {
   // Old § 17 første ledd bokstav a (før_2024), as Prop. 49 LS kap. 10.1.1 gives it. The subject is
   // changed from «forbrukeren» to «jeg», the rest is the same.
   dårligereStand: "i dårligere stand enn jeg med rimelighet hadde grunn til å forvente på bakgrunn av forbeholdet, kjøpesummens størrelse og forholdene ellers",
-  // § 29 tredje ledd tredje punktum (etter_2024), word for word after «hvis mangelen».
-  alvorligArt: "etter sin art er så alvorlig at det ikke er rimelig å forvente at forbrukeren skal godta et tilbud om avhjelp",
   // § 18 annet ledd, the exception in both versions (Prop. 49 LS: «svarer fullt ut til nåværende annet
   // punktum»).
   uforenlig: "uforenlig med varens eller mangelens art",
-  // § 30 første ledd, both versions.
-  avhjelpVilkar: "uten kostnad, uten vesentlig ulempe for forbrukeren og innen rimelig tid",
   // § 18 a fjerde ledd, both versions.
   garantiBegrenser: "begrenser ikke forbrukerens rettigheter etter loven",
 } as const;
@@ -189,9 +168,3 @@ export const lovRef = (v: Lovversjon, p: Poeng): string => {
   const par = paragraf(v, p);
   return par ? `forbrukerkjøpsloven ${par}` : "forbrukerkjøpsloven";
 };
-
-// «, jf. § 15 og § 18 a», or nothing when no number is known. Appended to a sentence before its full stop.
-export function jf(v: Lovversjon, ...poeng: Poeng[]): string {
-  const par = poeng.map((p) => paragraf(v, p)).filter((x): x is string => !!x);
-  return par.length ? `, jf. ${par.length < 2 ? par[0] : `${par.slice(0, -1).join(", ")} og ${par.at(-1)}`}` : "";
-}

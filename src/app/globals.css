@@ -251,10 +251,6 @@ h1,h2,h3{text-wrap:balance}
 .lp-wide{display:none}
 .lp-narrow{display:flex}
 .lp-burger{display:grid}
-.lp-login{display:none}
-.lp-loginmeny{display:flex;flex-direction:column}
-.lp-loginmeny > *{display:flex}
-@media (min-width:560px){.lp-login{display:block}.lp-loginmeny{display:none}}
 @media (min-width:1100px){.lp-wide{display:flex}.lp-narrow,.lp-burger{display:none}}
 /* The questions: the round plus turns into a cross when the question is open. */
 .lp-faq summary{list-style:none;cursor:pointer}
@@ -517,6 +513,11 @@ body:has(.fl-app){padding-left:0;padding-right:0;background:var(--fl-bg)}
 .fl-meny{position:fixed;inset:auto;right:max(clamp(16px,3vw,32px),env(safe-area-inset-right,0px));top:60px;margin:0;color:inherit;width:320px;max-width:calc(100vw - 32px);max-height:calc(100vh - 88px);max-height:calc(100dvh - 88px);overflow-y:auto;overscroll-behavior:contain;padding:6px;display:flex;flex-direction:column;text-align:left;
   background:#FFFFFF;border:1px solid var(--fl-line);border-radius:14px;box-shadow:0 24px 48px -20px rgba(15,27,45,.35),0 2px 6px rgba(15,27,45,.06)}
 .fl-meny:not(:popover-open){display:none}
+/* The landing page's bar. Below 360px the gap and the login button shrink so the menu button fits. */
+.lp-bar{height:72px;display:flex;align-items:center;gap:32px}
+@media (max-width:359px){.lp-bar{gap:12px}.lp-topp .fl-knapp{padding:0 10px;font-size:13px}}
+/* On the landing page the button ends the 72px header's centred column (.lp-in), not the screen. */
+.lp-topp .fl-meny{top:66px;right:max(calc((100vw - 1200px) / 2 + clamp(20px,4vw,48px)),clamp(20px,4vw,48px),env(safe-area-inset-right,0px))}
 .fl-meny-h{padding:12px 12px 14px;margin-bottom:6px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--fl-sunken)}
 .fl-meny-navn{font-size:15px;font-weight:600;color:var(--fl-ink)}
 .fl-meny-s{font-size:13px;font-weight:400;color:var(--fl-muted)}

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Konto } from "./deler/konto";
+import { Kontomeny } from "./deler/kontomeny";
 import { Ordmerke } from "./deler/ordmerke";
 
-// The header of the landing page: anchors to the sections and the account link.
-// From 1100px the links sit in the bar; below it they fold into a menu (the switch is in CSS, `.lp-wide`
-// and `.lp-narrow`). Below 560px «Logg inn» moves from the bar into the menu.
+// The header of the landing page: anchors to the sections and the account, as in the flow («Logg inn
+// med Vipps» or the account menu). From 1100px the links sit in the bar; below it they fold into a menu
+// (the switch is in CSS, `.lp-wide` and `.lp-narrow`).
 
 const LENKER = [
   ["#slik", "Slik fungerer det"],
@@ -20,8 +20,8 @@ export function LandingTopp() {
   const [apen, setApen] = useState(false);
   const lukk = () => setApen(false);
   return (
-    <header style={{ position: "sticky", top: "env(safe-area-inset-top, 0px)", zIndex: 10, background: "rgba(244,245,246,.88)", backdropFilter: "saturate(1.4) blur(12px)", WebkitBackdropFilter: "saturate(1.4) blur(12px)", borderBottom: "1px solid #E3E6E8" }}>
-      <div className="lp-in" style={{ height: 72, display: "flex", alignItems: "center", gap: 32 }}>
+    <header className="lp-topp" style={{ position: "sticky", top: "env(safe-area-inset-top, 0px)", zIndex: 10, background: "rgba(244,245,246,.88)", backdropFilter: "saturate(1.4) blur(12px)", WebkitBackdropFilter: "saturate(1.4) blur(12px)", borderBottom: "1px solid #E3E6E8" }}>
+      <div className="lp-in lp-bar">
         <a href="#top" aria-label="Tvistr, til toppen" style={{ textDecoration: "none", color: "#111515" }}>
           <Ordmerke size={28} />
         </a>
@@ -32,11 +32,8 @@ export function LandingTopp() {
             </a>
           ))}
         </nav>
-        <span className="lp-narrow" style={{ flex: 1 }} />
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flex: "none" }}>
-          <span className="lp-login">
-            <Konto variant="lenke" />
-          </span>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flex: "none", marginLeft: "auto" }}>
+          <Kontomeny />
           <button
             type="button"
             className="lp-narrow lp-burger"
@@ -59,9 +56,6 @@ export function LandingTopp() {
               {navn}
             </a>
           ))}
-          <span className="lp-loginmeny">
-            <Konto variant="meny" onVelgAction={lukk} />
-          </span>
         </nav>
       )}
     </header>

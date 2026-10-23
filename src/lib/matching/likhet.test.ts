@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { likhet } from "./likhet";
-import type { Rangert } from "./ranger";
+import { type Rangert, sakForFeil } from "./ranger";
 import type { Brukersak } from "./typer";
 
 const sak = (under: string[], svar: Partial<Brukersak> = {}): Brukersak => ({
@@ -29,4 +29,13 @@ describe("likhet", () => {
   });
 
   it("teller feilen som 0 på nivå B", () => expect(likhet(rangert("B", 9), sak(["turbo"]))).toBe(36));
+});
+
+describe("likhet per feil", () => {
+  it("to feil i samme område: nevneren følger feilen vedtaket sammenlignes med", () => {
+    const s = sak(["turbo"], { kategorier: [{ hoved: "motor", under: [], niva: 1, opplysning: null, verksted: null }, { hoved: "motor", under: ["turbo"], niva: 1, opplysning: null, verksted: null }] });
+    // The first fault has no subcategory (21 points), the second has one (25).
+    expect(likhet(rangert("A", 21), sakForFeil(s, 0))).toBe(100);
+    expect(likhet(rangert("A", 21), sakForFeil(s, 1))).toBe(84);
+  });
 });

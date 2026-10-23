@@ -177,6 +177,10 @@ function plasser(k: Kandidat, sak: Brukersak): Rangert | null {
 const sakskode = (k: Kandidat) => k.saksnummer?.replace(/^(FKU-\d{4}-\d+)-\d+$/, "$1") ?? `id:${k.id}`;
 
 // Level A first, then B; within A by points, within B by the number of the buyer's legal points hit.
+// The buyer's case with one fault only: each fault is matched with decisions of its own, so the letter
+// can cite one decision per fault. The car, the claim and the attempts are the case's.
+export const sakForFeil = (sak: Brukersak, i: number): Brukersak => ({ ...sak, kategorier: [sak.kategorier[i]] });
+
 export function ranger(alle: Kandidat[], sak: Brukersak): Rangering {
   const etterId = new Map(alle.map((k) => [k.id, k]));
   const dato = (r: Rangert) => etterId.get(r.id)!.vedtaksdato ?? "";
@@ -201,3 +205,6 @@ export function ranger(alle: Kandidat[], sak: Brukersak): Rangering {
   for (const r of plassert) perNiva[r.niva]++;
   return { kandidater: plassert.slice(0, VEKTER.kandidater), perNiva };
 }
+
+// One ranking per fault, in the order of sak.kategorier.
+export const rangerPerFeil = (alle: Kandidat[], sak: Brukersak): Rangering[] => sak.kategorier.map((_, i) => ranger(alle, sakForFeil(sak, i)));

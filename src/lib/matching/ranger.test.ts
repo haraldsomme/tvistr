@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AvledetFeil, Tidsniva } from "@/lib/feilvurdering/skjema";
 import type { AvgjorendeFeil } from "@/lib/avgjorende/skjema";
-import { nivaA, ranger } from "./ranger";
+import { nivaA, ranger, rangerPerFeil, sakForFeil } from "./ranger";
 import type { Brukersak, Kandidat, Kategorisvar } from "./typer";
 
 // Judged on its own, without a stated basis, at time level 1 by default. Every defect gets two
@@ -225,5 +225,23 @@ describe("ranger: poeng", () => {
     expect(x.treff.som_den_er).toBe("ikke_oppgitt");
     const b = ranger([rettslig(1)], sak({ krav: "heving" })).kandidater[0];
     expect(b.treff.underkategori).toBe("ikke_oppgitt");
+  });
+});
+
+describe("rangerPerFeil", () => {
+  const to = sak({ kategorier: [kat("motor", { under: ["turbo"] }), kat("karosseri", { under: ["lakk"], niva: 3 })], krav: "heving" });
+  it("sakForFeil gir saken med bare den ene feilen", () => expect(sakForFeil(to, 1).kategorier).toEqual([to.kategorier[1]]));
+  it("én rangering per feil, hver med bare sin feil", () => {
+    const [turbo, lakk] = rangerPerFeil([kandidat(1), rettslig(2)], to);
+    expect(turbo.kandidater.map((r) => [r.id, r.niva])).toEqual([[1, "A"], [2, "B"]]);
+    expect(lakk.kandidater.map((r) => [r.id, r.niva])).toEqual([[2, "A"]]);
+  });
+  it("de rettslige poengene regnes per feil: formodningen bare for feilen innenfor fristen", () => {
+    const formodning = kandidat(3, { feil: [feil({ hovedkategori: "understell", underkategori: "bremser", formodning: "anvendt" })] });
+    const medSitat = { ...formodning, avgjorende: { ...formodning.avgjorende!, rettslige_sitater: [{ poeng: "formodning" as const, sitat: "Feilen viste seg innen fristen." }] } };
+    const uten = { ...to, krav: null };
+    const [turbo, lakk] = rangerPerFeil([medSitat], uten);
+    expect(turbo.kandidater.map((r) => r.id)).toEqual([3]);
+    expect(lakk.kandidater).toEqual([]);
   });
 });

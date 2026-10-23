@@ -6,7 +6,8 @@ import type { ReactNode } from "react";
 // air-conditioning sensors failed; the committee found a manufacturing fault and granted a price
 // reduction (checked against the table 2026-10-20). The censored parts (S) are words made of n's, drawn
 // as grey bars and never read out. A numbered marker in the margin ties a section to its point beside
-// the sheet (page.tsx). Amounts and distances do not break inside the number (&nbsp;). The component
+// the sheet (page.tsx); point 4, the decision, marks the paragraph «Praksis fra …» under «Rettslig
+// grunnlag», as the letter now cites a decision under each fault. Amounts and distances do not break inside the number (&nbsp;). The component
 // has no script: the sheet is part of the page when it is built.
 
 const S = ({ children }: { children: string }) => (
@@ -58,15 +59,21 @@ export function HeroBrev() {
         <Rad k="l-subj">Reklamasjon på mangel ved Volkswagen Golf, reg.nr. AB 12345</Rad>
         <Rad>Jeg viser til mitt kjøp av brukt Volkswagen Golf, årsmodell 2022, reg.nr. AB 12345. Kjøpekontrakten ble inngått 20. juni 2026 til kr 259&nbsp;900, og jeg overtok bilen 24. juni 2026 med en kilometerstand på 39&nbsp;800 km. Bilen har en mangel, og jeg reklamerer med dette <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn</S>.</Rad>
         <Rad nr={2} k="l-h">Mangelen</Rad>
-        <Rad>Klimaanlegget (AC) sluttet å virke. Feilen ble oppdaget 30. september 2026. Anlegget blåser bare varm luft, og frontruta dugger igjen når det er fuktig ute. Verkstedet har funnet en defekt trykksensor i kjølekretsen, og anlegget kjøler derfor ikke.</Rad>
+        <Rad>Bilen har en feil som jeg reklamerer på.</Rad>
+        <Rad>Den 30. september 2026 oppdaget jeg feil ved klimaanlegget (AC). Anlegget blåser bare varm luft, og frontruta dugger igjen når det er fuktig ute.</Rad>
         <Rad>Konsekvensen av feilen er at <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn</S>.</Rad>
+        <Rad>Verkstedet har funnet en defekt trykksensor i kjølekretsen, og anlegget kjøler derfor ikke. <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn</S>.</Rad>
         <Rad nr={3} k="l-h">Rettslig grunnlag</Rad>
-        <Rad>Etter forbrukerkjøpsloven § 15 tredje ledd bokstav b skal bilen ha de egenskapene, blant annet med hensyn til holdbarhet og funksjonalitet, som er vanlige for biler av samme type, og som jeg med rimelighet kunne forvente. Bilen har dermed en mangel, jf. § 16 første ledd bokstav a.</Rad>
-        <Rad>Feilen viste seg tre måneder etter leveringen. Etter § 18 annet ledd skal en mangel som viser seg innen to år etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises. Det er dermed dere som må <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn</S>.</Rad>
-        <Rad nr={4} k="l-h">Praksis fra Forbrukerklageutvalget</Rad>
-        <Rad>I Forbrukerklageutvalgets vedtak i sak 22/10322 av 1. juni 2023 fikk kjøperen medhold i prisavslag tilsvarende hele utbedringskostnaden for defekte sensorer i klimaanlegget på en Volkswagen Golf 2017-modell. Bilen hadde gått 35&nbsp;500 km ved kjøpet, og feilen ble oppdaget fem måneder etter overtakelsen. Min bil er nyere, og feilen viste seg tidligere. Det er samme komponent: <S>nnnnnn nnnnnn nnnnnn nnnnnn nn</S>.</Rad>
-        <Rad>Utvalget la til grunn at <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn</S>. Forhandlerens innsigelser om at garantien var utløpt og at feilen ikke var til stede ved kjøpet, førte ikke frem.</Rad>
-        <Rad>Kjøperen i den saken måtte selv sannsynliggjøre mangelen. <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn</S>. Jeg kan ikke se noe som skiller min sak fra denne.</Rad>
+        <Rad>Etter forbrukerkjøpsloven § 15 skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. Når den ikke er det, foreligger det en mangel, jf. § 16 første ledd bokstav a.</Rad>
+        <Rad>
+          <em>Mangelen forelå ved leveringen.</em> Feilen viste seg innen to år etter overtakelsen. Etter § 18 annet ledd skal en mangel som viser seg innen to år etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises. Det er derfor dere som må <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn</S>.
+        </Rad>
+        <Rad>
+          <em>Reklamasjonen er rettidig.</em> Jeg reklamerer med dette brevet, innen to måneder etter at jeg oppdaget feilen 30. september 2026, jf. § 27 første ledd.
+        </Rad>
+        <Rad nr={4}>
+          <em>Praksis fra Forbrukerklageutvalget.</em> Det vises til Forbrukerklageutvalgets vedtak i sak 22/10322 av 1.6.2023. Saken gjaldt defekte sensorer i klimaanlegget på en Volkswagen Golf 2017 som hadde gått 35&nbsp;500 km ved kjøpet. Utvalget uttalte: «<S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn</S>» Kjøperen fikk medhold i krav om prisavslag. Saken gjaldt samme type feil som min, og min sak bør derfor vurderes på samme måte. <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn</S>
+        </Rad>
         <Rad nr={5} k="l-h">Krav</Rad>
         <Rad>Prinsipalt krever jeg retting av mangelen, jf. § 29 første ledd. Rettingen skal skje uten kostnad for meg, uten vesentlig ulempe og innen rimelig tid, jf. § 30 første ledd. Bilen stilles til rådighet for undersøkelse og utbedring etter nærmere avtale, jf. § 30 annet ledd. <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn</S>.</Rad>
         <Rad>Dersom retting ikke skjer innen rimelig tid, eller ikke lykkes, krever jeg subsidiært <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn</S>.</Rad>

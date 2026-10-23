@@ -1,13 +1,13 @@
 # Vedtaksvalget: avsnittet som viser til et vedtak
 
-Hvert klagebrev viser til ett vedtak fra Forbrukerklageutvalget (eller Forbrukertvistutvalget) der kjøperen fikk medhold. Avsnittet bygges av en mal. Alt som står om vedtaket, er enten et felt fra databasen eller et ordrett sitat fra utvalgets egen vurdering. Det finnes ingen fri prosa om vedtaket, så det er ingenting å ta feil av utover feltene.
+Hvert klagebrev viser til ett vedtak fra Forbrukerklageutvalget (eller Forbrukertvistutvalget) der kjøperen fikk medhold for hver feil kjøperen reklamerer på. Avsnittet står under feilen i «Rettslig grunnlag» og bygges av en mal. Alt som står om vedtaket, er enten et felt fra databasen eller et ordrett sitat fra utvalgets egen vurdering. Det finnes ingen fri prosa om vedtaket, så det er ingenting å ta feil av utover feltene.
 
 Brevløpet har tre ledd:
-1. rangering i kode
-2. ett Sonnet-kall som velger
-3. malen
+1. rangering i kode, én per feil (`rangerPerFeil`: saken med bare den ene feilen, `sakForFeil`)
+2. ett Sonnet-kall som velger ett vedtak for hver feil
+3. malen, ett avsnitt per feil
 
-Det har ingen kontroll per brev og ingen reserve. Finnes det ingen kandidat, brukes lovsetningen. Kvaliteten sikres i dataene, ved datavasker kjørt én gang (se under). Kravene og målingene står i `docs/ferdigkriterier.md`.
+Det har ingen kontroll per brev og ingen reserve. Finnes det ingen kandidat for en feil, brukes lovsetningen under den feilen. Det samme vedtaket kan stå under to feil. Kvaliteten sikres i dataene, ved datavasker kjørt én gang (se under). Kravene og målingene står i `docs/ferdigkriterier.md`.
 
 ## 1. Rangering (`src/lib/matching/`, kode)
 
@@ -54,12 +54,12 @@ Strengere for kjøperen gir delpoeng, mildere gir 0. På nivå B sorteres det f�
 ## 2. Valget (`src/lib/vedtaksvalg/valg.ts`, ett Sonnet-kall)
 
 **Modellen får:**
-- **Kjøperens svar** fra `kjoper.ts`:
+- **Kjøperens svar** fra `kjoper.ts`, med feilene nummerert (`nr`):
   - kategori og beskrivelse
   - når feilen viste seg, og lovversjonen
   - km, alder, «som den er», kravet og antall rettingsforsøk
   - om et verksted har undersøkt feilen, og hvis det finnes en skriftlig rapport, hva den sier (`rapport_sier`, fra avkrysningene i skjemaet)
-- **Hver kandidat:**
+- **Kandidatene gruppert per feil** (`feil_nr`), hver gruppe sortert etter rangeringen for den feilen. Feil uten kandidater er ikke med, og uten noen kandidater gjøres ikke kallet. **Hver kandidat:**
   - nivå
   - feilen (A) eller de rettslige poengene (B)
   - bil, km, alder og «som den er»
@@ -67,28 +67,29 @@ Strengere for kjøperen gir delpoeng, mildere gir 0. På nivå B sorteres det f�
   - hva utvalget bygde på for feilen (`bevisgrunnlag`, A): verksted, EU-kontroll, annonse og så videre
   - de verifiserte sitatene med id
 
-Har kjøperen en skriftlig verkstedrapport, ber instruksen modellen foretrekke blant like gode vedtak det der `bevisgrunnlag` viser at utvalget la vekt på sakkyndig dokumentasjon. Malen for avsnittet er den samme. Instruksen er `vedtaksvalg-v10` (økt fra v9 for dette).
+Har kjøperen en skriftlig verkstedrapport, ber instruksen modellen foretrekke blant like gode vedtak det der `bevisgrunnlag` viser at utvalget la vekt på sakkyndig dokumentasjon. Malen for avsnittet er den samme. Instruksen er `vedtaksvalg-v11` (økt fra v10 da valget ble per feil).
 
-**Modellen svarer bare** med `vedtak_id` og id-ene til 1–2 sitater (A) eller 1 sitat (B). Den skriver ingen tekst.
+**Modellen svarer bare** med ett valg per feil (`valg: [{ feil_nr, vedtak_id, sitater }]`): vedtaket og id-ene til 1–2 sitater (A) eller 1 sitat (B). Den skriver ingen tekst.
 
-**Hvis svaret ikke holder** (ukjent vedtak, eller sitat-id-er vedtaket ikke har), brukes rangeringens førstevalg med de første sitatene. Det samme skjer om kallet feiler. Ingenting prøves på nytt.
+**Hvis svaret ikke holder** for en feil (ingen valg for den, ukjent vedtak, eller sitat-id-er vedtaket ikke har), brukes rangeringens førstevalg for den feilen med de første sitatene. Det samme skjer for alle feilene om kallet feiler. Ingenting prøves på nytt.
 
-**Ti å velge mellom.** Vinduet «Lignende vedtak» i den betalte saken (`vedtaksvindu.tsx`) viser modellens valg først («Anbefalt»). Deretter kommer resten av rangeringens topp 10 som har sitater, i rangeringens rekkefølge (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger vedtaket i vinduet, som raden «Vedtaket» under «Svarene dine» åpner. Raden viser hvilket vedtak brevet viser til.
+**Ti å velge mellom per feil.** Vinduet «Lignende vedtak» i den betalte saken (`vedtaksvindu.tsx`) har én seksjon per feil, med feilens nummer og navn fra brevet når det er flere. Hver seksjon viser modellens valg først («Anbefalt»). Deretter kommer resten av den feilens topp 10 som har sitater, i rangeringens rekkefølge (`alternativer` i `valg.ts`). Hvert alternativ får sine første sitater, slik som rangeringens førstevalg, og avsnittet bygges av samme mal. Kjøperen velger vedtakene i vinduet, som raden «Vedtaket» under «Svarene dine» åpner. Raden viser hvilket vedtak brevet viser til under hver feil.
 
 **Ett kall per sett med svar.** Den betalte siden spør etter vedtakene bare mens ingen rad fra delene før betaling (Bilen, Kjøpet, Om feilen, Verksted, Hva selgeren sa, Sagt fra før og Kravet) er åpen, eller mens vinduet er åpent, 800 ms etter siste endring (`useVedtak` i `vedtaksvindu.tsx`). Mens kjøperen skriver i en slik rad, viser brevet vedtaket fra siste liste. Hvert nytt sett med svar som siden spør med, kan koste ett modellkall, og en sak har høyst fem.
-- **Lagring per sak:** `sak.vedtaksvalg` holder de fem siste modellsvarene (vedtak og sitater som tekst).
-  - Nøkkelen er det modellen leser: `kjoper`, kandidatene i rekkefølge og `VEDTAKSVALG_VERSJON` (`grunnlagFor`).
+- **Lagring per sak:** `sak.vedtaksvalg` er `{ liste: number[][]; svar: { grunnlag; valg: ({ vedtakId; sitater } | null)[] }[] }`: listene kjøperen sist fikk, én per feil, og de fem siste modellsvarene med vedtak og sitater som tekst per feil.
+  - Nøkkelen er det modellen leser: `kjoper`, kandidatene per feil i rekkefølge og `VEDTAKSVALG_VERSJON` (`grunnlagFor`).
+  - Rader fra før ett vedtak per feil (én liste med tall og svar med `vedtakId`) leses som tomme (`erLagretSvar`): første henting gir ett nytt kall og ingen endringsmelding.
   - Samme svar gir det lagrede valget uten kall: omlasting, en ny enhet, og endringer som tas tilbake.
   - Avsnittene bygges alltid på nytt av malen, så sammenligningen stemmer med svarene slik de er nå.
 - **Tak og brudd:**
   - En sak kan gjøre fem kall (`sak.modellkall`, tatt atomisk). Deretter brukes det lagrede valget så lenge vedtaket står i listen, ellers rangeringens førstevalg.
   - Kallet har ett forsøk, én nettverksretry og 30 sekunder (`rask` i `kallVerktoy`). Feiler det, brukes rangeringens førstevalg, og ingenting lagres.
-- **Når listen endres:** `finnVedtak` sammenligner med listen kjøperen sist fikk (`sak.vedtaksvalg.liste`, `endringMot`) og sier hvilke vedtak som er nye og om det anbefalte er byttet.
-  - Brevet følger det anbefalte. Unntaket er når kjøperen har valgt et annet selv (`prec_selv`) og det fortsatt står i listen (`nyttPrecValg`).
+- **Når en liste endres:** `finnVedtak` sammenligner hver feils liste med den kjøperen sist fikk (`sak.vedtaksvalg.liste`, `endringMot`) og sier hvilke vedtak som er nye og om det anbefalte er byttet.
+  - Brevet følger det anbefalte under hver feil. Unntaket er når kjøperen har valgt et annet selv (`skjema.prec[feil].selv`) og det fortsatt står i den feilens liste (`nyttPrecValg`).
   - Vinduet sier fra om byttet, og kortene for nye vedtak er merket «Ny».
   - Serverloggen viser for hvert valg om det var `lagret`, `nytt kall`, `tak nådd` eller `kallet feilet`.
 
-**Likhet.** Hvert vedtak har en prosent (`likhet` i `src/lib/matching/likhet.ts`): poengsummen fra rangeringen delt på det et vedtak kan få mot kjøperens svar.
+**Likhet.** Hvert vedtak har en prosent (`likhet` i `src/lib/matching/likhet.ts`): poengsummen fra rangeringen delt på det et vedtak kan få mot kjøperens svar for den feilen (`sakForFeil`).
 - Nevneren er summen av `likt`-poengene for kriteriene kjøperen har svart på, og den er lik for alle vedtak i saken. Underkategori teller bare når kjøperen har valgt en. Grunnlag og egen vurdering teller alltid.
 - En verdi vedtaket mangler, og feilkriteriene på nivå B, teller 0. Et vedtak om en annen feil havner derfor på høyst cirka 35 %.
 - «Strengere» for kjøperen gir delpoeng, som i rangeringen. I vinduet vises det som en styrke («↑ Bilen hadde gått lenger enn din»).
@@ -162,4 +163,5 @@ En kontroll per brev ble prøvd: et Sonnet-kall med fulltekst etter at avsnittet
 - **Dato:** 93 vedtak har ulik møtedato og signaturdato og vises uten dato.
 - **Alder ved kjøpet** er regnet fra årsmodell og kan avvike ett år fra det vedtaket sier. Derfor krever sammenligningssetningen minst to års forskjell.
 - **Vedtak uten uttrekk:** 90 vedtak i grunnsettet har ingen feil med medhold i feilvurderingen og har derfor ikke noe uttrekk.
-- **Resten av brevet** står i `docs/app.md`. Avsnittet om praksis står under «Praksis fra Forbrukerklageutvalget», etter det rettslige grunnlaget, og settes inn uendret. Uten kandidat står lovsetningen der. Etter avsnittet legger brevet til sin egen slutning (`slutning` i `src/lib/app/brev.ts`), bygget av `niva`, `treff` og `utfall`; den er brevets, ikke malens, og inngår ikke i målingene i `docs/ferdigkriterier.md`.
+- **Resten av brevet** står i `docs/app.md`. Avsnittet om praksis står under hver feil i «Rettslig grunnlag», etter det kursive innledningsordet *Praksis fra {utvalg}.*, og settes inn uendret. Uten kandidat for feilen står lovsetningen der. Etter avsnittet legger brevet til sin egen slutning (`slutning` i `src/lib/app/brev.ts`), én setning bygget av `niva` («Saken gjaldt samme type feil som min, og min sak bør derfor vurderes på samme måte.»); den er brevets, ikke malens, og inngår ikke i målingene i `docs/ferdigkriterier.md`.
+- **Flere feil i målingene:** `ferdig:dekning` bygger saker med én feil, så tallene er de samme som før. `simuler` skriver én rad per feil («… #2»), med kostnaden for det ene kallet på første rad.

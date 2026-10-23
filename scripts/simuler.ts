@@ -85,7 +85,7 @@ async function main() {
     sum += r.forbruk.kostnadUsd;
     console.log(`${r.navn.padEnd(36)} nivå ${r.niva ?? "-"}  ${String(r.felter?.saksnummer ?? "lovsetning").padEnd(18)} plass ${String(r.plass).padStart(2)}  ${r.fulgt ? "modell " : "poeng  "} ${r.sekunder} s  ${r.forbruk.tokensInn} inn / ${r.forbruk.tokensUt} ut  $${r.forbruk.kostnadUsd.toFixed(4)}`);
   }
-  console.log(`\n${resultater.length} avsnitt. Sum $${sum.toFixed(3)}, snitt $${(sum / Math.max(resultater.length, 1)).toFixed(4)} per brev.`);
+  console.log(`\n${resultater.length} avsnitt i ${saker.length} brev. Sum $${sum.toFixed(3)}, snitt $${(sum / Math.max(saker.length, 1)).toFixed(4)} per brev.`);
   process.exit(0);
 }
 main();

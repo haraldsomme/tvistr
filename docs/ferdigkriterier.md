@@ -57,6 +57,11 @@ Bare feltet som feiler, kjøres på nytt, ikke hele passet. Instruksen endres ik
 
 Det kommer ingen nye kriterier og ingen ny prosa i avsnittet. Målingen er felt mot fulltekst, ikke prosa.
 
+**Endret 2026-10-23: ett vedtak per feil.** Rangeringen kjøres per feil (`rangerPerFeil`), og instruksen og verktøyet er endret så ett kall velger ett vedtak for hver feil (`vedtaksvalg-v11`). Nivåene, poengene og malen er de samme. Målt på nytt samme dag:
+- `ferdig:dekning`: 2 232 kombinasjoner, A 1 932, B 300, lovsetning 0, dekning 100 % (grønn; sakene har én feil, så tallene er de samme som før).
+- `simuler`: 13 avsnitt i 12 brev, A 12, B 1, lovsetning 0, modellens valg brukt i alle. Saken med to feil fikk ett vedtak om hver av dem (oljeforbruk og hovedlykter) i ett kall ($0,022, 7 s). Snitt $0,013 per brev, 4–7 s.
+- Feltkontrollen av de tolv avsnittene mot fullteksten (`ferdig:simulert` og dommerne) er ikke kjørt på nytt for denne endringen.
+
 ## Brevløpet
 Rangering i kode, deretter ett Sonnet-kall for valget, deretter malen. Brevløpet har ingen kontroll per brev og ingen reserve. Uten kandidater bruker brevet lovsetningen.
 

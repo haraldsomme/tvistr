@@ -575,7 +575,7 @@ describe("spesifikasjonens eksempel: to feil", () => {
     expect(t).toContain(
       [
         "Rettslig grunnlag",
-        "Etter forbrukerkjøpsloven § 15 skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. Når den ikke er det, foreligger det en mangel, jf. § 16 første ledd bokstav a. Nedenfor går jeg gjennom de to feilene hver for seg.",
+        "Etter forbrukerkjøpsloven § 15 skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. Når den ikke er det, foreligger det en mangel, jf. § 16 første ledd bokstav a.",
         "1. Lakkskader eller bulker",
         "Mangelen forelå ved leveringen. Feilen viste seg innen to år etter overtakelsen. Etter § 18 annet ledd skal en mangel som viser seg innen to år etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises. Det er derfor dere som må bevise at feilen ikke var til stede da jeg overtok bilen. Verkstedrapporten fastslår at feilen ikke skyldes normal slitasje, og formodningen er dermed ikke uforenlig med varens eller mangelens art, jf. § 18 annet ledd tredje punktum.",
         "Reklamasjonen er rettidig. Det gikk mer enn to måneder fra jeg oppdaget feilen til jeg reklamerte. To måneder er imidlertid bare lovens korteste frist. Fristen etter § 27 første ledd er «innen rimelig tid», og den gjelder ikke dersom selgeren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro, jf. § 27 fjerde ledd.",
@@ -676,11 +676,11 @@ describe("gjennomgangen: antall feil og svaret på slitasje", () => {
     expect(t).toContain("Bilen har to feil som jeg reklamerer på.");
     expect(t).not.toContain("Nedenfor går jeg gjennom");
   });
-  it("to poster som nevner tre deler: tre feil, og gjennomgangen uten tall", () => {
+  it("to poster som nevner tre deler: tre feil, og ingen setning om gjennomgangen", () => {
     const s = { ...e, f_cats: ["motor", "klima"], f_parts: { motor: ["turbo", "registerreim"], klima: ["ac"] }, f_area: { motor: { found: e.f_area.hoyvolt.found }, klima: { found: e.f_area.hoyvolt.found } }, f_catdesc: {} };
     const t = tekst(s);
     expect(t).toContain("Bilen har tre feil som jeg reklamerer på.");
-    expect(t).toContain("Nedenfor går jeg gjennom feilene hver for seg.");
+    expect(t).not.toContain("Nedenfor går jeg gjennom");
   });
   it("slitasje: bevisbyrden bare for feilen innenfor formodningen", () => {
     const s = { ...e, c_purchase: "2023-01-01", c_delivery: "2023-01-01", f_cats: ["motor", "klima"], f_parts: { motor: ["turbo"], klima: ["ac"] }, f_area: { motor: { found: "2023-03-01" }, klima: { found: "2025-11-01" } }, f_catdesc: {}, f_prior: true, f_prior_date: "2025-11-10", f_prior_svar: ["slitasje"], ws: "nei", ws_says: [] };

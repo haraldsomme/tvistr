@@ -11,7 +11,6 @@ const SETNINGER = [
   "Jeg er kjent med at dere kan tilby å rette mangelen",
   "Bilen kan stilles til rådighet for",
   "innen to måneder etter at jeg oppdaget feilen",
-  "Nedenfor går jeg gjennom de",
   "To måneder er imidlertid bare lovens korteste frist",
 ];
 

@@ -249,8 +249,6 @@ export function byggBrev(s: Skjema, presedenser: Presedenser, idag: string): Blo
     tekst: [
       `Etter ${L.lovRef("krav")} skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. Når den ikke er det, foreligger det en mangel, jf. ${L.par("avvik")}.`,
       ...(s.seller_said === "lovet" ? [` Det dere opplyste før kjøpet, er en del av avtalen, jf. ${L.par("uriktig")}.`] : []),
-      // The faults are gone through one numbered section at a time; the count only when each section is one fault.
-      ...(flere ? [` Nedenfor går jeg gjennom ${antallFeil(sortert) === sortert.length ? `de ${tallord(sortert.length)} feilene` : "feilene"} hver for seg.`] : []),
     ],
   });
   // Before 2024 old § 17; from 2024 a general «som den er» is no agreed exception under § 15 annet ledd

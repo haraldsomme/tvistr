@@ -116,6 +116,30 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
     if (ny || fraStart) router.replace("/sak");
   }, [klar, ny, fraStart, settRaa, router]);
 
+  // Each screen is a step in the browser's history, so Back and Forward move between the questions.
+  // The entry the page opened on has no state of ours (Next may replace it): it is the first screen.
+  const fraHistorikk = useRef(false);
+  const vist = useRef<{ _screen: typeof skjerm; _i: number } | null>(null);
+  const forst = useRef<{ _screen: typeof skjerm; _i: number } | null>(null);
+  useEffect(() => {
+    if (!klar) return;
+    const na = { _screen: skjerm, _i: i };
+    forst.current ??= na;
+    if (!fraHistorikk.current && vist.current && (vist.current._screen !== skjerm || vist.current._i !== i)) window.history.pushState({ ...window.history.state, tvistr: na }, "");
+    fraHistorikk.current = false;
+    vist.current = na;
+  }, [klar, skjerm, i]);
+  useEffect(() => {
+    const tilbake = (e: PopStateEvent) => {
+      const h = e.state?.tvistr ?? forst.current;
+      if (!h) return;
+      fraHistorikk.current = true;
+      endre((l) => ({ ...l, _screen: h._screen, _i: h._i }));
+    };
+    window.addEventListener("popstate", tilbake);
+    return () => window.removeEventListener("popstate", tilbake);
+  }, [endre]);
+
   // A new screen starts at the top, with its question focused (not on the first paint).
   const forrige = useRef<string | null>(null);
   const her = `${skjerm}-${i}`;

@@ -225,3 +225,23 @@ test("to feil i samme område på ulike datoer", async ({ page }) => {
   await page.getByRole("switch", { name: /ulike datoer/ }).uncheck();
   await expect(datoer).toHaveCount(1);
 });
+
+test("nettleserens tilbake og frem går mellom spørsmålene", async ({ page }) => {
+  await stubRegistre(page);
+  await page.goto("/sak?ny");
+  await sporsmal(page, 1);
+  await velg(page, /En bilforhandler/, 2);
+  await page.locator("#c_reg").fill("AB 12345");
+  await page.getByRole("button", { name: "Hent bilen" }).click();
+  await expect(page.locator(".fl-skjerm").getByText("Peugeot 308")).toBeVisible();
+  await neste(page, 3);
+  await page.goBack();
+  await sporsmal(page, 2);
+  await expect(page.locator("#c_reg")).toHaveValue("AB 12345");
+  await page.goForward();
+  await sporsmal(page, 3);
+  await page.goBack();
+  await page.goBack();
+  await sporsmal(page, 1);
+  await expect(page).toHaveURL(/\/sak$/);
+});

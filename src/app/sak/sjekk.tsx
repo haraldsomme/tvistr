@@ -31,7 +31,6 @@ import { ENKELTVALG, synlige } from "./sporsmal";
 type Lagret = Utkast & { _i?: number; _screen?: "q" | "result" };
 
 const NOKKEL = "tvistr-utkast";
-const ADV_MS = 750;
 type Nokkel = Parameters<typeof har>[1];
 // The field the peek bar names for a change of the per-area answers.
 const SOM: Record<string, Nokkel> = { f_area: "f_found", f_catdesc: "f_any_desc" };
@@ -56,10 +55,8 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
   const router = useRouter();
   const [raa, settRaa, klar] = useLagret<Lagret>(NOKKEL, () => ({ ...standardUtkast(idag()), _i: 0 }));
   const lagret = useMemo(() => medSkjema(raa), [raa]);
-  const [adv, settAdv] = useState<string | null>(null);
   // The field the buyer changed last, for the peek bar on narrow screens.
   const [sist, settSist] = useState<Nokkel | null>(null);
-  const tid = useRef<ReturnType<typeof setTimeout>>(undefined);
   const tittel = useRef<HTMLHeadingElement>(null);
 
   // What the server and the verdict get: the draft without the position.
@@ -81,30 +78,22 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
     settSist((k as Nokkel | undefined) ?? null);
   };
 
-  const avbryt = useCallback(() => {
-    clearTimeout(tid.current);
-    settAdv(null);
-  }, []);
   const neste = useCallback(() => {
-    avbryt();
     endre((l) => {
       const v = synlige(l);
       const n = Math.min(l._i ?? 0, v.length - 1);
       if (!v[n].ferdig(l)) return l;
       return n >= v.length - 1 ? { ...l, _screen: "result" } : { ...l, _i: n + 1 };
     });
-  }, [avbryt, endre]);
+  }, [endre]);
   const tilbake = () => {
-    avbryt();
     endre((l) => ({ ...l, _i: Math.max(0, Math.min(l._i ?? 0, synlige(l).length - 1) - 1) }));
   };
   const tilSkjerm = (id: string) => {
-    avbryt();
     endre((l) => ({ ...l, _screen: "q", _i: Math.max(0, synlige(l).findIndex((x) => x.id === id)) }));
   };
   // «Start på nytt»: a new draft from question 1, as `/sak?ny`.
   const nyttUtkast = () => {
-    avbryt();
     settSist(null);
     settRaa({ ...standardUtkast(idag()), _i: 0 });
   };
@@ -112,16 +101,11 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
   // buttons says what is missing until the screen is done or another one opens.
   const [trykket, settTrykket] = useState<string | null>(null);
 
-  // A choice goes on by itself once the screen is done (not for a case the letter does not cover).
+  // A choice only sets the answer: the buyer goes on with «Neste», and sees the verdict move first.
   function velg(id: string, v: string) {
     const e = ENKELTVALG[id];
-    avbryt();
     endre((l) => ({ ...l, ...e.sett(l, v) }));
-    if (!sk.ferdig(e.sett(utkast, v))) return;
-    settAdv(v);
-    tid.current = setTimeout(neste, matchMedia("(prefers-reduced-motion: reduce)").matches ? 450 : ADV_MS);
   }
-  useEffect(() => () => clearTimeout(tid.current), []);
 
   // Once the stored draft is read: `?ny` starts a new draft; `?start` (the front page) opens question 1
   // with the answers kept. The parameter is dropped so a reload stays where the buyer is.
@@ -184,7 +168,7 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
             {valg.valg.map(([v, t, d]) => {
               const pa = valg.verdi(utkast) === v;
               return (
-                <button key={v} type="button" role="radio" aria-checked={pa} className="fl-valg-r" data-adv={adv === v || undefined} onClick={() => velg(sk.id, v)}>
+                <button key={v} type="button" role="radio" aria-checked={pa} className="fl-valg-r" onClick={() => velg(sk.id, v)}>
                   <span className="fl-valg-o" aria-hidden="true" />
                   <span className="fl-valg-t">
                     <b>{t}</b>
@@ -224,7 +208,7 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
           </button>
         )}
         <button type="button" className="fl-cta" aria-disabled={!ferdig} onClick={() => (ferdig ? neste() : settTrykket(her))}>
-          {adv ? "Går videre …" : siste ? "Se vurderingen" : "Neste"}
+          {siste ? "Se vurderingen" : "Neste"}
           <Pil s={17} w={2.2} />
         </button>
         <p className="fl-mangler" role="status">

@@ -30,10 +30,12 @@ const tilInnlogging = async (page: Page, lenke: string) => {
 };
 
 const sporsmal = (page: Page, n: number) => expect(page.locator(".fl-frem-l")).toContainText(new RegExp(`Spørsmål ${n} av 11$`));
-// A screen of one choice goes on by itself.
-const velg = async (page: Page, navn: string | RegExp, neste: number) => {
+// A screen of one choice waits for «Neste» like the others.
+const velg = async (page: Page, navn: string | RegExp, n: number) => {
   await page.getByRole("radio", { name: navn, exact: typeof navn === "string" }).click();
-  await sporsmal(page, neste);
+  await expect(page.locator(".fl-frem-l")).toContainText(new RegExp(`Spørsmål ${n - 1} av 11$`));
+  await page.getByRole("button", { name: "Neste", exact: true }).click();
+  await sporsmal(page, n);
 };
 const neste = async (page: Page, n: number) => {
   await page.getByRole("button", { name: "Neste", exact: true }).click();

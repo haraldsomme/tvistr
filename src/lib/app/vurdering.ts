@@ -50,6 +50,8 @@ export type Resultat = {
   summary: string;
   advice?: string[];
   factors: Faktor[];
+  // The sum of the weights, for sterk, god and kreverMer.
+  poeng?: number;
 };
 
 const UTENFOR = {
@@ -70,14 +72,14 @@ const UTENFOR = {
   },
 };
 
-// No level promises an outcome, and only one where most such cases were won says «trolig»
+// No level promises an outcome, and only the levels where most such cases were won say «trolig»
 // (docs/ferdigkriterier.md).
 const TIER = {
-  sterk: { badge: "Sterk sak", title: "Du har trolig en god sak", summary: "Ut fra svarene dine taler det meste for deg. Send en skriftlig reklamasjon så snart som mulig." },
-  god: { badge: "God sak", title: "Du har en sak", summary: "Loven er på din side, men forhandleren kan bestride noe av det. Se punktene under, og send en skriftlig reklamasjon så snart som mulig." },
+  sterk: { badge: "Sterk sak", title: "Du har trolig en sterk sak", summary: "Ut fra svarene dine taler det meste for deg. Send en skriftlig reklamasjon så snart som mulig." },
+  god: { badge: "God sak", title: "Du har trolig en god sak", summary: "Loven er på din side, men forhandleren kan bestride noe av det. Se punktene under, og send en skriftlig reklamasjon så snart som mulig." },
   kreverMer: {
     badge: "Krever mer",
-    title: "Saken krever mer av deg",
+    title: "Saken din kan være krevende",
     summary: "Forhandleren kan komme til å bestride kravet. Punktene under viser hva forhandleren kan si, og hva du bør skaffe. Send likevel en skriftlig reklamasjon nå: du må si fra innen rimelig tid etter at du oppdaget feilen, og brevet er første steg hvis saken skal til mekling.",
   },
 };
@@ -90,10 +92,24 @@ const FRIST = {
 };
 
 // The level from the weights: two or more for sterk, below zero for kreverMer.
-const nivaFor = (F: Faktor[]): "sterk" | "god" | "kreverMer" => {
-  const sum = F.reduce((n, f) => n + (f.w ?? 0), 0);
-  return sum >= 2 ? "sterk" : sum >= 0 ? "god" : "kreverMer";
+const sumFor = (F: Faktor[]) => F.reduce((n, f) => n + (f.w ?? 0), 0);
+const nivaFor = (sum: number): "sterk" | "god" | "kreverMer" => (sum >= 2 ? "sterk" : sum >= 0 ? "god" : "kreverMer");
+
+// Where the marker stands on the strength bar, 0 to 1: each level has a third, Krever mer on the left,
+// and the weights place it within its third (the ends are open: -4 or less, 5 or more). Past five years
+// it stands at the far left; without a verdict, or outside what the letter covers, there is none.
+const TREDJE: Record<"kreverMer" | "god" | "sterk", { fra: number; lo: number; hi: number }> = {
+  kreverMer: { fra: 0, lo: -4, hi: -1 },
+  god: { fra: 1 / 3, lo: 0, hi: 1 },
+  sterk: { fra: 2 / 3, lo: 2, hi: 5 },
 };
+export function styrke(r: Pick<Resultat, "tier" | "poeng">): number | null {
+  if (r.tier === "frist") return 0.02;
+  if (r.tier === "utenfor" || r.tier === "ukjent" || r.poeng === undefined) return null;
+  const t = TREDJE[r.tier];
+  const p = Math.min(t.hi, Math.max(t.lo, r.poeng));
+  return t.fra + (p - t.lo + 0.5) / (t.hi - t.lo + 1) / 3;
+}
 
 // Faults the committee most often turned down as wear (understell 59 %, drivlinje 39 % of the rejected,
 // the two highest; 2026-10-23).
@@ -182,8 +198,9 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
 
   // Without any date there is nothing to weigh yet.
   if (!q.delivery && !q.found) return { tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen.", factors: F };
-  const tier = nivaFor(F);
-  return { tier, ...TIER[tier], factors: F };
+  const poeng = sumFor(F);
+  const tier = nivaFor(poeng);
+  return { tier, ...TIER[tier], factors: F, poeng };
 }
 
 // § 27 annet ledd fjerde punktum (a warranty for longer) and fjerde ledd (the seller grossly negligent or

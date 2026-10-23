@@ -57,7 +57,7 @@ export const synlige = (u: Utkast) => SKJERMER.filter((s) => !s.vis || s.vis(u))
 export type Valg = readonly [verdi: string, tittel: string, tekst?: string];
 
 // The screens answered with one choice: the choices, the answer, and the draft with a new answer.
-// They go on by themselves once answered.
+// The buyer goes on with «Neste», as on the other screens.
 export const ENKELTVALG: Record<string, { valg: readonly Valg[]; verdi: (u: Utkast) => string | undefined; sett: (u: Utkast, v: string) => Utkast }> = {
   // The buyer is taken to have bought for private use: the flow does not ask.
   selger: {

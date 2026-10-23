@@ -604,12 +604,12 @@ body:has(.fl-app){padding-left:0;padding-right:0;background:var(--fl-bg)}
 .fl-niva[data-niva=god]{color:var(--fl-accent)}
 .fl-niva[data-niva=kreverMer]{color:var(--fl-warn-ink)}
 .fl-niva[data-niva=frist],.fl-niva[data-niva=utenfor]{color:var(--fl-warn-ink)}
-.fl-segs{display:flex;gap:4px}
-.fl-segs>span{flex:1;height:8px;border-radius:4px;background:var(--fl-pending);transition:background .4s}
-.fl-segs>[data-s=good]{background:var(--fl-good)}
-.fl-segs>[data-s=warn]{background:var(--fl-warn)}
-.fl-segs>[data-s=bad]{background:var(--fl-bad)}
-.fl-segs>[data-s=info]{background:#AEB8C6}
+.fl-maal{position:relative;height:8px;margin:4px 0;border-radius:4px;background:linear-gradient(90deg,var(--fl-warn),var(--fl-accent-mid) 50%,var(--fl-good));transition:opacity .3s}
+.fl-maal[data-tom=true]{opacity:.35}
+.fl-maal>span{position:absolute;top:50%;left:var(--x);width:18px;height:18px;border-radius:50%;background:#FFFFFF;border:3px solid var(--fl-ink);
+  box-shadow:0 1px 3px rgba(15,27,45,.25);transform:translate(-50%,-50%);transition:left .7s var(--fl-ease)}
+.fl-maal>span[data-flytter]{animation:fl-maal-puls .7s var(--fl-ease)}
+@keyframes fl-maal-puls{40%{transform:translate(-50%,-50%) scale(1.3);box-shadow:0 0 0 6px rgba(15,27,45,.12)}}
 .fl-styrke-l{margin:0;font-size:14px;line-height:1.45;color:var(--fl-ink-2)}
 /* Lovrader inside the panel: plain rows under a line, as the mockup's list. */
 .fl-styrke .lawsec{gap:0}
@@ -648,8 +648,6 @@ body:has(.fl-app){padding-left:0;padding-right:0;background:var(--fl-bg)}
   cursor:pointer;user-select:none;color:var(--fl-ink);font:inherit;transition:border-color .2s,box-shadow .25s}
 .fl-valg-r:hover{border-color:var(--fl-accent)}
 .fl-valg-r[aria-checked=true]{border-color:var(--fl-accent);box-shadow:0 0 0 1px var(--fl-accent),0 16px 34px -20px rgba(23,48,79,.45)}
-.fl-valg-r[data-adv]{animation:fl-puls .75s var(--fl-ease)}
-@keyframes fl-puls{40%{transform:scale(.99)}}
 .fl-valg-o{width:22px;height:22px;flex:none;border-radius:50%;border:1.5px solid var(--fl-line-2);display:grid;place-items:center}
 .fl-valg-o::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--fl-accent);opacity:0;transition:opacity .2s}
 .fl-valg-r[aria-checked=true] .fl-valg-o{border-color:var(--fl-accent)}

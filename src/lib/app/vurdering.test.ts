@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { dur, fmtD, parseD, relText } from "./dato";
 import { regler } from "./lov";
 import { eksempel, syncAreas } from "./skjema";
-import { celleFaktor, evaluate, medCelle, skriverResultat, wsFactors } from "./vurdering";
+import { celleFaktor, evaluate, medCelle, skriverResultat, styrke, wsFactors } from "./vurdering";
 
 const idag = "2026-10-16";
 const base = { seller: "forhandler", buyer: "privat", asis: "nei", notified: "nei" } as const;
@@ -195,12 +195,15 @@ describe("tekstene", () => {
   const sterk = niva({ ...base, delivery: "2026-06-01", found: "2026-10-01", opplysning: true });
   const god = niva({ ...base, delivery: "2026-06-01", found: "2026-10-01" });
   const mer = niva({ ...base, delivery: "2022-09-01", found: "2025-10-01" });
-  it("bare «Sterk sak» sier «trolig», og ingen lover et utfall eller har prosent", () => {
-    expect(`${sterk.title} ${sterk.summary}`).toMatch(/trolig/);
-    for (const r of [god, mer]) expect(`${r.title} ${r.summary}`).not.toMatch(/trolig/);
+  it("bare nivåene over 50 % sier «trolig», og ingen lover et utfall eller har prosent", () => {
+    for (const r of [sterk, god]) expect(r.title).toMatch(/trolig/);
+    expect(`${mer.title} ${mer.summary}`).not.toMatch(/trolig/);
     for (const r of [sterk, god, mer]) expect(`${r.title} ${r.summary}`).not.toMatch(/%|vinner|garantert/);
   });
-  it("merkelappene", () => expect([sterk.badge, god.badge, mer.badge]).toEqual(["Sterk sak", "God sak", "Krever mer"]));
+  it("merkelappene og overskriftene", () => {
+    expect([sterk.badge, god.badge, mer.badge]).toEqual(["Sterk sak", "God sak", "Krever mer"]);
+    expect([sterk.title, god.title, mer.title]).toEqual(["Du har trolig en sterk sak", "Du har trolig en god sak", "Saken din kan være krevende"]);
+  });
 });
 
 describe("lignende saker i vurderingen", () => {
@@ -219,4 +222,25 @@ describe("lignende saker i vurderingen", () => {
     expect(sent.factors[i + 1].t).toBe("Slik gikk lignende saker");
     expect(medCelle(evaluate({ ...base, delivery: "2026-06-01", found: "2026-10-01" }, idag), c).factors.some((f) => f.t === "Slik gikk lignende saker")).toBe(false);
   });
+});
+
+describe("styrkebaren", () => {
+  it("hvert nivå har sin tredjedel, og vektene flytter markøren innenfor den", () => {
+    const mer = styrke({ tier: "kreverMer", poeng: -1 })!,
+      god0 = styrke({ tier: "god", poeng: 0 })!,
+      god1 = styrke({ tier: "god", poeng: 1 })!,
+      sterk = styrke({ tier: "sterk", poeng: 2 })!;
+    expect(mer).toBeLessThan(1 / 3);
+    expect([god0, god1].every((x) => x > 1 / 3 && x < 2 / 3)).toBe(true);
+    expect(god0).toBeLessThan(god1);
+    expect(sterk).toBeGreaterThan(2 / 3);
+    expect(styrke({ tier: "sterk", poeng: 9 })).toBeLessThan(1);
+    expect(styrke({ tier: "kreverMer", poeng: -9 })).toBeGreaterThan(0);
+  });
+  it("uten vurdering og utenfor: ingen markør; fristen ute: helt til venstre", () => {
+    expect(styrke({ tier: "ukjent" })).toBeNull();
+    expect(styrke({ tier: "utenfor" })).toBeNull();
+    expect(styrke({ tier: "frist" })).toBeLessThan(0.05);
+  });
+  it("vurderingen gir summen av vektene", () => expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-10-01", opplysning: true }, idag).poeng).toBe(2));
 });

@@ -28,7 +28,8 @@ vi.mock("next/headers", () => ({
 vi.mock("@/app/sak/vedtak-db", () => ({ hentAlle, hentBilnavn: async () => () => null }));
 vi.mock("@/lib/sak/db", () => ({ hentEgenSak, betalteSaker }));
 vi.mock("@/lib/innlogging/okt", async (orig) => ({ ...(await orig<typeof import("@/lib/innlogging/okt")>()), innlogget }));
-vi.mock("@/lib/matching/ranger", () => ({ ranger: () => ({ kandidater: kandidater.rader }), avgjorendeFor: () => undefined }));
+const ranger = vi.hoisted(() => vi.fn((_alle: unknown, _sak: { somDenEr: boolean | null }) => ({ kandidater: kandidater.rader })));
+vi.mock("@/lib/matching/ranger", () => ({ ranger, avgjorendeFor: () => undefined }));
 // The limits per address are tested on their own; here every call is from the same address.
 vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => false, ipFra: () => "10.0.0.1" }));
 vi.mock("@/lib/matching/likhet", () => ({ likhet: () => 50 }));
@@ -106,6 +107,15 @@ describe("finnVedtak", () => {
     expect((await finnVedtak({ id: betaltSak.id, svar: { ...svar, feil: [{ ...svar.feil[0], hoved: "klima", under: [] }] } })).ok).toBe(false);
     expect((await finnVedtak({ id: betaltSak.id, svar: { ...svar, feil: [{ ...svar.feil[0], under: ["registerreim"] }] } })).ok).toBe(false);
     expect(hentAlle).not.toHaveBeenCalled();
+  });
+
+  it("«vet ikke» om som den er følger saken, ikke nettleserens «nei»", async () => {
+    hentEgenSak.mockResolvedValue({ ...betaltSak, sjekk: { asis: "vetikke" } });
+    await finnVedtak({ id: betaltSak.id, svar });
+    expect(ranger.mock.calls[0][1].somDenEr).toBeNull();
+    hentEgenSak.mockResolvedValue(betaltSak);
+    await finnVedtak({ id: betaltSak.id, svar });
+    expect(ranger.mock.calls[1][1].somDenEr).toBe(false);
   });
 
   it("gir en tom liste uten kandidater", async () => {

@@ -68,7 +68,9 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
     if (!lagret) return { ok: false, melding: "Brevet er ikke betalt." };
     const svar = rensSvar(inn.svar);
     if (!svar || !gjelderSaken(svar, lagret.skjema)) return { ok: false, melding: "Noe er galt med svarene. Prøv igjen." };
-    const { sak: brukersak, kjoper } = byggSaken(svar);
+    // «Vet ikke» about «som den er» lives only in the case's check (the form knows yes or no), so the
+    // browser sends «nei»; the case's own answer wins, and an unknown is never compared.
+    const { sak: brukersak, kjoper } = byggSaken(lagret.sjekk?.asis === "vetikke" ? { ...svar, somDenEr: null } : svar);
 
     const alle = await hentAlle();
     const { kandidater } = ranger(alle, brukersak);

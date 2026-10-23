@@ -84,3 +84,11 @@ describe("sladd", () => {
     expect(p).toEqual({ t: "prec", avsnitt: [["Én to. ", { skjult: 10 }], ["fem ", { skjult: 10 }]] });
   });
 });
+
+describe("underoverskrift og kursivt innledningsord", () => {
+  it("h2 går gjennom, kursivordet står og teksten etter første setning sladdes", () => {
+    const ut = sladd([{ t: "h2", tekst: ["1. Feil ved turboen"] }, { t: "p", tekst: [{ kursiv: "Reklamasjonen er rettidig." }, " Første setning her. Andre setning."] }]);
+    expect(ut[0]).toEqual({ t: "h2", tekst: ["1. Feil ved turboen"] });
+    expect(ut[1]).toEqual({ t: "p", tekst: [{ kursiv: "Reklamasjonen er rettidig." }, " Første setning her. ", { skjult: 20 }] });
+  });
+});

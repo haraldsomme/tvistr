@@ -511,7 +511,7 @@ function slutning(p: Presedens, s: Skjema): string {
   return d.join(" ");
 }
 
-const tekst = (d: Del[]) => d.map((x) => (typeof x === "string" ? x : "ph" in x ? `[${x.ph}]` : "felt" in x ? x.tekst : "")).join("");
+const tekst = (d: Del[]) => d.map((x) => (typeof x === "string" ? x : "ph" in x ? `[${x.ph}]` : "felt" in x ? x.tekst : "kursiv" in x ? x.kursiv : "")).join("");
 
 // The letter as plain text for the clipboard, placeholders as «[…]» and hidden text left out.
 export function tilTekst(B: Blokk[]): string {

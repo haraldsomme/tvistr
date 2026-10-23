@@ -14,6 +14,7 @@ function DelEl({ x }: { x: Del }) {
   if (typeof x === "string")
     return x.split(/(https?:\/\/\S+)/).map((t, i) => (i % 2 ? <a key={i} href={t} target="_blank" rel="noopener noreferrer">{t}</a> : t));
   if ("ph" in x) return <span className="ph">{x.ph}</span>;
+  if ("kursiv" in x) return <em>{x.kursiv}</em>;
   if ("felt" in x) return <span className={nye.has(x.felt) ? "fe fl-ny" : "fe"} data-felt={x.felt}>{x.tekst}</span>;
   return <span className="sl" style={{ width: `${Math.min(x.skjult, 60)}ch` }} aria-label="Skjult tekst" />;
 }
@@ -50,6 +51,8 @@ export function BlokkEl({ b }: { b: Blokk }) {
       return <p className="l-subj"><Deler d={b.tekst} /></p>;
     case "h":
       return <p className="l-h"><Deler d={b.tekst} /></p>;
+    case "h2":
+      return <p className="l-h2"><Deler d={b.tekst} /></p>;
     case "p":
       return <p><Deler d={b.tekst} /></p>;
     case "ol":

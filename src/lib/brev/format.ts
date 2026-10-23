@@ -13,3 +13,7 @@ export const smaa = (s: string) => (/^[A-ZÆØÅ]{2}/.test(s) ? s : s.charAt(0).
 
 // Brreg and the registry write place names in capitals: «OSLO» → «Oslo». Mixed case is left alone.
 export const sted = (s: string) => (s === s.toUpperCase() ? s.toLowerCase().replace(/(^|[\s\-.(])(\p{L})/gu, (_, a, b) => a + b.toUpperCase()) : s);
+
+// A count in words up to twelve, as the letter writes it («Bilen har to feil»); a larger one as a number.
+const TALLORD = ["null", "en", "to", "tre", "fire", "fem", "seks", "sju", "åtte", "ni", "ti", "elleve", "tolv"];
+export const tallord = (n: number) => TALLORD[n] ?? String(n);

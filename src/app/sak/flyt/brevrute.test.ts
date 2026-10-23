@@ -39,3 +39,10 @@ describe("seksjoner", () => {
     expect(seksjoner([{ t: "h", tekst: ["Mangelen"] }, { t: "p", tekst: [{ ph: "Feilen" }] }]).map((s) => s.fylt)).toEqual(["nei"]);
   });
 });
+
+describe("seksjoner med underoverskrift", () => {
+  it("h2 starter ingen seksjon", () => {
+    const b: Blokk[] = [{ t: "h", tekst: ["Mangelen"] }, { t: "p", tekst: ["a"] }, { t: "h2", tekst: ["1. Feil ved turboen"] }, { t: "p", tekst: ["b"] }];
+    expect(seksjoner(b)).toHaveLength(1);
+  });
+});

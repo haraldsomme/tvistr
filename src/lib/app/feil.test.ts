@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { feilposter } from "./feil";
+import { feilposter, feilposterSortert } from "./feil";
 import { standard } from "./skjema";
 
 const s = {
@@ -18,4 +18,13 @@ describe("feilposter", () => {
   it("alt delt: området gir ingen post", () => expect(feilposter({ ...s, f_parts: { ...s.f_parts, motor: ["turbo"] } }).map((p) => p.felt)).toEqual(["f_under.motor.turbo.found", "f_area.understell.found"]));
   it("en delt underkategori som ikke er valgt, teller ikke", () => expect(feilposter({ ...s, f_parts: { ...s.f_parts, motor: ["utslipp"] } })).toHaveLength(2));
   it("eldre skjema uten f_under", () => expect(feilposter({ ...s, f_under: undefined as never })).toHaveLength(2));
+});
+
+describe("nøkkel og sortering", () => {
+  it("hver post har en nøkkel: området, eller hoved.under for en feil datert for seg", () => expect(feilposter(s).map((p) => p.nokkel)).toEqual(["motor.turbo", "motor", "understell"]));
+  it("en enkelt underkategori uten egen dato har områdets nøkkel", () => expect(feilposter({ ...s, f_under: {}, f_parts: { ...s.f_parts, motor: ["turbo"] } })[0].nokkel).toBe("motor"));
+  it("feilposterSortert: etter dato, udaterte sist, stabilt", () => {
+    const u = { ...s, f_cats: ["motor", "understell", "klima"], f_parts: { ...s.f_parts, klima: ["ac"] }, f_area: { ...s.f_area, klima: { found: "" } } };
+    expect(feilposterSortert(u).map((p) => p.nokkel)).toEqual(["motor", "motor.turbo", "understell", "klima"]);
+  });
 });

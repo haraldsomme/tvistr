@@ -3,12 +3,13 @@
 import type { Kriterium, Niva, Treff } from "@/lib/matching/ranger";
 
 // Text, a placeholder for a missing answer, one of the buyer's own answers with its field (a `Skjema`
-// key, or «key.sub» for per-area and list values), or hidden text of about `skjult` characters.
-// Nothing in the body is emphasised: the headings are the only bold text, as in a lawyer's letter.
-export type Del = string | { ph: string } | { felt: string; tekst: string } | { skjult: number };
+// key, or «key.sub» for per-area and list values), hidden text of about `skjult` characters, or the
+// italic word that opens a paragraph under «Rettslig grunnlag» («Reklamasjonen er rettidig.»): the only
+// emphasis in the body. The headings (`h`) and the numbered subheadings per fault (`h2`) are bold.
+export type Del = string | { ph: string } | { felt: string; tekst: string } | { skjult: number } | { kursiv: string };
 export type Blokk =
   | { t: "addr" | "sign"; linjer: Del[][] }
-  | { t: "date" | "subj" | "h" | "p"; tekst: Del[] }
+  | { t: "date" | "subj" | "h" | "h2" | "p"; tekst: Del[] }
   | { t: "ol"; punkter: Del[][] }
   | { t: "prec"; avsnitt: Del[][] };
 

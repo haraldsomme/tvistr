@@ -579,3 +579,10 @@ describe("fristene, runde 2", () => {
   it("oppgitt kilometerstand når km er en feil", () => expect(tekst({ ...eksempel(idag), c_km: "141 000", f_cats: ["historikk"], f_parts: { historikk: ["km"] }, f_area: { historikk: { found: "2026-09-01" } } })).toContain("med en oppgitt kilometerstand på 141 000 km"));
   it("retting med subsidiær heving: ikke «avvise videre retting»", () => expect(tekst({ ...eksempel(idag), k_main: "retting", k_alt: "heving", k_forsok: "1" })).not.toContain("avvise videre retting"));
 });
+
+describe("tilTekst med underoverskrift og kursiv", () => {
+  it("kursivt innledningsord uten markering, underoverskriften på egen linje", () => {
+    const B: Blokk[] = [{ t: "h", tekst: ["Rettslig grunnlag"] }, { t: "h2", tekst: ["1. Feilen ved turboen"] }, { t: "p", tekst: [{ kursiv: "Reklamasjonen er rettidig." }, " Jeg reklamerte i tide."] }];
+    expect(tilTekst(B)).toBe("Rettslig grunnlag\n\n1. Feilen ved turboen\n\nReklamasjonen er rettidig. Jeg reklamerte i tide.");
+  });
+});

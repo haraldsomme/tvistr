@@ -74,15 +74,15 @@ export function eksempel(idag: string): Skjema {
   };
 }
 
-// [id, chip label, hint, severity 1–5, the letter's words after «Feilen»]
+// [id, chip label, hint, severity 1–5, the letter's words after «Konsekvensen av feilen er at», the same for one fault and several]
 export const IMPACT = [
-  ["kosmetisk", "Bare kosmetisk", "Synlig, men påvirker ikke bruken", 1, "er synlig"],
-  ["plagsom", "Plagsom", "Lyd, lukt, vibrasjoner eller annet som irriterer", 2, "er plagsom i daglig bruk"],
-  ["verdi", "Bilen er mindre verdt", "Bilen er ikke det du betalte for, for eksempel km-stand eller service", 2, "gjør at bilen er mindre verdt enn det jeg betalte for"],
-  ["bruk", "Påvirker bruken", "Du merker det når du kjører, eller må unngå noe", 3, "merkes under kjøring og begrenser hvordan bilen kan brukes"],
-  ["palitelig", "Ikke til å stole på", "Svikter av og til, for eksempel ved start eller rekkevidde", 4, "gjør at bilen bare kan brukes i begrenset grad, og at jeg ikke kan stole på den i vanlig bruk"],
-  ["sikkerhet", "Går ut over sikkerheten", "For eksempel bremser, styring eller varsellamper", 4, "går ut over sikkerheten"],
-  ["stopp", "Kan ikke brukes", "Den står, eller er ikke trygg å kjøre", 5, "gjør at bilen ikke kan brukes"],
+  ["kosmetisk", "Bare kosmetisk", "Synlig, men påvirker ikke bruken", 1, "bilens utseende er forringet"],
+  ["plagsom", "Plagsom", "Lyd, lukt, vibrasjoner eller annet som irriterer", 2, "bilen er plagsom å bruke i hverdagen"],
+  ["verdi", "Bilen er mindre verdt", "Bilen er ikke det du betalte for, for eksempel km-stand eller service", 2, "bilen er mindre verdt enn det jeg betalte for"],
+  ["bruk", "Påvirker bruken", "Du merker det når du kjører, eller må unngå noe", 3, "jeg merker det under kjøring og må begrense bruken av bilen"],
+  ["palitelig", "Ikke til å stole på", "Svikter av og til, for eksempel ved start eller rekkevidde", 4, "jeg ikke kan stole på bilen og bare kan bruke den i begrenset grad"],
+  ["sikkerhet", "Går ut over sikkerheten", "For eksempel bremser, styring eller varsellamper", 4, "bilens sikkerhet er svekket"],
+  ["stopp", "Kan ikke brukes", "Den står, eller er ikke trygg å kjøre", 5, "bilen ikke kan brukes"],
 ] as const;
 // «Bare kosmetisk» rules out the other choices.
 export const IMPACT_SOLO = "kosmetisk";

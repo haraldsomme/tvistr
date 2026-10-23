@@ -58,7 +58,8 @@ export function HeroBrev() {
         <Rad k="l-subj">Reklamasjon på mangel ved Volkswagen Golf, reg.nr. AB 12345</Rad>
         <Rad>Jeg viser til mitt kjøp av brukt Volkswagen Golf, årsmodell 2022, reg.nr. AB 12345. Kjøpekontrakten ble inngått 20. juni 2026 til kr 259&nbsp;900, og jeg overtok bilen 24. juni 2026 med en kilometerstand på 39&nbsp;800 km. Bilen har en mangel, og jeg reklamerer med dette <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn</S>.</Rad>
         <Rad nr={2} k="l-h">Mangelen</Rad>
-        <Rad>Klimaanlegget (AC) sluttet å virke. Feilen ble oppdaget 30. september 2026. Anlegget blåser bare varm luft, og frontruta dugger igjen når det er fuktig ute. Verkstedet har funnet en defekt trykksensor i kjølekretsen, og anlegget kjøler derfor ikke. Konsekvensen er at <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn</S>.</Rad>
+        <Rad>Klimaanlegget (AC) sluttet å virke. Feilen ble oppdaget 30. september 2026. Anlegget blåser bare varm luft, og frontruta dugger igjen når det er fuktig ute. Verkstedet har funnet en defekt trykksensor i kjølekretsen, og anlegget kjøler derfor ikke.</Rad>
+        <Rad>Konsekvensen av feilen er at <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn</S>.</Rad>
         <Rad nr={3} k="l-h">Rettslig grunnlag</Rad>
         <Rad>Etter forbrukerkjøpsloven § 15 tredje ledd bokstav b skal bilen ha de egenskapene, blant annet med hensyn til holdbarhet og funksjonalitet, som er vanlige for biler av samme type, og som jeg med rimelighet kunne forvente. Bilen har dermed en mangel, jf. § 16 første ledd bokstav a.</Rad>
         <Rad>Feilen viste seg tre måneder etter leveringen. Etter § 18 annet ledd skal en mangel som viser seg innen to år etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises. Det er dermed dere som må <S>nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn nnnnnn nn nnnnnn nnnnnn nnnnnn</S>.</Rad>

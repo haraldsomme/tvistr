@@ -158,9 +158,9 @@ export function Verksted({ s, sett }: StegProps) {
         navn="Er feilen undersøkt av et verksted?"
         verdi={s.ws}
         valg={[
-          ["rapport", "Ja, og jeg har en rapport", "En skriftlig vurdering fra verkstedet"],
-          ["uten", "Ja, men uten rapport", "Verkstedet har sett på bilen"],
           ["nei", "Nei"],
+          ["uten", "Ja, men uten rapport", "Verkstedet har sett på bilen"],
+          ["rapport", "Ja, og jeg har en rapport", "En skriftlig vurdering fra verkstedet"],
         ]}
         // A report is ticked as an attachment when the buyer says they have one; they can untick it.
         // Without a report there is no estimate to keep.

@@ -5,7 +5,7 @@ import type { AvledetFeil } from "@/lib/feilvurdering/skjema";
 import type { Kandidat } from "@/lib/matching/typer";
 import { byggStatistikk, type Statistikkrad, type Tellevedtak } from "./statistikk";
 import type { Svar } from "@/lib/vedtaksvalg/kjoper";
-import { bilnavnFra, lignende, tallblokker } from "./vurdering";
+import { bilnavnFra, celleFor, lignende, tallblokker } from "./vurdering";
 
 // The model must never be reached before payment.
 const velgVedtak = vi.fn();
@@ -21,6 +21,9 @@ const rad = (nokkel: string, n: number, m: number, r: Partial<Statistikkrad> = {
   nokkel,
   antallSaker: n,
   antallMedhold: m,
+  fullt: 0,
+  avslag: null,
+  avslagAntall: 0,
   heving: 0,
   prisavslag: 0,
   retting: 0,
@@ -79,6 +82,41 @@ describe("tellingen", () => {
     expect(rader.find((r) => r.nokkel === "motor.turbo")).toMatchObject({ retting: 1, heving: 0 });
     // Two defects with medhold and no extraction for this one: what it got alone cannot be told.
     expect(rader.find((r) => r.nokkel === "motor.olje")).toMatchObject({ retting: 0, heving: 0 });
+  });
+});
+
+describe("én definisjon av medhold", () => {
+  const f = (id: string, hoved: string, utfall: AvledetFeil["utfall"], r: Partial<AvledetFeil> = {}): AvledetFeil =>
+    ({ id, hovedkategori: hoved, underkategori: null, komponent: null, utfall, samlet: false, avslagsgrunn: null, bevisgrunnlag: null, dager_etter_levering: null, viste_seg: "ukjent", formodning: "ikke_nevnt", sitat: null, tidsniva: 1, ...r }) as AvledetFeil;
+  const v = (id: number, utfall: string, feil: AvledetFeil[]): Tellevedtak => ({ id, utfall, sanksjoner: null, feil, avgjorende: null });
+
+  it("«alle»: bare vedtak med vurdert feil, og medhold bare når en vurdert feil fikk medhold", () => {
+    const rader = byggStatistikk([
+      v(1, "medhold", [f("a", "motor", "medhold")]),
+      // Won, but on no assessed defect (only a claim outside the car).
+      v(2, "delvis_medhold", [f("a", "utenfor", "medhold"), f("b", "motor", "avvist")]),
+      // No defect assessed at all.
+      v(3, "medhold", [f("a", "motor", "ikke_vurdert")]),
+    ]);
+    expect(rader.find((r) => r.nokkel === "alle")).toMatchObject({ antallSaker: 2, antallMedhold: 1, fullt: 1 });
+  });
+  it("celler per kategori og tidsnivå, med den vanligste grunnen i de tapte", () => {
+    const rader = byggStatistikk([
+      v(1, "ikke_medhold", [f("a", "elektrisk", "avvist", { tidsniva: 2, avslagsgrunn: "ikke_sannsynliggjort_ved_levering" })]),
+      v(2, "ikke_medhold", [f("a", "elektrisk", "avvist", { tidsniva: 2, avslagsgrunn: "ikke_sannsynliggjort_ved_levering" }), f("b", "elektrisk", "avvist", { tidsniva: 2, avslagsgrunn: "paregnelig_slitasje" })]),
+      v(3, "delvis_medhold", [f("a", "elektrisk", "medhold", { tidsniva: 2 }), f("b", "elektrisk", "avvist", { tidsniva: 2, avslagsgrunn: "paregnelig_slitasje" })]),
+      v(4, "medhold", [f("a", "elektrisk", "medhold", { tidsniva: 1 })]),
+    ]);
+    // The reasons in a decision the buyer won do not count.
+    expect(rader.find((r) => r.nokkel === "elektrisk:2")).toMatchObject({ antallSaker: 3, antallMedhold: 1, fullt: 0, avslag: "ikke_sannsynliggjort_ved_levering", avslagAntall: 2 });
+    expect(rader.find((r) => r.nokkel === "elektrisk:1")).toMatchObject({ antallSaker: 1, antallMedhold: 1, fullt: 1 });
+    expect(rader.find((r) => r.nokkel === "elektrisk")).toMatchObject({ antallSaker: 4, antallMedhold: 2 });
+  });
+  it("cellen for kjøperen: bare etter formodningen, og bare fra 30 vedtak", () => {
+    const stat = new Map([["elektrisk:2", rad("elektrisk:2", 61, 10, { avslag: "ikke_dokumentert", avslagAntall: 20 })], ["motor:2", rad("motor:2", 29, 9)], ["motor:1", rad("motor:1", 700, 300)]]);
+    expect(celleFor([{ hoved: "motor", niva: 1 }], stat)).toBeNull();
+    expect(celleFor([{ hoved: "motor", niva: 2 }], stat)).toBeNull();
+    expect(celleFor([{ hoved: "motor", niva: 2 }, { hoved: "elektrisk", niva: 2 }], stat)).toMatchObject({ hoved: "elektrisk", niva: 2, saker: 61, medhold: 10, avslag: "ikke_dokumentert", avslagAntall: 20 });
   });
 });
 

@@ -2,19 +2,20 @@ import { describe, expect, it } from "vitest";
 import { dur, fmtD, parseD, relText } from "./dato";
 import { regler } from "./lov";
 import { eksempel, syncAreas } from "./skjema";
-import { evaluate, skriverResultat, wsFactors } from "./vurdering";
+import { celleFaktor, evaluate, medCelle, skriverResultat, wsFactors } from "./vurdering";
 
 const idag = "2026-10-16";
 const base = { seller: "forhandler", buyer: "privat", asis: "nei", notified: "nei" } as const;
 const har = (r: ReturnType<typeof evaluate>, t: string) => r.factors.some((f) => f.t === t);
 
 describe("evaluate", () => {
-  it("sterk etter 2024", () => expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-10-01" }, idag).tier).toBe("sterk"));
+  it("innen formodningen alene: god", () => expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-10-01" }, idag).tier).toBe("god"));
+  it("feil i det selgeren opplyste: sterk", () => expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-10-01", opplysning: true }, idag).tier).toBe("sterk"));
   it("innen to år etter 2024", () => expect(har(evaluate({ ...base, delivery: "2025-01-10", found: "2026-06-01" }, idag), "Feilen viste seg innen to år")).toBe(true));
   it("seks måneder før 2024", () => {
     const r = evaluate({ ...base, delivery: "2023-12-31", found: "2024-09-01" }, idag);
     expect(r.factors.some((f) => f.t.startsWith("Mer enn seks måneder"))).toBe(true);
-    expect(r.tier).toBe("mulig");
+    expect(r.tier).toBe("kreverMer");
   });
   it("innen seks måneder før 2024", () => expect(har(evaluate({ ...base, delivery: "2023-06-01", found: "2023-09-01" }, idag), "Feilen viste seg innen seks måneder")).toBe(true));
   it("grensen 1.1.2024", () => expect(har(evaluate({ ...base, delivery: "2024-01-01", found: "2024-09-01" }, idag), "Feilen viste seg innen to år")).toBe(true));
@@ -115,5 +116,107 @@ describe("kanttilfeller", () => {
     const r = evaluate({ ...base, delivery: "2026-06-01", found: "2027-01-01" }, idag);
     expect(r.factors.some((f) => f.t === "Sjekk datoene")).toBe(true);
     expect(r.factors.some((f) => /innen to år|Du er i tide/.test(f.t))).toBe(false);
+  });
+});
+
+describe("nivået fra vektene", () => {
+  const innen = { ...base, delivery: "2026-06-01", found: "2026-10-01" } as const;
+  const etter = { ...base, delivery: "2022-09-01", found: "2025-10-01" } as const;
+  it("selger lovet at bilen var fri for slike feil: sterk", () => expect(evaluate({ ...innen, seller_said: "lovet" }, idag).tier).toBe("sterk"));
+  it("én av flere feil i det selgeren opplyste: sterk", () => {
+    const r = evaluate({ ...innen, noenOpplysning: true, fysiske: ["motor"] }, idag);
+    expect(r.tier).toBe("sterk");
+    expect(har(r, "En av feilene gjelder det selgeren opplyste")).toBe(true);
+  });
+  it("«lovet» teller ikke to ganger når feilen alt gjelder det selgeren opplyste", () =>
+    expect(evaluate({ ...innen, opplysning: true, seller_said: "lovet" }, idag).factors.reduce((n, f) => n + (f.w ?? 0), 0)).toBe(2));
+  it("etter formodningen: krever mer, og en rapport om levering veier opp", () => {
+    expect(evaluate({ ...etter, fysiske: ["motor"] }, idag).tier).toBe("kreverMer");
+    expect(evaluate({ ...etter, fysiske: ["motor"], ws: "rapport", ws_says: ["levering"] }, idag).tier).toBe("god");
+  });
+  it("etter formodningen uten rapport: be om rapport, ingen vekt", () => {
+    const f = evaluate({ ...etter, ws: "nei" }, idag).factors.find((x) => x.t === "Få en verkstedrapport før du sender")!;
+    expect(f.s).toBe("warn");
+    expect(f.w).toBeUndefined();
+  });
+  it("etter formodningen, rapport uten levering eller slitasje: be verkstedet skrive det", () =>
+    expect(har(evaluate({ ...etter, ws: "rapport", ws_says: ["bekrefter"] }, idag), "Be verkstedet skrive om feilen fantes ved leveringen")).toBe(true));
+  it("bare understell: slitasje trekker ned, rapporten om at det ikke er slitasje fjerner det", () => {
+    expect(evaluate({ ...innen, fysiske: ["understell"] }, idag).tier).toBe("kreverMer");
+    const r = evaluate({ ...innen, fysiske: ["understell"], ws: "rapport", ws_says: ["ikke_slitasje"] }, idag);
+    expect(r.tier).toBe("god");
+    expect(har(r, "Verkstedet sier at feilen ikke er slitasje")).toBe(true);
+  });
+  it("understell sammen med motor: raden står, uten vekt", () => {
+    const f = evaluate({ ...innen, fysiske: ["understell", "motor"] }, idag).factors.find((x) => x.t === "Forhandleren kan si at det er slitasje")!;
+    expect(f.w).toBe(0);
+  });
+  it("forhandleren har sagt slitasje: står i raden", () =>
+    expect(evaluate({ ...innen, fysiske: ["understell"], f_prior_svar: ["slitasje"] }, idag).factors.find((x) => x.t === "Forhandleren kan si at det er slitasje")!.d).toContain("har alt sagt"));
+  it("vet ikke ennå: krever mer", () => expect(evaluate({ ...innen, fysiske: ["vet_ikke"] }, idag).tier).toBe("kreverMer"));
+  it("mislykket retting: én etter 2024, to før", () => {
+    expect(har(evaluate({ ...innen, k_forsok: "1" }, idag), "Forhandleren har ikke klart å rette feilen")).toBe(true);
+    expect(har(evaluate({ ...base, delivery: "2023-03-01", found: "2023-05-01", k_forsok: "1" }, idag), "Ett rettingsforsøk har ikke løst feilen")).toBe(true);
+    expect(evaluate({ ...base, delivery: "2023-03-01", found: "2023-05-01", k_forsok: "2+" }, idag).tier).toBe("sterk");
+  });
+  it("innvendinger fra forhandleren: brevet svarer", () => expect(har(evaluate({ ...innen, f_prior_svar: ["for_sent"] }, idag), "Brevet svarer på det forhandleren har sagt")).toBe(true));
+  it("sen reklamasjon og «som den er» flytter ikke nivået", () =>
+    expect(evaluate({ ...base, delivery: "2023-03-01", found: "2023-05-01", asis: "ja", notified: "ja", notifiedDate: "2023-09-01" }, idag).tier).toBe("god"));
+});
+
+describe("fristen på fem år", () => {
+  const ute = { ...base, delivery: "2020-01-01", found: "2026-01-01" } as const;
+  it("uten unntak: normalt ingen sak, med rådene", () => {
+    const r = evaluate(ute, idag);
+    expect(r.tier).toBe("frist");
+    expect(r.badge).toBe("Normalt ingen sak");
+    expect(r.advice?.length).toBeGreaterThan(0);
+    expect(har(r, "Fristen er ute")).toBe(true);
+  });
+  it("med unntak: vanlig vurdering, raden sier hva kjøperen må vise", () => {
+    const r = evaluate({ ...ute, unntak: true }, idag);
+    expect(r.tier).toBe("kreverMer");
+    expect(r.factors.find((f) => f.t === "Fristen er ute")!.d).toContain("du må kunne vise det");
+  });
+  it("med unntak: feilen viste seg sent, så raden om rapporten og lignende saker kommer med", () => {
+    const r = evaluate({ ...ute, unntak: true, ws: "nei" }, idag);
+    expect(har(r, "Få en verkstedrapport før du sender")).toBe(true);
+    const c = { hoved: "motor", tema: "motor", niva: 3, saker: 65, medhold: 16, avslag: null, avslagAntall: 0 } as const;
+    expect(medCelle(r, c).factors.some((f) => f.t === "Slik gikk lignende saker")).toBe(true);
+  });
+  it("skriveren tar med unntaket fra skjemaet", () => {
+    const s = syncAreas({ ...eksempel(idag), c_purchase: "2020-01-01", c_delivery: "2020-01-01", c_unntak: true });
+    expect(skriverResultat(s, idag).tier).not.toBe("frist");
+  });
+});
+
+describe("tekstene", () => {
+  const niva = (q: Parameters<typeof evaluate>[0]) => evaluate(q, idag);
+  const sterk = niva({ ...base, delivery: "2026-06-01", found: "2026-10-01", opplysning: true });
+  const god = niva({ ...base, delivery: "2026-06-01", found: "2026-10-01" });
+  const mer = niva({ ...base, delivery: "2022-09-01", found: "2025-10-01" });
+  it("bare «Sterk sak» sier «trolig», og ingen lover et utfall eller har prosent", () => {
+    expect(`${sterk.title} ${sterk.summary}`).toMatch(/trolig/);
+    for (const r of [god, mer]) expect(`${r.title} ${r.summary}`).not.toMatch(/trolig/);
+    for (const r of [sterk, god, mer]) expect(`${r.title} ${r.summary}`).not.toMatch(/%|vinner|garantert/);
+  });
+  it("merkelappene", () => expect([sterk.badge, god.badge, mer.badge]).toEqual(["Sterk sak", "God sak", "Krever mer"]));
+});
+
+describe("lignende saker i vurderingen", () => {
+  const c = { hoved: "elektrisk", tema: "elektriske feil", niva: 2, saker: 61, medhold: 10, avslag: "ikke_sannsynliggjort_ved_levering", avslagAntall: 30 } as const;
+  it("tallene og grunnen, i antall", () => {
+    const f = celleFaktor(c);
+    expect(f.d).toContain("I 61 saker om elektriske feil");
+    expect(f.d).toContain("medhold i 10");
+    expect(f.d).toContain("(30 av 51)");
+    expect(f.d).not.toContain("%");
+  });
+  it("en grunn uten tekst gir bare tallene", () => expect(celleFaktor({ ...c, avslag: "annet" }).d).not.toContain("vanligste grunnen"));
+  it("står etter raden om når feilen viste seg, bare når den viste seg sent", () => {
+    const sent = medCelle(evaluate({ ...base, delivery: "2023-03-01", found: "2024-01-01" }, idag), c);
+    const i = sent.factors.findIndex((f) => f.t.startsWith("Mer enn "));
+    expect(sent.factors[i + 1].t).toBe("Slik gikk lignende saker");
+    expect(medCelle(evaluate({ ...base, delivery: "2026-06-01", found: "2026-10-01" }, idag), c).factors.some((f) => f.t === "Slik gikk lignende saker")).toBe(false);
   });
 });

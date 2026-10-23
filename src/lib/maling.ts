@@ -5,8 +5,9 @@ import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 
 export const HENDELSER = ["landing", "sjekk_startet", "resultat_vist", "kjop_klikket", "betaling_fullfort", "brev_kopiert"] as const;
 export type Hendelse = (typeof HENDELSER)[number];
-// The verdict's tier (src/lib/app/vurdering.ts).
-export const STATUSER = ["sterk", "mulig", "svak", "utenfor"] as const;
+// The verdict's tier (src/lib/app/vurdering.ts). «mulig» and «svak» are the levels before 2026-10-23,
+// kept so older events still read.
+export const STATUSER = ["sterk", "god", "kreverMer", "frist", "utenfor", "mulig", "svak"] as const;
 
 const KJENTE = new Set(HOVEDKATEGORIER.flatMap((h) => [h.id, ...h.under.map((u) => `${h.id}.${u.id}`)]));
 

@@ -19,7 +19,7 @@ import { idag } from "@/lib/app/dato";
 import { datoavvik } from "@/lib/app/datoer";
 import { tall } from "@/lib/app/format";
 import { type Skjema, syncAreas } from "@/lib/app/skjema";
-import { skriverResultat } from "@/lib/app/vurdering";
+import { medCelle, skriverResultat } from "@/lib/app/vurdering";
 import { maal } from "@/lib/maling";
 import { PRIS } from "@/lib/pris";
 import { type Lagring, useAutolagring } from "./autolagring";
@@ -35,8 +35,8 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
   const lagring = useAutolagring(id, raa);
   const s = syncAreas(raa);
   const sett: Sett = (patch) => settRaa((f) => ({ ...f, ...patch }));
-  const r = skriverResultat(s, idag());
   const lignende = useLignende(s);
+  const r = medCelle(skriverResultat(s, idag()), lignende?.ok ? lignende.celle : null);
   // The sections answered after payment start open while they lack something.
   const [apen, settApen] = useState<ReadonlySet<string>>(() => new Set(ETTER.filter((st) => st.felt.some((k) => !har(start, k))).map((st) => st.id)));
   const [vindu, settVindu] = useState(false);
@@ -160,6 +160,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
       <Styrke r={r} apen onEndre={(f) => tilRad(stegFor(f.t))} />
       {lignende?.ok && (
         <Lignende
+          overskrift={lignende.overskrift}
           tall={lignende.tall}
           kort={lignende.kort}
           sammenligning={lignende.sammenligning}

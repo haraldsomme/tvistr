@@ -7,7 +7,7 @@ import { avgjorendeFor, ranger } from "@/lib/matching/ranger";
 import type { Kandidat } from "@/lib/matching/typer";
 import { byggSaken, type Svar } from "@/lib/vedtaksvalg/kjoper";
 import { MIN_ALDERSFORSKJELL, MIN_KM_ANDEL, visSaksnummer } from "@/lib/vedtaksvalg/mal";
-import { MIN_SAKER, type Statistikkrad } from "./statistikk";
+import { ALLE, celle, MIN_RATE, MIN_SAKER, type Statistikkrad } from "./statistikk";
 
 // «Lignende saker»: the figures for one of the buyer's categories with at least MIN_SAKER decisions.
 export type Tallblokk = {
@@ -52,6 +52,25 @@ export function tallblokker(s: { feil: { hoved: string; under: string[] }[] }, s
   return ut;
 }
 
+// All decided dealer cases: the headline of «Lignende saker».
+export type Overskrift = { saker: number; medhold: number };
+
+// The buyer's fault after the presumption period, as decided cases with the same kind of fault in the
+// same time level went: for the verdict's row, from MIN_RATE decisions. `avslag`: the reason most of
+// the lost ones were given (avslagsgrunn), with how many.
+export type Celle = { hoved: string; tema: string; niva: 2 | 3; saker: number; medhold: number; avslag: string | null; avslagAntall: number };
+
+export function celleFor(kategorier: { hoved: string; niva: number }[], statistikk: Map<string, Statistikkrad>): Celle | null {
+  for (const k of kategorier) {
+    if (k.niva !== 2 && k.niva !== 3) continue;
+    const r = statistikk.get(celle(k.hoved, k.niva));
+    const h = HOVEDKATEGORIER.find((x) => x.id === k.hoved);
+    if (!r || !h || r.antallSaker < MIN_RATE) continue;
+    return { hoved: k.hoved, tema: TEMA[k.hoved] ?? smaa(h.navn), niva: k.niva, saker: r.antallSaker, medhold: r.antallMedhold, avslag: r.avslag, avslagAntall: r.avslagAntall };
+  }
+  return null;
+}
+
 // One of «Saker som ligner din»: fields only, no quotes and no link. `fikk`: what the buyer got, in lower case.
 // `feil`: the defect the decision had (the same kind as the buyer's), by name.
 export type Vedtakskort = { id: number; saksnummer: string | null; ar: string | null; bil: string; km: number | null; somDenEr: boolean; fikk: string[]; feil: string | null };
@@ -73,9 +92,12 @@ export function sammenlign(alder: number | null, km: number | null, kort: { alde
 const alderVedKjop = (kjopsdato: string, ar: number | null) => (ar === null ? null : Math.max(0, Number(kjopsdato.slice(0, 4)) - ar));
 
 // `bilnavn`: make, model and model year of a decision, for a card whose extraction has no `bil`.
-export function lignende(inn: { svar: Svar; alle: Kandidat[]; statistikk: Map<string, Statistikkrad>; bilnavn: (id: number) => string | null }): { tall: Tallblokk[]; kort: Vedtakskort[]; sammenligning: string | null } {
+export type Lignende = { overskrift: Overskrift | null; tall: Tallblokk[]; kort: Vedtakskort[]; sammenligning: string | null; celle: Celle | null };
+
+export function lignende(inn: { svar: Svar; alle: Kandidat[]; statistikk: Map<string, Statistikkrad>; bilnavn: (id: number) => string | null }): Lignende {
   const { svar } = inn;
-  const { kandidater } = ranger(inn.alle, byggSaken(svar).sak);
+  const { sak } = byggSaken(svar);
+  const { kandidater } = ranger(inn.alle, sak);
   const etterId = new Map(inn.alle.map((k) => [k.id, k]));
   const a = kandidater.filter((r) => r.niva === "A").slice(0, ANTALL_KORT);
   const kort: Vedtakskort[] = a.map((r) => {
@@ -92,7 +114,14 @@ export function lignende(inn: { svar: Svar; alle: Kandidat[]; statistikk: Map<st
   const forst = a[0]?.feil;
   const passer = (b: Tallblokk) => !!forst && (b.nokkel === forst.hovedkategori || b.nokkel === `${forst.hovedkategori}.${forst.underkategori}`);
   const tall = tallblokker(svar, inn.statistikk).sort((x, y) => Number(passer(y)) - Number(passer(x)));
-  return { tall, kort, sammenligning: sammenlign(alderVedKjop(svar.kjopsdato, svar.ar), svar.km, profiler) };
+  const a0 = inn.statistikk.get(ALLE);
+  return {
+    overskrift: a0 ? { saker: a0.antallSaker, medhold: a0.antallMedhold } : null,
+    tall,
+    kort,
+    sammenligning: sammenlign(alderVedKjop(svar.kjopsdato, svar.ar), svar.km, profiler),
+    celle: celleFor(sak.kategorier, inn.statistikk),
+  };
 }
 
 // A decision's car when the extraction has no `bil`: make, model and model year, or the year alone.

@@ -72,6 +72,9 @@ export function seksjonFor(felt: string): string {
 // The section whose answers a verdict row turns on, for its «Endre» link. The rest are about the
 // answers per fault area.
 const STEG_FOR: [RegExp, string][] = [
+  [/^Slik gikk lignende saker|slitasje$|^Årsaken er ikke funnet/, "verksted"],
+  [/^Forhandleren har ikke klart|^Ett rettingsforsøk/, "kravet"],
+  [/^Brevet svarer på|^Forhandleren mener/, "sagt_fra"],
   [/^Forbrukerkjøpsloven gjelder/, "forhandleren"],
   [/verksted|rapport/i, "verksted"],
   [/^Du sa fra|^Du har sagt fra|^Du er i tide|^Det har gått mer enn to måneder/, "sagt_fra"],

@@ -601,9 +601,9 @@ body:has(.fl-app){padding-left:0;padding-right:0;background:var(--fl-bg)}
 .fl-styrke-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px;font-weight:500;color:var(--fl-ink-2)}
 .fl-niva{font-size:15px;font-weight:600;color:var(--fl-muted);transition:color .3s}
 .fl-niva[data-niva=sterk]{color:var(--fl-good)}
-.fl-niva[data-niva=mulig]{color:var(--fl-accent)}
-.fl-niva[data-niva=svak]{color:var(--fl-bad-ink)}
-.fl-niva[data-niva=utenfor]{color:var(--fl-warn-ink)}
+.fl-niva[data-niva=god]{color:var(--fl-accent)}
+.fl-niva[data-niva=kreverMer]{color:var(--fl-warn-ink)}
+.fl-niva[data-niva=frist],.fl-niva[data-niva=utenfor]{color:var(--fl-warn-ink)}
 .fl-segs{display:flex;gap:4px}
 .fl-segs>span{flex:1;height:8px;border-radius:4px;background:var(--fl-pending);transition:background .4s}
 .fl-segs>[data-s=good]{background:var(--fl-good)}
@@ -685,9 +685,9 @@ body:has(.fl-app){padding-left:0;padding-right:0;background:var(--fl-bg)}
 .fl-merkelapp{align-self:flex-start;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 10px;border-radius:999px;background:var(--fl-sunken);font-size:14px;font-weight:600;color:var(--fl-muted)}
 .fl-merkelapp>i{width:6px;height:6px;border-radius:50%;background:currentColor}
 .fl-merkelapp[data-niva=sterk]{background:var(--fl-good-soft);color:var(--fl-good)}
-.fl-merkelapp[data-niva=mulig]{background:var(--fl-accent-soft);color:var(--fl-accent)}
-.fl-merkelapp[data-niva=svak]{background:var(--fl-bad-soft);color:var(--fl-bad-ink)}
-.fl-merkelapp[data-niva=utenfor]{background:var(--fl-warn-soft);color:var(--fl-warn-ink)}
+.fl-merkelapp[data-niva=god]{background:var(--fl-accent-soft);color:var(--fl-accent)}
+.fl-merkelapp[data-niva=kreverMer]{background:var(--fl-warn-soft);color:var(--fl-warn-ink)}
+.fl-merkelapp[data-niva=frist],.fl-merkelapp[data-niva=utenfor]{background:var(--fl-warn-soft);color:var(--fl-warn-ink)}
 .fl-kort{padding:22px;border-radius:20px;background:#FFFFFF;box-shadow:0 0 0 1px rgba(15,27,45,.06);display:flex;flex-direction:column;gap:12px}
 .fl-kort-h{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .fl-kort-m{font-family:var(--f-mono);font-size:12.5px;color:var(--fl-ink-2)}

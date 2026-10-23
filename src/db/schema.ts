@@ -339,6 +339,11 @@ export const statistikkKategori = pgTable("statistikk_kategori", {
   // Decisions where the committee assessed a defect in the category, and those where it found for the buyer.
   antallSaker: integer("antall_saker").notNull(),
   antallMedhold: integer("antall_medhold").notNull(),
+  // Of those, the decisions with full medhold.
+  fullt: integer("fullt").notNull().default(0),
+  // The most common reason given in the decisions the buyer lost, and in how many (avslagsgrunn).
+  avslag: text("avslag"),
+  avslagAntall: integer("avslag_antall").notNull().default(0),
   // Of the decisions with medhold: what the buyer got for this defect.
   heving: integer("heving").notNull(),
   prisavslag: integer("prisavslag").notNull(),

@@ -3,13 +3,13 @@ import "server-only";
 // fields only. Code and database only: this file must never reach the model (vurdering.test.ts checks
 // the imports). Shared by vurderSaken and the preview of the letter (brevet-actions.ts).
 import { lesStatistikk } from "@/lib/vurdering/statistikk-db";
-import { lignende, type Tallblokk, type Vedtakskort } from "@/lib/vurdering/vurdering";
+import { type Lignende, lignende } from "@/lib/vurdering/vurdering";
 import type { Svar } from "@/lib/vedtaksvalg/kjoper";
 import { hentAlle, hentBilnavn } from "./vedtak-db";
 
 let statistikk: ReturnType<typeof lesStatistikk> | null = null;
 
-export async function lignendeFor(svar: Svar): Promise<{ tall: Tallblokk[]; kort: Vedtakskort[]; sammenligning: string | null }> {
+export async function lignendeFor(svar: Svar): Promise<Lignende> {
   statistikk ??= lesStatistikk().catch((e) => {
     statistikk = null;
     throw e;

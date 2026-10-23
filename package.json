@@ -25,6 +25,7 @@
     "rettslig:hent": "tsx --env-file=.env.local scripts/rettslig-hent.ts",
     "simuler": "tsx --env-file=.env.local scripts/simuler.ts",
     "statistikk:bygg": "tsx --env-file=.env.local scripts/statistikk.ts",
+    "vurdering:kalibrer": "tsx --env-file=.env.local scripts/vurdering-kalibrer.ts",
     "ferdig:stikkprove": "tsx --env-file=.env.local scripts/ferdig-stikkprove.ts",
     "ferdig:dekning": "tsx --env-file=.env.local scripts/ferdig-dekning.ts",
     "ferdig:simulert": "tsx --env-file=.env.local scripts/ferdig-simulert.ts",

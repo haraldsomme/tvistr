@@ -24,6 +24,7 @@ import { erObjekt, flett } from "@/lib/app/flett";
 import { useLagret } from "@/lib/app/lagring";
 import { type Skjema, standard, syncAreas } from "@/lib/app/skjema";
 import { standardUtkast, type Utkast, utkastResultat } from "@/lib/app/utkast";
+import { medCelle } from "@/lib/app/vurdering";
 import { Resultat } from "./resultat";
 import { ENKELTVALG, synlige } from "./sporsmal";
 
@@ -65,12 +66,13 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
   const utkast = useMemo<Utkast>(() => ({ skjema: lagret.skjema, seller: lagret.seller, buyer: lagret.buyer, asis: lagret.asis }), [lagret]);
   const dag = idag();
   const s = syncAreas(utkast.skjema);
-  const r = utkastResultat(utkast, dag);
+  const brev = useBrev(() => forhandsvis({ utkast }), JSON.stringify(utkast));
+  // The row on how cases like this went comes with «Lignende saker» from the server.
+  const r = medCelle(utkastResultat(utkast, dag), brev.svar?.lignende?.celle);
   const vis = synlige(utkast);
   const i = Math.min(lagret._i ?? 0, vis.length - 1);
   const sk = vis[i];
   const skjerm = lagret._screen ?? "q";
-  const brev = useBrev(() => forhandsvis({ utkast }), JSON.stringify(utkast));
 
   const endre = useCallback((f: (l: Lagret) => Lagret) => settRaa((l) => f(medSkjema(l))), [settRaa]);
   const sett: Sett = (patch) => {
@@ -153,7 +155,7 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
   const valg = ENKELTVALG[sk.id];
 
   const venstre = !klar ? null : skjerm === "result" ? (
-    <Resultat utkast={utkast} r={r} lignende={brev.svar?.lignende ?? null} utvikling={utvikling} onEndre={() => tilSkjerm(vis.at(-1)!.id)} onNy={nyttUtkast} onTilSkjerm={tilSkjerm} tittel={tittel} />
+    <Resultat utkast={utkast} r={r} lignende={brev.svar?.lignende ?? null} utvikling={utvikling} onEndre={() => tilSkjerm(vis.at(-1)!.id)} onNy={nyttUtkast} onTilSkjerm={tilSkjerm} onUnntak={() => sett({ c_unntak: true })} tittel={tittel} />
   ) : (
     <>
       {i === 0 && <MaalVisning hendelse="sjekk_startet" />}

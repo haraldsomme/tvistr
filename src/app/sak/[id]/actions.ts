@@ -171,8 +171,9 @@ export async function kjop(inn: { utkast: unknown; samtykke: unknown }): Promise
   const dag = idag();
   const utkast = rensUtkast(inn?.utkast, dag);
   if (!utkast || manglerISkjema(utkast.skjema)) return { ok: false, melding: "Saken mangler bil eller feil." };
-  // A private seller, leasing or a purchase through a firm is not a case the letter covers (evaluate).
-  if (utkastResultat(utkast, dag).tier === "utenfor") return { ok: false, melding: "Saken dekkes ikke av brevet." };
+  // A private seller, leasing, a purchase through a firm, or five years past the handover without the
+  // exception, is not a case the letter covers (evaluate).
+  if (["utenfor", "frist"].includes(utkastResultat(utkast, dag).tier)) return { ok: false, melding: "Saken dekkes ikke av brevet." };
   const id = nyId();
   const ordreId = nyId();
   const belopOre = PRIS * 100;

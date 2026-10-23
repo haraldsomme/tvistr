@@ -1,5 +1,5 @@
 // The verdict after the last question (mockup «Sjekk saken», the result): the level, title and summary
-// of the verdict, the closest decision with medhold as a card, the purchase, the strength of the case
+// of the verdict (past five years, the question about the exception instead of the purchase), the closest decision with medhold as a card, the purchase, the strength of the case
 // with its rows, and «Lignende saker». A case the owner has bought already is opened instead: the
 // answers just given are not carried over.
 import { useRouter } from "next/navigation";
@@ -42,6 +42,7 @@ export function Resultat({
   onEndre,
   onNy,
   onTilSkjerm,
+  onUnntak,
   tittel,
 }: {
   utkast: Utkast;
@@ -51,6 +52,8 @@ export function Resultat({
   onEndre: () => void;
   onNy: () => void;
   onTilSkjerm: (id: string) => void;
+  // Past five years: the buyer says the dealer held something back, or a warranty runs longer.
+  onUnntak: () => void;
   // The heading, focused when the result opens (as each question's is).
   tittel: RefObject<HTMLHeadingElement | null>;
 }) {
@@ -95,13 +98,21 @@ export function Resultat({
         </h1>
         <p>{r.summary}</p>
       </div>
-      {r.tier === "utenfor" ? (
+      {r.tier === "utenfor" || r.tier === "frist" ? (
         <div className="fl-kjop">
           <ul className="fl-rad">
             {r.advice?.map((t) => (
               <li key={t}>{t}</li>
             ))}
           </ul>
+          {r.tier === "frist" && (
+            <div className="fl-varsel fl-varsel-stabel">
+              <span>Holdt forhandleren tilbake noe om feilen, eller gir en garanti lengre frist enn fem år?</span>
+              <button type="button" className="lnk" onClick={onUnntak}>
+                Ja, se vurderingen
+              </button>
+            </div>
+          )}
           <Lenker onEndre={onEndre} onNy={onNy} />
         </div>
       ) : (
@@ -158,7 +169,7 @@ export function Resultat({
         </>
       )}
       <Styrke r={r} apen />
-      {r.tier !== "utenfor" && lignende && <Lignende tall={lignende.tall} kort={lignende.kort} sammenligning={lignende.sammenligning} fot="I brevet viser vi til et vedtak som ligner saken din, og argumenterer for at din sak bør få samme utfall." />}
+      {r.tier !== "utenfor" && r.tier !== "frist" && lignende && <Lignende overskrift={lignende.overskrift} tall={lignende.tall} kort={lignende.kort} sammenligning={lignende.sammenligning} fot="I brevet viser vi til et vedtak som ligner saken din, og argumenterer for at din sak bør få samme utfall." />}
       <p className="fine" style={{ margin: 0 }}>
         Vurderingen er veiledende og bygger bare på svarene dine. Den er ikke juridisk rådgivning.
       </p>

@@ -46,7 +46,7 @@ Skjermene (`SKJERMER` i `sporsmal.ts`), i brevets rekkefølge: Selger, Bilen, Kj
 - `brev.ts` har `import "server-only"`, og nettleseren importerer bare typene (`brevtyper.ts`). `npm run build && npm run sjekk:bunt` (`scripts/sjekk-bunt.ts`) feiler hvis en av fire av brevets egne setninger står i `.next/static`, eller hvis det ikke ligger noen skript der. Lovens ord kan ligge i bunten, fordi `evaluate` bruker dem.
 - Brevruten (`src/app/sak/flyt/brevrute.tsx`) markerer det som nettopp ble fylt inn i 2,5 sekunder og ruller dit, eller viser «Vis siste endring» når kjøperen leser i brevet selv. Avsnittene er nummerert og merket fylt, delvis fylt eller tomme, og toppen viser «x av N opplysninger fylt inn» (feltene i delene før betaling).
 
-**Resultatet** (`resultat.tsx`) viser nivået, tittelen og oppsummeringen fra vurderingen, det nærmeste vedtaket med medhold som et kort (bil, utfall, saksnummer og år, uten lenke eller sitat), «Lås opp hele brevet · kr 249», «Endre svarene» og «Start på nytt» (et nytt utkast, som `/sak?ny`), så «Styrken på saken» med radene og «Lignende saker». Overskriften får fokus når resultatet åpnes.
+**Resultatet** (`resultat.tsx`) viser nivået, tittelen og oppsummeringen fra vurderingen (er fristen på fem år ute, i stedet rådene og spørsmålet om unntaket, se «Vurderingen»), det nærmeste vedtaket med medhold som et kort (bil, utfall, saksnummer og år, uten lenke eller sitat), «Lås opp hele brevet · kr 249», «Endre svarene» og «Start på nytt» (et nytt utkast, som `/sak?ny`), så «Styrken på saken» med radene og «Lignende saker». Overskriften får fokus når resultatet åpnes.
 - Knappen åpner kjøpsvinduet (se «Betaling»).
 - Mangler bilen eller feilen (`manglerISkjema`), står en melding med en lenke til skjermen i stedet for knappen.
 - Er kjøperen innlogget, står «Sjekker kjøpene dine …» til sakene er hentet (`mineKjop`).
@@ -54,14 +54,24 @@ Skjermene (`SKJERMER` i `sporsmal.ts`), i brevets rekkefølge: Selger, Bilen, Kj
 
 ## Vurderingen
 
-`evaluate()` (`src/lib/app/vurdering.ts`) gir sterk, mulig, svak eller utenfor ut fra svarene, med en rad per forhold under «Dette sier loven om din sak». Formodningsperioden er seks måneder for kjøp før 1.1.2024 og to år etter. «Som den er» vurderes etter gamle § 17 før 2024 og § 15 annet ledd etter. Paragrafene kommer fra `src/lib/brev/paragrafer.ts` (`src/lib/app/lov.ts`).
+`evaluate()` (`src/lib/app/vurdering.ts`) gir «Sterk sak», «God sak» eller «Krever mer» ut fra svarene, med en rad per forhold under «Dette sier loven om din sak». Den gir «Normalt ingen sak» (`frist`) når fristen på fem år er ute, og «Utenfor det vi dekker» for privat selger, leasing og kjøp i næring. Formodningsperioden er seks måneder for kjøp før 1.1.2024 og to år etter. «Som den er» vurderes etter gamle § 17 før 2024 og § 15 annet ledd etter. Paragrafene kommer fra `src/lib/brev/paragrafer.ts` (`src/lib/app/lov.ts`).
+
+Hver rad har en vekt (`w`), og nivået er summen: 2 eller mer er sterk, under 0 er krever mer. Vektene ble satt én gang fra vedtakene (`npm run vurdering:kalibrer`, kravene i `docs/ferdigkriterier.md`). Rader som ikke flytter utfallet i vedtakene, veier ingenting: sen reklamasjon, «som den er», en verkstedrapport alene og datoer som må sjekkes.
+- +2: feil i det selgeren opplyste eller lovet (alle eller noen av feilene). Teller én gang.
+- +1: feilen viste seg innen formodningsperioden; forhandleren har ikke klart å rette (to forsøk før 2024, ett etter, som i brevet); etter formodningsperioden, en rapport som sier at feilen fantes ved levering eller ikke er slitasje.
+- −1: etter formodningsperioden; feilen oppdaget før overtakelsen; selgeren opplyste om feilen (fra 2024).
+- −2: bare feil på understell eller drivlinje uten rapport om at det ikke er slitasje; bare «vet ikke ennå» uten at årsaken er funnet; selgeren opplyste om feilen (før 2024); fristen på fem år med unntaket.
+- Rader uten vekt som sier hva kjøperen bør gjøre: «Få en verkstedrapport før du sender» og «Be verkstedet skrive om feilen fantes ved leveringen» (etter formodningsperioden), og «Brevet svarer på det forhandleren har sagt».
+- Etter formodningsperioden står «Slik gikk lignende saker» rett etter raden om tiden (`medCelle`). Raden har tallene for samme kategori og tidsnivå fra «Lignende saker» (`celle`, fra 30 vedtak) og den vanligste grunnen til at kjøperen tapte, i antall, aldri som andel.
+
+Fristen på fem år: uten unntak stopper vurderingen ved «Normalt ingen sak», med rådene og spørsmålet «Holdt forhandleren tilbake noe om feilen, eller gir en garanti lengre frist enn fem år?». «Ja» setter `c_unntak`, og vurderingen regnes som vanlig, med raden om hva kjøperen må vise. `kjop` avviser en sak med `frist`.
 
 Reglene for tid regnes i kalendermåneder fra overtakelsen, som i rangeringen (`tidsnivaFor`):
 - Formodningen gjelder bare feil som viste seg innen perioden. Feil i det selgeren opplyste eller lovet (historikk, service, utstyr, garanti) fantes ved salget, så formodningen brukes ikke for dem.
 - Etter fem år fra overtakelsen er fristen ute, også når feilen viste seg før.
 - Uten datoer er vurderingen «Foreløpig». Er en dato frem i tid, trekkes ingen konklusjon om fristene; kjøperen bes sjekke datoene.
 
-«Lignende saker» kommer fra databasen gjennom `lignendeFor` (`src/app/sak/lignende-db.ts`, ingen modellkall): før betaling i svaret fra `forhandsvis`, etter betaling fra `vurderSaken` (`src/app/sak/vurdering.ts`). Den gir tallene for den første kategorien med nok vedtak, og de tre nærmeste vedtakene med medhold fra `ranger()`. Kortene viser bil, utfall, saksnummer og år. De er ikke lenker, og ingen sitater sendes før betaling.
+«Lignende saker» kommer fra databasen gjennom `lignendeFor` (`src/app/sak/lignende-db.ts`, ingen modellkall): før betaling i svaret fra `forhandsvis`, etter betaling fra `vurderSaken` (`src/app/sak/vurdering.ts`). Den gir først alle avgjorte forhandlersaker («Av 2 103 saker der forhandleren ikke ga seg og saken endte med vedtak i Forbrukerklageutvalget, fikk kjøperen helt eller delvis medhold i 1 261»), så tallene for den første kategorien med nok vedtak, og de tre nærmeste vedtakene med medhold fra `ranger()`. Medhold er det samme overalt: vedtaket gikk kjøperens vei, og en feil utvalget vurderte i gruppen fikk medhold (`byggStatistikk`). Tallet for kategori og tidsnivå står ikke her, men i vurderingen. Kortene viser bil, utfall, saksnummer og år. De er ikke lenker, og ingen sitater sendes før betaling.
 
 ## Betaling
 

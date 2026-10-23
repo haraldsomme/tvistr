@@ -11,6 +11,9 @@ export type Skjema = {
   c_make: string; c_model: string; c_year: string; c_reg: string;
   // The purchase date only when it is not the handover date (it decides the law version).
   c_purchase: string; c_delivery: string; c_price: string; c_km: string; c_asis: boolean; c_lastreg: string;
+  // Past five years from the handover: the buyer says the dealer held something back, or a warranty
+  // gives a longer limit (fkjl. § 27). Without it the verdict stops at «frist».
+  c_unntak: boolean;
   // Fault areas are Tvistr's main categories, the parts their subcategories (src/lib/feil/kategorier.ts).
   f_cats: string[]; f_parts: Record<string, string[]>; f_area: Record<string, Omrade>; f_catdesc: Record<string, string>;
   // How the faults affect the buyer, once for all of them (IMPACT).
@@ -38,7 +41,7 @@ export type Skjema = {
 export const standard = (idag: string): Skjema => ({
   b_name: "", b_addr: "", b_zip: "", b_city: "", b_phone: "", b_email: "",
   d_name: "", d_org: "", d_addr: "", d_zip: "", d_city: "",
-  c_make: "", c_model: "", c_year: "", c_reg: "", c_purchase: "", c_delivery: "", c_price: "", c_km: "", c_asis: false, c_lastreg: "",
+  c_make: "", c_model: "", c_year: "", c_reg: "", c_purchase: "", c_delivery: "", c_price: "", c_km: "", c_asis: false, c_lastreg: "", c_unntak: false,
   f_cats: [], f_parts: {}, f_area: {}, f_catdesc: {}, f_impact: [], f_docs: [],
   f_found: "", f_sev: 0, f_drivable: "",
   ws: "", ws_name: "", ws_says: [], ws_quote: "", seller_said: "", seller_txt: "",

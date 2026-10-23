@@ -155,6 +155,13 @@
       "when": 1792689241603,
       "tag": "0021_statistikk_uten_median",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792752031531,
+      "tag": "0022_statistikk_avslag",
+      "breakpoints": true
     }
   ]
 }

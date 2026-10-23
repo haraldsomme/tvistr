@@ -1,15 +1,21 @@
-// The free verdict: sterk / mulig / svak from the buyer's answers, or utenfor when the case is not one
-// the letter covers. Ported from the artifact (evaluate, wsFactors); the presumption period and the
-// «som den er» rule follow the law version of the purchase (lov.ts).
+// The free verdict: sterk / god / kreverMer from the buyer's answers, frist when the five years have
+// run out, or utenfor when the case is not one the letter covers. Ported from the artifact (evaluate,
+// wsFactors); the presumption period and the «som den er» rule follow the law version of the purchase
+// (lov.ts). Each row has a weight (`w`), and the level is their sum. The weights were set once from
+// the decisions (docs/ferdigkriterier.md, «Vurderingen», npm run vurdering:kalibrer): rows the
+// committee's outcomes do not move (late notice, «som den er», dates to check) weigh nothing.
 import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { LOVORD } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
 import { addMonths, dayDiff, dur, fmtD, parseD } from "./dato";
 import { regler, type Regler } from "./lov";
-import type { Skjema } from "./skjema";
+import { forsokTall } from "./saken";
+import { SVAR, type Skjema } from "./skjema";
+import type { Celle } from "@/lib/vurdering/vurdering";
 
-export type Niva = "sterk" | "mulig" | "svak" | "utenfor" | "ukjent";
-export type Faktor = { s: "good" | "warn" | "bad" | "info"; t: string; d: string; law?: string };
+export type Niva = "sterk" | "god" | "kreverMer" | "frist" | "utenfor" | "ukjent";
+// `w`: how much the row moves the level; without it the row weighs nothing.
+export type Faktor = { s: "good" | "warn" | "bad" | "info"; t: string; d: string; law?: string; w?: number };
 export type Sjekksvar = {
   seller?: "forhandler" | "privat" | "leasing";
   buyer?: "privat" | "naering";
@@ -23,8 +29,19 @@ export type Sjekksvar = {
   notified?: "ja" | "nei";
   notifiedDate?: string;
   sev?: number;
-  // Every fault is in what the seller said or promised (opplysningsfeil).
+  // Every fault is in what the seller said or promised (opplysningsfeil); `noenOpplysning`: at least one.
   opplysning?: boolean;
+  noenOpplysning?: boolean;
+  // The main categories of the faults that are not in what the seller said.
+  fysiske?: string[];
+  // The workshop, what the seller said before the sale, the attempts at repair and the dealer's answer.
+  ws?: string;
+  ws_says?: string[];
+  seller_said?: string;
+  k_forsok?: string;
+  f_prior_svar?: string[];
+  // Past five years: the buyer says the dealer held something back, or a warranty runs longer.
+  unntak?: boolean;
 };
 export type Resultat = {
   tier: Niva;
@@ -53,11 +70,34 @@ const UTENFOR = {
   },
 };
 
+// No level promises an outcome, and only one where most such cases were won says «trolig»
+// (docs/ferdigkriterier.md).
 const TIER = {
   sterk: { badge: "Sterk sak", title: "Du har trolig en god sak", summary: "Ut fra svarene dine taler det meste for deg. Send en skriftlig reklamasjon så snart som mulig." },
-  mulig: { badge: "Mulig sak", title: "Du kan ha en sak, men noe bør avklares", summary: "Noen forhold kan svekke saken. Se punktene under. En verkstedrapport eller annen dokumentasjon kan gjøre den sterkere." },
-  svak: { badge: "Svak sak", title: "Saken ser vanskelig ut", summary: "Ett eller flere forhold taler tydelig mot deg. Du kan likevel reklamere, men vurder å få gratis råd fra Forbrukerrådet først." },
+  god: { badge: "God sak", title: "Du har en sak", summary: "Loven er på din side, men forhandleren kan bestride noe av det. Se punktene under, og send en skriftlig reklamasjon så snart som mulig." },
+  kreverMer: {
+    badge: "Krever mer",
+    title: "Saken krever mer av deg",
+    summary: "Forhandleren kan komme til å bestride kravet. Punktene under viser hva forhandleren kan si, og hva du bør skaffe. Send likevel en skriftlig reklamasjon nå: du må si fra innen rimelig tid etter at du oppdaget feilen, og brevet er første steg hvis saken skal til mekling.",
+  },
 };
+
+const FRIST = {
+  badge: "Normalt ingen sak",
+  title: "Fristen på fem år er normalt ute",
+  summary: "Det er mer enn fem år siden du overtok bilen. Da er det normalt for sent å reklamere, med mindre forhandleren holdt tilbake noe eller en garanti gir lengre frist.",
+  advice: ["Se om garantien gir lengre frist enn fem år.", "Har forhandleren holdt tilbake noe den visste om, gjelder ikke fristen på fem år.", "Forbrukerrådet gir gratis råd."],
+};
+
+// The level from the weights: two or more for sterk, below zero for kreverMer.
+const nivaFor = (F: Faktor[]): "sterk" | "god" | "kreverMer" => {
+  const sum = F.reduce((n, f) => n + (f.w ?? 0), 0);
+  return sum >= 2 ? "sterk" : sum >= 0 ? "god" : "kreverMer";
+};
+
+// Faults the committee most often turned down as wear (understell 59 %, drivlinje 39 % of the rejected,
+// the two highest; 2026-10-23).
+const SLITASJE = ["understell", "drivlinje"];
 
 export function evaluate(q: Sjekksvar, idag: string): Resultat {
   const ut = (k: keyof typeof UTENFOR): Resultat => ({ tier: "utenfor", badge: "Utenfor det vi dekker", ...UTENFOR[k], factors: [] });
@@ -75,27 +115,35 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   // The five years run from the handover; a complaint made after them is too late whenever the fault showed.
   const reklamert = q.notified === "ja" && q.notifiedDate ? q.notifiedDate : idag;
   let ute = false;
+  // The fault showed after the presumption period: the buyer must show it was there at delivery.
+  let etter = false;
   if (del && fd) {
-    if (fd < del) F.push({ s: "warn", t: "Feilen ble oppdaget før overtakelsen", d: "Var feilen kjent før du overtok bilen, kan det svekke saken. Sjekk at datoene stemmer." });
+    if (fd < del) F.push({ s: "warn", t: "Feilen ble oppdaget før overtakelsen", d: "Var feilen kjent før du overtok bilen, kan det svekke saken. Sjekk at datoene stemmer.", w: -1 });
     else {
       // Calendar months, as the law and the ranking count (tidsnivaFor).
       const d = dur(del, fd) || "samme dag";
       const fem = plussManeder(q.delivery!, 60);
       ute = q.found! > fem || reklamert > fem;
-      if (ute)
-        F.push({
-          s: "bad",
-          t: "Fristen er ute",
-          d: q.found! > fem ? `Feilen viste seg ${d} etter overtakelsen. Den absolutte fristen på fem år har gått ut, ${UNNTAK_FEM_AR}.` : `Det er mer enn fem år siden du overtok bilen. Den absolutte fristen på fem år har gått ut, ${UNNTAK_FEM_AR}.`,
-          law: L.ref("reklamasjon_5ar"),
-        });
-      else if (q.opplysning)
-        F.push({ s: "good", t: "Bilen var ikke som selgeren opplyste", d: "Avviket fantes allerede da du kjøpte bilen, så du trenger ikke formodningsregelen. Du må vise hva selgeren opplyste, og at bilen ikke var slik.", law: L.ref("uriktig") });
+      if (ute) {
+        const t = q.found! > fem ? `Feilen viste seg ${d} etter overtakelsen.` : "Det er mer enn fem år siden du overtok bilen.";
+        // Without the exception the case stops here (FRIST); with it, the row says what the buyer must show.
+        if (!q.unntak) return { tier: "frist", ...FRIST, factors: [...F, { s: "bad", t: "Fristen er ute", d: `${t} Den absolutte fristen på fem år har gått ut, ${UNNTAK_FEM_AR}.`, law: L.ref("reklamasjon_5ar") }] };
+        etter = true;
+        F.push({ s: "bad", t: "Fristen er ute", d: `${t} Du har svart at forhandleren holdt tilbake noe, eller at en garanti gir lengre frist. Da kan du reklamere etter fem år, men du må kunne vise det.`, law: L.ref("reklamasjon_5ar"), w: -2 });
+      } else if (q.opplysning)
+        F.push({ s: "good", t: "Bilen var ikke som selgeren opplyste", d: "Avviket fantes allerede da du kjøpte bilen, så du trenger ikke formodningsregelen. Du må vise hva selgeren opplyste, og at bilen ikke var slik.", law: L.ref("uriktig"), w: 2 });
       else if (q.found! <= plussManeder(q.delivery!, L.formodningMnd))
-        F.push({ s: "good", t: `Feilen viste seg innen ${L.formodningTekst}`, d: `Feilen viste seg ${d} etter overtakelsen. Da regnes den som hovedregel for å ha vært der fra start, og det er forhandleren som må bevise noe annet.`, law: L.ref("formodning") });
-      else F.push({ s: "warn", t: `Mer enn ${q.found! > plussManeder(q.delivery!, 24) ? "to år" : L.formodningTekst} etter overtakelsen`, d: "Du er innenfor femårsfristen for bil, men må selv sannsynliggjøre at feilen skyldes forhold ved leveringen.", law: L.ref("reklamasjon_5ar") });
+        F.push({ s: "good", t: `Feilen viste seg innen ${L.formodningTekst}`, d: `Feilen viste seg ${d} etter overtakelsen. Da regnes den som hovedregel for å ha vært der fra start, og det er forhandleren som må bevise noe annet.`, law: L.ref("formodning"), w: 1 });
+      else {
+        etter = true;
+        F.push({ s: "warn", t: `Mer enn ${q.found! > plussManeder(q.delivery!, 24) ? "to år" : L.formodningTekst} etter overtakelsen`, d: "Du er innenfor femårsfristen for bil, men må selv sannsynliggjøre at feilen skyldes forhold ved leveringen.", law: L.ref("reklamasjon_5ar"), w: -1 });
+      }
     }
   } else if (!fremtid) F.push({ s: "warn", t: "Datoene mangler", d: "Uten kjøpsdato og dato for når feilen ble oppdaget, kan vi ikke vurdere fristene. Vurderingen er derfor foreløpig." });
+
+  // Some, not all, faults are in what the seller said: those need no presumption either.
+  if (!ute && !q.opplysning && q.noenOpplysning)
+    F.push({ s: "good", t: "En av feilene gjelder det selgeren opplyste", d: "Det avviket fantes allerede da du kjøpte bilen. Du må vise hva selgeren opplyste, og at bilen ikke var slik.", law: L.ref("uriktig"), w: 2 });
 
   // Dates that cannot all be right.
   const avvik = [
@@ -130,11 +178,11 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   if (sev >= 4) F.push({ s: "good", t: "Alvorlig feil", d: "Kan gi grunnlag for å heve kjøpet hvis forhandleren ikke klarer å rette feilen.", law: L.ref("heving") });
   else if (sev === 1) F.push({ s: "info", t: "Kosmetisk feil", d: "Kan gi rett til retting eller prisavslag, men normalt ikke heving." });
 
-  const bad = F.filter((f) => f.s === "bad").length,
-    warn = F.filter((f) => f.s === "warn").length;
-  const tier = bad ? "svak" : warn === 0 ? "sterk" : warn <= 2 ? "mulig" : "svak";
+  F.push(...wsFactors({ ws: q.ws, ws_says: q.ws_says, seller_said: q.seller_said, c_purchase: q.kjopsdato, opplysning: q.opplysning || q.noenOpplysning }, etter), ...feilFaktorer(q), ...forsokFaktor(q, L));
+
   // Without any date there is nothing to weigh yet.
   if (!q.delivery && !q.found) return { tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen.", factors: F };
+  const tier = nivaFor(F);
   return { tier, ...TIER[tier], factors: F };
 }
 
@@ -150,53 +198,148 @@ const KJENT_ETTER_2024 = (L: Regler): Faktor => ({
   t: "Du ble opplyst om feilen",
   d: "Det teller mot deg bare hvis du ble spesielt opplyst om akkurat dette avviket og uttrykkelig godtok det. Det du visste, kan likevel påvirke hva du kunne forvente.",
   law: L.ref("forbehold"),
+  w: -1,
 });
 
+// What the report must say when the fault showed late: that it was there at delivery, or is not wear.
+// After the presumption period the buyer lost most often because that was not shown (46 % of the
+// rejected faults; wear 27 %), so a report that says it weighs as much as the period lost.
+const SVARER_PA_LEVERING = ["levering", "ikke_slitasje"];
+
 const WS_FAKTOR = {
-  rapport: (says: string[]): Faktor => ({
-    s: "good",
-    t: "Verkstedrapport støtter saken",
-    d: says.includes("levering") ? "Rapporten sier at feilen var til stede ved levering. Det er sterk dokumentasjon. Legg den ved brevet." : says.length ? "Legg ved rapporten når du sender brevet." : "Kryss av hva rapporten sier, så bruker vi det i brevet.",
-  }),
+  rapport: (says: string[], etter: boolean): Faktor =>
+    etter && !says.some((x) => SVARER_PA_LEVERING.includes(x))
+      ? {
+          s: "warn",
+          t: "Be verkstedet skrive om feilen fantes ved leveringen",
+          d: "Feilen viste seg sent, så du må selv vise at den fantes da du overtok bilen. Det er den vanligste grunnen til at slike saker tapes. Kryss av hvis rapporten sier det, eller be verkstedet ta det med.",
+        }
+      : {
+          s: "good",
+          t: "Verkstedrapport støtter saken",
+          d: says.includes("levering") ? "Rapporten sier at feilen var til stede ved levering. Det er sterk dokumentasjon. Legg den ved brevet." : says.length ? "Legg ved rapporten når du sender brevet." : "Kryss av hva rapporten sier, så bruker vi det i brevet.",
+          w: etter ? 1 : 0,
+        },
   uten: (says: string[]): Faktor => ({
     s: "info",
     t: "Verkstedet har sett på feilen",
     d: `${says.length ? "Det verkstedet sa, står i brevet." : "Kryss av hva verkstedet sa, så bruker vi det i brevet."} En skriftlig rapport gjør saken sterkere, og forhandleren kan be om å se den.`,
   }),
-  nei: (): Faktor => ({ s: "info", t: "Ingen verkstedrapport ennå", d: "En rapport fra et uavhengig verksted som beskriver feilen og årsaken, gjør saken mye sterkere." }),
+  nei: (_: string[], etter: boolean): Faktor =>
+    etter
+      ? { s: "warn", t: "Få en verkstedrapport før du sender", d: "Feilen viste seg sent, så du må selv vise at den fantes ved leveringen. En rapport som sier det, eller at feilen ikke er slitasje, svarer på de vanligste grunnene til at slike saker tapes." }
+      : { s: "info", t: "Ingen verkstedrapport ennå", d: "En rapport fra et uavhengig verksted som beskriver feilen og årsaken, gjør saken mye sterkere." },
 };
 
-// What the writer adds to the verdict: the workshop and what the seller said before the sale.
-export function wsFactors(s: { ws?: string; ws_says?: string[]; seller_said?: string; c_purchase?: string; c_delivery?: string }): Faktor[] {
+// What the writer adds to the verdict: the workshop and what the seller said before the sale. `etter`:
+// the fault showed after the presumption period. `opplysning`: a fault in what the seller said already
+// weighs, so «lovet» does not count twice.
+export function wsFactors(s: { ws?: string; ws_says?: string[]; seller_said?: string; c_purchase?: string; c_delivery?: string; opplysning?: boolean }, etter = false): Faktor[] {
   const F: Faktor[] = [];
   const dato = s.c_purchase || s.c_delivery;
-  if (s.ws === "rapport" || s.ws === "uten" || s.ws === "nei") F.push(WS_FAKTOR[s.ws](s.ws_says ?? []));
-  if (s.seller_said === "lovet") F.push({ s: "good", t: "Selger sa at bilen var fri for slike feil", d: "Det selger opplyste før kjøpet, er en del av avtalen. Avvik fra det er en mangel.", law: regler(dato).ref("uriktig") });
+  if (s.ws === "rapport" || s.ws === "uten" || s.ws === "nei") F.push(WS_FAKTOR[s.ws](s.ws_says ?? [], etter));
+  if (s.seller_said === "lovet") F.push({ s: "good", t: "Selger sa at bilen var fri for slike feil", d: "Det selger opplyste før kjøpet, er en del av avtalen. Avvik fra det er en mangel.", law: regler(dato).ref("uriktig"), w: s.opplysning ? 0 : 2 });
   else if (s.seller_said === "opplyste") {
     const L = regler(dato);
-    F.push(L.versjon === "før_2024" ? { s: "bad", t: "Selger opplyste om feilen", d: "Du kan normalt ikke reklamere på en feil selger fortalte om før kjøpet." } : { ...KJENT_ETTER_2024(L), t: "Selger opplyste om feilen" });
+    F.push(L.versjon === "før_2024" ? { s: "bad", t: "Selger opplyste om feilen", d: "Du kan normalt ikke reklamere på en feil selger fortalte om før kjøpet.", w: -2 } : { ...KJENT_ETTER_2024(L), t: "Selger opplyste om feilen" });
   }
   return F;
 }
 
-// The verdict in the writer: the check's rules on the writer's answers, plus the workshop and what the
-// seller said. Without dates it is only preliminary.
-export const writerQ = (s: Skjema): Sjekksvar => ({
-  seller: "forhandler",
-  buyer: "privat",
-  asis: s.c_asis ? "ja" : "nei",
-  kjopsdato: s.c_purchase || s.c_delivery,
-  delivery: s.c_delivery,
-  found: s.f_found,
-  opplysning: s.f_cats.length > 0 && s.f_cats.every((c) => opplysningsfeil(c, s.f_parts[c] ?? [])),
-  sist: s.f_cats.map((c) => s.f_area[c]?.found).filter((d): d is string => !!d).sort().at(-1),
-  sev: s.f_sev,
-  notified: s.f_prior ? "ja" : "nei",
-  notifiedDate: s.f_prior_date,
-});
+// The kind of fault: wear, an unknown cause, and what the dealer has answered. Only the faults that are
+// not in what the seller said, and the weight only when all of them are of the kind.
+function feilFaktorer(q: Sjekksvar): Faktor[] {
+  const F: Faktor[] = [];
+  const fys = q.fysiske ?? [];
+  const svar = q.f_prior_svar ?? [];
+  const rapport = q.ws === "rapport" ? (q.ws_says ?? []) : [];
+  const alle = (kat: string[]) => fys.length > 0 && !q.noenOpplysning && fys.every((c) => kat.includes(c));
+  const sagtSlitasje = svar.includes("slitasje") ? " Forhandleren har alt sagt at det er slitasje." : "";
+  if (fys.some((c) => SLITASJE.includes(c))) {
+    if (rapport.includes("ikke_slitasje")) F.push({ s: "good", t: "Verkstedet sier at feilen ikke er slitasje", d: `Slitasje er den vanligste grunnen til at slike feil blir avvist. Rapporten svarer på det.${sagtSlitasje}` });
+    else
+      F.push({
+        s: "warn",
+        t: "Forhandleren kan si at det er slitasje",
+        d: `Slitasje er den vanligste grunnen til at utvalget avviser feil på understell og drivlinje.${sagtSlitasje} En verkstedrapport som sier at feilen ikke skyldes normal slitasje, svarer på det.`,
+        w: alle(SLITASJE) ? -2 : 0,
+      });
+  } else if (svar.includes("slitasje")) F.push({ s: "info", t: "Forhandleren mener det er slitasje", d: "Brevet svarer på det med det loven sier. En verkstedrapport som sier at feilen ikke skyldes normal slitasje, styrker saken." });
+  // «Vet ikke ennå»: turned down most often as not documented (56 % of the rejected).
+  if (alle(["vet_ikke"]) && !rapport.includes("aarsak"))
+    F.push({ s: "warn", t: "Årsaken er ikke funnet ennå", d: "Slike saker blir oftest avvist fordi feilen ikke er dokumentert. Få feilen undersøkt av et verksted, så vet du hva du klager på.", w: -2 });
+  const andre = svar.filter((x) => x !== "slitasje" && SVAR.some(([id]) => id === x));
+  if (andre.length) F.push({ s: "info", t: "Brevet svarer på det forhandleren har sagt", d: "Brevet tar for seg innvendingene forhandleren har kommet med, og viser til det loven sier." });
+  return F;
+}
+
+// Failed repairs: the attempts after which the buyer may refuse more (§ 30: two before 2024, one after).
+function forsokFaktor(q: Sjekksvar, L: Regler): Faktor[] {
+  const n = forsokTall(q.k_forsok ?? "");
+  if (n === null || n < 1) return [];
+  if (n >= (L.versjon === "før_2024" ? 2 : 1))
+    return [{ s: "good", t: "Forhandleren har ikke klart å rette feilen", d: "Etter de mislykkede forsøkene kan du avvise flere forsøk og kreve prisavslag eller heving.", law: L.ref("avhjelp_avvise"), w: 1 }];
+  return [{ s: "info", t: "Ett rettingsforsøk har ikke løst feilen", d: "For kjøp før 2024 kan forhandleren normalt forsøke to ganger før du kan kreve prisavslag eller heving." }];
+}
+
+// The row on how cases like this went, when the fault showed after the presumption period (Celle):
+// added beside the verdict where «Lignende saker» has arrived. Counts, never a share.
+const AVSLAG_TEKST: Record<string, string> = {
+  ikke_sannsynliggjort_ved_levering: "at det ikke var vist at feilen fantes ved leveringen",
+  paregnelig_slitasje: "at feilen ble regnet som normal slitasje",
+  ikke_dokumentert: "at feilen ikke var dokumentert",
+};
+
+export function celleFaktor(c: Celle): Faktor {
+  const grunn = c.avslag ? AVSLAG_TEKST[c.avslag] : undefined;
+  const tapt = c.saker - c.medhold;
+  return {
+    s: "info",
+    t: "Slik gikk lignende saker",
+    d: [
+      `Feilen viste seg etter ${c.niva === 3 ? "to år" : "seks måneder"}, så du må selv vise at den fantes ved leveringen.`,
+      `I ${c.saker} saker om ${c.tema} som viste seg like sent og gikk helt til Forbrukerklageutvalget, fikk kjøperen medhold i ${c.medhold}.`,
+      grunn && tapt > 0 ? `Den vanligste grunnen til at kjøperen tapte, var ${grunn} (${c.avslagAntall} av ${tapt}). En verkstedrapport som sier at feilen fantes ved leveringen, og at den ikke er slitasje, svarer på det.` : "",
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
+// The verdict with the row on cases like this one, after the row on when the fault showed.
+export function medCelle(r: Resultat, c: Celle | null | undefined): Resultat {
+  if (!c || r.tier === "utenfor" || r.tier === "frist" || r.tier === "ukjent") return r;
+  const i = r.factors.findIndex((f) => f.t.startsWith("Mer enn ") || f.t === "Fristen er ute");
+  if (i < 0) return r;
+  return { ...r, factors: [...r.factors.slice(0, i + 1), celleFaktor(c), ...r.factors.slice(i + 1)] };
+}
+
+// The verdict in the writer: the check's rules on the writer's answers, the workshop, what the seller
+// said, the repair attempts and the dealer's answer. Without dates it is only preliminary.
+export const writerQ = (s: Skjema): Sjekksvar => {
+  const opp = s.f_cats.map((c) => opplysningsfeil(c, s.f_parts[c] ?? []));
+  return {
+    seller: "forhandler",
+    buyer: "privat",
+    asis: s.c_asis ? "ja" : "nei",
+    kjopsdato: s.c_purchase || s.c_delivery,
+    delivery: s.c_delivery,
+    found: s.f_found,
+    opplysning: s.f_cats.length > 0 && opp.every(Boolean),
+    noenOpplysning: opp.some(Boolean),
+    fysiske: s.f_cats.filter((_, i) => !opp[i]),
+    sist: s.f_cats.map((c) => s.f_area[c]?.found).filter((d): d is string => !!d).sort().at(-1),
+    sev: s.f_sev,
+    notified: s.f_prior ? "ja" : "nei",
+    notifiedDate: s.f_prior_date,
+    ws: s.ws,
+    ws_says: s.ws_says,
+    seller_said: s.seller_said,
+    k_forsok: s.k_forsok,
+    f_prior_svar: s.f_prior ? s.f_prior_svar : [],
+    unntak: s.c_unntak,
+  };
+};
 
 // `q`: the verdict's answers when they are not only the writer's (the draft's, utkast.ts).
-export function skriverResultat(s: Skjema, idag: string, q: Sjekksvar = writerQ(s)): Resultat {
-  const r = evaluate(q, idag);
-  return { ...r, factors: [...r.factors, ...wsFactors(s)] };
-}
+export const skriverResultat = (s: Skjema, idag: string, q: Sjekksvar = writerQ(s)): Resultat => evaluate(q, idag);

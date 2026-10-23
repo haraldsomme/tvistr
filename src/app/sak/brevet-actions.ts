@@ -40,7 +40,7 @@ export async function forhandsvis(inn: { utkast: unknown }): Promise<Forhandsvis
     // A case the letter does not cover gets no decisions to compare with. When the database fails, the
     // preview is built without them (only the error's message is logged, never the answers).
     const lignende =
-      svar && utkastResultat(utkast, dag).tier !== "utenfor"
+      svar && !["utenfor", "frist"].includes(utkastResultat(utkast, dag).tier)
         ? await lignendeFor(svar).catch((e: unknown) => {
             console.error("lignende saker feilet", e instanceof Error ? e.message : String(e));
             return null;

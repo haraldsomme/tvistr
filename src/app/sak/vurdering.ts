@@ -5,11 +5,11 @@
 // (vurdering.test.ts checks the imports).
 import { headers } from "next/headers";
 import { ipFra, lagGrense } from "@/lib/rategrense";
-import type { Tallblokk, Vedtakskort } from "@/lib/vurdering/vurdering";
+import type { Lignende as Funn } from "@/lib/vurdering/vurdering";
 import { lignendeFor } from "./lignende-db";
 import { rensSvar } from "./rens";
 
-export type Lignende = { ok: true; tall: Tallblokk[]; kort: Vedtakskort[]; sammenligning: string | null } | { ok: false; melding: string };
+export type Lignende = ({ ok: true } & Funn) | { ok: false; melding: string };
 
 const forMange = lagGrense({ antall: 30, vinduMs: 60_000 });
 

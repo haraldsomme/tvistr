@@ -1,15 +1,30 @@
-// «Lignende saker i klageutvalgene» (artifact simHTML): the counted figures for the buyer's
-// first category with enough decisions, and the three closest decisions with medhold. The cards are not
+// «Lignende saker i klageutvalgene» (artifact simHTML): all decided dealer cases first, then the
+// counted figures for the buyer's first category with enough decisions, and the three closest
+// decisions with medhold. Medhold is full or partial, by one definition (statistikk.ts). The cards are not
 // links: the decisions' text reaches the buyer only in the letter, after payment.
 import type { ReactNode } from "react";
 import { cap, tall } from "@/lib/app/format";
 import { sakTekst } from "@/lib/app/saken";
-import type { Tallblokk, Vedtakskort } from "@/lib/vurdering/vurdering";
+import type { Overskrift, Tallblokk, Vedtakskort } from "@/lib/vurdering/vurdering";
 import { Hake } from "./ikoner";
 
 const UTFALL = ["heving", "prisavslag", "retting", "erstatning"] as const;
 
-export function Lignende({ tall: blokker, kort, sammenligning, brukes, fot }: { tall: Tallblokk[]; kort: Vedtakskort[]; sammenligning: string | null; brukes?: number | null; fot: ReactNode }) {
+export function Lignende({
+  overskrift,
+  tall: blokker,
+  kort,
+  sammenligning,
+  brukes,
+  fot,
+}: {
+  overskrift?: Overskrift | null;
+  tall: Tallblokk[];
+  kort: Vedtakskort[];
+  sammenligning: string | null;
+  brukes?: number | null;
+  fot: ReactNode;
+}) {
   const b = blokker.find((x) => x.tall);
   if (!b && !kort.length) return null;
   const t = b?.tall;
@@ -17,6 +32,11 @@ export function Lignende({ tall: blokker, kort, sammenligning, brukes, fot }: { 
   return (
     <section className="sim" aria-label="Lignende saker i klageutvalgene">
       <h3 className="sec-h">Lignende saker i klageutvalgene</h3>
+      {overskrift && (
+        <p className="sim-lede">
+          Av {tall(overskrift.saker)} saker der forhandleren ikke ga seg og saken endte med vedtak i Forbrukerklageutvalget, fikk kjøperen helt eller delvis medhold i {tall(overskrift.medhold)}.
+        </p>
+      )}
       {b && t && (
         <div className="sim-card">
           <div className="sim-n">
@@ -28,7 +48,7 @@ export function Lignende({ tall: blokker, kort, sammenligning, brukes, fot }: { 
             </span>
           </div>
           <p className="sim-lede">
-            Utvalget har behandlet {tall(t.saker)} saker om {b.tema} i brukte biler kjøpt fra forhandler. I {tall(t.medhold)} av dem fikk kjøperen medhold.
+            Utvalget har behandlet {tall(t.saker)} saker om {b.tema} i brukte biler kjøpt fra forhandler. I {tall(t.medhold)} av dem fikk kjøperen helt eller delvis medhold.
           </p>
           <p className="fine" style={{ margin: 0 }}>
             Tallene gjelder saker som endte med vedtak. Hver sak vurderes konkret.

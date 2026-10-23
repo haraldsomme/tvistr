@@ -455,3 +455,27 @@ describe("utgiftene", () => {
   it("én utgift: uten sum", () => expect(tekst({ ...eksempel(idag), exp: [{ t: "Tauing.", a: 1500 }] })).toContain("jf. § 33: kr 1 500 til tauing."));
   it("utgift uten tekst: plassholder", () => expect(tekst({ ...eksempel(idag), exp: [{ t: "", a: 900 }] })).toContain("kr 900 til [utgift]."));
 });
+
+describe("sen reklamasjon", () => {
+  const sen = (seller_said: string) => {
+    const s = { ...eksempel(idag), c_purchase: "2022-05-14", c_delivery: "2022-05-14", f_prior: false, seller_said };
+    s.f_area = { hoyvolt: { found: "2023-02-10" } };
+    return tekst(s);
+  };
+  it("nevner fristen og unntaket, og løftet når selgeren lovet", () => {
+    const t = sen("lovet");
+    expect(t).toContain("Reklamasjonsfristen etter § 27 første ledd er «innen rimelig tid», og fristen gjelder ikke dersom selgeren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro, jf. § 27 fjerde ledd.");
+    expect(t).toContain("Opplysningen dere ga før kjøpet, var uriktig, og jeg gjør gjeldende at fristen av den grunn ikke er til hinder for kravet.");
+    expect(t).not.toContain("er dermed rettidig");
+  });
+  it("uten løfte: bare lovens regel", () => {
+    const t = sen("nei");
+    expect(t).toContain("jf. § 27 fjerde ledd.");
+    expect(t).not.toContain("gjør gjeldende at fristen");
+  });
+  it("over fem år med unntaket: brevet argumenterer unntaket", () => {
+    const s = { ...eksempel(idag), c_purchase: "2021-03-01", c_delivery: "2021-03-01", c_unntak: true, f_prior: false };
+    s.f_area = { hoyvolt: { found: "2026-09-01" } };
+    expect(tekst(s)).toContain("Det er mer enn fem år siden jeg overtok bilen. Fristen på fem år gjelder likevel ikke når selgeren har påtatt seg ansvar for lengre tid ved garanti, eller har opptrådt grovt uaktsomt eller i strid med redelighet og god tro, jf. § 27 fjerde ledd. Jeg gjør gjeldende at det er tilfellet her.");
+  });
+});

@@ -311,6 +311,16 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
     // and not dated before the discovery. Later than two months the letter claims nothing.
     if (!etterFemAr && nr >= found && nr <= addMonths(found, 2)) rettidig = true;
     if (rettidig) tid.push([`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen, og er dermed rettidig etter ${L.par("reklamasjon")}.`]);
+    // Late, the letter says what the law says rather than nothing: the limit is «rimelig tid», and a seller
+    // who acted in bad faith cannot rely on it. The buyer's own ground only when the seller promised.
+    const unntak = L.par("reklamasjon_unntak") ? `, jf. ${L.par("reklamasjon_unntak")}` : "";
+    if (etterFemAr && s.c_unntak)
+      tid.push([`Det er mer enn fem år siden jeg overtok bilen. Fristen på fem år gjelder likevel ikke når selgeren har påtatt seg ansvar for lengre tid ved garanti, eller har opptrådt grovt uaktsomt eller i strid med redelighet og god tro${unntak}. Jeg gjør gjeldende at det er tilfellet her.`]);
+    else if (!etterFemAr && nr > addMonths(found, 2))
+      tid.push([
+        `Reklamasjonsfristen etter ${L.par("reklamasjon")} er «innen rimelig tid», og fristen gjelder ikke dersom selgeren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro${unntak}.`,
+        ...(s.seller_said === "lovet" ? [" Opplysningen dere ga før kjøpet, var uriktig, og jeg gjør gjeldende at fristen av den grunn ikke er til hinder for kravet."] : []),
+      ]);
   }
   // The timeliness alone joins the paragraph before it.
   const forrige = B.at(-1);

@@ -18,6 +18,12 @@
 //               nr. 100 om renter ved forsinket betaling m.m. fra den dag forbrukeren reklamerte på
 //               mangelen.» The number is the same before 2024, but the day the interest runs from is
 //               verified for the current text only (RENTER_FRA_REKLAMASJON).
+//   reklamasjon_unntak, forbehold_uriktig  (2026-10-23)
+//               etter_2024 § 27 fjerde ledd annet punktum against lovdata.no («Dette gjelder ikke dersom
+//               selgeren har opptrådt grovt uaktsomt eller for øvrig i strid med redelighet og god tro»).
+//               før_2024 against the act as passed (stortinget.no, Besl. O. nr. 67 2001–2002): § 27 fjerde
+//               ledd with the same sentence, and § 17 første ledd bokstav b («når det foreligger forhold
+//               som nevnt i § 16 første ledd bokstav b eller c»). No § 17 on «som den er» after 2024.
 //   avhjelp_*, formodning_unntak, garanti_lov, selger, tidligere_ledd  (2026-10-18)
 //               etter_2024 against lovdata.no: § 29 tredje ledd (the seller may offer a remedy; third
 //               punktum: an immediate price reduction or heving for a defect «så alvorlig»), § 30 første
@@ -48,6 +54,8 @@ export const POENG = [
   "formodning", // a defect that shows itself early is presumed to have existed at delivery
   "reklamasjon", // notice of a defect
   "reklamasjon_5ar", // the five-year limit
+  "reklamasjon_unntak", // the deadlines do not bind a seller who acted grossly negligently or in bad faith
+  "forbehold_uriktig", // «som den er» does not cover wrong or withheld information (old § 17)
   "retting",
   "prisavslag",
   "heving",
@@ -76,6 +84,8 @@ export const PARAGRAFER: Record<Lovversjon, Record<Poeng, string | null>> = {
     formodning: "§ 18 annet ledd",
     reklamasjon: "§ 27 første ledd",
     reklamasjon_5ar: "§ 27 annet ledd annet punktum",
+    reklamasjon_unntak: "§ 27 fjerde ledd",
+    forbehold_uriktig: "§ 17 første ledd bokstav b",
     retting: "§§ 29 og 30",
     prisavslag: "§ 31",
     heving: "§ 32",
@@ -103,6 +113,8 @@ export const PARAGRAFER: Record<Lovversjon, Record<Poeng, string | null>> = {
     formodning: "§ 18 annet ledd",
     reklamasjon: "§ 27 første ledd",
     reklamasjon_5ar: "§ 27 annet ledd annet punktum",
+    reklamasjon_unntak: "§ 27 fjerde ledd",
+    forbehold_uriktig: null,
     retting: "§§ 29 og 30",
     prisavslag: "§ 31",
     heving: "§ 32",

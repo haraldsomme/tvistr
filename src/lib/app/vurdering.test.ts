@@ -121,7 +121,7 @@ describe("kanttilfeller", () => {
 
 describe("nivået fra vektene", () => {
   const innen = { ...base, delivery: "2026-06-01", found: "2026-10-01" } as const;
-  const etter = { ...base, delivery: "2022-09-01", found: "2025-10-01" } as const;
+  const etter = { ...base, delivery: "2022-09-01", found: "2025-10-01", notified: "ja", notifiedDate: "2025-10-10" } as const;
   it("selger lovet at bilen var fri for slike feil: sterk", () => expect(evaluate({ ...innen, seller_said: "lovet" }, idag).tier).toBe("sterk"));
   it("én av flere feil i det selgeren opplyste: sterk", () => {
     const r = evaluate({ ...innen, noenOpplysning: true, fysiske: ["motor"] }, idag);
@@ -157,7 +157,7 @@ describe("nivået fra vektene", () => {
   it("mislykket retting: én etter 2024, to før", () => {
     expect(har(evaluate({ ...innen, k_forsok: "1" }, idag), "Forhandleren har ikke klart å rette feilen")).toBe(true);
     expect(har(evaluate({ ...base, delivery: "2023-03-01", found: "2023-05-01", k_forsok: "1" }, idag), "Ett rettingsforsøk har ikke løst feilen")).toBe(true);
-    expect(evaluate({ ...base, delivery: "2023-03-01", found: "2023-05-01", k_forsok: "2+" }, idag).tier).toBe("sterk");
+    expect(evaluate({ ...base, delivery: "2023-03-01", found: "2023-05-01", notified: "ja", notifiedDate: "2023-05-10", k_forsok: "2+" }, idag).tier).toBe("sterk");
   });
   it("innvendinger fra forhandleren: brevet svarer", () => expect(har(evaluate({ ...innen, f_prior_svar: ["for_sent"] }, idag), "Brevet svarer på det forhandleren har sagt")).toBe(true));
   it("sen reklamasjon og «som den er» flytter ikke nivået", () =>
@@ -243,4 +243,18 @@ describe("styrkebaren", () => {
     expect(styrke({ tier: "frist" })).toBeLessThan(0.05);
   });
   it("vurderingen gir summen av vektene", () => expect(evaluate({ ...base, delivery: "2026-06-01", found: "2026-10-01", opplysning: true }, idag).poeng).toBe(2));
+});
+
+describe("sen reklamasjon", () => {
+  const rad = (r: ReturnType<typeof evaluate>, t: string) => r.factors.find((f) => f.t === t);
+  it("sen første reklamasjon: rad med vekt", () => {
+    const r = evaluate({ ...base, delivery: "2022-05-14", found: "2023-02-10" }, idag);
+    expect(rad(r, "Reklamasjonen kommer sent")).toMatchObject({ s: "bad", w: -2, law: "forbrkjl. § 27 fjerde ledd" });
+  });
+  it("mellom to og seks måneder: advarsel uten vekt", () => expect(rad(evaluate({ ...base, delivery: "2026-01-10", found: "2026-06-01" }, idag), "Det har gått mer enn to måneder")?.w).toBeUndefined());
+  it("innen to måneder: ingen av radene", () => {
+    const r = evaluate({ ...base, delivery: "2026-01-10", found: "2026-09-01" }, idag);
+    expect(rad(r, "Reklamasjonen kommer sent") ?? rad(r, "Det har gått mer enn to måneder")).toBeUndefined();
+  });
+  it("sen reklamasjon trekker ned et nivå", () => expect(evaluate({ ...base, delivery: "2022-05-14", found: "2023-02-10", opplysning: true }, idag).tier).toBe("god"));
 });

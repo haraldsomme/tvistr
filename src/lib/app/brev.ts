@@ -128,7 +128,7 @@ function forhandlerensSvar(s: Skjema): string {
   const avvist = s.f_prior_svar.includes("avvist");
   if (!at.length && !avvist) return "";
   const svarte = `svarte ${avvist ? "" : "dere "}${liste(at)}`;
-  return `Da jeg tok opp feilen, ${avvist ? `avviste dere reklamasjonen${at.length ? ` og ${svarte}` : ""}` : svarte}.`;
+  return `Da jeg tok opp ${feilposter(s).length > 1 ? "feilene" : "feilen"}, ${avvist ? `avviste dere reklamasjonen${at.length ? ` og ${svarte}` : ""}` : svarte}.`;
 }
 
 // The law's answer to each objection the seller gave (SVAR, after Forbrukerrådet's «Vanlige spørsmål og
@@ -193,7 +193,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
       ...(has("c_purchase") && s.c_purchase !== s.c_delivery
         ? ["Jeg kjøpte bilen ", vd("c_purchase", "kjøpsdato"), " for kr ", v("c_price", "kjøpesum"), " og overtok den ", vd("c_delivery", "overtakelsesdato")]
         : ["Jeg kjøpte og overtok bilen ", vd("c_delivery", "kjøpsdato"), " for kr ", v("c_price", "kjøpesum")]),
-      ...(has("c_km") ? [" med en kilometerstand på ", fe("c_km", s.c_km), " km"] : []), ". ",
+      ...(has("c_km") ? [(s.f_parts.historikk ?? []).includes("km") ? " med en oppgitt kilometerstand på " : " med en kilometerstand på ", fe("c_km", s.c_km), " km"] : []), ". ",
       ...(s.f_prior
         ? [
             ...(has("f_prior_date") ? ["Jeg tok opp mangelen med dere ", fe("f_prior_date", fmtD(s.f_prior_date))] : ["Jeg har tidligere tatt opp mangelen med dere"]),
@@ -323,11 +323,13 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   // Timely only when it surely is: within two months of the discovery and five years of the handover,
   // and not dated before the discovery.
   const tidligere = s.f_prior ? parseD(s.f_prior_date) : null;
-  const nr = tidligere ?? ld;
-  const etterFemAr = !!del && nr > parseD(plussManeder(s.c_delivery, 60))!;
   const reklamertFor = (p: Feilpost) => (tidligere && s.f_prior_date >= p.found ? tidligere : ld);
   const medDato = poster.filter((p) => parseD(p.found));
+  const femAr = del ? parseD(plussManeder(s.c_delivery, 60))! : null;
+  // The five years count for each fault on the day it was complained of.
+  const etterFemAr = !!femAr && (medDato.length ? medDato.some((p) => reklamertFor(p) > femAr) : (tidligere ?? ld) > femAr);
   const iTide = etterFemAr ? [] : medDato.filter((p) => reklamertFor(p) >= parseD(p.found)! && reklamertFor(p) <= addMonths(parseD(p.found)!, 2));
+  const sene = medDato.filter((p) => reklamertFor(p) > addMonths(parseD(p.found)!, 2));
   const rettidig = medDato.length > 0 && iTide.length === medDato.length;
   if (rettidig) tid.push([`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget ${medDato.length > 1 ? "feilene" : "feilen"}, og er dermed rettidig etter ${L.par("reklamasjon")}.`]);
   else if (iTide.length)
@@ -337,16 +339,20 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   const unntak = L.par("reklamasjon_unntak") ? `, jf. ${L.par("reklamasjon_unntak")}` : "";
   if (etterFemAr && s.c_unntak)
     tid.push([`Det er mer enn fem år siden jeg overtok bilen. Fristen på fem år gjelder likevel ikke når selgeren har påtatt seg ansvar for lengre tid ved garanti, eller har opptrådt grovt uaktsomt eller i strid med redelighet og god tro${unntak}. Jeg gjør gjeldende at det er tilfellet her.`]);
-  else if (!etterFemAr && medDato.some((p) => reklamertFor(p) > addMonths(parseD(p.found)!, 2)))
+  // An earlier complaint without a date: the letter cannot tell, so it claims nothing about lateness.
+  else if (!etterFemAr && sene.length && !(s.f_prior && !tidligere))
     tid.push([
+      ...(iTide.length ? ["Feilen ", ...kortNavn(sene), " ble ikke reklamert innen to måneder. "] : []),
       `Reklamasjonsfristen etter ${L.par("reklamasjon")} er «innen rimelig tid», og fristen gjelder ikke dersom selgeren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro${unntak}.`,
-      ...(s.seller_said === "lovet" ? [" Opplysningen dere ga før kjøpet, var uriktig, og jeg gjør gjeldende at fristen av den grunn ikke er til hinder for kravet."] : []),
+      ...(s.seller_said === "lovet"
+        ? [` Dere er en profesjonell forhandler og opplyste før kjøpet at bilen var fri for slike feil. Når det ikke stemte, har dere i det minste opptrådt grovt uaktsomt, og dere kan derfor ikke påberope dere at reklamasjonen kom for sent${unntak}.`]
+        : []),
     ]);
   // The timeliness alone joins the paragraph before it.
   const forrige = B.at(-1);
   if (tid.length === 1 && rettidig && forrige?.t === "p") forrige.tekst.push(" ", ...tid[0]);
   else if (tid.length) B.push({ t: "p", tekst: joinD(tid) });
-  const mot = svarPaInnvendinger(s, L, { iFormodning, rettidig, ikkeSlitasje });
+  const mot = svarPaInnvendinger(s, L, { iFormodning, rettidig: rettidig || etterFemAr, ikkeSlitasje });
   if (mot.ut.length) {
     const flereSvar = SVAR.filter(([id]) => s.f_prior_svar.includes(id)).length > 1;
     B.push({ t: "p", tekst: [[...(mot.alle ? [`${flereSvar ? "Svarene" : "Svaret"} dere ga, endrer ikke kravet.`] : []), ...mot.ut].join(" ")] });
@@ -438,13 +444,14 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   }
   if (s.k_main === "retting" && (s.k_alt === "prisavslag" || s.k_alt === "heving")) {
     const hev = s.k_alt === "heving";
-    const { grunner, folge } = hev ? hevingsgrunner(s, L) : { grunner: [], folge: "" };
+    // Repair is still asked for, so the letter does not say here that more repair may be refused.
+    const { grunner } = hev ? hevingsgrunner(s, L) : { grunner: [] };
     B.push({
       t: "p",
       tekst: [
         `Dersom retting ikke skjer innen rimelig tid, ikke lykkes eller ikke er mulig, krever jeg subsidiært ${hev ? `å heve kjøpet, jf. ${L.par("heving")}.` : `et forholdsmessig prisavslag, jf. ${L.par("prisavslag")}.`}`,
         ...(grunner.length ? [" ", ...ikkeUvesentlig(grunner)] : []),
-        ...(hev ? [bevisbyrde, folge ? ` ${folge}` : "", " Kjøpesummen skal i så fall tilbakebetales mot at bilen leveres tilbake, ", ...renter, "."] : []),
+        ...(hev ? [bevisbyrde, " Kjøpesummen skal i så fall tilbakebetales mot at bilen leveres tilbake, ", ...renter, "."] : []),
       ],
     });
   }

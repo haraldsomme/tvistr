@@ -13,7 +13,7 @@ const TOM: Omrade = { found: "" };
 const RAPPORT = [
   ["bekrefter", "Bekrefter feilen"],
   ["aarsak", "Angir årsaken"],
-  ["levering", "Feilen har utviklet seg over tid eller var til stede ved levering"],
+  ["levering", "Feilen var til stede ved levering"],
   ["ikke_slitasje", "Feilen er ikke normal slitasje"],
   ["frarader", "Fraråder bruk av bilen"],
   ["kostnad", "Inneholder et kostnadsoverslag"],
@@ -22,7 +22,7 @@ const RAPPORT = [
 const SAGT = [
   ["bekrefter", "Bekreftet feilen"],
   ["aarsak", "Fant årsaken"],
-  ["levering", "Feilen har utviklet seg over tid eller var til stede ved levering"],
+  ["levering", "Feilen var til stede ved levering"],
   ["ikke_slitasje", "Feilen er ikke normal slitasje"],
   ["frarader", "Frarådet bruk av bilen"],
 ] as const;
@@ -41,7 +41,7 @@ function Omradekort({ s, sett, c, i, n }: StegProps & { c: string; i: number; n:
     if (pa) {
       const a = s.f_area[c] ?? TOM;
       valgt.forEach((u, j) => (f_under[`${c}.${u}`] = { found: a.found, desc: j ? "" : (s.f_catdesc[c] ?? "") }));
-      sett({ f_under, f_catdesc: { ...s.f_catdesc, [c]: "" } });
+      sett({ f_under, f_area: { ...s.f_area, [c]: { found: "" } }, f_catdesc: { ...s.f_catdesc, [c]: "" } });
     } else {
       const forste = poster.map((p) => p.found).filter(Boolean).sort()[0] ?? "";
       sett({ f_under, f_area: { ...s.f_area, [c]: { found: forste } }, f_catdesc: { ...s.f_catdesc, [c]: poster.map((p) => p.desc).filter(Boolean).join(" ") } });

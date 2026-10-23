@@ -169,7 +169,7 @@ describe("vedleggslisten", () => {
   });
   it("uten rapport: det verkstedet sa, som det ble sagt, og hvor det kan bekreftes", () => {
     const t = tekst({ ...eksempel(idag), ws: "uten", ws_says: ["bekrefter", "levering", "ikke_slitasje"], ws_quote: "En battericelle er defekt" });
-    expect(t).toContain("Volkswagen Sandvika har undersøkt bilen. Verkstedet har bekreftet feilen og opplyst meg om at feilen har utviklet seg over tid og var til stede ved leveringen og at den ikke skyldes normal slitasje.");
+    expect(t).toContain("Volkswagen Sandvika har undersøkt bilen. Verkstedet har bekreftet feilen og opplyst meg om at feilen var til stede ved leveringen og at den ikke skyldes normal slitasje.");
     expect(t).toContain("Slik jeg oppfattet verkstedet: En battericelle er defekt. Dere kan kontakte verkstedet for å få dette bekreftet.");
     expect(t).toContain("Verkstedet har opplyst at feilen ikke skyldes normal slitasje, og formodningen er derfor ikke uforenlig");
     expect(t).not.toContain("rapport");
@@ -465,7 +465,7 @@ describe("sen reklamasjon", () => {
   it("nevner fristen og unntaket, og løftet når selgeren lovet", () => {
     const t = sen("lovet");
     expect(t).toContain("Reklamasjonsfristen etter § 27 første ledd er «innen rimelig tid», og fristen gjelder ikke dersom selgeren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro, jf. § 27 fjerde ledd.");
-    expect(t).toContain("Opplysningen dere ga før kjøpet, var uriktig, og jeg gjør gjeldende at fristen av den grunn ikke er til hinder for kravet.");
+    expect(t).toContain("Dere er en profesjonell forhandler og opplyste før kjøpet at bilen var fri for slike feil. Når det ikke stemte, har dere i det minste opptrådt grovt uaktsomt, og dere kan derfor ikke påberope dere at reklamasjonen kom for sent, jf. § 27 fjerde ledd.");
     expect(t).not.toContain("er dermed rettidig");
   });
   it("uten løfte: bare lovens regel", () => {
@@ -536,4 +536,29 @@ describe("ordlyd", () => {
   });
   it("anførselstegn inni sitatet", () => expect(tekst({ ...eksempel(idag), seller_txt: "Annonsen sa «141 000 km, full servicehistorikk»" })).toContain("Før kjøpet opplyste dere: «Annonsen sa ‘141 000 km, full servicehistorikk’»."));
   it("verkstedets ord uten rapport er ikke et sitat", () => expect(tekst({ ...eksempel(idag), ws: "uten", ws_quote: "Rusten må ha vært der ved salget" })).toContain("Slik jeg oppfattet verkstedet: Rusten må ha vært der ved salget."));
+});
+
+describe("fristene, runde 2", () => {
+  const base = { ...eksempel(idag), c_purchase: "2021-01-01", c_delivery: "2021-01-01", f_cats: ["motor", "klima"], f_parts: { motor: ["turbo"], klima: ["ac"] }, f_area: { motor: { found: "2025-11-01" }, klima: { found: "2026-09-01" } }, f_catdesc: {}, f_under: {}, seller_said: "nei", f_prior: true, f_prior_date: "2025-11-20", f_prior_svar: ["for_sent"] };
+  it("en feil reklamert med brevet etter fem år er ikke rettidig", () => {
+    const t = tekst(base);
+    expect(t).not.toContain("er dermed rettidig");
+  });
+  it("tidligere reklamasjon uten dato: ingenting om sen reklamasjon", () => {
+    const s = { ...eksempel(idag), f_prior: true, f_prior_date: "", c_purchase: "2025-01-01", c_delivery: "2025-01-01" };
+    s.f_area = { hoyvolt: { found: "2025-03-01" } };
+    expect(tekst(s)).not.toContain("Reklamasjonsfristen etter");
+  });
+  it("etter fem år med unntaket: svaret på «for sent» viser ikke til femårsfristen", () => {
+    const s = { ...base, c_unntak: true, f_area: { motor: { found: "2026-09-01" }, klima: { found: "2026-09-01" } }, f_prior_date: "2026-09-10" };
+    const t = tekst(s);
+    expect(t).toContain("Fristen på fem år gjelder likevel ikke");
+    expect(t).not.toContain("den ytterste fristen fem år");
+  });
+  it("sen feil nevnes ved navn når andre er i tide", () => {
+    const s = { ...eksempel(idag), c_purchase: "2025-01-01", c_delivery: "2025-01-01", f_cats: ["motor", "klima"], f_parts: { motor: ["turbo"], klima: ["ac"] }, f_area: { motor: { found: "2025-03-01" }, klima: { found: "2026-10-01" } }, f_catdesc: {}, f_prior: false, f_prior_svar: [] };
+    expect(tekst(s)).toContain("Feilen ved turboen ble ikke reklamert innen to måneder.");
+  });
+  it("oppgitt kilometerstand når km er en feil", () => expect(tekst({ ...eksempel(idag), c_km: "141 000", f_cats: ["historikk"], f_parts: { historikk: ["km"] }, f_area: { historikk: { found: "2026-09-01" } } })).toContain("med en oppgitt kilometerstand på 141 000 km"));
+  it("retting med subsidiær heving: ikke «avvise videre retting»", () => expect(tekst({ ...eksempel(idag), k_main: "retting", k_alt: "heving", k_forsok: "1" })).not.toContain("avvise videre retting"));
 });

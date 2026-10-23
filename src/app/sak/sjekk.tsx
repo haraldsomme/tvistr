@@ -4,7 +4,6 @@
 // of the case under it, the letter as the answers make it on the right (built and redacted on the
 // server, forhandsvis), then the verdict and the purchase. The draft stays in localStorage
 // (tvistr-utkast); nothing is saved on the server before kjop.
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Pil } from "@/app/deler/ikoner";
 import { MaalVisning } from "@/app/maal-visning";
@@ -52,7 +51,6 @@ const STEG: Record<string, (p: StegProps) => ReactNode> = {
 };
 
 export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStart: boolean; ny: boolean }) {
-  const router = useRouter();
   const [raa, settRaa, klar] = useLagret<Lagret>(NOKKEL, () => ({ ...standardUtkast(idag()), _i: 0 }));
   const lagret = useMemo(() => medSkjema(raa), [raa]);
   // The field the buyer changed last, for the peek bar on narrow screens.
@@ -113,8 +111,9 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
     if (!klar) return;
     if (ny) settRaa({ ...standardUtkast(idag()), _i: 0 });
     else if (fraStart) settRaa((l) => ({ ...l, _screen: "q", _i: 0 }));
-    if (ny || fraStart) router.replace("/sak");
-  }, [klar, ny, fraStart, settRaa, router]);
+    // Synchronously, so the history entries for the questions are never overwritten by a late navigation.
+    if (ny || fraStart) window.history.replaceState(window.history.state, "", "/sak");
+  }, [klar, ny, fraStart, settRaa]);
 
   // Each screen is a step in the browser's history, so Back and Forward move between the questions.
   // The entry the page opened on has no state of ours (Next may replace it): it is the first screen.
@@ -124,11 +123,12 @@ export function Sjekk({ utvikling, fraStart, ny }: { utvikling: boolean; fraStar
   useEffect(() => {
     if (!klar) return;
     const na = { _screen: skjerm, _i: i };
-    forst.current ??= na;
+    // `?ny` and `?start` open question 1 whatever the stored draft said a moment before.
+    forst.current ??= ny || fraStart ? { _screen: "q", _i: 0 } : na;
     if (!fraHistorikk.current && vist.current && (vist.current._screen !== skjerm || vist.current._i !== i)) window.history.pushState({ ...window.history.state, tvistr: na }, "");
     fraHistorikk.current = false;
     vist.current = na;
-  }, [klar, skjerm, i]);
+  }, [klar, skjerm, i, ny, fraStart]);
   useEffect(() => {
     const tilbake = (e: PopStateEvent) => {
       const h = e.state?.tvistr ?? forst.current;

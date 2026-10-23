@@ -92,6 +92,8 @@ Er alle grønne, er vurderingen ferdig. Er ett rødt, rapporteres tallene, og ar
 
 **Målt på nytt 2026-10-23 etter brukertesten** (raden «Reklamasjonen kommer sent», −2, mer enn seks måneder uten reklamasjon): samme tall som over, alle krav grønne. Raden står ikke i noen av de 2 061 vedtakene, fordi alle avgjorte saker hadde en reklamasjon, så vekten er en vurdering og ikke målt. «Du sa fra etter mer enn to måneder» har 60,7 % medhold (196 vedtak) mot 60,0 % totalt og veier fortsatt ingenting.
 
+**Målt igjen 2026-10-23 etter runde 2** (vurderingen er «Foreløpig» til både overtakelsesdato og feildato er inne, og sen reklamasjon regnes også for feil funnet etter en tidligere reklamasjon): 1 982 vedtak i nivåene (79 med bare én dato er nå foreløpige). Sterk sak 74,8 %, God sak 57,4 %, Krever mer 43,4 %; nivåene har 33,1 %, 46,8 % og 20,1 % av vedtakene. Alle krav grønne.
+
 ---
 
 Kriteriene for det gamle brevet, skjemaet, tidslinjen, riktighetsreglene og forhåndsvisningen er fjernet sammen med koden 2026-10-16. De står i git-historikken (commit `1c881fe`). Den nye appen er beskrevet i `docs/app.md`.

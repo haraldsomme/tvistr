@@ -267,3 +267,11 @@ describe("ordlyd i vurderingen", () => {
   it("ett forsøk etter 2024: entall", () =>
     expect(evaluate({ ...base, delivery: "2025-01-10", found: "2025-03-01", notified: "ja", notifiedDate: "2025-03-05", k_forsok: "1" }, idag).factors.find((f) => f.t === "Forhandleren har ikke klart å rette feilen")?.d).toContain("Etter det mislykkede forsøket"));
 });
+
+describe("sen reklamasjon per feil", () => {
+  it("en feil funnet etter den tidligere reklamasjonen og aldri reklamert, veier", () => {
+    const r = evaluate({ ...base, delivery: "2024-01-15", found: "2024-04-02", notified: "ja", notifiedDate: "2024-04-10", senereFunnet: "2025-02-18" }, idag);
+    expect(r.factors.some((f) => f.t === "Du sa fra i tide")).toBe(true);
+    expect(r.factors.find((f) => f.t === "Reklamasjonen kommer sent")?.w).toBe(-2);
+  });
+});

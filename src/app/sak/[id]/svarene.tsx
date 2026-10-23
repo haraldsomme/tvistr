@@ -49,7 +49,10 @@ export function oppsummering(id: string, skjema: Skjema): string {
           .join(", "),
       );
     case "omrader":
-      return ledd(s.f_found && `Oppdaget ${fmtD(s.f_found)}`, feilposter(s).map((p) => p.desc).find(Boolean));
+    {
+      const p = feilposter(s).filter((x) => x.found).sort((a, b) => a.found.localeCompare(b.found));
+      return ledd(p.length > 1 ? `${p.length} feil, første oppdaget ${fmtD(p[0].found)}` : s.f_found && `Oppdaget ${fmtD(s.f_found)}`, p[0]?.desc);
+    }
     case "virkning":
       return ledd(IMPACT.filter(([v]) => s.f_impact.includes(v)).map(([, navn]) => navn).join(", "));
     case "verksted":

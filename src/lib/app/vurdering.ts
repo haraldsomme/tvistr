@@ -29,6 +29,8 @@ export type Sjekksvar = {
   sist?: string;
   notified?: "ja" | "nei";
   notifiedDate?: string;
+  // The first fault found after the earlier complaint, which this letter is the complaint for.
+  senereFunnet?: string;
   sev?: number;
   // Every fault is in what the seller said or promised (opplysningsfeil); `noenOpplysning`: at least one.
   opplysning?: boolean;
@@ -171,6 +173,25 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   if (!ute && !q.opplysning && del && fd && q.sist && fd >= del && q.found! <= plussManeder(q.delivery!, L.formodningMnd) && q.sist > plussManeder(q.delivery!, L.formodningMnd))
     F.push({ s: "warn", t: "Én av feilene viste seg senere", d: `Én av feilene viste seg mer enn ${L.formodningTekst} etter overtakelsen. For den må du selv sannsynliggjøre at den skyldes forhold ved leveringen.` });
 
+  // Not yet complained of, counted from the day the fault was found.
+  // ponytail: six months as the line for «sent» is a judgement, not the law's; «rimelig tid» has no fixed limit.
+  const ikkeReklamert = (fra: Date): Faktor[] => {
+    if (today <= addMonths(fra, 2)) return [{ s: "good", t: "Du er i tide", d: `Sender du reklamasjonen innen ${fmtD(addMonths(fra, 2))}, er den alltid rettidig.`, law: L.ref("reklamasjon") }];
+    // Notice after two months does not move the outcome in the decisions (60.7 % against 60.0 %), so it
+    // weighs nothing. More than six months without any notice cannot be measured (every decided case
+    // had one) and weighs by judgement: the dealer's first answer will be that it is too late.
+    if (today <= addMonths(fra, 6))
+      return [{ s: "warn", t: "Det har gått mer enn to måneder", d: "Du må reklamere innen rimelig tid etter at du oppdaget feilen. Send reklamasjonen nå, og forklar i brevet hvorfor den kommer først nå.", law: L.ref("reklamasjon") }];
+    return [
+      {
+        s: "bad",
+        t: "Reklamasjonen kommer sent",
+        d: `Du oppdaget feilen for ${dur(fra, today)} siden uten å si fra. Forhandleren vil trolig si at reklamasjonen kommer for sent. Da hjelper det bare om forhandleren ga uriktige opplysninger eller holdt noe tilbake, eller en garanti gir lengre frist.`,
+        law: L.ref("reklamasjon_unntak"),
+        w: -2,
+      },
+    ];
+  };
   if (!ute && fd && fd >= (del ?? fd)) {
     const lim = addMonths(fd, 2),
       nd = parseD(q.notifiedDate);
@@ -178,21 +199,10 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
       if (nd <= lim) F.push({ s: "good", t: "Du sa fra i tide", d: `Du sa fra ${dayDiff(fd, nd) <= 0 ? "samme dag som" : `${dur(fd, nd)} etter at`} du oppdaget feilen. Reklamasjon innen to måneder er alltid rettidig.`, law: L.ref("reklamasjon") });
       else F.push({ s: "warn", t: "Du sa fra etter mer enn to måneder", d: "Det kan fortsatt være innen rimelig tid, men forhandleren kan bestride det. Bekreft reklamasjonen skriftlig nå." });
     } else if (q.notified === "ja" && !nd) F.push({ s: "info", t: "Du har sagt fra", d: "Bekreft reklamasjonen skriftlig, så har du dokumentasjon på datoen." });
-    else if (today <= lim) F.push({ s: "good", t: "Du er i tide", d: `Sender du reklamasjonen innen ${fmtD(lim)}, er den alltid rettidig.`, law: L.ref("reklamasjon") });
-    // Notice after two months does not move the outcome in the decisions (60.7 % against 60.0 %), so it
-    // weighs nothing. More than six months without any notice cannot be measured (every decided case
-    // had one) and weighs by judgement: the dealer's first answer will be that it is too late.
-    // ponytail: six months is a judgement, not the law's; «rimelig tid» has no fixed limit.
-    else if (today <= addMonths(fd, 6))
-      F.push({ s: "warn", t: "Det har gått mer enn to måneder", d: "Du må reklamere innen rimelig tid etter at du oppdaget feilen. Send reklamasjonen nå, og forklar i brevet hvorfor den kommer først nå.", law: L.ref("reklamasjon") });
-    else
-      F.push({
-        s: "bad",
-        t: "Reklamasjonen kommer sent",
-        d: `Du oppdaget feilen for ${dur(fd, today)} siden uten å si fra. Forhandleren vil trolig si at reklamasjonen kommer for sent. Da hjelper det bare om forhandleren ga uriktige opplysninger eller holdt noe tilbake, eller en garanti gir lengre frist.`,
-        law: L.ref("reklamasjon_unntak"),
-        w: -2,
-      });
+    else F.push(...ikkeReklamert(fd));
+    // A fault found after the earlier complaint is complained of by this letter.
+    const senere = q.notified === "ja" && nd ? parseD(q.senereFunnet) : null;
+    if (senere) F.push(...ikkeReklamert(senere));
   }
 
   // Before 2024 «som den er» is judged by old § 17; from 2024 a general clause is no agreed exception
@@ -363,6 +373,7 @@ export const writerQ = (s: Skjema): Sjekksvar => {
     sev: s.f_sev,
     notified: s.f_prior ? "ja" : "nei",
     notifiedDate: s.f_prior_date,
+    senereFunnet: s.f_prior && s.f_prior_date ? feilposter(s).map((p) => p.found).filter((d) => d > s.f_prior_date).sort()[0] : undefined,
     ws: s.ws,
     ws_says: s.ws_says,
     seller_said: s.seller_said,

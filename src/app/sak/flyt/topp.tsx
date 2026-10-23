@@ -6,7 +6,7 @@ import { Kontomeny } from "@/app/deler/kontomeny";
 import { Ordmerke } from "@/app/deler/ordmerke";
 
 // The dot's colour follows the wording: saving, failed, or kept.
-const tilstand = (lagring: string) => (lagring.startsWith("Ikke") ? "feil" : lagring.startsWith("Lagrer") ? "lagrer" : "ok");
+const tilstand = (lagring: string) => (lagring.startsWith("Ikke lagret,") ? "feil" : lagring.startsWith("Lagrer") || lagring === "Ikke lagret ennå" ? "lagrer" : "ok");
 
 export function Topp({ lagring, aktivSak }: { lagring: string; aktivSak?: string }) {
   return (

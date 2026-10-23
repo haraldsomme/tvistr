@@ -126,7 +126,7 @@ export function svarToggle(list: string[], v: string, on: boolean): string[] {
 export const WS_SAYS: Record<string, string> = {
   bekrefter: "bekrefter feilen",
   aarsak: "angir årsaken til feilen",
-  levering: "konkluderer med at feilen har utviklet seg over tid og var til stede ved leveringen",
+  levering: "konkluderer med at feilen var til stede ved leveringen",
   ikke_slitasje: "fastslår at feilen ikke skyldes normal slitasje",
   frarader: "fraråder videre bruk av bilen",
   kostnad: "inneholder et kostnadsoverslag for utbedring",
@@ -135,7 +135,7 @@ export const WS_SAYS: Record<string, string> = {
 export const WS_SAGT: Record<string, { gjort?: string; opplyst?: string }> = {
   bekrefter: { gjort: "bekreftet feilen" },
   aarsak: { gjort: "funnet årsaken til den" },
-  levering: { opplyst: "at feilen har utviklet seg over tid og var til stede ved leveringen" },
+  levering: { opplyst: "at feilen var til stede ved leveringen" },
   ikke_slitasje: { opplyst: "at feilen ikke skyldes normal slitasje" },
   frarader: { gjort: "frarådet videre bruk av bilen" },
 };

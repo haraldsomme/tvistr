@@ -96,7 +96,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
   const rader = mangler(s);
   const avvik = [...datoavvik(s, idag()), ...(orgValid(s.d_org) === false ? ["Organisasjonsnummeret til forhandleren er ikke gyldig. Sjekk det mot Enhetsregisteret."] : [])];
   const nMangler = rader.reduce((a, x) => a + x.felt.length, 0);
-  const etikett = nMangler ? `${nMangler} ${nMangler === 1 ? "opplysning" : "opplysninger"} mangler` : "Klart til å sendes";
+  const etikett = nMangler ? `${nMangler} ${nMangler === 1 ? "opplysning" : "opplysninger"} mangler` : avvik.length ? "Se sjekklisten før du sender" : "Klart til å sendes";
 
   const venstre = (
     <>

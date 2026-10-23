@@ -220,7 +220,7 @@ test("to feil i samme område på ulike datoer", async ({ page }) => {
   // Both days stand in the redacted letter, each in its own paragraph.
   const dato = (n: number) => new Date(Date.now() - n * 864e5).toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" });
   await expect(page.locator(".fl-ark")).toContainText(`Den ${dato(80)} oppdaget jeg`, { timeout: 30_000 });
-  await expect(page.locator(".fl-ark")).toContainText(`Den ${dato(20)} oppdaget jeg også`);
+  await expect(page.locator(".fl-ark")).toContainText(`Den ${dato(20)} oppdaget jeg`);
   // Joined again: one date.
   await page.getByRole("switch", { name: /ulike datoer/ }).uncheck();
   await expect(datoer).toHaveCount(1);

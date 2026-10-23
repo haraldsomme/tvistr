@@ -131,6 +131,14 @@ export const WS_SAYS: Record<string, string> = {
   frarader: "fraråder videre bruk av bilen",
   kostnad: "inneholder et kostnadsoverslag for utbedring",
 };
+// The same for several faults («Verkstedrapporten bekrefter feilene, angir årsaken til dem»).
+export const WS_SAYS_FLERE: Record<string, string> = {
+  ...WS_SAYS,
+  bekrefter: "bekrefter feilene",
+  aarsak: "angir årsaken til dem",
+  levering: "konkluderer med at feilene var til stede ved leveringen",
+  ikke_slitasje: "fastslår at feilene ikke skyldes normal slitasje",
+};
 // What a workshop said without a report, after «Verkstedet har»; `opplyst` are joined after «opplyst meg om».
 export const WS_SAGT: Record<string, { gjort?: string; opplyst?: string }> = {
   bekrefter: { gjort: "bekreftet feilen" },

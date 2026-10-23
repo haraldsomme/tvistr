@@ -9,18 +9,19 @@ import "server-only";
 // under «Rettslig grunnlag», and each claim before its grounds.
 import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { feilord, kortFeil } from "@/lib/brev/feilord";
-import { liste, tall } from "@/lib/brev/format";
+import { fe, feiloverskrift, funn, joinD, listJoinD } from "./feilnavn";
+import { liste, tall, tallord } from "@/lib/brev/format";
 import { ANDRE_LOVER, LOVORD, RENTER_FRA_REKLAMASJON, SELGER_BEVISER_UVESENTLIG, TILBUD_UTEN_OPPHOLD } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
 import type { Kriterium } from "@/lib/matching/ranger";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
 import type { Blokk, Del, Presedens } from "./brevtyper";
 import { addDays, addMonths, dur, fmtD, parseD } from "./dato";
-import { bareOpplysningsfeil, type Feilpost, feilposter } from "./feil";
+import { bareOpplysningsfeil, type Feilpost, feilposter, feilposterSortert } from "./feil";
 import { cap, lcFirst } from "./format";
 import { regler, type Regler } from "./lov";
 import { forsokTall, heltall } from "./saken";
-import { IKKE_SVART, IMPACT, rapportVedlagt, type Skjema, SVAR, vedlegg, WS_SAGT, WS_SAYS } from "./skjema";
+import { IKKE_SVART, IMPACT, rapportVedlagt, type Skjema, SVAR, vedlegg, WS_SAGT, WS_SAYS, WS_SAYS_FLERE } from "./skjema";
 
 type Tekstfelt = { [K in keyof Skjema]: Skjema[K] extends string ? K : never }[keyof Skjema];
 
@@ -32,24 +33,6 @@ const unquote = (s: string) => {
   const t = s.trim();
   return trimDot(/^[«"][\s\S]*[»"]$/.test(t) ? t.slice(1, -1) : t).replace(/«/g, "‘").replace(/»/g, "’");
 };
-// One of the buyer's answers as written in the letter, tagged with its field; nothing when empty.
-const fe = (felt: string, tekst: string): Del => (tekst ? { felt, tekst } : "");
-// liste and join(" ") over parts, so a tagged answer stays its own part.
-const listJoinD = (a: Del[][]): Del[] => a.flatMap((x, i) => [...(i === 0 ? [] : i === a.length - 1 ? [" og "] : [", "]), ...x]);
-const joinD = (a: Del[][]): Del[] => a.flatMap((x, i) => [...(i ? [" "] : []), ...x]);
-
-// The faults after «oppdaget jeg», each tagged with its area: «feil ved turboen og clutchen» first,
-// then the phrases of their own («rust»). «ved» is repeated when a name has its own «og», «eller» or
-// comma, so the list stays readable.
-function funn(poster: Feilpost[]): Del[] {
-  const ord = poster.flatMap((p) => feilord(p.hoved, p.under).map((o) => ({ c: p.hoved, o })));
-  const ved = ord.flatMap(({ c, o }) => ("ved" in o ? [{ c, t: o.ved }] : []));
-  const sammensatt = ved.some((x) => /,| og | eller /.test(x.t));
-  const deler: Del[][] = [];
-  if (ved.length) deler.push(["feil ved ", ...listJoinD(ved.map((x, i) => [...(i && sammensatt ? ["ved "] : []), fe(`f_parts.${x.c}`, x.t)]))]);
-  for (const { c, o } of ord) if ("tekst" in o) deler.push([fe(`f_parts.${c}`, o.tekst)]);
-  return listJoinD(deler);
-}
 
 // The faults by name in «Rettslig grunnlag»: «ved bremsene» for one subcategory, else the area
 // («ved motoren»), each name once.
@@ -125,7 +108,7 @@ function henvendelsen(s: Skjema): Del[] {
   const dato = s.f_prior_date.trim() !== "";
   const poster = feilposter(s);
   const kjent = poster.filter((p) => !dato || !p.found || p.found <= s.f_prior_date);
-  const feilen = kjent.length > 1 ? "feilene" : "feilen";
+  const feilen = kjent.length === 2 ? "begge feilene" : kjent.length > 1 ? "feilene" : "feilen";
   const ut: Del[] = dato
     ? ["Jeg kontaktet dere ", fe("f_prior_date", fmtD(s.f_prior_date)), ` og opplyste om ${feilen}.`, ...(kjent.length < poster.length ? [" For feil jeg har oppdaget etter det, er dette brevet reklamasjonen."] : [])]
     : [`Jeg har tidligere kontaktet dere og opplyst om ${feilen}.`];
@@ -214,25 +197,16 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   const imp = s.f_impact.filter((k) => !(k === "palitelig" && s.f_impact.includes("stopp")) && !(k === "bruk" && (s.f_impact.includes("stopp") || s.f_impact.includes("palitelig"))));
   const ledd = IMPACT.filter((x) => imp.includes(x[0])).toReversed().map((x) => `at ${x[4]}`);
   const virkning = ledd.length ? `Konsekvensen av ${poster.length > 1 ? "feilene" : "feilen"} er ${liste(ledd)}.` : "";
-  // One paragraph per fault, by the day it was discovered, «også» from the second. Faults of the same
-  // day without a description of their own share a sentence.
+  // How many faults, then one paragraph per fault by the day it was discovered, each under its own
+  // numbered subheading when there are several (the same numbers as under «Rettslig grunnlag»).
   if (poster.length) {
-    const sortert = poster.map((p, i) => ({ p, i })).sort((a, b) => (a.p.found || "9").localeCompare(b.p.found || "9") || a.i - b.i).map((x) => x.p);
-    const grupper: Feilpost[][] = [];
-    for (const p of sortert) {
-      const g = grupper.at(-1);
-      if (g && p.found && p.found === g[0].found && g.every((x) => !x.desc)) g.push(p);
-      else grupper.push([p]);
-    }
-    grupper.forEach((g, i) => {
-      const d = g[0].found,
-        siste = g.at(-1)!;
+    const sortert = feilposterSortert(s);
+    B.push({ t: "p", tekst: [`Bilen har ${tallord(sortert.length)} feil som jeg reklamerer på.`] });
+    sortert.forEach((p, i) => {
+      if (sortert.length > 1) B.push({ t: "h2", tekst: [`${i + 1}. `, ...feiloverskrift(p, "ubestemt")] });
       B.push({
         t: "p",
-        tekst: [
-          "Den ", d ? fe(g[0].felt, fmtD(d)) : { ph: "dato" }, ` oppdaget jeg ${i ? "også " : ""}`, ...funn(g), ".",
-          ...(siste.desc ? [" ", fe(siste.descFelt, sentence(siste.desc))] : []),
-        ],
+        tekst: ["Den ", p.found ? fe(p.felt, fmtD(p.found)) : { ph: "dato" }, " oppdaget jeg ", ...funn([p]), ".", ...(p.desc ? [" ", fe(p.descFelt, sentence(p.desc))] : [])],
       });
     });
   } else B.push({ t: "p", tekst: ["Den ", vd("f_found", "dato"), " oppdaget jeg ", { ph: "Beskrivelse av feilen" }, "."] });
@@ -244,7 +218,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   if (s.ws === "rapport" || s.ws === "uten") {
     bevis.push(has("ws_name") ? [fe("ws_name", s.ws_name.trim()), " har undersøkt bilen."] : ["Bilen er undersøkt av et verksted."]);
     if (s.ws === "rapport") {
-      const says = s.ws_says.map((k) => WS_SAYS[k]).filter(Boolean);
+      const says = s.ws_says.map((k) => (poster.length > 1 ? WS_SAYS_FLERE : WS_SAYS)[k]).filter(Boolean);
       bevis.push([`Verkstedrapporten${rapportVedlagt(s) ? ", som følger vedlagt," : ""} ${says.length ? liste(says) : "beskriver feilen"}.`]);
       if (has("ws_quote")) bevis.push(["Rapportens konklusjon er: «", fe("ws_quote", unquote(s.ws_quote)), "»."]);
     } else {

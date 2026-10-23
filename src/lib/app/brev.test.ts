@@ -405,16 +405,38 @@ describe("feilene i løpende tekst", () => {
     f_catdesc: catdesc,
     f_impact: ["plagsom"],
   });
-  it("ingen kulepunkter: én blokk per feil, etter dato, med «også» fra den andre", () => {
+  it("to feil: innledningssetning, nummererte underoverskrifter i datorekkefølge, ingen «også»", () => {
     const B = byggBrev(syncAreas(to({ motor: "Bilen mister trekkraft" })), null, idag);
     expect(B.some((b) => (b.t as string) === "ul")).toBe(false);
     const t = tilTekst(B);
-    expect(t).toContain("Den 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje. Bilen mister trekkraft.\n\nDen 1. september 2025 oppdaget jeg også feil ved klimaanlegget (AC).\n\nKonsekvensen av feilene er at bilen er plagsom å bruke i hverdagen.");
-  });
-  it("samme dag uten beskrivelse: én setning", () => {
-    const t = tekst(to({}, "2025-05-01"));
-    expect(t).toContain("Den 1. mai 2025 oppdaget jeg feil ved klimaanlegget (AC) og turboen og unormalt oljeforbruk eller oljelekkasje.");
+    expect(t).toContain(
+      "Mangelen\n\nBilen har to feil som jeg reklamerer på.\n\n1. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje\n\nDen 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje. Bilen mister trekkraft.\n\n2. Feil ved klimaanlegget (AC)\n\nDen 1. september 2025 oppdaget jeg feil ved klimaanlegget (AC).\n\nKonsekvensen av feilene er at bilen er plagsom å bruke i hverdagen.",
+    );
     expect(t).not.toContain("oppdaget jeg også");
+    expect(B.filter((b) => b.t === "h2").map((b) => tilTekst([b])).slice(0, 2)).toEqual(["1. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje", "2. Feil ved klimaanlegget (AC)"]);
+  });
+  it("samme dag: hvert sitt avsnitt", () => {
+    const t = tekst(to({}, "2025-05-01"));
+    expect(t).toContain("1. Feil ved klimaanlegget (AC)\n\nDen 1. mai 2025 oppdaget jeg feil ved klimaanlegget (AC).\n\n2. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje\n\nDen 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje.");
+  });
+  it("én feil: ingen underoverskrift, og innledningssetningen i entall", () => {
+    const B = byggBrev(syncAreas(eksempel(idag)), null, idag);
+    expect(tilTekst(B)).toContain("Mangelen\n\nBilen har en feil som jeg reklamerer på.\n\nDen ");
+    expect(B.some((b) => b.t === "h2")).toBe(false);
+  });
+  it("overskriften kommer fra brevformen", () => {
+    const s = { ...to({}), f_cats: ["karosseri", "klima"], f_parts: { karosseri: ["lakk"], klima: ["ac"] }, f_area: { karosseri: { found: "2025-05-01" }, klima: { found: "2025-09-01" } } };
+    expect(tekst(s)).toContain("\n\n1. Lakkskader eller bulker\n\nDen 1. mai 2025 oppdaget jeg lakkskader eller bulker.");
+  });
+  it("en feil uten dato står sist, med plassholder for datoen", () => {
+    const t = tekst(to({}, ""));
+    expect(t).toContain("2. Feil ved klimaanlegget (AC)\n\nDen [dato] oppdaget jeg feil ved klimaanlegget (AC).");
+  });
+  it("to feil: rapporten og kontakten i flertall", () => {
+    const s = { ...to({}), ws: "rapport", ws_says: ["bekrefter", "aarsak", "levering", "ikke_slitasje", "kostnad"], f_prior: true, f_prior_date: "2025-10-01", f_prior_svar: [] };
+    const t = tekst(s);
+    expect(t).toContain("bekrefter feilene, angir årsaken til dem, konkluderer med at feilene var til stede ved leveringen, fastslår at feilene ikke skyldes normal slitasje og inneholder et kostnadsoverslag for utbedring.");
+    expect(t).toContain("Jeg kontaktet dere 1. oktober 2025 og opplyste om begge feilene.");
   });
   it("«ved» gjentas når et navn har sitt eget «eller»", () => {
     const s = { ...eksempel(idag), f_cats: ["motor"], f_parts: { motor: ["turbo", "registerreim"] }, f_area: { motor: { found: eksempel(idag).f_area.hoyvolt.found } }, f_catdesc: {} };
@@ -441,9 +463,9 @@ describe("avsnittene", () => {
     ["verksted uten rapport", { ...eksempel(idag), ws: "uten", seller_said: "nei", f_prior: false }],
     ["har ikke svart", { ...eksempel(idag), ws: "nei", seller_said: "nei", f_prior_svar: ["ikke_svart"] }],
     ["bare rettidig", { ...eksempel(idag), f_cats: ["historikk"], f_parts: { historikk: ["km"] }, f_area: { historikk: { found: eksempel(idag).f_area.hoyvolt.found } } }],
-  ])("ingen avsnitt på én setning i «Mangelen» og «Rettslig grunnlag», bortsett fra konsekvensen: %s", (_, s) => {
+  ])("ingen avsnitt på én setning i «Mangelen» og «Rettslig grunnlag», bortsett fra konsekvensen og innledningssetningen: %s", (_, s) => {
     const B = byggBrev(syncAreas(s), PRES, idag);
-    for (const p of [...deler(B, "Mangelen", "Rettslig"), ...deler(B, "Rettslig grunnlag", "Praksis")].filter((p) => !p.startsWith("Konsekvensen av"))) expect(setninger(p), p).toBeGreaterThan(1);
+    for (const p of [...deler(B, "Mangelen", "Rettslig"), ...deler(B, "Rettslig grunnlag", "Praksis")].filter((p) => !p.startsWith("Konsekvensen av") && !p.startsWith("Bilen har "))) expect(setninger(p), p).toBeGreaterThan(1);
   });
 });
 
@@ -494,7 +516,7 @@ describe("to feil i samme område på ulike datoer", () => {
   it("hver feil med sin dato", () => {
     const t = tekst(saken);
     expect(t).toContain("Den 2. april 2024 oppdaget jeg feil ved utslippssystemet (EGR, partikkelfilter eller AdBlue). Partikkelfilteret tettet seg.");
-    expect(t).toContain("Den 18. februar 2025 oppdaget jeg også feil ved turboen. Turboen hviner.");
+    expect(t).toContain("Den 18. februar 2025 oppdaget jeg feil ved turboen. Turboen hviner.");
     expect(t).not.toContain("2. april 2024 oppdaget jeg feil ved turboen");
   });
   it("formodningen for de to første, femårsregelen ikke for noen", () => {

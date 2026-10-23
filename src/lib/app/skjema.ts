@@ -1,6 +1,7 @@
 // The letter writer's answers (the artifact's `S`), their defaults, the sample case, and the fixed
 // lists the form and the letter share. Text fields are strings, "" when empty.
 import { addDays, iso, parseD } from "./dato";
+import { feilposter } from "./feil";
 
 export type Omrade = { found: string };
 export type Utgift = { t: string; a: number };
@@ -16,6 +17,8 @@ export type Skjema = {
   c_unntak: boolean;
   // Fault areas are Tvistr's main categories, the parts their subcategories (src/lib/feil/kategorier.ts).
   f_cats: string[]; f_parts: Record<string, string[]>; f_area: Record<string, Omrade>; f_catdesc: Record<string, string>;
+  // A subcategory discovered on another day than the rest of its area, by «hoved.under» (feil.ts).
+  f_under: Record<string, { found: string; desc: string }>;
   // How the faults affect the buyer, once for all of them (IMPACT).
   f_impact: string[];
   f_docs: string[];
@@ -42,7 +45,7 @@ export const standard = (idag: string): Skjema => ({
   b_name: "", b_addr: "", b_zip: "", b_city: "", b_phone: "", b_email: "",
   d_name: "", d_org: "", d_addr: "", d_zip: "", d_city: "",
   c_make: "", c_model: "", c_year: "", c_reg: "", c_purchase: "", c_delivery: "", c_price: "", c_km: "", c_asis: false, c_lastreg: "", c_unntak: false,
-  f_cats: [], f_parts: {}, f_area: {}, f_catdesc: {}, f_impact: [], f_docs: [],
+  f_cats: [], f_parts: {}, f_area: {}, f_catdesc: {}, f_under: {}, f_impact: [], f_docs: [],
   f_found: "", f_sev: 0, f_drivable: "",
   ws: "", ws_name: "", ws_says: [], ws_quote: "", seller_said: "", seller_txt: "",
   f_prior: false, f_prior_date: "", f_prior_svar: [],
@@ -141,6 +144,6 @@ const drivableOf = (arr: string[]) => (arr.includes("stopp") ? "nei" : arr.inclu
 
 // The first discovery and what the impact means, for the verdict and the letter (artifact syncAreas).
 export function syncAreas(s: Skjema): Skjema {
-  const founds = s.f_cats.map((c) => s.f_area[c]?.found).filter((d): d is string => !!d).sort();
+  const founds = feilposter(s).map((p) => p.found).filter(Boolean).sort();
   return { ...s, f_found: founds[0] ?? "", f_sev: sevOf(s.f_impact), f_drivable: drivableOf(s.f_impact) };
 }

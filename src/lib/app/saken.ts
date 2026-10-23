@@ -3,6 +3,7 @@
 // purchase (or handover) date.
 import type { RapportPunkt } from "@/lib/brev/rapport";
 import type { Kilde, Svar } from "@/lib/vedtaksvalg/kjoper";
+import { feilposter } from "./feil";
 import { erObjekt, flett } from "./flett";
 import { validReg } from "./format";
 import { IMPACT_SOLO, type Skjema, standard } from "./skjema";
@@ -25,7 +26,7 @@ export const heltall = (s: string | undefined) => {
 
 export function tilSvar(s: Skjema): Svar | null {
   const kjopsdato = s.c_purchase || s.c_delivery;
-  const feil = s.f_cats.filter((c) => s.f_area[c]?.found);
+  const feil = feilposter(s).filter((p) => p.found);
   if (!kjopsdato || !feil.length) return null;
   // «lovet»: the seller said the car was free of such faults (the form does not ask whether in writing).
   // «opplyste»: the seller disclosed the fault, which is no misrepresentation, so it is left out.
@@ -39,7 +40,7 @@ export function tilSvar(s: Skjema): Svar | null {
     somDenEr: s.c_asis ? "ja" : "nei",
     krav: s.k_main === "retting" || s.k_main === "prisavslag" || s.k_main === "heving" ? s.k_main : null,
     forsok: forsokTall(s.k_forsok),
-    feil: feil.map((c) => ({ hoved: c, under: s.f_parts[c] ?? [], oppdaget: s.f_area[c].found, beskrivelse: s.f_catdesc[c]?.trim() || null, opplysning, verksted, rapport })),
+    feil: feil.map((p) => ({ hoved: p.hoved, under: p.under, oppdaget: p.found, beskrivelse: p.desc || null, opplysning, verksted, rapport })),
   };
 }
 

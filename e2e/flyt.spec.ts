@@ -195,3 +195,33 @@ test("brevet finnes bare for en betalt sak", async ({ page }) => {
   expect((await page.goto("/sak/ikke-en-id"))?.status()).toBe(404);
   expect((await page.goto("/brev"))?.status()).toBe(404);
 });
+
+test("to feil i samme område på ulike datoer", async ({ page }) => {
+  test.setTimeout(120_000);
+  await stubRegistre(page);
+  await page.goto("/sak?ny");
+  await sporsmal(page, 1);
+  await velg(page, /En bilforhandler/, 2);
+  await page.locator("#c_reg").fill("AB 12345");
+  await page.getByRole("button", { name: "Hent bilen" }).click();
+  await expect(page.locator(".fl-skjerm").getByText("Peugeot 308")).toBeVisible();
+  await neste(page, 3);
+  await neste(page, 4);
+  await velg(page, "Nei", 5);
+  await page.getByRole("checkbox", { name: "Motor og eksos" }).click();
+  await page.getByRole("checkbox", { name: "Turbo", exact: true }).click();
+  await page.getByRole("checkbox", { name: "EGR, partikkelfilter, AdBlue" }).click();
+  await neste(page, 6);
+  await page.getByRole("switch", { name: /ulike datoer/ }).check();
+  const datoer = page.getByLabel("Når oppdaget du feilen?");
+  await expect(datoer).toHaveCount(2);
+  await datoer.nth(0).fill(dager(80));
+  await datoer.nth(1).fill(dager(20));
+  // Both days stand in the redacted letter, each in its own paragraph.
+  const dato = (n: number) => new Date(Date.now() - n * 864e5).toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" });
+  await expect(page.locator(".fl-ark")).toContainText(`Den ${dato(80)} oppdaget jeg`, { timeout: 30_000 });
+  await expect(page.locator(".fl-ark")).toContainText(`Den ${dato(20)} oppdaget jeg også`);
+  // Joined again: one date.
+  await page.getByRole("switch", { name: /ulike datoer/ }).uncheck();
+  await expect(datoer).toHaveCount(1);
+});

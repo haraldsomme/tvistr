@@ -479,3 +479,33 @@ describe("sen reklamasjon", () => {
     expect(tekst(s)).toContain("Det er mer enn fem år siden jeg overtok bilen. Fristen på fem år gjelder likevel ikke når selgeren har påtatt seg ansvar for lengre tid ved garanti, eller har opptrådt grovt uaktsomt eller i strid med redelighet og god tro, jf. § 27 fjerde ledd. Jeg gjør gjeldende at det er tilfellet her.");
   });
 });
+
+describe("to feil i samme område på ulike datoer", () => {
+  const saken = {
+    ...eksempel(idag),
+    c_purchase: "2024-01-15", c_delivery: "2024-01-15",
+    f_cats: ["motor", "understell"], f_parts: { motor: ["utslipp", "turbo"], understell: ["bremser"] },
+    f_area: { motor: { found: "2024-04-02" }, understell: { found: "2026-10-10" } },
+    f_catdesc: { motor: "Partikkelfilteret tettet seg." },
+    f_under: { "motor.turbo": { found: "2025-02-18", desc: "Turboen hviner." } },
+    f_prior: true, f_prior_date: "2024-04-10", f_prior_svar: [],
+  };
+  it("hver feil med sin dato", () => {
+    const t = tekst(saken);
+    expect(t).toContain("Den 2. april 2024 oppdaget jeg feil ved utslippssystemet (EGR, partikkelfilter eller AdBlue). Partikkelfilteret tettet seg.");
+    expect(t).toContain("Den 18. februar 2025 oppdaget jeg også feil ved turboen. Turboen hviner.");
+    expect(t).not.toContain("2. april 2024 oppdaget jeg feil ved turboen");
+  });
+  it("formodningen for de to første, femårsregelen ikke for noen", () => {
+    const t = tekst(saken);
+    expect(t).toContain("Feilene ved turboen og ved utslippssystemet (EGR, partikkelfilter eller AdBlue) viste seg innen to år etter overtakelsen.");
+    expect(t).toContain("Feilen ved bremsene viste seg mer enn to år etter overtakelsen.");
+  });
+  it("tidligere reklamasjon bare for det som var kjent, og rettidig per feil", () => {
+    const t = tekst(saken);
+    expect(t).toContain("For feil jeg har oppdaget senere, er dette brevet reklamasjonen.");
+    expect(t).toContain("Reklamasjonen på feilen ved utslippssystemet (EGR, partikkelfilter eller AdBlue) og ved bremsene er fremsatt innen to måneder etter at jeg oppdaget dem");
+    expect(t).toContain("jf. § 27 fjerde ledd.");
+    expect(t).not.toContain("Reklamasjonen er fremsatt innen to måneder");
+  });
+});

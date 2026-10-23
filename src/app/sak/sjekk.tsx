@@ -33,7 +33,7 @@ type Lagret = Utkast & { _i?: number; _screen?: "q" | "result" };
 const NOKKEL = "tvistr-utkast";
 type Nokkel = Parameters<typeof har>[1];
 // The field the peek bar names for a change of the per-area answers.
-const SOM: Record<string, Nokkel> = { f_area: "f_found", f_catdesc: "f_any_desc" };
+const SOM: Record<string, Nokkel> = { f_area: "f_found", f_catdesc: "f_any_desc", f_under: "f_found" };
 
 // The form inside the draft over the defaults, so a draft stored by an older version has every field.
 const medSkjema = (l: Lagret): Lagret => ({ ...l, skjema: flett(standard(idag()), erObjekt(l.skjema) ? l.skjema : {}) as Skjema });

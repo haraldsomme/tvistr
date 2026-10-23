@@ -4,6 +4,7 @@
 // the purchase asks for it instead (manglerISkjema). Private sales, leasing and purchases through a
 // company are not covered: their screen stays undone.
 import { seksjon } from "@/app/sak/skjema/steg";
+import { feilposter } from "@/lib/app/feil";
 import type { Utkast } from "@/lib/app/utkast";
 
 export type Skjerm = {
@@ -41,7 +42,7 @@ export const SKJERMER: Skjerm[] = [
     id: "omrader",
     gruppe: "Feilen",
     ...som("omrader"),
-    ferdig: (u) => u.skjema.f_cats.length > 0 && u.skjema.f_cats.every((c) => !!u.skjema.f_area[c]?.found),
+    ferdig: (u) => u.skjema.f_cats.length > 0 && feilposter(u.skjema).every((p) => !!p.found),
     mangler: (u) => (u.skjema.f_cats.length ? "Legg inn når du oppdaget feilen for hver feil." : "Velg minst én feil først."),
   },
   { id: "virkning", gruppe: "Feilen", ...som("virkning"), ferdig: (u) => u.skjema.f_impact.length > 0, mangler: () => "Velg minst ett svar." },

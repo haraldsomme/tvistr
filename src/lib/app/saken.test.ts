@@ -122,3 +122,10 @@ describe("nyttPrecValg", () => {
     expect(nyttPrecValg({ prec_id: 9, prec_selv: true }, [])).toEqual({ endre: null, utfall: "fulgt" });
   });
 });
+
+describe("tilSvar med en feil datert for seg", () => {
+  it("én rad per feil, med sin dato", () => {
+    const s = { ...standard("2026-10-23"), c_delivery: "2024-01-15", f_cats: ["motor"], f_parts: { motor: ["utslipp", "turbo"] }, f_area: { motor: { found: "2024-04-02" } }, f_under: { "motor.turbo": { found: "2025-02-18", desc: "" } } };
+    expect(tilSvar(s)!.feil.map((f) => [f.hoved, f.under, f.oppdaget])).toEqual([["motor", ["turbo"], "2025-02-18"], ["motor", ["utslipp"], "2024-04-02"]]);
+  });
+});

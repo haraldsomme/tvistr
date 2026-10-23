@@ -3,6 +3,7 @@
 // The sections answered after payment come first. The car is locked to the purchase except its mileage,
 // the faults are locked altogether, and «Vedtaket» opens the dialog where the decision is picked.
 import type { ReactNode } from "react";
+import { feilposter } from "@/lib/app/feil";
 import { Opp } from "@/app/deler/ikoner";
 import { Bilen, Kjopet } from "@/app/sak/skjema/bilen";
 import type { Sett, StegProps } from "@/app/sak/skjema/felt";
@@ -48,7 +49,7 @@ export function oppsummering(id: string, skjema: Skjema): string {
           .join(", "),
       );
     case "omrader":
-      return ledd(s.f_found && `Oppdaget ${fmtD(s.f_found)}`, s.f_cats.map((c) => (s.f_catdesc[c] ?? "").trim()).find(Boolean));
+      return ledd(s.f_found && `Oppdaget ${fmtD(s.f_found)}`, feilposter(s).map((p) => p.desc).find(Boolean));
     case "virkning":
       return ledd(IMPACT.filter(([v]) => s.f_impact.includes(v)).map(([, navn]) => navn).join(", "));
     case "verksted":

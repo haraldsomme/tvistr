@@ -8,6 +8,7 @@ import { opplysningsfeil } from "@/lib/brev/feiltype";
 import { LOVORD } from "@/lib/brev/paragrafer";
 import { plussManeder } from "@/lib/brev/tidslinje";
 import { addMonths, dayDiff, dur, fmtD, parseD } from "./dato";
+import { feilposter } from "./feil";
 import { regler, type Regler } from "./lov";
 import { forsokTall } from "./saken";
 import { SVAR, type Skjema } from "./skjema";
@@ -358,7 +359,7 @@ export const writerQ = (s: Skjema): Sjekksvar => {
     opplysning: s.f_cats.length > 0 && opp.every(Boolean),
     noenOpplysning: opp.some(Boolean),
     fysiske: s.f_cats.filter((_, i) => !opp[i]),
-    sist: s.f_cats.map((c) => s.f_area[c]?.found).filter((d): d is string => !!d).sort().at(-1),
+    sist: feilposter(s).map((p) => p.found).filter(Boolean).sort().at(-1),
     sev: s.f_sev,
     notified: s.f_prior ? "ja" : "nei",
     notifiedDate: s.f_prior_date,

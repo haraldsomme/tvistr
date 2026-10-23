@@ -16,6 +16,7 @@ import type { Kriterium } from "@/lib/matching/ranger";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
 import type { Blokk, Del, Presedens } from "./brevtyper";
 import { addDays, addMonths, dur, fmtD, parseD } from "./dato";
+import { bareOpplysningsfeil, type Feilpost, feilposter } from "./feil";
 import { cap, lcFirst } from "./format";
 import { regler, type Regler } from "./lov";
 import { forsokTall, heltall } from "./saken";
@@ -33,11 +34,11 @@ const fe = (felt: string, tekst: string): Del => (tekst ? { felt, tekst } : "");
 const listJoinD = (a: Del[][]): Del[] => a.flatMap((x, i) => [...(i === 0 ? [] : i === a.length - 1 ? [" og "] : [", "]), ...x]);
 const joinD = (a: Del[][]): Del[] => a.flatMap((x, i) => [...(i ? [" "] : []), ...x]);
 
-// The faults of one or more areas after «oppdaget jeg», each tagged with its area: «feil ved turboen og
-// clutchen» first, then the phrases of their own («rust»). «ved» is repeated when a name has its own
-// «og», «eller» or comma, so the list stays readable.
-function funn(cats: string[], s: Skjema): Del[] {
-  const ord = cats.flatMap((c) => feilord(c, s.f_parts[c] ?? []).map((o) => ({ c, o })));
+// The faults after «oppdaget jeg», each tagged with its area: «feil ved turboen og clutchen» first,
+// then the phrases of their own («rust»). «ved» is repeated when a name has its own «og», «eller» or
+// comma, so the list stays readable.
+function funn(poster: Feilpost[]): Del[] {
+  const ord = poster.flatMap((p) => feilord(p.hoved, p.under).map((o) => ({ c: p.hoved, o })));
   const ved = ord.flatMap(({ c, o }) => ("ved" in o ? [{ c, t: o.ved }] : []));
   const sammensatt = ved.some((x) => /,| og | eller /.test(x.t));
   const deler: Del[][] = [];
@@ -46,8 +47,16 @@ function funn(cats: string[], s: Skjema): Del[] {
   return listJoinD(deler);
 }
 
-// The areas by name in «Rettslig grunnlag»: «ved motoren og ved klimaanlegget».
-const kortNavn = (cats: string[]) => listJoinD(cats.map((c) => [fe(`f_parts.${c}`, kortFeil(c))]));
+// The faults by name in «Rettslig grunnlag»: «ved bremsene» for one subcategory, else the area
+// («ved motoren»), each name once.
+const kort = (p: Feilpost) => {
+  const o = p.under.length === 1 ? feilord(p.hoved, p.under)[0] : null;
+  return o && "ved" in o ? `ved ${o.ved}` : kortFeil(p.hoved);
+};
+const kortNavn = (poster: Feilpost[]) => {
+  const navn = [...new Map(poster.map((p) => [kort(p), p.hoved])).entries()];
+  return listJoinD(navn.map(([t, c]) => [fe(`f_parts.${c}`, t)]));
+};
 
 // A defect so serious the buyer need not accept a remedy first (§ 29 tredje ledd tredje punktum, from
 // 2024): only from the answers that show it.
@@ -151,6 +160,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   // Set when the case is bought: no answer the buyer edits.
   const dato = fmtD(ld);
   const B: Blokk[] = [];
+  const poster = feilposter(s);
 
   const snd: Del[][] = [[v("b_name", "Ditt navn")], [v("b_addr", "Adresse")], [v("b_zip", "Postnr."), " ", v("b_city", "Poststed")]];
   if (has("b_phone")) snd.push(["Telefon: ", fe("b_phone", s.b_phone)]);
@@ -181,7 +191,11 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
         : ["Jeg kjøpte og overtok bilen ", vd("c_delivery", "kjøpsdato"), " for kr ", v("c_price", "kjøpesum")]),
       ...(has("c_km") ? [" med en kilometerstand på ", fe("c_km", s.c_km), " km"] : []), ". ",
       ...(s.f_prior
-        ? [...(has("f_prior_date") ? ["Jeg tok opp mangelen med dere ", fe("f_prior_date", fmtD(s.f_prior_date))] : ["Jeg har tidligere tatt opp mangelen med dere"]), `, og dette brevet bekrefter og utdyper reklamasjonen, jf. ${L.lovRef("reklamasjon")}.`]
+        ? [
+            ...(has("f_prior_date") ? ["Jeg tok opp mangelen med dere ", fe("f_prior_date", fmtD(s.f_prior_date))] : ["Jeg har tidligere tatt opp mangelen med dere"]),
+            `, og dette brevet bekrefter og utdyper reklamasjonen, jf. ${L.lovRef("reklamasjon")}.`,
+            ...(has("f_prior_date") && poster.some((p) => p.found > s.f_prior_date) ? [" For feil jeg har oppdaget senere, er dette brevet reklamasjonen."] : []),
+          ]
         : [`Bilen har en mangel, og jeg reklamerer med dette etter ${L.lovRef("reklamasjon")}.`]),
     ],
   });
@@ -191,29 +205,27 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   // «ikke til å stole på» and «påvirker bruken» would, and «ikke til å stole på» says what «påvirker
   // bruken» would; the clauses with «gjør at» come last, so the list stays readable.
   const imp = s.f_impact.filter((k) => !(k === "palitelig" && s.f_impact.includes("stopp")) && !(k === "bruk" && (s.f_impact.includes("stopp") || s.f_impact.includes("palitelig"))));
-  const flere = s.f_cats.length > 1;
+  const flere = poster.length > 1;
   const ledd = IMPACT.filter((x) => imp.includes(x[0])).map((x) => (flere && FLERTALL[x[0]]) || x[4]);
   const virkning = ledd.length ? `${flere ? "Feilene" : "Feilen"} ${liste([...ledd.filter((x) => !x.startsWith("gjør at")), ...ledd.filter((x) => x.startsWith("gjør at"))])}.` : "";
   // One paragraph per fault, by the day it was discovered, «også» from the second. Faults of the same
   // day without a description of their own share a sentence.
-  if (s.f_cats.length) {
-    const dag = (c: string) => s.f_area[c]?.found ?? "";
-    const desc = (c: string) => (s.f_catdesc[c] ?? "").trim();
-    const sortert = s.f_cats.map((c, i) => ({ c, i })).sort((a, b) => (dag(a.c) || "9").localeCompare(dag(b.c) || "9") || a.i - b.i).map((x) => x.c);
-    const grupper: string[][] = [];
-    for (const c of sortert) {
+  if (poster.length) {
+    const sortert = poster.map((p, i) => ({ p, i })).sort((a, b) => (a.p.found || "9").localeCompare(b.p.found || "9") || a.i - b.i).map((x) => x.p);
+    const grupper: Feilpost[][] = [];
+    for (const p of sortert) {
       const g = grupper.at(-1);
-      if (g && dag(c) && dag(c) === dag(g[0]) && g.every((x) => !desc(x))) g.push(c);
-      else grupper.push([c]);
+      if (g && p.found && p.found === g[0].found && g.every((x) => !x.desc)) g.push(p);
+      else grupper.push([p]);
     }
     grupper.forEach((g, i) => {
-      const d = dag(g[0]),
+      const d = g[0].found,
         siste = g.at(-1)!;
       B.push({
         t: "p",
         tekst: [
-          "Den ", d ? fe(`f_area.${g[0]}.found`, fmtD(d)) : { ph: "dato" }, ` oppdaget jeg ${i ? "også " : ""}`, ...funn(g, s), ".",
-          ...(desc(siste) ? [" ", fe(`f_catdesc.${siste}`, sentence(desc(siste)))] : []),
+          "Den ", d ? fe(g[0].felt, fmtD(d)) : { ph: "dato" }, ` oppdaget jeg ${i ? "også " : ""}`, ...funn(g), ".",
+          ...(siste.desc ? [" ", fe(siste.descFelt, sentence(siste.desc))] : []),
           ...(i === grupper.length - 1 && virkning ? [" ", virkning] : []),
         ],
       });
@@ -281,17 +293,17 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   // Said by the workshop without a report, it is told as what the workshop said.
   const ikkeSlitasje = (s.ws === "rapport" || s.ws === "uten") && s.ws_says.includes("ikke_slitasje");
   let iFormodning = false;
-  const datert = s.f_cats.map((c) => ({ c, d: s.f_area[c]?.found ?? "" })).filter((x) => x.d && s.c_delivery && x.d >= s.c_delivery && !opplysningsfeil(x.c, s.f_parts[x.c] ?? []));
+  const datert = poster.filter((p) => p.found && s.c_delivery && p.found >= s.c_delivery && !opplysningsfeil(p.hoved, p.under));
   if (s.c_delivery && datert.length) {
-    const inne = datert.filter((x) => x.d <= plussManeder(s.c_delivery, L.formodningMnd));
-    const sene = datert.filter((x) => x.d > plussManeder(s.c_delivery, 24) && x.d <= plussManeder(s.c_delivery, 60));
+    const inne = datert.filter((p) => p.found <= plussManeder(s.c_delivery, L.formodningMnd));
+    const sene = datert.filter((p) => p.found > plussManeder(s.c_delivery, 24) && p.found <= plussManeder(s.c_delivery, 60));
     const alene = datert.length === 1;
     if (inne.length) {
       const hvem: [Del[], string] = alene
-        ? [[`Feilen viste seg ${dur(del!, parseD(inne[0].d)!) || "samme dag"} etter overtakelsen.`], "feilen"]
+        ? [[`Feilen viste seg ${dur(del!, parseD(inne[0].found)!) || "samme dag"} etter overtakelsen.`], "feilen"]
         : inne.length === datert.length
           ? [[`Feilene viste seg innen ${L.formodningTekst} etter overtakelsen.`], "feilene"]
-          : [[`${inne.length > 1 ? "Feilene" : "Feilen"} `, ...kortNavn(inne.map((x) => x.c)), ` viste seg innen ${L.formodningTekst} etter overtakelsen.`], inne.length > 1 ? "disse feilene" : "denne feilen"];
+          : [[`${inne.length > 1 ? "Feilene" : "Feilen"} `, ...kortNavn(inne), ` viste seg innen ${L.formodningTekst} etter overtakelsen.`], inne.length > 1 ? "disse feilene" : "denne feilen"];
       // The exception (§ 18 annet ledd, «uforenlig med varens eller mangelens art») is the seller's usual
       // answer for a used car: wear. It is only answered when the workshop report says it is not wear.
       const unntak = ikkeSlitasje ? ` ${s.ws === "rapport" ? "Verkstedrapporten fastslår" : "Verkstedet har opplyst"} at feilen ikke skyldes normal slitasje, og formodningen er derfor ikke ${LOVORD.uforenlig}, jf. ${L.par("formodning_unntak")}.` : "";
@@ -299,29 +311,33 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
       iFormodning = true;
     }
     if (sene.length) {
-      const hvem: Del[] = alene ? [`Feilen viste seg ${dur(del!, parseD(sene[0].d)!)} etter overtakelsen.`] : [`${sene.length > 1 ? "Feilene" : "Feilen"} `, ...kortNavn(sene.map((x) => x.c)), " viste seg mer enn to år etter overtakelsen."];
+      const hvem: Del[] = alene ? [`Feilen viste seg ${dur(del!, parseD(sene[0].found)!)} etter overtakelsen.`] : [`${sene.length > 1 ? "Feilene" : "Feilen"} `, ...kortNavn(sene), " viste seg mer enn to år etter overtakelsen."];
       tid.push([...hvem, ` En bil er ment å vare vesentlig lenger enn to år, og reklamasjonsfristen er derfor fem år, jf. ${L.par("reklamasjon_5ar")}.`]);
     }
-  } else if ((!del || !found) && !s.f_cats.every((c) => opplysningsfeil(c, s.f_parts[c] ?? []))) tid.push([`En mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, jf. ${L.par("formodning")}.`]);
-  let rettidig = false;
-  if (found) {
-    const nr = (s.f_prior && parseD(s.f_prior_date)) || ld;
-    const etterFemAr = !!del && nr > parseD(plussManeder(s.c_delivery, 60))!;
-    // Timely only when it surely is: within two months of the discovery and five years of the handover,
-    // and not dated before the discovery. Later than two months the letter claims nothing.
-    if (!etterFemAr && nr >= found && nr <= addMonths(found, 2)) rettidig = true;
-    if (rettidig) tid.push([`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget feilen, og er dermed rettidig etter ${L.par("reklamasjon")}.`]);
-    // Late, the letter says what the law says rather than nothing: the limit is «rimelig tid», and a seller
-    // who acted in bad faith cannot rely on it. The buyer's own ground only when the seller promised.
-    const unntak = L.par("reklamasjon_unntak") ? `, jf. ${L.par("reklamasjon_unntak")}` : "";
-    if (etterFemAr && s.c_unntak)
-      tid.push([`Det er mer enn fem år siden jeg overtok bilen. Fristen på fem år gjelder likevel ikke når selgeren har påtatt seg ansvar for lengre tid ved garanti, eller har opptrådt grovt uaktsomt eller i strid med redelighet og god tro${unntak}. Jeg gjør gjeldende at det er tilfellet her.`]);
-    else if (!etterFemAr && nr > addMonths(found, 2))
-      tid.push([
-        `Reklamasjonsfristen etter ${L.par("reklamasjon")} er «innen rimelig tid», og fristen gjelder ikke dersom selgeren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro${unntak}.`,
-        ...(s.seller_said === "lovet" ? [" Opplysningen dere ga før kjøpet, var uriktig, og jeg gjør gjeldende at fristen av den grunn ikke er til hinder for kravet."] : []),
-      ]);
-  }
+  } else if ((!del || !found) && !bareOpplysningsfeil(s)) tid.push([`En mangel som viser seg innen ${L.formodningTekst} etter leveringen, formodes å ha eksistert ved leveringen, jf. ${L.par("formodning")}.`]);
+  // Each fault was complained of by the earlier contact when it was known then, else by this letter.
+  // Timely only when it surely is: within two months of the discovery and five years of the handover,
+  // and not dated before the discovery.
+  const tidligere = s.f_prior ? parseD(s.f_prior_date) : null;
+  const nr = tidligere ?? ld;
+  const etterFemAr = !!del && nr > parseD(plussManeder(s.c_delivery, 60))!;
+  const reklamertFor = (p: Feilpost) => (tidligere && s.f_prior_date >= p.found ? tidligere : ld);
+  const medDato = poster.filter((p) => parseD(p.found));
+  const iTide = etterFemAr ? [] : medDato.filter((p) => reklamertFor(p) >= parseD(p.found)! && reklamertFor(p) <= addMonths(parseD(p.found)!, 2));
+  const rettidig = medDato.length > 0 && iTide.length === medDato.length;
+  if (rettidig) tid.push([`Reklamasjonen er fremsatt innen to måneder etter at jeg oppdaget ${medDato.length > 1 ? "feilene" : "feilen"}, og er dermed rettidig etter ${L.par("reklamasjon")}.`]);
+  else if (iTide.length)
+    tid.push(["Reklamasjonen på feilen ", ...kortNavn(iTide), ` er fremsatt innen to måneder etter at jeg oppdaget ${iTide.length > 1 ? "dem" : "den"}, og er dermed rettidig etter ${L.par("reklamasjon")}.`]);
+  // Late, the letter says what the law says rather than nothing: the limit is «rimelig tid», and a seller
+  // who acted in bad faith cannot rely on it. The buyer's own ground only when the seller promised.
+  const unntak = L.par("reklamasjon_unntak") ? `, jf. ${L.par("reklamasjon_unntak")}` : "";
+  if (etterFemAr && s.c_unntak)
+    tid.push([`Det er mer enn fem år siden jeg overtok bilen. Fristen på fem år gjelder likevel ikke når selgeren har påtatt seg ansvar for lengre tid ved garanti, eller har opptrådt grovt uaktsomt eller i strid med redelighet og god tro${unntak}. Jeg gjør gjeldende at det er tilfellet her.`]);
+  else if (!etterFemAr && medDato.some((p) => reklamertFor(p) > addMonths(parseD(p.found)!, 2)))
+    tid.push([
+      `Reklamasjonsfristen etter ${L.par("reklamasjon")} er «innen rimelig tid», og fristen gjelder ikke dersom selgeren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro${unntak}.`,
+      ...(s.seller_said === "lovet" ? [" Opplysningen dere ga før kjøpet, var uriktig, og jeg gjør gjeldende at fristen av den grunn ikke er til hinder for kravet."] : []),
+    ]);
   // The timeliness alone joins the paragraph before it.
   const forrige = B.at(-1);
   if (tid.length === 1 && rettidig && forrige?.t === "p") forrige.tekst.push(" ", ...tid[0]);

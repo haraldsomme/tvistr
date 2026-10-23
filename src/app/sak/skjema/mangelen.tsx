@@ -3,6 +3,7 @@
 // complaint, as blocks for a page to place under its own heading.
 import { FeilIkon, FeilListe } from "@/app/deler/feilliste";
 import { relText } from "@/lib/app/dato";
+import { type Feilpost, feilposter } from "@/lib/app/feil";
 import { docsValg, IKKE_SVART, IMPACT, impactToggle, type Omrade, SVAR, svarToggle } from "@/lib/app/skjema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { Felt, Kortliste, type StegProps, Valgliste, Vis } from "./felt";
@@ -27,11 +28,35 @@ const SAGT = [
 ] as const;
 const veksle = (liste: string[], v: string, pa: boolean) => (pa ? [...liste.filter((x) => x !== v), v] : liste.filter((x) => x !== v));
 
+// One card per chosen area: when the faults were discovered and what they are. An area with two or
+// more subcategories can date each on its own (f_under), when they showed up on different days.
 function Omradekort({ s, sett, c, i, n }: StegProps & { c: string; i: number; n: number }) {
   const h = HOVEDKATEGORIER.find((x) => x.id === c)!;
-  const a = s.f_area[c] ?? TOM;
-  const settA = (p: Partial<Omrade>) => sett({ f_area: { ...s.f_area, [c]: { ...a, ...p } } });
-  const id = `ar${i}`;
+  const valgt = s.f_parts[c] ?? [];
+  const poster = feilposter(s).filter((p) => p.hoved === c);
+  const delt = poster.some((p) => p.felt.startsWith("f_under."));
+  // Splitting moves the area's date to each subcategory and its text to the first; joining moves them back.
+  const del = (pa: boolean) => {
+    const f_under = Object.fromEntries(Object.entries(s.f_under ?? {}).filter(([k]) => !k.startsWith(`${c}.`)));
+    if (pa) {
+      const a = s.f_area[c] ?? TOM;
+      valgt.forEach((u, j) => (f_under[`${c}.${u}`] = { found: a.found, desc: j ? "" : (s.f_catdesc[c] ?? "") }));
+      sett({ f_under, f_catdesc: { ...s.f_catdesc, [c]: "" } });
+    } else {
+      const forste = poster.map((p) => p.found).filter(Boolean).sort()[0] ?? "";
+      sett({ f_under, f_area: { ...s.f_area, [c]: { found: forste } }, f_catdesc: { ...s.f_catdesc, [c]: poster.map((p) => p.desc).filter(Boolean).join(" ") } });
+    }
+  };
+  const settPost = (p: Feilpost, endring: { found?: string; desc?: string }) => {
+    if (p.felt.startsWith("f_under.")) {
+      const k = `${c}.${p.under[0]}`;
+      const x = s.f_under[k];
+      return sett({ f_under: { ...s.f_under, [k]: { ...x, ...endring } } });
+    }
+    if (endring.found !== undefined) sett({ f_area: { ...s.f_area, [c]: { ...(s.f_area[c] ?? TOM), found: endring.found } } });
+    if (endring.desc !== undefined) sett({ f_catdesc: { ...s.f_catdesc, [c]: endring.desc } });
+  };
+  const underNavn = (p: Feilpost) => p.under.map((u) => h.under.find((x) => x.id === u)?.navn ?? u).join(", ");
   return (
     <div className="block area">
       <div className="bt">
@@ -41,21 +66,36 @@ function Omradekort({ s, sett, c, i, n }: StegProps & { c: string; i: number; n:
         </h3>
         <span>{n > 1 ? `Feil ${i + 1} av ${n}` : ""}</span>
       </div>
-      <div className="grid area-g">
-        <div className="f c3">
-          <label className="lb" htmlFor={`${id}f`}>
-            Når oppdaget du feilen?
-          </label>
-          <input className="in" type="date" id={`${id}f`} value={a.found} onChange={(e) => settA({ found: e.target.value })} />
-          <span className="hint">{a.found ? relText(a.found, s.c_delivery) : ""}</span>
-        </div>
-        <div className="f c6">
-          <label className="lb" htmlFor={`${id}d`}>
-            Mer om feilen <em>valgfritt</em>
-          </label>
-          <textarea className="in cd-in" id={`${id}d`} rows={3} placeholder="Hva skjer, når skjer det og hvor ofte? Har bilen vist feilmeldinger?" value={s.f_catdesc[c] ?? ""} onChange={(e) => sett({ f_catdesc: { ...s.f_catdesc, [c]: e.target.value } })} />
-        </div>
-      </div>
+      {valgt.length > 1 && (
+        <label className="sw" htmlFor={`ar${i}u`} style={{ marginBottom: 14 }}>
+          <div>
+            <div className="sw-t">Feilene ble oppdaget på ulike datoer</div>
+            <div className="sw-d">Da får hver feil sin egen dato, og brevet regner fristene for hver av dem.</div>
+          </div>
+          <input className="tg" type="checkbox" role="switch" id={`ar${i}u`} checked={delt} onChange={(e) => del(e.target.checked)} />
+        </label>
+      )}
+      {poster.map((p, j) => {
+        const id = `ar${i}${delt ? `-${j}` : ""}`;
+        return (
+          <div className="grid area-g" key={p.felt}>
+            {delt && <div className="sub-h c6">{underNavn(p)}</div>}
+            <div className="f c3">
+              <label className="lb" htmlFor={`${id}f`}>
+                Når oppdaget du feilen?
+              </label>
+              <input className="in" type="date" id={`${id}f`} value={p.found} onChange={(e) => settPost(p, { found: e.target.value })} />
+              <span className="hint">{p.found ? relText(p.found, s.c_delivery) : ""}</span>
+            </div>
+            <div className="f c6">
+              <label className="lb" htmlFor={`${id}d`}>
+                Mer om feilen <em>valgfritt</em>
+              </label>
+              <textarea className="in cd-in" id={`${id}d`} rows={3} placeholder="Hva skjer, når skjer det og hvor ofte? Har bilen vist feilmeldinger?" value={p.felt.startsWith("f_under.") ? (s.f_under[`${c}.${p.under[0]}`]?.desc ?? "") : (s.f_catdesc[c] ?? "")} onChange={(e) => settPost(p, { desc: e.target.value })} />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

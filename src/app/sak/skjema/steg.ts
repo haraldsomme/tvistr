@@ -1,6 +1,7 @@
 // The form's sections: those answered before payment (FOR, they shape the letter's content) and after
 // (ETTER: sender, recipient and the letter's settings), the fields each needs, and what is missing.
 import type { Skjema } from "@/lib/app/skjema";
+import { feilposter } from "@/lib/app/feil";
 
 type Nokkel = keyof Skjema | "f_any_desc";
 // `navn` names the section in lists, `tittel` and `hint` ask it: the question before payment
@@ -42,7 +43,7 @@ export const ETIKETT: Record<string, string> = {
 };
 
 export function har(s: Skjema, k: Nokkel): boolean {
-  if (k === "f_any_desc") return s.f_cats.some((c) => (s.f_catdesc[c] ?? "").trim());
+  if (k === "f_any_desc") return feilposter(s).some((p) => p.desc);
   const v = s[k];
   return Array.isArray(v) ? v.length > 0 : typeof v === "string" ? v.trim() !== "" : v !== false && v !== null && v !== undefined;
 }

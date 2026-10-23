@@ -8,6 +8,7 @@ import "server-only";
 // the answers become clauses in it rather than sentences of their own: facts under «Mangelen», law
 // under «Rettslig grunnlag», and each claim before its grounds.
 import { opplysningsfeil } from "@/lib/brev/feiltype";
+import { feilord } from "@/lib/brev/feilord";
 import { fe, feiloverskrift, funn, joinD, listJoinD } from "./feilnavn";
 import { liste, tall, tallord } from "@/lib/brev/format";
 import { ANDRE_LOVER, LOVORD, RENTER_FRA_REKLAMASJON, SELGER_BEVISER_UVESENTLIG, TILBUD_UTEN_OPPHOLD } from "@/lib/brev/paragrafer";
@@ -31,6 +32,9 @@ const unquote = (s: string) => {
   const t = s.trim();
   return trimDot(/^[«"][\s\S]*[»"]$/.test(t) ? t.slice(1, -1) : t).replace(/«/g, "‘").replace(/»/g, "’");
 };
+
+// The faults the posts name: a post with two parts of one area dated together is two faults.
+const antallFeil = (poster: Feilpost[]) => poster.reduce((n, p) => n + feilord(p.hoved, p.under).length, 0);
 
 // A defect so serious the buyer need not accept a remedy first (§ 29 tredje ledd tredje punktum, from
 // 2024): only from the answers that show it.
@@ -111,12 +115,17 @@ function henvendelsen(s: Skjema): Del[] {
 // reasons or «wait and see» need no answer. Nothing is claimed that the answers do not carry: wear is
 // only answered inside the presumption or when the workshop ruled it out, lateness only with the law's limits. `alle` is
 // whether every objection given is answered somewhere in the letter, so it may say they change nothing.
-function svarPaInnvendinger(s: Skjema, L: Regler, k: { iFormodning: boolean; rettidig: boolean; ikkeSlitasje: boolean }): { ut: string[]; alle: boolean } {
+// Which of the dated faults (not those in what the seller said) showed inside the presumption.
+type Formodningsdekning = "ingen" | "en" | "noen" | "alle";
+
+function svarPaInnvendinger(s: Skjema, L: Regler, k: { iFormodning: Formodningsdekning; rettidig: boolean; ikkeSlitasje: boolean }): { ut: string[]; alle: boolean } {
   const har = (id: string) => s.f_prior && s.f_prior_svar.includes(id);
   const ut: string[] = [];
   let alle = true;
   if (har("slitasje")) {
-    if (k.iFormodning) ut.push("Det er dere som må bevise at feilen ikke var til stede ved leveringen, også når dere viser til slitasje eller feil bruk.");
+    if (k.iFormodning === "alle") ut.push("Det er dere som må bevise at feilen ikke var til stede ved leveringen, også når dere viser til slitasje eller feil bruk.");
+    else if (k.iFormodning !== "ingen")
+      ut.push(`For ${k.iFormodning === "noen" ? "feilene" : "feilen"} som viste seg innen ${L.formodningTekst} etter overtakelsen, er det dere som må bevise at ${k.iFormodning === "noen" ? "de" : "den"} ikke var til stede ved leveringen, også når dere viser til slitasje eller feil bruk.`);
     else if (k.ikkeSlitasje) ut.push(`Dere har vist til slitasje eller feil bruk, men ${s.ws === "rapport" ? "verkstedrapporten fastslår" : "verkstedet har opplyst"} at feilen ikke skyldes normal slitasje.`);
     else alle = false;
   }
@@ -189,7 +198,7 @@ export function byggBrev(s: Skjema, presedenser: Presedenser, idag: string): Blo
   // numbered subheading when there are several (the same numbers as under «Rettslig grunnlag»).
   if (poster.length) {
     const sortert = feilposterSortert(s);
-    B.push({ t: "p", tekst: [`Bilen har ${tallord(sortert.length)} feil som jeg reklamerer på.`] });
+    B.push({ t: "p", tekst: [`Bilen har ${tallord(antallFeil(sortert))} feil som jeg reklamerer på.`] });
     sortert.forEach((p, i) => {
       if (sortert.length > 1) B.push({ t: "h2", tekst: [`${i + 1}. `, ...feiloverskrift(p, "ubestemt")] });
       B.push({
@@ -234,7 +243,8 @@ export function byggBrev(s: Skjema, presedenser: Presedenser, idag: string): Blo
     tekst: [
       `Etter ${L.lovRef("krav")} skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. Når den ikke er det, foreligger det en mangel, jf. ${L.par("avvik")}.`,
       ...(s.seller_said === "lovet" ? [` Det dere opplyste før kjøpet, er en del av avtalen, jf. ${L.par("uriktig")}.`] : []),
-      ...(flere ? [` Nedenfor går jeg gjennom de ${tallord(sortert.length)} feilene hver for seg.`] : []),
+      // The faults are gone through one numbered section at a time; the count only when each section is one fault.
+      ...(flere ? [` Nedenfor går jeg gjennom ${antallFeil(sortert) === sortert.length ? `de ${tallord(sortert.length)} feilene` : "feilene"} hver for seg.`] : []),
     ],
   });
   // Before 2024 old § 17; from 2024 a general «som den er» is no agreed exception under § 15 annet ledd
@@ -353,7 +363,9 @@ export function byggBrev(s: Skjema, presedenser: Presedenser, idag: string): Blo
   }
   // The answers to the seller's objections, after all the faults: wear is answered inside the
   // presumption, lateness only when not every fault is in time.
-  const iFormodning = sortert.some((p) => !opplysningsfeil(p.hoved, p.under) && iFormodningen(p));
+  const fysiske = sortert.filter((p) => !opplysningsfeil(p.hoved, p.under) && !!del && !!p.found && p.found >= s.c_delivery);
+  const inne = fysiske.filter(iFormodningen).length;
+  const iFormodning: Formodningsdekning = !inne ? "ingen" : inne === fysiske.length ? "alle" : inne > 1 ? "noen" : "en";
   const etterFemAr = frister.length ? frister.some((f) => f.etterFemAr) : !!femAr && (tidligere ?? ld) > femAr;
   const rettidig = frister.length > 0 && frister.every((f) => f.iTide);
   const mot = svarPaInnvendinger(s, L, { iFormodning, rettidig: rettidig || etterFemAr, ikkeSlitasje });

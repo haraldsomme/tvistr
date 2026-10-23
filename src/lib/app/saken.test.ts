@@ -124,8 +124,9 @@ describe("nyttPrecValg per feil", () => {
       utfall: { motor: "borte", klima: "beholdt" },
     });
   });
-  it("fjerner valg for feil som ikke lenger har en liste", () => {
-    expect(nyttPrecValg({ motor: { id: 1, selv: false }, rust: { id: 3, selv: true } }, [liste("motor", 1)])).toEqual({ endre: { prec: { motor: { id: 1, selv: false } } }, utfall: { motor: "fulgt" } });
+  it("beholder valg for feil uten liste i dette svaret, så en feilet henting ikke sletter egne valg", () => {
+    expect(nyttPrecValg({ motor: { id: 7, selv: true } }, [])).toEqual({ endre: null, utfall: {} });
+    expect(nyttPrecValg({ motor: { id: 1, selv: false }, rust: { id: 3, selv: true } }, [liste("motor", 1)])).toEqual({ endre: null, utfall: { motor: "fulgt" } });
   });
   it("gjør ingenting uten lister", () => expect(nyttPrecValg({}, [])).toEqual({ endre: null, utfall: {} }));
 });

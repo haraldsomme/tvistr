@@ -127,10 +127,11 @@ export function tilKjop(ny: Skjema, gammel: Skjema | null): Skjema {
 
 // Which decision the letter cites under each fault when the lists arrive. The recommended one (first)
 // unless the buyer picked another themselves and it is still on that fault's list. A fault without a
-// list keeps no choice. `utfall` tells the buyer what happened, per fault.
+// list in these answers (a failed fetch, a date cleared for a moment) keeps its choice. `utfall` tells
+// the buyer what happened, per fault.
 export type Precutfall = "fulgt" | "beholdt" | "borte";
 export function nyttPrecValg(prec: Skjema["prec"], lister: readonly { nokkel: string; valg: readonly { id: number }[] }[]): { endre: Partial<Skjema> | null; utfall: Record<string, Precutfall> } {
-  const ny: Skjema["prec"] = {};
+  const ny: Skjema["prec"] = { ...prec };
   const utfall: Record<string, Precutfall> = {};
   for (const { nokkel, valg } of lister) {
     const anbefalt = valg[0]?.id;

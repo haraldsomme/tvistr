@@ -408,7 +408,7 @@ describe("feilene i løpende tekst", () => {
     expect(B.some((b) => (b.t as string) === "ul")).toBe(false);
     const t = tilTekst(B);
     expect(t).toContain(
-      "Mangelen\n\nBilen har to feil som jeg reklamerer på.\n\n1. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje\n\nDen 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje. Bilen mister trekkraft.\n\n2. Feil ved klimaanlegget (AC)\n\nDen 1. september 2025 oppdaget jeg feil ved klimaanlegget (AC).\n\nKonsekvensen av feilene er at bilen er plagsom å bruke i hverdagen.",
+      "Mangelen\n\nBilen har tre feil som jeg reklamerer på.\n\n1. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje\n\nDen 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje. Bilen mister trekkraft.\n\n2. Feil ved klimaanlegget (AC)\n\nDen 1. september 2025 oppdaget jeg feil ved klimaanlegget (AC).\n\nKonsekvensen av feilene er at bilen er plagsom å bruke i hverdagen.",
     );
     expect(t).not.toContain("oppdaget jeg også");
     expect(B.filter((b) => b.t === "h2").map((b) => tilTekst([b])).slice(0, 2)).toEqual(["1. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje", "2. Feil ved klimaanlegget (AC)"]);
@@ -418,7 +418,8 @@ describe("feilene i løpende tekst", () => {
     expect(t).toContain("1. Feil ved klimaanlegget (AC)\n\nDen 1. mai 2025 oppdaget jeg feil ved klimaanlegget (AC).\n\n2. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje\n\nDen 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje.");
   });
   it("én feil: ingen underoverskrift, og innledningssetningen i entall", () => {
-    const B = byggBrev(syncAreas(eksempel(idag)), alle(eksempel(idag), null), idag);
+    const en = { ...eksempel(idag), f_parts: { hoyvolt: ["lading"] } };
+    const B = byggBrev(syncAreas(en), alle(en, null), idag);
     expect(tilTekst(B)).toContain("Mangelen\n\nBilen har en feil som jeg reklamerer på.\n\nDen ");
     expect(B.some((b) => b.t === "h2")).toBe(false);
   });
@@ -663,5 +664,27 @@ describe("tilTekst med underoverskrift og kursiv", () => {
   it("kursivt innledningsord uten markering, underoverskriften på egen linje", () => {
     const B: Blokk[] = [{ t: "h", tekst: ["Rettslig grunnlag"] }, { t: "h2", tekst: ["1. Feilen ved turboen"] }, { t: "p", tekst: [{ kursiv: "Reklamasjonen er rettidig." }, " Jeg reklamerte i tide."] }];
     expect(tilTekst(B)).toBe("Rettslig grunnlag\n\n1. Feilen ved turboen\n\nReklamasjonen er rettidig. Jeg reklamerte i tide.");
+  });
+});
+
+describe("gjennomgangen: antall feil og svaret på slitasje", () => {
+  const e = eksempel(idag);
+  it("én post som nevner to deler: to feil, uten underoverskrifter", () => {
+    const s = { ...e, f_cats: ["motor"], f_parts: { motor: ["turbo", "registerreim"] }, f_area: { motor: { found: e.f_area.hoyvolt.found } }, f_catdesc: {} };
+    const t = tekst(s);
+    expect(t).toContain("Bilen har to feil som jeg reklamerer på.");
+    expect(t).not.toContain("Nedenfor går jeg gjennom");
+  });
+  it("to poster som nevner tre deler: tre feil, og gjennomgangen uten tall", () => {
+    const s = { ...e, f_cats: ["motor", "klima"], f_parts: { motor: ["turbo", "registerreim"], klima: ["ac"] }, f_area: { motor: { found: e.f_area.hoyvolt.found }, klima: { found: e.f_area.hoyvolt.found } }, f_catdesc: {} };
+    const t = tekst(s);
+    expect(t).toContain("Bilen har tre feil som jeg reklamerer på.");
+    expect(t).toContain("Nedenfor går jeg gjennom feilene hver for seg.");
+  });
+  it("slitasje: bevisbyrden bare for feilen innenfor formodningen", () => {
+    const s = { ...e, c_purchase: "2023-01-01", c_delivery: "2023-01-01", f_cats: ["motor", "klima"], f_parts: { motor: ["turbo"], klima: ["ac"] }, f_area: { motor: { found: "2023-03-01" }, klima: { found: "2025-11-01" } }, f_catdesc: {}, f_prior: true, f_prior_date: "2025-11-10", f_prior_svar: ["slitasje"], ws: "nei", ws_says: [] };
+    const t = tekst(s);
+    expect(t).toContain("For feilen som viste seg innen seks måneder etter overtakelsen, er det dere som må bevise at den ikke var til stede ved leveringen, også når dere viser til slitasje eller feil bruk.");
+    expect(t).not.toContain("Det er dere som må bevise at feilen ikke var til stede ved leveringen, også når");
   });
 });

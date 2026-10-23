@@ -18,6 +18,7 @@ import { ALLE, ETIKETT, ETTER, FOR, har, mangler, seksjonFor, stegFor } from "@/
 import { idag } from "@/lib/app/dato";
 import { datoavvik } from "@/lib/app/datoer";
 import { orgValid, tall } from "@/lib/app/format";
+import { svarPoster } from "@/lib/app/saken";
 import { type Skjema, syncAreas } from "@/lib/app/skjema";
 import { medCelle, skriverResultat } from "@/lib/app/vurdering";
 import { maal } from "@/lib/maling";
@@ -53,8 +54,9 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const presedens = vedtak.venter ? "venter" : vedtak.valgt;
-  const brev = useBrev(() => fulltBrev({ id, skjema: s, presedens }), JSON.stringify([id, s, presedens]));
+  // For now the one decision stands under every fault (one per fault comes with finnVedtak's lists).
+  const presedenser = Object.fromEntries(svarPoster(s).map((p) => [p.nokkel, vedtak.venter ? ("venter" as const) : vedtak.valgt]));
+  const brev = useBrev(() => fulltBrev({ id, skjema: s, presedenser }), JSON.stringify([id, s, presedenser]));
   // Copying waits for the letter built from the answers as they are now; after a failed call the
   // letter shown is an older one.
   const klar = brev.svar && !brev.venter && !brev.feil ? brev.svar : null;

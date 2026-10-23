@@ -234,7 +234,6 @@ h1,h2,h3{text-wrap:balance}
 /* Censored text: filler drawn as a grey bar, starting right after the legible words. */
 .hb-sladd{color:transparent;user-select:none;background:#E1E6ED;border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .hb-note{margin:0;padding:0 8px;font-size:14px;line-height:1.5;color:#465150;text-align:center}
-.hb-ark .l-prec a{color:#1F3A5F}
 /* Landing page: links and buttons, with their hover states (the page itself is inline-styled). */
 .lp a{color:#1F3A5F}
 .lp a:hover{color:#16294A}

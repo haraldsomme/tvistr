@@ -24,6 +24,15 @@ describe("forhåndsvisningen", () => {
 
   it("uten vedtak: lovsetningen, ingen praksis-overskrift", () => expect(JSON.stringify(forhandsvisning(eksempel(idag), null, idag))).not.toContain("Praksis fra"));
 
+  it("to feil: bilen og utfallet under den første, plassholderen under den andre", () => {
+    const e = eksempel(idag);
+    const s = { ...e, f_cats: ["hoyvolt", "klima"], f_parts: { ...e.f_parts, klima: ["ac"] }, f_area: { ...e.f_area, klima: { found: e.f_area.hoyvolt.found } } };
+    const j = JSON.stringify(forhandsvisning(s, kort, idag));
+    expect(j.split("Toyota RAV4 2019").length).toBe(2);
+    expect(j.split("lignende sak hentes").length).toBe(2);
+    expect(j.split('"kursiv":"Praksis fra Forbrukerklageutvalget."').length).toBe(3);
+  });
+
   it("dagens dato og 14 dagers frist, uansett svar", () => {
     const j = JSON.stringify(forhandsvisning({ ...eksempel(idag), l_date: "2020-01-01" }, kort, idag));
     expect(j).not.toContain("2020");

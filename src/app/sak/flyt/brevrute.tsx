@@ -20,8 +20,6 @@ function delerAv(b: Blokk): Del[][] {
       return b.linjer;
     case "ol":
       return b.punkter;
-    case "prec":
-      return b.avsnitt;
     default:
       return [b.tekst];
   }

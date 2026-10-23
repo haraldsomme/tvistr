@@ -138,12 +138,13 @@ test("fra forsiden til brevet med et vedtak", async ({ page, browser }) => {
   // With no row of the answers open the decision is looked up. Turbo on a used car has many decisions
   // with medhold: the letter must cite one, with quotes and a link.
   const brev = page.locator(".fl-ark");
-  const prec = page.locator(".fl-ark .l-prec");
+  // The decision's paragraph under the fault, after the italic «Praksis fra …», with the conclusion and the link.
+  const prec = page.locator('.fl-ark [data-felt^="vedtak.avsnitt"]').first();
+  const avsnitt = prec.locator("xpath=..");
   await expect(prec).toContainText("«", { timeout: 120_000 });
-  await expect(prec).toContainText("http");
-  await expect(brev).toContainText("Praksis fra");
-  // The letter's own conclusion after the decision's paragraph.
-  await expect(brev).toContainText("Min sak bør derfor vurderes på samme måte");
+  await expect(avsnitt).toContainText("http");
+  await expect(avsnitt.locator("em")).toContainText("Praksis fra");
+  await expect(avsnitt).toContainText("min sak bør derfor vurderes på samme måte");
   const for_ = await prec.innerText();
 
   // «Vedtaket» opens «Lignende vedtak»: up to ten, the recommended first; another pick changes the letter on «Ferdig».

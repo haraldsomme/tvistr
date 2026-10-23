@@ -24,9 +24,13 @@ export const heltall = (s: string | undefined) => {
   return d ? Number(d) : null;
 };
 
+// The faults the ranking is asked about, in the order of Svar.feil (and so of finnVedtak's lists):
+// those with a date. Their keys tie each list to its fault in the letter.
+export const svarPoster = (s: Skjema) => feilposter(s).filter((p) => p.found);
+
 export function tilSvar(s: Skjema): Svar | null {
   const kjopsdato = s.c_purchase || s.c_delivery;
-  const feil = feilposter(s).filter((p) => p.found);
+  const feil = svarPoster(s);
   if (!kjopsdato || !feil.length) return null;
   // «lovet»: the seller said the car was free of such faults (the form does not ask whether in writing).
   // «opplyste»: the seller disclosed the fault, which is no misrepresentation, so it is left out.

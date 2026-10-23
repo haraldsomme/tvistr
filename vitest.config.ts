@@ -9,5 +9,5 @@ export default defineConfig({
       "server-only": fileURLToPath(new URL("./src/test/server-only.ts", import.meta.url)),
     },
   },
-  test: { exclude: ["node_modules/**", ".next/**", ".superpowers/**", "e2e/**"] },
+  test: { exclude: ["node_modules/**", ".next/**", ".superpowers/**", "e2e/**", "tmp-ux/**"] },
 });

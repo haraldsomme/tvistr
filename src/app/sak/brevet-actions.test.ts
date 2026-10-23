@@ -48,7 +48,7 @@ describe("forhandsvis", () => {
     const r = await forhandsvis({ utkast: { skjema } });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(JSON.stringify(r)).not.toContain("Det er dermed dere som må bevise");
+    expect(JSON.stringify(r)).not.toContain("Det er derfor dere som må bevise");
     // The letter cites the first card by its car, never its number (the card itself shows it, as today).
     const brev = JSON.stringify(r.blokker);
     expect(brev).toContain("Toyota RAV4 2019");
@@ -91,27 +91,43 @@ describe("forhandsvis", () => {
 
 describe("fulltBrev", () => {
   it("gir ingenting uten en egen betalt sak", async () => {
-    expect(await fulltBrev({ id: betaltSak.id, skjema, presedens: null })).toEqual({ ok: false, melding: "Brevet er ikke betalt." });
+    expect(await fulltBrev({ id: betaltSak.id, skjema, presedenser: {} })).toEqual({ ok: false, melding: "Brevet er ikke betalt." });
   });
 
   it("bruker sakens bil, ikke den som sendes", async () => {
     hentEgenSak.mockResolvedValue(betaltSak);
-    const r = await fulltBrev({ id: betaltSak.id, skjema: { ...skjema, c_reg: "ZZ 99999" }, presedens: null });
+    const r = await fulltBrev({ id: betaltSak.id, skjema: { ...skjema, c_reg: "ZZ 99999" }, presedenser: {} });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.tekst).toContain("EL 48213");
     expect(r.tekst).not.toContain("ZZ 99999");
-    expect(r.tekst).toContain("Det er dermed dere som må bevise");
+    expect(r.tekst).toContain("Det er derfor dere som må bevise");
     expect(r.emne).toContain("EL 48213");
     expect(JSON.stringify(r.blokker)).not.toContain("skjult");
   });
 
   it("tar med vedtaket brevet viser til", async () => {
     hentEgenSak.mockResolvedValue(betaltSak);
-    const r = await fulltBrev({ id: betaltSak.id, skjema, presedens });
+    const r = await fulltBrev({ id: betaltSak.id, skjema, presedenser: { hoyvolt: presedens } });
     expect(r.ok && r.tekst).toContain("Vedtaket er offentlig tilgjengelig på https://www.forbrukerradet.no/vedtak/22-3390");
-    const v = await fulltBrev({ id: betaltSak.id, skjema, presedens: "venter" });
-    expect(v.ok).toBe(true);
+    const v = await fulltBrev({ id: betaltSak.id, skjema, presedenser: { hoyvolt: "venter" } });
+    expect(v.ok && v.tekst).toContain("[lignende sak hentes]");
+  });
+
+  it("en nøkkel brevet ikke har, gir fortsatt brev med lovsetningen", async () => {
+    hentEgenSak.mockResolvedValue(betaltSak);
+    const r = await fulltBrev({ id: betaltSak.id, skjema, presedenser: { klima: presedens } });
+    expect(r.ok && r.tekst).toContain("Kravet bygger på lovens vilkår.");
+  });
+
+  it.each([
+    ["ikke et objekt", "vedtaket"],
+    ["en liste", [presedens]],
+    ["ugyldig nøkkel", { "motor; drop": presedens }],
+    ["for mange nøkler", Object.fromEntries(Array.from({ length: 41 }, (_, i) => [`k${"x".repeat(i)}`, null]))],
+  ])("avviser vedtakene når de er %s", async (_, p) => {
+    hentEgenSak.mockResolvedValue(betaltSak);
+    expect((await fulltBrev({ id: betaltSak.id, skjema, presedenser: p })).ok).toBe(false);
   });
 
   it.each([
@@ -129,18 +145,18 @@ describe("fulltBrev", () => {
     ["tekst", "vedtaket"],
   ])("avviser et vedtak med %s", async (_, p) => {
     hentEgenSak.mockResolvedValue(betaltSak);
-    expect((await fulltBrev({ id: betaltSak.id, skjema, presedens: p })).ok).toBe(false);
+    expect((await fulltBrev({ id: betaltSak.id, skjema, presedenser: { hoyvolt: p } })).ok).toBe(false);
   });
 
   it("avviser et skjema som ikke er et skjema", async () => {
     hentEgenSak.mockResolvedValue(betaltSak);
-    expect((await fulltBrev({ id: betaltSak.id, skjema: "x", presedens: null })).ok).toBe(false);
+    expect((await fulltBrev({ id: betaltSak.id, skjema: "x", presedenser: {} })).ok).toBe(false);
   });
 
   it("stopper ved for mange forsøk", async () => {
     grense.full = true;
     hentEgenSak.mockResolvedValue(betaltSak);
-    expect(await fulltBrev({ id: betaltSak.id, skjema, presedens: null })).toEqual({ ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." });
+    expect(await fulltBrev({ id: betaltSak.id, skjema, presedenser: {} })).toEqual({ ok: false, melding: "For mange forsøk. Vent et minutt og prøv igjen." });
     expect(hentEgenSak).not.toHaveBeenCalled();
   });
 });

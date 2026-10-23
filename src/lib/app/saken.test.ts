@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { forsokTall, gjelderSaken, kjopt, laas, manglerISkjema, nyttPrecValg, rensSkjema, sakTekst, sammeSakSkjema, tilKjop, tilSvar } from "./saken";
+import { forsokTall, gjelderSaken, kjopt, laas, manglerISkjema, nyttPrecValg, rensSkjema, sakTekst, sammeSakSkjema, svarPoster, tilKjop, tilSvar } from "./saken";
 import { eksempel, standard } from "./skjema";
 
 const idag = "2026-10-16";
@@ -127,5 +127,14 @@ describe("tilSvar med en feil datert for seg", () => {
   it("én rad per feil, med sin dato", () => {
     const s = { ...standard("2026-10-23"), c_delivery: "2024-01-15", f_cats: ["motor"], f_parts: { motor: ["utslipp", "turbo"] }, f_area: { motor: { found: "2024-04-02" } }, f_under: { "motor.turbo": { found: "2025-02-18", desc: "" } } };
     expect(tilSvar(s)!.feil.map((f) => [f.hoved, f.under, f.oppdaget])).toEqual([["motor", ["turbo"], "2025-02-18"], ["motor", ["utslipp"], "2024-04-02"]]);
+  });
+});
+
+describe("svarPoster", () => {
+  it("bare feilene med dato, i den rekkefølgen tilSvar sender dem", () => {
+    const e = eksempel("2026-10-16");
+    const s = { ...e, f_cats: ["klima", "hoyvolt"], f_parts: { ...e.f_parts, klima: ["ac"] }, f_area: { hoyvolt: e.f_area.hoyvolt, klima: { found: "" } } };
+    expect(svarPoster(s).map((p) => p.nokkel)).toEqual(["hoyvolt"]);
+    expect(tilSvar(s)!.feil.map((f) => f.hoved)).toEqual(svarPoster(s).map((p) => p.hoved));
   });
 });

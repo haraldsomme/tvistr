@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
 import { byggBrev, emne, tilTekst } from "./brev";
-import type { Blokk, Presedens } from "./brevtyper";
+import type { Blokk, Presedens, Presedenser } from "./brevtyper";
+import { feilposter } from "./feil";
 import { docsValg, eksempel, standard, svarToggle, syncAreas, vedlegg } from "./skjema";
 
 const idag = "2026-10-16";
@@ -23,7 +24,9 @@ const PRES: Presedens = {
   likhet: 80,
   treff: {} as Presedens["treff"],
 };
-const tekst = (s: ReturnType<typeof eksempel>, p: Presedens | null = null) => tilTekst(byggBrev(syncAreas(s), p, idag));
+// The same decision (or «venter») under every fault, as the letter got one decision before.
+const alle = (s: ReturnType<typeof eksempel>, p: Presedens | "venter" | null): Presedenser => (p ? Object.fromEntries(feilposter(syncAreas(s)).map((x) => [x.nokkel, p])) : {});
+const tekst = (s: ReturnType<typeof eksempel>, p: Presedens | "venter" | null = null) => tilTekst(byggBrev(syncAreas(s), alle(s, p), idag));
 
 describe("brevet", () => {
   it("eksempelbrevet", () => expect(tekst(eksempel(idag), PRES)).toMatchSnapshot());
@@ -70,7 +73,7 @@ describe("brevet", () => {
     expect(() => tekst(s)).not.toThrow();
   });
 
-  it("emnefeltet", () => expect(emne(byggBrev(syncAreas(eksempel(idag)), null, idag))).toBe("Reklamasjon på mangel ved Volkswagen ID.4, reg.nr. EL 48213"));
+  it("emnefeltet", () => expect(emne(byggBrev(syncAreas(eksempel(idag)), alle(eksempel(idag), null), idag))).toBe("Reklamasjon på mangel ved Volkswagen ID.4, reg.nr. EL 48213"));
 });
 
 describe("rettinger etter gjennomgangen", () => {
@@ -98,13 +101,12 @@ describe("tidslinjen i brevet", () => {
   it("to feil, én innenfor og én utenfor formodningen: formodningen nevner bare den ene", () => {
     const s = med({ ...eksempel(idag), c_purchase: "2023-03-01", c_delivery: "2023-03-01" }, { motor: "2023-05-01", klima: "2024-01-15" });
     const t = tekst(s);
-    expect(t).toContain("Feilen ved motoren viste seg");
-    expect(t).toContain("at denne feilen ikke var til stede");
-    expect(t).not.toContain("Feilen viste seg 2 måneder");
+    expect(t).toContain("1. Feilen ved motoren eller eksosanlegget\n\nMangelen forelå ved leveringen. Feilen viste seg innen seks måneder etter overtakelsen.");
+    expect(t.split("2. Feilen ved klimaanlegget eller varmen")[1]).not.toContain("formodes");
   });
-  it("to feil innenfor: flertall", () => {
+  it("to feil innenfor: formodningen under hver", () => {
     const s = med({ ...eksempel(idag), c_purchase: "2025-03-01", c_delivery: "2025-03-01" }, { motor: "2025-05-01", klima: "2025-09-01" });
-    expect(tekst(s)).toContain("at feilene ikke var til stede");
+    expect(tekst(s).split("Det er derfor dere som må bevise at feilen ikke var til stede da jeg overtok bilen.").length).toBe(3);
   });
   it("feil oppdaget mer enn fem år etter overtakelsen: ingen påstand om femårsfristen", () => {
     const s = med({ ...eksempel(idag), c_purchase: "2020-01-01", c_delivery: "2020-01-01" }, { motor: "2025-06-01" });
@@ -115,7 +117,7 @@ describe("tidslinjen i brevet", () => {
     expect(tekst(s)).not.toContain("unnlatt å opplyse");
   });
   it("mens vedtaket hentes: plassholder i stedet for lovsetningen", () => {
-    const t = tilTekst(byggBrev(syncAreas(eksempel(idag)), "venter", idag));
+    const t = tilTekst(byggBrev(syncAreas(eksempel(idag)), alle(eksempel(idag), "venter"), idag));
     expect(t).toContain("[lignende sak hentes]");
     expect(t).not.toContain(LOVSETNING);
   });
@@ -171,7 +173,7 @@ describe("vedleggslisten", () => {
     const t = tekst({ ...eksempel(idag), ws: "uten", ws_says: ["bekrefter", "levering", "ikke_slitasje"], ws_quote: "En battericelle er defekt" });
     expect(t).toContain("Volkswagen Sandvika har undersøkt bilen. Verkstedet har bekreftet feilen og opplyst meg om at feilen var til stede ved leveringen og at den ikke skyldes normal slitasje.");
     expect(t).toContain("Slik jeg oppfattet verkstedet: En battericelle er defekt. Dere kan kontakte verkstedet for å få dette bekreftet.");
-    expect(t).toContain("Verkstedet har opplyst at feilen ikke skyldes normal slitasje, og formodningen er derfor ikke uforenlig");
+    expect(t).toContain("Verkstedet har opplyst at feilen ikke skyldes normal slitasje, og formodningen er dermed ikke uforenlig");
     expect(t).not.toContain("rapport");
   });
   it("uten rapport og uten svar: bare at bilen er undersøkt", () => {
@@ -307,7 +309,7 @@ describe("lånebil etter lovversjon", () => {
 
 describe("unntaket fra formodningen", () => {
   it("besvares når verkstedet har utelukket slitasje", () =>
-    expect(tekst(eksempel(idag))).toContain("Verkstedrapporten fastslår at feilen ikke skyldes normal slitasje, og formodningen er derfor ikke uforenlig med varens eller mangelens art, jf. § 18 annet ledd tredje punktum."));
+    expect(tekst(eksempel(idag))).toContain("Verkstedrapporten fastslår at feilen ikke skyldes normal slitasje, og formodningen er dermed ikke uforenlig med varens eller mangelens art, jf. § 18 annet ledd tredje punktum."));
   it("nevnes ikke uten slik rapport", () => expect(tekst({ ...eksempel(idag), ws_says: ["bekrefter"] })).not.toContain("uforenlig"));
 });
 
@@ -359,39 +361,35 @@ describe("forhandlerens svar", () => {
 describe("slutningen etter vedtaket", () => {
   const T = (t: Partial<Presedens["treff"]>) => ({ underkategori: "likt", tidsniva: "likt", km: "likt", alder: "likt", som_den_er: "likt", krav: "likt", egen_vurdering: "likt", grunnlag: "likt", ...t }) as Presedens["treff"];
   const pres = (p: Partial<Presedens>) => ({ ...PRES, treff: T({}), ...p });
-  it("nivå A med samme utgangspunkt og samme krav", () => {
+  it("nivå A: samme type feil, og lenken i samme avsnitt", () => {
     const t = tekst({ ...eksempel(idag), k_main: "heving" }, pres({ utfall: ["heving"] }));
-    expect(t).toContain("Saken gjaldt samme type feil som min, og min bil var ikke i et svakere utgangspunkt. Kjøperen fikk der medhold i heving, som er det jeg krever. Min sak bør derfor vurderes på samme måte. Vedtaket er offentlig tilgjengelig på");
+    expect(t).toContain(`${PRES.avsnitt} Saken gjaldt samme type feil som min, og min sak bør derfor vurderes på samme måte. Vedtaket er offentlig tilgjengelig på https://example.org/v.pdf`);
   });
-  it("strengere på én side: ingen påstand om utgangspunktet", () => {
-    const t = tekst(eksempel(idag), pres({ treff: T({ km: "strengere" }), utfall: ["heving"] }));
+  it("ingen påstand om utgangspunktet eller kravet", () => {
+    const t = tekst({ ...eksempel(idag), k_main: "retting" }, pres({ utfall: ["retting"] }));
     expect(t).not.toContain("svakere utgangspunkt");
-    expect(t).toContain("Min sak bør derfor vurderes på samme måte.");
-  });
-  it("kravet nevnes bare når vedtaket ga det", () => {
-    expect(tekst({ ...eksempel(idag), k_main: "prisavslag", k_amount: "1" }, pres({ utfall: ["heving"] }))).not.toContain("som er det jeg krever");
-    expect(tekst({ ...eksempel(idag), k_main: "retting" }, pres({ utfall: ["retting"] }))).toContain("Kjøperen fikk der medhold i retting, som er det jeg krever.");
+    expect(t).not.toContain("som er det jeg krever");
   });
   it("omlevering er ikke et krav i brevet", () => expect(tekst({ ...eksempel(idag), k_main: "omlevering" })).not.toMatch(/omlevering/i));
-  it("nivå B: samme rettslige spørsmål", () => expect(tekst(eksempel(idag), pres({ niva: "B" }))).toContain("Vedtaket avgjør det samme rettslige spørsmålet som min sak reiser"));
+  it("nivå B: samme rettslige spørsmål", () => expect(tekst(eksempel(idag), pres({ niva: "B" }))).toContain("Vedtaket avgjør det samme rettslige spørsmålet som min sak reiser, og min sak bør derfor vurderes på samme måte."));
   it("uten vedtak eller mens det hentes: ingen slutning", () => {
     expect(tekst(eksempel(idag))).not.toContain("vurderes på samme måte");
-    expect(tilTekst(byggBrev(syncAreas(eksempel(idag)), "venter", idag))).not.toContain("vurderes på samme måte");
+    expect(tekst(eksempel(idag), "venter")).not.toContain("vurderes på samme måte");
   });
 });
 
 describe("feltmerker", () => {
-  const deler = (B: Blokk[]) => B.flatMap((b) => ("tekst" in b ? [b.tekst] : "linjer" in b ? b.linjer : "punkter" in b ? b.punkter : b.avsnitt)).flat();
+  const deler = (B: Blokk[]) => B.flatMap((b) => ("tekst" in b ? [b.tekst] : "linjer" in b ? b.linjer : b.punkter)).flat();
   const felt = (B: Blokk[], k: string) => deler(B).filter((d): d is { felt: string; tekst: string } => typeof d === "object" && "felt" in d && d.felt === k);
   it("kjøperens svar er merket", () => {
-    const B = byggBrev(syncAreas(eksempel(idag)), PRES, idag);
+    const B = byggBrev(syncAreas(eksempel(idag)), alle(eksempel(idag), PRES), idag);
     expect(felt(B, "c_km")[0].tekst).toBe("38 500");
     expect(felt(B, "b_name")[0].tekst).toBe("Kari Nordmann");
     expect(felt(B, "c_reg").length).toBeGreaterThan(1);
     expect(felt(B, "f_catdesc.hoyvolt")[0].tekst).toContain("40 kW");
     expect(felt(B, "seller_txt")[0].tekst).toContain("full kapasitet");
   });
-  it("ingen tomme merker", () => expect(deler(byggBrev(syncAreas(eksempel(idag)), PRES, idag)).every((d) => typeof d !== "object" || !("felt" in d) || d.felt && d.tekst)).toBe(true));
+  it("ingen tomme merker", () => expect(deler(byggBrev(syncAreas(eksempel(idag)), alle(eksempel(idag), PRES), idag)).every((d) => typeof d !== "object" || !("felt" in d) || d.felt && d.tekst)).toBe(true));
 });
 
 describe("feilene i løpende tekst", () => {
@@ -406,7 +404,7 @@ describe("feilene i løpende tekst", () => {
     f_impact: ["plagsom"],
   });
   it("to feil: innledningssetning, nummererte underoverskrifter i datorekkefølge, ingen «også»", () => {
-    const B = byggBrev(syncAreas(to({ motor: "Bilen mister trekkraft" })), null, idag);
+    const B = byggBrev(syncAreas(to({ motor: "Bilen mister trekkraft" })), alle(to({ motor: "Bilen mister trekkraft" }), null), idag);
     expect(B.some((b) => (b.t as string) === "ul")).toBe(false);
     const t = tilTekst(B);
     expect(t).toContain(
@@ -420,7 +418,7 @@ describe("feilene i løpende tekst", () => {
     expect(t).toContain("1. Feil ved klimaanlegget (AC)\n\nDen 1. mai 2025 oppdaget jeg feil ved klimaanlegget (AC).\n\n2. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje\n\nDen 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje.");
   });
   it("én feil: ingen underoverskrift, og innledningssetningen i entall", () => {
-    const B = byggBrev(syncAreas(eksempel(idag)), null, idag);
+    const B = byggBrev(syncAreas(eksempel(idag)), alle(eksempel(idag), null), idag);
     expect(tilTekst(B)).toContain("Mangelen\n\nBilen har en feil som jeg reklamerer på.\n\nDen ");
     expect(B.some((b) => b.t === "h2")).toBe(false);
   });
@@ -443,7 +441,7 @@ describe("feilene i løpende tekst", () => {
     expect(tekst(s)).toContain("oppdaget jeg feil ved turboen og ved registerreimen eller registerkjedet.");
   });
   it("feltmerket følger hvert område", () => {
-    const B = byggBrev(syncAreas(to({})), null, idag);
+    const B = byggBrev(syncAreas(to({})), alle(to({}), null), idag);
     const deler = B.flatMap((b) => ("tekst" in b ? b.tekst : []));
     expect(deler).toContainEqual({ felt: "f_parts.motor", tekst: "turboen" });
     expect(deler).toContainEqual({ felt: "f_parts.klima", tekst: "klimaanlegget (AC)" });
@@ -464,14 +462,14 @@ describe("avsnittene", () => {
     ["har ikke svart", { ...eksempel(idag), ws: "nei", seller_said: "nei", f_prior_svar: ["ikke_svart"] }],
     ["bare rettidig", { ...eksempel(idag), f_cats: ["historikk"], f_parts: { historikk: ["km"] }, f_area: { historikk: { found: eksempel(idag).f_area.hoyvolt.found } } }],
   ])("ingen avsnitt på én setning i «Mangelen» og «Rettslig grunnlag», bortsett fra konsekvensen og innledningssetningen: %s", (_, s) => {
-    const B = byggBrev(syncAreas(s), PRES, idag);
-    for (const p of [...deler(B, "Mangelen", "Rettslig"), ...deler(B, "Rettslig grunnlag", "Praksis")].filter((p) => !p.startsWith("Konsekvensen av") && !p.startsWith("Bilen har "))) expect(setninger(p), p).toBeGreaterThan(1);
+    const B = byggBrev(syncAreas(s), alle(s, PRES), idag);
+    for (const p of [...deler(B, "Mangelen", "Rettslig"), ...deler(B, "Rettslig grunnlag", "Krav")].filter((p) => !p.startsWith("Konsekvensen av") && !p.startsWith("Bilen har "))) expect(setninger(p), p).toBeGreaterThan(1);
   });
 });
 
 describe("utgiftene", () => {
   it("to utgifter: én setning med sum", () => {
-    const B = byggBrev(syncAreas(eksempel(idag)), null, idag);
+    const B = byggBrev(syncAreas(eksempel(idag)), alle(eksempel(idag), null), idag);
     expect(B.some((b) => (b.t as string) === "exp")).toBe(false);
     expect(tilTekst(B)).toContain("Jeg krever også erstatning for utgiftene jeg har hatt som følge av mangelen, jf. § 33: kr 1 890 til feilsøking hos merkeverksted og kr 2 850 til leiebil i tre dager, til sammen kr 4 740.");
   });
@@ -487,7 +485,8 @@ describe("sen reklamasjon", () => {
   };
   it("nevner fristen og unntaket, og løftet når selgeren lovet", () => {
     const t = sen("lovet");
-    expect(t).toContain("Reklamasjonsfristen etter § 27 første ledd er «innen rimelig tid», og to måneder er bare lovens korteste frist. Fristen gjelder ikke dersom selgeren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro, jf. § 27 fjerde ledd.");
+    expect(t).toContain("Reklamasjonen er rettidig. Det gikk mer enn to måneder fra jeg oppdaget feilen til jeg reklamerte. To måneder er imidlertid bare lovens korteste frist. Fristen etter § 27 første ledd er «innen rimelig tid», og den gjelder ikke dersom selgeren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro, jf. § 27 fjerde ledd.");
+    expect(t).not.toContain("innen to måneder etter at jeg oppdaget feilen");
     expect(t).toContain("Dere er en profesjonell forhandler og opplyste før kjøpet at bilen var fri for slike feil. Når det ikke stemte, har dere i det minste opptrådt grovt uaktsomt, og dere kan derfor ikke påberope dere at reklamasjonen kom for sent, jf. § 27 fjerde ledd.");
     expect(t).not.toContain("er dermed rettidig");
   });
@@ -519,33 +518,89 @@ describe("to feil i samme område på ulike datoer", () => {
     expect(t).toContain("Den 18. februar 2025 oppdaget jeg feil ved turboen. Turboen hviner.");
     expect(t).not.toContain("2. april 2024 oppdaget jeg feil ved turboen");
   });
-  it("formodningen for de to første, femårsregelen ikke for noen", () => {
+  it("formodningen for de to første, femårsregelen for den tredje", () => {
     const t = tekst(saken);
-    expect(t).toContain("Feilene ved turboen og ved utslippssystemet (EGR, partikkelfilter eller AdBlue) viste seg innen to år etter overtakelsen.");
-    expect(t).toContain("At feilen ved bremsene viste seg mer enn to år etter overtakelsen, hindrer ikke reklamasjon: en bil er ment å vare vesentlig lenger enn to år, og den ytterste reklamasjonsfristen er derfor fem år, jf. § 27 annet ledd annet punktum.");
+    expect(t).toContain("1. Feilen ved utslippssystemet (EGR, partikkelfilter eller AdBlue)\n\nMangelen forelå ved leveringen. Feilen viste seg innen to år etter overtakelsen.");
+    expect(t).toContain("2. Feilen ved turboen\n\nMangelen forelå ved leveringen. Feilen viste seg innen to år etter overtakelsen.");
+    expect(t).toContain("At feilen viste seg mer enn to år etter overtakelsen, er ikke til hinder for reklamasjon: en bil er ment å vare vesentlig lenger enn to år, og den ytterste reklamasjonsfristen er derfor fem år, jf. § 27 annet ledd annet punktum.");
   });
   it("tidligere reklamasjon bare for det som var kjent, og rettidig per feil", () => {
     const t = tekst(saken);
     expect(t).toContain("og opplyste om feilen. For feil jeg har oppdaget etter det, er dette brevet reklamasjonen.");
-    expect(t).toContain("Reklamasjonen på feilen ved utslippssystemet (EGR, partikkelfilter eller AdBlue) og ved bremsene er fremsatt innen to måneder etter at jeg oppdaget dem");
-    expect(t).toContain("jf. § 27 fjerde ledd.");
-    expect(t).not.toContain("Reklamasjonen er fremsatt innen to måneder");
+    expect(t).toContain("Reklamasjonen er rettidig. Jeg reklamerte 10. april 2024, innen to måneder etter at jeg oppdaget feilen 2. april 2024, jf. § 27 første ledd.");
+    expect(t.split("2. Feilen ved turboen")[1].split("3. Feilen ved bremsene")[0]).toContain("Det gikk mer enn to måneder fra jeg oppdaget feilen til jeg reklamerte.");
+    expect(t).toContain("Reklamasjonen er rettidig. Jeg reklamerer med dette brevet, innen to måneder etter at jeg oppdaget feilen 10. oktober 2026, jf. § 27 første ledd.");
+  });
+  it("vedtaket per nøkkel: en feil datert for seg har sitt eget", () => {
+    const t = tilTekst(byggBrev(syncAreas(saken), { "motor.turbo": PRES }, idag));
+    const [, turbo] = t.split("2. Feilen ved turboen");
+    expect(turbo.split("3. Feilen ved bremsene")[0]).toContain(`Praksis fra Forbrukerklageutvalget. ${PRES.avsnitt}`);
+    expect(t.split("2. Feilen ved turboen")[0].split("1. Feilen ved utslippssystemet")[1]).toContain(LOVSETNING);
   });
 });
 
-describe("bevisbyrden og fristene i hvert sitt avsnitt", () => {
+describe("bevisbyrden og fristene i hvert sitt avsnitt, per feil", () => {
   // Karosseri inside the presumption but complained of late; klima after two years but in time.
   const s = { ...eksempel(idag), c_purchase: "2024-06-01", c_delivery: "2024-06-01", f_cats: ["karosseri", "klima"], f_parts: { karosseri: ["rust"], klima: ["ac"] }, f_area: { karosseri: { found: "2024-09-01" }, klima: { found: "2026-09-01" } }, f_catdesc: {}, f_prior: false, f_prior_svar: [] };
-  const avsnitt = () => tilTekst(byggBrev(syncAreas(s), PRES, idag)).split("\n\n");
-  it("formodningen i ett avsnitt, uten femårsregelen", () => {
-    const p = avsnitt().find((x) => x.startsWith("Feilen ved karosseriet"))!;
-    expect(p).toContain("viste seg innen to år etter overtakelsen. Etter § 18 annet ledd");
-    expect(p).toContain("at denne feilen ikke var til stede");
-    expect(p).not.toContain("fem år");
+  const t = () => tekst(s, PRES);
+  it("den første: formodningen, så den sene reklamasjonen", () => {
+    expect(t()).toContain(
+      "1. Rust\n\nMangelen forelå ved leveringen. Feilen viste seg innen to år etter overtakelsen. Etter § 18 annet ledd skal en mangel som viser seg innen to år etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises. Det er derfor dere som må bevise at feilen ikke var til stede da jeg overtok bilen. Verkstedrapporten fastslår at feilen ikke skyldes normal slitasje, og formodningen er dermed ikke uforenlig med varens eller mangelens art, jf. § 18 annet ledd tredje punktum.\n\nReklamasjonen er rettidig. Det gikk mer enn to måneder fra jeg oppdaget feilen til jeg reklamerte. To måneder er imidlertid bare lovens korteste frist.",
+    );
   });
-  it("fristene i neste avsnitt: først den rettidige, så femårsregelen, så den sene med lovens korteste frist", () => {
-    const p = avsnitt().find((x) => x.startsWith("Reklamasjonen på feilen ved klimaanlegget"))!;
-    expect(p).toMatch(/er dermed rettidig etter § 27 første ledd\. At feilen ved klimaanlegget \(AC\) viste seg mer enn to år etter overtakelsen, hindrer ikke reklamasjon: .* fem år, jf\. § 27 annet ledd annet punktum\. For feilen ved karosseriet gikk det mer enn to måneder fra jeg oppdaget den til jeg reklamerte\. To måneder er likevel bare lovens korteste frist\./);
+  it("den andre: rapporten i stedet for formodningen, så rettidig og femårsregelen", () => {
+    expect(t()).toContain(
+      "2. Feilen ved klimaanlegget (AC)\n\nMangelen forelå ved leveringen. Verkstedrapporten fastslår at feilen ikke skyldes normal slitasje.\n\nReklamasjonen er rettidig. Jeg reklamerer med dette brevet, innen to måneder etter at jeg oppdaget feilen 1. september 2026, jf. § 27 første ledd. At feilen viste seg mer enn to år etter overtakelsen, er ikke til hinder for reklamasjon: en bil er ment å vare vesentlig lenger enn to år, og den ytterste reklamasjonsfristen er derfor fem år, jf. § 27 annet ledd annet punktum.\n\nPraksis fra Forbrukerklageutvalget.",
+    );
+  });
+  it("uten rapportens ord om leveringen eller slitasje: ikke noe avsnitt om at mangelen forelå", () => {
+    const u = tekst({ ...s, ws: "nei", ws_says: [] }, PRES);
+    expect(u.split("2. Feilen ved klimaanlegget (AC)\n\n")[1]).toMatch(/^Reklamasjonen er rettidig\./);
+  });
+});
+
+describe("spesifikasjonens eksempel: to feil", () => {
+  const s = {
+    ...eksempel(idag),
+    c_make: "BMW", c_model: "iX3", c_year: "2022", c_purchase: "2024-06-04", c_delivery: "2024-06-04", c_km: "22 000", c_price: "520 000",
+    f_cats: ["karosseri", "klima"], f_parts: { karosseri: ["lakk"], klima: ["ac"] }, f_area: { karosseri: { found: "2025-02-23" }, klima: { found: "2026-10-01" } }, f_under: {},
+    f_catdesc: { karosseri: "Det er en stor bulk på innsiden av bagasjeromsluken ved siden av låsemekanismen.", klima: "Anlegget blåser bare varm luft, og luften i bilen blir fuktig." },
+    ws: "rapport", ws_name: "Testverkstedet AS", ws_says: ["bekrefter", "aarsak", "levering", "ikke_slitasje", "kostnad"], seller_said: "nei", seller_txt: "",
+    f_prior: true, f_prior_date: "2026-10-18", f_prior_svar: [], f_impact: ["plagsom", "bruk", "sikkerhet"], k_main: "retting", k_alt: "heving", l_date: "2026-10-23",
+  };
+  it("«Rettslig grunnlag» som i spesifikasjonen, med lovsetningen der vedtaket mangler", () => {
+    const t = tilTekst(byggBrev(syncAreas(s), { karosseri: PRES }, idag));
+    expect(t).toContain(
+      [
+        "Rettslig grunnlag",
+        "Etter forbrukerkjøpsloven § 15 skal bilen være i samsvar med avtalen og ha de egenskapene jeg med rette kunne forvente. Når den ikke er det, foreligger det en mangel, jf. § 16 første ledd bokstav a. Nedenfor går jeg gjennom de to feilene hver for seg.",
+        "1. Lakkskader eller bulker",
+        "Mangelen forelå ved leveringen. Feilen viste seg innen to år etter overtakelsen. Etter § 18 annet ledd skal en mangel som viser seg innen to år etter leveringen, formodes å ha eksistert ved leveringen, med mindre noe annet bevises. Det er derfor dere som må bevise at feilen ikke var til stede da jeg overtok bilen. Verkstedrapporten fastslår at feilen ikke skyldes normal slitasje, og formodningen er dermed ikke uforenlig med varens eller mangelens art, jf. § 18 annet ledd tredje punktum.",
+        "Reklamasjonen er rettidig. Det gikk mer enn to måneder fra jeg oppdaget feilen til jeg reklamerte. To måneder er imidlertid bare lovens korteste frist. Fristen etter § 27 første ledd er «innen rimelig tid», og den gjelder ikke dersom selgeren har opptrådt grovt uaktsomt eller i strid med redelighet og god tro, jf. § 27 fjerde ledd.",
+        `Praksis fra Forbrukerklageutvalget. ${PRES.avsnitt} Saken gjaldt samme type feil som min, og min sak bør derfor vurderes på samme måte. Vedtaket er offentlig tilgjengelig på https://example.org/v.pdf`,
+        "2. Feilen ved klimaanlegget (AC)",
+        "Mangelen forelå ved leveringen. Verkstedrapporten konkluderer med at feilen var til stede ved leveringen og at den ikke skyldes normal slitasje.",
+        `Reklamasjonen er rettidig. Jeg reklamerte 18. oktober 2026, innen to måneder etter at jeg oppdaget feilen 1. oktober 2026, jf. § 27 første ledd. At feilen viste seg mer enn to år etter overtakelsen, er ikke til hinder for reklamasjon: en bil er ment å vare vesentlig lenger enn to år, og den ytterste reklamasjonsfristen er derfor fem år, jf. § 27 annet ledd annet punktum. ${LOVSETNING}`,
+        "Krav",
+      ].join("\n\n"),
+    );
+  });
+  it("hovedoverskriften «Praksis fra …» er borte, og innledningsordene er kursive", () => {
+    const B = byggBrev(syncAreas(s), { karosseri: PRES, klima: PRES }, idag);
+    expect(B.filter((b) => b.t === "h").map((b) => tilTekst([b]))).toEqual(["Mangelen", "Rettslig grunnlag", "Krav", "Vedlegg"]);
+    const kursiv = B.flatMap((b) => ("tekst" in b ? b.tekst : [])).flatMap((d) => (typeof d === "object" && "kursiv" in d ? [d.kursiv] : []));
+    expect(kursiv).toEqual(["Mangelen forelå ved leveringen.", "Reklamasjonen er rettidig.", "Praksis fra Forbrukerklageutvalget.", "Mangelen forelå ved leveringen.", "Reklamasjonen er rettidig.", "Praksis fra Forbrukerklageutvalget."]);
+  });
+  it("vedtakets avsnitt er merket per feil", () => {
+    const B = byggBrev(syncAreas(s), { karosseri: PRES, klima: PRES }, idag);
+    const felt = B.flatMap((b) => ("tekst" in b ? b.tekst : [])).flatMap((d) => (typeof d === "object" && "felt" in d && d.felt.startsWith("vedtak.") ? [d.felt] : []));
+    expect(felt).toEqual(["vedtak.avsnitt.karosseri", "vedtak.avsnitt.klima"]);
+  });
+  it("mens vedtakene hentes: plassholder under hver feil", () => expect(tekst(s, "venter").split("Praksis fra Forbrukerklageutvalget. [lignende sak hentes]").length).toBe(3));
+  it("én feil: ingen underoverskrift og ingen «Nedenfor», men de tre avsnittene", () => {
+    const t = tekst(eksempel(idag), PRES);
+    expect(t).not.toContain("Nedenfor går jeg gjennom");
+    expect(t).toMatch(/\n\nMangelen forelå ved leveringen\. [\s\S]*\n\nReklamasjonen er rettidig\. [\s\S]*\n\nPraksis fra Forbrukerklageutvalget\. /);
   });
 });
 
@@ -579,14 +634,15 @@ describe("ordlyd", () => {
 
 describe("fristene, runde 2", () => {
   const base = { ...eksempel(idag), c_purchase: "2021-01-01", c_delivery: "2021-01-01", f_cats: ["motor", "klima"], f_parts: { motor: ["turbo"], klima: ["ac"] }, f_area: { motor: { found: "2025-11-01" }, klima: { found: "2026-09-01" } }, f_catdesc: {}, f_under: {}, seller_said: "nei", f_prior: true, f_prior_date: "2025-11-20", f_prior_svar: ["for_sent"] };
-  it("en feil reklamert med brevet etter fem år er ikke rettidig", () => {
+  it("en feil reklamert med brevet etter fem år er ikke rettidig, den andre er det", () => {
     const t = tekst(base);
-    expect(t).not.toContain("er dermed rettidig");
+    expect(t.split("2. Feilen ved klimaanlegget (AC)")[1]).not.toContain("innen to måneder");
+    expect(t).toContain("Jeg reklamerte 20. november 2025, innen to måneder etter at jeg oppdaget feilen 1. november 2025, jf. § 27 første ledd.");
   });
   it("tidligere reklamasjon uten dato: ingenting om sen reklamasjon", () => {
     const s = { ...eksempel(idag), f_prior: true, f_prior_date: "", c_purchase: "2025-01-01", c_delivery: "2025-01-01" };
     s.f_area = { hoyvolt: { found: "2025-03-01" } };
-    expect(tekst(s)).not.toContain("Reklamasjonsfristen etter");
+    expect(tekst(s)).not.toContain("To måneder er imidlertid");
   });
   it("etter fem år med unntaket: svaret på «for sent» viser ikke til femårsfristen", () => {
     const s = { ...base, c_unntak: true, f_area: { motor: { found: "2026-09-01" }, klima: { found: "2026-09-01" } }, f_prior_date: "2026-09-10" };
@@ -594,9 +650,10 @@ describe("fristene, runde 2", () => {
     expect(t).toContain("Fristen på fem år gjelder likevel ikke");
     expect(t).not.toContain("den ytterste fristen fem år");
   });
-  it("sen feil nevnes ved navn når andre er i tide", () => {
+  it("sen feil får lovens frist under sin egen overskrift når andre er i tide", () => {
     const s = { ...eksempel(idag), c_purchase: "2025-01-01", c_delivery: "2025-01-01", f_cats: ["motor", "klima"], f_parts: { motor: ["turbo"], klima: ["ac"] }, f_area: { motor: { found: "2025-03-01" }, klima: { found: "2026-10-01" } }, f_catdesc: {}, f_prior: false, f_prior_svar: [] };
-    expect(tekst(s)).toContain("For feilen ved turboen gikk det mer enn to måneder fra jeg oppdaget den til jeg reklamerte. To måneder er likevel bare lovens korteste frist. Fristen etter § 27 første ledd er «innen rimelig tid», og den gjelder ikke dersom");
+    expect(tekst(s).split("2. Feilen ved klimaanlegget (AC)")[0]).toContain("1. Feilen ved turboen\n\nMangelen forelå ved leveringen. Feilen viste seg innen to år etter overtakelsen.");
+    expect(tekst(s).split("2. Feilen ved klimaanlegget (AC)")[0]).toContain("Reklamasjonen er rettidig. Det gikk mer enn to måneder fra jeg oppdaget feilen til jeg reklamerte. To måneder er imidlertid bare lovens korteste frist.");
   });
   it("oppgitt kilometerstand når km er en feil", () => expect(tekst({ ...eksempel(idag), c_km: "141 000", f_cats: ["historikk"], f_parts: { historikk: ["km"] }, f_area: { historikk: { found: "2026-09-01" } } })).toContain("med en oppgitt kilometerstand på 141 000 km"));
   it("retting med subsidiær heving: ikke «avvise videre retting»", () => expect(tekst({ ...eksempel(idag), k_main: "retting", k_alt: "heving", k_forsok: "1" })).not.toContain("avvise videre retting"));

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { byggBrev } from "./brev";
+import { feilposter } from "./feil";
 import type { Presedens } from "./brevtyper";
 import { sladd } from "./sladd";
 import { eksempel, syncAreas } from "./skjema";
@@ -25,14 +26,14 @@ const PRES: Presedens = {
 };
 
 describe("sladd", () => {
-  const B0 = byggBrev(syncAreas(eksempel(idag)), PRES, idag);
+  const B0 = byggBrev(syncAreas(eksempel(idag)), Object.fromEntries(feilposter(eksempel(idag)).map((p) => [p.nokkel, PRES])), idag);
   const B = sladd(B0);
   const json = JSON.stringify(B);
 
   // «Bilen kan stilles til rådighet …» is a one-sentence paragraph, so its first half stays; the rest
   // («… etter nærmere avtale») is what must not be sent.
   it("skjult tekst sendes ikke", () => {
-    for (const t of ["Det er dermed dere som må bevise", "formodes å ha eksistert", "etter nærmere avtale"]) expect(json).not.toContain(t);
+    for (const t of ["Det er derfor dere som må bevise", "formodes å ha eksistert", "etter nærmere avtale"]) expect(json).not.toContain(t);
   });
 
   it("overskrifter og svar vises", () => {
@@ -79,9 +80,10 @@ describe("sladd", () => {
     expect(sladd(inn)).toEqual(inn);
   });
 
-  it("prec skjules avsnitt for avsnitt", () => {
-    const [p] = sladd([{ t: "prec", avsnitt: [["Én to. Tre fire."], ["fem seks"]] }]);
-    expect(p).toEqual({ t: "prec", avsnitt: [["Én to. ", { skjult: 10 }], ["fem ", { skjult: 10 }]] });
+  it("praksisavsnittet: kursivordet og feltmerket står, lenken skjules", () => {
+    const p = B.find((b) => b.t === "p" && b.tekst.some((d) => typeof d === "object" && "felt" in d && d.felt.startsWith("vedtak.avsnitt")));
+    expect(p?.t === "p" && p.tekst[0]).toEqual({ kursiv: "Praksis fra Forbrukerklageutvalget." });
+    expect(JSON.stringify(p)).not.toContain("offentlig tilgjengelig");
   });
 });
 

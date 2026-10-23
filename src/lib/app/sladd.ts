@@ -78,7 +78,6 @@ function sladdDeler(inn: Del[]): Del[] {
 export function sladd(blokker: Blokk[]): Blokk[] {
   return blokker.map((b) => {
     if (b.t === "p") return { ...b, tekst: sladdDeler(b.tekst) };
-    if (b.t === "prec") return { ...b, avsnitt: b.avsnitt.map(sladdDeler) };
     return b;
   });
 }

@@ -6,7 +6,14 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const SETNINGER = ["Det er dermed dere som må bevise", "Jeg er kjent med at dere kan tilby å rette mangelen", "Bilen kan stilles til rådighet for", "Reklamasjonen er fremsatt innen to måneder"];
+const SETNINGER = [
+  "Det er derfor dere som må bevise",
+  "Jeg er kjent med at dere kan tilby å rette mangelen",
+  "Bilen kan stilles til rådighet for",
+  "innen to måneder etter at jeg oppdaget feilen",
+  "Nedenfor går jeg gjennom de",
+  "To måneder er imidlertid bare lovens korteste frist",
+];
 
 const mappe = process.argv[2] ?? ".next/static";
 // A minifier may write «å» as å or \xe5.

@@ -6,7 +6,7 @@
 // for the owner, with the car and the faults as bought (laas).
 import { headers } from "next/headers";
 import { byggBrev, emne, tilTekst } from "@/lib/app/brev";
-import type { Blokk, Presedens } from "@/lib/app/brevtyper";
+import type { Blokk, Presedens, Presedenser } from "@/lib/app/brevtyper";
 import { idag } from "@/lib/app/dato";
 import { erObjekt } from "@/lib/app/flett";
 import { forhandsvisning } from "@/lib/app/forhandsvisning";
@@ -97,17 +97,34 @@ function rensPresedens(v: unknown): Presedens | "venter" | null | undefined {
   return { id, saksnummer, vedtaksdato, bil, utfall, avsnitt, kildeUrl, utvalg, anbefalt, niva, gjaldt, km, alder, somDenEr, likhet, treff: treff as Record<Kriterium, Treff> };
 }
 
-// `presedens` is the decision picked in «Lignende vedtak», or «venter» while the list is still being fetched.
-export async function fulltBrev(inn: { id: unknown; skjema: unknown; presedens: unknown }): Promise<FulltBrev> {
+// The decisions under the faults, by the fault's key (Feilpost.nokkel), each as rensPresedens takes it.
+// Undefined when it is not such an object; a key the letter does not have is ignored there.
+const MAKS_PRESEDENSER = 40;
+function rensPresedenser(v: unknown): Presedenser | undefined {
+  if (!erObjekt(v) || Array.isArray(v)) return undefined;
+  const ut: Presedenser = {};
+  const par = Object.entries(v);
+  if (par.length > MAKS_PRESEDENSER) return undefined;
+  for (const [k, p] of par) {
+    if (!/^[a-z_]+(\.[a-z_]+)?$/.test(k)) return undefined;
+    const r = rensPresedens(p);
+    if (r === undefined) return undefined;
+    ut[k] = r;
+  }
+  return ut;
+}
+
+// `presedenser` are the decisions picked in «Lignende vedtak», one per fault, «venter» while the list is still being fetched.
+export async function fulltBrev(inn: { id: unknown; skjema: unknown; presedenser: unknown }): Promise<FulltBrev> {
   if (forMangeBrev(await ipAdresse())) return FOR_MANGE;
   try {
     const lagret = await hentEgenSak(inn?.id);
     if (!lagret) return { ok: false, melding: "Brevet er ikke betalt." };
     const dag = idag();
     const skjema = rensSkjema(inn.skjema, dag);
-    const presedens = rensPresedens(inn.presedens);
-    if (!skjema || presedens === undefined) return { ok: false, melding: "Noe er galt med svarene. Prøv igjen." };
-    const blokker = byggBrev(syncAreas(laas(lagret.skjema, skjema)), presedens, dag);
+    const presedenser = rensPresedenser(inn.presedenser);
+    if (!skjema || presedenser === undefined) return { ok: false, melding: "Noe er galt med svarene. Prøv igjen." };
+    const blokker = byggBrev(syncAreas(laas(lagret.skjema, skjema)), presedenser, dag);
     return { ok: true, blokker, tekst: tilTekst(blokker), emne: emne(blokker) };
   } catch (e) {
     console.error("brevet feilet", feiltekst(e));

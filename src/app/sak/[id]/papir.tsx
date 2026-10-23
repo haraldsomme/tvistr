@@ -57,8 +57,6 @@ export function BlokkEl({ b }: { b: Blokk }) {
       return <p><Deler d={b.tekst} /></p>;
     case "ol":
       return <ol>{b.punkter.map((d, j) => <li key={j}><Deler d={d} /></li>)}</ol>;
-    case "prec":
-      return <div className="l-prec">{b.avsnitt.map((d, j) => <p key={j}><Deler d={d} /></p>)}</div>;
   }
 }
 

@@ -10,8 +10,7 @@ export type Del = string | { ph: string } | { felt: string; tekst: string } | { 
 export type Blokk =
   | { t: "addr" | "sign"; linjer: Del[][] }
   | { t: "date" | "subj" | "h" | "h2" | "p"; tekst: Del[] }
-  | { t: "ol"; punkter: Del[][] }
-  | { t: "prec"; avsnitt: Del[][] };
+  | { t: "ol"; punkter: Del[][] };
 
 // One of the (up to ten) decisions the letter can cite, as finnVedtak returns it after payment.
 export type Presedens = {
@@ -35,3 +34,7 @@ export type Presedens = {
   likhet: number;
   treff: Record<Kriterium, Treff>;
 };
+
+// The decision the letter cites under each fault, by the fault's key (Feilpost.nokkel): one of
+// finnVedtak's, «venter» while it is being fetched, or none (null or missing: the law's sentence).
+export type Presedenser = Record<string, Presedens | null | "venter">;

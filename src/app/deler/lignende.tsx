@@ -22,7 +22,8 @@ export function Lignende({
   tall: Tallblokk[];
   kort: Vedtakskort[];
   sammenligning: string | null;
-  brukes?: number | null;
+  // The decisions the letter cites (one per fault), marked on their cards.
+  brukes?: readonly number[];
   fot: ReactNode;
 }) {
   const b = blokker.find((x) => x.tall);
@@ -87,7 +88,7 @@ export function Lignende({
                   {meta && <div className="sim-c-m">{meta}</div>}
                   <div className="sim-c-f">
                     <span className="sim-chip">{sakTekst(k.saksnummer, k.ar)}</span>
-                    {brukes === k.id && <span className="sim-use">Brukes i brevet</span>}
+                    {brukes?.includes(k.id) && <span className="sim-use">Brukes i brevet</span>}
                   </div>
                 </div>
               );

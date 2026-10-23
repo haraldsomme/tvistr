@@ -380,9 +380,11 @@ export const sak = pgTable(
     skjema: jsonb("skjema").$type<Skjema>().notNull(),
     // Null until an order for the case is paid.
     betalt: timestamp("betalt", { withTimezone: true }),
-    // The decision choice (finnVedtak): the list the buyer last got, the recommended first, and the
-    // last model answers by what the model read, so the same answers never cost a second call.
-    vedtaksvalg: jsonb("vedtaksvalg").$type<{ liste: number[]; svar: LagretSvar[] }>(),
+    // The decision choice (finnVedtak): the lists the buyer last got, one per fault with the
+    // recommended first, and the last model answers by what the model read, so the same answers
+    // never cost a second call. Rows from before one decision per fault hold one list of numbers and
+    // answers with `vedtakId`; finnVedtak reads them as empty (erLagretSvar).
+    vedtaksvalg: jsonb("vedtaksvalg").$type<{ liste: number[][]; svar: LagretSvar[] }>(),
     // Model calls made for the case, against MAKS_MODELLKALL_PER_SAK.
     modellkall: integer("modellkall").notNull().default(0),
     opprettet: timestamp("opprettet", { withTimezone: true }).notNull().defaultNow(),

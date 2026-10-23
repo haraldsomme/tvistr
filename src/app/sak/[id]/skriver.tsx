@@ -54,8 +54,8 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
     return () => clearTimeout(t);
   }, [toast]);
 
-  // For now the one decision stands under every fault (one per fault comes with finnVedtak's lists).
-  const presedenser = Object.fromEntries(svarPoster(s).map((p) => [p.nokkel, vedtak.venter ? ("venter" as const) : vedtak.valgt]));
+  // The decision under each fault, by its key; while the lists are fetched, a gap under every dated fault.
+  const presedenser = vedtak.venter ? Object.fromEntries(svarPoster(s).map((p) => [p.nokkel, "venter" as const])) : Object.fromEntries(vedtak.feil.map((f) => [f.nokkel, f.valgt]));
   const brev = useBrev(() => fulltBrev({ id, skjema: s, presedenser }), JSON.stringify([id, s, presedenser]));
   // Copying waits for the letter built from the answers as they are now; after a failed call the
   // letter shown is an older one.
@@ -166,7 +166,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
           tall={lignende.tall}
           kort={lignende.kort}
           sammenligning={lignende.sammenligning}
-          brukes={s.prec_id}
+          brukes={vedtak.feil.flatMap((f) => (f.valgt ? [f.valgt.id] : []))}
           fot={
             <>
               Brevet viser til saken du har valgt, og forklarer hvorfor du har krav på samme resultat.{" "}
@@ -183,7 +183,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
           Hva du kan gjøre hvis forhandleren avviser
         </a>
       </p>
-      {vindu && <Vedtaksvindu vedtak={vedtak} sett={sett} onLukk={lukkVindu} />}
+      {vindu && <Vedtaksvindu vedtak={vedtak} prec={s.prec} sett={sett} onLukk={lukkVindu} />}
       <div className={`toast${toast ? " on" : ""}`} role="status" aria-live="polite">
         {toast}
       </div>

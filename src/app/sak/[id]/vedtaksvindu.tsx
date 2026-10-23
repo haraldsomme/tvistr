@@ -1,6 +1,7 @@
-// «Lignende vedtak» (mockup, after payment): the ranking's top ten decisions with medhold, the model's
-// choice first («Anbefalt»), each with how it compares to the buyer's case and its likeness. The buyer
-// picks the one the letter cites; the pick applies on «Ferdig» and is dropped on «Avbryt».
+// «Lignende vedtak» (mockup, after payment): for each fault, the ranking's top ten decisions with
+// medhold, the model's choice first («Anbefalt»), each with how it compares to the buyer's case and its
+// likeness. The buyer picks the one the letter cites under each fault; the picks apply on «Ferdig» and
+// are dropped on «Avbryt».
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Hake, Lukk } from "@/app/deler/ikoner";
@@ -9,9 +10,12 @@ import { fmtD } from "@/lib/app/dato";
 import { cap, tall } from "@/lib/app/format";
 import type { Presedens } from "@/lib/app/brevtyper";
 import { trygt } from "@/lib/app/kall";
-import { nyttPrecValg, type Precutfall, sakNavn, tilSvar } from "@/lib/app/saken";
+import { delTekst, feiloverskrift } from "@/lib/app/feilnavn";
+import { feilposterSortert } from "@/lib/app/feil";
+import { nyttPrecValg, type Precutfall, sakNavn, svarPoster, tilSvar } from "@/lib/app/saken";
 import type { Skjema } from "@/lib/app/skjema";
 import type { Kriterium, Treff } from "@/lib/matching/ranger";
+import type { Endring } from "@/lib/vedtaksvalg/valg";
 import { type Funn, finnVedtak } from "./actions";
 
 // One request per set of answers at a time, however often the page asks while it runs. A result
@@ -24,15 +28,27 @@ const hent = (svar: NonNullable<ReturnType<typeof tilSvar>>, id: string) => {
   return underveis.get(k)!;
 };
 
-// A list as it arrived, and what it did to the decision the letter cites.
-type Hentet = {
-  n: string;
-  f: Funn;
+// What a new list did to the decision the letter cites under one fault.
+type Virkning = {
   utfall: Precutfall;
   // The decision the letter cited before the new list replaced it; null when it still cites the same.
   byttetFra: Presedens | null;
   // The buyer's own pick, kept or gone (utfall).
   egetValg: Presedens | null;
+};
+
+// The lists as they arrived: one per fault, in the order of the answers' faults (`nokler`).
+type Hentet = { n: string; f: Funn; nokler: string[]; virkning: Record<string, Virkning> };
+
+// One fault's decisions: its number and name as the letter has them, the list, the one the letter
+// cites, and what changed since the list the buyer last got.
+export type Feilvalg = {
+  nokkel: string;
+  nr: number;
+  navn: string;
+  valg: Presedens[];
+  valgt: Presedens | null;
+  endring: (Endring & Virkning) | null;
 };
 
 export type Vedtaksvalg = {
@@ -41,19 +57,17 @@ export type Vedtaksvalg = {
   // A list for other answers was shown in this session: the answers changed and a new one is coming.
   endres: boolean;
   funn: Funn | null;
-  // What changed since the list the buyer last got (finnVedtak), with what it did to the letter.
-  endring: (NonNullable<Extract<Funn, { ok: true }>["endring"]> & Omit<Hentet, "n" | "f">) | null;
-  valg: Presedens[];
-  valgt: Presedens | null;
-  // The letter waits for the decision.
+  // The faults with a list, in the letter's order.
+  feil: Feilvalg[];
+  // The letter waits for the decisions.
   venter: boolean;
   provIgjen: () => void;
 };
 
 // The decisions for the case's answers, fetched 800 ms after they last changed while `aktiv` (no row
 // that changes them is open, or the dialog is). Each new set of answers costs one of the case's model
-// calls, so not while the buyer is typing in such a row, where the last list stands and the letter
-// keeps citing its decision, and not again for a list already shown. A failed set is fetched again
+// calls, so not while the buyer is typing in such a row, where the last lists stand and the letter
+// keeps citing their decisions, and not again for lists already shown. A failed set is fetched again
 // when the lookup becomes active again, and on «Prøv igjen».
 export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean): Vedtaksvalg {
   const svar = tilSvar(s);
@@ -69,13 +83,23 @@ export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean): Ve
       () =>
         hent(svar, id).then((f) => {
           if (!gjeldende) return;
+          // Each list belongs to the fault at its place in the answers (svarPoster), never by the letter's order.
+          const nokler = svarPoster(s).map((p) => p.nokkel);
+          const lister = f.ok ? nokler.map((nokkel, i) => ({ nokkel, valg: f.valg[i] ?? [] })) : [];
           // The letter follows the recommendation, unless the buyer picked another that is still on the list.
-          const { endre, utfall } = f.ok ? nyttPrecValg(s, f.valg) : { endre: null, utfall: "fulgt" as const };
+          const { endre, utfall } = nyttPrecValg(s.prec, lister);
           settFunn((forrige) => {
-            const kjente = [...(f.ok ? f.valg : []), ...(forrige?.f.ok ? forrige.f.valg : [])];
-            const sak = (id: number | null) => kjente.find((v) => v.id === id) ?? null;
-            const byttet = f.ok && !!f.endring && s.prec_id !== null && endre?.prec_id !== undefined && endre.prec_id !== s.prec_id;
-            return { n, f, utfall, byttetFra: byttet ? sak(s.prec_id) : null, egetValg: utfall === "fulgt" ? null : sak(s.prec_id) };
+            const kjente = [...lister.flatMap((l) => l.valg), ...(forrige?.f.ok ? forrige.f.valg.flat() : [])];
+            const sak = (id: number | undefined) => kjente.find((v) => v.id === id) ?? null;
+            const virkning = Object.fromEntries(
+              lister.map(({ nokkel }, i) => {
+                const for_ = s.prec[nokkel]?.id;
+                const na = endre?.prec?.[nokkel]?.id ?? for_;
+                const byttet = f.ok && !!f.endring[i] && for_ !== undefined && na !== for_;
+                return [nokkel, { utfall: utfall[nokkel] ?? "fulgt", byttetFra: byttet ? sak(for_) : null, egetValg: utfall[nokkel] && utfall[nokkel] !== "fulgt" ? sak(for_) : null }];
+              }),
+            );
+            return { n, f, nokler, virkning };
           });
           if (endre) sett(endre);
         }),
@@ -89,17 +113,24 @@ export function useVedtak(s: Skjema, sett: Sett, id: string, aktiv: boolean): Ve
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hente, n, id, forsok]);
 
-  // The list for these answers, or while inactive the last one fetched.
+  // The lists for these answers, or while inactive the last ones fetched.
   const aktuell = funn && (funn.n === n || (!aktiv && funn.f.ok)) ? funn.f : null;
-  const valg = aktuell?.ok ? aktuell.valg : [];
-  const endring = aktuell?.ok && aktuell.endring && funn ? { ...aktuell.endring, utfall: funn.utfall, byttetFra: funn.byttetFra, egetValg: funn.egetValg } : null;
+  const poster = feilposterSortert(s);
+  const feil: Feilvalg[] =
+    aktuell?.ok && funn
+      ? poster.flatMap((p, j) => {
+          const i = funn.nokler.indexOf(p.nokkel);
+          if (i < 0) return [];
+          const valg = aktuell.valg[i] ?? [];
+          const e = aktuell.endring[i];
+          return [{ nokkel: p.nokkel, nr: j + 1, navn: cap(delTekst(feiloverskrift(p, "ubestemt"))), valg, valgt: valg.find((v) => v.id === s.prec[p.nokkel]?.id) ?? valg[0] ?? null, endring: e ? { ...e, ...funn.virkning[p.nokkel] } : null }];
+        })
+      : [];
   return {
     mangler: !svar,
     endres: !!funn && funn.n !== n,
     funn: aktuell,
-    endring,
-    valg,
-    valgt: valg.find((v) => v.id === s.prec_id) ?? valg[0] ?? null,
+    feil,
     venter: !!svar && (!aktuell || !aktuell.ok),
     provIgjen: () => settForsok((f) => f + 1),
   };
@@ -119,7 +150,7 @@ export const TREFFTEKST: Record<Kriterium, Partial<Record<Treff, [Tone, string]>
   grunnlag: { likt: ["good", "Bygde på bevis du også har"], mildere: ["warn", "Bygde på bevis du ikke har"] },
 };
 
-function Kort({ v, valgt, iBrevet, ny, onVelg }: { v: Presedens; valgt: boolean; iBrevet: boolean; ny: boolean; onVelg: () => void }) {
+function Kort({ navn, v, valgt, iBrevet, ny, onVelg }: { navn: string; v: Presedens; valgt: boolean; iBrevet: boolean; ny: boolean; onVelg: () => void }) {
   const tittel = [v.bil, v.km !== null ? `${tall(v.km)} km` : "", v.alder !== null ? `${v.alder} år gammel` : "", v.somDenEr ? "«som den er»" : ""].filter(Boolean).join(" · ");
   const brikker = (Object.keys(TREFFTEKST) as Kriterium[]).flatMap((k) => {
     const t = TREFFTEKST[k][v.treff[k]];
@@ -127,7 +158,7 @@ function Kort({ v, valgt, iBrevet, ny, onVelg }: { v: Presedens; valgt: boolean;
   });
   return (
     <label className="fl-vk" data-valgt={valgt || undefined}>
-      <input type="radio" name="prec_id" value={v.id} checked={valgt} onChange={onVelg} />
+      <input type="radio" name={navn} value={v.id} checked={valgt} onChange={onVelg} />
       <span className="fl-vk-o" aria-hidden="true" />
       <span className="fl-vk-b">
         <span className="fl-vk-h">
@@ -171,8 +202,10 @@ function Kort({ v, valgt, iBrevet, ny, onVelg }: { v: Presedens; valgt: boolean;
   );
 }
 
-// Why the list changed and what it did to the letter, so new decisions on top are no surprise.
-function Endringsmelding({ endring, valg, valgt }: { endring: NonNullable<Vedtaksvalg["endring"]>; valg: Presedens[]; valgt: Presedens | null }) {
+// Why a fault's list changed and what it did to the letter, so new decisions on top are no surprise.
+function Endringsmelding({ f }: { f: Feilvalg }) {
+  const { endring, valg, valgt } = f;
+  if (!endring) return null;
   const anbefalt = valg[0];
   const setninger = [
     endring.nye.length
@@ -192,17 +225,38 @@ function Endringsmelding({ endring, valg, valgt }: { endring: NonNullable<Vedtak
   );
 }
 
+// One fault's cards, under its number and name when the letter has several faults.
+function Feilliste({ f, flere, markert, onVelg }: { f: Feilvalg; flere: boolean; markert: Presedens | null; onVelg: (id: number) => void }) {
+  return (
+    <section className="fl-vk-g" aria-label={flere ? `${f.nr}. ${f.navn}` : undefined}>
+      {flere && <h3 className="fl-vk-gh">{`${f.nr}. ${f.navn}`}</h3>}
+      <Endringsmelding f={f} />
+      {f.valg.length ? (
+        <div className="fl-vk-l" role="radiogroup" aria-label={flere ? `Lignende vedtak for ${f.navn.toLowerCase()}` : "Lignende vedtak"}>
+          {f.valg.map((v) => (
+            <Kort key={v.id} navn={`prec_${f.nokkel}`} v={v} valgt={v.id === markert?.id} iBrevet={v.id === f.valgt?.id} ny={!!f.endring?.nye.includes(v.id)} onVelg={() => onVelg(v.id)} />
+          ))}
+        </div>
+      ) : (
+        <p className="fl-melding">Vi fant ingen lignende sak med medhold for denne feilen. Brevet bygger der på lovens vilkår.</p>
+      )}
+    </section>
+  );
+}
+
 // The dialog, mounted afresh on each opening (the page renders it only while open), so a dropped pick is
 // gone the next time. Every way out closes the <dialog> (Escape too), which puts focus back where it was, and its
 // close event tells the page; the page behind does not scroll (globals.css).
-export function Vedtaksvindu({ vedtak, sett, onLukk }: { vedtak: Vedtaksvalg; sett: Sett; onLukk: () => void }) {
-  const { funn, valg, valgt } = vedtak;
-  // The staged pick; null follows the letter.
-  const [plukk, settPlukk] = useState<number | null>(null);
-  const markert = valg.find((v) => v.id === plukk) ?? valgt;
+export function Vedtaksvindu({ vedtak, prec, sett, onLukk }: { vedtak: Vedtaksvalg; prec: Skjema["prec"]; sett: Sett; onLukk: () => void }) {
+  const { funn, feil } = vedtak;
+  // The staged picks per fault; a fault without one follows the letter.
+  const [plukk, settPlukk] = useState<Record<string, number>>({});
+  const markert = (f: Feilvalg) => f.valg.find((v) => v.id === plukk[f.nokkel]) ?? f.valgt;
   const vindu = useRef<HTMLDialogElement>(null);
   const boks = useRef<HTMLDivElement>(null);
   const lukk = () => vindu.current?.close();
+  const flere = feil.length > 1;
+  const antall = feil.reduce((n, f) => n + f.valg.length, 0);
 
   useEffect(() => {
     vindu.current?.showModal();
@@ -210,7 +264,11 @@ export function Vedtaksvindu({ vedtak, sett, onLukk }: { vedtak: Vedtaksvalg; se
   }, []);
 
   const ferdig = () => {
-    if (markert && markert.id !== valgt?.id) sett({ prec_id: markert.id, prec_selv: !markert.anbefalt });
+    const endret = feil.flatMap((f) => {
+      const m = markert(f);
+      return m && m.id !== f.valgt?.id ? [[f.nokkel, { id: m.id, selv: !m.anbefalt }] as const] : [];
+    });
+    if (endret.length) sett({ prec: { ...prec, ...Object.fromEntries(endret) } });
     lukk();
   };
 
@@ -221,7 +279,9 @@ export function Vedtaksvindu({ vedtak, sett, onLukk }: { vedtak: Vedtaksvalg; se
           <div>
             <h2 id="vedtakTittel">Lignende vedtak</h2>
             <p>
-              {valg.length ? `${valg.length} vedtak` : "Vedtak"} fra Forbrukerklageutvalget der kjøperen fikk medhold. Det øverste ligner mest på saken din, og det er det vi anbefaler. Vedtaket du velger, brukes i brevet.
+              {flere
+                ? "Vedtak fra Forbrukerklageutvalget der kjøperen fikk medhold, ett for hver feil i brevet. Det øverste under hver feil ligner mest, og det er det vi anbefaler. Vedtakene du velger, brukes i brevet."
+                : `${antall ? `${antall} vedtak` : "Vedtak"} fra Forbrukerklageutvalget der kjøperen fikk medhold. Det øverste ligner mest på saken din, og det er det vi anbefaler. Vedtaket du velger, brukes i brevet.`}
             </p>
           </div>
           <button type="button" className="fl-ikon" aria-label="Lukk" onClick={lukk}>
@@ -242,18 +302,15 @@ export function Vedtaksvindu({ vedtak, sett, onLukk }: { vedtak: Vedtaksvalg; se
                 Prøv igjen
               </button>
             </div>
-          ) : !valg.length ? (
+          ) : !antall ? (
             <p className="fl-melding">Vi fant ingen lignende sak med medhold. Brevet bygger på lovens vilkår.</p>
           ) : (
             <>
-              {vedtak.endring && <Endringsmelding endring={vedtak.endring} valg={valg} valgt={valgt} />}
-              <div className="fl-vk-l" role="radiogroup" aria-label="Lignende vedtak">
-                {valg.map((v) => (
-                  <Kort key={v.id} v={v} valgt={v.id === markert?.id} iBrevet={v.id === valgt?.id} ny={!!vedtak.endring?.nye.includes(v.id)} onVelg={() => settPlukk(v.id)} />
-                ))}
-              </div>
+              {feil.map((f) => (
+                <Feilliste key={f.nokkel} f={f} flere={flere} markert={markert(f)} onVelg={(id) => settPlukk((p) => ({ ...p, [f.nokkel]: id }))} />
+              ))}
               <p className="fine" style={{ margin: 0 }}>
-                Likhet viser hvor mye vedtaket ligner saken din på feil, tidspunkt, bil, krav og bevis. Det er ikke en vinnersjanse.
+                Likhet viser hvor mye vedtaket ligner {flere ? "feilen" : "saken din"} på feil, tidspunkt, bil, krav og bevis. Det er ikke en vinnersjanse.
               </p>
             </>
           )}

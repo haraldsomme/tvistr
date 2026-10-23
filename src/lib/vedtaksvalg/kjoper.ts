@@ -40,6 +40,8 @@ export type Kjoper = {
   krav: Krav | null;
   rettingsforsok: number | null;
   feil: {
+    // 1, 2, …: the model answers with one decision per fault by this number (feil_nr).
+    nr: number;
     kategori: string;
     underkategorier: string[];
     beskrivelse: string | null;
@@ -86,6 +88,7 @@ export function byggSaken(s: Svar): { sak: Brukersak; kjoper: Kjoper } {
     feil: s.feil.map((f, i) => {
       const h = HOVEDKATEGORIER.find((x) => x.id === f.hoved)!;
       return {
+        nr: i + 1,
         kategori: `${h.id} (${h.navn})`,
         underkategorier: f.under.map((u) => `${h.id}.${u} (${h.under.find((x) => x.id === u)!.navn})`),
         beskrivelse: f.beskrivelse,

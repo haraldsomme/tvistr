@@ -16,7 +16,8 @@ import { cap } from "@/lib/app/format";
 import { sakNavn, sakTekst } from "@/lib/app/saken";
 import { IMPACT, type Skjema, syncAreas, vedlegg } from "@/lib/app/skjema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
-import type { Vedtaksvalg } from "./vedtaksvindu";
+import { liste } from "@/lib/brev/format";
+import type { Feilvalg, Vedtaksvalg } from "./vedtaksvindu";
 
 const IKKE = "Ikke fylt ut";
 const ledd = (...x: (string | false | null | undefined)[]) => x.filter(Boolean).join(" · ") || IKKE;
@@ -92,19 +93,25 @@ const Laas = () => (
   </svg>
 );
 
-// What the letter cites, for the row «Vedtaket».
-function vedtakTekst(s: Skjema, v: Vedtaksvalg): string {
+// What the letter cites, for the row «Vedtaket»: the decision, its car and «Anbefalt» for one fault;
+// numbered as in the letter for several.
+export function vedtakTekst(s: Skjema, v: Vedtaksvalg): string {
   if (v.mangler) return "Legg inn datoene først";
   if (!v.funn) return "Finner lignende saker …";
   if (!v.funn.ok) return "Fikk ikke hentet vedtakene";
-  if (!v.valgt) return "Ingen lignende sak med medhold";
-  return [sakTekst(v.valgt.saksnummer, v.valgt.vedtaksdato?.slice(0, 4) ?? null), v.valgt.bil, v.valgt.anbefalt && "Anbefalt"].filter(Boolean).join(" · ");
+  if (!v.feil.some((f) => f.valgt)) return "Ingen lignende sak med medhold";
+  const sak = (p: NonNullable<Feilvalg["valgt"]>) => sakTekst(p.saksnummer, p.vedtaksdato?.slice(0, 4) ?? null);
+  if (v.feil.length === 1) {
+    const p = v.feil[0].valgt!;
+    return [sak(p), p.bil, p.anbefalt && "Anbefalt"].filter(Boolean).join(" · ");
+  }
+  return v.feil.map((f) => `${f.nr}. ${f.valgt ? sak(f.valgt) : "Lovens vilkår"}`).join(" · ");
 }
 
-// When a new list changed the decision the letter cites, as the dialog says it (Endringsmelding).
+// When new lists changed the decision the letter cites under a fault, as the dialog says it (Endringsmelding).
 export function vedtakEndret(s: Skjema, v: Vedtaksvalg): string | null {
-  if (!v.endring || !v.valgt || (!v.endring.byttetFra && v.endring.utfall !== "borte")) return null;
-  return `Endret: brevet viser nå til ${sakNavn(v.valgt)}`;
+  const byttet = v.feil.filter((f) => f.endring && f.valgt && (f.endring.byttetFra || f.endring.utfall === "borte"));
+  return byttet.length ? `Endret: brevet viser nå til ${liste(byttet.map((f) => sakNavn(f.valgt)))}` : null;
 }
 
 // The row's element id, for scrolling to it from the letter, the checklist and the verdict.

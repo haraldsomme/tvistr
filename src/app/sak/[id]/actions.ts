@@ -21,7 +21,7 @@ import { SANKSJONER } from "@/lib/feilvurdering/skjema";
 import { opprinnelse } from "@/lib/innlogging/flyt";
 import { innlogget, sha256hex } from "@/lib/innlogging/okt";
 import { likhet } from "@/lib/matching/likhet";
-import { avgjorendeFor, type Rangert, ranger } from "@/lib/matching/ranger";
+import { avgjorendeFor, type Rangert, rangerPerFeil, sakForFeil } from "@/lib/matching/ranger";
 import { poengtekst } from "@/lib/matching/rett";
 import type { Kandidat } from "@/lib/matching/typer";
 import { PRIS } from "@/lib/pris";
@@ -30,12 +30,14 @@ import { betalteSaker, hentEgenSak } from "@/lib/sak/db";
 import { nyId } from "@/lib/sak/id";
 import { byggSaken } from "@/lib/vedtaksvalg/kjoper";
 import { visSaksnummer } from "@/lib/vedtaksvalg/mal";
-import { byggValg, type Endring, endringMot, fraLagret, grunnlagFor, type LagretSvar, type Modellsvar, sitaterFor, sporModellen, tilLagret, UTVALG_I_TEKSTEN, type Valggrunnlag, type Vedtaksdetaljer } from "@/lib/vedtaksvalg/valg";
+import { byggValg, type Endring, endringMot, erLagretSvar, fraLagret, grunnlagFor, type LagretSvar, type Modellsvar, sitaterFor, sporModellen, tilLagret, UTVALG_I_TEKSTEN, type Valggrunnlag, type Vedtaksdetaljer } from "@/lib/vedtaksvalg/valg";
 import { opprettBetaling, vippsSattOpp } from "@/lib/vipps/klient";
 import { HELT_BREV_UTEN_BETALING, UTVIKLINGSEIER } from "@/lib/vipps/profil";
 import { feiltekst } from "@/lib/logg";
 
-export type Funn = { ok: true; valg: Presedens[]; endring: Endring | null } | { ok: false; melding: string };
+// One list per fault, in the order of the answers' faults: the recommended decision first, then the
+// rest of that fault's ranking; and what changed since the lists the buyer last got.
+export type Funn = { ok: true; valg: Presedens[][]; endring: (Endring | null)[] } | { ok: false; melding: string };
 
 // Model calls a case may make. Past it the stored answer stands while its decision is on the list,
 // else the ranking's first; the letter works either way.
@@ -74,12 +76,14 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
     const { sak: brukersak, kjoper } = byggSaken(lagret.sjekk?.asis === "vetikke" && svar.somDenEr === "nei" ? { ...svar, somDenEr: null } : svar);
 
     const alle = await hentAlle();
-    const { kandidater } = ranger(alle, brukersak);
-    if (!kandidater.length) return { ok: true, valg: [], endring: null };
+    // One ranking per fault, in the order of the answers' faults (svarPoster on the page).
+    const kandidater = rangerPerFeil(alle, brukersak).map((r) => r.kandidater);
+    if (!kandidater.some((l) => l.length)) return { ok: true, valg: kandidater.map(() => []), endring: kandidater.map(() => null) };
+    const ider = [...new Set(kandidater.flat().map((r) => r.id))];
     const rader = await db
       .select({ id: vedtak.id, kildeUrl: vedtak.kildeUrl, utvalg: UTVALG_I_TEKSTEN, merke: vedtak.merke, modell: vedtak.modell, arsmodell: vedtak.arsmodell })
       .from(vedtak)
-      .where(inArray(vedtak.id, kandidater.map((r) => r.id)));
+      .where(inArray(vedtak.id, ider));
     const detaljer = new Map<number, Vedtaksdetaljer>(rader.map((d) => [d.id, d]));
     const etterId = new Map(alle.map((k) => [k.id, k]));
     const bilnavn = await hentBilnavn();
@@ -87,8 +91,9 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
     const sitater = sitaterFor(grunnlag);
 
     // The model's answer: stored for these very answers, else a new call while the case has calls left.
+    // A case stored before one decision per fault has nothing to reuse (erLagretSvar).
     const noekkel = grunnlagFor(kjoper, kandidater);
-    const lagrede = lagret.vedtaksvalg?.svar ?? [];
+    const lagrede = (lagret.vedtaksvalg?.svar ?? []).filter(erLagretSvar);
     const treff = lagrede.find((x) => x.grunnlag === noekkel);
     let modellsvar: Modellsvar | null;
     let nytt: LagretSvar | null = null;
@@ -109,7 +114,7 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
     }
     const svaret = byggValg(modellsvar, grunnlag);
 
-    const presedens = (r: Rangert, avsnitt: string, anbefalt: boolean): Presedens => {
+    const presedens = (r: Rangert, avsnitt: string, anbefalt: boolean, i: number): Presedens => {
       const k: Kandidat = etterId.get(r.id)!;
       const egne = r.feil ? (avgjorendeFor(k.avgjorende, r.feil)?.sanksjoner ?? []) : [];
       return {
@@ -127,16 +132,18 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
         km: k.km,
         alder: k.alder,
         somDenEr: k.somDenEr,
-        likhet: likhet(r, brukersak),
+        likhet: likhet(r, sakForFeil(brukersak, i)),
         treff: r.treff,
       };
     };
-    const valg = [presedens(svaret.r, svaret.avsnitt, true), ...svaret.alternativer.map((a) => presedens(a.r, a.avsnitt, false))];
+    const valg = svaret.feil.map((f, i) => (f ? [presedens(f.r, f.avsnitt, true, i), ...f.alternativer.map((a) => presedens(a.r, a.avsnitt, false, i))] : []));
 
-    const liste = valg.map((v) => v.id);
-    const forrige = lagret.vedtaksvalg?.liste;
-    const endring = endringMot(forrige, liste, (id) => visSaksnummer(etterId.get(id)?.saksnummer ?? null));
-    if (nytt || liste.join() !== forrige?.join()) {
+    const liste = valg.map((l) => l.map((v) => v.id));
+    // A list stored before one decision per fault is a list of numbers: nothing to compare with.
+    const lagretListe = lagret.vedtaksvalg?.liste;
+    const forrige = Array.isArray(lagretListe?.[0]) ? lagretListe : undefined;
+    const endring = liste.map((l, i) => endringMot(forrige?.[i], l, (id) => visSaksnummer(etterId.get(id)?.saksnummer ?? null)));
+    if (nytt || JSON.stringify(liste) !== JSON.stringify(forrige)) {
       const svarene = nytt ? [nytt, ...lagrede].slice(0, LAGREDE_SVAR) : lagrede;
       try {
         await db.update(sak).set({ vedtaksvalg: { liste, svar: svarene } }).where(eq(sak.id, lagret.id));
@@ -144,7 +151,7 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
         console.error("vedtaksvalget ble ikke lagret", feiltekst(e));
       }
     }
-    console.info(`vedtaksvalg: ${etterId.get(svaret.r.id)?.saksnummer} (nivå ${svaret.niva}, ${kilde}${svaret.fulgt ? "" : ", rangeringens førstevalg"}), $${kostnad.toFixed(3)}`);
+    svaret.feil.forEach((f, i) => console.info(`vedtaksvalg feil ${i + 1}: ${f ? `${etterId.get(f.r.id)?.saksnummer} (nivå ${f.niva}, ${kilde}${f.fulgt ? "" : ", rangeringens førstevalg"})` : "ingen kandidat"}, $${(i ? 0 : kostnad).toFixed(3)}`));
     return { ok: true, valg, endring };
   } catch (e) {
     console.error("vedtaksvalget feilet", feiltekst(e));

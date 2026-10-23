@@ -12,8 +12,12 @@ const batch = vi.fn<(q: unknown[]) => Promise<unknown[]>>(async () => []);
 const returnering = vi.fn(async () => [{ n: 1 }]);
 type Hvor = { where: () => Promise<undefined> & { returning: typeof returnering } };
 const satt = vi.fn<(v: unknown) => Hvor>(() => ({ where: () => Object.assign(Promise.resolve(undefined), { returning: returnering }) }));
-const kandidater = vi.hoisted(() => ({ rader: [] as { id: number; niva: string; feil: null; rett: never[]; treff: object }[] }));
-const sporModellen = vi.fn(async () => ({ svar: { vedtak_id: 2, sitater: ["s1"] } as { vedtak_id: number; sitater: string[] } | null, modell: "m", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0.01 } }));
+type Rad = { id: number; niva: string; feil: null; rett: never[]; treff: object };
+// The ranking's candidates: the same for every fault, unless `perFeil` gives each fault its own.
+const kandidater = vi.hoisted(() => ({ rader: [] as Rad[], perFeil: null as Rad[][] | null }));
+type Valg = { feil_nr: number; vedtak_id: number; sitater: string[] };
+const valg = (...v: [number, number][]) => ({ valg: v.map(([feil_nr, vedtak_id]) => ({ feil_nr, vedtak_id, sitater: ["s1"] })) });
+const sporModellen = vi.fn(async () => ({ svar: valg([1, 2]) as { valg: Valg[] } | null, modell: "m", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0.01 } }));
 const opprettBetaling = vi.fn<(p: { ref: string; belopOre: number; returnUrl: string; beskrivelse: string }) => Promise<{ redirectUrl: string; reference: string }>>(async () => ({ redirectUrl: "https://pay-mt.vipps.no/x", reference: "r" }));
 const vipps = vi.hoisted(() => ({ sattOpp: true }));
 vi.mock("@/lib/vipps/klient", () => ({ opprettBetaling, vippsSattOpp: () => vipps.sattOpp }));
@@ -29,7 +33,12 @@ vi.mock("@/app/sak/vedtak-db", () => ({ hentAlle, hentBilnavn: async () => () =>
 vi.mock("@/lib/sak/db", () => ({ hentEgenSak, betalteSaker }));
 vi.mock("@/lib/innlogging/okt", async (orig) => ({ ...(await orig<typeof import("@/lib/innlogging/okt")>()), innlogget }));
 const ranger = vi.hoisted(() => vi.fn<(alle: unknown, sak: { somDenEr: boolean | null }) => { kandidater: unknown[] }>(() => ({ kandidater: kandidater.rader })));
-vi.mock("@/lib/matching/ranger", () => ({ ranger, avgjorendeFor: () => undefined }));
+vi.mock("@/lib/matching/ranger", () => ({
+  ranger,
+  rangerPerFeil: (alle: unknown, sak: { somDenEr: boolean | null; kategorier: unknown[] }) => sak.kategorier.map((_, i) => (kandidater.perFeil ? { kandidater: kandidater.perFeil[i] ?? [] } : ranger(alle, sak))),
+  sakForFeil: (sak: unknown) => sak,
+  avgjorendeFor: () => undefined,
+}));
 // The limits per address are tested on their own; here every call is from the same address.
 vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => false, ipFra: () => "10.0.0.1" }));
 vi.mock("@/lib/matching/likhet", () => ({ likhet: () => 50 }));
@@ -37,18 +46,30 @@ vi.mock("@/lib/matching/likhet", () => ({ likhet: () => 50 }));
 vi.mock("@/lib/vedtaksvalg/valg", async (orig) => {
   const ekte = await orig<typeof import("@/lib/vedtaksvalg/valg")>();
   type R = { id: number };
+  type Svar = { valg: Valg[] } | null;
+  const forFeil = (svar: Svar, i: number) => svar?.valg.find((v) => v.feil_nr === i + 1)?.vedtak_id;
   return {
     UTVALG_I_TEKSTEN: "utvalg",
     endringMot: ekte.endringMot,
-    grunnlagFor: (kjoper: unknown, k: R[]) => JSON.stringify([kjoper, k.map((r) => r.id)]),
+    erLagretSvar: ekte.erLagretSvar,
+    grunnlagFor: (kjoper: unknown, k: R[][]) => JSON.stringify([kjoper, k.map((l) => l.map((r) => r.id))]),
     sporModellen,
-    sitaterFor: () => new Map(),
-    tilLagret: (grunnlag: string, svar: { vedtak_id: number }) => ({ grunnlag, vedtakId: svar.vedtak_id, sitater: ["tekst"] }),
-    fraLagret: (l: { vedtakId: number } | undefined, kandidater: R[]) => (l && kandidater.some((r) => r.id === l.vedtakId) ? { vedtak_id: l.vedtakId, sitater: ["s1"] } : null),
-    byggValg: (svar: { vedtak_id: number } | null, o: { kandidater: R[] }) => {
-      const r = o.kandidater.find((x) => x.id === svar?.vedtak_id) ?? o.kandidater[0];
-      return { r, niva: "A", avsnitt: "a", sitater: [], fulgt: !!svar, alternativer: o.kandidater.filter((x) => x !== r).map((x) => ({ r: x, avsnitt: "b", sitater: [] })) };
+    sitaterFor: (o: { kandidater: R[][] }) => o.kandidater.map(() => new Map()),
+    tilLagret: (grunnlag: string, svar: { valg: Valg[] }, s: unknown[]) => ({ grunnlag, valg: s.map((_, i) => (forFeil(svar, i) ? { vedtakId: forFeil(svar, i)!, sitater: ["tekst"] } : null)) }),
+    fraLagret: (l: unknown, kandidater: R[][]) => {
+      if (!ekte.erLagretSvar(l)) return null;
+      const v = l.valg.flatMap((x, i) => (x && kandidater[i]?.some((r) => r.id === x.vedtakId) ? [{ feil_nr: i + 1, vedtak_id: x.vedtakId, sitater: ["s1"] }] : []));
+      return v.length ? { valg: v } : null;
     },
+    byggValg: (svar: Svar, o: { kandidater: R[][] }) => ({
+      modell: null,
+      forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 },
+      feil: o.kandidater.map((k, i) => {
+        if (!k.length) return null;
+        const r = k.find((x) => x.id === forFeil(svar, i)) ?? k[0];
+        return { r, niva: "A", avsnitt: `a${i}`, sitater: [], fulgt: !!forFeil(svar, i), alternativer: k.filter((x) => x !== r).map((x) => ({ r: x, avsnitt: "b", sitater: [] })) };
+      }),
+    }),
   };
 });
 vi.mock("@/db", () => ({
@@ -83,6 +104,7 @@ beforeEach(() => {
   innlogget.mockResolvedValue(null);
   hentAlle.mockResolvedValue([]);
   kandidater.rader = [];
+  kandidater.perFeil = null;
   vipps.sattOpp = true;
   process.env.TVISTR_HELT_BREV_UTEN_BETALING = "1";
 });
@@ -120,7 +142,7 @@ describe("finnVedtak", () => {
 
   it("gir en tom liste uten kandidater", async () => {
     hentEgenSak.mockResolvedValue(betaltSak);
-    expect(await finnVedtak({ id: betaltSak.id, svar })).toEqual({ ok: true, valg: [], endring: null });
+    expect(await finnVedtak({ id: betaltSak.id, svar })).toEqual({ ok: true, valg: [[]], endring: [null] });
   });
 });
 
@@ -138,17 +160,17 @@ describe("finnVedtak: ett modellkall per sett med svar", () => {
       return { where: () => Object.assign(Promise.resolve(undefined), { returning: returnering }) };
     });
   };
-  const ider = (f: Awaited<ReturnType<typeof finnVedtak>>) => (f.ok ? f.valg.map((v) => v.id) : null);
+  const ider = (f: Awaited<ReturnType<typeof finnVedtak>>, i = 0) => (f.ok ? f.valg[i].map((v) => v.id) : null);
 
   it("bruker det lagrede svaret for de samme svarene", async () => {
     vedtakene(1, 2, 3);
     iBasen();
     const forste = await finnVedtak({ id: betaltSak.id, svar });
     expect(ider(forste)).toEqual([2, 1, 3]);
-    expect(forste.ok && forste.endring).toBeNull();
+    expect(forste.ok && forste.endring).toEqual([null]);
     const andre = await finnVedtak({ id: betaltSak.id, svar });
     expect(ider(andre)).toEqual([2, 1, 3]);
-    expect(andre.ok && andre.endring).toBeNull();
+    expect(andre.ok && andre.endring).toEqual([null]);
     expect(sporModellen).toHaveBeenCalledTimes(1);
   });
 
@@ -168,9 +190,9 @@ describe("finnVedtak: ett modellkall per sett med svar", () => {
     iBasen();
     await finnVedtak({ id: betaltSak.id, svar });
     vedtakene(4, 1, 5);
-    sporModellen.mockResolvedValueOnce({ svar: { vedtak_id: 4, sitater: ["s1"] }, modell: "m", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } });
+    sporModellen.mockResolvedValueOnce({ svar: valg([1, 4]), modell: "m", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } });
     const f = await finnVedtak({ id: betaltSak.id, svar: { ...svar, km: 150000 } });
-    expect(f.ok && f.endring).toEqual({ forrigeAnbefalt: { id: 2, saksnummer: "2" }, nye: [4, 5] });
+    expect(f.ok && f.endring).toEqual([{ forrigeAnbefalt: { id: 2, saksnummer: "2" }, nye: [4, 5] }]);
   });
 
   it("bruker rangeringens førstevalg når kallet feiler, og lagrer ikke svaret", async () => {
@@ -198,6 +220,45 @@ describe("finnVedtak: ett modellkall per sett med svar", () => {
     vedtakene(7, 8);
     returnering.mockResolvedValueOnce([]);
     expect(ider(await finnVedtak({ id: betaltSak.id, svar: { ...svar, km: 150000 } }))).toEqual([7, 8]);
+  });
+
+  const toFeil = { ...svar, feil: [svar.feil[0], { ...svar.feil[0], hoved: "klima", under: ["ac"], oppdaget: "2025-06-01" }] };
+  const toSak = () => {
+    let rad: Sak = { ...betaltSak, skjema: { ...skjema, f_cats: ["motor", "klima"], f_parts: { motor: ["turbo"], klima: ["ac"] } } };
+    hentEgenSak.mockImplementation(async () => rad);
+    satt.mockImplementation((v: unknown) => {
+      if ((v as Partial<Sak>).vedtaksvalg) rad = { ...rad, ...(v as Partial<Sak>) };
+      return { where: () => Object.assign(Promise.resolve(undefined), { returning: returnering }) };
+    });
+    return () => rad;
+  };
+
+  it("to feil: ett kall, én liste per feil, modellens valg per feil", async () => {
+    vedtakene();
+    kandidater.perFeil = [[1, 2].map((id) => ({ id, niva: "A", feil: null, rett: [], treff: {} })), [3, 4].map((id) => ({ id, niva: "A", feil: null, rett: [], treff: {} }))];
+    const rad = toSak();
+    sporModellen.mockResolvedValueOnce({ svar: valg([1, 2], [2, 4]), modell: "m", forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } });
+    const f = await finnVedtak({ id: betaltSak.id, svar: toFeil });
+    expect([ider(f, 0), ider(f, 1)]).toEqual([[2, 1], [4, 3]]);
+    expect(f.ok && f.valg.map((l) => l[0].anbefalt)).toEqual([true, true]);
+    expect(sporModellen).toHaveBeenCalledTimes(1);
+    expect(rad().vedtaksvalg!.liste).toEqual([[2, 1], [4, 3]]);
+  });
+
+  it("en feil uten kandidater gir tom liste for den, de andre får sine", async () => {
+    vedtakene();
+    kandidater.perFeil = [[], [3].map((id) => ({ id, niva: "A", feil: null, rett: [], treff: {} }))];
+    toSak();
+    const f = await finnVedtak({ id: betaltSak.id, svar: toFeil });
+    expect([ider(f, 0), ider(f, 1)]).toEqual([[], [3]]);
+  });
+
+  it("et lagret svar i den gamle formen regnes som tomt: nytt kall og ingen endringsmelding", async () => {
+    vedtakene(1, 2, 3);
+    hentEgenSak.mockResolvedValue({ ...betaltSak, vedtaksvalg: { liste: [1, 2, 3], svar: [{ grunnlag: "x", vedtakId: 1, sitater: [] }] } as unknown as Sak["vedtaksvalg"] });
+    const f = await finnVedtak({ id: betaltSak.id, svar });
+    expect(sporModellen).toHaveBeenCalledTimes(1);
+    expect(f.ok && f.endring).toEqual([null]);
   });
 
   it("holder på de fem siste svarene", async () => {

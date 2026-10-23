@@ -94,6 +94,8 @@ export function rensSkjema(inn: unknown, idag: string): Skjema | null {
   const s = standard(idag);
   const kjente = Object.fromEntries(Object.entries(inn).filter(([k]) => k in s));
   const ut = fraEldre(inn, flett(s, kjente) as Skjema);
+  // Only well-formed choices of a decision per fault; a case from before had one (prec_id), now gone.
+  ut.prec = Object.fromEntries(Object.entries(ut.prec).filter(([, v]) => erObjekt(v) && Number.isSafeInteger(v.id) && typeof v.selv === "boolean"));
   // Omlevering is no longer a claim (no decision gave a buyer another used car); a case saved with it
   // claims retting, which the ranking already treated it as.
   return ut.k_main === "omlevering" ? { ...ut, k_main: "retting" } : ut;
@@ -123,13 +125,25 @@ export function tilKjop(ny: Skjema, gammel: Skjema | null): Skjema {
   return ut as Skjema;
 }
 
-// Which decision the letter cites when a list arrives. The recommended one (first) unless the buyer
-// picked another themselves and it is still on the list. `utfall` tells the buyer what happened.
+// Which decision the letter cites under each fault when the lists arrive. The recommended one (first)
+// unless the buyer picked another themselves and it is still on that fault's list. A fault without a
+// list keeps no choice. `utfall` tells the buyer what happened, per fault.
 export type Precutfall = "fulgt" | "beholdt" | "borte";
-export function nyttPrecValg(s: Pick<Skjema, "prec_id" | "prec_selv">, valg: readonly { id: number }[]): { endre: Partial<Skjema> | null; utfall: Precutfall } {
-  const anbefalt = valg[0]?.id;
-  if (anbefalt === undefined) return { endre: null, utfall: "fulgt" };
-  if (s.prec_selv && valg.some((v) => v.id === s.prec_id)) return { endre: null, utfall: "beholdt" };
-  if (s.prec_selv) return { endre: { prec_id: anbefalt, prec_selv: false }, utfall: "borte" };
-  return { endre: s.prec_id === anbefalt ? null : { prec_id: anbefalt }, utfall: "fulgt" };
+export function nyttPrecValg(prec: Skjema["prec"], lister: readonly { nokkel: string; valg: readonly { id: number }[] }[]): { endre: Partial<Skjema> | null; utfall: Record<string, Precutfall> } {
+  const ny: Skjema["prec"] = {};
+  const utfall: Record<string, Precutfall> = {};
+  for (const { nokkel, valg } of lister) {
+    const anbefalt = valg[0]?.id;
+    if (anbefalt === undefined) continue;
+    const har = prec[nokkel];
+    if (har?.selv && valg.some((v) => v.id === har.id)) {
+      ny[nokkel] = har;
+      utfall[nokkel] = "beholdt";
+    } else {
+      ny[nokkel] = { id: anbefalt, selv: false };
+      utfall[nokkel] = har?.selv ? "borte" : "fulgt";
+    }
+  }
+  const lik = (a: Skjema["prec"], b: Skjema["prec"]) => Object.keys(a).length === Object.keys(b).length && Object.entries(a).every(([k, v]) => b[k]?.id === v.id && b[k]?.selv === v.selv);
+  return { endre: lik(ny, prec) ? null : { prec: ny }, utfall };
 }

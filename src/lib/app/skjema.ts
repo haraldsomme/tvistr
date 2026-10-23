@@ -36,9 +36,9 @@ export type Skjema = {
   k_forsok: string; k_cost: string;
   // The letter's date, set when the case is bought.
   l_date: string;
-  prec_id: number | null;
-  // The buyer picked the decision themselves instead of following the recommendation.
-  prec_selv: boolean;
+  // The decision the letter cites under each fault, by the fault's key (Feilpost.nokkel); `selv` when the
+  // buyer picked it themselves instead of following the recommendation.
+  prec: Record<string, { id: number; selv: boolean }>;
 };
 
 export const standard = (idag: string): Skjema => ({
@@ -50,7 +50,7 @@ export const standard = (idag: string): Skjema => ({
   ws: "", ws_name: "", ws_says: [], ws_quote: "", seller_said: "", seller_txt: "",
   f_prior: false, f_prior_date: "", f_prior_svar: [],
   k_main: "", k_alt: "ingen", k_amount: "", k_exp: false, exp: [], k_forsok: "", k_cost: "",
-  l_date: idag, prec_id: null, prec_selv: false,
+  l_date: idag, prec: {},
 });
 
 export function eksempel(idag: string): Skjema {

@@ -106,27 +106,39 @@ describe("kjøpet fra skjemaet", () => {
   });
 });
 
-describe("nyttPrecValg", () => {
-  const valg = [{ id: 1 }, { id: 2 }, { id: 3 }];
-  it("følger det anbefalte når brukeren ikke har valgt selv", () => {
-    expect(nyttPrecValg({ prec_id: 2, prec_selv: false }, valg)).toEqual({ endre: { prec_id: 1 }, utfall: "fulgt" });
-    expect(nyttPrecValg({ prec_id: 1, prec_selv: false }, valg)).toEqual({ endre: null, utfall: "fulgt" });
+describe("nyttPrecValg per feil", () => {
+  const liste = (nokkel: string, ...ider: number[]) => ({ nokkel, valg: ider.map((id) => ({ id })) });
+  it("følger det anbefalte for hver feil når brukeren ikke har valgt selv", () => {
+    expect(nyttPrecValg({ motor: { id: 2, selv: false } }, [liste("motor", 1, 2), liste("klima", 5, 6)])).toEqual({
+      endre: { prec: { motor: { id: 1, selv: false }, klima: { id: 5, selv: false } } },
+      utfall: { motor: "fulgt", klima: "fulgt" },
+    });
+    expect(nyttPrecValg({ motor: { id: 1, selv: false } }, [liste("motor", 1, 2)])).toEqual({ endre: null, utfall: { motor: "fulgt" } });
   });
-  it("beholder brukerens eget valg når det fortsatt er i listen", () => {
-    expect(nyttPrecValg({ prec_id: 3, prec_selv: true }, valg)).toEqual({ endre: null, utfall: "beholdt" });
+  it("beholder brukerens eget valg som fortsatt står i sin liste", () => {
+    expect(nyttPrecValg({ motor: { id: 2, selv: true } }, [liste("motor", 1, 2)])).toEqual({ endre: null, utfall: { motor: "beholdt" } });
   });
-  it("går til det anbefalte når brukerens valg er borte", () => {
-    expect(nyttPrecValg({ prec_id: 9, prec_selv: true }, valg)).toEqual({ endre: { prec_id: 1, prec_selv: false }, utfall: "borte" });
+  it("går til det anbefalte bare for feilen der brukerens valg er borte", () => {
+    expect(nyttPrecValg({ motor: { id: 9, selv: true }, klima: { id: 6, selv: true } }, [liste("motor", 1, 2), liste("klima", 5, 6)])).toEqual({
+      endre: { prec: { motor: { id: 1, selv: false }, klima: { id: 6, selv: true } } },
+      utfall: { motor: "borte", klima: "beholdt" },
+    });
   });
-  it("gjør ingenting uten en liste", () => {
-    expect(nyttPrecValg({ prec_id: 9, prec_selv: true }, [])).toEqual({ endre: null, utfall: "fulgt" });
+  it("fjerner valg for feil som ikke lenger har en liste", () => {
+    expect(nyttPrecValg({ motor: { id: 1, selv: false }, rust: { id: 3, selv: true } }, [liste("motor", 1)])).toEqual({ endre: { prec: { motor: { id: 1, selv: false } } }, utfall: { motor: "fulgt" } });
   });
+  it("gjør ingenting uten lister", () => expect(nyttPrecValg({}, [])).toEqual({ endre: null, utfall: {} }));
 });
 
-describe("tilSvar med en feil datert for seg", () => {
-  it("én rad per feil, med sin dato", () => {
-    const s = { ...standard("2026-10-23"), c_delivery: "2024-01-15", f_cats: ["motor"], f_parts: { motor: ["utslipp", "turbo"] }, f_area: { motor: { found: "2024-04-02" } }, f_under: { "motor.turbo": { found: "2025-02-18", desc: "" } } };
-    expect(tilSvar(s)!.feil.map((f) => [f.hoved, f.under, f.oppdaget])).toEqual([["motor", ["turbo"], "2025-02-18"], ["motor", ["utslipp"], "2024-04-02"]]);
+describe("rensSkjema og vedtakene", () => {
+  it("en eldre sak med ett vedtak (prec_id) får ingen valg per feil", () => {
+    const s = rensSkjema({ ...eksempel("2026-10-16"), prec_id: 4, prec_selv: true }, "2026-10-16")!;
+    expect(s.prec).toEqual({});
+    expect("prec_id" in s).toBe(false);
+  });
+  it("beholder bare gyldige valg", () => {
+    const s = rensSkjema({ ...eksempel("2026-10-16"), prec: { hoyvolt: { id: 4, selv: true }, motor: { id: "x", selv: 1 } } }, "2026-10-16")!;
+    expect(s.prec).toEqual({ hoyvolt: { id: 4, selv: true } });
   });
 });
 

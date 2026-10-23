@@ -44,4 +44,10 @@ describe("byggSaken", () => {
     expect(sak.kategorier[0]).toMatchObject({ hoved: "motor", under: ["turbo"], niva: 1, opplysning: false, verksted: true });
     expect(kjoper.feil[0].underkategorier).toEqual(["motor.turbo (Turbo)"]);
   });
+
+  it("nummererer feilene fra 1, slik modellen svarer per feil", () => {
+    const s = svar({});
+    const { kjoper } = byggSaken({ ...s, feil: [s.feil[0], { ...s.feil[0], hoved: "klima", under: ["ac"] }] });
+    expect(kjoper.feil.map((f) => f.nr)).toEqual([1, 2]);
+  });
 });

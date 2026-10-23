@@ -78,6 +78,7 @@ export function eksempel(idag: string): Skjema {
 export const IMPACT = [
   ["kosmetisk", "Bare kosmetisk", "Synlig, men påvirker ikke bruken", 1, "er synlig"],
   ["plagsom", "Plagsom", "Lyd, lukt, vibrasjoner eller annet som irriterer", 2, "er plagsom i daglig bruk"],
+  ["verdi", "Bilen er mindre verdt", "Bilen er ikke det du betalte for, for eksempel km-stand eller service", 2, "gjør at bilen er mindre verdt enn det jeg betalte for"],
   ["bruk", "Påvirker bruken", "Du merker det når du kjører, eller må unngå noe", 3, "merkes under kjøring og begrenser hvordan bilen kan brukes"],
   ["palitelig", "Ikke til å stole på", "Svikter av og til, for eksempel ved start eller rekkevidde", 4, "gjør at bilen bare kan brukes i begrenset grad, og at jeg ikke kan stole på den i vanlig bruk"],
   ["sikkerhet", "Går ut over sikkerheten", "For eksempel bremser, styring eller varsellamper", 4, "går ut over sikkerheten"],

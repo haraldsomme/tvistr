@@ -509,3 +509,19 @@ describe("to feil i samme område på ulike datoer", () => {
     expect(t).not.toContain("Reklamasjonen er fremsatt innen to måneder");
   });
 });
+
+describe("opplysningsfeil", () => {
+  const km = { ...eksempel(idag), f_cats: ["historikk"], f_parts: { historikk: ["km"] }, f_area: { historikk: { found: "2026-09-01" } }, f_catdesc: {}, f_impact: ["verdi"], k_main: "prisavslag", k_amount: "45 000", ws: "nei", f_prior: false };
+  it("verdi som virkning, intet rettingstilbud og ingen undersøkelse", () => {
+    const t = tekst(km);
+    expect(t).toContain("Feilen gjør at bilen er mindre verdt enn det jeg betalte for.");
+    expect(t).not.toContain("kan tilby å rette mangelen");
+    expect(t).not.toContain("stilles til rådighet");
+  });
+  it("som den er før 2024 med løfte: også bokstav b", () => {
+    const s = { ...eksempel(idag), c_purchase: "2022-05-14", c_delivery: "2022-05-14", c_asis: true, seller_said: "lovet" };
+    s.f_area = { hoyvolt: { found: "2022-08-01" } };
+    expect(tekst(s)).toContain("Bilen har også en mangel når den ikke svarer til opplysninger dere ga før kjøpet, jf. § 17 første ledd bokstav b.");
+    expect(tekst({ ...s, seller_said: "nei" })).not.toContain("bokstav b");
+  });
+});

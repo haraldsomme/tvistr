@@ -277,7 +277,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
       t: "p",
       tekst: [
         L.versjon === "før_2024"
-          ? `${pastatt ? "Et forbehold om at bilen selges «som den er», fritar dere ikke uten videre for ansvar." : "Bilen ble solgt «som den er»."} Etter ${L.lovRef("forbehold")} har bilen likevel en mangel når den er ${LOVORD.dårligereStand}.`
+          ? `${pastatt ? "Et forbehold om at bilen selges «som den er», fritar dere ikke uten videre for ansvar." : "Bilen ble solgt «som den er»."} Etter ${L.lovRef("forbehold")} har bilen likevel en mangel når den er ${LOVORD.dårligereStand}.${s.seller_said === "lovet" && L.par("forbehold_uriktig") ? ` Bilen har også en mangel når den ikke svarer til opplysninger dere ga før kjøpet, jf. ${L.par("forbehold_uriktig")}.` : ""}`
           : `${pastatt ? "Et generelt forbehold om at bilen selges «som den er», er ikke" : "Forbeholdet om at bilen ble solgt «som den er», er ikke"} et avtalt unntak etter ${L.lovRef("forbehold")}. Unntaket fra ${LOVORD.kravTredjeFjerde} forutsetter at jeg ved inngåelsen av avtalen ${LOVORD.avtaltUnntak}.`,
       ],
     });
@@ -385,7 +385,8 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   // Price reduction or heving claimed first while the seller may still offer a remedy (§ 29 tredje ledd):
   // the letter says so, as Forbrukerrådet's template does, and keeps the claim for when no lawful remedy
   // comes. From 2024 a defect the answers show is serious is claimed at once with the law's words.
-  const forbi = forbiAvhjelp(s, L);
+  // A wrong odometer or a missing service record is nothing to repair: no offer, nothing to examine.
+  const forbi = forbiAvhjelp(s, L) || bareOpplysningsfeil(s);
   const umiddelbart = !!L.par("avhjelp_umiddelbart") && alvorlig(s) && (forsokTall(s.k_forsok) ?? 0) < 1;
   const tilbud = (krav: string) =>
     ` Jeg er kjent med at dere kan tilby å rette mangelen${TILBUD_UTEN_OPPHOLD[L.versjon] ? ", dersom det skjer uten opphold" : ""}, jf. ${L.par("avhjelp_tilbud")}. Rettingen må i så fall skje uten kostnad, uten vesentlig ulempe for meg og innen rimelig tid, jf. ${L.par("avhjelp_vilkar")}. Skjer ikke det, fastholder jeg kravet om ${krav}.`;
@@ -407,7 +408,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
           "Jeg krever et forholdsmessig prisavslag på kr ", v("k_amount", "beløp"), `, jf. ${L.par("prisavslag")}`,
           ...(has("k_cost") ? [", basert på et overslag over utbedringskostnaden på kr ", fe("k_cost", s.k_cost.trim())] : []), ".",
           umiddelbart ? ` ${cap(liste(alvor))}, og mangelen er derfor etter sin art så alvorlig at det ikke er rimelig å forvente at jeg skal godta et tilbud om avhjelp, jf. ${L.par("avhjelp_umiddelbart")}.` : forbi ? "" : tilbud("prisavslag"),
-          rad("undersøkelse og retting"),
+          bareOpplysningsfeil(s) ? "" : rad(forbi ? "undersøkelse" : "undersøkelse og retting"),
         ],
       });
       break;

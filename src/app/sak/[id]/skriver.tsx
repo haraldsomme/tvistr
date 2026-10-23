@@ -17,7 +17,7 @@ import type { Sett } from "@/app/sak/skjema/felt";
 import { ALLE, ETIKETT, ETTER, FOR, har, mangler, seksjonFor, stegFor } from "@/app/sak/skjema/steg";
 import { idag } from "@/lib/app/dato";
 import { datoavvik } from "@/lib/app/datoer";
-import { tall } from "@/lib/app/format";
+import { orgValid, tall } from "@/lib/app/format";
 import { type Skjema, syncAreas } from "@/lib/app/skjema";
 import { medCelle, skriverResultat } from "@/lib/app/vurdering";
 import { maal } from "@/lib/maling";
@@ -27,7 +27,7 @@ import { useLignende } from "./lignende";
 import { radId, Svarene } from "./svarene";
 import { useVedtak, Vedtaksvindu } from "./vedtaksvindu";
 
-const LAGRING: Record<Lagring, string> = { lagret: "Lagret på kontoen din", lagrer: "Lagrer …", feil: "Ikke lagret, prøver igjen" };
+const LAGRING: Record<Lagring, string> = { lagret: "Lagret på kontoen din", endret: "Ikke lagret ennå", lagrer: "Lagrer …", feil: "Ikke lagret, prøver igjen" };
 const ALLE_FELT = ALLE.flatMap((st) => st.felt);
 
 export function Skriver({ id, start }: { id: string; start: Skjema }) {
@@ -94,7 +94,7 @@ export function Skriver({ id, start }: { id: string; start: Skjema }) {
   }
 
   const rader = mangler(s);
-  const avvik = datoavvik(s, idag());
+  const avvik = [...datoavvik(s, idag()), ...(orgValid(s.d_org) === false ? ["Organisasjonsnummeret til forhandleren er ikke gyldig. Sjekk det mot Enhetsregisteret."] : [])];
   const nMangler = rader.reduce((a, x) => a + x.felt.length, 0);
   const etikett = nMangler ? `${nMangler} ${nMangler === 1 ? "opplysning" : "opplysninger"} mangler` : "Klart til å sendes";
 

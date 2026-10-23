@@ -8,7 +8,7 @@ import { trygt } from "@/lib/app/kall";
 import type { Skjema } from "@/lib/app/skjema";
 import { lagreSak } from "./actions";
 
-export type Lagring = "lagret" | "lagrer" | "feil";
+export type Lagring = "lagret" | "endret" | "lagrer" | "feil";
 
 const PAUSE_MS = 800;
 const PROV_IGJEN_MS = 5000;
@@ -46,6 +46,8 @@ export function useAutolagring(id: string, skjema: Skjema): Lagring {
   useEffect(() => {
     naa.current = skjema;
     if (JSON.stringify(skjema) === lagret.current) return;
+    // Not «Lagret» while the pause runs: a reload now would ask first.
+    settStatus((x) => (x === "lagret" ? "endret" : x));
     clearTimeout(tid.current);
     tid.current = setTimeout(() => send.current(), PAUSE_MS);
   }, [skjema]);

@@ -30,7 +30,7 @@ const trimDot = (s: string) => s.trim().replace(/[.]$/, "");
 // The buyer's words inside the letter's «»: their own outer quotes go, inner «» become ‘’.
 const unquote = (s: string) => {
   const t = s.trim();
-  return trimDot(/^[«"].*[»"]$/s.test(t) ? t.slice(1, -1) : t).replace(/«/g, "‘").replace(/»/g, "’");
+  return trimDot(/^[«"][\s\S]*[»"]$/.test(t) ? t.slice(1, -1) : t).replace(/«/g, "‘").replace(/»/g, "’");
 };
 // One of the buyer's answers as written in the letter, tagged with its field; nothing when empty.
 const fe = (felt: string, tekst: string): Del => (tekst ? { felt, tekst } : "");

@@ -10,7 +10,9 @@ export const NyeFelt = createContext<ReadonlySet<string>>(new Set());
 // hidden text of about its length.
 function DelEl({ x }: { x: Del }) {
   const nye = useContext(NyeFelt);
-  if (typeof x === "string") return x;
+  // The decision's address, clickable on screen; the copied text keeps it as text.
+  if (typeof x === "string")
+    return x.split(/(https?:\/\/\S+)/).map((t, i) => (i % 2 ? <a key={i} href={t} target="_blank" rel="noopener noreferrer">{t}</a> : t));
   if ("ph" in x) return <span className="ph">{x.ph}</span>;
   if ("felt" in x) return <span className={nye.has(x.felt) ? "fe fl-ny" : "fe"} data-felt={x.felt}>{x.tekst}</span>;
   return <span className="sl" style={{ width: `${Math.min(x.skjult, 60)}ch` }} aria-label="Skjult tekst" />;

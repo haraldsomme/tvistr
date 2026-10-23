@@ -3,7 +3,9 @@
 // complaint, as blocks for a page to place under its own heading.
 import { FeilIkon, FeilListe } from "@/app/deler/feilliste";
 import { relText } from "@/lib/app/dato";
-import { type Feilpost, feilposter } from "@/lib/app/feil";
+import { type Feilpost, feilposter, feilposterSortert, virkningFor } from "@/lib/app/feil";
+import { delTekst, feiloverskrift } from "@/lib/app/feilnavn";
+import { cap } from "@/lib/app/format";
 import { docsValg, IKKE_SVART, IMPACT, impactToggle, type Omrade, SVAR, svarToggle } from "@/lib/app/skjema";
 import { HOVEDKATEGORIER } from "@/lib/feil/kategorier";
 import { Felt, Kortliste, type StegProps, Valgliste, Vis } from "./felt";
@@ -130,21 +132,43 @@ const VIRKNING_IKON: Record<string, string> = {
   stopp: "M7.9 2h8.2L22 7.9v8.2L16.1 22H7.9L2 16.1V7.9zM15 9l-6 6M9 9l6 6",
 };
 
-// How the faults affect the buyer, once for all of them. «Bare kosmetisk» rules out the others (impactToggle).
+// How each fault affects the buyer, one card per fault in the letter's order and with its name.
+// «Bare kosmetisk» rules out the others, apart from «Bilen er mindre verdt» (impactToggle). The first
+// choice writes every fault's impacts, so a case saved with one list for all keeps them (virkningFor).
 export function Virkning({ s, sett }: StegProps) {
+  const poster = feilposterSortert(s);
+  const valg = IMPACT.map(([v, l, d]) => [v, l, d] as const);
+  const ikon = (v: string) => (
+    <svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d={VIRKNING_IKON[v]} />
+    </svg>
+  );
+  const velg = (p: Feilpost, v: string, pa: boolean) => {
+    const f_virkning = { ...Object.fromEntries(poster.map((x) => [x.nokkel, virkningFor(s, x)])), [p.nokkel]: impactToggle(virkningFor(s, p), v, pa) };
+    sett({ f_virkning, f_impact: [...new Set(Object.values(f_virkning).flat())] });
+  };
+  if (poster.length < 2) {
+    const p = poster[0];
+    return <Kortliste flere navn="Hvordan feilen påvirker deg" verdi={p ? virkningFor(s, p) : s.f_impact} valg={valg} onVelg={(v, pa) => (p ? velg(p, v, pa) : sett({ f_impact: impactToggle(s.f_impact, v, pa) }))} ikon={ikon} />;
+  }
   return (
-    <Kortliste
-      flere
-      navn="Hvordan feilene påvirker deg"
-      verdi={s.f_impact}
-      valg={IMPACT.map(([v, l, d]) => [v, l, d] as const)}
-      onVelg={(v, pa) => sett({ f_impact: impactToggle(s.f_impact, v, pa) })}
-      ikon={(v) => (
-        <svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-          <path d={VIRKNING_IKON[v]} />
-        </svg>
-      )}
-    />
+    <div>
+      {poster.map((p, i) => {
+        const navn = cap(delTekst(feiloverskrift(p, "ubestemt")));
+        return (
+          <div className="block area" key={p.nokkel}>
+            <div className="bt">
+              <h3>
+                <FeilIkon id={p.hoved} />
+                {`${i + 1}. ${navn}`}
+              </h3>
+              <span>{`Feil ${i + 1} av ${poster.length}`}</span>
+            </div>
+            <Kortliste flere navn={`Hvordan påvirker ${navn.toLowerCase()} deg`} verdi={virkningFor(s, p)} valg={valg} onVelg={(v, pa) => velg(p, v, pa)} ikon={ikon} />
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

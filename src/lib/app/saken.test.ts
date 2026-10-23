@@ -131,6 +131,13 @@ describe("nyttPrecValg per feil", () => {
   it("gjør ingenting uten lister", () => expect(nyttPrecValg({}, [])).toEqual({ endre: null, utfall: {} }));
 });
 
+describe("rensSkjema og konsekvensene", () => {
+  it("beholder bare kjente konsekvenser per feil", () => {
+    const s = rensSkjema({ ...eksempel("2026-10-16"), f_virkning: { hoyvolt: ["plagsom", "x"], motor: "bruk" } }, "2026-10-16")!;
+    expect(s.f_virkning).toEqual({ hoyvolt: ["plagsom"] });
+  });
+});
+
 describe("rensSkjema og vedtakene", () => {
   it("en eldre sak med ett vedtak (prec_id) får ingen valg per feil", () => {
     const s = rensSkjema({ ...eksempel("2026-10-16"), prec_id: 4, prec_selv: true }, "2026-10-16")!;

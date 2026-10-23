@@ -8,6 +8,10 @@ import type { Feilvalg, Vedtaksvalg } from "./vedtaksvindu";
 const idag = "2026-10-21";
 
 describe("oppsummering", () => {
+  it("konsekvensene per feil, nummerert som i brevet", () => {
+    const s = { ...eksempel(idag), f_cats: ["karosseri", "klima"], f_parts: { karosseri: ["lakk"], klima: ["ac"] }, f_area: { karosseri: { found: "2025-02-23" }, klima: { found: "2026-10-01" } }, f_virkning: { karosseri: ["kosmetisk", "verdi"], klima: ["plagsom"] } };
+    expect(oppsummering("virkning", s)).toBe("1. Bare kosmetisk, Bilen er mindre verdt · 2. Plagsom");
+  });
   it("bilen", () => expect(oppsummering("bilen", eksempel(idag))).toBe("Volkswagen ID.4 2022 · EL 48213"));
   it("kjøpet: kjøpsdato og kjøpesum", () => expect(oppsummering("kjopet", { ...eksempel(idag), c_purchase: "2025-03-12", c_price: "129 900" })).toBe("12. mars 2025 · 129 900 kr"));
   it("kravet", () => expect(oppsummering("kravet", eksempel(idag))).toContain("Retting"));

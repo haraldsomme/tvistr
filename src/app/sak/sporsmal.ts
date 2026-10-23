@@ -4,7 +4,7 @@
 // the purchase asks for it instead (manglerISkjema). Private sales, leasing and purchases through a
 // company are not covered: their screen stays undone.
 import { seksjon } from "@/app/sak/skjema/steg";
-import { feilposter } from "@/lib/app/feil";
+import { feilposter, virkningFor } from "@/lib/app/feil";
 import type { Utkast } from "@/lib/app/utkast";
 
 export type Skjerm = {
@@ -45,7 +45,16 @@ export const SKJERMER: Skjerm[] = [
     ferdig: (u) => u.skjema.f_cats.length > 0 && feilposter(u.skjema).every((p) => !!p.found),
     mangler: (u) => (u.skjema.f_cats.length ? "Legg inn når du oppdaget feilen for hver feil." : "Velg minst én feil først."),
   },
-  { id: "virkning", gruppe: "Feilen", ...som("virkning"), ferdig: (u) => u.skjema.f_impact.length > 0, mangler: () => "Velg minst ett svar." },
+  {
+    id: "virkning",
+    gruppe: "Feilen",
+    ...som("virkning"),
+    ferdig: (u) => {
+      const p = feilposter(u.skjema);
+      return p.length ? p.every((x) => virkningFor(u.skjema, x).length > 0) : u.skjema.f_impact.length > 0;
+    },
+    mangler: (u) => (feilposter(u.skjema).length > 1 ? "Velg minst ett svar for hver feil." : "Velg minst ett svar."),
+  },
   { id: "verksted", gruppe: "Feilen", ...som("verksted"), ferdig: (u) => !!u.skjema.ws, mangler: () => "Velg om feilen er undersøkt av et verksted." },
   { id: "selger_sa", gruppe: "Kontrakten", ...som("selger_sa"), ferdig: (u) => !!u.skjema.seller_said, mangler: () => "Velg hva selgeren sa." },
   // Nothing is required, but the date once the buyer says they have complained.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { feilposter, feilposterSortert } from "./feil";
+import { feilposter, feilposterSortert, virkningFor } from "./feil";
 import { standard } from "./skjema";
 
 const s = {
@@ -26,5 +26,16 @@ describe("nøkkel og sortering", () => {
   it("feilposterSortert: etter dato, udaterte sist, stabilt", () => {
     const u = { ...s, f_cats: ["motor", "understell", "klima"], f_parts: { ...s.f_parts, klima: ["ac"] }, f_area: { ...s.f_area, klima: { found: "" } } };
     expect(feilposterSortert(u).map((p) => p.nokkel)).toEqual(["motor", "motor.turbo", "understell", "klima"]);
+  });
+});
+
+describe("virkningFor", () => {
+  const [turbo, motor, understell] = feilposter(s);
+  it("konsekvensene til feilen, etter nøkkelen", () => expect(virkningFor({ ...s, f_virkning: { "motor.turbo": ["plagsom"], motor: ["bruk"] } }, turbo)).toEqual(["plagsom"]));
+  it("en feil datert for seg arver områdets", () => expect(virkningFor({ ...s, f_virkning: { motor: ["bruk"] } }, turbo)).toEqual(["bruk"]));
+  it("ingen valg for feilen: ingen konsekvens", () => expect(virkningFor({ ...s, f_virkning: { motor: ["bruk"] } }, understell)).toEqual([]));
+  it("et eldre skjema med ett felles valg gir det til hver feil", () => {
+    const eldre = { ...s, f_virkning: {}, f_impact: ["sikkerhet"] };
+    expect([turbo, motor, understell].map((p) => virkningFor(eldre, p))).toEqual([["sikkerhet"], ["sikkerhet"], ["sikkerhet"]]);
   });
 });

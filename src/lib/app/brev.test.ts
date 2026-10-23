@@ -188,8 +188,9 @@ describe("vedleggslisten", () => {
 });
 
 describe("konsekvensen", () => {
-  const med = (f_impact: string[]) => ({ ...eksempel(idag), f_impact });
-  it("«påvirker bruken» sies konkret når bilen ellers kan brukes", () => expect(tekst(med(["bruk"]))).toContain("\n\nKonsekvensen av feilen er at jeg merker det under kjøring og må begrense bruken av bilen.\n\n"));
+  // One part, so «feilen»; the impact closes the fault's paragraph.
+  const med = (f_impact: string[]) => ({ ...eksempel(idag), f_parts: { hoyvolt: ["lading"] }, f_impact });
+  it("«påvirker bruken» sies konkret når bilen ellers kan brukes", () => expect(tekst(med(["bruk"]))).toContain(" Konsekvensen av feilen er at jeg merker det under kjøring og må begrense bruken av bilen.\n\n"));
   it("«påvirker bruken» utelates når setningen før alt sier at bilen bare kan brukes delvis", () => {
     const t = tekst(med(["palitelig", "bruk"]));
     expect(t).toContain("Konsekvensen av feilen er at jeg ikke kan stole på bilen og bare kan bruke den i begrenset grad.");
@@ -408,14 +409,14 @@ describe("feilene i løpende tekst", () => {
     expect(B.some((b) => (b.t as string) === "ul")).toBe(false);
     const t = tilTekst(B);
     expect(t).toContain(
-      "Mangelen\n\nBilen har tre feil som jeg reklamerer på.\n\n1. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje\n\nDen 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje. Bilen mister trekkraft.\n\n2. Feil ved klimaanlegget (AC)\n\nDen 1. september 2025 oppdaget jeg feil ved klimaanlegget (AC).\n\nKonsekvensen av feilene er at bilen er plagsom å bruke i hverdagen.",
+      "Mangelen\n\nBilen har tre feil som jeg reklamerer på.\n\n1. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje\n\nDen 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje. Bilen mister trekkraft. Konsekvensen av feilene er at bilen er plagsom å bruke i hverdagen.\n\n2. Feil ved klimaanlegget (AC)\n\nDen 1. september 2025 oppdaget jeg feil ved klimaanlegget (AC). Konsekvensen av feilen er at bilen er plagsom å bruke i hverdagen.",
     );
     expect(t).not.toContain("oppdaget jeg også");
     expect(B.filter((b) => b.t === "h2").map((b) => tilTekst([b])).slice(0, 2)).toEqual(["1. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje", "2. Feil ved klimaanlegget (AC)"]);
   });
   it("samme dag: hvert sitt avsnitt", () => {
     const t = tekst(to({}, "2025-05-01"));
-    expect(t).toContain("1. Feil ved klimaanlegget (AC)\n\nDen 1. mai 2025 oppdaget jeg feil ved klimaanlegget (AC).\n\n2. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje\n\nDen 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje.");
+    expect(t).toContain("1. Feil ved klimaanlegget (AC)\n\nDen 1. mai 2025 oppdaget jeg feil ved klimaanlegget (AC). Konsekvensen av feilen er at bilen er plagsom å bruke i hverdagen.\n\n2. Feil ved turboen og unormalt oljeforbruk eller oljelekkasje\n\nDen 1. mai 2025 oppdaget jeg feil ved turboen og unormalt oljeforbruk eller oljelekkasje. Konsekvensen av feilene er at bilen er plagsom å bruke i hverdagen.");
   });
   it("én feil: ingen underoverskrift, og innledningssetningen i entall", () => {
     const en = { ...eksempel(idag), f_parts: { hoyvolt: ["lading"] } };
@@ -686,5 +687,36 @@ describe("gjennomgangen: antall feil og svaret på slitasje", () => {
     const t = tekst(s);
     expect(t).toContain("For feilen som viste seg innen seks måneder etter overtakelsen, er det dere som må bevise at den ikke var til stede ved leveringen, også når dere viser til slitasje eller feil bruk.");
     expect(t).not.toContain("Det er dere som må bevise at feilen ikke var til stede ved leveringen, også når");
+  });
+});
+
+describe("konsekvensen per feil", () => {
+  const e = eksempel(idag);
+  const to = {
+    ...e, c_purchase: "2024-06-04", c_delivery: "2024-06-04",
+    f_cats: ["karosseri", "klima"], f_parts: { karosseri: ["lakk"], klima: ["ac"] }, f_area: { karosseri: { found: "2025-02-23" }, klima: { found: "2026-10-01" } }, f_under: {},
+    f_catdesc: { karosseri: "Det er en stor bulk på innsiden av bagasjeromsluken ved siden av låsemekanismen.", klima: "Anlegget blåser bare varm luft, og luften i bilen blir fuktig." },
+    f_virkning: { karosseri: ["kosmetisk", "verdi"], klima: ["plagsom", "bruk", "sikkerhet"] },
+  };
+  it("under hver feil, i feilens avsnitt, som i eksempelet", () => {
+    expect(tekst(to)).toContain(
+      "1. Lakkskader eller bulker\n\nDen 23. februar 2025 oppdaget jeg lakkskader eller bulker. Det er en stor bulk på innsiden av bagasjeromsluken ved siden av låsemekanismen. Konsekvensen av feilen er kosmetisk, og senker verdien på bilen.\n\n2. Feil ved klimaanlegget (AC)\n\nDen 1. oktober 2026 oppdaget jeg feil ved klimaanlegget (AC). Anlegget blåser bare varm luft, og luften i bilen blir fuktig. Konsekvensen av feilen er at bilens sikkerhet er svekket, at jeg merker det under kjøring og må begrense bruken av bilen og at bilen er plagsom å bruke i hverdagen.\n\n",
+    );
+  });
+  it("ingen felles konsekvens etter feilene", () => expect(tekst(to)).not.toContain("Konsekvensen av feilene er"));
+  it("bare kosmetisk", () => expect(tekst({ ...to, f_virkning: { ...to.f_virkning, karosseri: ["kosmetisk"] } })).toContain("Konsekvensen av feilen er kosmetisk.\n\n"));
+  it("en feil uten valg får ingen setning om konsekvensen", () => expect(tekst({ ...to, f_virkning: { klima: ["plagsom"] } })).toContain("låsemekanismen.\n\n2. Feil ved"));
+  it("et eldre skjema med ett felles valg: samme konsekvens under hver feil", () => {
+    const t = tekst({ ...to, f_virkning: {}, f_impact: ["plagsom"] });
+    expect(t.split("Konsekvensen av feilen er at bilen er plagsom å bruke i hverdagen.").length).toBe(3);
+  });
+  it("en post som nevner to deler: «feilene»", () => {
+    const s = { ...e, f_cats: ["motor"], f_parts: { motor: ["turbo", "registerreim"] }, f_area: { motor: { found: e.f_area.hoyvolt.found } }, f_catdesc: {}, f_virkning: { motor: ["plagsom"] } };
+    expect(tekst(s)).toContain("Konsekvensen av feilene er at bilen er plagsom å bruke i hverdagen.");
+  });
+  it("konsekvensen er merket med feilens felt, så et klikk åpner valget", () => {
+    const B = byggBrev(syncAreas(to), {}, idag);
+    const felt = B.flatMap((b) => ("tekst" in b ? b.tekst : [])).flatMap((d) => (typeof d === "object" && "felt" in d && d.felt.startsWith("f_virkning.") ? [d.felt] : []));
+    expect(felt).toEqual(["f_virkning.karosseri", "f_virkning.klima"]);
   });
 });

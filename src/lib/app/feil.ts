@@ -32,5 +32,13 @@ export const feilposterSortert = (s: Feilsvar): Feilpost[] =>
     .sort((a, b) => (a.p.found || "9").localeCompare(b.p.found || "9") || a.i - b.i)
     .map((x) => x.p);
 
+// How a fault affects the buyer: its own choice, else its area's (a subcategory just dated on its own),
+// else, for a case saved with one list for all the faults, that list.
+type Virkningssvar = Partial<Pick<Skjema, "f_virkning" | "f_impact">>;
+export function virkningFor(s: Virkningssvar, p: Pick<Feilpost, "nokkel" | "hoved">): string[] {
+  const v = s.f_virkning ?? {};
+  return v[p.nokkel] ?? v[p.hoved] ?? (Object.keys(v).length ? [] : (s.f_impact ?? []));
+}
+
 // Every fault is in what the seller said or promised: no presumption, nothing a workshop repairs.
 export const bareOpplysningsfeil = (s: Feilsvar) => s.f_cats.length > 0 && s.f_cats.every((c) => opplysningsfeil(c, s.f_parts[c] ?? []));

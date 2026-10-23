@@ -1,7 +1,7 @@
 // The letter writer's answers (the artifact's `S`), their defaults, the sample case, and the fixed
 // lists the form and the letter share. Text fields are strings, "" when empty.
 import { addDays, iso, parseD } from "./dato";
-import { feilposter } from "./feil";
+import { feilposter, virkningFor } from "./feil";
 
 export type Omrade = { found: string };
 export type Utgift = { t: string; a: number };
@@ -19,7 +19,10 @@ export type Skjema = {
   f_cats: string[]; f_parts: Record<string, string[]>; f_area: Record<string, Omrade>; f_catdesc: Record<string, string>;
   // A subcategory discovered on another day than the rest of its area, by «hoved.under» (feil.ts).
   f_under: Record<string, { found: string; desc: string }>;
-  // How the faults affect the buyer, once for all of them (IMPACT).
+  // How each fault affects the buyer (IMPACT ids), by the fault's key (Feilpost.nokkel); read it with
+  // virkningFor. A case saved before had one list for all the faults in f_impact.
+  f_virkning: Record<string, string[]>;
+  // All the faults' impacts together, for the verdict and the claims (syncAreas keeps it).
   f_impact: string[];
   f_docs: string[];
   // Derived by syncAreas.
@@ -45,7 +48,7 @@ export const standard = (idag: string): Skjema => ({
   b_name: "", b_addr: "", b_zip: "", b_city: "", b_phone: "", b_email: "",
   d_name: "", d_org: "", d_addr: "", d_zip: "", d_city: "",
   c_make: "", c_model: "", c_year: "", c_reg: "", c_purchase: "", c_delivery: "", c_price: "", c_km: "", c_asis: false, c_lastreg: "", c_unntak: false,
-  f_cats: [], f_parts: {}, f_area: {}, f_catdesc: {}, f_under: {}, f_impact: [], f_docs: [],
+  f_cats: [], f_parts: {}, f_area: {}, f_catdesc: {}, f_under: {}, f_virkning: {}, f_impact: [], f_docs: [],
   f_found: "", f_sev: 0, f_drivable: "",
   ws: "", ws_name: "", ws_says: [], ws_quote: "", seller_said: "", seller_txt: "",
   f_prior: false, f_prior_date: "", f_prior_svar: [],
@@ -84,11 +87,14 @@ export const IMPACT = [
   ["sikkerhet", "Går ut over sikkerheten", "For eksempel bremser, styring eller varsellamper", 4, "bilens sikkerhet er svekket"],
   ["stopp", "Kan ikke brukes", "Den står, eller er ikke trygg å kjøre", 5, "bilen ikke kan brukes"],
 ] as const;
-// «Bare kosmetisk» rules out the other choices.
+// «Bare kosmetisk» rules out the other choices, apart from «Bilen er mindre verdt».
 export const IMPACT_SOLO = "kosmetisk";
+const MED_KOSMETISK = "verdi";
 export function impactToggle(list: string[], v: string, on: boolean): string[] {
   const out = list.filter((x) => x !== v);
-  return on ? (v === IMPACT_SOLO ? [v] : [...out.filter((x) => x !== IMPACT_SOLO), v]) : out;
+  if (!on) return out;
+  if (v === IMPACT_SOLO) return [...out.filter((x) => x === MED_KOSMETISK), v];
+  return v === MED_KOSMETISK ? [...out, v] : [...out.filter((x) => x !== IMPACT_SOLO), v];
 }
 export const DOCS = [["kontrakt", "Kjøpekontrakt"], ["verksted", "Verkstedrapport"], ["tilstand", "Tilstandsrapport"], ["bilder", "Bilder og video"], ["korr", "Korrespondanse"], ["kvitt", "Kvitteringer for utgifter"], ["annonse", "Salgsannonse"]] as const;
 // The documents the buyer ticks: the workshop report only when they have one (ticked when they say so,
@@ -151,8 +157,11 @@ export const WS_SAGT: Record<string, { gjort?: string; opplyst?: string }> = {
 const sevOf = (arr: string[]) => Math.max(0, ...arr.map((k) => IMPACT.find((x) => x[0] === k)?.[3] ?? 0));
 const drivableOf = (arr: string[]) => (arr.includes("stopp") ? "nei" : arr.includes("palitelig") ? "delvis" : arr.length ? "ja" : "");
 
-// The first discovery and what the impact means, for the verdict and the letter (artifact syncAreas).
+// The first discovery and what the impact means, for the verdict and the letter (artifact syncAreas):
+// all the faults' impacts together, the worst deciding.
 export function syncAreas(s: Skjema): Skjema {
-  const founds = feilposter(s).map((p) => p.found).filter(Boolean).sort();
-  return { ...s, f_found: founds[0] ?? "", f_sev: sevOf(s.f_impact), f_drivable: drivableOf(s.f_impact) };
+  const poster = feilposter(s);
+  const founds = poster.map((p) => p.found).filter(Boolean).sort();
+  const imp = poster.length ? [...new Set(poster.flatMap((p) => virkningFor(s, p)))] : s.f_impact;
+  return { ...s, f_found: founds[0] ?? "", f_impact: imp, f_sev: sevOf(imp), f_drivable: drivableOf(imp) };
 }

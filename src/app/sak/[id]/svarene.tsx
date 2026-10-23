@@ -3,7 +3,7 @@
 // The sections answered after payment come first. The car is locked to the purchase except its mileage,
 // the faults are locked altogether, and «Vedtaket» opens the dialog where the decision is picked.
 import type { ReactNode } from "react";
-import { feilposter } from "@/lib/app/feil";
+import { feilposter, feilposterSortert, virkningFor } from "@/lib/app/feil";
 import { Opp } from "@/app/deler/ikoner";
 import { Bilen, Kjopet } from "@/app/sak/skjema/bilen";
 import type { Sett, StegProps } from "@/app/sak/skjema/felt";
@@ -55,7 +55,12 @@ export function oppsummering(id: string, skjema: Skjema): string {
       return ledd(p.length > 1 ? `${p.length} feil, første oppdaget ${fmtD(p[0].found)}` : s.f_found && `Oppdaget ${fmtD(s.f_found)}`, p[0]?.desc);
     }
     case "virkning":
-      return ledd(IMPACT.filter(([v]) => s.f_impact.includes(v)).map(([, navn]) => navn).join(", "));
+    {
+      // Per fault, numbered as in the letter when there are several.
+      const navn = (v: string[]) => IMPACT.filter(([x]) => v.includes(x)).map(([, n]) => n).join(", ");
+      const p = feilposterSortert(s);
+      return ledd(p.length > 1 ? p.map((x, i) => `${i + 1}. ${navn(virkningFor(s, x)) || "Ikke valgt"}`).join(" · ") : navn(p[0] ? virkningFor(s, p[0]) : s.f_impact));
+    }
     case "verksted":
       return ledd(WS[s.ws], s.ws !== "nei" && s.ws_name.trim());
     case "selger_sa":

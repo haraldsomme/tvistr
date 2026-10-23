@@ -1,7 +1,7 @@
 // The form's sections: those answered before payment (FOR, they shape the letter's content) and after
 // (ETTER: sender, recipient and the letter's settings), the fields each needs, and what is missing.
 import type { Skjema } from "@/lib/app/skjema";
-import { feilposter } from "@/lib/app/feil";
+import { feilposter, virkningFor } from "@/lib/app/feil";
 
 type Nokkel = keyof Skjema | "f_any_desc";
 // `navn` names the section in lists, `tittel` and `hint` ask it: the question before payment
@@ -13,7 +13,7 @@ export const FOR: Seksjon[] = [
   { id: "kjopet", navn: "Kjøpet", tittel: "Kjøpet", hint: "Hent opplysningene fra kjøpekontrakten. Kjøpsdatoen er utgangspunktet for alle fristene.", felt: ["c_delivery", "c_price"] },
   { id: "feilen", navn: "Feilen", tittel: "Hva gjelder reklamasjonen?", hint: "Velg alle områdene der du har funnet feil. Du kan velge flere.", felt: ["f_cats"] },
   { id: "omrader", navn: "Om feilen", tittel: "Hva er feil med bilen?", hint: "Vær konkret og hold deg til fakta. En presis beskrivelse gjør det vanskeligere å avvise saken.", felt: ["f_found", "f_any_desc"] },
-  { id: "virkning", navn: "Hvordan feilen påvirker deg", tittel: "Hvordan påvirker feilene deg?", hint: "Velg alt som passer. Er feilen bare kosmetisk, velger du bare det.", felt: ["f_impact"] },
+  { id: "virkning", navn: "Hvordan feilen påvirker deg", tittel: "Hvordan påvirker feilene deg?", hint: "Velg alt som passer for hver feil. Er en feil bare kosmetisk, velger du det, og eventuelt at bilen er mindre verdt.", felt: ["f_virkning"] },
   { id: "verksted", navn: "Verksted", tittel: "Er feilen undersøkt av et verksted?", hint: "En verkstedrapport gjør saken mye sterkere. Alt du krysser av for, føres opp i brevet.", felt: ["ws"] },
   { id: "selger_sa", navn: "Hva selgeren sa", tittel: "Sa selger noe om denne feilen før kjøpet?", hint: "For eksempel i annonsen, kontrakten eller en melding.", felt: ["seller_said"] },
   // No hint: the switch's own text says the date counts.
@@ -39,11 +39,15 @@ export const ETIKETT: Record<string, string> = {
   b_name: "Navn", b_addr: "Adresse", b_zip: "Postnr.", b_city: "Poststed", b_phone: "Telefon", b_email: "E-post",
   d_name: "Firmanavn", d_org: "Org.nr.", d_addr: "Adresse", d_zip: "Postnr.", d_city: "Poststed",
   c_make: "Merke", c_model: "Modell", c_year: "Årsmodell", c_reg: "Reg.nr.", c_purchase: "Kjøpsdato", c_delivery: "Kjøpsdato", c_price: "Kjøpesum", c_km: "Km-stand",
-  f_cats: "Deler", f_found: "Dato oppdaget", f_any_desc: "Beskrivelse av feilen", f_impact: "Hvordan feilen påvirker deg", ws: "Verkstedundersøkelse", seller_said: "Hva selger sa før kjøpet", k_main: "Hovedkrav", k_forsok: "Rettingsforsøk", k_cost: "Utbedringskostnad",
+  f_cats: "Deler", f_found: "Dato oppdaget", f_any_desc: "Beskrivelse av feilen", f_virkning: "Hvordan feilen påvirker deg", ws: "Verkstedundersøkelse", seller_said: "Hva selger sa før kjøpet", k_main: "Hovedkrav", k_forsok: "Rettingsforsøk", k_cost: "Utbedringskostnad",
 };
 
 export function har(s: Skjema, k: Nokkel): boolean {
   if (k === "f_any_desc") return feilposter(s).some((p) => p.desc);
+  if (k === "f_virkning") {
+    const p = feilposter(s);
+    return p.length ? p.every((x) => virkningFor(s, x).length > 0) : s.f_impact.length > 0;
+  }
   const v = s[k];
   return Array.isArray(v) ? v.length > 0 : typeof v === "string" ? v.trim() !== "" : v !== false && v !== null && v !== undefined;
 }

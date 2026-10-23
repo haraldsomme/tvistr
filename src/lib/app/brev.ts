@@ -16,11 +16,11 @@ import { plussManeder } from "@/lib/brev/tidslinje";
 import { LOVSETNING } from "@/lib/vedtaksvalg/valg";
 import type { Blokk, Del, Presedens, Presedenser } from "./brevtyper";
 import { addDays, addMonths, dur, fmtD, parseD } from "./dato";
-import { bareOpplysningsfeil, type Feilpost, feilposter, feilposterSortert } from "./feil";
+import { bareOpplysningsfeil, type Feilpost, feilposter, feilposterSortert, virkningFor } from "./feil";
 import { cap, lcFirst } from "./format";
 import { regler, type Regler } from "./lov";
 import { forsokTall, heltall } from "./saken";
-import { IKKE_SVART, IMPACT, rapportVedlagt, type Skjema, SVAR, vedlegg, WS_SAGT, WS_SAYS, WS_SAYS_FLERE } from "./skjema";
+import { IKKE_SVART, IMPACT, IMPACT_SOLO, rapportVedlagt, type Skjema, SVAR, vedlegg, WS_SAGT, WS_SAYS, WS_SAYS_FLERE } from "./skjema";
 
 type Tekstfelt = { [K in keyof Skjema]: Skjema[K] extends string ? K : never }[keyof Skjema];
 
@@ -188,12 +188,19 @@ export function byggBrev(s: Skjema, presedenser: Presedenser, idag: string): Blo
   });
 
   B.push({ t: "h", tekst: ["Mangelen"] });
-  // How the faults affect the buyer, as its own paragraph under them: «Konsekvensen av feilen er at A,
-  // at B og at C.», the most serious first. «Kan ikke brukes» says what «ikke til å stole på» and
-  // «påvirker bruken» would, and «ikke til å stole på» says what «påvirker bruken» would.
-  const imp = s.f_impact.filter((k) => !(k === "palitelig" && s.f_impact.includes("stopp")) && !(k === "bruk" && (s.f_impact.includes("stopp") || s.f_impact.includes("palitelig"))));
-  const ledd = IMPACT.filter((x) => imp.includes(x[0])).toReversed().map((x) => `at ${x[4]}`);
-  const virkning = ledd.length ? `Konsekvensen av ${poster.length > 1 ? "feilene" : "feilen"} er ${liste(ledd)}.` : "";
+  // How each fault affects the buyer, closing its paragraph: «Konsekvensen av feilen er at A, at B og
+  // at C.», the most serious first, or «… er kosmetisk[, og senker verdien på bilen].». «Kan ikke
+  // brukes» says what «ikke til å stole på» and «påvirker bruken» would, and «ikke til å stole på» says
+  // what «påvirker bruken» would. Tagged with the choice, so a click opens it.
+  const konsekvens = (p: Feilpost): Del[] => {
+    const v = virkningFor(s, p);
+    if (!v.length) return [];
+    const feilen = feilord(p.hoved, p.under).length > 1 ? "feilene" : "feilen";
+    const imp = v.filter((k) => !(k === "palitelig" && v.includes("stopp")) && !(k === "bruk" && (v.includes("stopp") || v.includes("palitelig"))));
+    const ledd = IMPACT.filter((x) => imp.includes(x[0])).toReversed().map((x) => `at ${x[4]}`);
+    const t = v.includes(IMPACT_SOLO) ? `Konsekvensen av ${feilen} er kosmetisk${v.includes("verdi") ? ", og senker verdien på bilen" : ""}.` : `Konsekvensen av ${feilen} er ${liste(ledd)}.`;
+    return [" ", fe(`f_virkning.${p.nokkel}`, t)];
+  };
   // How many faults, then one paragraph per fault by the day it was discovered, each under its own
   // numbered subheading when there are several (the same numbers as under «Rettslig grunnlag»).
   if (poster.length) {
@@ -203,12 +210,11 @@ export function byggBrev(s: Skjema, presedenser: Presedenser, idag: string): Blo
       if (sortert.length > 1) B.push({ t: "h2", tekst: [`${i + 1}. `, ...feiloverskrift(p, "ubestemt")] });
       B.push({
         t: "p",
-        tekst: ["Den ", p.found ? fe(p.felt, fmtD(p.found)) : { ph: "dato" }, " oppdaget jeg ", ...funn([p]), ".", ...(p.desc ? [" ", fe(p.descFelt, sentence(p.desc))] : [])],
+        tekst: ["Den ", p.found ? fe(p.felt, fmtD(p.found)) : { ph: "dato" }, " oppdaget jeg ", ...funn([p]), ".", ...(p.desc ? [" ", fe(p.descFelt, sentence(p.desc))] : []), ...konsekvens(p)],
       });
     });
   } else B.push({ t: "p", tekst: ["Den ", vd("f_found", "dato"), " oppdaget jeg ", { ph: "Beskrivelse av feilen" }, "."] });
   const sisteFeil = B.at(-1)!;
-  if (virkning) B.push({ t: "p", tekst: [virkning] });
 
   // The evidence in one paragraph: the workshop and its report, and what the seller said before the sale.
   const bevis: Del[][] = [];

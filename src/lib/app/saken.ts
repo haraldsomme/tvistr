@@ -6,7 +6,7 @@ import type { Kilde, Svar } from "@/lib/vedtaksvalg/kjoper";
 import { feilposter } from "./feil";
 import { erObjekt, flett } from "./flett";
 import { validReg } from "./format";
-import { IMPACT_SOLO, type Skjema, standard } from "./skjema";
+import { IMPACT, IMPACT_SOLO, type Skjema, standard } from "./skjema";
 
 // What the writer's workshop ticks mean in the ranking's words.
 const WS_TIL_PUNKT: Record<string, RapportPunkt> = { bekrefter: "bekrefter", aarsak: "arsak", levering: "til_stede", ikke_slitasje: "ikke_slitasje", frarader: "frarader", kostnad: "overslag" };
@@ -94,6 +94,9 @@ export function rensSkjema(inn: unknown, idag: string): Skjema | null {
   const s = standard(idag);
   const kjente = Object.fromEntries(Object.entries(inn).filter(([k]) => k in s));
   const ut = fraEldre(inn, flett(s, kjente) as Skjema);
+  // Only known impacts per fault.
+  const kjenteVirkninger = new Set<string>(IMPACT.map(([id]) => id));
+  ut.f_virkning = Object.fromEntries(Object.entries(ut.f_virkning).flatMap(([k, v]) => (Array.isArray(v) ? [[k, v.filter((x) => kjenteVirkninger.has(x))]] : [])));
   // Only well-formed choices of a decision per fault; a case from before had one (prec_id), now gone.
   ut.prec = Object.fromEntries(Object.entries(ut.prec).filter(([, v]) => erObjekt(v) && Number.isSafeInteger(v.id) && typeof v.selv === "boolean"));
   // Omlevering is no longer a claim (no decision gave a buyer another used car); a case saved with it

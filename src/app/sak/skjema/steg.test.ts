@@ -15,7 +15,7 @@ describe("seksjonene", () => {
     ["f_parts.motor", "feilen"],
     ["f_catdesc.motor", "omrader"],
     ["f_area.motor.found", "omrader"],
-    ["f_impact", "virkning"],
+    ["f_virkning.klima", "virkning"],
     ["ws_quote", "verksted"],
     ["seller_txt", "selger_sa"],
     ["f_prior_date", "sagt_fra"],

@@ -50,6 +50,11 @@ describe("SKJERMER", () => {
     const vetikke = ENKELTVALG.forbehold.sett(utkast({}, { c_asis: true }), "vetikke");
     expect([vetikke.asis, vetikke.skjema.c_asis]).toEqual(["vetikke", false]);
   });
+  it("virkningen trenger minst ett svar for hver feil", () => {
+    const to = { f_cats: ["motor", "klima"], f_parts: { motor: ["turbo"], klima: ["ac"] } };
+    expect(skjerm("virkning").ferdig(utkast({}, { ...to, f_virkning: { motor: ["plagsom"] } }))).toBe(false);
+    expect(skjerm("virkning").ferdig(utkast({}, { ...to, f_virkning: { motor: ["plagsom"], klima: ["bruk"] } }))).toBe(true);
+  });
   it("virkningen trenger minst ett svar", () => {
     expect(skjerm("virkning").ferdig(utkast())).toBe(false);
     expect(skjerm("virkning").ferdig(utkast({}, { f_impact: ["plagsom"] }))).toBe(true);

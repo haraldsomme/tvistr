@@ -27,7 +27,11 @@ type Tekstfelt = { [K in keyof Skjema]: Skjema[K] extends string ? K : never }[k
 const kr = (n: number) => `kr ${tall(n)}`;
 const sentence = (s: string) => (/[.!?]$/.test(s.trim()) ? s.trim() : `${s.trim()}.`);
 const trimDot = (s: string) => s.trim().replace(/[.]$/, "");
-const unquote = (s: string) => trimDot(s.trim().replace(/^[«"]|[»"]$/g, ""));
+// The buyer's words inside the letter's «»: their own outer quotes go, inner «» become ‘’.
+const unquote = (s: string) => {
+  const t = s.trim();
+  return trimDot(/^[«"].*[»"]$/s.test(t) ? t.slice(1, -1) : t).replace(/«/g, "‘").replace(/»/g, "’");
+};
 // One of the buyer's answers as written in the letter, tagged with its field; nothing when empty.
 const fe = (felt: string, tekst: string): Del => (tekst ? { felt, tekst } : "");
 // liste and join(" ") over parts, so a tagged answer stays its own part.
@@ -103,7 +107,7 @@ function hevingsgrunner(s: Skjema, L: Regler): { grunner: Del[][]; folge: string
     } else if (n === 1) g.push(["ett rettingsforsøk har ikke løst feilen"]);
   } else if (n !== null && n >= 1) {
     g.push([`dere har forsøkt å rette feilen${ganger ? ` ${ganger}` : ""} uten å lykkes`]);
-    folge = `Etter de mislykkede rettingsforsøkene kan jeg avvise videre retting, jf. ${L.par("avhjelp_avvise")}.`;
+    folge = `Etter ${n === 1 ? "det mislykkede rettingsforsøket" : "de mislykkede rettingsforsøkene"} kan jeg avvise videre retting, jf. ${L.par("avhjelp_avvise")}.`;
   }
   g.push(...alvorGrunner(s).map((x) => [x]));
   if (s.seller_said === "lovet") g.push(["bilen avviker fra det dere uttrykkelig opplyste før kjøpet"]);
@@ -247,7 +251,7 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
       const opplyst = sagt.flatMap((x) => x.opplyst ?? []).map((x, i) => (i ? x.replace("at feilen", "at den") : x));
       const gjort = [...sagt.flatMap((x) => x.gjort ?? []), ...(opplyst.length ? [`opplyst meg om ${liste(opplyst)}`] : [])];
       if (gjort.length) bevis.push([`Verkstedet har ${liste(gjort)}.`]);
-      if (has("ws_quote")) bevis.push(["Verkstedet forklarte det slik: «", fe("ws_quote", unquote(s.ws_quote)), "»."]);
+      if (has("ws_quote")) bevis.push(["Slik jeg oppfattet verkstedet: ", fe("ws_quote", sentence(unquote(s.ws_quote)))]);
       if (gjort.length || has("ws_quote")) bevis.push(["Dere kan kontakte verkstedet for å få dette bekreftet."]);
     }
   }
@@ -465,7 +469,8 @@ export function byggBrev(s: Skjema, presedens: Presedens | null | "venter", idag
   // An amount the seller must pay (a price reduction or compensation) draws late-payment interest
   // when it is paid late; when it falls due follows forsinkelsesrenteloven § 2, which the letter does
   // not restate. The purchase price repaid after heving has its own rule above (renter).
-  const belop = s.k_main === "prisavslag" || (s.k_exp && s.exp.some((x) => x.t || x.a)) ? ` Beløpet bes utbetalt innen fristen. Ved forsinket betaling kreves forsinkelsesrente etter ${ANDRE_LOVER.forsinkelsesrente}.` : "";
+  const hva = [s.k_main === "prisavslag" ? "prisavslaget" : "", s.k_exp && s.exp.some((x) => x.t || x.a) ? "erstatningen for utgiftene" : ""].filter(Boolean);
+  const belop = hva.length ? ` ${cap(liste(hva))} bes utbetalt innen fristen. Ved forsinket betaling kreves forsinkelsesrente etter ${ANDRE_LOVER.forsinkelsesrente}.` : "";
   B.push({ t: "p", tekst: [`Jeg ber om en skriftlig tilbakemelding innen ${dd} med forslag til hvordan dere vil løse saken.${belop} Kommer vi ikke til enighet, vil jeg ${nxt}.`] });
   B.push({ t: "sign", linjer: [["Med vennlig hilsen"], [""], [v("b_name", "Ditt navn")]] });
   // The list of attachments follows the signature, as in a Norwegian business letter.

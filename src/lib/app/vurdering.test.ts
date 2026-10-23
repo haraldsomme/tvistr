@@ -258,3 +258,12 @@ describe("sen reklamasjon", () => {
   });
   it("sen reklamasjon trekker ned et nivå", () => expect(evaluate({ ...base, delivery: "2022-05-14", found: "2023-02-10", opplysning: true }, idag).tier).toBe("god"));
 });
+
+describe("ordlyd i vurderingen", () => {
+  it("foreløpig til begge datoene er inne", () => {
+    expect(evaluate({ ...base, delivery: "2026-06-01" }, idag).tier).toBe("ukjent");
+    expect(evaluate({ ...base, found: "2026-06-01" }, idag).tier).toBe("ukjent");
+  });
+  it("ett forsøk etter 2024: entall", () =>
+    expect(evaluate({ ...base, delivery: "2025-01-10", found: "2025-03-01", notified: "ja", notifiedDate: "2025-03-05", k_forsok: "1" }, idag).factors.find((f) => f.t === "Forhandleren har ikke klart å rette feilen")?.d).toContain("Etter det mislykkede forsøket"));
+});

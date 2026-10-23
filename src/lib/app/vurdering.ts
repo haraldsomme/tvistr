@@ -211,7 +211,7 @@ export function evaluate(q: Sjekksvar, idag: string): Resultat {
   F.push(...wsFactors({ ws: q.ws, ws_says: q.ws_says, seller_said: q.seller_said, c_purchase: q.kjopsdato, opplysning: q.opplysning || q.noenOpplysning }, etter), ...feilFaktorer(q), ...forsokFaktor(q, L));
 
   // Without any date there is nothing to weigh yet.
-  if (!q.delivery && !q.found) return { tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen.", factors: F };
+  if (!q.delivery || !q.found) return { tier: "ukjent", badge: "Foreløpig", title: "Legg inn datoene for å se hvor sterk saken er", summary: "Saksstyrken regnes ut når du har lagt inn når du overtok bilen og når du oppdaget feilen.", factors: F };
   const poeng = sumFor(F);
   const tier = nivaFor(poeng);
   return { tier, ...TIER[tier], factors: F, poeng };
@@ -309,7 +309,7 @@ function forsokFaktor(q: Sjekksvar, L: Regler): Faktor[] {
   const n = forsokTall(q.k_forsok ?? "");
   if (n === null || n < 1) return [];
   if (n >= (L.versjon === "før_2024" ? 2 : 1))
-    return [{ s: "good", t: "Forhandleren har ikke klart å rette feilen", d: "Etter de mislykkede forsøkene kan du avvise flere forsøk og kreve prisavslag eller heving.", law: L.ref("avhjelp_avvise"), w: 1 }];
+    return [{ s: "good", t: "Forhandleren har ikke klart å rette feilen", d: `Etter ${n === 1 ? "det mislykkede forsøket" : "de mislykkede forsøkene"} kan du avvise flere forsøk og kreve prisavslag eller heving.`, law: L.ref("avhjelp_avvise"), w: 1 }];
   return [{ s: "info", t: "Ett rettingsforsøk har ikke løst feilen", d: "For kjøp før 2024 kan forhandleren normalt forsøke to ganger før du kan kreve prisavslag eller heving." }];
 }
 

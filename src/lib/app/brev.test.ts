@@ -170,7 +170,7 @@ describe("vedleggslisten", () => {
   it("uten rapport: det verkstedet sa, som det ble sagt, og hvor det kan bekreftes", () => {
     const t = tekst({ ...eksempel(idag), ws: "uten", ws_says: ["bekrefter", "levering", "ikke_slitasje"], ws_quote: "En battericelle er defekt" });
     expect(t).toContain("Volkswagen Sandvika har undersøkt bilen. Verkstedet har bekreftet feilen og opplyst meg om at feilen har utviklet seg over tid og var til stede ved leveringen og at den ikke skyldes normal slitasje.");
-    expect(t).toContain("Verkstedet forklarte det slik: «En battericelle er defekt». Dere kan kontakte verkstedet for å få dette bekreftet.");
+    expect(t).toContain("Slik jeg oppfattet verkstedet: En battericelle er defekt. Dere kan kontakte verkstedet for å få dette bekreftet.");
     expect(t).toContain("Verkstedet har opplyst at feilen ikke skyldes normal slitasje, og formodningen er derfor ikke uforenlig");
     expect(t).not.toContain("rapport");
   });
@@ -234,7 +234,7 @@ describe("begrunnelsen for heving", () => {
   it("ett forsøk fra 2024: forbrukeren kan avvise videre retting (§ 30 fjerde ledd), kostnaden nevnes ikke", () => {
     const t = tekst(hev({ k_cost: "9 000", k_forsok: "1", seller_said: "nei" }));
     expect(t).toContain("dere har forsøkt å rette feilen uten å lykkes");
-    expect(t).toContain("Etter de mislykkede rettingsforsøkene kan jeg avvise videre retting, jf. § 30 fjerde ledd.");
+    expect(t).toContain("Etter det mislykkede rettingsforsøket kan jeg avvise videre retting, jf. § 30 fjerde ledd.");
     expect(t).toContain("Jeg hever kjøpet, jf. § 32.");
     expect(t).not.toContain("Jeg er kjent med at dere kan tilby å rette");
     expect(t).not.toContain("anslått til");
@@ -524,4 +524,16 @@ describe("opplysningsfeil", () => {
     expect(tekst(s)).toContain("Bilen har også en mangel når den ikke svarer til opplysninger dere ga før kjøpet, jf. § 17 første ledd bokstav b.");
     expect(tekst({ ...s, seller_said: "nei" })).not.toContain("bokstav b");
   });
+});
+
+describe("ordlyd", () => {
+  it("ett forsøk etter 2024: entall", () => expect(tekst({ ...eksempel(idag), k_main: "heving", k_forsok: "1" })).toContain("Etter det mislykkede rettingsforsøket kan jeg avvise videre retting"));
+  it("beløpet navngis", () => {
+    expect(tekst({ ...eksempel(idag), k_main: "prisavslag", k_amount: "25 000", k_exp: false })).toContain(" Prisavslaget bes utbetalt innen fristen.");
+    expect(tekst({ ...eksempel(idag), k_main: "heving" })).toContain(" Erstatningen for utgiftene bes utbetalt innen fristen.");
+    expect(tekst({ ...eksempel(idag), k_main: "prisavslag", k_amount: "25 000" })).toContain(" Prisavslaget og erstatningen for utgiftene bes utbetalt innen fristen.");
+    expect(tekst({ ...eksempel(idag), k_main: "retting", k_exp: false })).not.toContain("bes utbetalt");
+  });
+  it("anførselstegn inni sitatet", () => expect(tekst({ ...eksempel(idag), seller_txt: "Annonsen sa «141 000 km, full servicehistorikk»" })).toContain("Før kjøpet opplyste dere: «Annonsen sa ‘141 000 km, full servicehistorikk’»."));
+  it("verkstedets ord uten rapport er ikke et sitat", () => expect(tekst({ ...eksempel(idag), ws: "uten", ws_quote: "Rusten må ha vært der ved salget" })).toContain("Slik jeg oppfattet verkstedet: Rusten må ha vært der ved salget."));
 });

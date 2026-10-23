@@ -28,7 +28,7 @@ vi.mock("next/headers", () => ({
 vi.mock("@/app/sak/vedtak-db", () => ({ hentAlle, hentBilnavn: async () => () => null }));
 vi.mock("@/lib/sak/db", () => ({ hentEgenSak, betalteSaker }));
 vi.mock("@/lib/innlogging/okt", async (orig) => ({ ...(await orig<typeof import("@/lib/innlogging/okt")>()), innlogget }));
-const ranger = vi.hoisted(() => vi.fn((_alle: unknown, _sak: { somDenEr: boolean | null }) => ({ kandidater: kandidater.rader })));
+const ranger = vi.hoisted(() => vi.fn<(alle: unknown, sak: { somDenEr: boolean | null }) => { kandidater: unknown[] }>(() => ({ kandidater: kandidater.rader })));
 vi.mock("@/lib/matching/ranger", () => ({ ranger, avgjorendeFor: () => undefined }));
 // The limits per address are tested on their own; here every call is from the same address.
 vi.mock("@/lib/rategrense", () => ({ lagGrense: () => () => false, ipFra: () => "10.0.0.1" }));

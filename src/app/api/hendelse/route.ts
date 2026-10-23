@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { hendelse } from "@/db/schema";
 import { rensMaling } from "@/lib/maling";
 import { ipFra, lagGrense, lesJson } from "@/lib/rategrense";
+import { feiltekst } from "@/lib/logg";
 
 const forMange = lagGrense({ antall: 120, vinduMs: 60_000 });
 
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
   try {
     await db.insert(hendelse).values(m);
   } catch (e) {
-    console.error("hendelse ble ikke lagret", e);
+    console.error("hendelse ble ikke lagret", feiltekst(e));
     return new Response(null, { status: 500 });
   }
   return new Response(null, { status: 204 });

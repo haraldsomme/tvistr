@@ -13,6 +13,7 @@ import { avstem } from "@/lib/vipps/avstem";
 import { hentBetaling } from "@/lib/vipps/klient";
 import { maskerEpost } from "@/lib/vipps/kjoper";
 import { HELT_BREV_UTEN_BETALING, UTVIKLINGSEIER } from "@/lib/vipps/profil";
+import { feiltekst } from "@/lib/logg";
 
 // What the confirmation shows. The page opens for anyone with the reference, which the receipt prints
 // as «Ordrenummer», so only the browser logged in as the case's owner (`innlogget`) gets the case: its
@@ -81,7 +82,7 @@ export async function sjekkBetaling(ref: unknown, n: unknown): Promise<Betalings
       },
     };
   } catch (e) {
-    console.error("betalingssjekken feilet", e);
+    console.error("betalingssjekken feilet", feiltekst(e));
     return { status: "venter" };
   }
 }

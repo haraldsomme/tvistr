@@ -19,6 +19,7 @@ import { ipFra, lagGrense } from "@/lib/rategrense";
 import { hentEgenSak } from "@/lib/sak/db";
 import { lignendeFor } from "./lignende-db";
 import { rensUtkast } from "./rens";
+import { feiltekst } from "@/lib/logg";
 
 type Feil = { ok: false; melding: string };
 export type Forhandsvist = { ok: true; blokker: Blokk[]; lignende: Awaited<ReturnType<typeof lignendeFor>> | null } | Feil;
@@ -42,13 +43,13 @@ export async function forhandsvis(inn: { utkast: unknown }): Promise<Forhandsvis
     const lignende =
       svar && !["utenfor", "frist"].includes(utkastResultat(utkast, dag).tier)
         ? await lignendeFor(svar).catch((e: unknown) => {
-            console.error("lignende saker feilet", e instanceof Error ? e.message : String(e));
+            console.error("lignende saker feilet", feiltekst(e));
             return null;
           })
         : null;
     return { ok: true, blokker: forhandsvisning(utkast.skjema, lignende?.kort[0] ?? null, dag), lignende };
   } catch (e) {
-    console.error("forhåndsvisningen feilet", e instanceof Error ? e.message : e);
+    console.error("forhåndsvisningen feilet", feiltekst(e));
     return { ok: false, melding: "Noe gikk galt. Prøv igjen." };
   }
 }
@@ -109,7 +110,7 @@ export async function fulltBrev(inn: { id: unknown; skjema: unknown; presedens: 
     const blokker = byggBrev(syncAreas(laas(lagret.skjema, skjema)), presedens, dag);
     return { ok: true, blokker, tekst: tilTekst(blokker), emne: emne(blokker) };
   } catch (e) {
-    console.error("brevet feilet", e instanceof Error ? e.message : e);
+    console.error("brevet feilet", feiltekst(e));
     return { ok: false, melding: "Noe gikk galt. Prøv igjen." };
   }
 }

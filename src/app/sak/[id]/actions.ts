@@ -33,6 +33,7 @@ import { visSaksnummer } from "@/lib/vedtaksvalg/mal";
 import { byggValg, type Endring, endringMot, fraLagret, grunnlagFor, type LagretSvar, type Modellsvar, sitaterFor, sporModellen, tilLagret, UTVALG_I_TEKSTEN, type Valggrunnlag, type Vedtaksdetaljer } from "@/lib/vedtaksvalg/valg";
 import { opprettBetaling, vippsSattOpp } from "@/lib/vipps/klient";
 import { HELT_BREV_UTEN_BETALING, UTVIKLINGSEIER } from "@/lib/vipps/profil";
+import { feiltekst } from "@/lib/logg";
 
 export type Funn = { ok: true; valg: Presedens[]; endring: Endring | null } | { ok: false; melding: string };
 
@@ -140,13 +141,13 @@ export async function finnVedtak(inn: { id: unknown; svar: unknown }): Promise<F
       try {
         await db.update(sak).set({ vedtaksvalg: { liste, svar: svarene } }).where(eq(sak.id, lagret.id));
       } catch (e) {
-        console.error("vedtaksvalget ble ikke lagret", e instanceof Error ? e.message : e);
+        console.error("vedtaksvalget ble ikke lagret", feiltekst(e));
       }
     }
     console.info(`vedtaksvalg: ${etterId.get(svaret.r.id)?.saksnummer} (nivå ${svaret.niva}, ${kilde}${svaret.fulgt ? "" : ", rangeringens førstevalg"}), $${kostnad.toFixed(3)}`);
     return { ok: true, valg, endring };
   } catch (e) {
-    console.error("vedtaksvalget feilet", e instanceof Error ? e.message : e);
+    console.error("vedtaksvalget feilet", feiltekst(e));
     return { ok: false, melding: "Vi fant ikke lignende saker akkurat nå. Prøv igjen." };
   }
 }
@@ -199,14 +200,14 @@ export async function kjop(inn: { utkast: unknown; samtykke: unknown }): Promise
     console.info(`kjøp: ny sak (${leverandor})`);
     if (utenVipps) return { ok: true, url: retur };
   } catch (e) {
-    console.error("kjøpet feilet", e);
+    console.error("kjøpet feilet", feiltekst(e));
     return { ok: false, melding: "Vi fikk ikke lagret saken. Prøv igjen." };
   }
   try {
     const { redirectUrl } = await opprettBetaling({ ref: ordreId, belopOre, returnUrl: `${opprinnelse(await headers())}${retur}`, beskrivelse: "Reklamasjonsbrev for bil" });
     return { ok: true, url: redirectUrl };
   } catch (e) {
-    console.error("vipps-betalingen ble ikke opprettet", e);
+    console.error("vipps-betalingen ble ikke opprettet", feiltekst(e));
     await db.update(ordre).set({ status: "feilet", oppdatert: new Date() }).where(eq(ordre.id, ordreId)).catch(() => {});
     return { ok: false, melding: "Vi fikk ikke kontakt med Vipps. Prøv igjen." };
   }
@@ -223,7 +224,7 @@ export async function lagreSak(inn: { id: unknown; skjema: unknown }): Promise<{
     await db.update(sak).set({ skjema: laas(lagret.skjema, skjema), endret: new Date() }).where(eq(sak.id, lagret.id));
     return { ok: true };
   } catch (e) {
-    console.error("lagringen feilet", e);
+    console.error("lagringen feilet", feiltekst(e));
     return { ok: false, melding: "Vi fikk ikke lagret. Prøver igjen." };
   }
 }

@@ -9,6 +9,7 @@ import { sendKvittering } from "@/lib/epost/kvittering";
 import { UFULLFORT_DAGER } from "@/lib/sak/lagringstid";
 import { avstem } from "./avstem";
 import { hentBetaling } from "./klient";
+import { feiltekst } from "@/lib/logg";
 
 export async function avstemUavklarte(na = new Date()): Promise<{ antall: number; feilet: number; kvitteringer: number }> {
   const siden = (ms: number) => new Date(na.getTime() - ms);
@@ -18,7 +19,7 @@ export async function avstemUavklarte(na = new Date()): Promise<{ antall: number
     .where(and(eq(ordre.leverandor, "vipps"), eq(ordre.status, "opprettet"), lt(ordre.opprettet, siden(15 * 60_000)), gt(ordre.opprettet, siden(UFULLFORT_DAGER * 86_400_000))))
     .limit(500);
   let feilet = 0;
-  for (const r of rader) await avstem(r.id).catch((e) => (feilet++, console.error("avstemming feilet", r.id, e)));
+  for (const r of rader) await avstem(r.id).catch((e) => (feilet++, console.error("avstemming feilet", r.id, feiltekst(e))));
 
   const uten = await db
     .select({ id: ordre.id })

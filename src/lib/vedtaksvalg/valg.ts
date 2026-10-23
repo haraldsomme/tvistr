@@ -9,6 +9,7 @@ import { poengtekst } from "@/lib/matching/rett";
 import type { Brukersak, Kandidat } from "@/lib/matching/typer";
 import type { Kjoper } from "./kjoper";
 import { avsnittA, avsnittB, type Malvedtak } from "./mal";
+import { feiltekst } from "@/lib/logg";
 
 // Bump when the instruction or the answer changes.
 export const VEDTAKSVALG_VERSJON = "vedtaksvalg-v10";
@@ -178,7 +179,7 @@ export async function sporModellen(opts: Valggrunnlag & { rask?: boolean }): Pro
     });
     return { svar: kall.input, modell: kall.modell, forbruk: kall.forbruk };
   } catch (e) {
-    console.error("vedtaksvalget: modellkallet feilet, bruker rangeringen", e instanceof Error ? e.message : e);
+    console.error("vedtaksvalget: modellkallet feilet, bruker rangeringen", feiltekst(e));
     return { svar: null, modell: null, forbruk: { tokensInn: 0, tokensUt: 0, kostnadUsd: 0 } };
   }
 }

@@ -14,6 +14,7 @@ import { ordre, sak } from "@/db/schema";
 import { sendKvittering } from "@/lib/epost/kvittering";
 import { capture, hentBetaling } from "./klient";
 import { fyllKjoper } from "./kjoper";
+import { feiltekst } from "@/lib/logg";
 
 export type Avstemt = { status: "betalt"; sakId: string } | { status: "venter" } | { status: "avbrutt" } | { status: "ukjent" };
 
@@ -64,6 +65,6 @@ export async function avstem(ref: string): Promise<Avstemt> {
   ]);
   console.info("vipps: betalt", JSON.stringify({ ref }));
   // Only the call that made the order paid sends the receipt; the cron sends any that failed.
-  if (vant.length) await sendKvittering(ref, b.userDetails?.email).catch((e) => console.error("kvitteringen feilet", ref, e));
+  if (vant.length) await sendKvittering(ref, b.userDetails?.email).catch((e) => console.error("kvitteringen feilet", ref, feiltekst(e)));
   return { status: "betalt", sakId: o.sakId };
 }

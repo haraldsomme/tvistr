@@ -2,6 +2,7 @@
 // (https://autosys-kjoretoy-api.atlas.vegvesen.no). The key (VEGVESEN_API_KEY) stays on the server.
 // The registration number is the user's own and is only passed on, never stored.
 
+import { feiltekst } from "@/lib/logg";
 const URL_OPPSLAG = "https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata";
 
 export type Kjoretoy = {
@@ -89,7 +90,7 @@ export async function hentKjoretoy(regnr: string): Promise<Oppslag> {
     const kjoretoy = lesKjoretoy(json);
     return kjoretoy ? { ok: true, kjoretoy, eierFra: lesEierFra(json) } : { ok: false, feil: "ikke_funnet" };
   } catch (e) {
-    console.error("kjøretøyoppslag feilet", e);
+    console.error("kjøretøyoppslag feilet", feiltekst(e));
     return { ok: false, feil: "utilgjengelig" };
   }
 }

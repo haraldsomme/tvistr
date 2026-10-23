@@ -9,6 +9,7 @@ import { ordre, sak } from "@/db/schema";
 import { tall } from "@/lib/app/format";
 import { FIRMA } from "@/lib/firma";
 import { vippsBase } from "@/lib/vipps/klient";
+import { feiltekst } from "@/lib/logg";
 
 export type Kvittering = { ref: string; sakId: string; belopOre: number; betalt: Date; bil: string; reg: string };
 
@@ -116,7 +117,7 @@ export async function sendKvittering(ref: string, delt: string | undefined): Pro
     console.info("kvittering sendt", JSON.stringify({ ref }));
     return "sendt";
   } catch (e) {
-    console.error("kvitteringen feilet", ref, e);
+    console.error("kvitteringen feilet", ref, feiltekst(e));
     await db.update(ordre).set({ kvitteringSendt: null }).where(eq(ordre.id, ref)).catch(() => {});
     return "feilet";
   }

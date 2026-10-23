@@ -2,6 +2,7 @@ import { avstem } from "@/lib/vipps/avstem";
 import { gyldigSignatur } from "@/lib/vipps/signatur";
 import { erId } from "@/lib/sak/id";
 import { ipFra, lagGrense } from "@/lib/rategrense";
+import { feiltekst } from "@/lib/logg";
 
 const forMange = lagGrense({ antall: 300, vinduMs: 60_000 });
 
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     await avstem(ref);
     return new Response(null, { status: 200 });
   } catch (e) {
-    console.error("vipps-webhook feilet", e);
+    console.error("vipps-webhook feilet", feiltekst(e));
     return new Response(null, { status: 500 });
   }
 }

@@ -8,6 +8,7 @@ import { ipFra, lagGrense } from "@/lib/rategrense";
 import type { Lignende as Funn } from "@/lib/vurdering/vurdering";
 import { lignendeFor } from "./lignende-db";
 import { rensSvar } from "./rens";
+import { feiltekst } from "@/lib/logg";
 
 export type Lignende = ({ ok: true } & Funn) | { ok: false; melding: string };
 
@@ -23,7 +24,7 @@ export async function vurderSaken(inn: unknown): Promise<Lignende> {
     console.info("lignende", JSON.stringify({ kategorier: svar.feil.map((f) => f.hoved), kort: r.kort.map((k) => k.saksnummer) }));
     return { ok: true, ...r };
   } catch (e) {
-    console.error("lignende saker feilet", e);
+    console.error("lignende saker feilet", feiltekst(e));
     return { ok: false, melding: "Noe gikk galt. Prøv igjen." };
   }
 }

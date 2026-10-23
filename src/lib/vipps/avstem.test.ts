@@ -6,11 +6,12 @@ type Rad = { sakId: string; status: string; belopOre: number };
 const rad = vi.hoisted(() => ({ ordre: null as Rad | null }));
 const hentBetaling = vi.fn<(ref: string) => Promise<Betaling>>();
 const capture = vi.fn(async () => ({}));
+const kanseller = vi.fn(async () => ({}));
 const batch = vi.fn<(q: unknown[]) => Promise<unknown[][]>>(async () => [[{ id: "abcdefghijkm" }], []]);
 const sendKvittering = vi.fn(async () => "sendt");
 vi.mock("@/lib/epost/kvittering", () => ({ sendKvittering }));
 const satt = vi.fn<(v: unknown) => { where: () => { v: unknown } }>((v) => ({ where: () => ({ v }) }));
-vi.mock("./klient", () => ({ hentBetaling, capture }));
+vi.mock("./klient", () => ({ hentBetaling, capture, kanseller }));
 vi.mock("@/db", () => ({
   db: {
     batch,
@@ -29,6 +30,7 @@ const betaling = (state: Tilstand, o: { captured?: number; cancelled?: number } 
   pspReference: "psp-1",
   amount: nok(24900),
   aggregate: { authorizedAmount: nok(state === "AUTHORIZED" ? 24900 : 0), cancelledAmount: nok(o.cancelled ?? 0), capturedAmount: nok(o.captured ?? 0), refundedAmount: nok(0) },
+  profile: { sub: "sub-1" },
 });
 
 beforeEach(() => {
@@ -69,13 +71,15 @@ describe("avstem", () => {
     expect(s.v.betalt).toBeInstanceOf(Date);
   });
 
-  it("gir saken ingen eier når betalingen ikke har en, og varsler uten persondata", async () => {
+  it("kansellerer en betaling uten eier, tar ikke pengene og åpner ikke saken", async () => {
     const varsel = vi.spyOn(console, "warn").mockImplementation(() => {});
-    hentBetaling.mockResolvedValue({ ...betaling("AUTHORIZED"), userDetails: { email: "kari@eksempel.no", firstName: "Kari", lastName: "Nordmann" } });
-    await avstem("abcdefghijkm");
-    const [[, s]] = batch.mock.calls[0] as unknown as [[unknown, { v: Record<string, unknown> }]];
-    expect(s.v.vippsSub).toBeNull();
-    expect(varsel).toHaveBeenCalledWith("vipps: betalt uten sub", JSON.stringify({ ref: "abcdefghijkm" }));
+    hentBetaling.mockResolvedValue({ ...betaling("AUTHORIZED"), profile: undefined, userDetails: { email: "kari@eksempel.no", firstName: "Kari", lastName: "Nordmann" } });
+    expect(await avstem("abcdefghijkm")).toEqual({ status: "avbrutt" });
+    expect(kanseller).toHaveBeenCalledWith("abcdefghijkm");
+    expect(capture).not.toHaveBeenCalled();
+    expect(batch).not.toHaveBeenCalled();
+    expect(satt).toHaveBeenCalledWith(expect.objectContaining({ status: "avbrutt" }));
+    expect(varsel).toHaveBeenCalledWith("vipps: avbrutt uten sub", JSON.stringify({ ref: "abcdefghijkm" }));
     expect(JSON.stringify(varsel.mock.calls)).not.toMatch(/kari|Kari|Nordmann/);
     varsel.mockRestore();
   });

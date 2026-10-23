@@ -85,7 +85,7 @@ Brevet koster kr 249 (`PRIS` i `src/lib/pris.ts`) og betales med Vipps MobilePay
 5. Et nytt forsøk gir en ny sak. En sak som aldri blir betalt, slettes etter 30 dager.
 
 **Avstemming** (`avstem` i `src/lib/vipps/avstem.ts`) er det eneste som flytter en Vipps-ordre fra «opprettet». Den spør alltid Vipps (`GET /epayment/v1/payments/{ref}`) og stoler aldri på nettleseren eller webhooken:
-- `AUTHORIZED`: capture med en gang. Brevet er digitalt innhold som leveres straks, og ePayment har ikke direkte capture. Først når capture har gått gjennom, blir ordren «betalt» med `transaksjon_id` (pspReference), og saken får `betalt`. Feiler capture, forblir ordren «opprettet», og neste kall prøver igjen.
+- `AUTHORIZED`: capture med en gang. Brevet er digitalt innhold som leveres straks, og ePayment har ikke direkte capture. Først når capture har gått gjennom, blir ordren «betalt» med `transaksjon_id` (pspReference), og saken får `betalt`. Feiler capture, forblir ordren «opprettet», og neste kall prøver igjen. Mangler betalingen kjøperens Vipps-konto (`profile.sub`), ville saken ikke åpnes for noen: da kanselleres betalingen i stedet, ordren blir «avbrutt», og loggen har bare referansen.
 - `ABORTED`, `EXPIRED`, `TERMINATED` eller en kansellert betaling: ordren blir «avbrutt».
 - Den tåler å kjøres flere ganger samtidig. Capture har en fast `Idempotency-Key` (`<ref>-capture`), og oppdateringene skjer med vilkår i én `db.batch`.
 - Bare kallet som gjør ordren betalt (`.returning()`), fyller kjøperen fra Vipps inn i skjemaet (`fyllKjoper` i `src/lib/vipps/kjoper.ts`: bare tomme felt, adressen bare samlet) og sender kvitteringen.

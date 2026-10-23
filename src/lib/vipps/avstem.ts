@@ -12,7 +12,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { ordre, sak } from "@/db/schema";
 import { sendKvittering } from "@/lib/epost/kvittering";
-import { capture, hentBetaling } from "./klient";
+import { capture, hentBetaling, kanseller } from "./klient";
 import { fyllKjoper } from "./kjoper";
 import { feiltekst } from "@/lib/logg";
 
@@ -39,7 +39,18 @@ export async function avstem(ref: string): Promise<Avstemt> {
     return { status: "avbrutt" };
   }
 
+  const sub = b.profile?.sub ?? null;
   if (b.aggregate.capturedAmount.value < o.belopOre) {
+    // Without the payer's Vipps account the case would open for nobody: the money is not taken.
+    if (!sub) {
+      await kanseller(ref).catch(() => {});
+      await db
+        .update(ordre)
+        .set({ status: "avbrutt", oppdatert: new Date() })
+        .where(and(eq(ordre.id, ref), eq(ordre.status, "opprettet")));
+      console.warn("vipps: avbrutt uten sub", JSON.stringify({ ref }));
+      return { status: "avbrutt" };
+    }
     try {
       await capture(ref, o.belopOre);
     } catch {
@@ -49,8 +60,8 @@ export async function avstem(ref: string): Promise<Avstemt> {
   // The buyer's details from Vipps go into the form as it opens; the buyer cannot edit it before then.
   const [s] = await db.select({ skjema: sak.skjema }).from(sak).where(eq(sak.id, o.sakId)).limit(1);
   const na = new Date();
-  const sub = b.profile?.sub ?? null;
-  // A case without an owner opens for nobody; the warning lets support find it. Only the reference is logged.
+  // Captured before this check existed: a case without an owner opens for nobody; the warning lets
+  // support find it. Only the reference is logged.
   if (!sub) console.warn("vipps: betalt uten sub", JSON.stringify({ ref }));
   const [vant] = await db.batch([
     db
